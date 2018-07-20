@@ -1,28 +1,29 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/db/kvstore"
+	"github.com/opencord/voltha-go/rw_core/config"
 	"os"
 	"os/signal"
-	"time"
-	"errors"
 	"strconv"
-	"github.com/opencord/voltha-go/db/kvstore"
-	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/rw_core/config"
 	"syscall"
+	"time"
 )
 
 type rwCore struct {
-	kvClient     kvstore.Client
-	config       *config.RWCoreFlags
-	halted		bool
-	exitChannel  chan int
+	kvClient    kvstore.Client
+	config      *config.RWCoreFlags
+	halted      bool
+	exitChannel chan int
 }
 
 func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
 
-	log.Infow("kv-store-type", log.Fields{"store":storeType})
+	log.Infow("kv-store-type", log.Fields{"store": storeType})
 	switch storeType {
 	case "consul":
 		return kvstore.NewConsulClient(address, timeout)
@@ -51,7 +52,6 @@ func (core *rwCore) setKVClient() error {
 	return nil
 }
 
-
 func toString(value interface{}) (string, error) {
 	switch t := value.(type) {
 	case []byte:
@@ -63,40 +63,15 @@ func toString(value interface{}) (string, error) {
 	}
 }
 
+func (core *rwCore) start(ctx context.Context) {
+	log.Info("Starting RW Core components")
+	// Setup GRPC Server
 
-func (core *rwCore) start() {
-	log.Info("core-starting")
+	// Setup KV Client
 
-	//First set the KV client.  Some client immediately tries to connect to the KV store (etcd) while others does
-	// not create the connection until a request to the store is made (consul)
-	tick := time.Tick(kvstore.GetDuration(core.config.KVStoreTimeout))
-	connected := false
-KVStoreConnectLoop:
-	for {
-		if err := core.setKVClient(); err != nil {
-			log.Warn("cannot-create-kv-client-retrying")
-			select {
-			case <-tick:
-				log.Debug("kv-client-retry")
-				continue
-			case <-core.exitChannel:
-				log.Info("exit-request-received")
-				break KVStoreConnectLoop
-			}
-		} else {
-			log.Debug("got-kv-client.")
-			connected = true
-			break
-		}
-	}
-	// Connected is true only if there is a valid KV store connection and no exit request has been received
-	if connected {
-		log.Info("core-started")
-	} else {
-		log.Info("core-ended")
-	}
+	// Setup Kafka messaging services
+
 }
-
 
 func (core *rwCore) stop() {
 	// Stop leadership tracking
@@ -109,7 +84,7 @@ func (core *rwCore) stop() {
 	if core.kvClient != nil {
 		// Release all reservations
 		if err := core.kvClient.ReleaseAllReservations(); err != nil {
-			log.Infow("fail-to-release-all-reservations", log.Fields{"error":err})
+			log.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
 		}
 		// Close the DB connection
 		core.kvClient.Close()
@@ -133,16 +108,26 @@ func waitForExit() int {
 			syscall.SIGINT,
 			syscall.SIGTERM,
 			syscall.SIGQUIT:
-			log.Infow("closing-signal-received", log.Fields{"signal":s})
+			log.Infow("closing-signal-received", log.Fields{"signal": s})
 			exitChannel <- 0
 		default:
-			log.Infow("unexpected-signal-received", log.Fields{"signal":s})
+			log.Infow("unexpected-signal-received", log.Fields{"signal": s})
 			exitChannel <- 1
 		}
 	}()
 
 	code := <-exitChannel
 	return code
+}
+
+func printBanner() {
+	fmt.Println("                                            ")
+	fmt.Println(" ______        ______                       ")
+	fmt.Println("|  _ \\ \\      / / ___|___  _ __ ___       ")
+	fmt.Println("| |_) \\ \\ /\\ / / |   / _ \\| '__/ _ \\   ")
+	fmt.Println("|  _ < \\ V  V /| |__| (_) | | |  __/       ")
+	fmt.Println("|_| \\_\\ \\_/\\_/  \\____\\___/|_|  \\___| ")
+	fmt.Println("                                            ")
 }
 
 func main() {
@@ -152,22 +137,30 @@ func main() {
 	cf.ParseCommandArguments()
 
 	// Setup logging
-	if _, err := log.SetLogger(log.JSON, log.DebugLevel, log.Fields{"instanceId":cf.InstanceID}); err != nil {
+	if _, err := log.SetLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	defer log.CleanUp()
 
-	log.Infow("rw-core-config", log.Fields{"config":*cf})
+	// Print banner if specified
+	if cf.Banner {
+		printBanner()
+	}
+
+	log.Infow("rw-core-config", log.Fields{"config": *cf})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	core := newRWCore(cf)
-	go core.start()
+	go core.start(ctx)
 
 	code := waitForExit()
-	log.Infow("received-a-closing-signal", log.Fields{"code":code})
+	log.Infow("received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
 	core.stop()
 
 	elapsed := time.Since(start)
-	log.Infow("rw-core-run-time", log.Fields{"core":core.config.InstanceID, "time":elapsed/time.Second})
+	log.Infow("rw-core-run-time", log.Fields{"core": core.config.InstanceID, "time": elapsed / time.Second})
 }

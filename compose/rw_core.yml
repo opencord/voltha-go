@@ -4,9 +4,10 @@ services:
     image: voltha-rw-core
     entrypoint:
         - /app/rw_core
-        - -kv-store-type=etcd
-        - -kv-store-host=${DOCKER_HOST_IP}
-        - -kv-store-port=2379
+        - -kv_store_type=etcd
+        - -kv_store_host=${DOCKER_HOST_IP}
+        - -kv_store_port=2379
+        - -banner=true
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     networks:

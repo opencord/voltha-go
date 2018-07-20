@@ -4,11 +4,11 @@ import (
 	//log "../common"
 	"context"
 	"errors"
-	"sync"
-	log "github.com/opencord/voltha-go/common/log"
 	"fmt"
 	v3Client "github.com/coreos/etcd/clientv3"
 	v3rpcTypes "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+	log "github.com/opencord/voltha-go/common/log"
+	"sync"
 )
 
 // EtcdClient represents the Etcd KV store client
@@ -98,13 +98,13 @@ func (c *EtcdClient) Put(key string, value interface{}, timeout int) error {
 	if err != nil {
 		switch err {
 		case context.Canceled:
-			log.Warnw("context-cancelled", log.Fields{"error":err})
+			log.Warnw("context-cancelled", log.Fields{"error": err})
 		case context.DeadlineExceeded:
-			log.Warnw("context-deadline-exceeded", log.Fields{"error":err})
+			log.Warnw("context-deadline-exceeded", log.Fields{"error": err})
 		case v3rpcTypes.ErrEmptyKey:
-			log.Warnw("etcd-client-error", log.Fields{"error":err})
+			log.Warnw("etcd-client-error", log.Fields{"error": err})
 		default:
-			log.Warnw("bad-endpoints", log.Fields{"error":err})
+			log.Warnw("bad-endpoints", log.Fields{"error": err})
 		}
 		return err
 	}
@@ -142,7 +142,7 @@ func (c *EtcdClient) Delete(key string, timeout int) error {
 		return nil
 	}
 
-	log.Debugw("delete-keys", log.Fields{"all-keys-deleted":int64(len(gresp.Kvs)) == dresp.Deleted})
+	log.Debugw("delete-keys", log.Fields{"all-keys-deleted": int64(len(gresp.Kvs)) == dresp.Deleted})
 	if int64(len(gresp.Kvs)) == dresp.Deleted {
 		log.Debug("All-keys-deleted")
 	} else {
@@ -236,7 +236,7 @@ func (c *EtcdClient) ReleaseAllReservations() error {
 	for key, leaseID := range c.keyReservations {
 		_, err := c.ectdAPI.Revoke(context.Background(), *leaseID)
 		if err != nil {
-			log.Errorw("cannot-release-reservation", log.Fields{"key":key, "error":err})
+			log.Errorw("cannot-release-reservation", log.Fields{"key": key, "error": err})
 			return err
 		}
 		delete(c.keyReservations, key)
@@ -280,7 +280,7 @@ func (c *EtcdClient) RenewReservation(key string) error {
 	if leaseID != nil {
 		_, err := c.ectdAPI.KeepAliveOnce(context.Background(), *leaseID)
 		if err != nil {
-			log.Errorw("lease-may-have-expired", log.Fields{"error":err})
+			log.Errorw("lease-may-have-expired", log.Fields{"error": err})
 			return err
 		}
 	} else {
@@ -305,7 +305,7 @@ func (c *EtcdClient) Watch(key string) chan *Event {
 	//defer c.writeLock.Unlock()
 	c.watchedChannels[key] = append(c.watchedChannels[key], channelMap)
 
-	log.Debugw("watched-channels", log.Fields{"channels":c.watchedChannels[key]})
+	log.Debugw("watched-channels", log.Fields{"channels": c.watchedChannels[key]})
 	// Launch a go routine to listen for updates
 	go c.listenForKeyChange(channel, ch)
 
@@ -323,7 +323,7 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 	defer c.writeLock.Unlock()
 
 	if watchedChannels, ok = c.watchedChannels[key]; !ok {
-		log.Warnw("key-has-no-watched-channels", log.Fields{"key":key})
+		log.Warnw("key-has-no-watched-channels", log.Fields{"key": key})
 		return
 	}
 	// Look for the channels
@@ -333,7 +333,7 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 			log.Debug("channel-found")
 			// Close the etcd watcher before the client channel.  This should close the etcd channel as well
 			if err := t.Close(); err != nil {
-				log.Errorw("watcher-cannot-be-closed", log.Fields{"key":key, "error":err})
+				log.Errorw("watcher-cannot-be-closed", log.Fields{"key": key, "error": err})
 			}
 			close(ch)
 			pos = i
@@ -344,11 +344,11 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 	if pos >= 0 {
 		c.watchedChannels[key] = append(c.watchedChannels[key][:pos], c.watchedChannels[key][pos+1:]...)
 	}
-	log.Infow("watcher-channel-exiting", log.Fields{"key":key, "channel":c.watchedChannels[key]})
+	log.Infow("watcher-channel-exiting", log.Fields{"key": key, "channel": c.watchedChannels[key]})
 }
 
 func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *Event) {
-	log.Infow("start-listening-on-channel", log.Fields{"channel":ch})
+	log.Infow("start-listening-on-channel", log.Fields{"channel": ch})
 	for resp := range channel {
 		for _, ev := range resp.Events {
 			//log.Debugf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
@@ -373,6 +373,6 @@ func (c *EtcdClient) Close() {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	if err := c.ectdAPI.Close(); err != nil {
-		log.Errorw("error-closing-client", log.Fields{"error":err})
+		log.Errorw("error-closing-client", log.Fields{"error": err})
 	}
 }

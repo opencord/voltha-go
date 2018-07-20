@@ -1,9 +1,9 @@
 package kvstore
 
 import (
-	"time"
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
 )
 
 func TestDurationWithNegativeTimeout(t *testing.T) {

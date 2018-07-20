@@ -2,11 +2,11 @@ package log
 
 import (
 	"errors"
+	"fmt"
 	zp "go.uber.org/zap"
 	zc "go.uber.org/zap/zapcore"
 	"runtime"
 	"strings"
-	"fmt"
 )
 
 const (
@@ -26,6 +26,7 @@ const (
 
 // CONSOLE formats the log for the console, mostly used during development
 const CONSOLE = "console"
+
 // JSON formats the log using json format, mostly used by an automated logging system consumption
 const JSON = "json"
 
