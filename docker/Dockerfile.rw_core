@@ -1,0 +1,31 @@
+# -------------
+# Build stage
+
+FROM golang:alpine AS build-env
+
+# Install required packages
+RUN apk add --no-cache wget git make build-base
+
+# Prepare directory structure
+RUN ["mkdir", "-p", "/src"]
+RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
+
+# Copy files
+ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
+ADD common $GOPATH/src/github.com/opencord/voltha-go/common
+ADD db $GOPATH/src/github.com/opencord/voltha-go/db
+
+# Build rw_core
+RUN cd $GOPATH/src/github.com/opencord/voltha-go/rw_core && go get -d ./... && go build -o /src/rw_core
+
+# -------------
+# Image creation stage
+
+FROM alpine:3.6
+
+# Set the working directory
+WORKDIR /app
+
+# Copy required files
+COPY --from=build-env /src/rw_core /app/
+

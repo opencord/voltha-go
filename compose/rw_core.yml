@@ -1,0 +1,17 @@
+version: '2'
+services:
+  rw_core:
+    image: voltha-rw-core
+    entrypoint:
+        - /app/rw_core
+        - -kv-store-type=etcd
+        - -kv-store-host=${DOCKER_HOST_IP}
+        - -kv-store-port=2379
+    volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock"
+    networks:
+    - default
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,40 @@
+# PyCharm
+.idea
+exportToHTML
+
+# Emacs
+*~
+.#*
+
+# Vagrant
+.vagrant
+*.box
+
+# Ansible
+ansible/*.retry
+
+# Any vi swap files
+*.swp
+
+# Protobuf output files
+**/*_pb2.py
+**/*_pb2_grpc.py
+
+# Editors
+*.bak
+*.project
+*.pydevproject
+
+# Docker
+.docker-base-built
+
+# Mac stuff
+.DS_Store
+**/.DS_Store
+
+# Generated docs
+**/*.pdf
+
+# Vagrant logfile
+*.log
+
