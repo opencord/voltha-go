@@ -4,16 +4,30 @@
 FROM golang:alpine AS build-env
 
 # Install required packages
-RUN apk add --no-cache wget git make build-base
+RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
 
 # Prepare directory structure
-RUN ["mkdir", "-p", "/src"]
+RUN ["mkdir", "-p", "/src", "src/protos"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
+RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
 
 # Copy files
 ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
 ADD common $GOPATH/src/github.com/opencord/voltha-go/common
 ADD db $GOPATH/src/github.com/opencord/voltha-go/db
+ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
+
+# Copy required proto files
+# ... VOLTHA proos
+ADD protos/*.proto /src/protos/
+ADD protos/scripts/* /src/protos/
+
+# Install golang protobuf
+RUN go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+RUN go get -u github.com/golang/protobuf/protoc-gen-go
+
+# Compile protobuf files
+RUN sh /src/protos/build_protos.sh /src/protos
 
 # Build rw_core
 RUN cd $GOPATH/src/github.com/opencord/voltha-go/rw_core && go get -d ./... && go build -o /src/rw_core

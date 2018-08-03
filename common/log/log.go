@@ -1,7 +1,6 @@
 package log
 
 import (
-	"errors"
 	"fmt"
 	zp "go.uber.org/zap"
 	zc "go.uber.org/zap/zapcore"
@@ -148,7 +147,9 @@ func CleanUp() error {
 // this method will return an error
 func GetLogger() (Logger, error) {
 	if defaultLogger == nil {
-		return nil, errors.New("Uninitialized-logger")
+		// Setup the logger with default values - debug level,
+		SetLogger(JSON, 0, Fields{"instanceId": "default-logger"})
+		//return nil, errors.New("Uninitialized-logger")
 	}
 	return defaultLogger, nil
 }

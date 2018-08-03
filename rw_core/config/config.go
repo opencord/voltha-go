@@ -24,7 +24,7 @@ const (
 	default_KVStoreTimeout   = 5 //in seconds
 	default_KVStoreHost      = "10.100.198.240"
 	default_KVStorePort      = 8500 // Etcd = 2379
-	default_LogLevel         = 1
+	default_LogLevel         = 0
 	default_Banner           = false
 	default_CoreTopic        = "rwcore"
 	default_RWCoreEndpoint   = "rwcore"
