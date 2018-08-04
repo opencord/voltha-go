@@ -110,12 +110,14 @@ func getDefaultConfig(outputType string, level int, defaultFields Fields) zp.Con
 	}
 }
 
+var cfg zp.Config
+
 // SetLogger needs to be invoked before the logger API can be invoked.  This function
 // initialize the default logger (zap's sugaredlogger)
 func SetLogger(outputType string, level int, defaultFields Fields) (Logger, error) {
 
 	// Build a custom config using zap
-	cfg := getDefaultConfig(outputType, level, defaultFields)
+	cfg = getDefaultConfig(outputType, level, defaultFields)
 
 	l, err := cfg.Build()
 	if err != nil {
@@ -128,6 +130,25 @@ func SetLogger(outputType string, level int, defaultFields Fields) (Logger, erro
 	}
 
 	return defaultLogger, nil
+}
+
+func SetLoglevel(level int) {
+	switch level {
+	case DebugLevel:
+		cfg.Level.SetLevel(zc.DebugLevel)
+	case InfoLevel:
+		cfg.Level.SetLevel(zc.InfoLevel)
+	case WarnLevel:
+		cfg.Level.SetLevel(zc.WarnLevel)
+	case ErrorLevel:
+		cfg.Level.SetLevel(zc.ErrorLevel)
+	case PanicLevel:
+		cfg.Level.SetLevel(zc.PanicLevel)
+	case FatalLevel:
+		cfg.Level.SetLevel(zc.FatalLevel)
+	default:
+		cfg.Level.SetLevel(zc.ErrorLevel)
+	}
 }
 
 // CleanUp flushed any buffered log entries. Applications should take care to call

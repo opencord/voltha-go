@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	kk "github.com/opencord/voltha-go/kafka"
 	ca "github.com/opencord/voltha-go/protos/core_adapter"
@@ -10,8 +11,6 @@ import (
 	rhp "github.com/opencord/voltha-go/rw_core/core"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	//"time"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -19,7 +18,7 @@ var coreKafkaProxy *kk.KafkaMessagingProxy
 var adapterKafkaProxy *kk.KafkaMessagingProxy
 
 func init() {
-	if _, err := log.SetLogger(log.JSON, 1, log.Fields{"instanceId": "testing"}); err != nil {
+	if _, err := log.SetLogger(log.JSON, 3, log.Fields{"instanceId": "testing"}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	coreKafkaProxy, _ = kk.NewKafkaMessagingProxy(
@@ -80,6 +79,7 @@ func TestSubscribeUnsubscribe(t *testing.T) {
 
 func TestMultipleSubscribeUnsubscribe(t *testing.T) {
 	// First subscribe to the specific topic
+	log.SetLoglevel(0)
 	var err error
 	var ch1 <-chan *ca.InterContainerMessage
 	var ch2 <-chan *ca.InterContainerMessage
@@ -118,6 +118,7 @@ func TestMultipleSubscribeUnsubscribe(t *testing.T) {
 }
 
 func TestIncorrectAPI(t *testing.T) {
+	log.SetLoglevel(3)
 	trnsId := uuid.New().String()
 	protoMsg := &voltha.Device{Id: trnsId}
 	args := make([]*kk.KVArg, 1)
