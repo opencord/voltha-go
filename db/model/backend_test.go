@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Open Networking Foundation
+
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ * http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package model
 
 import (
@@ -11,8 +26,8 @@ const (
 	CONSUL_KV  = "consul"
 	INVALID_KV = "invalid"
 
-	etcd_host   = "10.104.149.247"
-	etcd_port   = 2379
+	etcd_host = "10.104.149.247"
+	etcd_port = 2379
 
 	/*
 		To debug locally with the remote ETCD container

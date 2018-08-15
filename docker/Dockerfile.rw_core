@@ -10,6 +10,8 @@ RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
 RUN ["mkdir", "-p", "/src", "src/protos"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
 RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
+#RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
+
 
 # Copy files
 ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
@@ -30,7 +32,7 @@ RUN go get -u github.com/golang/protobuf/protoc-gen-go
 RUN sh /src/protos/build_protos.sh /src/protos
 
 # Build rw_core
-RUN cd $GOPATH/src/github.com/opencord/voltha-go/rw_core && go get -d ./... && go build -o /src/rw_core
+RUN cd $GOPATH/src/github.com/opencord/voltha-go/rw_core && go get -d ./... && rm -rf $GOPATH/src/github.com/coreos/etcd/vendor/golang.org/x/net/trace && go build -o /src/rw_core
 
 # -------------
 # Image creation stage

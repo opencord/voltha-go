@@ -70,8 +70,12 @@ message AlarmFilters {
     repeated AlarmFilter filters = 1;
 }
 
+message Logging {
+    LogLevel.LogLevel level = 1;
+}
+
 // Top-level (root) node for a Voltha Instance
-message VolthaInstance {
+message CoreInstance {
     option (yang_message_rule) = CREATE_BOTH_GROUPING_AND_CONTAINER;
 
     string instance_id = 1  [(access) = READ_ONLY];
@@ -82,24 +86,16 @@ message VolthaInstance {
 
     HealthStatus health = 10 [(child_node) = {}];
 
-    repeated Adapter adapters = 11 [(child_node) = {key: "id" }];
-
     repeated LogicalDevice logical_devices = 12 [(child_node) = {key: "id"}];
 
     repeated Device devices = 13 [(child_node) = {key: "id"}];
 
-    repeated DeviceType device_types = 14 [(child_node) = {key: "id"}];
-
     repeated DeviceGroup device_groups = 15 [(child_node) = {key: "id"}];
 
     repeated AlarmFilter alarm_filters = 16 [(child_node) = {key: "id"}];
-
-    repeated
-        omci.MibDeviceData omci_mibs = 28
-        [(child_node) = {key: "device_id"}];
 }
 
-message VolthaInstances {
+message CoreInstances {
     option (yang_message_rule) = CREATE_BOTH_GROUPING_AND_CONTAINER;
     repeated string items = 1;
 }
@@ -112,7 +108,7 @@ message Voltha {
 
     LogLevel.LogLevel log_level = 2;
 
-    repeated VolthaInstance instances = 3 [(child_node) = {key: "instance_id"}];
+    repeated CoreInstance core_instances = 3 [(child_node) = {key: "instance_id"}];
 
     repeated Adapter adapters = 11 [(child_node) = {key: "id"}];
 
@@ -121,6 +117,8 @@ message Voltha {
     repeated Device devices = 13 [(child_node) = {key: "id"}];
 
     repeated DeviceGroup device_groups = 15 [(child_node) = {key: "id"}];
+
+    repeated AlarmFilter alarm_filters = 16 [(child_node) = {key: "id"}];
 
     repeated
         omci.MibDeviceData omci_mib_database = 28
@@ -154,6 +152,13 @@ message OfAgentSubscriber {
  */
 service VolthaService {
 
+    // Get more information on a given physical device
+    rpc UpdateLogLevel(Logging) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            get: "/api/v1/devices/{id}"
+        };
+    }
+
     // Get high level information on the Voltha cluster
     rpc GetVoltha(google.protobuf.Empty) returns(Voltha) {
         option (google.api.http) = {
@@ -161,8 +166,8 @@ service VolthaService {
         };
     }
 
-    // List all Voltha cluster instances
-    rpc ListVolthaInstances(google.protobuf.Empty) returns(VolthaInstances) {
+    // List all Voltha cluster core instances
+    rpc ListCoreInstances(google.protobuf.Empty) returns(CoreInstances) {
         option (google.api.http) = {
             get: "/api/v1/instances"
         };
@@ -171,7 +176,7 @@ service VolthaService {
     }
 
     // Get details on a Voltha cluster instance
-    rpc GetVolthaInstance(ID) returns(VolthaInstance) {
+    rpc GetCoreInstance(ID) returns(CoreInstance) {
         option (google.api.http) = {
             get: "/api/v1/instances/{id}"
         };

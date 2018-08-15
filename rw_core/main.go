@@ -1,14 +1,33 @@
+/*
+ * Copyright 2018-present Open Networking Foundation
+
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ * http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package main
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/kafka"
 	ca "github.com/opencord/voltha-go/protos/core_adapter"
+	"github.com/opencord/voltha-go/protos/voltha"
 	"github.com/opencord/voltha-go/rw_core/config"
+	grpcapi "github.com/opencord/voltha-go/rw_core/nbi/grpc"
+	"google.golang.org/grpc"
 	"os"
 	"os/signal"
 	"strconv"
@@ -22,6 +41,7 @@ type rwCore struct {
 	halted      bool
 	exitChannel chan int
 	kmp         *kafka.KafkaMessagingProxy
+	grpcServer  *grpcserver.GrpcServer
 	//For test
 	receiverChannels []<-chan *ca.InterContainerMessage
 }
@@ -69,10 +89,32 @@ func toString(value interface{}) (string, error) {
 	}
 }
 
+func (core *rwCore) startGRPCService(context.Context) {
+	//	create an insecure gserver server
+	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false)
+	log.Info("server created")
+	//
+	//	Create a function to register the core GRPC service with the GRPC server
+	f := func(gs *grpc.Server) {
+		voltha.RegisterVolthaServiceServer(
+			gs,
+			grpcapi.NewAPIHandler(),
+		)
+	}
+
+	core.grpcServer.AddService(f)
+	log.Info("service add")
+
+	//	Start the server
+	core.grpcServer.Start(context.Background())
+	log.Info("server started")
+}
+
 
 func (core *rwCore) start(ctx context.Context) {
 	log.Info("Starting RW Core components")
 	// Setup GRPC Server
+	go core.startGRPCService(ctx)
 
 	// Setup KV Client
 

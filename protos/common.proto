@@ -11,6 +11,10 @@ message ID {
     string id = 1;
 }
 
+enum TestModeKeys {
+    api_test=0;
+}
+
 message LogLevel {
     option (yang_child_rule) = MOVE_TO_PARENT_LEVEL;
 
@@ -21,6 +25,7 @@ message LogLevel {
         WARNING = 2;
         ERROR = 3;
         CRITICAL = 4;
+        FATAL = 5;
     }
 }
 

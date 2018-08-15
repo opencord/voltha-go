@@ -7,7 +7,11 @@ services:
         - -kv_store_type=etcd
         - -kv_store_host=${DOCKER_HOST_IP}
         - -kv_store_port=2379
+        - -grpc_host=${DOCKER_HOST_IP}
+        - -grpc_port=50057
         - -banner=true
+    ports:
+      - "50057:50057"
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     networks:

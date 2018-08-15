@@ -1,18 +1,33 @@
+/*
+ * Copyright 2018-present Open Networking Foundation
+
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ * http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package core
 
 import (
+	"errors"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/opencord/voltha-go/common/log"
 	ca "github.com/opencord/voltha-go/protos/core_adapter"
 	"github.com/opencord/voltha-go/protos/voltha"
-	"github.com/golang/protobuf/ptypes"
-	"errors"
 )
 
 type RequestHandlerProxy struct {
 	TestMode bool
 }
 
-func (rhp *RequestHandlerProxy) GetDevice(args []*ca.Argument)(error, *voltha.Device) {
+func (rhp *RequestHandlerProxy) GetDevice(args []*ca.Argument) (error, *voltha.Device) {
 	if len(args) != 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -32,8 +47,7 @@ func (rhp *RequestHandlerProxy) GetDevice(args []*ca.Argument)(error, *voltha.De
 	return nil, nil
 }
 
-
-func (rhp *RequestHandlerProxy) GetChildDevice(args []*ca.Argument)(error, *voltha.Device) {
+func (rhp *RequestHandlerProxy) GetChildDevice(args []*ca.Argument) (error, *voltha.Device) {
 	if len(args) < 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -53,7 +67,7 @@ func (rhp *RequestHandlerProxy) GetChildDevice(args []*ca.Argument)(error, *volt
 	return nil, nil
 }
 
-func (rhp *RequestHandlerProxy) GetPorts(args []*ca.Argument)(error, *voltha.Ports) {
+func (rhp *RequestHandlerProxy) GetPorts(args []*ca.Argument) (error, *voltha.Ports) {
 	if len(args) != 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -75,7 +89,7 @@ func (rhp *RequestHandlerProxy) GetPorts(args []*ca.Argument)(error, *voltha.Por
 	log.Debugw("GetPorts", log.Fields{"deviceID": pID.Val, "portype": pt.Val})
 
 	if rhp.TestMode { // Execute only for test cases
-		aPort := &voltha.Port{Label:"test_port"}
+		aPort := &voltha.Port{Label: "test_port"}
 		allPorts := &voltha.Ports{}
 		allPorts.Items = append(allPorts.Items, aPort)
 		return nil, allPorts
@@ -84,7 +98,7 @@ func (rhp *RequestHandlerProxy) GetPorts(args []*ca.Argument)(error, *voltha.Por
 
 }
 
-func (rhp *RequestHandlerProxy) GetChildDevices(args []*ca.Argument)(error, *voltha.Device) {
+func (rhp *RequestHandlerProxy) GetChildDevices(args []*ca.Argument) (error, *voltha.Device) {
 	if len(args) != 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -107,7 +121,7 @@ func (rhp *RequestHandlerProxy) GetChildDevices(args []*ca.Argument)(error, *vol
 // ChildDeviceDetected is invoked when a child device is detected.  The following
 // parameters are expected:
 // {parent_device_id, parent_port_no, child_device_type, proxy_address, admin_state, **kw)
-func (rhp *RequestHandlerProxy) ChildDeviceDetected(args []*ca.Argument) (error) {
+func (rhp *RequestHandlerProxy) ChildDeviceDetected(args []*ca.Argument) error {
 	if len(args) < 5 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -142,13 +156,11 @@ func (rhp *RequestHandlerProxy) ChildDeviceDetected(args []*ca.Argument) (error)
 
 	// Need to decode the other params - in this case the key will represent the proto type
 	// TODO decompose the other parameteres for matching criteria and process
-	log.Debugw("ChildDeviceDetected", log.Fields{"deviceId": pID.Val, "portNo":portNo.Val,
-	"deviceType": dt.Val, "proxyAddress": pAddr, "adminState": adminState})
+	log.Debugw("ChildDeviceDetected", log.Fields{"deviceId": pID.Val, "portNo": portNo.Val,
+		"deviceType": dt.Val, "proxyAddress": pAddr, "adminState": adminState})
 
 	if rhp.TestMode { // Execute only for test cases
 		return nil
 	}
 	return nil
 }
-
-
