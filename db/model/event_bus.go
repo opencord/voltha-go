@@ -18,7 +18,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/opencord/voltha/protos/go/voltha"
+	"github.com/opencord/voltha-go/protos/voltha"
 )
 
 type EventBus struct {

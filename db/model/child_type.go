@@ -20,7 +20,7 @@ import (
 	desc "github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/opencord/voltha/protos/go/common"
+	"github.com/opencord/voltha-go/protos/common"
 	"reflect"
 	"strconv"
 	"sync"
@@ -61,7 +61,9 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 
 	msgType := reflect.TypeOf(cls)
 
-	if names, names_exist = GetInstance().ChildrenFieldsCache[msgType.String()]; !names_exist {
+	inst := GetInstance()
+
+	if names, names_exist = inst.ChildrenFieldsCache[msgType.String()]; !names_exist {
 		names = make(map[string]*ChildType)
 
 		_, md := desc.ForMessage(cls.(desc.Message))
@@ -75,7 +77,7 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 					var keyFromStr func(string) interface{}
 
 					if meta.(*common.ChildNode).GetKey() == "" {
-						fmt.Println("Child key is empty ... moving on")
+						//fmt.Println("Child key is empty ... moving on")
 					} else {
 						parentType := FindOwnerType(reflect.ValueOf(cls), field.GetName(), 0, false)
 						keyType := FindKeyOwner(reflect.New(parentType).Elem().Interface(), meta.(*common.ChildNode).GetKey(), 0)

@@ -18,7 +18,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/opencord/voltha/protos/go/voltha"
+	"github.com/opencord/voltha-go/protos/voltha"
 	"testing"
 	"time"
 )
@@ -44,11 +44,11 @@ func Test_NewRoot(t *testing.T) {
 
 	r := root.Load(msgClass)
 	afterLoad := time.Now()
-	fmt.Printf(">>>>>>>>>>>>> Time to load : %f\n", afterLoad.Sub(start).Seconds())
+	fmt.Printf(">>>>>>>>>>>>> Time to Load : %f\n", afterLoad.Sub(start).Seconds())
 
 	d := r.Node.Get(deviceProxy, "", 0, false, "")
 	afterGet := time.Now()
-	fmt.Printf(">>>>>>>>>>>>> Time to load and get: %f\n", afterGet.Sub(start).Seconds())
+	fmt.Printf(">>>>>>>>>>>>> Time to Load and get: %f\n", afterGet.Sub(start).Seconds())
 
 	jr, _ := json.Marshal(r)
 	fmt.Printf("Content of ROOT --> \n%s\n", jr)

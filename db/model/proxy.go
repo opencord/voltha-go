@@ -21,6 +21,28 @@ import (
 	"strings"
 )
 
+type OperationContext struct {
+	Path      string
+	Data      interface{}
+	FieldName string
+	ChildKey  string
+}
+
+func NewOperationContext(path string, data interface{}, fieldName string, childKey string) *OperationContext {
+	oc := &OperationContext{
+		Path:      path,
+		Data:      data,
+		FieldName: fieldName,
+		ChildKey:  childKey,
+	}
+	return oc
+}
+
+func (oc *OperationContext) Update(data interface{}) *OperationContext {
+	oc.Data = data
+	return oc
+}
+
 type Proxy struct {
 	Root      *Root
 	Node      *Node
@@ -87,16 +109,16 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 }
 
 func (p *Proxy) openTransaction() *Transaction {
-	txid := p.Root.makeTxBranch()
+	txid := p.Root.MakeTxBranch()
 	return NewTransaction(p, txid)
 }
 
 func (p *Proxy) commitTransaction(txid string) {
-	p.Root.foldTxBranch(txid)
+	p.Root.FoldTxBranch(txid)
 }
 
 func (p *Proxy) cancelTransaction(txid string) {
-	p.Root.deleteTxBranch(txid)
+	p.Root.DeleteTxBranch(txid)
 }
 
 func (p *Proxy) RegisterCallback(callbackType CallbackType, callback func(), args ...interface{}) {

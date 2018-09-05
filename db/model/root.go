@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"reflect"
+	"time"
+	"github.com/opencord/voltha-go/common/log"
 )
 
 type Root struct {
@@ -29,8 +31,8 @@ type Root struct {
 	KvStore               *Backend
 	Loading               bool
 	RevisionClass         interface{}
-	Callbacks             []func() interface{}
-	NotificationCallbacks []func() interface{}
+	Callbacks             []func()
+	NotificationCallbacks []func()
 }
 
 func NewRoot(initialData interface{}, kvStore *Backend, revisionClass interface{}) *Root {
@@ -38,24 +40,27 @@ func NewRoot(initialData interface{}, kvStore *Backend, revisionClass interface{
 	root.KvStore = kvStore
 	root.DirtyNodes = make(map[string]*Node)
 	root.Loading = false
-	if kvStore != nil /*&& FIXME: RevisionClass is a subclass of PersistedConfigRevision */ {
+	if kvStore != nil /*&& TODO: RevisionClass is not a subclass of PersistedRevision ??? */ {
 		revisionClass = reflect.TypeOf(PersistedRevision{})
 	}
 	root.RevisionClass = revisionClass
-	root.Callbacks = []func() interface{}{}
-	root.NotificationCallbacks = []func() interface{}{}
+	root.Callbacks = []func(){}
+	root.NotificationCallbacks = []func(){}
 
 	root.Node = NewNode(root, initialData, false, "")
 
 	return root
 }
 
-func (r *Root) makeRevision(branch *Branch, data interface{}, children map[string][]*Revision) *Revision {
+func (r *Root) MakeRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
+	if r.RevisionClass.(reflect.Type) == reflect.TypeOf(PersistedRevision{}) {
+		return NewPersistedRevision(branch, data, children)
+	}
 
-	return &Revision{}
+	return NewNonPersistedRevision(branch, data, children)
 }
 
-func (r *Root) makeTxBranch() string {
+func (r *Root) MakeTxBranch() string {
 	txid_bin, _ := uuid.New().MarshalBinary()
 	txid := hex.EncodeToString(txid_bin)[:12]
 	r.DirtyNodes[txid] = r.Node
@@ -63,21 +68,20 @@ func (r *Root) makeTxBranch() string {
 	return txid
 }
 
-func (r *Root) deleteTxBranch(txid string) {
+func (r *Root) DeleteTxBranch(txid string) {
 	for _, dirtyNode := range r.DirtyNodes {
 		dirtyNode.deleteTxBranch(txid)
 	}
 	delete(r.DirtyNodes, txid)
 }
 
-func (r *Root) foldTxBranch(txid string) {
-	// TODO: implement foldTxBranch
-	// if err := r.Node.mergeTxBranch(txid, dryRun=true); err != nil {
-	//   r.deleteTxBranch(txid)
-	// } else {
-	//   r.Node.mergeTxBranch(txid)
-	//   r.executeCallbacks()
-	// }
+func (r *Root) FoldTxBranch(txid string) {
+	if err := r.Node.mergeTxBranch(txid, true); err != nil {
+		r.DeleteTxBranch(txid)
+	} else {
+		r.Node.mergeTxBranch(txid, false)
+		r.executeCallbacks()
+	}
 }
 
 func (r *Root) executeCallbacks() {
@@ -97,16 +101,15 @@ func (r *Root) noCallbacks() bool {
 	return len(r.Callbacks) == 0
 }
 
-func (r *Root) addCallback(callback func() interface{}) {
+func (r *Root) addCallback(callback func()) {
 	r.Callbacks = append(r.Callbacks, callback)
 }
-func (r *Root) addNotificationCallback(callback func() interface{}) {
+func (r *Root) addNotificationCallback(callback func()) {
 	r.NotificationCallbacks = append(r.NotificationCallbacks, callback)
 }
 
-func (r *Root) Update(path string, data interface{}, strict bool, txid string, makeBranch t_makeBranch) *Revision {
-	var result *Revision
-	// FIXME: the more i look at this... i think i need to implement an interface for Node & root
+func (r *Root) Update(path string, data interface{}, strict bool, txid string, makeBranch t_makeBranch) Revision {
+	var result Revision
 
 	if makeBranch == nil {
 		// TODO: raise error
@@ -133,9 +136,8 @@ func (r *Root) Update(path string, data interface{}, strict bool, txid string, m
 	return result
 }
 
-func (r *Root) Add(path string, data interface{}, txid string, makeBranch t_makeBranch) *Revision {
-	var result *Revision
-	// FIXME: the more i look at this... i think i need to implement an interface for Node & root
+func (r *Root) Add(path string, data interface{}, txid string, makeBranch t_makeBranch) Revision {
+	var result Revision
 
 	if makeBranch == nil {
 		// TODO: raise error
@@ -162,9 +164,8 @@ func (r *Root) Add(path string, data interface{}, txid string, makeBranch t_make
 	return result
 }
 
-func (r *Root) Remove(path string, txid string, makeBranch t_makeBranch) *Revision {
-	var result *Revision
-	// FIXME: the more i look at this... i think i need to implement an interface for Node & root
+func (r *Root) Remove(path string, txid string, makeBranch t_makeBranch) Revision {
+	var result Revision
 
 	if makeBranch == nil {
 		// TODO: raise error
@@ -199,13 +200,36 @@ func (r *Root) Load(rootClass interface{}) *Root {
 	return r
 }
 
+func (r *Root) MakeLatest(branch *Branch, revision Revision, changeAnnouncement map[CallbackType][]interface{}) {
+	r.Node.MakeLatest(branch, revision, changeAnnouncement)
+
+	if r.KvStore != nil && branch.Txid == "" {
+		tags := make(map[string]string)
+		for k, v := range r.Tags {
+			tags[k] = v.GetHash()
+		}
+		data := &rootData{
+			Latest: branch.Latest.GetHash(),
+			Tags:   tags,
+		}
+		if blob, err := json.Marshal(data); err != nil {
+			// TODO report error
+		} else {
+			log.Debugf("Changing root to : %s", string(blob))
+			if err := r.KvStore.Put("root", blob); err != nil {
+				log.Errorf("failed to properly put value in kvstore - err: %s", err.Error())
+			}
+		}
+	}
+}
+
 func (r *Root) LoadLatest(hash string) {
 	r.Node.LoadLatest(r.KvStore, hash)
 }
 
 type rootData struct {
-	Latest string            `json:GetLatest`
-	Tags   map[string]string `json:Tags`
+	Latest string `json:latest`
+	Tags   map[string]string `json:tags`
 }
 
 func (r *Root) loadFromPersistence(rootClass interface{}) {
@@ -214,10 +238,12 @@ func (r *Root) loadFromPersistence(rootClass interface{}) {
 	r.Loading = true
 	blob, _ := r.KvStore.Get("root")
 
+	start := time.Now()
 	if err := json.Unmarshal(blob.Value.([]byte), &data); err != nil {
 		fmt.Errorf("problem to unmarshal blob - error:%s\n", err.Error())
 	}
-
+	stop := time.Now()
+	GetProfiling().AddToInMemoryModelTime(stop.Sub(start).Seconds())
 	for tag, hash := range data.Tags {
 		r.Node.LoadLatest(r.KvStore, hash)
 		r.Node.Tags[tag] = r.Node.Latest()

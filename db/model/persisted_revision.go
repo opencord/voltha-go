@@ -23,23 +23,25 @@ import (
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"reflect"
+	"time"
 )
 
 type PersistedRevision struct {
-	*Revision
+	Revision
 	Compress bool
 	kvStore  *Backend
 }
 
-func NewPersistedRevision(branch *Branch, data interface{}, children map[string][]*Revision) *PersistedRevision {
+func NewPersistedRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
 	pr := &PersistedRevision{}
-	pr.kvStore = branch.node.root.KvStore
-	pr.Revision = NewRevision(branch, data, children)
+	pr.kvStore = branch.Node.root.KvStore
+	pr.Revision = NewNonPersistedRevision(branch, data, children)
+	pr.Finalize()
 	return pr
 }
 
-func (pr *PersistedRevision) finalize() {
-	pr.Revision.finalize()
+func (pr *PersistedRevision) Finalize() {
+	//pr.Revision.Finalize()
 	pr.store()
 }
 
@@ -49,23 +51,23 @@ type revData struct {
 }
 
 func (pr *PersistedRevision) store() {
-	if ok, _ := pr.kvStore.Get(pr.Revision.Hash); ok != nil {
+	if ok, _ := pr.kvStore.Get(pr.Revision.GetHash()); ok != nil {
 		return
 	}
 
 	pr.storeConfig()
 
 	childrenHashes := make(map[string][]string)
-	for fieldName, children := range pr.Children {
+	for fieldName, children := range pr.GetChildren() {
 		hashes := []string{}
 		for _, rev := range children {
-			hashes = append(hashes, rev.Hash)
+			hashes = append(hashes, rev.GetHash())
 		}
 		childrenHashes[fieldName] = hashes
 	}
 	data := &revData{
 		Children: childrenHashes,
-		Config:   pr.Config.Hash,
+		Config:   pr.GetConfig().Hash,
 	}
 	if blob, err := json.Marshal(data); err != nil {
 		// TODO report error
@@ -77,12 +79,14 @@ func (pr *PersistedRevision) store() {
 			w.Close()
 			blob = b.Bytes()
 		}
-		pr.kvStore.Put(pr.Hash, blob)
+		pr.kvStore.Put(pr.GetHash(), blob)
 	}
 }
 
-func (pr *PersistedRevision) load(branch *Branch, kvStore *Backend, msgClass interface{}, hash string) *PersistedRevision {
+func (pr *PersistedRevision) Load(branch *Branch, kvStore *Backend, msgClass interface{}, hash string) Revision {
 	blob, _ := kvStore.Get(hash)
+
+	start := time.Now()
 	output := blob.Value.([]byte)
 	var data revData
 	if pr.Compress {
@@ -99,32 +103,40 @@ func (pr *PersistedRevision) load(branch *Branch, kvStore *Backend, msgClass int
 		fmt.Errorf("problem to unmarshal data - %s", err.Error())
 	}
 
+	stop := time.Now()
+	GetProfiling().AddToInMemoryModelTime(stop.Sub(start).Seconds())
 	configHash := data.Config
 	configData := pr.loadConfig(kvStore, msgClass, configHash)
-	assembledChildren := make(map[string][]*Revision)
+
+	assembledChildren := make(map[string][]Revision)
 
 	childrenHashes := data.Children
-	node := branch.node
+	node := branch.Node
 	for fieldName, child := range ChildrenFields(msgClass) {
-		var children []*Revision
+		var children []Revision
 		for _, childHash := range childrenHashes[fieldName] {
-			//fmt.Printf("child class type: %+v", reflect.New(n).Elem().Interface())
-			childNode := node.makeNode(reflect.New(child.ClassType).Elem().Interface(), "")
+			childNode := node.MakeNode(reflect.New(child.ClassType).Elem().Interface(), "")
 			childNode.LoadLatest(kvStore, childHash)
 			childRev := childNode.Latest()
 			children = append(children, childRev)
 		}
 		assembledChildren[fieldName] = children
 	}
+
 	rev := NewPersistedRevision(branch, configData, assembledChildren)
 	return rev
 }
 
+func (pr *PersistedRevision) assignValue(a, b Revision) Revision {
+	a = b
+	return a
+}
+
 func (pr *PersistedRevision) storeConfig() {
-	if ok, _ := pr.kvStore.Get(pr.Config.Hash); ok != nil {
+	if ok, _ := pr.kvStore.Get(pr.GetConfig().Hash); ok != nil {
 		return
 	}
-	if blob, err := proto.Marshal(pr.Config.Data.(proto.Message)); err != nil {
+	if blob, err := proto.Marshal(pr.GetConfig().Data.(proto.Message)); err != nil {
 		// TODO report error
 	} else {
 		if pr.Compress {
@@ -134,12 +146,13 @@ func (pr *PersistedRevision) storeConfig() {
 			w.Close()
 			blob = b.Bytes()
 		}
-		pr.kvStore.Put(pr.Config.Hash, blob)
+		pr.kvStore.Put(pr.GetConfig().Hash, blob)
 	}
 }
 
 func (pr *PersistedRevision) loadConfig(kvStore *Backend, msgClass interface{}, hash string) interface{} {
 	blob, _ := kvStore.Get(hash)
+	start := time.Now()
 	output := blob.Value.([]byte)
 
 	if pr.Compress {
@@ -161,5 +174,50 @@ func (pr *PersistedRevision) loadConfig(kvStore *Backend, msgClass interface{}, 
 		}
 	}
 
+	stop := time.Now()
+
+	GetProfiling().AddToInMemoryModelTime(stop.Sub(start).Seconds())
 	return data.Interface()
+}
+
+func (pr *PersistedRevision) UpdateData(data interface{}, branch *Branch) Revision {
+	newNPR := pr.Revision.UpdateData(data, branch)
+
+	newPR := &PersistedRevision{
+		Revision: newNPR,
+		Compress: pr.Compress,
+		kvStore: pr.kvStore,
+	}
+
+	newPR.Finalize()
+
+	return newPR
+}
+
+func (pr *PersistedRevision) UpdateChildren(name string, children []Revision, branch *Branch) Revision {
+	newNPR := pr.Revision.UpdateChildren(name, children, branch)
+
+	newPR := &PersistedRevision{
+		Revision: newNPR,
+		Compress: pr.Compress,
+		kvStore: pr.kvStore,
+	}
+
+	newPR.Finalize()
+
+	return newPR
+}
+
+func (pr *PersistedRevision) UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision {
+	newNPR := pr.Revision.UpdateAllChildren(children, branch)
+
+	newPR := &PersistedRevision{
+		Revision: newNPR,
+		Compress: pr.Compress,
+		kvStore: pr.kvStore,
+	}
+
+	newPR.Finalize()
+
+	return newPR
 }

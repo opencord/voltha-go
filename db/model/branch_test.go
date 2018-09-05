@@ -29,31 +29,31 @@ var (
 func Test_ConfigBranch_New(t *testing.T) {
 	node := &Node{}
 	hash := fmt.Sprintf("%x", md5.Sum([]byte("origin_hash")))
-	origin := &Revision{
+	origin := &NonPersistedRevision{
 		Config:   &DataRevision{},
-		Children: make(map[string][]*Revision),
+		Children: make(map[string][]Revision),
 		Hash:     hash,
-		branch:   &Branch{},
+		Branch:   &Branch{},
 		WeakRef:  "need to fix this",
 	}
 	txid := fmt.Sprintf("%x", md5.Sum([]byte("branch_transaction_id")))
 
 	BRANCH = NewBranch(node, txid, origin, true)
 
-	t.Logf("New branch created: %+v\n", BRANCH)
+	t.Logf("New Branch created: %+v\n", BRANCH)
 }
 
 func Test_ConfigBranch_AddRevision(t *testing.T) {
 	HASH = fmt.Sprintf("%x", md5.Sum([]byte("revision_hash")))
-	rev := &Revision{
+	rev := &NonPersistedRevision{
 		Config:   &DataRevision{},
-		Children: make(map[string][]*Revision),
+		Children: make(map[string][]Revision),
 		Hash:     HASH,
-		branch:   &Branch{},
+		Branch:   &Branch{},
 		WeakRef:  "need to fix this",
 	}
 
-	BRANCH.revisions[HASH] = rev
+	BRANCH.Revisions[HASH] = rev
 	t.Logf("Added revision: %+v\n", rev)
 }
 
@@ -66,6 +66,6 @@ func Test_ConfigBranch_LatestRevision(t *testing.T) {
 	t.Logf("Got GetLatest revision:%+v\n", rev)
 }
 func Test_ConfigBranch_OriginRevision(t *testing.T) {
-	rev := BRANCH.origin
-	t.Logf("Got origin revision:%+v\n", rev)
+	rev := BRANCH.Origin
+	t.Logf("Got Origin revision:%+v\n", rev)
 }

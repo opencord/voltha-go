@@ -19,31 +19,31 @@ package model
 // TODO: missing proper logging
 
 type Branch struct {
-	node      *Node
+	Node      *Node
 	Txid      string
-	origin    *Revision
-	revisions map[string]*Revision
-	Latest    *Revision
+	Origin    Revision
+	Revisions map[string]Revision
+	Latest    Revision
 }
 
-func NewBranch(node *Node, txid string, origin *Revision, autoPrune bool) *Branch {
+func NewBranch(node *Node, txid string, origin Revision, autoPrune bool) *Branch {
 	cb := &Branch{}
-	cb.node = node
+	cb.Node = node
 	cb.Txid = txid
-	cb.origin = origin
-	cb.revisions = make(map[string]*Revision)
+	cb.Origin = origin
+	cb.Revisions = make(map[string]Revision)
 	cb.Latest = origin
 
 	return cb
 }
 
 // TODO: Check if the following are required
-func (cb *Branch) get(hash string) *Revision {
-	return cb.revisions[hash]
+func (cb *Branch) get(hash string) Revision {
+	return cb.Revisions[hash]
 }
-func (cb *Branch) GetLatest() *Revision {
+func (cb *Branch) GetLatest() Revision {
 	return cb.Latest
 }
-func (cb *Branch) GetOrigin() *Revision {
-	return cb.origin
+func (cb *Branch) GetOrigin() Revision {
+	return cb.Origin
 }

@@ -129,22 +129,24 @@ func FindKeyOwner(iface interface{}, name string, depth int) interface{} {
 // FIXME: Need to figure out if GetAttributeValue and GetAttributeStructure can become one
 // Code is repeated in both, but outputs have a different purpose
 // Left as-is for now to get things working
-func GetAttributeValue(data interface{}, name string, depth int) reflect.Value {
-	var result reflect.Value
+func GetAttributeValue(data interface{}, name string, depth int) (string, reflect.Value) {
+	var attribName string
+	var attribValue reflect.Value
 	obj := reflect.ValueOf(data)
 
 	if !obj.IsValid() {
-		return result
+		return attribName, attribValue
 	}
 
 	k := obj.Kind()
 	switch k {
 	case reflect.Ptr:
-		t := obj.Type().Elem()
-		n := reflect.New(t)
+		if obj.IsNil() {
+			return attribName, attribValue
+		}
 
-		if rc := GetAttributeValue(n.Elem().Interface(), name, depth+1); rc.IsValid() {
-			return rc
+		if attribName, attribValue = GetAttributeValue(obj.Elem().Interface(), name, depth+1); attribValue.IsValid() {
+			return attribName, attribValue
 		}
 
 	case reflect.Struct:
@@ -152,12 +154,12 @@ func GetAttributeValue(data interface{}, name string, depth int) reflect.Value {
 			json := strings.Split(obj.Type().Field(i).Tag.Get("json"), ",")
 
 			if json[0] == name {
-				return obj.Field(i)
+				return obj.Type().Field(i).Name, obj.Field(i)
 			}
 
 			if obj.Field(i).IsValid() {
-				if rc := GetAttributeValue(obj.Field(i).Interface(), name, depth+1); rc.IsValid() {
-					return rc
+				if attribName, attribValue = GetAttributeValue(obj.Field(i).Interface(), name, depth+1); attribValue.IsValid() {
+					return attribName, attribValue
 				}
 			}
 		}
@@ -168,15 +170,15 @@ func GetAttributeValue(data interface{}, name string, depth int) reflect.Value {
 		n.Elem().Set(s)
 
 		for i := 0; i < obj.Len(); i += 1 {
-			if rc := GetAttributeValue(obj.Index(i).Interface(), name, depth+1); rc.IsValid() {
-				return rc
+			if attribName, attribValue = GetAttributeValue(obj.Index(i).Interface(), name, depth+1); attribValue.IsValid() {
+				return attribName, attribValue
 			}
 		}
 	default:
 		//fmt.Printf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
 	}
 
-	return result
+	return attribName, attribValue
 
 }
 
@@ -234,7 +236,7 @@ func GetAttributeStructure(data interface{}, name string, depth int) reflect.Str
 
 }
 
-func Clone(a interface{}) interface{} {
+func Clone2(a interface{}) interface{} {
 	b := reflect.ValueOf(a)
 	buff := new(bytes.Buffer)
 	enc := gob.NewEncoder(buff)
@@ -243,4 +245,13 @@ func Clone(a interface{}) interface{} {
 	dec.Decode(b.Elem().Interface())
 
 	return b.Interface()
+}
+
+func Clone(a, b interface{}) interface{} {
+	buff := new(bytes.Buffer)
+	enc := gob.NewEncoder(buff)
+	dec := gob.NewDecoder(buff)
+	enc.Encode(a)
+	dec.Decode(b)
+	return b
 }

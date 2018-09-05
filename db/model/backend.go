@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"strconv"
+	"time"
+	"github.com/opencord/voltha-go/common/log"
 )
 
 //TODO: missing cache stuff
@@ -48,7 +50,7 @@ func NewBackend(storeType string, host string, port int, timeout int, pathPrefix
 
 	address := host + ":" + strconv.Itoa(port)
 	if b.Client, err = b.newClient(address, timeout); err != nil {
-		fmt.Errorf("failed to create a new kv Client - %s", err.Error())
+		log.Errorf("failed to create a new kv Client - %s", err.Error())
 	}
 
 	return b
@@ -65,12 +67,22 @@ func (b *Backend) newClient(address string, timeout int) (kvstore.Client, error)
 }
 
 func (b *Backend) makePath(key string) string {
-	return fmt.Sprintf("%s/%s", b.PathPrefix, key)
+	path := fmt.Sprintf("%s/%s", b.PathPrefix, key)
+	log.Debugf("formatting path: %s", path)
+	return path
+}
+func (b *Backend) List(key string) (map[string]*kvstore.KVPair, error) {
+	return b.Client.List(b.makePath(key), b.Timeout)
 }
 func (b *Backend) Get(key string) (*kvstore.KVPair, error) {
-	return b.Client.Get(b.makePath(key), b.Timeout)
+	start := time.Now()
+	err, pair := b.Client.Get(b.makePath(key), b.Timeout)
+	stop := time.Now()
+	GetProfiling().AddToDatabaseRetrieveTime(stop.Sub(start).Seconds())
+	return err, pair
 }
 func (b *Backend) Put(key string, value interface{}) error {
+	log.Debugf("Put key: %s, value: %+v, path: %s", key, string(value.([]byte)), b.makePath(key))
 	return b.Client.Put(b.makePath(key), value, b.Timeout)
 }
 func (b *Backend) Delete(key string) error {

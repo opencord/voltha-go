@@ -17,7 +17,7 @@ package model
 
 import (
 	"fmt"
-	"github.com/opencord/voltha/protos/go/voltha"
+	"github.com/opencord/voltha-go/protos/voltha"
 	"reflect"
 	"testing"
 )
