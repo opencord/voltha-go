@@ -31,8 +31,8 @@ type Root struct {
 	KvStore               *Backend
 	Loading               bool
 	RevisionClass         interface{}
-	Callbacks             []func()
-	NotificationCallbacks []func()
+	Callbacks             []CallbackTuple
+	NotificationCallbacks []CallbackTuple
 }
 
 func NewRoot(initialData interface{}, kvStore *Backend, revisionClass interface{}) *Root {
@@ -44,8 +44,8 @@ func NewRoot(initialData interface{}, kvStore *Backend, revisionClass interface{
 		revisionClass = reflect.TypeOf(PersistedRevision{})
 	}
 	root.RevisionClass = revisionClass
-	root.Callbacks = []func(){}
-	root.NotificationCallbacks = []func(){}
+	root.Callbacks = []CallbackTuple{}
+	root.NotificationCallbacks = []CallbackTuple{}
 
 	root.Node = NewNode(root, initialData, false, "")
 
@@ -88,12 +88,12 @@ func (r *Root) executeCallbacks() {
 	for len(r.Callbacks) > 0 {
 		callback := r.Callbacks[0]
 		r.Callbacks = r.Callbacks[1:]
-		callback()
+		callback.Execute(nil)
 	}
 	for len(r.NotificationCallbacks) > 0 {
 		callback := r.NotificationCallbacks[0]
 		r.NotificationCallbacks = r.NotificationCallbacks[1:]
-		callback()
+		callback.Execute(nil)
 	}
 }
 
@@ -101,11 +101,11 @@ func (r *Root) noCallbacks() bool {
 	return len(r.Callbacks) == 0
 }
 
-func (r *Root) addCallback(callback func()) {
-	r.Callbacks = append(r.Callbacks, callback)
+func (r *Root) addCallback(callback CallbackFunction, args ...interface{}) {
+	r.Callbacks = append(r.Callbacks, CallbackTuple{callback, args})
 }
-func (r *Root) addNotificationCallback(callback func()) {
-	r.NotificationCallbacks = append(r.NotificationCallbacks, callback)
+func (r *Root) addNotificationCallback(callback CallbackFunction, args ...interface{}) {
+	r.NotificationCallbacks = append(r.NotificationCallbacks, CallbackTuple{callback, args})
 }
 
 func (r *Root) Update(path string, data interface{}, strict bool, txid string, makeBranch t_makeBranch) Revision {
@@ -200,7 +200,7 @@ func (r *Root) Load(rootClass interface{}) *Root {
 	return r
 }
 
-func (r *Root) MakeLatest(branch *Branch, revision Revision, changeAnnouncement map[CallbackType][]interface{}) {
+func (r *Root) MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
 	r.Node.MakeLatest(branch, revision, changeAnnouncement)
 
 	if r.KvStore != nil && branch.Txid == "" {

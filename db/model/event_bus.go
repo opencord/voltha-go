@@ -44,7 +44,12 @@ func NewEventBus() *EventBus {
 	return bus
 }
 
-func (bus *EventBus) Advertise(eventType CallbackType, data interface{}, hash string) {
+//func (bus *EventBus) Advertise(eventType CallbackType, data interface{}, hash string) {
+func (bus *EventBus) Advertise(args ...interface{}) interface{} {
+	eventType := args[0].(CallbackType)
+	data := args[1]
+	hash := args[2].(string)
+
 	if _, ok := IGNORED_CALLBACKS[eventType]; ok {
 		fmt.Printf("ignoring event - type:%s, data:%+v\n", eventType, data)
 	}
@@ -75,4 +80,6 @@ func (bus *EventBus) Advertise(eventType CallbackType, data interface{}, hash st
 	}
 
 	bus.client.Publish(bus.topic, event)
+
+	return nil
 }

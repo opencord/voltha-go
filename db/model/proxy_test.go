@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 )
 
 type proxyTest struct {
@@ -46,7 +47,7 @@ var (
 		DbPort:    2379,
 		DbTimeout: 5,
 	}
-	devId string
+	devId          string
 	targetDeviceId string
 )
 
@@ -56,8 +57,6 @@ func init() {
 	}
 	defer log.CleanUp()
 
-}
-func Test_Proxy_0_GetRootProxy(t *testing.T) {
 	pt.Backend = NewBackend(pt.DbType, pt.DbHost, pt.DbPort, pt.DbTimeout, pt.DbPrefix)
 
 	msgClass := &voltha.Voltha{}
@@ -68,6 +67,18 @@ func Test_Proxy_0_GetRootProxy(t *testing.T) {
 
 	pt.Proxy = pt.Root.Node.GetProxy("/", false)
 }
+
+//func Test_Proxy_0_GetRootProxy(t *testing.T) {
+//	pt.Backend = NewBackend(pt.DbType, pt.DbHost, pt.DbPort, pt.DbTimeout, pt.DbPrefix)
+//
+//	msgClass := &voltha.Voltha{}
+//	root := NewRoot(msgClass, pt.Backend, nil)
+//	pt.Root = root.Load(msgClass)
+//
+//	GetProfiling().Report()
+//
+//	pt.Proxy = pt.Root.Node.GetProxy("/", false)
+//}
 
 func Test_Proxy_1_GetDevices(t *testing.T) {
 	devices := pt.Proxy.Get("/devices", 1, false, "")
@@ -83,7 +94,7 @@ func Test_Proxy_1_GetDevices(t *testing.T) {
 
 func Test_Proxy_2_GetDevice(t *testing.T) {
 	basePath := "/devices/" + targetDeviceId
-	device1 := pt.Proxy.Get(basePath + "/ports", 1, false, "")
+	device1 := pt.Proxy.Get(basePath+"/ports", 1, false, "")
 	t.Logf("retrieved device with ports: %+v", device1)
 
 	device2 := pt.Proxy.Get(basePath, 0, false, "")
@@ -157,10 +168,10 @@ func Test_Proxy_3_AddDevice(t *testing.T) {
 	devId = "0001" + hex.EncodeToString(devIdBin)[:12]
 
 	device := &voltha.Device{
-		Id:                  devId,
-		Type:                "simulated_olt",
-		Address:             &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
-		AdminState:          voltha.AdminState_PREPROVISIONED,
+		Id:         devId,
+		Type:       "simulated_olt",
+		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
+		AdminState: voltha.AdminState_PREPROVISIONED,
 	}
 
 	if added := pt.Proxy.Add("/devices", device, ""); added == nil {
@@ -171,7 +182,7 @@ func Test_Proxy_3_AddDevice(t *testing.T) {
 }
 
 func Test_Proxy_4_CheckAddedDevice(t *testing.T) {
-	if d := pt.Proxy.Get("/devices/" + devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+	if d := pt.Proxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
 		t.Error("Failed to find added device")
 	} else {
 		djson, _ := json.Marshal(d)
@@ -181,7 +192,7 @@ func Test_Proxy_4_CheckAddedDevice(t *testing.T) {
 }
 
 func Test_Proxy_5_UpdateDevice(t *testing.T) {
-	if retrieved := pt.Proxy.Get("/devices/" + targetDeviceId, 1, false, ""); retrieved == nil {
+	if retrieved := pt.Proxy.Get("/devices/"+targetDeviceId, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
 		var fwVersion int
@@ -196,7 +207,7 @@ func Test_Proxy_5_UpdateDevice(t *testing.T) {
 		cloned.FirmwareVersion = strconv.Itoa(fwVersion)
 		t.Logf("Before update : %+v", cloned)
 
-		if afterUpdate := pt.Proxy.Update("/devices/" + targetDeviceId, &cloned, false, ""); afterUpdate == nil {
+		if afterUpdate := pt.Proxy.Update("/devices/"+targetDeviceId, &cloned, false, ""); afterUpdate == nil {
 			t.Error("Failed to update device")
 		} else {
 			t.Logf("Updated device : %+v", afterUpdate.(Revision).GetData())
@@ -205,13 +216,13 @@ func Test_Proxy_5_UpdateDevice(t *testing.T) {
 }
 
 func Test_Proxy_6_CheckUpdatedDevice(t *testing.T) {
-	device := pt.Proxy.Get("/devices/" + targetDeviceId, 0, false, "")
+	device := pt.Proxy.Get("/devices/"+targetDeviceId, 0, false, "")
 
 	t.Logf("content of updated device: %+v", device)
 }
 
 func Test_Proxy_7_RemoveDevice(t *testing.T) {
-	if removed := pt.Proxy.Remove("/devices/" + devId, ""); removed == nil {
+	if removed := pt.Proxy.Remove("/devices/"+devId, ""); removed == nil {
 		t.Error("Failed to remove device")
 	} else {
 		t.Logf("Removed device : %+v", removed)
@@ -219,10 +230,58 @@ func Test_Proxy_7_RemoveDevice(t *testing.T) {
 }
 
 func Test_Proxy_8_CheckRemovedDevice(t *testing.T) {
-	if d := pt.Proxy.Get("/devices/" + devId, 0, false, ""); reflect.ValueOf(d).IsValid() {
+	if d := pt.Proxy.Get("/devices/"+devId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
 	} else {
 		t.Logf("Device was removed: %s", devId)
 	}
+}
+
+// -----------------------------
+// Callback tests
+// -----------------------------
+
+func firstCallback(args ...interface{}) interface{} {
+	name := args[0]
+	id := args[1]
+	fmt.Printf("Running first callback - name: %s, id: %s\n", name, id)
+	return nil
+}
+func secondCallback(args ...interface{}) interface{} {
+	name := args[0].(map[string]string)
+	id := args[1]
+	fmt.Printf("Running second callback - name: %s, id: %f\n", name["name"], id)
+	panic("Generating a panic in second callback")
+	return nil
+}
+func thirdCallback(args ...interface{}) interface{} {
+	name := args[0]
+	id := args[1].(*voltha.Device)
+	fmt.Printf("Running third callback - name: %+v, id: %s\n", name, id.Id)
+	return nil
+}
+
+func Test_Proxy_Callbacks_1_Register(t *testing.T) {
+	pt.Proxy.RegisterCallback(PRE_ADD, firstCallback, "abcde", "12345")
+
+	m := make(map[string]string)
+	m["name"] = "fghij"
+	pt.Proxy.RegisterCallback(PRE_ADD, secondCallback, m, 1.2345)
+
+	d := &voltha.Device{Id: "12345"}
+	pt.Proxy.RegisterCallback(PRE_ADD, thirdCallback, "klmno", d)
+}
+
+func Test_Proxy_Callbacks_2_Invoke_WithNoInterruption(t *testing.T) {
+	pt.Proxy.InvokeCallbacks(PRE_ADD, nil, true)
+}
+func Test_Proxy_Callbacks_3_Invoke_WithInterruption(t *testing.T) {
+	pt.Proxy.InvokeCallbacks(PRE_ADD, nil, false)
+}
+
+func Test_Proxy_Callbacks_4_Unregister(t *testing.T) {
+	pt.Proxy.UnregisterCallback(PRE_ADD, firstCallback)
+	pt.Proxy.UnregisterCallback(PRE_ADD, secondCallback)
+	pt.Proxy.UnregisterCallback(PRE_ADD, thirdCallback)
 }

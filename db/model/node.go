@@ -37,6 +37,11 @@ type Node struct {
 	AutoPrune bool
 }
 
+type ChangeTuple struct {
+	Type CallbackType
+	Data interface{}
+}
+
 func NewNode(root *Root, initialData interface{}, autoPrune bool, txid string) *Node {
 	n := &Node{}
 
@@ -69,7 +74,7 @@ func (n *Node) MakeRevision(branch *Branch, data interface{}, children map[strin
 	return n.root.MakeRevision(branch, data, children)
 }
 
-func (n *Node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement map[CallbackType][]interface{}) {
+func (n *Node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
 	if _, ok := branch.Revisions[revision.GetHash()]; !ok {
 		branch.Revisions[revision.GetHash()] = revision
 	}
@@ -80,15 +85,17 @@ func (n *Node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement 
 
 	if changeAnnouncement != nil && branch.Txid == "" {
 		if n.Proxy != nil {
-			for changeType, data := range changeAnnouncement {
+			for _, change := range changeAnnouncement {
 				// TODO: Invoke callback
-				fmt.Printf("invoking callback - changeType: %+v, data:%+v\n", changeType, data)
+				fmt.Printf("invoking callback - changeType: %+v, data:%+v\n", change.Type, change.Data)
+				n.root.addCallback(n.Proxy.InvokeCallbacks, change.Type, change.Data, true)
 			}
 		}
 
-		for changeType, data := range changeAnnouncement {
+		for _, change := range changeAnnouncement {
 			// TODO: send notifications
-			fmt.Printf("sending notification - changeType: %+v, data:%+v\n", changeType, data)
+			fmt.Printf("sending notification - changeType: %+v, data:%+v\n", change.Type, change.Data)
+			n.root.addNotificationCallback(n.makeEventBus().Advertise, change.Type, change.Data, revision.GetHash())
 		}
 	}
 }
@@ -266,8 +273,9 @@ func (n *Node) doGet(rev Revision, depth int) interface{} {
 	msg := rev.Get(depth)
 
 	if n.Proxy != nil {
-		// TODO: invoke GET callback
-		fmt.Println("invoking proxy GET Callbacks")
+		log.Debug("invoking proxy GET Callbacks")
+		msg = n.Proxy.InvokeCallbacks(GET, msg, false)
+
 	}
 	return msg
 }
@@ -373,8 +381,8 @@ func (n *Node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 	//}
 
 	if n.Proxy != nil {
-		// TODO: n.proxy.InvokeCallbacks(CallbackType.PRE_UPDATE, data)
-		fmt.Println("invoking proxy PRE_UPDATE Callbacks")
+		log.Debug("invoking proxy PRE_UPDATE Callbacks")
+		n.Proxy.InvokeCallbacks(PRE_UPDATE, data, false)
 	}
 	if !reflect.DeepEqual(branch.Latest.GetData(), data) {
 		if strict {
@@ -428,8 +436,8 @@ func (n *Node) Add(path string, data interface{}, txid string, makeBranch t_make
 		if path == "" {
 			if field.Key != "" {
 				if n.Proxy != nil {
-					// TODO -> n.proxy.InvokeCallbacks(PRE_ADD, data)
-					fmt.Println("invoking proxy PRE_ADD Callbacks")
+					log.Debug("invoking proxy PRE_ADD Callbacks")
+					n.Proxy.InvokeCallbacks(PRE_ADD, data, false)
 				}
 
 				for _, v := range rev.GetChildren()[name] {
@@ -508,7 +516,7 @@ func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 
 	field := ChildrenFields(n.Type)[name]
 	var children []Revision
-	post_anno := make(map[CallbackType][]interface{})
+	postAnnouncement := []ChangeTuple{}
 
 	if field.IsContainer {
 		if path == "" {
@@ -542,14 +550,14 @@ func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 				idx, childRev := n.findRevByKey(children, field.Key, key)
 				if n.Proxy != nil {
 					data := childRev.GetData()
-					fmt.Println("invoking proxy PRE_REMOVE Callbacks")
-					fmt.Printf("setting POST_REMOVE Callbacks : %+v\n", data)
+					n.Proxy.InvokeCallbacks(PRE_REMOVE, data, false)
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data})
 				} else {
-					fmt.Println("setting POST_REMOVE Callbacks")
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData()})
 				}
 				children = append(children[:idx], children[idx+1:]...)
 				rev := rev.UpdateChildren(name, children, branch)
-				n.root.MakeLatest(branch, rev, post_anno)
+				n.root.MakeLatest(branch, rev, postAnnouncement)
 				return rev
 			}
 		} else {

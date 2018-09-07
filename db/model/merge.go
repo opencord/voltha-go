@@ -87,7 +87,7 @@ func newChangeAnalysis(lst1, lst2 []Revision, keyName string) *changeAnalysis {
 func Merge3Way(
 	forkRev, srcRev, dstRev Revision,
 	mergeChildFunc func(Revision) Revision,
-	dryRun bool) (rev Revision, changes map[CallbackType][]interface{}) {
+	dryRun bool) (rev Revision, changes []ChangeTuple) {
 
 	var configChanged bool
 
@@ -124,9 +124,9 @@ func Merge3Way(
 						newChildren[fieldName] = append(newChildren[fieldName], mergeChildFunc(rev))
 					}
 					if field.IsContainer {
-						changes[POST_LISTCHANGE] = append(
-							changes[POST_LISTCHANGE],
-							NewOperationContext("", nil, fieldName, ""),
+						changes = append(
+							changes, ChangeTuple{POST_LISTCHANGE,
+							NewOperationContext("", nil, fieldName, "")},
 						)
 					}
 				}
@@ -146,18 +146,11 @@ func Merge3Way(
 					newRev := mergeChildFunc(newList[idx])
 					newList[idx] = newRev
 
-					changes[POST_ADD] = append(
-						changes[POST_ADD],
-						newRev.GetData(),
-					)
+					changes = append(changes, ChangeTuple{POST_ADD,newRev.GetData()})
 				}
 				for key, _ := range src.RemovedKeys {
 					oldRev := forkList[src.KeyMap1[key]]
-
-					changes[POST_REMOVE] = append(
-						changes[POST_REMOVE],
-						oldRev.GetData(),
-					)
+					changes = append(changes, ChangeTuple{POST_REMOVE,oldRev.GetData()})
 				}
 				for key, _ := range src.ChangedKeys {
 					idx := src.KeyMap2[key]
@@ -184,10 +177,7 @@ func Merge3Way(
 					} else {
 						newRev := mergeChildFunc(srcList[src.KeyMap2[key]])
 						newList = append(newList, newRev)
-						changes[POST_ADD] = append(
-							changes[POST_ADD],
-							newRev.GetData(),
-						)
+						changes = append(changes, ChangeTuple{POST_ADD,newRev.GetData()})
 					}
 				}
 				for key, _ := range src.ChangedKeys {
@@ -223,10 +213,7 @@ func Merge3Way(
 						newList[len(newList)-1] = nil
 						newList = newList[:len(newList)-1]
 
-						changes[POST_REMOVE] = append(
-							changes[POST_REMOVE],
-							oldRev.GetData(),
-						)
+						changes = append(changes, ChangeTuple{POST_REMOVE,oldRev.GetData()})
 					}
 				}
 
@@ -246,10 +233,7 @@ func Merge3Way(
 		rev = rev.UpdateAllChildren(newChildren, dstRev.GetBranch())
 
 		if configChanged {
-			changes[POST_UPDATE] = append(
-				changes[POST_UPDATE],
-				rev.GetData(),
-			)
+			changes = append(changes, ChangeTuple{POST_UPDATE,rev.GetData()})
 		}
 		return rev, changes
 	}
