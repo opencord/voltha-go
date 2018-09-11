@@ -27,7 +27,7 @@ import (
 
 type Root struct {
 	*Node
-	DirtyNodes            map[string]*Node
+	DirtyNodes            map[string][]*Node
 	KvStore               *Backend
 	Loading               bool
 	RevisionClass         interface{}
@@ -38,7 +38,7 @@ type Root struct {
 func NewRoot(initialData interface{}, kvStore *Backend, revisionClass interface{}) *Root {
 	root := &Root{}
 	root.KvStore = kvStore
-	root.DirtyNodes = make(map[string]*Node)
+	root.DirtyNodes = make(map[string][]*Node)
 	root.Loading = false
 	if kvStore != nil /*&& TODO: RevisionClass is not a subclass of PersistedRevision ??? */ {
 		revisionClass = reflect.TypeOf(PersistedRevision{})
@@ -63,23 +63,23 @@ func (r *Root) MakeRevision(branch *Branch, data interface{}, children map[strin
 func (r *Root) MakeTxBranch() string {
 	txid_bin, _ := uuid.New().MarshalBinary()
 	txid := hex.EncodeToString(txid_bin)[:12]
-	r.DirtyNodes[txid] = r.Node
+	r.DirtyNodes[txid] = []*Node{r.Node}
 	r.Node.makeTxBranch(txid)
 	return txid
 }
 
 func (r *Root) DeleteTxBranch(txid string) {
-	for _, dirtyNode := range r.DirtyNodes {
+	for _, dirtyNode := range r.DirtyNodes[txid] {
 		dirtyNode.deleteTxBranch(txid)
 	}
 	delete(r.DirtyNodes, txid)
 }
 
 func (r *Root) FoldTxBranch(txid string) {
-	if err := r.Node.mergeTxBranch(txid, true); err != nil {
+	if _, err := r.mergeTxBranch(txid, true); err != nil {
 		r.DeleteTxBranch(txid)
 	} else {
-		r.Node.mergeTxBranch(txid, false)
+		r.mergeTxBranch(txid, false)
 		r.executeCallbacks()
 	}
 }
@@ -120,10 +120,8 @@ func (r *Root) Update(path string, data interface{}, strict bool, txid string, m
 	}
 
 	if txid != "" {
-		//dirtied := r.DirtyNodes[txid]
-
 		trackDirty := func(node *Node) *Branch {
-			//dirtied.Add(Node)
+			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
 			return node.makeTxBranch(txid)
 		}
 		result = r.Node.Update(path, data, strict, txid, trackDirty)
@@ -148,10 +146,8 @@ func (r *Root) Add(path string, data interface{}, txid string, makeBranch t_make
 	}
 
 	if txid != "" {
-		//dirtied := r.DirtyNodes[txid]
-
 		trackDirty := func(node *Node) *Branch {
-			//dirtied.Add(Node)
+			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
 			return node.makeTxBranch(txid)
 		}
 		result = r.Node.Add(path, data, txid, trackDirty)
@@ -176,10 +172,8 @@ func (r *Root) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 	}
 
 	if txid != "" {
-		//dirtied := r.DirtyNodes[txid]
-
 		trackDirty := func(node *Node) *Branch {
-			//dirtied.Add(Node)
+			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
 			return node.makeTxBranch(txid)
 		}
 		result = r.Node.Remove(path, txid, trackDirty)

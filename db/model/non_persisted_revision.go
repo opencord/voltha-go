@@ -188,7 +188,7 @@ func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision
 }
 
 func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision {
-	newRev := reflect.ValueOf(npr).Interface().(NonPersistedRevision)
+	newRev := reflect.ValueOf(npr).Elem().Interface().(NonPersistedRevision)
 	newRev.SetBranch(branch)
 	newRev.SetChildren(children)
 	newRev.Finalize()

@@ -82,7 +82,7 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 	} else {
 		fullPath = p.Path + path
 	}
-	return p.Node.Update(fullPath, data, strict, txid, nil)
+	return p.Root.Update(fullPath, data, strict, txid, nil)
 }
 
 func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
@@ -96,7 +96,7 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 	} else {
 		fullPath = p.Path + path
 	}
-	return p.Node.Add(fullPath, data, txid, nil)
+	return p.Root.Add(fullPath, data, txid, nil)
 }
 
 func (p *Proxy) Remove(path string, txid string) interface{} {
@@ -110,7 +110,7 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 	} else {
 		fullPath = p.Path + path
 	}
-	return p.Node.Remove(fullPath, txid, nil)
+	return p.Root.Remove(fullPath, txid, nil)
 }
 
 func (p *Proxy) openTransaction() *Transaction {

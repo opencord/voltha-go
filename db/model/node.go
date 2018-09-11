@@ -15,6 +15,9 @@
  */
 package model
 
+// TODO: proper error handling
+// TODO: proper logging
+
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -590,7 +593,7 @@ func (n *Node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
 		childBranch := rev.GetBranch()
 
 		if childBranch.Txid == txid {
-			rev = childBranch.Node.mergeTxBranch(txid, dryRun)
+			rev, _ = childBranch.Node.mergeTxBranch(txid, dryRun)
 		}
 
 		return rev
@@ -598,7 +601,7 @@ func (n *Node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
 	return f
 }
 
-func (n *Node) mergeTxBranch(txid string, dryRun bool) Revision {
+func (n *Node) mergeTxBranch(txid string, dryRun bool) (Revision, error) {
 	srcBranch := n.Branches[txid]
 	dstBranch := n.Branches[NONE]
 
@@ -613,7 +616,8 @@ func (n *Node) mergeTxBranch(txid string, dryRun bool) Revision {
 		delete(n.Branches, txid)
 	}
 
-	return rev
+	// TODO: return proper error when one occurs
+	return rev, nil
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Diff utility ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

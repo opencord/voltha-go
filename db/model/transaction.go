@@ -29,34 +29,34 @@ func NewTransaction(proxy *Proxy, txid string) *Transaction {
 	}
 	return tx
 }
-func (t *Transaction) Get(path string, depth int, deep bool) Revision {
+func (t *Transaction) Get(path string, depth int, deep bool) interface{} {
 	if t.txid == "" {
 		fmt.Errorf("closed transaction")
 		return nil
 	}
 	// TODO: need to review the return values at the different layers!!!!!
-	return t.proxy.Get(path, depth, deep, t.txid).(Revision)
+	return t.proxy.Get(path, depth, deep, t.txid)
 }
-func (t *Transaction) Update(path string, data interface{}, strict bool) Revision {
+func (t *Transaction) Update(path string, data interface{}, strict bool) interface{} {
 	if t.txid == "" {
 		fmt.Errorf("closed transaction")
 		return nil
 	}
-	return t.proxy.Update(path, data, strict, t.txid).(Revision)
+	return t.proxy.Update(path, data, strict, t.txid)
 }
-func (t *Transaction) Add(path string, data interface{}) Revision {
+func (t *Transaction) Add(path string, data interface{}) interface{} {
 	if t.txid == "" {
 		fmt.Errorf("closed transaction")
 		return nil
 	}
-	return t.proxy.Add(path, data, t.txid).(Revision)
+	return t.proxy.Add(path, data, t.txid)
 }
-func (t *Transaction) Remove(path string) Revision {
+func (t *Transaction) Remove(path string) interface{} {
 	if t.txid == "" {
 		fmt.Errorf("closed transaction")
 		return nil
 	}
-	return t.proxy.Remove(path, t.txid).(Revision)
+	return t.proxy.Remove(path, t.txid)
 }
 func (t *Transaction) Cancel() {
 	t.proxy.cancelTransaction(t.txid)

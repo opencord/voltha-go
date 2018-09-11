@@ -76,7 +76,7 @@ func newChangeAnalysis(lst1, lst2 []Revision, keyName string) *changeAnalysis {
 		}
 	}
 	for v, _ := range changes.KeyMap1 {
-		if _, ok := changes.KeyMap2[v]; ok && lst1[changes.KeyMap1[v]].GetHash() != lst1[changes.KeyMap2[v]].GetHash() {
+		if _, ok := changes.KeyMap2[v]; ok && lst1[changes.KeyMap1[v]].GetHash() != lst2[changes.KeyMap2[v]].GetHash() {
 			changes.ChangedKeys[v] = struct{}{}
 		}
 	}
@@ -100,7 +100,7 @@ func Merge3Way(
 		configChanged = true
 	}
 
-	newChildren := reflect.ValueOf(dstRev.GetChildren()).Elem().Interface().(map[string][]Revision)
+	newChildren := reflect.ValueOf(dstRev.GetChildren()).Interface().(map[string][]Revision)
 	childrenFields := ChildrenFields(forkRev.GetData())
 
 	for fieldName, field := range childrenFields {
@@ -108,7 +108,7 @@ func Merge3Way(
 		srcList := srcRev.GetChildren()[fieldName]
 		dstList := dstRev.GetChildren()[fieldName]
 
-		if revisionsAreEqual(forkList, srcList) {
+		if revisionsAreEqual(dstList, srcList) {
 			for _, rev := range srcList {
 				mergeChildFunc(rev)
 			}
@@ -126,7 +126,7 @@ func Merge3Way(
 					if field.IsContainer {
 						changes = append(
 							changes, ChangeTuple{POST_LISTCHANGE,
-							NewOperationContext("", nil, fieldName, "")},
+								NewOperationContext("", nil, fieldName, "")},
 						)
 					}
 				}
@@ -139,23 +139,30 @@ func Merge3Way(
 			if revisionsAreEqual(dstList, forkList) {
 				src := newChangeAnalysis(forkList, srcList, field.Key)
 
-				newList := reflect.ValueOf(srcList).Elem().Interface().([]Revision)
+				newList := reflect.ValueOf(srcList).Interface().([]Revision)
 
 				for key, _ := range src.AddedKeys {
-					idx := src.KeyMap1[key]
+					idx := src.KeyMap2[key]
 					newRev := mergeChildFunc(newList[idx])
-					newList[idx] = newRev
 
-					changes = append(changes, ChangeTuple{POST_ADD,newRev.GetData()})
+					// FIXME: newRev may come back as nil... exclude those entries for now
+					if newRev != nil {
+						newList[idx] = newRev
+						changes = append(changes, ChangeTuple{POST_ADD, newRev.GetData()})
+					}
 				}
 				for key, _ := range src.RemovedKeys {
 					oldRev := forkList[src.KeyMap1[key]]
-					changes = append(changes, ChangeTuple{POST_REMOVE,oldRev.GetData()})
+					changes = append(changes, ChangeTuple{POST_REMOVE, oldRev.GetData()})
 				}
 				for key, _ := range src.ChangedKeys {
 					idx := src.KeyMap2[key]
 					newRev := mergeChildFunc(newList[idx])
-					newList[idx] = newRev
+
+					// FIXME: newRev may come back as nil... exclude those entries for now
+					if newRev != nil {
+						newList[idx] = newRev
+					}
 				}
 
 				newChildren[fieldName] = newList
@@ -163,7 +170,7 @@ func Merge3Way(
 				src := newChangeAnalysis(forkList, srcList, field.Key)
 				dst := newChangeAnalysis(forkList, dstList, field.Key)
 
-				newList := reflect.ValueOf(dstList).Elem().Interface().([]Revision)
+				newList := reflect.ValueOf(dstList).Interface().([]Revision)
 
 				for key, _ := range src.AddedKeys {
 					if _, exists := dst.AddedKeys[key]; exists {
@@ -177,7 +184,7 @@ func Merge3Way(
 					} else {
 						newRev := mergeChildFunc(srcList[src.KeyMap2[key]])
 						newList = append(newList, newRev)
-						changes = append(changes, ChangeTuple{POST_ADD,newRev.GetData()})
+						changes = append(changes, ChangeTuple{POST_ADD, newRev.GetData()})
 					}
 				}
 				for key, _ := range src.ChangedKeys {
@@ -213,7 +220,7 @@ func Merge3Way(
 						newList[len(newList)-1] = nil
 						newList = newList[:len(newList)-1]
 
-						changes = append(changes, ChangeTuple{POST_REMOVE,oldRev.GetData()})
+						changes = append(changes, ChangeTuple{POST_REMOVE, oldRev.GetData()})
 					}
 				}
 
@@ -233,10 +240,11 @@ func Merge3Way(
 		rev = rev.UpdateAllChildren(newChildren, dstRev.GetBranch())
 
 		if configChanged {
-			changes = append(changes, ChangeTuple{POST_UPDATE,rev.GetData()})
+			changes = append(changes, ChangeTuple{POST_UPDATE, rev.GetData()})
 		}
 		return rev, changes
-	}
+	} else {
+		return nil, nil
 
-	return nil, nil
+	}
 }
