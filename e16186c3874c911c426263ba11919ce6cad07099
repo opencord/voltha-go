@@ -16,6 +16,24 @@
       "revId": "e16186c3874c911c426263ba11919ce6cad07099",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efe8b10c_dd5bb967",
+        "filename": "db/model/node.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2018-09-11T14:54:21Z",
+      "side": 1,
+      "message": "sure ... will do",
+      "parentUuid": "fd695473_eaf71864",
+      "revId": "e16186c3874c911c426263ba11919ce6cad07099",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
