@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4654eda4_025e0895",
+        "filename": "adapters/__init__.pyc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2018-09-18T14:09:34Z",
+      "side": 1,
+      "message": "Should the .pyc files be included in this submission?\n\nor do you need to add some exclusions in .gitignore",
+      "revId": "6848c0e4163e4b52445dcc4a495155216768f37b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "828c19c6_c8cc2f05",
+        "filename": "rw_core/core/id.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2018-09-18T14:09:34Z",
+      "side": 1,
+      "message": "Do you need this?",
+      "revId": "6848c0e4163e4b52445dcc4a495155216768f37b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
