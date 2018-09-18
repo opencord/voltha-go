@@ -2,6 +2,9 @@
 .idea
 exportToHTML
 
+# Python
+*.pyc
+
 # Emacs
 *~
 .#*
@@ -19,12 +22,18 @@ ansible/*.retry
 # Any vi swap files
 *.swp
 
+# Virtualenv
+venv
+venv-darwin
+venv-linux
+adapters/venv
+adapters/venv-linux
+adapters/venv-darwin
+
 # Protobuf output files
 **/*_pb2.py
 **/*_pb2_grpc.py
 **/*.pb.go
-**/*.pyc
-
 
 # Editors
 *.bak
@@ -43,4 +52,8 @@ ansible/*.retry
 
 # Vagrant logfile
 *.log
+
+# Files copied over during make
+adapters/protos/*.proto
+adapters/protos/*.desc
 
