@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package grpc
+package core
 
 import (
 	"context"
@@ -24,6 +24,7 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"os"
@@ -34,9 +35,14 @@ var conn *grpc.ClientConn
 var stub voltha.VolthaServiceClient
 var testMode string
 
+/*
+NOTE:  These tests require the rw_core to run prior to executing these test cases
+*/
+
 func setup() {
 	var err error
-	if _, err = log.SetLogger(log.JSON, 3, log.Fields{"instanceId": "testing"}); err != nil {
+
+	if err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	conn, err = grpc.Dial("localhost:50057", grpc.WithInsecure())
@@ -55,13 +61,13 @@ func TestGetDevice(t *testing.T) {
 	response, err := stub.GetDevice(ctx, &id)
 	assert.Nil(t, response)
 	st, _ := status.FromError(err)
-	assert.Equal(t, "UnImplemented", st.Message())
-
+	assert.Equal(t, id.Id, st.Message())
+	assert.Equal(t, codes.NotFound, st.Code())
 }
 
 func TestUpdateLogLevelError(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
-	level := voltha.Logging{Level: common.LogLevel_ERROR}
+	level := voltha.Logging{PackageName: "github.com/opencord/voltha-go/rw_core/core", Level: common.LogLevel_ERROR}
 	response, err := stub.UpdateLogLevel(ctx, &level)
 	log.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
@@ -78,13 +84,12 @@ func TestGetVoltha(t *testing.T) {
 
 func TestUpdateLogLevelDebug(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
-	level := voltha.Logging{Level: common.LogLevel_DEBUG}
+	level := voltha.Logging{PackageName: "github.com/opencord/voltha-go/rw_core/core", Level: common.LogLevel_DEBUG}
 	response, err := stub.UpdateLogLevel(ctx, &level)
 	log.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
-
 
 func TestGetCoreInstance(t *testing.T) {
 	id := &voltha.ID{Id: "getCoreInstance"}
@@ -101,7 +106,8 @@ func TestGetLogicalDevice(t *testing.T) {
 	response, err := stub.GetLogicalDevice(ctx, id)
 	assert.Nil(t, response)
 	st, _ := status.FromError(err)
-	assert.Equal(t, "UnImplemented", st.Message())
+	assert.Equal(t, id.Id, st.Message())
+	assert.Equal(t, codes.NotFound, st.Code())
 }
 
 func TestGetLogicalDevicePort(t *testing.T) {
@@ -142,10 +148,8 @@ func TestListLogicalDeviceFlowGroups(t *testing.T) {
 
 func TestListDevices(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
-	response, err := stub.ListDevices(ctx, &empty.Empty{})
-	assert.Nil(t, response)
-	st, _ := status.FromError(err)
-	assert.Equal(t, "UnImplemented", st.Message())
+	response, _ := stub.ListDevices(ctx, &empty.Empty{})
+	assert.Equal(t, len(response.Items), 0)
 }
 
 func TestListAdapters(t *testing.T) {
@@ -158,10 +162,8 @@ func TestListAdapters(t *testing.T) {
 
 func TestListLogicalDevices(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
-	response, err := stub.ListLogicalDevices(ctx, &empty.Empty{})
-	assert.Nil(t, response)
-	st, _ := status.FromError(err)
-	assert.Equal(t, "UnImplemented", st.Message())
+	response, _ := stub.ListLogicalDevices(ctx, &empty.Empty{})
+	assert.Equal(t, len(response.Items), 0)
 }
 
 func TestListCoreInstances(t *testing.T) {
@@ -221,6 +223,9 @@ func TestEnableLogicalDevicePort(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	id := &voltha.LogicalPortId{Id: "EnableLogicalDevicePort"}
 	response, err := stub.EnableLogicalDevicePort(ctx, id)
+	if e, ok := status.FromError(err); ok {
+		log.Infow("response", log.Fields{"error": err, "errorcode": e.Code(), "msg": e.Message()})
+	}
 	log.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)

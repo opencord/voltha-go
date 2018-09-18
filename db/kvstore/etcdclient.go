@@ -20,9 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	v3Client "github.com/coreos/etcd/clientv3"
-	v3rpcTypes "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+	//v3Client "github.com/coreos/etcd/clientv3"
+	//v3rpcTypes "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	log "github.com/opencord/voltha-go/common/log"
+	v3Client "go.etcd.io/etcd/clientv3"
+	v3rpcTypes "go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
 	"sync"
 )
 

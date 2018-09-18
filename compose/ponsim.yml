@@ -1,0 +1,57 @@
+version: '2'
+services:
+  ponsim_olt:
+    image: "${REGISTRY}${REPOSITORY}voltha-ponsim${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    entrypoint:
+      - /app/ponsim
+      - -device_type
+      - "OLT"
+      - -onus
+      - "4"
+      - -internal_if
+      - "eth0"
+      - -external_if
+      - "eth0"
+      - -vcore_endpoint
+      - "vcore"
+      - -promiscuous
+      - -verbose
+    ports:
+      - "50060:50060"
+    networks:
+    - default
+
+  ponsim_onu:
+    image: "${REGISTRY}${REPOSITORY}voltha-ponsim${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    entrypoint:
+      - /app/ponsim
+      - -device_type
+      - "ONU"
+      - -parent_addr
+      - "ponsim_olt"
+      - -grpc_port
+      - "50061"
+      - -internal_if
+      - "eth0"
+      - -external_if
+      - "lo"
+      - -promiscuous
+      - -verbose
+    ports:
+    - "50061:50061"
+    networks:
+    - default
+
+networks:
+  default:
+    driver: bridge
