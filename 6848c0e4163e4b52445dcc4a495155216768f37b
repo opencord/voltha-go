@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "84b27611_355690fd",
+        "filename": "adapters/__init__.pyc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-09-18T14:28:39Z",
+      "side": 1,
+      "message": "Yes, needs to be excluded.  Updated in new submission.",
+      "parentUuid": "4654eda4_025e0895",
+      "revId": "6848c0e4163e4b52445dcc4a495155216768f37b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "828c19c6_c8cc2f05",
         "filename": "rw_core/core/id.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-18T14:09:34Z",
       "side": 1,
       "message": "Do you need this?",
+      "revId": "6848c0e4163e4b52445dcc4a495155216768f37b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fecbb19d_c0ffb67f",
+        "filename": "rw_core/core/id.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-09-18T14:28:39Z",
+      "side": 1,
+      "message": "No :)",
+      "parentUuid": "828c19c6_c8cc2f05",
       "revId": "6848c0e4163e4b52445dcc4a495155216768f37b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
