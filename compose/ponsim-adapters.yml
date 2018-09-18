@@ -1,0 +1,41 @@
+version: '2'
+services:
+  ponsim_olt_adapter:
+    image: "${REGISTRY}${REPOSITORY}voltha-ponsim-adapter-olt${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [
+      "/adapters/adapters/ponsim_olt/main.py",
+      "-v",
+      "--name=ponsim_olt",
+      "--kafka_adapter=10.176.230.190:9092",
+      "--kafka_cluster=10.176.230.190:9092",
+      "--core_topic=rwcore"
+    ]
+    networks:
+    - default
+
+  ponsim_onu_adapter:
+    image: "${REGISTRY}${REPOSITORY}voltha-ponsim-adapter-onu${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [
+      "/adapters/adapters/ponsim_onu/main.py",
+      "-v",
+      "--name=ponsim_onu",
+      "--kafka_adapter=10.176.230.190:9092",
+      "--kafka_cluster=10.176.230.190:9092",
+      "--core_topic=rwcore"
+    ]
+    networks:
+    - default
+
+networks:
+  default:
+    driver: bridge

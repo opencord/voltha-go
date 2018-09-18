@@ -28,6 +28,10 @@ import (
 type DefaultAPIHandler struct {
 }
 
+func init() {
+	log.AddPackage(log.JSON, log.WarnLevel, nil)
+}
+
 func NewDefaultAPIHandler() *DefaultAPIHandler {
 	handler := &DefaultAPIHandler{}
 	return handler

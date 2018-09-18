@@ -16,15 +16,15 @@
 package model
 
 import (
-	"github.com/opencord/voltha-go/protos/voltha"
-	"testing"
-	"github.com/opencord/voltha-go/common/log"
-	"strconv"
-	"reflect"
-	"github.com/google/uuid"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/protos/voltha"
+	"reflect"
+	"strconv"
+	"testing"
 )
 
 type proxyTest struct {

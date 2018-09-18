@@ -72,6 +72,7 @@ message AlarmFilters {
 
 message Logging {
     LogLevel.LogLevel level = 1;
+    string package_name = 2;
 }
 
 // Top-level (root) node for a Voltha Instance

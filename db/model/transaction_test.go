@@ -16,24 +16,24 @@
 package model
 
 import (
-	"github.com/opencord/voltha-go/protos/voltha"
-	"github.com/opencord/voltha-go/common/log"
-	"testing"
-	"github.com/google/uuid"
 	"encoding/hex"
-	"strconv"
+	"github.com/google/uuid"
+	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/protos/voltha"
 	"reflect"
+	"strconv"
+	"testing"
 )
 
 type transactionTest struct {
-	Root        *Root
-	Backend     *Backend
-	Proxy       *Proxy
-	DbPrefix    string
-	DbType      string
-	DbHost      string
-	DbPort      int
-	DbTimeout   int
+	Root      *Root
+	Backend   *Backend
+	Proxy     *Proxy
+	DbPrefix  string
+	DbType    string
+	DbHost    string
+	DbPort    int
+	DbTimeout int
 }
 
 var (
@@ -46,7 +46,7 @@ var (
 		DbTimeout: 5,
 	}
 	txTargetDevId string
-	txDevId string
+	txDevId       string
 )
 
 func init() {
@@ -148,7 +148,7 @@ func Test_Transaction_4_UpdateDevice(t *testing.T) {
 
 func Test_Transaction_5_RemoveDevice(t *testing.T) {
 	removeTx := tx.Proxy.openTransaction()
-	if removed := removeTx.Remove("/devices/"+txDevId); removed == nil {
+	if removed := removeTx.Remove("/devices/" + txDevId); removed == nil {
 		t.Error("Failed to remove device")
 	} else {
 		t.Logf("Removed device : %+v", removed)

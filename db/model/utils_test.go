@@ -16,17 +16,17 @@
 package model
 
 import (
-	"testing"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"reflect"
+	"testing"
 )
 
 func Test_Utils_Clone(t *testing.T) {
 	a := &voltha.Device{
-		Id: "abcde",
+		Id:              "abcde",
 		FirmwareVersion: "someversion",
 	}
-	b:= &voltha.Device{}
+	b := &voltha.Device{}
 	Clone(reflect.ValueOf(a).Interface(), b)
 	t.Logf("A: %+v, B: %+v", a, b)
 	b.Id = "12345"
