@@ -250,10 +250,10 @@ message Device {
         uint32 onu_session_id = 4; // session identifier for the ONU; optional
     };
 
-    oneof address {
-        // Device contact MAC address (format: "xx:xx:xx:xx:xx:xx")
-        string mac_address = 13;
+    // Device contact MAC address (format: "xx:xx:xx:xx:xx:xx")
+    string mac_address = 13;
 
+    oneof address {
         // Device contact IPv4 address (format: "a.b.c.d" or can use hostname too)
         string ipv4_address = 14;
 

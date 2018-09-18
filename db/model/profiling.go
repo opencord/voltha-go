@@ -16,8 +16,8 @@
 package model
 
 import (
-	"sync"
 	"github.com/opencord/voltha-go/common/log"
+	"sync"
 )
 
 type profiling struct {

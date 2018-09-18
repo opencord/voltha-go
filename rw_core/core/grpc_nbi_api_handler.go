@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package grpc
+package core
 
 import (
 	"context"
@@ -21,18 +21,28 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type APIHandler struct {
+	deviceMgr        *DeviceManager
+	logicalDeviceMgr *LogicalDeviceManager
+	clusterDataProxy *model.Proxy
+	localDataProxy   *model.Proxy
 	da.DefaultAPIHandler
 }
 
-func NewAPIHandler() *APIHandler {
-	handler := &APIHandler{}
+func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, cdProxy *model.Proxy, ldProxy *model.Proxy) *APIHandler {
+	handler := &APIHandler{deviceMgr: deviceMgr,
+		logicalDeviceMgr: lDeviceMgr,
+		clusterDataProxy: cdProxy,
+		localDataProxy:   ldProxy}
 	return handler
 }
 func isTestMode(ctx context.Context) bool {
@@ -45,10 +55,16 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	log.Debugw("UpdateLogLevel-request", log.Fields{"newloglevel": logging.Level, "intval": int(logging.Level)})
 	if isTestMode(ctx) {
 		out := new(empty.Empty)
-		log.SetLoglevel(int(logging.Level))
+		log.SetPackageLogLevel(logging.PackageName, int(logging.Level))
 		return out, nil
 	}
 	return nil, errors.New("Unimplemented")
+
+}
+
+func processEnableDevicePort(ctx context.Context, id *voltha.LogicalPortId, ch chan error) {
+	log.Debugw("processEnableDevicePort", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
+	ch <- status.Errorf(100, "%d-%s", 100, "erreur")
 
 }
 
@@ -58,7 +74,15 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 		out := new(empty.Empty)
 		return out, nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan error)
+	go processEnableDevicePort(ctx, id, ch)
+	select {
+	case resp := <-ch:
+		close(ch)
+		return new(empty.Empty), resp
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }
 
 func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
@@ -88,21 +112,79 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 	return nil, errors.New("Unimplemented")
 }
 
+// GetDevice must be implemented in the read-only containers - should it also be implemented here?
+func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
+	log.Debugw("GetDevice-request", log.Fields{"id": id})
+	return handler.deviceMgr.getDevice(id.Id)
+}
+
+// GetDevice must be implemented in the read-only containers - should it also be implemented here?
+func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
+	log.Debug("ListDevices")
+	return handler.deviceMgr.ListDevices()
+}
+
+// GetLogicalDevice must be implemented in the read-only containers - should it also be implemented here?
+func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
+	log.Debugw("GetLogicalDevice-request", log.Fields{"id": id})
+	return handler.logicalDeviceMgr.getLogicalDevice(id.Id)
+}
+
+// ListLogicalDevices must be implemented in the read-only containers - should it also be implemented here?
+func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
+	log.Debug("ListLogicalDevices")
+	return handler.logicalDeviceMgr.listLogicalDevices()
+}
+
 func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
-	log.Debugw("createdevice-request", log.Fields{"device": *device})
+	log.Debugw("createdevice", log.Fields{"device": *device})
 	if isTestMode(ctx) {
 		return &voltha.Device{Id: device.Id}, nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.createDevice(ctx, device, ch)
+	select {
+	case res := <-ch:
+		if res == nil {
+			return &voltha.Device{Id: device.Id}, nil
+		} else if err, ok := res.(error); ok {
+			return &voltha.Device{Id: device.Id}, err
+		} else {
+			log.Warnw("create-device-unexpected-return-type", log.Fields{"result": res})
+			err = status.Errorf(codes.Internal, "%s", res)
+			return &voltha.Device{Id: device.Id}, err
+		}
+	case <-ctx.Done():
+		log.Debug("createdevice-client-timeout")
+		return nil, ctx.Err()
+	}
 }
 
 func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
-	log.Debugw("enabledevice-request", log.Fields{"id": id})
+	log.Debugw("enabledevice", log.Fields{"id": id})
 	if isTestMode(ctx) {
 		out := new(empty.Empty)
 		return out, nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.enableDevice(ctx, id, ch)
+	select {
+	case res := <-ch:
+		if res == nil {
+			return new(empty.Empty), nil
+		} else if err, ok := res.(error); ok {
+			return new(empty.Empty), err
+		} else {
+			log.Warnw("enable-device-unexpected-return-type", log.Fields{"result": res})
+			err = status.Errorf(codes.Internal, "%s", res)
+			return new(empty.Empty), err
+		}
+	case <-ctx.Done():
+		log.Debug("enabledevice-client-timeout")
+		return nil, ctx.Err()
+	}
 }
 
 func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {

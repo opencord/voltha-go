@@ -16,11 +16,9 @@
 package config
 
 import (
-	//"context"
 	"flag"
 	"fmt"
-	//dt "github.com/docker/docker/api/types"
-	//dc "github.com/docker/docker/client"
+	"github.com/opencord/voltha-go/common/log"
 	"os"
 )
 
@@ -31,13 +29,13 @@ const (
 	default_InstanceID       = "rwcore001"
 	default_GrpcPort         = 50057
 	default_GrpcHost         = "127.0.0.1"
-	default_KafkaAdapterHost = "10.100.198.240"
+	default_KafkaAdapterHost = "10.176.230.190"
 	default_KafkaAdapterPort = 9092
-	default_KafkaClusterHost = "10.100.198.240"
+	default_KafkaClusterHost = "10.176.215.107"
 	default_KafkaClusterPort = 9094
 	default_KVStoreType      = ConsulStoreName
 	default_KVStoreTimeout   = 5 //in seconds
-	default_KVStoreHost      = "10.100.198.240"
+	default_KVStoreHost      = "10.176.230.190"
 	default_KVStorePort      = 8500 // Etcd = 2379
 	default_LogLevel         = 0
 	default_Banner           = false
@@ -69,6 +67,10 @@ type RWCoreFlags struct {
 	RWCoreKey        string
 	RWCoreCert       string
 	RWCoreCA         string
+}
+
+func init() {
+	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
 // NewRWCoreFlags returns a new RWCore config
@@ -145,17 +147,11 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	flag.Parse()
 
-	// Update the necessary keys with the prefixes
-	//start := time.Now()
 	containerName := getContainerInfo()
-	//fmt.Println("container name:", containerName)
 	if len(containerName) > 0 {
 		cf.InstanceID = containerName
 	}
 
-	//fmt.Println("Inside config:", cf)
-	//elapsed := time.Since(start)
-	//fmt.Println("time:", elapsed/time.Second)
 }
 
 func getContainerInfo() string {
