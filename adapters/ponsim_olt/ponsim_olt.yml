@@ -1,0 +1,52 @@
+logging:
+    version: 1
+
+    formatters:
+      brief:
+        format: '%(message)s'
+      default:
+        format: '%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(module)s.%(funcName)s %(message)s'
+        datefmt: '%Y%m%dT%H%M%S'
+
+    handlers:
+        console:
+            class : logging.StreamHandler
+            level: DEBUG
+            formatter: default
+            stream: ext://sys.stdout
+        localRotatingFile:
+            class: logging.handlers.RotatingFileHandler
+            filename: ponsim_olt.log
+            formatter: default
+            maxBytes: 2097152
+            backupCount: 10
+            level: DEBUG
+        null:
+            class: logging.NullHandler
+
+    loggers:
+        amqp:
+            handlers: [null]
+            propagate: False
+        conf:
+            propagate: False
+        '': # root logger
+            handlers: [console, localRotatingFile]
+            level: DEBUG # this can be bumped up/down by -q and -v command line
+                        # options
+            propagate: False
+
+
+kafka-cluster-proxy:
+    event_bus_publisher:
+        topic_mappings:
+            'model-change-events':
+                kafka_topic: 'voltha.events'
+                filters:     [null]
+            'alarms':
+                kafka_topic: 'voltha.alarms'
+                filters:     [null]
+            'kpis':
+                kafka_topic: 'voltha.kpis'
+                filters:     [null]
+

@@ -10,6 +10,9 @@ exportToHTML
 .vagrant
 *.box
 
+# venv
+.venv
+
 # Ansible
 ansible/*.retry
 

@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-go/common/log"
 	"reflect"
 	"time"
-	"github.com/opencord/voltha-go/common/log"
 )
 
 type Root struct {
@@ -222,7 +222,7 @@ func (r *Root) LoadLatest(hash string) {
 }
 
 type rootData struct {
-	Latest string `json:latest`
+	Latest string            `json:latest`
 	Tags   map[string]string `json:tags`
 }
 

@@ -19,9 +19,9 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
+	"github.com/opencord/voltha-go/common/log"
 	"reflect"
 	"sort"
-	"github.com/opencord/voltha-go/common/log"
 )
 
 var (

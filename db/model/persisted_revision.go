@@ -186,7 +186,7 @@ func (pr *PersistedRevision) UpdateData(data interface{}, branch *Branch) Revisi
 	newPR := &PersistedRevision{
 		Revision: newNPR,
 		Compress: pr.Compress,
-		kvStore: pr.kvStore,
+		kvStore:  pr.kvStore,
 	}
 
 	newPR.Finalize()
@@ -200,7 +200,7 @@ func (pr *PersistedRevision) UpdateChildren(name string, children []Revision, br
 	newPR := &PersistedRevision{
 		Revision: newNPR,
 		Compress: pr.Compress,
-		kvStore: pr.kvStore,
+		kvStore:  pr.kvStore,
 	}
 
 	newPR.Finalize()
@@ -214,7 +214,7 @@ func (pr *PersistedRevision) UpdateAllChildren(children map[string][]Revision, b
 	newPR := &PersistedRevision{
 		Revision: newNPR,
 		Compress: pr.Compress,
-		kvStore: pr.kvStore,
+		kvStore:  pr.kvStore,
 	}
 
 	newPR.Finalize()

@@ -37,12 +37,12 @@ func init() {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	coreKafkaProxy, _ = kk.NewKafkaMessagingProxy(
-		kk.KafkaHost("10.100.198.220"),
+		kk.KafkaHost("10.176.215.107"),
 		kk.KafkaPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Core"}))
 
 	adapterKafkaProxy, _ = kk.NewKafkaMessagingProxy(
-		kk.KafkaHost("10.100.198.220"),
+		kk.KafkaHost("10.176.215.107"),
 		kk.KafkaPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Adapter"}))
 

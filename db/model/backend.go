@@ -18,10 +18,10 @@ package model
 import (
 	"errors"
 	"fmt"
+	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"strconv"
 	"time"
-	"github.com/opencord/voltha-go/common/log"
 )
 
 //TODO: missing cache stuff
