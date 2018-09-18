@@ -16,13 +16,13 @@
 package model
 
 import (
-	"fmt"
-	"strings"
-	"reflect"
 	"crypto/md5"
-	"github.com/opencord/voltha-go/common/log"
 	"errors"
+	"fmt"
+	"github.com/opencord/voltha-go/common/log"
+	"reflect"
 	"runtime"
+	"strings"
 )
 
 type OperationContext struct {

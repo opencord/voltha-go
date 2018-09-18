@@ -1,7 +1,7 @@
 # -------------
 # Build stage
 
-FROM golang:alpine AS build-env
+FROM golang:1.9.2-alpine AS build-env
 
 # Install required packages
 RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
@@ -32,7 +32,7 @@ RUN go get -u github.com/golang/protobuf/protoc-gen-go
 RUN sh /src/protos/build_protos.sh /src/protos
 
 # Build rw_core
-RUN cd $GOPATH/src/github.com/opencord/voltha-go/rw_core && go get -d ./... && rm -rf $GOPATH/src/github.com/coreos/etcd/vendor/golang.org/x/net/trace && go build -o /src/rw_core
+RUN cd $GOPATH/src/github.com/opencord/voltha-go/rw_core && go get -d ./... && rm -rf $GOPATH/src/go.etcd.io/etcd/vendor/golang.org/x/net/trace && go build -o /src/rw_core
 
 # -------------
 # Image creation stage

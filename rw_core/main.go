@@ -22,12 +22,9 @@ import (
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
-	"github.com/opencord/voltha-go/kafka"
 	ca "github.com/opencord/voltha-go/protos/core_adapter"
-	"github.com/opencord/voltha-go/protos/voltha"
 	"github.com/opencord/voltha-go/rw_core/config"
-	grpcapi "github.com/opencord/voltha-go/rw_core/nbi/grpc"
-	"google.golang.org/grpc"
+	c "github.com/opencord/voltha-go/rw_core/core"
 	"os"
 	"os/signal"
 	"strconv"
@@ -40,10 +37,15 @@ type rwCore struct {
 	config      *config.RWCoreFlags
 	halted      bool
 	exitChannel chan int
-	kmp         *kafka.KafkaMessagingProxy
-	grpcServer  *grpcserver.GrpcServer
+	//kmp         *kafka.KafkaMessagingProxy
+	grpcServer *grpcserver.GrpcServer
+	core       *c.Core
 	//For test
 	receiverChannels []<-chan *ca.InterContainerMessage
+}
+
+func init() {
+	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
 func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
@@ -67,14 +69,14 @@ func newRWCore(cf *config.RWCoreFlags) *rwCore {
 	return &rwCore
 }
 
-func (core *rwCore) setKVClient() error {
-	addr := core.config.KVStoreHost + ":" + strconv.Itoa(core.config.KVStorePort)
-	client, err := newKVClient(core.config.KVStoreType, addr, core.config.KVStoreTimeout)
+func (rw *rwCore) setKVClient() error {
+	addr := rw.config.KVStoreHost + ":" + strconv.Itoa(rw.config.KVStorePort)
+	client, err := newKVClient(rw.config.KVStoreType, addr, rw.config.KVStoreTimeout)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
-	core.kvClient = client
+	rw.kvClient = client
 	return nil
 }
 
@@ -89,70 +91,75 @@ func toString(value interface{}) (string, error) {
 	}
 }
 
-func (core *rwCore) startGRPCService(context.Context) {
-	//	create an insecure gserver server
-	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false)
-	log.Info("server created")
-	//
-	//	Create a function to register the core GRPC service with the GRPC server
-	f := func(gs *grpc.Server) {
-		voltha.RegisterVolthaServiceServer(
-			gs,
-			grpcapi.NewAPIHandler(),
-		)
-	}
+//func (rw *rwCore) createGRPCService(context.Context) {
+//	//	create an insecure gserver server
+//	rw.grpcServer = grpcserver.NewGrpcServer(rw.config.GrpcHost, rw.config.GrpcPort, nil, false)
+//	log.Info("grpc-server-created")
+//}
 
-	core.grpcServer.AddService(f)
-	log.Info("service add")
+//func (rw *rwCore) startKafkaMessagingProxy(ctx context.Context) error {
+//	log.Infow("starting-kafka-messaging-proxy", log.Fields{"host":rw.config.KafkaAdapterHost,
+//	"port":rw.config.KafkaAdapterPort, "topic":rw.config.CoreTopic})
+//	var err error
+//	if rw.kmp, err = kafka.NewKafkaMessagingProxy(
+//		kafka.KafkaHost(rw.config.KafkaAdapterHost),
+//		kafka.KafkaPort(rw.config.KafkaAdapterPort),
+//		kafka.DefaultTopic(&kafka.Topic{Name: rw.config.CoreTopic})); err != nil {
+//		log.Errorw("fail-to-create-kafka-proxy", log.Fields{"error": err})
+//		return err
+//	}
+//	if err = rw.kmp.Start(); err != nil {
+//		log.Fatalw("error-starting-messaging-proxy", log.Fields{"error": err})
+//		return err
+//	}
+//
+//	requestProxy := &c.RequestHandlerProxy{}
+//	rw.kmp.SubscribeWithTarget(kafka.Topic{Name: rw.config.CoreTopic}, requestProxy)
+//
+//	log.Info("started-kafka-messaging-proxy")
+//	return nil
+//}
 
-	//	Start the server
-	core.grpcServer.Start(context.Background())
-	log.Info("server started")
-}
-
-
-func (core *rwCore) start(ctx context.Context) {
+func (rw *rwCore) start(ctx context.Context) {
 	log.Info("Starting RW Core components")
-	// Setup GRPC Server
-	go core.startGRPCService(ctx)
+
+	//// Setup GRPC Server
+	//rw.createGRPCService(ctx)
+
+	//// Setup Kafka messaging services
+	//if err := rw.startKafkaMessagingProxy(ctx); err != nil {
+	//	log.Fatalw("failed-to-start-kafka-proxy", log.Fields{"err":err})
+	//}
+
+	// Create the core service
+	rw.core = c.NewCore(rw.config.InstanceID, rw.config)
+
+	// start the core
+	rw.core.Start(ctx)
 
 	// Setup KV Client
-
-	// Setup Kafka messaging services
-	var err error
-	if core.kmp, err = kafka.NewKafkaMessagingProxy(
-		kafka.KafkaHost("10.100.198.220"),
-		kafka.KafkaPort(9092),
-		kafka.DefaultTopic(&kafka.Topic{Name: "Adapter"})); err != nil {
-		log.Errorw("fail-to-create-kafka-proxy", log.Fields{"error": err})
-		return
-	}
-	// Start the kafka messaging service - synchronous call to ensure
-	if err = core.kmp.Start(); err != nil {
-		log.Fatalw("error-starting-messaging-proxy", log.Fields{"error": err})
-	}
 }
 
-func (core *rwCore) stop() {
+func (rw *rwCore) stop() {
 	// Stop leadership tracking
-	core.halted = true
+	rw.halted = true
 
-	// Stop the Kafka messaging service
-	if core.kmp != nil {
-		core.kmp.Stop()
-	}
+	//// Stop the Kafka messaging service
+	//if rw.kmp != nil {
+	//	rw.kmp.Stop()
+	//}
 
 	// send exit signal
-	core.exitChannel <- 0
+	rw.exitChannel <- 0
 
 	// Cleanup - applies only if we had a kvClient
-	if core.kvClient != nil {
+	if rw.kvClient != nil {
 		// Release all reservations
-		if err := core.kvClient.ReleaseAllReservations(); err != nil {
+		if err := rw.kvClient.ReleaseAllReservations(); err != nil {
 			log.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
 		}
 		// Close the DB connection
-		core.kvClient.Close()
+		rw.kvClient.Close()
 	}
 }
 
@@ -201,10 +208,21 @@ func main() {
 	cf := config.NewRWCoreFlags()
 	cf.ParseCommandArguments()
 
-	// Setup logging
-	if _, err := log.SetLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
+	//// Setup logging
+
+	//Setup default logger - applies for packages that do not have specific logger set
+	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
+
+	// Update all loggers (provisionned via init) with a common field
+	if err := log.UpdateAllLoggers(log.Fields{"instanceId": cf.InstanceID}); err != nil {
+		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+	}
+
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
+
 	defer log.CleanUp()
 
 	// Print banner if specified
@@ -217,15 +235,15 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	core := newRWCore(cf)
-	go core.start(ctx)
+	rw := newRWCore(cf)
+	go rw.start(ctx)
 
 	code := waitForExit()
 	log.Infow("received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
-	core.stop()
+	rw.stop()
 
 	elapsed := time.Since(start)
-	log.Infow("rw-core-run-time", log.Fields{"core": core.config.InstanceID, "time": elapsed / time.Second})
+	log.Infow("rw-core-run-time", log.Fields{"core": rw.config.InstanceID, "time": elapsed / time.Second})
 }
