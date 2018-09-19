@@ -36,18 +36,18 @@ type DeviceManager struct {
 	logicalDeviceMgr    *LogicalDeviceManager
 	kafkaProxy          *kafka.KafkaMessagingProxy
 	stateTransitions    *TransitionMap
-	localDataProxy      *model.Proxy
+	clusterDataProxy    *model.Proxy
 	exitChannel         chan int
 	lockDeviceAgentsMap sync.RWMutex
 }
 
-func NewDeviceManager(kafkaProxy *kafka.KafkaMessagingProxy, ldProxy *model.Proxy) *DeviceManager {
+func NewDeviceManager(kafkaProxy *kafka.KafkaMessagingProxy, cdProxy *model.Proxy) *DeviceManager {
 	var deviceMgr DeviceManager
 	deviceMgr.exitChannel = make(chan int, 1)
 	deviceMgr.deviceAgents = make(map[string]*DeviceAgent)
 	deviceMgr.adapterProxy = NewAdapterProxy(kafkaProxy)
 	deviceMgr.kafkaProxy = kafkaProxy
-	deviceMgr.localDataProxy = ldProxy
+	deviceMgr.clusterDataProxy = cdProxy
 	deviceMgr.lockDeviceAgentsMap = sync.RWMutex{}
 	return &deviceMgr
 }
@@ -98,7 +98,7 @@ func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Devi
 	log.Debugw("createDevice-start", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
 
 	// Create and start a device agent for that device
-	agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.localDataProxy)
+	agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy)
 	dMgr.addDeviceAgentToMap(agent)
 	agent.start(ctx)
 
@@ -122,7 +122,7 @@ func (dMgr *DeviceManager) enableDevice(ctx context.Context, id *voltha.ID, ch c
 func (dMgr *DeviceManager) getDevice(id string) (*voltha.Device, error) {
 	log.Debugw("getDevice-start", log.Fields{"deviceid": id})
 
-	if device := dMgr.localDataProxy.Get("/devices/"+id, 1, false, ""); device == nil {
+	if device := dMgr.clusterDataProxy.Get("/devices/"+id, 1, false, ""); device == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id)
 	} else {
 		cloned := reflect.ValueOf(device).Elem().Interface().(voltha.Device)
@@ -136,7 +136,7 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	dMgr.lockDeviceAgentsMap.Lock()
 	defer dMgr.lockDeviceAgentsMap.Unlock()
 	for _, agent := range dMgr.deviceAgents {
-		if device := dMgr.localDataProxy.Get("/devices/"+agent.deviceId, 1, false, ""); device != nil {
+		if device := dMgr.clusterDataProxy.Get("/devices/"+agent.deviceId, 1, false, ""); device != nil {
 			cloned := reflect.ValueOf(device).Elem().Interface().(voltha.Device)
 			result.Items = append(result.Items, &cloned)
 		}
@@ -215,7 +215,7 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	childDevice.ProxyAddress = &voltha.Device_ProxyAddress{ChannelId: uint32(channelId)}
 
 	// Create and start a device agent for that device
-	agent := newDeviceAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.localDataProxy)
+	agent := newDeviceAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.clusterDataProxy)
 	dMgr.addDeviceAgentToMap(agent)
 	agent.start(nil)
 

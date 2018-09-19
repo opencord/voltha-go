@@ -63,8 +63,8 @@ func (core *Core) Start(ctx context.Context) {
 	log.Info("starting-core")
 	core.startKafkaMessagingProxy(ctx)
 	log.Info("values", log.Fields{"kmp": core.kmp})
-	core.deviceMgr = NewDeviceManager(core.kmp, core.localDataProxy)
-	core.logicalDeviceMgr = NewLogicalDeviceManager(core.deviceMgr, core.kmp, core.localDataProxy)
+	core.deviceMgr = NewDeviceManager(core.kmp, core.clusterDataProxy)
+	core.logicalDeviceMgr = NewLogicalDeviceManager(core.deviceMgr, core.kmp, core.clusterDataProxy)
 	core.registerAdapterRequestHandler(ctx, core.deviceMgr, core.logicalDeviceMgr, core.localDataProxy, core.clusterDataProxy)
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
@@ -86,7 +86,7 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false)
 	log.Info("grpc-server-created")
 
-	core.grpcNBIAPIHanfler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.clusterDataProxy, core.localDataProxy)
+	core.grpcNBIAPIHanfler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
 		voltha.RegisterVolthaServiceServer(

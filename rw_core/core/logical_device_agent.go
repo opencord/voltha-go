@@ -29,23 +29,23 @@ import (
 )
 
 type LogicalDeviceAgent struct {
-	logicalDeviceId string
-	lastData        *voltha.LogicalDevice
-	rootDeviceId    string
-	deviceMgr       *DeviceManager
-	ldeviceMgr      *LogicalDeviceManager
-	localDataProxy  *model.Proxy
-	exitChannel     chan int
+	logicalDeviceId  string
+	lastData         *voltha.LogicalDevice
+	rootDeviceId     string
+	deviceMgr        *DeviceManager
+	ldeviceMgr       *LogicalDeviceManager
+	clusterDataProxy *model.Proxy
+	exitChannel      chan int
 }
 
 func NewLogicalDeviceAgent(id string, device *voltha.Device, ldeviceMgr *LogicalDeviceManager, deviceMgr *DeviceManager,
-	ldProxy *model.Proxy) *LogicalDeviceAgent {
+	cdProxy *model.Proxy) *LogicalDeviceAgent {
 	var agent LogicalDeviceAgent
 	agent.exitChannel = make(chan int, 1)
 	agent.logicalDeviceId = id
 	agent.rootDeviceId = device.Id
 	agent.deviceMgr = deviceMgr
-	agent.localDataProxy = ldProxy
+	agent.clusterDataProxy = cdProxy
 	agent.ldeviceMgr = ldeviceMgr
 	return &agent
 }
@@ -83,7 +83,7 @@ func (agent *LogicalDeviceAgent) Start(ctx context.Context) error {
 		ld.Ports = append(ld.Ports, lp)
 	}
 	// Save the logical device
-	if added := agent.localDataProxy.Add("/logical_devices", ld, ""); added == nil {
+	if added := agent.clusterDataProxy.Add("/logical_devices", ld, ""); added == nil {
 		log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 	} else {
 		log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
@@ -108,7 +108,7 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(ctx context.Context, childDev
 		cloned := reflect.ValueOf(ldevice).Elem().Interface().(voltha.LogicalDevice)
 		lp := (proto.Clone(portCap.Port)).(*voltha.LogicalPort)
 		cloned.Ports = append(cloned.Ports, lp)
-		afterUpdate := agent.localDataProxy.Update("/logical_devices/"+agent.logicalDeviceId, &cloned, false, "")
+		afterUpdate := agent.clusterDataProxy.Update("/logical_devices/"+agent.logicalDeviceId, &cloned, false, "")
 		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "failed-add-UNI-port:%s", agent.logicalDeviceId)
 		}

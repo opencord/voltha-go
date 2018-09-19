@@ -54,7 +54,7 @@ DOCKER_IMAGE_LIST = \
 	rw_core
 
 
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core ro_core
+.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core ro_core protos kafka db tests adapters
 
 # This should to be the first and default target in this Makefile
 help:
@@ -78,11 +78,7 @@ $(DIRS_CLEAN):
 	@echo "    CLEAN $(basename $@)"
 	$(Q)$(MAKE) -C $(basename $@) clean
 
-build: protoc protos 
-#build: protoc protos containers
-
-base:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f adapters/docker/Dockerfile.base .
+build: containers
 
 containers: rw_core
 
@@ -93,18 +89,5 @@ else
 rw_core:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-rw-core:${TAG} -f docker/Dockerfile.rw_core_d .
 endif
-
-protoc:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-protoc:${TAG} -f adapters/docker/Dockerfile.protoc .
-
-protos:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-protos:${TAG} -f adapters/docker/Dockerfile.protos .
-
-ponsim_adapter_olt:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-ponsim-adapter-olt:${TAG} -f adapters/docker/Dockerfile.ponsim_adapter_olt .
-
-ponsim_adapter_onu:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-ponsim-adapter-onu:${TAG} -f adapters/docker/Dockerfile.ponsim_adapter_onu .
-
 
 # end file

@@ -28,15 +28,15 @@ import (
 )
 
 type DeviceAgent struct {
-	deviceId       string
-	lastData       *voltha.Device
-	adapterProxy   *AdapterProxy
-	deviceMgr      *DeviceManager
-	localDataProxy *model.Proxy
-	exitChannel    chan int
+	deviceId         string
+	lastData         *voltha.Device
+	adapterProxy     *AdapterProxy
+	deviceMgr        *DeviceManager
+	clusterDataProxy *model.Proxy
+	exitChannel      chan int
 }
 
-func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceManager, ldProxy *model.Proxy) *DeviceAgent {
+func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceManager, cdProxy *model.Proxy) *DeviceAgent {
 	var agent DeviceAgent
 	device.Id = CreateDeviceId()
 	agent.deviceId = device.Id
@@ -44,14 +44,14 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	agent.lastData = device
 	agent.deviceMgr = deviceMgr
 	agent.exitChannel = make(chan int, 1)
-	agent.localDataProxy = ldProxy
+	agent.clusterDataProxy = cdProxy
 	return &agent
 }
 
 func (agent *DeviceAgent) start(ctx context.Context) {
 	log.Debugw("starting-device-agent", log.Fields{"device": agent.lastData})
 	// Add the initial device to the local model
-	if added := agent.localDataProxy.Add("/devices", agent.lastData, ""); added == nil {
+	if added := agent.clusterDataProxy.Add("/devices", agent.lastData, ""); added == nil {
 		log.Errorw("failed-to-add-device", log.Fields{"deviceId": agent.deviceId})
 	}
 	log.Debug("device-agent-started")
@@ -72,7 +72,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 		cloned := reflect.ValueOf(device).Elem().Interface().(voltha.Device)
 		cloned.AdminState = voltha.AdminState_ENABLED
 		cloned.OperStatus = voltha.OperStatus_ACTIVATING
-		if afterUpdate := agent.localDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, ""); afterUpdate == nil {
+		if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, ""); afterUpdate == nil {
 			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
 		} else {
 			if err := agent.adapterProxy.AdoptDevice(ctx, &cloned); err != nil {
@@ -136,7 +136,7 @@ func (agent *DeviceAgent) updateDevice(device *voltha.Device) error {
 	} else {
 		// store the changed data
 		cloned := (proto.Clone(device)).(*voltha.Device)
-		afterUpdate := agent.localDataProxy.Update("/devices/"+device.Id, cloned, false, "")
+		afterUpdate := agent.clusterDataProxy.Update("/devices/"+device.Id, cloned, false, "")
 		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", device.Id)
 		}
@@ -164,7 +164,7 @@ func (agent *DeviceAgent) updateDeviceState(operState *core_adapter.IntType, con
 		}
 		log.Debugw("DeviceStateUpdate-device", log.Fields{"device": cloned})
 		// Store the device
-		if afterUpdate := agent.localDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, ""); afterUpdate == nil {
+		if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, ""); afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
 		// Perform the state transition
@@ -187,7 +187,7 @@ func (agent *DeviceAgent) updatePmConfigs(pmConfigs *voltha.PmConfigs) error {
 		cp := proto.Clone(pmConfigs)
 		cloned.PmConfigs = cp.(*voltha.PmConfigs)
 		// Store the device
-		afterUpdate := agent.localDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, "")
+		afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, "")
 		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
@@ -210,7 +210,7 @@ func (agent *DeviceAgent) addPort(port *voltha.Port) error {
 		cp := proto.Clone(port)
 		cloned.Ports = append(cloned.Ports, cp.(*voltha.Port))
 		// Store the device
-		afterUpdate := agent.localDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, "")
+		afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, "")
 		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
@@ -250,7 +250,7 @@ func (agent *DeviceAgent) updateDeviceAttribute(name string, value interface{}) 
 	log.Debugw("update-field-status", log.Fields{"device": storeDevice, "name": name, "updated": updated})
 	//	Save the data
 	cloned := reflect.ValueOf(storeDevice).Elem().Interface().(voltha.Device)
-	if afterUpdate := agent.localDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, ""); afterUpdate == nil {
+	if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, &cloned, false, ""); afterUpdate == nil {
 		log.Warnw("attribute-update-failed", log.Fields{"attribute": name, "value": value})
 	}
 	return

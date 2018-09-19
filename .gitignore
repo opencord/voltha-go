@@ -34,6 +34,7 @@ adapters/venv-darwin
 **/*_pb2.py
 **/*_pb2_grpc.py
 **/*.pb.go
+**/*.desc
 
 # Editors
 *.bak
@@ -55,5 +56,4 @@ adapters/venv-darwin
 
 # Files copied over during make
 adapters/protos/*.proto
-adapters/protos/*.desc
 

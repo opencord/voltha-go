@@ -34,18 +34,18 @@ type LogicalDeviceManager struct {
 	deviceMgr                  *DeviceManager
 	adapterProxy               *AdapterProxy
 	kafkaProxy                 *kafka.KafkaMessagingProxy
-	localDataProxy             *model.Proxy
+	clusterDataProxy           *model.Proxy
 	exitChannel                chan int
 	lockLogicalDeviceAgentsMap sync.RWMutex
 }
 
-func NewLogicalDeviceManager(deviceMgr *DeviceManager, kafkaProxy *kafka.KafkaMessagingProxy, ldProxy *model.Proxy) *LogicalDeviceManager {
+func NewLogicalDeviceManager(deviceMgr *DeviceManager, kafkaProxy *kafka.KafkaMessagingProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
 	var logicalDeviceMgr LogicalDeviceManager
 	logicalDeviceMgr.exitChannel = make(chan int, 1)
 	logicalDeviceMgr.logicalDeviceAgents = make(map[string]*LogicalDeviceAgent)
 	logicalDeviceMgr.deviceMgr = deviceMgr
 	logicalDeviceMgr.kafkaProxy = kafkaProxy
-	logicalDeviceMgr.localDataProxy = ldProxy
+	logicalDeviceMgr.clusterDataProxy = cdProxy
 	logicalDeviceMgr.lockLogicalDeviceAgentsMap = sync.RWMutex{}
 	return &logicalDeviceMgr
 }
@@ -80,7 +80,7 @@ func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string)
 
 func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalDevice, error) {
 	log.Debugw("getlogicalDevice-start", log.Fields{"logicaldeviceid": id})
-	logicalDevice := ldMgr.localDataProxy.Get("/logical_devices/"+id, 1, false, "")
+	logicalDevice := ldMgr.clusterDataProxy.Get("/logical_devices/"+id, 1, false, "")
 	if logicalDevice != nil {
 		cloned := reflect.ValueOf(logicalDevice).Elem().Interface().(voltha.LogicalDevice)
 		return &cloned, nil
@@ -94,7 +94,7 @@ func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices,
 	ldMgr.lockLogicalDeviceAgentsMap.Lock()
 	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
 	for _, agent := range ldMgr.logicalDeviceAgents {
-		logicalDevice := ldMgr.localDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 1, false, "")
+		logicalDevice := ldMgr.clusterDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 1, false, "")
 		if logicalDevice != nil {
 			cloned := reflect.ValueOf(logicalDevice).Elem().Interface().(voltha.LogicalDevice)
 			result.Items = append(result.Items, &cloned)
@@ -118,7 +118,7 @@ func (ldMgr *LogicalDeviceManager) CreateLogicalDevice(ctx context.Context, devi
 	id := strings.Replace(macAddress, ":", "", -1)
 	log.Debugw("setting-logical-device-id", log.Fields{"logicaldeviceId": id})
 
-	agent := NewLogicalDeviceAgent(id, device, ldMgr, ldMgr.deviceMgr, ldMgr.localDataProxy)
+	agent := NewLogicalDeviceAgent(id, device, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 	go agent.Start(ctx)
 

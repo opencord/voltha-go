@@ -44,7 +44,7 @@ func CreateLogicalDeviceId() string {
 	return val
 }
 
-// CreateLogicalPortId produces a random port ID for a logical device.   
+// CreateLogicalPortId produces a random port ID for a logical device.
 func CreateLogicalPortId() uint32 {
 	//	A logical port is a uint32
 	return m.Uint32()

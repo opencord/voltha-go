@@ -75,25 +75,15 @@ message Logging {
     string package_name = 2;
 }
 
-// Top-level (root) node for a Voltha Instance
+// CoreInstance represents a core instance.  It is data held in memory when a core
+// is running.  This data is not persistent.
 message CoreInstance {
     option (yang_message_rule) = CREATE_BOTH_GROUPING_AND_CONTAINER;
 
     string instance_id = 1  [(access) = READ_ONLY];
 
-    string version = 2 [(access) = READ_ONLY];
+    HealthStatus health = 2 [(child_node) = {}];
 
-    LogLevel.LogLevel log_level = 3;
-
-    HealthStatus health = 10 [(child_node) = {}];
-
-    repeated LogicalDevice logical_devices = 12 [(child_node) = {key: "id"}];
-
-    repeated Device devices = 13 [(child_node) = {key: "id"}];
-
-    repeated DeviceGroup device_groups = 15 [(child_node) = {key: "id"}];
-
-    repeated AlarmFilter alarm_filters = 16 [(child_node) = {key: "id"}];
 }
 
 message CoreInstances {
@@ -101,25 +91,23 @@ message CoreInstances {
     repeated string items = 1;
 }
 
-// Voltha representing the entire Voltha cluster
+// Voltha represents the Voltha cluster data.  Each Core instance will hold a subset of
+// the entire cluster. However, some items (e.g. adapters) will be held by all cores
+// for better performance
 message Voltha {
     option (yang_message_rule) = CREATE_BOTH_GROUPING_AND_CONTAINER;
 
     string version = 1 [(access) = READ_ONLY];
 
-    LogLevel.LogLevel log_level = 2;
+    repeated Adapter adapters = 2 [(child_node) = {key: "id"}];
 
-    repeated CoreInstance core_instances = 3 [(child_node) = {key: "instance_id"}];
+    repeated LogicalDevice logical_devices = 3 [(child_node) = {key: "id"}];
 
-    repeated Adapter adapters = 11 [(child_node) = {key: "id"}];
+    repeated Device devices = 4 [(child_node) = {key: "id"}];
 
-    repeated LogicalDevice logical_devices = 12 [(child_node) = {key: "id"}];
+    repeated DeviceGroup device_groups = 5 [(child_node) = {key: "id"}];
 
-    repeated Device devices = 13 [(child_node) = {key: "id"}];
-
-    repeated DeviceGroup device_groups = 15 [(child_node) = {key: "id"}];
-
-    repeated AlarmFilter alarm_filters = 16 [(child_node) = {key: "id"}];
+    repeated AlarmFilter alarm_filters = 6 [(child_node) = {key: "id"}];
 
     repeated
         omci.MibDeviceData omci_mib_database = 28

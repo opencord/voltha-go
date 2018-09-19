@@ -21,7 +21,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
@@ -33,16 +32,12 @@ import (
 type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
-	clusterDataProxy *model.Proxy
-	localDataProxy   *model.Proxy
 	da.DefaultAPIHandler
 }
 
-func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, cdProxy *model.Proxy, ldProxy *model.Proxy) *APIHandler {
+func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager) *APIHandler {
 	handler := &APIHandler{deviceMgr: deviceMgr,
-		logicalDeviceMgr: lDeviceMgr,
-		clusterDataProxy: cdProxy,
-		localDataProxy:   ldProxy}
+		logicalDeviceMgr: lDeviceMgr}
 	return handler
 }
 func isTestMode(ctx context.Context) bool {

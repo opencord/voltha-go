@@ -20,7 +20,7 @@ MAINTAINER Voltha Community <info@opennetworking.org>
 RUN apt-get update && \
     apt-get install -y python python-pip openssl iproute2 libpcap-dev wget
 
-COPY adapters/requirements.txt /tmp/requirements.txt
+COPY requirements.txt /tmp/requirements.txt
 
 # pip install cython enum34 six && \
 # Install app dependencies

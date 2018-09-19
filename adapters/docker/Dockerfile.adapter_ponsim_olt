@@ -23,20 +23,20 @@ MAINTAINER Voltha Community <info@opennetworking.org>
 # Bundle app source
 RUN mkdir /adapters && touch /adapters/__init__.py
 ENV PYTHONPATH=/adapters
-COPY adapters/common /adapters/adapters/common
-COPY adapters/kafka /adapters/adapters/kafka
-COPY adapters/*.py /adapters/adapters/
+COPY common /adapters/adapters/common
+COPY kafka /adapters/adapters/kafka
+COPY ./*.py /adapters/adapters/
 #COPY pki /voltha/pki
-COPY adapters/ponsim_onu /adapters/adapters/ponsim_onu
+COPY ponsim_olt /adapters/adapters/ponsim_olt
 RUN touch /adapters/adapters/__init__.py
 
 
 # Copy in the generated GRPC proto code
 COPY --from=protos /protos/voltha /adapters/adapters/protos
 COPY --from=protos /protos/google/api /adapters/adapters/protos/third_party/google/api
-COPY adapters/protos/third_party/__init__.py /adapters/adapters/protos/third_party
+COPY protos/third_party/__init__.py /adapters/adapters/protos/third_party
 RUN touch /adapters/adapters/protos/__init__.py
 RUN touch /adapters/adapters/protos/third_party/google/__init__.py
 
 # Exposing process and default entry point
-# CMD ["python", "/adapters/ponsim_onu/main.py"]
+# CMD ["python", "/adapters/ponsim_olt/main.py"]
