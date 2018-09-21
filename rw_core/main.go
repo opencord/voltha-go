@@ -45,7 +45,7 @@ type rwCore struct {
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	log.AddPackage(log.JSON, log.DebugLevel, nil)
 }
 
 func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {

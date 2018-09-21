@@ -118,15 +118,15 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ca.Argument) (*vol
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
-	pID := &ca.StrType{}
+	pID := &voltha.ID{}
 	if err := ptypes.UnmarshalAny(args[0].Value, pID); err != nil {
 		log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
 		return nil, err
 	}
-	log.Debugw("GetChildDevice", log.Fields{"deviceId": pID.Val})
+	log.Debugw("GetChildDevice", log.Fields{"deviceId": pID.Id})
 
 	if rhp.TestMode { // Execute only for test cases
-		return &voltha.Device{Id: pID.Val}, nil
+		return &voltha.Device{Id: pID.Id}, nil
 	}
 	return nil, nil
 }
@@ -137,7 +137,7 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ca.Argument) (*voltha.Po
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
-	pID := &ca.StrType{}
+	pID := &voltha.ID{}
 	if err := ptypes.UnmarshalAny(args[0].Value, pID); err != nil {
 		log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
 		return nil, err
@@ -149,7 +149,7 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ca.Argument) (*voltha.Po
 		return nil, err
 	}
 
-	log.Debugw("GetPorts", log.Fields{"deviceID": pID.Val, "portype": pt.Val})
+	log.Debugw("GetPorts", log.Fields{"deviceID": pID.Id, "portype": pt.Val})
 
 	if rhp.TestMode { // Execute only for test cases
 		aPort := &voltha.Port{Label: "test_port"}
@@ -167,15 +167,15 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ca.Argument) (*vo
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
-	pID := &ca.StrType{}
+	pID := &voltha.ID{}
 	if err := ptypes.UnmarshalAny(args[0].Value, pID); err != nil {
 		log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
 		return nil, err
 	}
-	log.Debugw("GetChildDevice", log.Fields{"deviceId": pID.Val})
+	log.Debugw("GetChildDevice", log.Fields{"deviceId": pID.Id})
 
 	if rhp.TestMode { // Execute only for test cases
-		return &voltha.Device{Id: pID.Val}, nil
+		return &voltha.Device{Id: pID.Id}, nil
 	}
 	//TODO: Complete
 	return nil, nil

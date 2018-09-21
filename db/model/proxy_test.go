@@ -52,9 +52,10 @@ var (
 )
 
 func init() {
-	if _, err := log.SetLogger(log.CONSOLE, 0, log.Fields{"instanceId": "proxy_test"}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("cannot setup logging")
-	}
+
+	log.AddPackage(log.JSON, log.ErrorLevel, nil)
+	log.UpdateAllLoggers(log.Fields{"instanceId": "proxy_test"})
+
 	defer log.CleanUp()
 
 	pt.Backend = NewBackend(pt.DbType, pt.DbHost, pt.DbPort, pt.DbTimeout, pt.DbPrefix)

@@ -29,20 +29,25 @@ import (
 	"time"
 )
 
+/*
+Prerequite:  Start the kafka/zookeeper containers.
+*/
+
 var coreKafkaProxy *kk.KafkaMessagingProxy
 var adapterKafkaProxy *kk.KafkaMessagingProxy
 
 func init() {
-	if _, err := log.SetLogger(log.JSON, 3, log.Fields{"instanceId": "testing"}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
-	}
+	log.AddPackage(log.JSON, log.ErrorLevel, nil)
+	log.UpdateAllLoggers(log.Fields{"instanceId": "testing"})
+	log.SetAllLogLevel(log.ErrorLevel)
+
 	coreKafkaProxy, _ = kk.NewKafkaMessagingProxy(
-		kk.KafkaHost("10.176.215.107"),
+		kk.KafkaHost("192.168.0.20"),
 		kk.KafkaPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Core"}))
 
 	adapterKafkaProxy, _ = kk.NewKafkaMessagingProxy(
-		kk.KafkaHost("10.176.215.107"),
+		kk.KafkaHost("192.168.0.20"),
 		kk.KafkaPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Adapter"}))
 
@@ -53,7 +58,7 @@ func init() {
 
 func subscribeTarget(kmp *kk.KafkaMessagingProxy) {
 	topic := kk.Topic{Name: "Core"}
-	requestProxy := &rhp.RequestHandlerProxy{TestMode: true}
+	requestProxy := &rhp.AdapterRequestHandlerProxy{TestMode: true}
 	kmp.SubscribeWithTarget(topic, requestProxy)
 }
 
@@ -94,7 +99,7 @@ func TestSubscribeUnsubscribe(t *testing.T) {
 
 func TestMultipleSubscribeUnsubscribe(t *testing.T) {
 	// First subscribe to the specific topic
-	log.SetLoglevel(0)
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
 	var err error
 	var ch1 <-chan *ca.InterContainerMessage
 	var ch2 <-chan *ca.InterContainerMessage
@@ -133,7 +138,7 @@ func TestMultipleSubscribeUnsubscribe(t *testing.T) {
 }
 
 func TestIncorrectAPI(t *testing.T) {
-	log.SetLoglevel(3)
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.ErrorLevel)
 	trnsId := uuid.New().String()
 	protoMsg := &voltha.Device{Id: trnsId}
 	args := make([]*kk.KVArg, 1)
@@ -181,7 +186,7 @@ func TestIncorrectAPIParams(t *testing.T) {
 
 func TestGetDevice(t *testing.T) {
 	trnsId := uuid.New().String()
-	protoMsg := &ca.StrType{Val: trnsId}
+	protoMsg := &voltha.ID{Id:trnsId}
 	args := make([]*kk.KVArg, 1)
 	args[0] = &kk.KVArg{
 		Key:   "deviceID",
@@ -207,7 +212,7 @@ func TestGetDevice(t *testing.T) {
 
 func TestGetDeviceTimeout(t *testing.T) {
 	trnsId := uuid.New().String()
-	protoMsg := &ca.StrType{Val: trnsId}
+	protoMsg := &voltha.ID{Id:trnsId}
 	args := make([]*kk.KVArg, 1)
 	args[0] = &kk.KVArg{
 		Key:   "deviceID",
@@ -232,7 +237,7 @@ func TestGetDeviceTimeout(t *testing.T) {
 
 func TestGetChildDevice(t *testing.T) {
 	trnsId := uuid.New().String()
-	protoMsg := &ca.StrType{Val: trnsId}
+	protoMsg := &voltha.ID{Id:trnsId}
 	args := make([]*kk.KVArg, 1)
 	args[0] = &kk.KVArg{
 		Key:   "deviceID",
@@ -255,7 +260,7 @@ func TestGetChildDevice(t *testing.T) {
 
 func TestGetChildDevices(t *testing.T) {
 	trnsId := uuid.New().String()
-	protoMsg := &ca.StrType{Val: trnsId}
+	protoMsg := &voltha.ID{Id:trnsId}
 	args := make([]*kk.KVArg, 1)
 	args[0] = &kk.KVArg{
 		Key:   "deviceID",
@@ -278,7 +283,7 @@ func TestGetChildDevices(t *testing.T) {
 
 func TestGetPorts(t *testing.T) {
 	trnsId := uuid.New().String()
-	protoArg1 := &ca.StrType{Val: trnsId}
+	protoArg1 := &voltha.ID{Id:trnsId}
 	args := make([]*kk.KVArg, 2)
 	args[0] = &kk.KVArg{
 		Key:   "deviceID",
@@ -306,7 +311,7 @@ func TestGetPorts(t *testing.T) {
 
 func TestGetPortsMissingArgs(t *testing.T) {
 	trnsId := uuid.New().String()
-	protoArg1 := &ca.StrType{Val: trnsId}
+	protoArg1 := &voltha.ID{Id:trnsId}
 	args := make([]*kk.KVArg, 1)
 	args[0] = &kk.KVArg{
 		Key:   "deviceID",
@@ -422,11 +427,6 @@ func TestChildDeviceDetectedMissingArgs(t *testing.T) {
 	args[2] = &kk.KVArg{
 		Key:   "childDeviceType",
 		Value: protoArg3,
-	}
-	protoArg4 := &voltha.Device_ProxyAddress{DeviceId: trnsId, ChannelId: 100}
-	args[3] = &kk.KVArg{
-		Key:   "proxyAddress",
-		Value: protoArg4,
 	}
 
 	rpc := "ChildDeviceDetected"

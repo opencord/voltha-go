@@ -50,9 +50,10 @@ var (
 )
 
 func init() {
-	if _, err := log.SetLogger(log.CONSOLE, 0, log.Fields{"instanceId": "transaction_test"}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("cannot setup logging")
-	}
+
+	log.AddPackage(log.JSON, log.ErrorLevel, nil)
+	log.UpdateAllLoggers(log.Fields{"instanceId": "transaction_test"})
+
 	defer log.CleanUp()
 
 	tx.Backend = NewBackend(tx.DbType, tx.DbHost, tx.DbPort, tx.DbTimeout, tx.DbPrefix)

@@ -149,26 +149,6 @@ func SetDefaultLogger(outputType string, level int, defaultFields Fields) (Logge
 	return defaultLogger, nil
 }
 
-func SetPackageLevelLoggers(outputType string, level int, defaultFields Fields, pkgNames []string) error {
-	cfgs = make(map[string]zp.Config)
-	loggers = make(map[string]*logger)
-	for _, pkg := range pkgNames {
-		// Build a custom config using zap - for now initialzie all packages uses the same config
-		cfgs[pkg] = getDefaultConfig(outputType, level, defaultFields)
-
-		l, err := cfgs[pkg].Build()
-		if err != nil {
-			return err
-		}
-
-		loggers[pkg] = &logger{
-			log:    l.Sugar(),
-			parent: l,
-		}
-	}
-
-	return nil
-}
 
 func AddPackage(outputType string, level int, defaultFields Fields) error {
 	if cfgs == nil {
@@ -217,28 +197,32 @@ func UpdateAllLoggers(defaultFields Fields) error {
 	return nil
 }
 
-//func SetDefaultLoglevel(level int) {
-//	switch level {
-//	case DebugLevel:
-//		cfg.Level.SetLevel(zc.DebugLevel)
-//	case InfoLevel:
-//		cfg.Level.SetLevel(zc.InfoLevel)
-//	case WarnLevel:
-//		cfg.Level.SetLevel(zc.WarnLevel)
-//	case ErrorLevel:
-//		cfg.Level.SetLevel(zc.ErrorLevel)
-//	case PanicLevel:
-//		cfg.Level.SetLevel(zc.PanicLevel)
-//	case FatalLevel:
-//		cfg.Level.SetLevel(zc.FatalLevel)
-//	default:
-//		cfg.Level.SetLevel(zc.ErrorLevel)
-//	}
-//}
 
 func SetPackageLogLevel(packageName string, level int) {
 	// Get proper config
 	if cfg, ok := cfgs[packageName]; ok {
+		switch level {
+		case DebugLevel:
+			cfg.Level.SetLevel(zc.DebugLevel)
+		case InfoLevel:
+			cfg.Level.SetLevel(zc.InfoLevel)
+		case WarnLevel:
+			cfg.Level.SetLevel(zc.WarnLevel)
+		case ErrorLevel:
+			cfg.Level.SetLevel(zc.ErrorLevel)
+		case PanicLevel:
+			cfg.Level.SetLevel(zc.PanicLevel)
+		case FatalLevel:
+			cfg.Level.SetLevel(zc.FatalLevel)
+		default:
+			cfg.Level.SetLevel(zc.ErrorLevel)
+		}
+	}
+}
+
+func SetAllLogLevel(level int) {
+	// Get proper config
+	for _, cfg := range cfgs{
 		switch level {
 		case DebugLevel:
 			cfg.Level.SetLevel(zc.DebugLevel)
@@ -280,81 +264,54 @@ func CleanUp() error {
 	return nil
 }
 
-// GetLogger returned the default logger.  If SetLogger was not previously invoked then
-// this method will return an error
-//func GetLogger() (Logger, error) {
-//	if defaultLogger == nil {
-//		// Setup the logger with default values - debug level,
-//		SetDefaultLogger(JSON, 0, Fields{"instanceId": "default-logger"})
-//		//return nil, errors.New("Uninitialized-logger")
-//	}
-//	return defaultLogger, nil
-//}
-
-//func extractFileNameAndLineNumber(skipLevel int) (string, int) {
-//	_, file, line, ok := runtime.Caller(skipLevel)
-//	var key string
-//	if !ok {
-//		key = "<???>"
-//		line = 1
-//	} else {
-//		slash := strings.LastIndex(file, "/")
-//		key = file[slash+1:]
-//	}
-//	return key, line
-//}
-
-// sourced adds a source field to the logger that contains
-// the file name and line where the logging happened.
-//func (l *logger) sourced() *zp.SugaredLogger {
-//	key, line := extractFileNameAndLineNumber(3)
-//	if strings.HasSuffix(key, "log.go") || strings.HasSuffix(key, "proc.go") {
-//		// Go to a lower level
-//		key, line = extractFileNameAndLineNumber(2)
-//	}
-//	if !strings.HasSuffix(key, ".go") {
-//		// Go to a higher level
-//		key, line = extractFileNameAndLineNumber(4)
-//	}
-//
-//	return l.log.With("caller", fmt.Sprintf("%s:%d", key, line))
-//}
-
-func retrieveCallInfo(skiplevel int) (string, string, string, int) {
-	pc, file, line, _ := runtime.Caller(skiplevel)
-	_, fileName := path.Split(file)
-	parts := strings.Split(runtime.FuncForPC(pc).Name(), ".")
-	pl := len(parts)
+func getCallerInfo() (string, string, string, int){
+	// Since the caller of a log function is one stack frame before (in terms of stack higher level) the log.go
+	// filename, then first look for the last log.go filename and then grab the caller info one level higher.
+	maxLevel := 3
+	skiplevel := 3  // Level with the most empirical success to see the last log.go stack frame.
+	pc := make([]uintptr, maxLevel)
+	n := runtime.Callers(skiplevel, pc)
 	packageName := ""
-	funcName := parts[pl-1]
-
-	if parts[pl-2][0] == '(' {
-		//funcName = parts[pl-2] + "." + funcName
-		packageName = strings.Join(parts[0:pl-2], ".")
-	} else {
-		packageName = strings.Join(parts[0:pl-1], ".")
+	funcName := ""
+	fileName := ""
+	var line int
+	if n == 0 {
+		return packageName, fileName, funcName, line
+	}
+	frames := runtime.CallersFrames(pc[:n])
+	var frame runtime.Frame
+	var foundFrame runtime.Frame
+	more := true
+	for more {
+		frame, more = frames.Next()
+		_, fileName = path.Split(frame.File)
+		if fileName != "log.go" {
+			foundFrame = frame // First frame after log.go in the frame stack
+			break
+		}
+	}
+	parts := strings.Split(foundFrame.Function, ".")
+	pl := len(parts)
+	if pl >= 2 {
+		funcName = parts[pl-1]
+		if parts[pl-2][0] == '(' {
+			packageName = strings.Join(parts[0:pl-2], ".")
+		} else {
+			packageName = strings.Join(parts[0:pl-1], ".")
+		}
 	}
 
-	return packageName, fileName, funcName, line
-}
-
-func getCallerInfo() (string, string, string, int) {
-	packageName, fileName, funcName, line := retrieveCallInfo(3)
-
-	if strings.HasSuffix(funcName, "log.go") || strings.HasSuffix(funcName, "proc.go") || strings.HasSuffix(packageName, ".init") {
-		// Go to a lower level
-		packageName, fileName, funcName, line = retrieveCallInfo(2)
-	}
-	if !strings.HasSuffix(funcName, ".go") {
-		// Go to a higher level
-		packageName, fileName, funcName, line = retrieveCallInfo(4)
+	if strings.HasSuffix(packageName, ".init") {
+		packageName= strings.TrimSuffix(packageName, ".init")
 	}
 
 	if strings.HasSuffix(fileName, ".go") {
-		fileName = strings.TrimSuffix(fileName, ".go")
+		fileName= strings.TrimSuffix(fileName, ".go")
 	}
-	return packageName, fileName, funcName, line
+
+	return packageName, fileName, funcName, foundFrame.Line
 }
+
 
 func getPackageLevelLogger() *zp.SugaredLogger {
 	pkgName, fileName, funcName, line := getCallerInfo()

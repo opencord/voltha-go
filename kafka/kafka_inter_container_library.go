@@ -772,6 +772,10 @@ func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, kvArgs ...*KVA
 	}
 
 	for _, arg := range kvArgs {
+		if arg == nil {
+			// In case the caller sends an array with empty args
+			continue
+		}
 		var marshalledArg *any.Any
 		var err error
 		// ascertain the value interface type is a proto.Message
