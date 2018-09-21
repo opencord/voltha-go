@@ -13,9 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+//Package log provides a structured Logger interface implemented using zap logger. It provides the following capabilities:
+//1. Package level logging - a go package can register itself (AddPackage) and have a logger created for that package.
+//2. Dynamic log level change - for all registered packages (SetAllLogLevel)
+//3. Dynamic log level change - for a given package (SetPackageLogLevel)
+//4. Provides a default logger for unregistered packages
+//5. Allow key-value pairs to be added to a logger(UpdateLogger) or all loggers (UpdateAllLoggers) at run time
+//6. Add to the log output the location where the log was invoked (filename.functionname.linenumber)
+//
+// Using package-level logging (recommended approach).  In the examples below, log refers to this log package.
+// 1.  In the appropriate package add the following in the init section of the package.  The log level can be changed
+// and any number of default fields can be added as well. The log level specifies the lowest log level that will be
+// in the output while the fields will be automatically added to all log printouts.
+//
+//	log.AddPackage(mylog.JSON, log.WarnLevel, log.Fields{"anyFieldName": "any value"})
+//
+//2. In the calling package, just invoke any of the publicly available functions of the logger.  Here is an  example
+// to write an Info log with additional fields:
+//
+//log.Infow("An example", mylog.Fields{"myStringOutput": "output", "myIntOutput": 2})
+//
+//3. To dynamically change the log level, you can use 1)SetLogLevel from inside your package or 2) SetPackageLogLevel
+// from anywhere or 3)  SetAllLogLevel from anywhere.
+//
+
 package log
 
 import (
+	"errors"
 	"fmt"
 	zp "go.uber.org/zap"
 	zc "go.uber.org/zap/zapcore"
@@ -74,9 +100,18 @@ type Logger interface {
 	Fatalw(string, Fields)
 
 	With(Fields) Logger
+
+	// The following are added to be able to use this logger as a gRPC LoggerV2 if needed
+	//
+	Warning(...interface{})
+	Warningln(...interface{})
+	Warningf(string, ...interface{})
+
+	// V reports whether verbosity level l is at least the requested verbose level.
+	V(l int) bool
 }
 
-// Fields is used as key-value pairs for structural logging
+// Fields is used as key-value pairs for structured logging
 type Fields map[string]interface{}
 
 var defaultLogger *logger
@@ -90,7 +125,7 @@ type logger struct {
 	parent *zp.Logger
 }
 
-func parseLevel(l int) zp.AtomicLevel {
+func parseAtomicLevel(l int) zp.AtomicLevel {
 	switch l {
 	case DebugLevel:
 		return zp.NewAtomicLevelAt(zc.DebugLevel)
@@ -108,9 +143,27 @@ func parseLevel(l int) zp.AtomicLevel {
 	return zp.NewAtomicLevelAt(zc.ErrorLevel)
 }
 
+func parseLevel(l int) zc.Level {
+	switch l {
+	case DebugLevel:
+		return zc.DebugLevel
+	case InfoLevel:
+		return InfoLevel
+	case WarnLevel:
+		return zc.WarnLevel
+	case ErrorLevel:
+		return zc.ErrorLevel
+	case PanicLevel:
+		return zc.PanicLevel
+	case FatalLevel:
+		return zc.FatalLevel
+	}
+	return zc.ErrorLevel
+}
+
 func getDefaultConfig(outputType string, level int, defaultFields Fields) zp.Config {
 	return zp.Config{
-		Level:            parseLevel(level),
+		Level:            parseAtomicLevel(level),
 		Encoding:         outputType,
 		Development:      true,
 		OutputPaths:      []string{"stdout"},
@@ -149,8 +202,15 @@ func SetDefaultLogger(outputType string, level int, defaultFields Fields) (Logge
 	return defaultLogger, nil
 }
 
-
-func AddPackage(outputType string, level int, defaultFields Fields) error {
+// AddPackage registers a package to the log map.  Each package gets its own logger which allows
+// its config (loglevel) to be changed dynamically without interacting with the other packages.
+// outputType is JSON, level is the lowest level log to output with this logger and defaultFields is a map of
+// key-value pairs to always add to the output.
+// Note: AddPackage also returns a reference to the actual logger.  If a calling package uses this reference directly
+//instead of using the publicly available functions in this log package then a number of functionalities will not
+// be available to it, notably log tracing with filename.functionname.linenumber annotation.
+//
+func AddPackage(outputType string, level int, defaultFields Fields) (Logger, error) {
 	if cfgs == nil {
 		cfgs = make(map[string]zp.Config)
 	}
@@ -159,23 +219,25 @@ func AddPackage(outputType string, level int, defaultFields Fields) error {
 	}
 	pkgName, _, _, _ := getCallerInfo()
 
-	if _, exist := cfgs[pkgName]; exist {
-		return nil
+	if _, exist := loggers[pkgName]; exist {
+		return loggers[pkgName], nil
 	}
+
 	cfgs[pkgName] = getDefaultConfig(outputType, level, defaultFields)
 
 	l, err := cfgs[pkgName].Build()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	loggers[pkgName] = &logger{
 		log:    l.Sugar(),
 		parent: l,
 	}
-	return nil
+	return loggers[pkgName], nil
 }
 
+//UpdateAllLoggers create new loggers for all registered pacakges with the defaultFields.
 func UpdateAllLoggers(defaultFields Fields) error {
 	for pkgName, cfg := range cfgs {
 		for k, v := range defaultFields {
@@ -197,7 +259,43 @@ func UpdateAllLoggers(defaultFields Fields) error {
 	return nil
 }
 
+// UpdateLogger deletes the logger associated with a caller's package and creates a new logger with the
+// defaultFields.  If a calling package is holding on to a Logger reference obtained from AddPackage invocation, then
+// that package needs to invoke UpdateLogger if it needs to make changes to the default fields and obtain a new logger
+// reference
+func UpdateLogger(defaultFields Fields) (Logger, error) {
+	pkgName, _, _, _ := getCallerInfo()
+	if _, exist := loggers[pkgName]; !exist {
+		return nil, errors.New(fmt.Sprintf("package-%s-not-registered", pkgName))
+	}
 
+	// Build a new logger
+	if _, exist := cfgs[pkgName]; !exist {
+		return nil, errors.New(fmt.Sprintf("config-%s-not-registered", pkgName))
+	}
+
+	cfg := cfgs[pkgName]
+	for k, v := range defaultFields {
+		if cfg.InitialFields == nil {
+			cfg.InitialFields = make(map[string]interface{})
+		}
+		cfg.InitialFields[k] = v
+	}
+	l, err := cfg.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the logger
+	loggers[pkgName] = &logger{
+		log:    l.Sugar(),
+		parent: l,
+	}
+	return loggers[pkgName], nil
+}
+
+//SetPackageLogLevel dynamically sets the log level of a given package to level.  This is typically invoked at an
+// application level during debugging
 func SetPackageLogLevel(packageName string, level int) {
 	// Get proper config
 	if cfg, ok := cfgs[packageName]; ok {
@@ -220,9 +318,10 @@ func SetPackageLogLevel(packageName string, level int) {
 	}
 }
 
+//SetAllLogLevel sets the log level of all registered packages to level
 func SetAllLogLevel(level int) {
 	// Get proper config
-	for _, cfg := range cfgs{
+	for _, cfg := range cfgs {
 		switch level {
 		case DebugLevel:
 			cfg.Level.SetLevel(zc.DebugLevel)
@@ -240,6 +339,32 @@ func SetAllLogLevel(level int) {
 			cfg.Level.SetLevel(zc.ErrorLevel)
 		}
 	}
+}
+
+//SetLogLevel sets the log level for the logger corresponding to the caller's package
+func SetLogLevel(level int) error {
+	pkgName, _, _, _ := getCallerInfo()
+	if _, exist := cfgs[pkgName]; !exist {
+		return errors.New(fmt.Sprint("unregistered-package-%s", pkgName))
+	}
+	cfg := cfgs[pkgName]
+	switch level {
+	case DebugLevel:
+		cfg.Level.SetLevel(zc.DebugLevel)
+	case InfoLevel:
+		cfg.Level.SetLevel(zc.InfoLevel)
+	case WarnLevel:
+		cfg.Level.SetLevel(zc.WarnLevel)
+	case ErrorLevel:
+		cfg.Level.SetLevel(zc.ErrorLevel)
+	case PanicLevel:
+		cfg.Level.SetLevel(zc.PanicLevel)
+	case FatalLevel:
+		cfg.Level.SetLevel(zc.FatalLevel)
+	default:
+		cfg.Level.SetLevel(zc.ErrorLevel)
+	}
+	return nil
 }
 
 // CleanUp flushed any buffered log entries. Applications should take care to call
@@ -264,11 +389,11 @@ func CleanUp() error {
 	return nil
 }
 
-func getCallerInfo() (string, string, string, int){
+func getCallerInfo() (string, string, string, int) {
 	// Since the caller of a log function is one stack frame before (in terms of stack higher level) the log.go
 	// filename, then first look for the last log.go filename and then grab the caller info one level higher.
 	maxLevel := 3
-	skiplevel := 3  // Level with the most empirical success to see the last log.go stack frame.
+	skiplevel := 3 // Level with the most empirical success to see the last log.go stack frame.
 	pc := make([]uintptr, maxLevel)
 	n := runtime.Callers(skiplevel, pc)
 	packageName := ""
@@ -302,23 +427,30 @@ func getCallerInfo() (string, string, string, int){
 	}
 
 	if strings.HasSuffix(packageName, ".init") {
-		packageName= strings.TrimSuffix(packageName, ".init")
+		packageName = strings.TrimSuffix(packageName, ".init")
 	}
 
 	if strings.HasSuffix(fileName, ".go") {
-		fileName= strings.TrimSuffix(fileName, ".go")
+		fileName = strings.TrimSuffix(fileName, ".go")
 	}
 
 	return packageName, fileName, funcName, foundFrame.Line
 }
 
-
-func getPackageLevelLogger() *zp.SugaredLogger {
+func getPackageLevelSugaredLogger() *zp.SugaredLogger {
 	pkgName, fileName, funcName, line := getCallerInfo()
 	if _, exist := loggers[pkgName]; exist {
 		return loggers[pkgName].log.With("caller", fmt.Sprintf("%s.%s:%d", fileName, funcName, line))
 	}
 	return defaultLogger.log.With("caller", fmt.Sprintf("%s.%s:%d", fileName, funcName, line))
+}
+
+func getPackageLevelLogger() Logger {
+	pkgName, _, _, _ := getCallerInfo()
+	if _, exist := loggers[pkgName]; exist {
+		return loggers[pkgName]
+	}
+	return defaultLogger
 }
 
 func serializeMap(fields Fields) []interface{} {
@@ -444,112 +576,152 @@ func (l logger) Fatalw(msg string, keysAndValues Fields) {
 	l.log.Fatalw(msg, serializeMap(keysAndValues)...)
 }
 
+// Warning logs a message at level Warn on the standard logger.
+func (l logger) Warning(args ...interface{}) {
+	l.log.Warn(args...)
+}
+
+// Warningln logs a message at level Warn on the standard logger with a line feed. Default in any case.
+func (l logger) Warningln(args ...interface{}) {
+	l.log.Warn(args...)
+}
+
+// Warningf logs a message at level Warn on the standard logger.
+func (l logger) Warningf(format string, args ...interface{}) {
+	l.log.Warnf(format, args...)
+}
+
+// V reports whether verbosity level l is at least the requested verbose level.
+func (l logger) V(level int) bool {
+	return l.parent.Core().Enabled(parseLevel(level))
+}
+
 // With returns a logger initialized with the key-value pairs
 func With(keysAndValues Fields) Logger {
-	return logger{log: getPackageLevelLogger().With(serializeMap(keysAndValues)...), parent: defaultLogger.parent}
+	return logger{log: getPackageLevelSugaredLogger().With(serializeMap(keysAndValues)...), parent: defaultLogger.parent}
 }
 
 // Debug logs a message at level Debug on the standard logger.
 func Debug(args ...interface{}) {
-	getPackageLevelLogger().Debug(args...)
+	getPackageLevelSugaredLogger().Debug(args...)
 }
 
 // Debugln logs a message at level Debug on the standard logger.
 func Debugln(args ...interface{}) {
-	getPackageLevelLogger().Debug(args...)
+	getPackageLevelSugaredLogger().Debug(args...)
 }
 
 // Debugf logs a message at level Debug on the standard logger.
 func Debugf(format string, args ...interface{}) {
-	getPackageLevelLogger().Debugf(format, args...)
+	getPackageLevelSugaredLogger().Debugf(format, args...)
 }
 
 // Debugw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func Debugw(msg string, keysAndValues Fields) {
-	getPackageLevelLogger().Debugw(msg, serializeMap(keysAndValues)...)
+	getPackageLevelSugaredLogger().Debugw(msg, serializeMap(keysAndValues)...)
 }
 
 // Info logs a message at level Info on the standard logger.
 func Info(args ...interface{}) {
-	getPackageLevelLogger().Info(args...)
+	getPackageLevelSugaredLogger().Info(args...)
 }
 
 // Infoln logs a message at level Info on the standard logger.
 func Infoln(args ...interface{}) {
-	getPackageLevelLogger().Info(args...)
+	getPackageLevelSugaredLogger().Info(args...)
 }
 
 // Infof logs a message at level Info on the standard logger.
 func Infof(format string, args ...interface{}) {
-	getPackageLevelLogger().Infof(format, args...)
+	getPackageLevelSugaredLogger().Infof(format, args...)
 }
 
 //Infow logs a message with some additional context. The variadic key-value
 //pairs are treated as they are in With.
 func Infow(msg string, keysAndValues Fields) {
-	getPackageLevelLogger().Infow(msg, serializeMap(keysAndValues)...)
+	getPackageLevelSugaredLogger().Infow(msg, serializeMap(keysAndValues)...)
 }
 
 // Warn logs a message at level Warn on the standard logger.
 func Warn(args ...interface{}) {
-	getPackageLevelLogger().Warn(args...)
+	getPackageLevelSugaredLogger().Warn(args...)
 }
 
 // Warnln logs a message at level Warn on the standard logger.
 func Warnln(args ...interface{}) {
-	getPackageLevelLogger().Warn(args...)
+	getPackageLevelSugaredLogger().Warn(args...)
 }
 
 // Warnf logs a message at level Warn on the standard logger.
 func Warnf(format string, args ...interface{}) {
-	getPackageLevelLogger().Warnf(format, args...)
+	getPackageLevelSugaredLogger().Warnf(format, args...)
 }
 
 // Warnw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func Warnw(msg string, keysAndValues Fields) {
-	getPackageLevelLogger().Warnw(msg, serializeMap(keysAndValues)...)
+	getPackageLevelSugaredLogger().Warnw(msg, serializeMap(keysAndValues)...)
 }
 
 // Error logs a message at level Error on the standard logger.
 func Error(args ...interface{}) {
-	getPackageLevelLogger().Error(args...)
+	getPackageLevelSugaredLogger().Error(args...)
 }
 
 // Errorln logs a message at level Error on the standard logger.
 func Errorln(args ...interface{}) {
-	getPackageLevelLogger().Error(args...)
+	getPackageLevelSugaredLogger().Error(args...)
 }
 
 // Errorf logs a message at level Error on the standard logger.
 func Errorf(format string, args ...interface{}) {
-	getPackageLevelLogger().Errorf(format, args...)
+	getPackageLevelSugaredLogger().Errorf(format, args...)
 }
 
 // Errorw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func Errorw(msg string, keysAndValues Fields) {
-	getPackageLevelLogger().Errorw(msg, serializeMap(keysAndValues)...)
+	getPackageLevelSugaredLogger().Errorw(msg, serializeMap(keysAndValues)...)
 }
 
 // Fatal logs a message at level Fatal on the standard logger.
 func Fatal(args ...interface{}) {
-	getPackageLevelLogger().Fatal(args...)
+	getPackageLevelSugaredLogger().Fatal(args...)
 }
 
 // Fatalln logs a message at level Fatal on the standard logger.
 func Fatalln(args ...interface{}) {
-	getPackageLevelLogger().Fatal(args...)
+	getPackageLevelSugaredLogger().Fatal(args...)
 }
 
 // Fatalf logs a message at level Fatal on the standard logger.
 func Fatalf(format string, args ...interface{}) {
-	getPackageLevelLogger().Fatalf(format, args...)
+	getPackageLevelSugaredLogger().Fatalf(format, args...)
 }
 
 // Fatalw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func Fatalw(msg string, keysAndValues Fields) {
-	getPackageLevelLogger().Fatalw(msg, serializeMap(keysAndValues)...)
+	getPackageLevelSugaredLogger().Fatalw(msg, serializeMap(keysAndValues)...)
+}
+
+// Warning logs a message at level Warn on the standard logger.
+func Warning(args ...interface{}) {
+	getPackageLevelSugaredLogger().Warn(args...)
+}
+
+// Warningln logs a message at level Warn on the standard logger.
+func Warningln(args ...interface{}) {
+	getPackageLevelSugaredLogger().Warn(args...)
+}
+
+// Warningf logs a message at level Warn on the standard logger.
+func Warningf(format string, args ...interface{}) {
+	getPackageLevelSugaredLogger().Warnf(format, args...)
+}
+
+// V reports whether verbosity level l is at least the requested verbose level.
+func V(level int) bool {
+	return getPackageLevelLogger().V(level)
 }
