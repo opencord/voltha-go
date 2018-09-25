@@ -113,7 +113,7 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 	return p.Root.Remove(fullPath, txid, nil)
 }
 
-func (p *Proxy) openTransaction() *Transaction {
+func (p *Proxy) OpenTransaction() *Transaction {
 	txid := p.Root.MakeTxBranch()
 	return NewTransaction(p, txid)
 }

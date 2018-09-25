@@ -35,15 +35,16 @@ type Root struct {
 	NotificationCallbacks []CallbackTuple
 }
 
-func NewRoot(initialData interface{}, kvStore *Backend, revisionClass interface{}) *Root {
+func NewRoot(initialData interface{}, kvStore *Backend) *Root {
 	root := &Root{}
 	root.KvStore = kvStore
 	root.DirtyNodes = make(map[string][]*Node)
 	root.Loading = false
-	if kvStore != nil /*&& TODO: RevisionClass is not a subclass of PersistedRevision ??? */ {
-		revisionClass = reflect.TypeOf(PersistedRevision{})
+	if kvStore != nil {
+		root.RevisionClass = reflect.TypeOf(PersistedRevision{})
+	} else {
+		root.RevisionClass = reflect.TypeOf(NonPersistedRevision{})
 	}
-	root.RevisionClass = revisionClass
 	root.Callbacks = []CallbackTuple{}
 	root.NotificationCallbacks = []CallbackTuple{}
 
@@ -188,8 +189,8 @@ func (r *Root) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 
 func (r *Root) Load(rootClass interface{}) *Root {
 	//fakeKvStore := &Backend{}
-	//root := NewRoot(rootClass, fakeKvStore, PersistedRevision{})
-	//r.KvStore = KvStore
+	//root := NewRoot(rootClass, nil)
+	//root.KvStore = r.KvStore
 	r.loadFromPersistence(rootClass)
 	return r
 }

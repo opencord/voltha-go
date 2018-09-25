@@ -40,30 +40,30 @@ func revisionsAreEqual(a, b []Revision) bool {
 }
 
 type changeAnalysis struct {
-	KeyMap1     map[reflect.Value]int
-	KeyMap2     map[reflect.Value]int
-	AddedKeys   map[reflect.Value]struct{}
-	RemovedKeys map[reflect.Value]struct{}
-	ChangedKeys map[reflect.Value]struct{}
+	KeyMap1     map[string]int
+	KeyMap2     map[string]int
+	AddedKeys   map[string]struct{}
+	RemovedKeys map[string]struct{}
+	ChangedKeys map[string]struct{}
 }
 
 func newChangeAnalysis(lst1, lst2 []Revision, keyName string) *changeAnalysis {
 	changes := &changeAnalysis{}
 
-	changes.KeyMap1 = make(map[reflect.Value]int)
-	changes.KeyMap2 = make(map[reflect.Value]int)
+	changes.KeyMap1 = make(map[string]int)
+	changes.KeyMap2 = make(map[string]int)
 
-	changes.AddedKeys = make(map[reflect.Value]struct{})
-	changes.RemovedKeys = make(map[reflect.Value]struct{})
-	changes.ChangedKeys = make(map[reflect.Value]struct{})
+	changes.AddedKeys = make(map[string]struct{})
+	changes.RemovedKeys = make(map[string]struct{})
+	changes.ChangedKeys = make(map[string]struct{})
 
 	for i, rev := range lst1 {
 		_, v := GetAttributeValue(rev.GetData(), keyName, 0)
-		changes.KeyMap1[v] = i
+		changes.KeyMap1[v.String()] = i
 	}
 	for i, rev := range lst2 {
 		_, v := GetAttributeValue(rev.GetData(), keyName, 0)
-		changes.KeyMap2[v] = i
+		changes.KeyMap2[v.String()] = i
 	}
 	for v, _ := range changes.KeyMap2 {
 		if _, ok := changes.KeyMap1[v]; !ok {
@@ -90,6 +90,7 @@ func Merge3Way(
 	dryRun bool) (rev Revision, changes []ChangeTuple) {
 
 	var configChanged bool
+	var revsToDiscard []Revision
 
 	if dstRev.GetConfig() == forkRev.GetConfig() {
 		configChanged = dstRev.GetConfig() != srcRev.GetConfig()
@@ -153,6 +154,7 @@ func Merge3Way(
 				}
 				for key, _ := range src.RemovedKeys {
 					oldRev := forkList[src.KeyMap1[key]]
+					revsToDiscard = append(revsToDiscard, oldRev)
 					changes = append(changes, ChangeTuple{POST_REMOVE, oldRev.GetData()})
 				}
 				for key, _ := range src.ChangedKeys {
@@ -165,7 +167,9 @@ func Merge3Way(
 					}
 				}
 
-				newChildren[fieldName] = newList
+				if !dryRun {
+					newChildren[fieldName] = newList
+				}
 			} else {
 				src := newChangeAnalysis(forkList, srcList, field.Key)
 				dst := newChangeAnalysis(forkList, dstList, field.Key)
@@ -212,9 +216,10 @@ func Merge3Way(
 					if _, changed := dst.ChangedKeys[key]; changed {
 						log.Error("conflict error - revision has changed")
 					}
-					if _, removed := dst.ChangedKeys[key]; !removed {
+					if _, removed := dst.RemovedKeys[key]; !removed {
 						dstIdx := dst.KeyMap2[key]
 						oldRev := newList[dstIdx]
+						revsToDiscard = append(revsToDiscard, oldRev)
 
 						copy(newList[dstIdx:], newList[dstIdx+1:])
 						newList[len(newList)-1] = nil
@@ -224,8 +229,9 @@ func Merge3Way(
 					}
 				}
 
-				newChildren[fieldName] = newList
-
+				if !dryRun {
+					newChildren[fieldName] = newList
+				}
 			}
 		}
 	}
@@ -237,6 +243,11 @@ func Merge3Way(
 			rev = dstRev
 		}
 
+		for _, discarded := range revsToDiscard {
+			discarded.Drop("", true)
+		}
+
+		dstRev.GetBranch().Latest.Drop("", configChanged)
 		rev = rev.UpdateAllChildren(newChildren, dstRev.GetBranch())
 
 		if configChanged {

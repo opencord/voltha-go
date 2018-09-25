@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"github.com/opencord/voltha-go/common/log"
 	"io/ioutil"
 	"reflect"
 	"time"
@@ -51,6 +52,9 @@ type revData struct {
 }
 
 func (pr *PersistedRevision) store() {
+	if pr.GetBranch().Txid != "" {
+		return
+	}
 	if ok, _ := pr.kvStore.Get(pr.Revision.GetHash()); ok != nil {
 		return
 	}
@@ -220,4 +224,31 @@ func (pr *PersistedRevision) UpdateAllChildren(children map[string][]Revision, b
 	newPR.Finalize()
 
 	return newPR
+}
+
+// Drop takes care of eliminating a revision hash that is no longer needed
+// and its associated config when required
+func (pr *PersistedRevision) Drop(txid string, includeConfig bool) {
+	if pr.kvStore != nil && txid == "" {
+		if includeConfig {
+			log.Debugf("removing rev config - hash: %s", pr.GetConfig().Hash)
+			if err := pr.kvStore.Delete(pr.GetConfig().Hash); err != nil {
+				log.Errorf(
+					"failed to remove rev config - hash: %s, err: %s",
+					pr.GetConfig().Hash,
+					err.Error(),
+				)
+			}
+		}
+
+		log.Debugf("removing rev - hash: %s", pr.GetHash())
+		if err := pr.kvStore.Delete(pr.GetHash()); err != nil {
+			log.Errorf("failed to remove rev - hash: %s, err: %s", pr.GetHash(), err.Error())
+		}
+	} else {
+		if includeConfig {
+			log.Debugf("Attempted to remove revision config:%s linked to transaction:%s", pr.GetConfig().Hash, txid)
+		}
+		log.Debugf("Attempted to remove revision:%s linked to transaction:%s", pr.GetHash(), txid)
+	}
 }

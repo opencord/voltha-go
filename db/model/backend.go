@@ -68,22 +68,24 @@ func (b *Backend) newClient(address string, timeout int) (kvstore.Client, error)
 
 func (b *Backend) makePath(key string) string {
 	path := fmt.Sprintf("%s/%s", b.PathPrefix, key)
-	log.Debugf("formatting path: %s", path)
 	return path
 }
 func (b *Backend) List(key string) (map[string]*kvstore.KVPair, error) {
 	return b.Client.List(b.makePath(key), b.Timeout)
 }
 func (b *Backend) Get(key string) (*kvstore.KVPair, error) {
+	formattedPath := b.makePath(key)
+	log.Debugf("Get key: %s, path: %s", key, formattedPath)
 	start := time.Now()
-	err, pair := b.Client.Get(b.makePath(key), b.Timeout)
+	err, pair := b.Client.Get(formattedPath, b.Timeout)
 	stop := time.Now()
 	GetProfiling().AddToDatabaseRetrieveTime(stop.Sub(start).Seconds())
 	return err, pair
 }
 func (b *Backend) Put(key string, value interface{}) error {
-	log.Debugf("Put key: %s, value: %+v, path: %s", key, string(value.([]byte)), b.makePath(key))
-	return b.Client.Put(b.makePath(key), value, b.Timeout)
+	formattedPath := b.makePath(key)
+	log.Debugf("Put key: %s, value: %+v, path: %s", key, string(value.([]byte)), formattedPath)
+	return b.Client.Put(formattedPath, value, b.Timeout)
 }
 func (b *Backend) Delete(key string) error {
 	return b.Client.Delete(b.makePath(key), b.Timeout)

@@ -24,21 +24,21 @@ import (
 )
 
 var (
-	backend *Backend
-	//rootPrefix = "service/voltha/data/core/0001"
+	backend    *Backend
+	rootPrefix = "service/voltha/data/core/0001"
 
-	basePrefix  = "service/voltha/service/vcores/data/devices"
-	deviceId    = "00016f13befaedcc"
-	rootPrefix  = basePrefix + "/" + deviceId
+	//basePrefix  = "service/voltha/service/vcores/data/devices"
+	deviceId = "00016f13befaedcc"
+	//rootPrefix  = basePrefix + "/" + deviceId
 	deviceProxy = "/devices/" + deviceId
 )
 
 func Test_NewRoot(t *testing.T) {
 	backend = NewBackend(ETCD_KV, etcd_host, etcd_port, timeout, rootPrefix)
 
-	//var msgClass *voltha.VolthaInstance
-	var msgClass *voltha.DeviceInstance
-	root := NewRoot(msgClass, backend, nil)
+	var msgClass *voltha.Voltha
+	//var msgClass *voltha.DeviceInstance
+	root := NewRoot(msgClass, backend)
 
 	start := time.Now()
 

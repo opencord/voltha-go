@@ -89,22 +89,27 @@ func (n *Node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	if changeAnnouncement != nil && branch.Txid == "" {
 		if n.Proxy != nil {
 			for _, change := range changeAnnouncement {
-				// TODO: Invoke callback
 				fmt.Printf("invoking callback - changeType: %+v, data:%+v\n", change.Type, change.Data)
 				n.root.addCallback(n.Proxy.InvokeCallbacks, change.Type, change.Data, true)
 			}
 		}
 
 		for _, change := range changeAnnouncement {
-			// TODO: send notifications
 			fmt.Printf("sending notification - changeType: %+v, data:%+v\n", change.Type, change.Data)
 			n.root.addNotificationCallback(n.makeEventBus().Advertise, change.Type, change.Data, revision.GetHash())
 		}
 	}
 }
 
-func (n *Node) Latest() Revision {
-	if branch, exists := n.Branches[NONE]; exists {
+func (n *Node) Latest(txid ...string) Revision {
+	var branch *Branch
+	var exists bool
+
+	if len(txid) > 0 && txid[0] != "" {
+		if branch, exists = n.Branches[txid[0]]; exists {
+			return branch.Latest
+		}
+	} else if branch, exists = n.Branches[NONE]; exists {
 		return branch.Latest
 	}
 	return nil
@@ -127,7 +132,9 @@ func (n *Node) initialize(data interface{}, txid string) {
 
 					for i := 0; i < fieldValue.Len(); i++ {
 						v := fieldValue.Index(i)
-						rev := n.MakeNode(v.Interface(), txid).Latest()
+
+						rev := n.MakeNode(v.Interface(), txid).Latest(txid)
+
 						_, key := GetAttributeValue(v.Interface(), field.Key, 0)
 						for _, k := range keysSeen {
 							if k == key.String() {
@@ -353,6 +360,7 @@ func (n *Node) Update(path string, data interface{}, strict bool, txid string, m
 			}
 			children[idx] = newChildRev
 			rev = rev.UpdateChildren(name, children, branch)
+			branch.Latest.Drop(txid, false)
 			n.root.MakeLatest(branch, rev, nil)
 			return rev
 		} else {
@@ -363,6 +371,7 @@ func (n *Node) Update(path string, data interface{}, strict bool, txid string, m
 		childNode := childRev.GetNode()
 		newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
 		rev = rev.UpdateChildren(name, []Revision{newChildRev}, branch)
+		branch.Latest.Drop(txid, false)
 		n.root.MakeLatest(branch, rev, nil)
 		return rev
 	}
@@ -393,8 +402,8 @@ func (n *Node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 			fmt.Println("checking access violations")
 		}
 		rev := branch.Latest.UpdateData(data, branch)
-		n.root.MakeLatest(branch, rev, nil) // TODO -> changeAnnouncement needs to be a tuple (CallbackType.
-		// POST_UPDATE, rev.data)
+		branch.Latest.Drop(branch.Txid, true)
+		n.root.MakeLatest(branch, rev, []ChangeTuple{{POST_UPDATE, rev.GetData()}})
 		return rev
 	} else {
 		return branch.Latest
@@ -453,11 +462,11 @@ func (n *Node) Add(path string, data interface{}, txid string, makeBranch t_make
 					fmt.Errorf("duplicate key found: %s", key.String())
 				}
 
-				childRev := n.MakeNode(data, "").Latest()
+				childRev := n.MakeNode(data, txid).Latest(txid)
 				children = append(children, childRev)
 				rev := rev.UpdateChildren(name, children, branch)
-				n.root.MakeLatest(branch, rev, nil) // TODO -> changeAnnouncement needs to be a tuple (CallbackType.
-				// POST_ADD, rev.data)
+				branch.Latest.Drop(txid, false)
+				n.root.MakeLatest(branch, rev, []ChangeTuple{{POST_ADD, rev.GetData()}})
 				return rev
 			} else {
 				fmt.Errorf("cannot add to non-keyed container\n")
@@ -477,6 +486,7 @@ func (n *Node) Add(path string, data interface{}, txid string, makeBranch t_make
 			newChildRev := childNode.Add(path, data, txid, makeBranch)
 			children[idx] = newChildRev
 			rev := rev.UpdateChildren(name, children, branch)
+			branch.Latest.Drop(txid, false)
 			n.root.MakeLatest(branch, rev, nil)
 			return rev
 		} else {
@@ -543,6 +553,7 @@ func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 				newChildRev := childNode.Remove(path, txid, makeBranch)
 				children[idx] = newChildRev
 				rev := rev.UpdateChildren(name, children, branch)
+				branch.Latest.Drop(txid, false)
 				n.root.MakeLatest(branch, rev, nil)
 				return rev
 			} else {
@@ -558,8 +569,10 @@ func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 				} else {
 					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData()})
 				}
+				childRev.Drop(txid, true)
 				children = append(children[:idx], children[idx+1:]...)
 				rev := rev.UpdateChildren(name, children, branch)
+				branch.Latest.Drop(txid, false)
 				n.root.MakeLatest(branch, rev, postAnnouncement)
 				return rev
 			}

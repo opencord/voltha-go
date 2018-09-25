@@ -143,14 +143,32 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 			if field.IsContainer {
 				for _, rev := range npr.Children[fieldName] {
 					childData := rev.Get(depth - 1)
-					childDataHolder = reflect.Append(childDataHolder, reflect.ValueOf(childData))
-					//fmt.Printf("data:%+v, dataHolder:%+v\n", childData, childDataHolder)
+					foundEntry := false
+					for i := 0; i < childDataHolder.Len(); i++ {
+						if reflect.DeepEqual(childDataHolder.Index(i).Interface(), childData) {
+							foundEntry = true
+							break
+						}
+					}
+					if !foundEntry {
+						// avoid duplicates by adding if the child was not found in the holder
+						childDataHolder = reflect.Append(childDataHolder, reflect.ValueOf(childData))
+					}
 				}
 			} else {
 				rev := npr.Children[fieldName][0]
 				childData := rev.Get(depth - 1)
-				childDataHolder = reflect.Append(childDataHolder, reflect.ValueOf(childData))
-				//fmt.Printf("data:%+v, dataHolder:%+v\n", childData, childDataHolder)
+				foundEntry := false
+				for i := 0; i < childDataHolder.Len(); i++ {
+					if reflect.DeepEqual(childDataHolder.Index(i).Interface(), childData) {
+						foundEntry = true
+						break
+					}
+				}
+				if !foundEntry {
+					// avoid duplicates by adding if the child was not found in the holder
+					childDataHolder = reflect.Append(childDataHolder, reflect.ValueOf(childData))
+				}
 			}
 			// Merge child data with cloned object
 			reflect.ValueOf(data).Elem().FieldByName(childDataName).Set(childDataHolder)
@@ -160,6 +178,9 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 }
 
 func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Revision {
+	// TODO: Need to keep the hash for the old revision.
+	// TODO: This will allow us to get rid of the unnecessary data
+
 	newRev := reflect.ValueOf(npr).Elem().Interface().(NonPersistedRevision)
 	newRev.SetBranch(branch)
 	log.Debugf("newRev config : %+v, npr: %+v", newRev.GetConfig(), npr)
@@ -194,4 +215,8 @@ func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revisio
 	newRev.Finalize()
 
 	return &newRev
+}
+
+func (npr *NonPersistedRevision) Drop(txid string, includeConfig bool) {
+	//npr.SetConfig(nil)
 }

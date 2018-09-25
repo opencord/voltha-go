@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"reflect"
 	"strconv"
@@ -52,8 +53,7 @@ var (
 )
 
 func init() {
-
-	log.AddPackage(log.JSON, log.ErrorLevel, nil)
+	log.AddPackage(log.JSON, log.DebugLevel, nil)
 	log.UpdateAllLoggers(log.Fields{"instanceId": "proxy_test"})
 
 	defer log.CleanUp()
@@ -61,25 +61,13 @@ func init() {
 	pt.Backend = NewBackend(pt.DbType, pt.DbHost, pt.DbPort, pt.DbTimeout, pt.DbPrefix)
 
 	msgClass := &voltha.Voltha{}
-	root := NewRoot(msgClass, pt.Backend, nil)
+	root := NewRoot(msgClass, pt.Backend)
 	pt.Root = root.Load(msgClass)
 
 	GetProfiling().Report()
 
 	pt.Proxy = pt.Root.Node.GetProxy("/", false)
 }
-
-//func Test_Proxy_0_GetRootProxy(t *testing.T) {
-//	pt.Backend = NewBackend(pt.DbType, pt.DbHost, pt.DbPort, pt.DbTimeout, pt.DbPrefix)
-//
-//	msgClass := &voltha.Voltha{}
-//	root := NewRoot(msgClass, pt.Backend, nil)
-//	pt.Root = root.Load(msgClass)
-//
-//	GetProfiling().Report()
-//
-//	pt.Proxy = pt.Root.Node.GetProxy("/", false)
-//}
 
 func Test_Proxy_1_GetDevices(t *testing.T) {
 	devices := pt.Proxy.Get("/devices", 1, false, "")
@@ -93,86 +81,28 @@ func Test_Proxy_1_GetDevices(t *testing.T) {
 	}
 }
 
-func Test_Proxy_2_GetDevice(t *testing.T) {
-	basePath := "/devices/" + targetDeviceId
-	device1 := pt.Proxy.Get(basePath+"/ports", 1, false, "")
-	t.Logf("retrieved device with ports: %+v", device1)
-
-	device2 := pt.Proxy.Get(basePath, 0, false, "")
-
-	t.Logf("retrieved device: %+v", device2)
-}
-
-//func Test_Proxy_3_AddDevice(t *testing.T) {
-//	//ports := []*voltha.Port{
-//	//	{
-//	//		PortNo:     123,
-//	//		Label:      "test-port-0",
-//	//		Type:       voltha.Port_PON_OLT,
-//	//		AdminState: common.AdminState_ENABLED,
-//	//		OperStatus: common.OperStatus_ACTIVE,
-//	//		DeviceId:   "etcd_port-0-device-id",
-//	//		Peers:      []*voltha.Port_PeerPort{},
-//	//	},
-//	//}
-//	devIdBin, _ := uuid.New().MarshalBinary()
-//	devId := hex.EncodeToString(devIdBin)[:12]
-//
-//	device := &voltha.Device{
-//		Id:                  devId,
-//		Type:                "simulated_olt",
-//		//Root:                true,
-//		//ParentId:            "",
-//		//ParentPortNo:        0,
-//		//Vendor:              "voltha-test",
-//		//Model:               "latest-voltha-simulated-olt",
-//		//HardwareVersion:     "1.0.0",
-//		//FirmwareVersion:     "1.0.0",
-//		//Images:              &voltha.Images{},
-//		//SerialNumber:        "abcdef-123456",
-//		//VendorId:            "DEADBEEF-INC",
-//		//Adapter:             "simulated_olt",
-//		//Vlan:                1234,
-//		Address:             &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
-//		//ExtraArgs:           "",
-//		//ProxyAddress:        &voltha.Device_ProxyAddress{},
-//		AdminState:          voltha.AdminState_PREPROVISIONED,
-//		//OperStatus:          common.OperStatus_ACTIVE,
-//		//Reason:              "",
-//		//ConnectStatus:       common.ConnectStatus_REACHABLE,
-//		//Custom:              &any.Any{},
-//		//Ports:               ports,
-//		//Flows:               &openflow_13.Flows{},
-//		//FlowGroups:          &openflow_13.FlowGroups{},
-//		//PmConfigs:           &voltha.PmConfigs{},
-//		//ImageDownloads:      []*voltha.ImageDownload{},
-//	}
-//
-//	//if retrieved := pt.Proxy.Get("/devices/00019b09a90bbe17", 0, false, ""); retrieved == nil {
-//	//	t.Error("Failed to get device")
-//	//} else {
-//	//	devIdBin, _ := uuid.New().MarshalBinary()
-//	//	devId = "0001" + hex.EncodeToString(devIdBin)[:12]
-//	//	newDevice := Clone(de\).(*voltha.Device)
-//	//	newDevice.Id = devId
-//
-//		if added := pt.Proxy.Add("/devices", device, ""); added == nil {
-//			t.Error("Failed to add device")
-//		} else {
-//			t.Logf("Added device : %+v", added)
-//		}
-//	//}
-//
-//}
-func Test_Proxy_3_AddDevice(t *testing.T) {
+func Test_Proxy_2_AddDevice(t *testing.T) {
 	devIdBin, _ := uuid.New().MarshalBinary()
 	devId = "0001" + hex.EncodeToString(devIdBin)[:12]
+
+	ports := []*voltha.Port{
+		{
+			PortNo:     123,
+			Label:      "test-port-0",
+			Type:       voltha.Port_PON_OLT,
+			AdminState: common.AdminState_ENABLED,
+			OperStatus: common.OperStatus_ACTIVE,
+			DeviceId:   "etcd_port-0-device-id",
+			Peers:      []*voltha.Port_PeerPort{},
+		},
+	}
 
 	device := &voltha.Device{
 		Id:         devId,
 		Type:       "simulated_olt",
 		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
 		AdminState: voltha.AdminState_PREPROVISIONED,
+		Ports:      ports,
 	}
 
 	if added := pt.Proxy.Add("/devices", device, ""); added == nil {
@@ -182,7 +112,7 @@ func Test_Proxy_3_AddDevice(t *testing.T) {
 	}
 }
 
-func Test_Proxy_4_CheckAddedDevice(t *testing.T) {
+func Test_Proxy_3_GetDevice_PostAdd(t *testing.T) {
 	if d := pt.Proxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
 		t.Error("Failed to find added device")
 	} else {
@@ -192,7 +122,7 @@ func Test_Proxy_4_CheckAddedDevice(t *testing.T) {
 	}
 }
 
-func Test_Proxy_5_UpdateDevice(t *testing.T) {
+func Test_Proxy_4_UpdateDevice(t *testing.T) {
 	if retrieved := pt.Proxy.Get("/devices/"+targetDeviceId, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
@@ -216,13 +146,13 @@ func Test_Proxy_5_UpdateDevice(t *testing.T) {
 	}
 }
 
-func Test_Proxy_6_CheckUpdatedDevice(t *testing.T) {
+func Test_Proxy_5_GetDevice_PostUpdate(t *testing.T) {
 	device := pt.Proxy.Get("/devices/"+targetDeviceId, 0, false, "")
 
 	t.Logf("content of updated device: %+v", device)
 }
 
-func Test_Proxy_7_RemoveDevice(t *testing.T) {
+func Test_Proxy_6_RemoveDevice(t *testing.T) {
 	if removed := pt.Proxy.Remove("/devices/"+devId, ""); removed == nil {
 		t.Error("Failed to remove device")
 	} else {
@@ -230,7 +160,7 @@ func Test_Proxy_7_RemoveDevice(t *testing.T) {
 	}
 }
 
-func Test_Proxy_8_CheckRemovedDevice(t *testing.T) {
+func Test_Proxy_7_GetDevice_PostRemove(t *testing.T) {
 	if d := pt.Proxy.Get("/devices/"+devId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
@@ -253,7 +183,8 @@ func secondCallback(args ...interface{}) interface{} {
 	name := args[0].(map[string]string)
 	id := args[1]
 	fmt.Printf("Running second callback - name: %s, id: %f\n", name["name"], id)
-	panic("Generating a panic in second callback")
+	// FIXME: the panic call seem to interfere with the logging mechanism
+	//panic("Generating a panic in second callback")
 	return nil
 }
 func thirdCallback(args ...interface{}) interface{} {
