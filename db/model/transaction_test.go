@@ -27,7 +27,7 @@ import (
 )
 
 type transactionTest struct {
-	Root      *Root
+	Root      *root
 	Backend   *Backend
 	Proxy     *Proxy
 	DbPrefix  string
@@ -69,7 +69,7 @@ func init() {
 
 	GetProfiling().Report()
 
-	tx.Proxy = tx.Root.Node.GetProxy("/", false)
+	tx.Proxy = tx.Root.GetProxy("/", false)
 }
 
 func Test_Transaction_1_GetDevices(t *testing.T) {

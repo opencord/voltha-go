@@ -66,7 +66,7 @@ func Test_Node_01_New(t *testing.T) {
 		PmConfigs:       &voltha.PmConfigs{},
 		ImageDownloads:  []*voltha.ImageDownload{},
 	}
-	root := &Root{}
+	root := &root{}
 	txid := fmt.Sprintf("%x", md5.Sum([]byte("node_transaction_id")))
 
 	node := NewNode(root, data, true, txid)

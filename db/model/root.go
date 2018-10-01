@@ -25,9 +25,14 @@ import (
 	"time"
 )
 
-type Root struct {
-	*Node
-	DirtyNodes            map[string][]*Node
+type Root interface {
+	Node
+}
+
+type root struct {
+	node
+
+	DirtyNodes            map[string][]*node
 	KvStore               *Backend
 	Loading               bool
 	RevisionClass         interface{}
@@ -35,11 +40,12 @@ type Root struct {
 	NotificationCallbacks []CallbackTuple
 }
 
-func NewRoot(initialData interface{}, kvStore *Backend) *Root {
-	root := &Root{}
+func NewRoot(initialData interface{}, kvStore *Backend) *root {
+	root := &root{}
 	root.KvStore = kvStore
-	root.DirtyNodes = make(map[string][]*Node)
+	root.DirtyNodes = make(map[string][]*node)
 	root.Loading = false
+
 	if kvStore != nil {
 		root.RevisionClass = reflect.TypeOf(PersistedRevision{})
 	} else {
@@ -48,12 +54,12 @@ func NewRoot(initialData interface{}, kvStore *Backend) *Root {
 	root.Callbacks = []CallbackTuple{}
 	root.NotificationCallbacks = []CallbackTuple{}
 
-	root.Node = NewNode(root, initialData, false, "")
+	root.node = *NewNode(root, initialData, false, "")
 
 	return root
 }
 
-func (r *Root) MakeRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
+func (r *root) MakeRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
 	if r.RevisionClass.(reflect.Type) == reflect.TypeOf(PersistedRevision{}) {
 		return NewPersistedRevision(branch, data, children)
 	}
@@ -61,31 +67,31 @@ func (r *Root) MakeRevision(branch *Branch, data interface{}, children map[strin
 	return NewNonPersistedRevision(branch, data, children)
 }
 
-func (r *Root) MakeTxBranch() string {
+func (r *root) MakeTxBranch() string {
 	txid_bin, _ := uuid.New().MarshalBinary()
 	txid := hex.EncodeToString(txid_bin)[:12]
-	r.DirtyNodes[txid] = []*Node{r.Node}
-	r.Node.makeTxBranch(txid)
+	r.DirtyNodes[txid] = []*node{&r.node}
+	r.node.MakeBranch(txid)
 	return txid
 }
 
-func (r *Root) DeleteTxBranch(txid string) {
+func (r *root) DeleteTxBranch(txid string) {
 	for _, dirtyNode := range r.DirtyNodes[txid] {
-		dirtyNode.deleteTxBranch(txid)
+		dirtyNode.DeleteBranch(txid)
 	}
 	delete(r.DirtyNodes, txid)
 }
 
-func (r *Root) FoldTxBranch(txid string) {
-	if _, err := r.mergeTxBranch(txid, true); err != nil {
+func (r *root) FoldTxBranch(txid string) {
+	if _, err := r.MergeBranch(txid, true); err != nil {
 		r.DeleteTxBranch(txid)
 	} else {
-		r.mergeTxBranch(txid, false)
-		r.executeCallbacks()
+		r.MergeBranch(txid, false)
+		r.ExecuteCallbacks()
 	}
 }
 
-func (r *Root) executeCallbacks() {
+func (r *root) ExecuteCallbacks() {
 	for len(r.Callbacks) > 0 {
 		callback := r.Callbacks[0]
 		r.Callbacks = r.Callbacks[1:]
@@ -98,105 +104,110 @@ func (r *Root) executeCallbacks() {
 	}
 }
 
-func (r *Root) noCallbacks() bool {
+func (r *root) HasCallbacks() bool {
 	return len(r.Callbacks) == 0
 }
 
-func (r *Root) addCallback(callback CallbackFunction, args ...interface{}) {
+func (r *root) AddCallback(callback CallbackFunction, args ...interface{}) {
 	r.Callbacks = append(r.Callbacks, CallbackTuple{callback, args})
 }
-func (r *Root) addNotificationCallback(callback CallbackFunction, args ...interface{}) {
+func (r *root) AddNotificationCallback(callback CallbackFunction, args ...interface{}) {
 	r.NotificationCallbacks = append(r.NotificationCallbacks, CallbackTuple{callback, args})
 }
 
-func (r *Root) Update(path string, data interface{}, strict bool, txid string, makeBranch t_makeBranch) Revision {
+
+func (r *root) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
 
 	if makeBranch == nil {
 		// TODO: raise error
 	}
 
-	if r.noCallbacks() {
+	if r.HasCallbacks() {
 		// TODO: raise error
 	}
 
 	if txid != "" {
-		trackDirty := func(node *Node) *Branch {
+		trackDirty := func(node *node) *Branch {
 			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
-			return node.makeTxBranch(txid)
+			return node.MakeBranch(txid)
 		}
-		result = r.Node.Update(path, data, strict, txid, trackDirty)
+		result = r.node.Update(path, data, strict, txid, trackDirty)
 	} else {
-		result = r.Node.Update(path, data, strict, "", nil)
+		result = r.node.Update(path, data, strict, "", nil)
 	}
 
-	r.executeCallbacks()
+	r.ExecuteCallbacks()
 
 	return result
 }
 
-func (r *Root) Add(path string, data interface{}, txid string, makeBranch t_makeBranch) Revision {
+func (r *root) Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
 
 	if makeBranch == nil {
 		// TODO: raise error
 	}
 
-	if r.noCallbacks() {
+	if r.HasCallbacks() {
 		// TODO: raise error
 	}
 
 	if txid != "" {
-		trackDirty := func(node *Node) *Branch {
+		trackDirty := func(node *node) *Branch {
 			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
-			return node.makeTxBranch(txid)
+			return node.MakeBranch(txid)
 		}
-		result = r.Node.Add(path, data, txid, trackDirty)
+		result = r.node.Add(path, data, txid, trackDirty)
 	} else {
-		result = r.Node.Add(path, data, "", nil)
+		result = r.node.Add(path, data, "", nil)
 	}
 
-	r.executeCallbacks()
+	r.ExecuteCallbacks()
 
 	return result
 }
 
-func (r *Root) Remove(path string, txid string, makeBranch t_makeBranch) Revision {
+func (r *root) Remove(path string, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
 
 	if makeBranch == nil {
 		// TODO: raise error
 	}
 
-	if r.noCallbacks() {
+	if r.HasCallbacks() {
 		// TODO: raise error
 	}
 
 	if txid != "" {
-		trackDirty := func(node *Node) *Branch {
+		trackDirty := func(node *node) *Branch {
 			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
-			return node.makeTxBranch(txid)
+			return node.MakeBranch(txid)
 		}
-		result = r.Node.Remove(path, txid, trackDirty)
+		result = r.node.Remove(path, txid, trackDirty)
 	} else {
-		result = r.Node.Remove(path, "", nil)
+		result = r.node.Remove(path, "", nil)
 	}
 
-	r.executeCallbacks()
+	r.ExecuteCallbacks()
 
 	return result
 }
 
-func (r *Root) Load(rootClass interface{}) *Root {
+func (r *root) Load(rootClass interface{}) *root {
 	//fakeKvStore := &Backend{}
 	//root := NewRoot(rootClass, nil)
 	//root.KvStore = r.KvStore
-	r.loadFromPersistence(rootClass)
+	r.LoadFromPersistence(rootClass)
 	return r
 }
 
-func (r *Root) MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
-	r.Node.MakeLatest(branch, revision, changeAnnouncement)
+func (r *root) MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
+	r.makeLatest(branch, revision, changeAnnouncement)
+}
+
+func (r *root) makeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
+	r.node.makeLatest(branch, revision, changeAnnouncement)
 
 	if r.KvStore != nil && branch.Txid == "" {
 		tags := make(map[string]string)
@@ -218,8 +229,8 @@ func (r *Root) MakeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	}
 }
 
-func (r *Root) LoadLatest(hash string) {
-	r.Node.LoadLatest(r.KvStore, hash)
+func (r *root) LoadLatest(hash string) {
+	r.node.LoadLatest(r.KvStore, hash)
 }
 
 type rootData struct {
@@ -227,7 +238,7 @@ type rootData struct {
 	Tags   map[string]string `json:tags`
 }
 
-func (r *Root) loadFromPersistence(rootClass interface{}) {
+func (r *root) LoadFromPersistence(rootClass interface{}) {
 	var data rootData
 
 	r.Loading = true
@@ -240,10 +251,10 @@ func (r *Root) loadFromPersistence(rootClass interface{}) {
 	stop := time.Now()
 	GetProfiling().AddToInMemoryModelTime(stop.Sub(start).Seconds())
 	for tag, hash := range data.Tags {
-		r.Node.LoadLatest(r.KvStore, hash)
-		r.Node.Tags[tag] = r.Node.Latest()
+		r.node.LoadLatest(r.KvStore, hash)
+		r.node.Tags[tag] = r.node.Latest()
 	}
 
-	r.Node.LoadLatest(r.KvStore, data.Latest)
+	r.node.LoadLatest(r.KvStore, data.Latest)
 	r.Loading = false
 }

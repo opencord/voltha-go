@@ -29,7 +29,7 @@ import (
 )
 
 type proxyTest struct {
-	Root      *Root
+	Root      *root
 	Backend   *Backend
 	Proxy     *Proxy
 	DbPrefix  string
@@ -66,7 +66,7 @@ func init() {
 
 	GetProfiling().Report()
 
-	pt.Proxy = pt.Root.Node.GetProxy("/", false)
+	pt.Proxy = pt.Root.GetProxy("/", false)
 }
 
 func Test_Proxy_1_GetDevices(t *testing.T) {
@@ -115,6 +115,61 @@ func Test_Proxy_2_AddDevice(t *testing.T) {
 func Test_Proxy_3_GetDevice_PostAdd(t *testing.T) {
 	if d := pt.Proxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
 		t.Error("Failed to find added device")
+	} else {
+		djson, _ := json.Marshal(d)
+
+		t.Logf("Found device: count: %s", djson)
+	}
+}
+func Test_Proxy_3_1_RegisterProxy(t *testing.T) {
+	// Get a device proxy and update a specific port
+	devProxy := pt.Root.GetProxy("/devices/"+devId, false)
+	port123 := devProxy.Get("/ports/123", 0, false, "")
+	t.Logf("got ports: %+v", port123)
+
+	devProxy.RegisterCallback(POST_UPDATE, deviceCallback, nil)
+
+	port123.(*voltha.Port).OperStatus = common.OperStatus_DISCOVERED
+
+	devProxy.Update("/ports/123", port123, false, "")
+	updated := devProxy.Get("/ports", 0, false, "")
+	t.Logf("got updated ports: %+v", updated)
+
+	//
+	// Get a device proxy and update all its ports
+	//
+
+	//devProxy := pt.Root.GetProxy("/devices/"+devId, false)
+	//ports := devProxy.Get("/ports", 0, false, "")
+	//t.Logf("got ports: %+v", ports)
+	//devProxy.RegisterCallback(POST_UPDATE, deviceCallback, nil)
+	//
+	//ports.([]interface{})[0].(*voltha.Port).OperStatus = common.OperStatus_DISCOVERED
+	//
+	//devProxy.Update("/ports", ports, false, "")
+	//updated := devProxy.Get("/ports", 0, false, "")
+	//t.Logf("got updated ports: %+v", updated)
+
+
+	//
+	// Get a device proxy, retrieve all the ports and update a specific one
+	//
+
+	//devProxy := pt.Root.GetProxy("/devices/"+devId, false)
+	//ports := devProxy.Get("/ports", 0, false, "")
+	//t.Logf("got ports: %+v", ports)
+	//devProxy.RegisterCallback(POST_UPDATE, deviceCallback, nil)
+	//
+	//ports.([]interface{})[0].(*voltha.Port).OperStatus = common.OperStatus_DISCOVERED
+	//
+	//devProxy.Update("/ports/123", ports.([]interface{})[0], false, "")
+	//updated := devProxy.Get("/ports", 0, false, "")
+	//t.Logf("got updated ports: %+v", updated)
+}
+
+func Test_Proxy_3_2_GetDevice_PostRegister(t *testing.T) {
+	if d := pt.Proxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		t.Error("Failed to find updated registered device")
 	} else {
 		djson, _ := json.Marshal(d)
 
@@ -177,6 +232,10 @@ func firstCallback(args ...interface{}) interface{} {
 	name := args[0]
 	id := args[1]
 	fmt.Printf("Running first callback - name: %s, id: %s\n", name, id)
+	return nil
+}
+func deviceCallback(args ...interface{}) interface{} {
+	fmt.Printf("Running device callback\n")
 	return nil
 }
 func secondCallback(args ...interface{}) interface{} {

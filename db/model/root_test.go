@@ -46,7 +46,7 @@ func Test_NewRoot(t *testing.T) {
 	afterLoad := time.Now()
 	fmt.Printf(">>>>>>>>>>>>> Time to Load : %f\n", afterLoad.Sub(start).Seconds())
 
-	d := r.Node.Get(deviceProxy, "", 0, false, "")
+	d := r.node.Get(deviceProxy, "", 0, false, "")
 	afterGet := time.Now()
 	fmt.Printf(">>>>>>>>>>>>> Time to Load and get: %f\n", afterGet.Sub(start).Seconds())
 

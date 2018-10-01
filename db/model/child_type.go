@@ -88,15 +88,24 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 								return s
 							}
 						case "int32":
-							fallthrough
+							keyFromStr = func(s string) interface{} {
+								i, _ := strconv.Atoi(s)
+								return int32(i)
+							}
 						case "int64":
-							fallthrough
+							keyFromStr = func(s string) interface{} {
+								i, _ := strconv.Atoi(s)
+								return int64(i)
+							}
 						case "uint32":
-							fallthrough
+							keyFromStr = func(s string) interface{} {
+								i, _ := strconv.Atoi(s)
+								return uint32(i)
+							}
 						case "uint64":
 							keyFromStr = func(s string) interface{} {
 								i, _ := strconv.Atoi(s)
-								return i
+								return uint64(i)
 							}
 						default:
 							fmt.Errorf("Key type not implemented - type: %s\n", keyType.(reflect.Type))

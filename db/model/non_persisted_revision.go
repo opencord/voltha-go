@@ -89,7 +89,7 @@ func (npr *NonPersistedRevision) GetData() interface{} {
 	return npr.Config.Data
 }
 
-func (npr *NonPersistedRevision) GetNode() *Node {
+func (npr *NonPersistedRevision) GetNode() *node {
 	return npr.Branch.Node
 }
 

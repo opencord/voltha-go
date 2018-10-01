@@ -29,7 +29,7 @@ type Revision interface {
 	GetBranch() *Branch
 	Get(int) interface{}
 	GetData() interface{}
-	GetNode() *Node
+	GetNode() *node
 	UpdateData(data interface{}, branch *Branch) Revision
 	UpdateChildren(name string, children []Revision, branch *Branch) Revision
 	UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision

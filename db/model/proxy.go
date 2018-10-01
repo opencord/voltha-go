@@ -48,14 +48,14 @@ func (oc *OperationContext) Update(data interface{}) *OperationContext {
 }
 
 type Proxy struct {
-	Root      *Root
-	Node      *Node
+	Root      Root
+	Node      Node
 	Path      string
 	Exclusive bool
 	Callbacks map[CallbackType]map[string]CallbackTuple
 }
 
-func NewProxy(root *Root, node *Node, path string, exclusive bool) *Proxy {
+func NewProxy(root Root, node Node, path string, exclusive bool) *Proxy {
 	callbacks := make(map[CallbackType]map[string]CallbackTuple)
 	p := &Proxy{
 		Root:      root,

@@ -27,7 +27,7 @@ var (
 )
 
 func Test_ConfigBranch_New(t *testing.T) {
-	node := &Node{}
+	node := &node{}
 	hash := fmt.Sprintf("%x", md5.Sum([]byte("origin_hash")))
 	origin := &NonPersistedRevision{
 		Config:   &DataRevision{},

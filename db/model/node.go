@@ -30,8 +30,28 @@ const (
 	NONE string = "none"
 )
 
-type Node struct {
-	root      *Root
+type Node interface {
+	MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple)
+
+	// CRUD functions
+	Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision
+	Get(path string, hash string, depth int, deep bool, txid string) interface{}
+	Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision
+	Remove(path string, txid string, makeBranch MakeBranchFunction) Revision
+
+	MakeBranch(txid string) *Branch
+	DeleteBranch(txid string)
+	MergeBranch(txid string, dryRun bool) (Revision, error)
+
+	MakeTxBranch() string
+	DeleteTxBranch(txid string)
+	FoldTxBranch(txid string)
+
+	GetProxy(path string, exclusive bool) *Proxy
+}
+
+type node struct {
+	root      *root
 	Type      interface{}
 	Branches  map[string]*Branch
 	Tags      map[string]Revision
@@ -45,8 +65,8 @@ type ChangeTuple struct {
 	Data interface{}
 }
 
-func NewNode(root *Root, initialData interface{}, autoPrune bool, txid string) *Node {
-	n := &Node{}
+func NewNode(root *root, initialData interface{}, autoPrune bool, txid string) *node {
+	n := &node{}
 
 	n.root = root
 	n.Branches = make(map[string]*Branch)
@@ -69,15 +89,18 @@ func NewNode(root *Root, initialData interface{}, autoPrune bool, txid string) *
 	return n
 }
 
-func (n *Node) MakeNode(data interface{}, txid string) *Node {
+func (n *node) MakeNode(data interface{}, txid string) *node {
 	return NewNode(n.root, data, true, txid)
 }
 
-func (n *Node) MakeRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
+func (n *node) MakeRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
 	return n.root.MakeRevision(branch, data, children)
 }
 
-func (n *Node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
+func (n *node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
+	n.makeLatest(branch, revision, changeAnnouncement)
+}
+func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
 	if _, ok := branch.Revisions[revision.GetHash()]; !ok {
 		branch.Revisions[revision.GetHash()] = revision
 	}
@@ -90,18 +113,18 @@ func (n *Node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement 
 		if n.Proxy != nil {
 			for _, change := range changeAnnouncement {
 				fmt.Printf("invoking callback - changeType: %+v, data:%+v\n", change.Type, change.Data)
-				n.root.addCallback(n.Proxy.InvokeCallbacks, change.Type, change.Data, true)
+				n.root.AddCallback(n.Proxy.InvokeCallbacks, change.Type, change.Data, true)
 			}
 		}
 
 		for _, change := range changeAnnouncement {
 			fmt.Printf("sending notification - changeType: %+v, data:%+v\n", change.Type, change.Data)
-			n.root.addNotificationCallback(n.makeEventBus().Advertise, change.Type, change.Data, revision.GetHash())
+			n.root.AddNotificationCallback(n.makeEventBus().Advertise, change.Type, change.Data, revision.GetHash())
 		}
 	}
 }
 
-func (n *Node) Latest(txid ...string) Revision {
+func (n *node) Latest(txid ...string) Revision {
 	var branch *Branch
 	var exists bool
 
@@ -115,11 +138,11 @@ func (n *Node) Latest(txid ...string) Revision {
 	return nil
 }
 
-func (n *Node) GetHash(hash string) Revision {
+func (n *node) GetHash(hash string) Revision {
 	return n.Branches[NONE].Revisions[hash]
 }
 
-func (n *Node) initialize(data interface{}, txid string) {
+func (n *node) initialize(data interface{}, txid string) {
 	var children map[string][]Revision
 	children = make(map[string][]Revision)
 	for fieldName, field := range ChildrenFields(n.Type) {
@@ -162,7 +185,7 @@ func (n *Node) initialize(data interface{}, txid string) {
 	//data.ClearField(field_name)
 	branch := NewBranch(n, "", nil, n.AutoPrune)
 	rev := n.MakeRevision(branch, data, children)
-	n.MakeLatest(branch, rev, nil)
+	n.makeLatest(branch, rev, nil)
 
 	if txid == "" {
 		n.Branches[NONE] = branch
@@ -171,10 +194,30 @@ func (n *Node) initialize(data interface{}, txid string) {
 	}
 }
 
+func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) (int, Revision) {
+	for i, rev := range revs {
+		dataValue := reflect.ValueOf(rev.GetData())
+		dataStruct := GetAttributeStructure(rev.GetData(), keyName, 0)
+
+		fieldValue := dataValue.Elem().FieldByName(dataStruct.Name)
+
+		log.Debugf("fieldValue: %+v, type: %+v, value: %+v", fieldValue.Interface(), fieldValue.Type(), value)
+		a := fmt.Sprintf("%s", fieldValue.Interface())
+		b := fmt.Sprintf("%s", value)
+		if a == b {
+			return i, rev
+		}
+	}
+
+	fmt.Errorf("key %s=%s not found", keyName, value)
+
+	return -1, nil
+}
+
 //
 // Get operation
 //
-func (n *Node) Get(path string, hash string, depth int, deep bool, txid string) interface{} {
+func (n *node) Get(path string, hash string, depth int, deep bool, txid string) interface{} {
 	if deep {
 		depth = -1
 	}
@@ -197,29 +240,12 @@ func (n *Node) Get(path string, hash string, depth int, deep bool, txid string) 
 		rev = branch.Latest
 	}
 
-	return n.get(rev, path, depth)
+	return n.getPath(rev, path, depth)
 }
 
-func (n *Node) findRevByKey(revs []Revision, keyName string, value string) (int, Revision) {
-	for i, rev := range revs {
-		dataValue := reflect.ValueOf(rev.GetData())
-		dataStruct := GetAttributeStructure(rev.GetData(), keyName, 0)
-
-		fieldValue := dataValue.Elem().FieldByName(dataStruct.Name)
-
-		if fieldValue.Interface().(string) == value {
-			return i, rev
-		}
-	}
-
-	fmt.Errorf("key %s=%s not found", keyName, value)
-
-	return -1, nil
-}
-
-func (n *Node) get(rev Revision, path string, depth int) interface{} {
+func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 	if path == "" {
-		return n.doGet(rev, depth)
+		return n.getData(rev, depth)
 	}
 
 	partition := strings.SplitN(path, "/", 2)
@@ -234,25 +260,25 @@ func (n *Node) get(rev Revision, path string, depth int) interface{} {
 	names := ChildrenFields(n.Type)
 	field := names[name]
 
-	if field != nil && field.IsContainer {
+	if field.IsContainer {
 		if field.Key != "" {
 			children := rev.GetChildren()[name]
 			if path != "" {
 				partition = strings.SplitN(path, "/", 2)
 				key := partition[0]
 				path = ""
-				key = field.KeyFromStr(key).(string)
-				if _, childRev := n.findRevByKey(children, field.Key, key); childRev == nil {
+				keyValue := field.KeyFromStr(key)
+				if _, childRev := n.findRevByKey(children, field.Key, keyValue); childRev == nil {
 					return nil
 				} else {
 					childNode := childRev.GetNode()
-					return childNode.get(childRev, path, depth)
+					return childNode.getPath(childRev, path, depth)
 				}
 			} else {
 				var response []interface{}
 				for _, childRev := range children {
 					childNode := childRev.GetNode()
-					value := childNode.doGet(childRev, depth)
+					value := childNode.getData(childRev, depth)
 					response = append(response, value)
 				}
 				return response
@@ -265,21 +291,20 @@ func (n *Node) get(rev Revision, path string, depth int) interface{} {
 			}
 			for _, childRev := range rev.GetChildren()[name] {
 				childNode := childRev.GetNode()
-				value := childNode.doGet(childRev, depth)
+				value := childNode.getData(childRev, depth)
 				response = append(response, value)
 			}
 			return response
 		}
 	} else {
-		c1 := rev.GetChildren()[name]
-		childRev := c1[0]
+		childRev := rev.GetChildren()[name][0]
 		childNode := childRev.GetNode()
-		return childNode.get(childRev, path, depth)
+		return childNode.getPath(childRev, path, depth)
 	}
 	return nil
 }
 
-func (n *Node) doGet(rev Revision, depth int) interface{} {
+func (n *node) getData(rev Revision, depth int) interface{} {
 	msg := rev.Get(depth)
 
 	if n.Proxy != nil {
@@ -293,7 +318,7 @@ func (n *Node) doGet(rev Revision, depth int) interface{} {
 //
 // Update operation
 //
-func (n *Node) Update(path string, data interface{}, strict bool, txid string, makeBranch t_makeBranch) Revision {
+func (n *node) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
 	// FIXME: is this required ... a bit overkill to take out a "/"
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -339,13 +364,13 @@ func (n *Node) Update(path string, data interface{}, strict bool, txid string, m
 			} else {
 				path = partition[1]
 			}
-			key = field.KeyFromStr(key).(string)
+			keyValue := field.KeyFromStr(key)
 			// TODO. Est-ce que le copy ne fonctionne pas? dois-je plutôt faire un clone de chaque item?
 			for _, v := range rev.GetChildren()[name] {
 				revCopy := reflect.ValueOf(v).Interface().(Revision)
 				children = append(children, revCopy)
 			}
-			idx, childRev := n.findRevByKey(children, field.Key, key)
+			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
 			newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
 			if newChildRev.GetHash() == childRev.GetHash() {
@@ -355,7 +380,12 @@ func (n *Node) Update(path string, data interface{}, strict bool, txid string, m
 				}
 				return branch.Latest
 			}
-			if _, newKey := GetAttributeValue(newChildRev.GetData(), field.Key, 0); newKey.Interface().(string) != key {
+
+			_, newKey := GetAttributeValue(newChildRev.GetData(), field.Key, 0)
+			log.Debugf("newKey is %s", newKey.Interface())
+			_newKeyType := fmt.Sprintf("%s", newKey)
+			_keyValueType := fmt.Sprintf("%s", keyValue)
+			if _newKeyType != _keyValueType {
 				fmt.Errorf("cannot change key field\n")
 			}
 			children[idx] = newChildRev
@@ -378,7 +408,7 @@ func (n *Node) Update(path string, data interface{}, strict bool, txid string, m
 	return nil
 }
 
-func (n *Node) doUpdate(branch *Branch, data interface{}, strict bool) Revision {
+func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision {
 	log.Debugf("Comparing types - expected: %+v, actual: %+v", reflect.ValueOf(n.Type).Type(), reflect.TypeOf(data))
 
 	if reflect.TypeOf(data) != reflect.ValueOf(n.Type).Type() {
@@ -413,7 +443,7 @@ func (n *Node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 //
 // Add operation
 //
-func (n *Node) Add(path string, data interface{}, txid string, makeBranch t_makeBranch) Revision {
+func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -479,9 +509,9 @@ func (n *Node) Add(path string, data interface{}, txid string, makeBranch t_make
 			} else {
 				path = partition[1]
 			}
-			key = field.KeyFromStr(key).(string)
+			keyValue := field.KeyFromStr(key)
 			copy(children, rev.GetChildren()[name])
-			idx, childRev := n.findRevByKey(children, field.Key, key)
+			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
 			newChildRev := childNode.Add(path, data, txid, makeBranch)
 			children[idx] = newChildRev
@@ -501,7 +531,7 @@ func (n *Node) Add(path string, data interface{}, txid string, makeBranch t_make
 //
 // Remove operation
 //
-func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revision {
+func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) Revision {
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -542,13 +572,13 @@ func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 			} else {
 				path = partition[1]
 			}
-			key = field.KeyFromStr(key).(string)
+			keyValue := field.KeyFromStr(key)
 			if path != "" {
 				for _, v := range rev.GetChildren()[name] {
 					newV := reflect.ValueOf(v).Interface().(Revision)
 					children = append(children, newV)
 				}
-				idx, childRev := n.findRevByKey(children, field.Key, key)
+				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 				childNode := childRev.GetNode()
 				newChildRev := childNode.Remove(path, txid, makeBranch)
 				children[idx] = newChildRev
@@ -561,7 +591,7 @@ func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 					newV := reflect.ValueOf(v).Interface().(Revision)
 					children = append(children, newV)
 				}
-				idx, childRev := n.findRevByKey(children, field.Key, key)
+				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 				if n.Proxy != nil {
 					data := childRev.GetData()
 					n.Proxy.InvokeCallbacks(PRE_REMOVE, data, false)
@@ -588,25 +618,25 @@ func (n *Node) Remove(path string, txid string, makeBranch t_makeBranch) Revisio
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Branching ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-type t_makeBranch func(*Node) *Branch
+type MakeBranchFunction func(*node) *Branch
 
-func (n *Node) makeTxBranch(txid string) *Branch {
+func (n *node) MakeBranch(txid string) *Branch {
 	branchPoint := n.Branches[NONE].Latest
 	branch := NewBranch(n, txid, branchPoint, true)
 	n.Branches[txid] = branch
 	return branch
 }
 
-func (n *Node) deleteTxBranch(txid string) {
+func (n *node) DeleteBranch(txid string) {
 	delete(n.Branches, txid)
 }
 
-func (n *Node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
+func (n *node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
 	f := func(rev Revision) Revision {
 		childBranch := rev.GetBranch()
 
 		if childBranch.Txid == txid {
-			rev, _ = childBranch.Node.mergeTxBranch(txid, dryRun)
+			rev, _ = childBranch.Node.MergeBranch(txid, dryRun)
 		}
 
 		return rev
@@ -614,7 +644,7 @@ func (n *Node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
 	return f
 }
 
-func (n *Node) mergeTxBranch(txid string, dryRun bool) (Revision, error) {
+func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 	srcBranch := n.Branches[txid]
 	dstBranch := n.Branches[NONE]
 
@@ -635,7 +665,7 @@ func (n *Node) mergeTxBranch(txid string, dryRun bool) (Revision, error) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Diff utility ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-//func (n *Node) diff(hash1, hash2, txid string) {
+//func (n *node) diff(hash1, hash2, txid string) {
 //	branch := n.Branches[txid]
 //	rev1 := branch.get(hash1)
 //	rev2 := branch.get(hash2)
@@ -655,7 +685,7 @@ func (n *Node) mergeTxBranch(txid string, dryRun bool) (Revision, error) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Internals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-func (n *Node) hasChildren(data interface{}) bool {
+func (n *node) hasChildren(data interface{}) bool {
 	for fieldName, field := range ChildrenFields(n.Type) {
 		_, fieldValue := GetAttributeValue(data, fieldName, 0)
 
@@ -668,17 +698,21 @@ func (n *Node) hasChildren(data interface{}) bool {
 	return false
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Node Proxy ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ node Proxy ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-func (n *Node) GetProxy(path string, exclusive bool) *Proxy {
-	return n.getProxy(path, n.root, path, exclusive)
+func (n *node) GetProxy(path string, exclusive bool) *Proxy {
+	r := NewRoot(n.Type, n.root.KvStore)
+	r.node = *n
+	r.KvStore = n.root.KvStore
+
+	return n.getProxy(path, r, path, exclusive)
 }
-func (n *Node) getProxy(path string, root *Root, fullPath string, exclusive bool) *Proxy {
+func (n *node) getProxy(path string, root Root, fullPath string, exclusive bool) *Proxy {
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
 	if path == "" {
-		return n.makeProxy(n.root, path, exclusive)
+		return n.makeProxy(root, path, exclusive)
 	}
 
 	rev := n.Branches[NONE].Latest
@@ -694,12 +728,21 @@ func (n *Node) getProxy(path string, root *Root, fullPath string, exclusive bool
 		if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]
-			path = partition[1]
-			key = field.KeyFromStr(key).(string)
+			if len(partition) < 2 {
+				path = ""
+			} else {
+				path = partition[1]
+			}
+			keyValue := field.KeyFromStr(key)
 			children := rev.GetChildren()[name]
-			_, childRev := n.findRevByKey(children, field.Key, key)
+			_, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
-			return childNode.getProxy(path, root, fullPath, exclusive)
+
+			r := NewRoot(childNode.Type, n.root.KvStore)
+			r.node = *childNode
+			r.KvStore = childNode.root.KvStore
+
+			return childNode.getProxy(path, r, fullPath, exclusive)
 		}
 		log.Error("cannot index into container with no keys")
 	} else {
@@ -711,7 +754,7 @@ func (n *Node) getProxy(path string, root *Root, fullPath string, exclusive bool
 	return nil
 }
 
-func (n *Node) makeProxy(root *Root, fullPath string, exclusive bool) *Proxy {
+func (n *node) makeProxy(root Root, fullPath string, exclusive bool) *Proxy {
 	if n.Proxy == nil {
 		n.Proxy = NewProxy(root, n, fullPath, exclusive)
 	} else {
@@ -722,7 +765,7 @@ func (n *Node) makeProxy(root *Root, fullPath string, exclusive bool) *Proxy {
 	return n.Proxy
 }
 
-func (n *Node) makeEventBus() *EventBus {
+func (n *node) makeEventBus() *EventBus {
 	if n.EventBus == nil {
 		n.EventBus = NewEventBus()
 	}
@@ -731,10 +774,20 @@ func (n *Node) makeEventBus() *EventBus {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Persistence Loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-func (n *Node) LoadLatest(kvStore *Backend, hash string) {
+func (n *node) LoadLatest(kvStore *Backend, hash string) {
 	branch := NewBranch(n, "", nil, n.AutoPrune)
 	pr := &PersistedRevision{}
 	rev := pr.Load(branch, kvStore, n.Type, hash)
-	n.MakeLatest(branch, rev, nil)
+	n.makeLatest(branch, rev, nil)
 	n.Branches[NONE] = branch
+}
+
+func (n *node) MakeTxBranch() string {
+	return n.root.MakeTxBranch()
+}
+func (n *node) FoldTxBranch(txid string) {
+	n.root.FoldTxBranch(txid)
+}
+func (n *node) DeleteTxBranch(txid string) {
+	n.root.DeleteTxBranch(txid)
 }

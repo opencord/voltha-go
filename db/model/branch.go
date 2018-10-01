@@ -19,14 +19,14 @@ package model
 // TODO: missing proper logging
 
 type Branch struct {
-	Node      *Node
+	Node      *node
 	Txid      string
 	Origin    Revision
 	Revisions map[string]Revision
 	Latest    Revision
 }
 
-func NewBranch(node *Node, txid string, origin Revision, autoPrune bool) *Branch {
+func NewBranch(node *node, txid string, origin Revision, autoPrune bool) *Branch {
 	cb := &Branch{}
 	cb.Node = node
 	cb.Txid = txid
