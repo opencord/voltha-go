@@ -73,7 +73,7 @@ func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} 
 
 func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
-		fmt.Errorf("invalid path: %s", path)
+		log.Errorf("invalid path: %s", path)
 		return nil
 	}
 	var fullPath string
@@ -87,7 +87,7 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 
 func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
-		fmt.Errorf("invalid path: %s", path)
+		log.Errorf("invalid path: %s", path)
 		return nil
 	}
 	var fullPath string
@@ -101,7 +101,7 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 
 func (p *Proxy) Remove(path string, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
-		fmt.Errorf("invalid path: %s", path)
+		log.Errorf("invalid path: %s", path)
 		return nil
 	}
 	var fullPath string

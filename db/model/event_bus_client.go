@@ -16,7 +16,7 @@
 package model
 
 import (
-	"fmt"
+	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/protos/voltha"
 )
 
@@ -28,5 +28,5 @@ func NewEventBusClient() *EventBusClient {
 }
 
 func (ebc *EventBusClient) Publish(topic string, event voltha.ConfigEvent) {
-	fmt.Printf("publishing event:%+v, topic:%s\n", event, topic)
+	log.Debugf("publishing event:%+v, topic:%s\n", event, topic)
 }

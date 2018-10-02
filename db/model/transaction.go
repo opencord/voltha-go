@@ -15,7 +15,9 @@
  */
 package model
 
-import "fmt"
+import (
+	"github.com/opencord/voltha-go/common/log"
+)
 
 type Transaction struct {
 	proxy *Proxy
@@ -31,7 +33,7 @@ func NewTransaction(proxy *Proxy, txid string) *Transaction {
 }
 func (t *Transaction) Get(path string, depth int, deep bool) interface{} {
 	if t.txid == "" {
-		fmt.Errorf("closed transaction")
+		log.Errorf("closed transaction")
 		return nil
 	}
 	// TODO: need to review the return values at the different layers!!!!!
@@ -39,21 +41,21 @@ func (t *Transaction) Get(path string, depth int, deep bool) interface{} {
 }
 func (t *Transaction) Update(path string, data interface{}, strict bool) interface{} {
 	if t.txid == "" {
-		fmt.Errorf("closed transaction")
+		log.Errorf("closed transaction")
 		return nil
 	}
 	return t.proxy.Update(path, data, strict, t.txid)
 }
 func (t *Transaction) Add(path string, data interface{}) interface{} {
 	if t.txid == "" {
-		fmt.Errorf("closed transaction")
+		log.Errorf("closed transaction")
 		return nil
 	}
 	return t.proxy.Add(path, data, t.txid)
 }
 func (t *Transaction) Remove(path string) interface{} {
 	if t.txid == "" {
-		fmt.Errorf("closed transaction")
+		log.Errorf("closed transaction")
 		return nil
 	}
 	return t.proxy.Remove(path, t.txid)

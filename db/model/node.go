@@ -61,8 +61,9 @@ type node struct {
 }
 
 type ChangeTuple struct {
-	Type CallbackType
-	Data interface{}
+	Type         CallbackType
+	PreviousData interface{}
+	LatestData   interface{}
 }
 
 func NewNode(root *root, initialData interface{}, autoPrune bool, txid string) *node {
@@ -83,7 +84,7 @@ func NewNode(root *root, initialData interface{}, autoPrune bool, txid string) *
 		n.Type = reflect.ValueOf(initialData).Interface()
 	} else {
 		// not implemented error
-		fmt.Errorf("cannot process initial data - %+v", initialData)
+		log.Errorf("cannot process initial data - %+v", initialData)
 	}
 
 	return n
@@ -112,14 +113,17 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	if changeAnnouncement != nil && branch.Txid == "" {
 		if n.Proxy != nil {
 			for _, change := range changeAnnouncement {
-				fmt.Printf("invoking callback - changeType: %+v, data:%+v\n", change.Type, change.Data)
-				n.root.AddCallback(n.Proxy.InvokeCallbacks, change.Type, change.Data, true)
+				log.Debugf("invoking callback - changeType: %+v, previous:%+v, latest: %+v\n", change.Type,
+					change.PreviousData, change.LatestData)
+				n.root.AddCallback(n.Proxy.InvokeCallbacks, change.Type, change.PreviousData, change.LatestData, true)
 			}
 		}
 
 		for _, change := range changeAnnouncement {
-			fmt.Printf("sending notification - changeType: %+v, data:%+v\n", change.Type, change.Data)
-			n.root.AddNotificationCallback(n.makeEventBus().Advertise, change.Type, change.Data, revision.GetHash())
+			log.Debugf("sending notification - changeType: %+v, previous:%+v, latest: %+v\n", change.Type,
+				change.PreviousData,
+				change.LatestData)
+			n.root.AddNotificationCallback(n.makeEventBus().Advertise, change.Type, change.PreviousData, change.LatestData, revision.GetHash())
 		}
 	}
 }
@@ -161,7 +165,7 @@ func (n *node) initialize(data interface{}, txid string) {
 						_, key := GetAttributeValue(v.Interface(), field.Key, 0)
 						for _, k := range keysSeen {
 							if k == key.String() {
-								fmt.Errorf("duplicate key - %s", k)
+								log.Errorf("duplicate key - %s", k)
 							}
 						}
 						children[fieldName] = append(children[fieldName], rev)
@@ -178,7 +182,7 @@ func (n *node) initialize(data interface{}, txid string) {
 				children[fieldName] = append(children[fieldName], n.MakeNode(fieldValue.Interface(), txid).Latest())
 			}
 		} else {
-			fmt.Errorf("field is invalid - %+v", fieldValue)
+			log.Errorf("field is invalid - %+v", fieldValue)
 		}
 	}
 	// FIXME: ClearField???  No such method in go protos.  Reset?
@@ -209,7 +213,7 @@ func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) 
 		}
 	}
 
-	fmt.Errorf("key %s=%s not found", keyName, value)
+	log.Errorf("key %s=%s not found", keyName, value)
 
 	return -1, nil
 }
@@ -355,7 +359,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 
 	if field.IsContainer {
 		if path == "" {
-			fmt.Errorf("cannot update a list\n")
+			log.Errorf("cannot update a list\n")
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]
@@ -386,7 +390,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			_newKeyType := fmt.Sprintf("%s", newKey)
 			_keyValueType := fmt.Sprintf("%s", keyValue)
 			if _newKeyType != _keyValueType {
-				fmt.Errorf("cannot change key field\n")
+				log.Errorf("cannot change key field\n")
 			}
 			children[idx] = newChildRev
 			rev = rev.UpdateChildren(name, children, branch)
@@ -394,7 +398,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			n.root.MakeLatest(branch, rev, nil)
 			return rev
 		} else {
-			fmt.Errorf("cannot index into container with no keys\n")
+			log.Errorf("cannot index into container with no keys\n")
 		}
 	} else {
 		childRev := rev.GetChildren()[name][0]
@@ -413,7 +417,7 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 
 	if reflect.TypeOf(data) != reflect.ValueOf(n.Type).Type() {
 		// TODO raise error
-		fmt.Errorf("data does not match type: %+v", n.Type)
+		log.Errorf("data does not match type: %+v", n.Type)
 		return nil
 	}
 
@@ -429,11 +433,12 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 	if !reflect.DeepEqual(branch.Latest.GetData(), data) {
 		if strict {
 			// TODO: checkAccessViolations(data, Branch.GetLatest.data)
-			fmt.Println("checking access violations")
+			log.Debugf("checking access violations")
 		}
 		rev := branch.Latest.UpdateData(data, branch)
+		changes := []ChangeTuple{{POST_UPDATE, branch.Latest.GetData(), rev.GetData()}}
 		branch.Latest.Drop(branch.Txid, true)
-		n.root.MakeLatest(branch, rev, []ChangeTuple{{POST_UPDATE, rev.GetData()}})
+		n.root.MakeLatest(branch, rev, changes)
 		return rev
 	} else {
 		return branch.Latest
@@ -449,7 +454,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 	}
 	if path == "" {
 		// TODO raise error
-		fmt.Errorf("cannot add for non-container mode\n")
+		log.Errorf("cannot add for non-container mode\n")
 	}
 
 	var branch *Branch
@@ -489,17 +494,18 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 				_, key := GetAttributeValue(data, field.Key, 0)
 				if _, rev := n.findRevByKey(children, field.Key, key.String()); rev != nil {
 					// TODO raise error
-					fmt.Errorf("duplicate key found: %s", key.String())
+					log.Errorf("duplicate key found: %s", key.String())
 				}
 
 				childRev := n.MakeNode(data, txid).Latest(txid)
 				children = append(children, childRev)
 				rev := rev.UpdateChildren(name, children, branch)
+				changes := []ChangeTuple{{POST_ADD, branch.Latest.GetData(), rev.GetData()}}
 				branch.Latest.Drop(txid, false)
-				n.root.MakeLatest(branch, rev, []ChangeTuple{{POST_ADD, rev.GetData()}})
+				n.root.MakeLatest(branch, rev, changes)
 				return rev
 			} else {
-				fmt.Errorf("cannot add to non-keyed container\n")
+				log.Errorf("cannot add to non-keyed container\n")
 			}
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
@@ -520,10 +526,10 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 			n.root.MakeLatest(branch, rev, nil)
 			return rev
 		} else {
-			fmt.Errorf("cannot add to non-keyed container\n")
+			log.Errorf("cannot add to non-keyed container\n")
 		}
 	} else {
-		fmt.Errorf("cannot add to non-container field\n")
+		log.Errorf("cannot add to non-container field\n")
 	}
 	return nil
 }
@@ -537,7 +543,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 	}
 	if path == "" {
 		// TODO raise error
-		fmt.Errorf("cannot remove for non-container mode\n")
+		log.Errorf("cannot remove for non-container mode\n")
 	}
 	var branch *Branch
 	var ok bool
@@ -563,7 +569,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 
 	if field.IsContainer {
 		if path == "" {
-			fmt.Errorf("cannot remove without a key\n")
+			log.Errorf("cannot remove without a key\n")
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]
@@ -595,9 +601,9 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				if n.Proxy != nil {
 					data := childRev.GetData()
 					n.Proxy.InvokeCallbacks(PRE_REMOVE, data, false)
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data})
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data, nil})
 				} else {
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData()})
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
 				}
 				childRev.Drop(txid, true)
 				children = append(children[:idx], children[idx+1:]...)
@@ -607,10 +613,10 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				return rev
 			}
 		} else {
-			fmt.Errorf("cannot add to non-keyed container\n")
+			log.Errorf("cannot add to non-keyed container\n")
 		}
 	} else {
-		fmt.Errorf("cannot add to non-container field\n")
+		log.Errorf("cannot add to non-container field\n")
 	}
 
 	return nil

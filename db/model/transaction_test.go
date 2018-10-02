@@ -181,7 +181,6 @@ func Test_Transaction_5_GetDevice_PostUpdate(t *testing.T) {
 	getDevTx.Commit()
 }
 
-
 func Test_Transaction_6_RemoveDevice(t *testing.T) {
 	removeTx := tx.Proxy.OpenTransaction()
 	if removed := removeTx.Remove("/devices/" + txDevId); removed == nil {

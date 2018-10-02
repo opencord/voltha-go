@@ -17,7 +17,7 @@ package model
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/protos/voltha"
 )
 
@@ -51,7 +51,7 @@ func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	hash := args[2].(string)
 
 	if _, ok := IGNORED_CALLBACKS[eventType]; ok {
-		fmt.Printf("ignoring event - type:%s, data:%+v\n", eventType, data)
+		log.Debugf("ignoring event - type:%s, data:%+v\n", eventType, data)
 	}
 	var kind voltha.ConfigEventType_ConfigEventType
 	switch eventType {
@@ -67,7 +67,7 @@ func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	var err error
 	if IsProtoMessage(data) {
 		if msg, err = json.Marshal(data); err != nil {
-			fmt.Errorf("problem marshalling data: %+v, err:%s\n", data, err.Error())
+			log.Errorf("problem marshalling data: %+v, err:%s\n", data, err.Error())
 		}
 	} else {
 		msg = data.([]byte)

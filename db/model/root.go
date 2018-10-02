@@ -18,7 +18,6 @@ package model
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	"reflect"
@@ -114,7 +113,6 @@ func (r *root) AddCallback(callback CallbackFunction, args ...interface{}) {
 func (r *root) AddNotificationCallback(callback CallbackFunction, args ...interface{}) {
 	r.NotificationCallbacks = append(r.NotificationCallbacks, CallbackTuple{callback, args})
 }
-
 
 func (r *root) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
@@ -246,7 +244,7 @@ func (r *root) LoadFromPersistence(rootClass interface{}) {
 
 	start := time.Now()
 	if err := json.Unmarshal(blob.Value.([]byte), &data); err != nil {
-		fmt.Errorf("problem to unmarshal blob - error:%s\n", err.Error())
+		log.Errorf("problem to unmarshal blob - error:%s\n", err.Error())
 	}
 	stop := time.Now()
 	GetProfiling().AddToInMemoryModelTime(stop.Sub(start).Seconds())
