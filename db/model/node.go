@@ -61,8 +61,9 @@ type node struct {
 }
 
 type ChangeTuple struct {
-	Type CallbackType
-	Data interface{}
+	Type         CallbackType
+	PreviousData interface{}
+	LatestData   interface{}
 }
 
 func NewNode(root *root, initialData interface{}, autoPrune bool, txid string) *node {
@@ -112,14 +113,17 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	if changeAnnouncement != nil && branch.Txid == "" {
 		if n.Proxy != nil {
 			for _, change := range changeAnnouncement {
-				fmt.Printf("invoking callback - changeType: %+v, data:%+v\n", change.Type, change.Data)
-				n.root.AddCallback(n.Proxy.InvokeCallbacks, change.Type, change.Data, true)
+				fmt.Printf("invoking callback - changeType: %+v, previous:%+v, latest: %+v\n", change.Type,
+					change.PreviousData, change.LatestData)
+				n.root.AddCallback(n.Proxy.InvokeCallbacks, change.Type, change.PreviousData, change.LatestData, true)
 			}
 		}
 
 		for _, change := range changeAnnouncement {
-			fmt.Printf("sending notification - changeType: %+v, data:%+v\n", change.Type, change.Data)
-			n.root.AddNotificationCallback(n.makeEventBus().Advertise, change.Type, change.Data, revision.GetHash())
+			fmt.Printf("sending notification - changeType: %+v, previous:%+v, latest: %+v\n", change.Type,
+				change.PreviousData,
+				change.LatestData)
+			n.root.AddNotificationCallback(n.makeEventBus().Advertise, change.Type, change.PreviousData, change.LatestData, revision.GetHash())
 		}
 	}
 }
@@ -432,8 +436,9 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 			fmt.Println("checking access violations")
 		}
 		rev := branch.Latest.UpdateData(data, branch)
+		changes := []ChangeTuple{{POST_UPDATE, branch.Latest.GetData(), rev.GetData()}}
 		branch.Latest.Drop(branch.Txid, true)
-		n.root.MakeLatest(branch, rev, []ChangeTuple{{POST_UPDATE, rev.GetData()}})
+		n.root.MakeLatest(branch, rev, changes)
 		return rev
 	} else {
 		return branch.Latest
@@ -495,8 +500,9 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 				childRev := n.MakeNode(data, txid).Latest(txid)
 				children = append(children, childRev)
 				rev := rev.UpdateChildren(name, children, branch)
+				changes := []ChangeTuple{{POST_ADD, branch.Latest.GetData(), rev.GetData()}}
 				branch.Latest.Drop(txid, false)
-				n.root.MakeLatest(branch, rev, []ChangeTuple{{POST_ADD, rev.GetData()}})
+				n.root.MakeLatest(branch, rev, changes)
 				return rev
 			} else {
 				fmt.Errorf("cannot add to non-keyed container\n")
@@ -595,9 +601,9 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				if n.Proxy != nil {
 					data := childRev.GetData()
 					n.Proxy.InvokeCallbacks(PRE_REMOVE, data, false)
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data})
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data,nil})
 				} else {
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData()})
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
 				}
 				childRev.Drop(txid, true)
 				children = append(children[:idx], children[idx+1:]...)
