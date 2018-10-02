@@ -18,7 +18,6 @@ package model
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/protos/common"
@@ -150,7 +149,6 @@ func Test_Proxy_3_1_RegisterProxy(t *testing.T) {
 	//updated := devProxy.Get("/ports", 0, false, "")
 	//t.Logf("got updated ports: %+v", updated)
 
-
 	//
 	// Get a device proxy, retrieve all the ports and update a specific one
 	//
@@ -231,17 +229,17 @@ func Test_Proxy_7_GetDevice_PostRemove(t *testing.T) {
 func firstCallback(args ...interface{}) interface{} {
 	name := args[0]
 	id := args[1]
-	fmt.Printf("Running first callback - name: %s, id: %s\n", name, id)
+	log.Infof("Running first callback - name: %s, id: %s\n", name, id)
 	return nil
 }
 func deviceCallback(args ...interface{}) interface{} {
-	fmt.Printf("Running device callback\n")
+	log.Infof("Running device callback\n")
 	return nil
 }
 func secondCallback(args ...interface{}) interface{} {
 	name := args[0].(map[string]string)
 	id := args[1]
-	fmt.Printf("Running second callback - name: %s, id: %f\n", name["name"], id)
+	log.Infof("Running second callback - name: %s, id: %f\n", name["name"], id)
 	// FIXME: the panic call seem to interfere with the logging mechanism
 	//panic("Generating a panic in second callback")
 	return nil
@@ -249,7 +247,7 @@ func secondCallback(args ...interface{}) interface{} {
 func thirdCallback(args ...interface{}) interface{} {
 	name := args[0]
 	id := args[1].(*voltha.Device)
-	fmt.Printf("Running third callback - name: %+v, id: %s\n", name, id.Id)
+	log.Infof("Running third callback - name: %+v, id: %s\n", name, id.Id)
 	return nil
 }
 

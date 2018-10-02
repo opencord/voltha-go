@@ -17,16 +17,9 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/protos/voltha"
 )
 
-type EventBusClient struct {
-}
-
-func NewEventBusClient() *EventBusClient {
-	return &EventBusClient{}
-}
-
-func (ebc *EventBusClient) Publish(topic string, event voltha.ConfigEvent) {
-	log.Debugf("publishing event:%+v, topic:%s\n", event, topic)
+func init() {
+	log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "DB_MODEL"})
+	defer log.CleanUp()
 }

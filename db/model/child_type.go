@@ -16,10 +16,10 @@
 package model
 
 import (
-	"fmt"
 	desc "github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/protos/common"
 	"reflect"
 	"strconv"
@@ -77,7 +77,7 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 					var keyFromStr func(string) interface{}
 
 					if meta.(*common.ChildNode).GetKey() == "" {
-						//fmt.Println("Child key is empty ... moving on")
+						//log.Debugf("Child key is empty ... moving on")
 					} else {
 						parentType := FindOwnerType(reflect.ValueOf(cls), field.GetName(), 0, false)
 						keyType := FindKeyOwner(reflect.New(parentType).Elem().Interface(), meta.(*common.ChildNode).GetKey(), 0)
@@ -108,7 +108,7 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 								return uint64(i)
 							}
 						default:
-							fmt.Errorf("Key type not implemented - type: %s\n", keyType.(reflect.Type))
+							log.Errorf("Key type not implemented - type: %s\n", keyType.(reflect.Type))
 						}
 
 						ct := ChildType{

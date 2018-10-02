@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"io/ioutil"
@@ -104,7 +103,7 @@ func (pr *PersistedRevision) Load(branch *Branch, kvStore *Backend, msgClass int
 		}
 	}
 	if err := json.Unmarshal(output, &data); err != nil {
-		fmt.Errorf("problem to unmarshal data - %s", err.Error())
+		log.Errorf("problem to unmarshal data - %s", err.Error())
 	}
 
 	stop := time.Now()
