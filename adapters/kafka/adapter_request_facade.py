@@ -82,17 +82,17 @@ class AdapterRequestFacade(object):
         d = Device()
         if device:
             device.Unpack(d)
-            return (True, self.adapter.adopt_device(d))
+            return True, self.adapter.adopt_device(d)
         else:
-            return (False, d)
+            return False, d
 
     def get_ofp_device_info(self, device):
         d = Device()
         if device:
             device.Unpack(d)
-            return (True, self.adapter.get_ofp_device_info(d))
+            return True, self.adapter.get_ofp_device_info(d)
         else:
-            return (False, d)
+            return False, d
 
     def get_ofp_port_info(self, device, port_no):
         d = Device()
@@ -104,7 +104,7 @@ class AdapterRequestFacade(object):
         p = IntType()
         port_no.Unpack(p)
 
-        return (True, self.adapter.get_ofp_port_info(d, p.val))
+        return True, self.adapter.get_ofp_port_info(d, p.val)
 
 
     def reconcile_device(self, device):
@@ -114,10 +114,20 @@ class AdapterRequestFacade(object):
         return self.adapter.abandon_device(device)
 
     def disable_device(self, device):
-        return self.adapter.disable_device(device)
+        d = Device()
+        if device:
+            device.Unpack(d)
+            return True, self.adapter.disable_device(d)
+        else:
+            return False, d
 
     def reenable_device(self, device):
-        return self.adapter.reenable_device(device)
+        d = Device()
+        if device:
+            device.Unpack(d)
+            return True, self.adapter.reenable_device(d)
+        else:
+            return False, d
 
     def reboot_device(self, device):
         d = Device()

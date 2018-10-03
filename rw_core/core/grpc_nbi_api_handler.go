@@ -48,19 +48,14 @@ func isTestMode(ctx context.Context) bool {
 
 func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
 	log.Debugw("UpdateLogLevel-request", log.Fields{"newloglevel": logging.Level, "intval": int(logging.Level)})
-	if isTestMode(ctx) {
-		out := new(empty.Empty)
-		log.SetPackageLogLevel(logging.PackageName, int(logging.Level))
-		return out, nil
-	}
-	return nil, errors.New("Unimplemented")
-
+	out := new(empty.Empty)
+	log.SetPackageLogLevel(logging.PackageName, int(logging.Level))
+	return out, nil
 }
 
 func processEnableDevicePort(ctx context.Context, id *voltha.LogicalPortId, ch chan error) {
 	log.Debugw("processEnableDevicePort", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
 	ch <- status.Errorf(100, "%d-%s", 100, "erreur")
-
 }
 
 func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
@@ -141,15 +136,17 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 	go handler.deviceMgr.createDevice(ctx, device, ch)
 	select {
 	case res := <-ch:
-		if res == nil {
-			return &voltha.Device{Id: device.Id}, nil
-		} else if err, ok := res.(error); ok {
-			return &voltha.Device{Id: device.Id}, err
-		} else {
-			log.Warnw("create-device-unexpected-return-type", log.Fields{"result": res})
-			err = status.Errorf(codes.Internal, "%s", res)
-			return &voltha.Device{Id: device.Id}, err
+		if res != nil {
+			if err, ok := res.(error); ok {
+				return &voltha.Device{}, err
+			}
+			if d, ok := res.(*voltha.Device); ok {
+				return d, nil
+			}
 		}
+		log.Warnw("create-device-unexpected-return-type", log.Fields{"result": res})
+		err := status.Errorf(codes.Internal, "%s", res)
+		return &voltha.Device{}, err
 	case <-ctx.Done():
 		log.Debug("createdevice-client-timeout")
 		return nil, ctx.Err()
@@ -187,6 +184,24 @@ func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*e
 	if isTestMode(ctx) {
 		out := new(empty.Empty)
 		return out, nil
+	}
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.disableDevice(ctx, id, ch)
+	select {
+	case res := <-ch:
+		if res == nil {
+			return new(empty.Empty), nil
+		} else if err, ok := res.(error); ok {
+			return new(empty.Empty), err
+		} else {
+			log.Warnw("disable-device-unexpected-return-type", log.Fields{"result": res})
+			err = status.Errorf(codes.Internal, "%s", res)
+			return new(empty.Empty), err
+		}
+	case <-ctx.Done():
+		log.Debug("enabledevice-client-timeout")
+		return nil, ctx.Err()
 	}
 	return nil, errors.New("Unimplemented")
 }

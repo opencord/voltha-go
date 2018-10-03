@@ -39,7 +39,6 @@ var testMode string
 Prerequite:  These tests require the rw_core to run prior to executing these test cases.
 */
 
-
 func setup() {
 	var err error
 

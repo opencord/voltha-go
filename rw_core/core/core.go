@@ -24,7 +24,6 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"google.golang.org/grpc"
-	"reflect"
 )
 
 type Core struct {
@@ -35,8 +34,8 @@ type Core struct {
 	grpcNBIAPIHanfler *APIHandler
 	config            *config.RWCoreFlags
 	kmp               *kafka.KafkaMessagingProxy
-	clusterDataRoot   *model.Root
-	localDataRoot     *model.Root
+	clusterDataRoot   model.Root
+	localDataRoot     model.Root
 	clusterDataProxy  *model.Proxy
 	localDataProxy    *model.Proxy
 	exitChannel       chan int
@@ -52,10 +51,10 @@ func NewCore(id string, cf *config.RWCoreFlags) *Core {
 	core.exitChannel = make(chan int, 1)
 	core.config = cf
 	// TODO: Setup the KV store
-	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, nil, reflect.TypeOf(model.NonPersistedRevision{}))
-	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, nil, reflect.TypeOf(model.NonPersistedRevision{}))
-	core.clusterDataProxy = core.clusterDataRoot.Node.GetProxy("/", false)
-	core.localDataProxy = core.localDataRoot.Node.GetProxy("/", false)
+	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, nil)
+	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, nil)
+	core.clusterDataProxy = core.clusterDataRoot.GetProxy("/", false)
+	core.localDataProxy = core.localDataRoot.GetProxy("/", false)
 	return &core
 }
 
@@ -79,7 +78,7 @@ func (core *Core) Stop(ctx context.Context) {
 	log.Info("core-stopped")
 }
 
-//startGRPCService creates the grpc service handler, registers it to the grpc server
+//startGRPCService creates the grpc service handlers, registers it to the grpc server
 // and starts the server
 func (core *Core) startGRPCService(ctx context.Context) {
 	//	create an insecure gserver server
@@ -129,7 +128,7 @@ func (core *Core) registerAdapterRequestHandler(ctx context.Context, dMgr *Devic
 	requestProxy := NewAdapterRequestHandlerProxy(dMgr, ldMgr, cdProxy, ldProxy)
 	core.kmp.SubscribeWithTarget(kafka.Topic{Name: core.config.CoreTopic}, requestProxy)
 
-	log.Info("request-handler")
+	log.Info("request-handlers")
 	return nil
 }
 

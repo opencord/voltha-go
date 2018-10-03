@@ -83,12 +83,16 @@ class IAdapter(object):
         raise NotImplementedError()
 
     def get_ofp_device_info(self, device):
-        log.debug('get_ofp_device_info', device_id=device.id)
-        return self.devices_handlers[device.id].get_ofp_device_info(device)
+        log.debug('get_ofp_device_info_start', device_id=device.id)
+        ofp_device_info = self.devices_handlers[device.id].get_ofp_device_info(device)
+        log.debug('get_ofp_device_info_ends', device_id=device.id)
+        return ofp_device_info
 
     def get_ofp_port_info(self, device, port_no):
-        log.debug('get_ofp_port_info', device_id=device.id, port_no=port_no)
-        return self.devices_handlers[device.id].get_ofp_port_info(device, port_no)
+        log.debug('get_ofp_port_info_start', device_id=device.id, port_no=port_no)
+        ofp_port_info = self.devices_handlers[device.id].get_ofp_port_info(device, port_no)
+        log.debug('get_ofp_port_info_ends', device_id=device.id, port_no=port_no)
+        return ofp_port_info
 
     def adopt_device(self, device):
         log.debug('adopt_device', device_id=device.id)
@@ -105,7 +109,8 @@ class IAdapter(object):
 
     def disable_device(self, device):
         log.info('disable-device', device_id=device.id)
-        reactor.callLater(0, self.devices_handlers[device.id].disable)
+        reactor.callLater(1, self.devices_handlers[device.id].disable)
+        log.debug('disable_device_done', device_id=device.id)
         return device
 
     def reenable_device(self, device):

@@ -25,6 +25,7 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"reflect"
 )
 
 type AdapterRequestHandlerProxy struct {
@@ -89,6 +90,24 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ca.Argument) (*voltha.D
 	}
 }
 
+// updatePartialDeviceData updates a subset of a device that an Adapter can update.
+// TODO:  May need a specific proto to handle only a subset of a device that can be changed by an adapter
+func (rhp *AdapterRequestHandlerProxy) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
+	//		First retrieve the most up to date device info
+	var currentDevice *voltha.Device
+	var err error
+	if currentDevice, err = rhp.deviceMgr.getDevice(device.Id); err != nil {
+		return nil, err
+	}
+	cloned := reflect.ValueOf(currentDevice).Elem().Interface().(voltha.Device)
+	cloned.Root = device.Root
+	cloned.Vendor = device.Vendor
+	cloned.Model = device.Model
+	cloned.SerialNumber = device.SerialNumber
+	cloned.MacAddress = device.MacAddress
+	return &cloned, nil
+}
+
 func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ca.Argument) (*empty.Empty, error) {
 	if len(args) != 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
@@ -100,15 +119,21 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ca.Argument) (*empty
 		log.Warnw("cannot-unmarshal-device", log.Fields{"error": err})
 		return nil, err
 	}
-	log.Debugw("DeviceUpdate", log.Fields{"device": device})
+	log.Debugw("DeviceUpdate", log.Fields{"deviceId": device.Id})
 
 	if rhp.TestMode { // Execute only for test cases
 		return new(empty.Empty), nil
 	}
-	if err := rhp.deviceMgr.updateDevice(device); err != nil {
-		log.Debugw("DeviceUpdate-error", log.Fields{"device": device, "error": err})
+
+	//Merge the adapter device info (only the ones an adapter can change) with the latest device data
+	if updatedDevice, err := rhp.mergeDeviceInfoFromAdapter(device); err != nil {
 		return nil, status.Errorf(codes.Internal, "%s", err.Error())
+	} else {
+		// An adapter request needs an Ack without having to wait for the update to be
+		// completed.  We therefore run the update in its own routine.
+		go rhp.deviceMgr.updateDevice(updatedDevice)
 	}
+
 	return new(empty.Empty), nil
 }
 
@@ -137,28 +162,30 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ca.Argument) (*voltha.Po
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
-	pID := &voltha.ID{}
-	if err := ptypes.UnmarshalAny(args[0].Value, pID); err != nil {
-		log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
-		return nil, err
-	}
-	// Porttype is an enum sent as an integer proto
+	deviceId := &voltha.ID{}
 	pt := &ca.IntType{}
-	if err := ptypes.UnmarshalAny(args[1].Value, pt); err != nil {
-		log.Warnw("cannot-unmarshal-porttype", log.Fields{"error": err})
-		return nil, err
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port_type":
+			if err := ptypes.UnmarshalAny(arg.Value, pt); err != nil {
+				log.Warnw("cannot-unmarshal-porttype", log.Fields{"error": err})
+				return nil, err
+			}
+		}
 	}
-
-	log.Debugw("GetPorts", log.Fields{"deviceID": pID.Id, "portype": pt.Val})
-
+	log.Debugw("GetPorts", log.Fields{"deviceID": deviceId.Id, "portype": pt.Val})
 	if rhp.TestMode { // Execute only for test cases
 		aPort := &voltha.Port{Label: "test_port"}
 		allPorts := &voltha.Ports{}
 		allPorts.Items = append(allPorts.Items, aPort)
 		return allPorts, nil
 	}
-	return nil, nil
-
+	return rhp.deviceMgr.getPorts(nil, deviceId.Id, voltha.Port_PortType(pt.Val))
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ca.Argument) (*voltha.Device, error) {
@@ -254,29 +281,69 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ca.Argument) (*
 				log.Warnw("cannot-unmarshal-operStatus", log.Fields{"error": err})
 				return nil, err
 			}
-			if operStatus.Val == -1 {
-				operStatus = nil
-			}
+			//if operStatus.Val == -1 {
+			//	operStatus = nil
+			//}
 		case "connect_status":
 			if err := ptypes.UnmarshalAny(arg.Value, connStatus); err != nil {
 				log.Warnw("cannot-unmarshal-connStatus", log.Fields{"error": err})
 				return nil, err
 			}
-			if connStatus.Val == -1 {
-				connStatus = nil
-			}
+			//if connStatus.Val == -1 {
+			//	connStatus = nil
+			//}
 		}
 	}
-
 	log.Debugw("DeviceStateUpdate", log.Fields{"deviceId": deviceId.Id, "oper-status": operStatus, "conn-status": connStatus})
-
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	if err := rhp.deviceMgr.updateDeviceState(deviceId.Id, operStatus, connStatus); err != nil {
-		log.Debugw("DeviceUpdate-error", log.Fields{"deviceId": deviceId.Id, "error": err})
-		return nil, status.Errorf(codes.Internal, "%s", err.Error())
+
+	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
+	go rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val), voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+	return new(empty.Empty), nil
+}
+
+func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ca.Argument) (*empty.Empty, error) {
+	if len(args) < 2 {
+		log.Warn("invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
 	}
+	deviceId := &voltha.ID{}
+	portType := &ca.IntType{}
+	portNo := &ca.IntType{}
+	operStatus := &ca.IntType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "oper_status":
+			if err := ptypes.UnmarshalAny(arg.Value, operStatus); err != nil {
+				log.Warnw("cannot-unmarshal-operStatus", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port_type":
+			if err := ptypes.UnmarshalAny(arg.Value, portType); err != nil {
+				log.Warnw("cannot-unmarshal-porttype", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port_no":
+			if err := ptypes.UnmarshalAny(arg.Value, portNo); err != nil {
+				log.Warnw("cannot-unmarshal-portno", log.Fields{"error": err})
+				return nil, err
+			}
+
+		}
+	}
+	log.Debugw("PortStateUpdate", log.Fields{"deviceId": deviceId.Id, "operStatus": operStatus, "portType": portType, "portNo": portNo})
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+	go rhp.deviceMgr.updatePortState(deviceId.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val), voltha.OperStatus_OperStatus(operStatus.Val))
 	return new(empty.Empty), nil
 }
 
@@ -309,10 +376,14 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ca.Argument) (*empty.
 		return nil, nil
 	}
 
-	if err := rhp.deviceMgr.addPort(deviceId.Id, port); err != nil {
-		log.Debugw("addport-error", log.Fields{"deviceId": deviceId.Id, "error": err})
-		return nil, status.Errorf(codes.Internal, "%s", err.Error())
-	}
+	// Run port creation in its own go routine
+	go rhp.deviceMgr.addPort(deviceId.Id, port)
+
+	//if err := rhp.deviceMgr.addPort(deviceId.Id, port); err != nil {
+	//	log.Debugw("addport-error", log.Fields{"deviceId": deviceId.Id, "error": err})
+	//	return nil, status.Errorf(codes.Internal, "%s", err.Error())
+	//}
+	// Return an Ack
 	return new(empty.Empty), nil
 }
 
@@ -346,10 +417,14 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ca.Argument)
 		return nil, nil
 	}
 
-	if err := rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs); err != nil {
-		log.Debugw("update-pmconfigs-error", log.Fields{"deviceId": pmConfigs.Id, "error": err})
-		return nil, status.Errorf(codes.Internal, "%s", err.Error())
-	}
+	// Run PM config update in its own go routine
+	go rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs)
+
+	//if err := rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs); err != nil {
+	//	log.Debugw("update-pmconfigs-error", log.Fields{"deviceId": pmConfigs.Id, "error": err})
+	//	return nil, status.Errorf(codes.Internal, "%s", err.Error())
+	//}
+	// Return an Ack
 	return new(empty.Empty), nil
 
 }

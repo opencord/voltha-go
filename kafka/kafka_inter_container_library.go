@@ -49,7 +49,7 @@ const (
 	DefaultReturnErrors      = true
 	DefaultConsumerMaxwait   = 50
 	DefaultMaxProcessingTime = 100
-	DefaultRequestTimeout    = 200 // 200 milliseconds - to handle a wider latency range
+	DefaultRequestTimeout    = 500 // 500 milliseconds - to handle a wider latency range
 )
 
 type consumerChannels struct {

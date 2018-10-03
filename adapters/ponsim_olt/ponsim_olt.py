@@ -25,7 +25,7 @@ import grpc
 import structlog
 from scapy.layers.l2 import Ether, Dot1Q
 from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue
 from grpc._channel import _Rendezvous
 
 from adapters.common.frameio.frameio import BpfProgramFilter, hexify
@@ -245,11 +245,10 @@ class PonSimOltHandler(object):
 
             self.log.info('grpc-channel-closed')
 
+    @inlineCallbacks
     def _get_nni_port(self):
-        ports = self.adapter_agent.get_ports(self.device_id, Port.ETHERNET_NNI)
-        if ports:
-            # For now, we use on one NNI port
-            return ports[0]
+        ports = yield self.adapter_agent.get_ports(self.device_id, Port.ETHERNET_NNI)
+        returnValue(ports)
 
     @inlineCallbacks
     def activate(self, device):
@@ -272,7 +271,8 @@ class PonSimOltHandler(object):
             device.vendor = 'ponsim'
             device.model = 'n/a'
             device.serial_number = device.host_and_port
-            device.connect_status = ConnectStatus.REACHABLE
+            device.mac_address = "AA:BB:CC:DD:EE:FF"
+            # device.connect_status = ConnectStatus.REACHABLE
             yield self.adapter_agent.device_update(device)
 
             # Now set the initial PM configuration for this device
@@ -288,7 +288,7 @@ class PonSimOltHandler(object):
                 port_no=info.nni_port,
                 label='NNI facing Ethernet port',
                 type=Port.ETHERNET_NNI,
-                admin_state=AdminState.ENABLED,
+                # admin_state=AdminState.ENABLED,
                 oper_status=OperStatus.ACTIVE
             )
             self.nni_port = nni_port
@@ -297,10 +297,11 @@ class PonSimOltHandler(object):
                 port_no=1,
                 label='PON port',
                 type=Port.PON_OLT,
-                admin_state=AdminState.ENABLED,
+                # admin_state=AdminState.ENABLED,
                 oper_status=OperStatus.ACTIVE
             ))
-            yield self.adapter_agent.device_state_update(device.id, oper_status=OperStatus.ACTIVE)
+
+            yield self.adapter_agent.device_state_update(device.id, connect_status=ConnectStatus.REACHABLE, oper_status=OperStatus.ACTIVE)
 
             # register ONUS
             self.log.info('onu-found', onus=info.onus, len=len(info.onus))
@@ -319,7 +320,7 @@ class PonSimOltHandler(object):
 
             # TODO
             # Start collecting stats from the device after a brief pause
-            # self.start_kpi_collection(device.id)
+            self.start_kpi_collection(device.id)
         except Exception as e:
             log.exception("Exception-activating", e=e)
 
@@ -577,137 +578,68 @@ class PonSimOltHandler(object):
         log.info('self-test-device', device=device.id)
         raise NotImplementedError()
 
+
+    @inlineCallbacks
     def disable(self):
         self.log.info('disabling', device_id=self.device_id)
 
         self.stop_kpi_collection()
 
-        # Get the latest device reference
-        device = self.adapter_agent.get_device(self.device_id)
-
-        # Update the operational status to UNKNOWN
-        device.oper_status = OperStatus.UNKNOWN
-        device.connect_status = ConnectStatus.UNREACHABLE
-        self.adapter_agent.device_update(device)
-
-        # Remove the logical device
-        logical_device = self.adapter_agent.get_logical_device(
-            self.logical_device_id)
-        self.adapter_agent.delete_logical_device(logical_device)
-
-        # Disable all child devices first
-        self.adapter_agent.update_child_devices_state(self.device_id,
-                                                      admin_state=AdminState.DISABLED)
-
-        # Remove the peer references from this device
-        self.adapter_agent.delete_all_peer_references(self.device_id)
-
-        # Set all ports to disabled
-        self.adapter_agent.disable_all_ports(self.device_id)
+        # Update the operational status to UNKNOWN and connection status to UNREACHABLE
+        yield self.adapter_agent.device_state_update(self.device_id, oper_status=OperStatus.UNKNOWN, connect_status=ConnectStatus.UNREACHABLE)
 
         self.close_channel()
         self.log.info('disabled-grpc-channel')
-
-        #  Update the logice device mapping
-        if self.logical_device_id in \
-                self.adapter.logical_device_id_to_root_device_id:
-            del self.adapter.logical_device_id_to_root_device_id[
-                self.logical_device_id]
 
         # TODO:
         # 1) Remove all flows from the device
         # 2) Remove the device from ponsim
 
-        self.log.info('disabled', device_id=device.id)
+        self.log.info('disabled', device_id=self.device_id)
 
+    @inlineCallbacks
     def reenable(self):
         self.log.info('re-enabling', device_id=self.device_id)
-
-        # Get the latest device reference
-        device = self.adapter_agent.get_device(self.device_id)
 
         # Set the ofp_port_no and nni_port in case we bypassed the reconcile
         # process if the device was in DISABLED state on voltha restart
         if not self.ofp_port_no and not self.nni_port:
-            stub = ponsim_pb2.PonSimStub(self.get_channel())
+            yield self.get_channel()
+            stub = ponsim_pb2.PonSimStub(self.channel)
             info = stub.GetDeviceInfo(Empty())
             log.info('got-info', info=info)
             self.ofp_port_no = info.nni_port
-            self.nni_port = self._get_nni_port()
+            ports = yield self._get_nni_port()
+            # For ponsim, we are using only 1 NNI port
+            if ports.items:
+                self.nni_port = ports.items[0]
 
-        # Update the connect status to REACHABLE
-        device.connect_status = ConnectStatus.REACHABLE
-        self.adapter_agent.device_update(device)
+        # Update the state of the NNI port
+        yield self.adapter_agent.port_state_update(self.device_id,
+                                                   port_type=Port.ETHERNET_NNI,
+                                                   port_no=self.ofp_port_no,
+                                                   oper_status=OperStatus.ACTIVE)
 
-        # Set all ports to enabled
-        self.adapter_agent.enable_all_ports(self.device_id)
+        # Update the state of the PON port
+        yield self.adapter_agent.port_state_update(self.device_id,
+                                                   port_type=Port.PON_OLT,
+                                                   port_no=1,
+                                                   oper_status=OperStatus.ACTIVE)
 
-        ld = LogicalDevice(
-            # not setting id and datapth_id will let the adapter agent pick id
-            desc=ofp_desc(
-                hw_desc='simulated pon',
-                sw_desc='simulated pon',
-                serial_num=uuid4().hex,
-                dp_desc='n/a'
-            ),
-            switch_features=ofp_switch_features(
-                n_buffers=256,  # TODO fake for now
-                n_tables=2,  # TODO ditto
-                capabilities=(  # TODO and ditto
-                        OFPC_FLOW_STATS
-                        | OFPC_TABLE_STATS
-                        | OFPC_PORT_STATS
-                        | OFPC_GROUP_STATS
-                )
-            ),
-            root_device_id=device.id
-        )
-        mac_address = "AA:BB:CC:DD:EE:FF"
-        ld_initialized = self.adapter_agent.create_logical_device(ld,
-                                                                  dpid=mac_address)
-        cap = OFPPF_1GB_FD | OFPPF_FIBER
-        self.adapter_agent.add_logical_port(ld_initialized.id, LogicalPort(
-            id='nni',
-            ofp_port=ofp_port(
-                port_no=self.ofp_port_no,
-                hw_addr=mac_str_to_tuple(
-                    '00:00:00:00:00:%02x' % self.ofp_port_no),
-                name='nni',
-                config=0,
-                state=OFPPS_LIVE,
-                curr=cap,
-                advertised=cap,
-                peer=cap,
-                curr_speed=OFPPF_1GB_FD,
-                max_speed=OFPPF_1GB_FD
-            ),
-            device_id=device.id,
-            device_port_no=self.nni_port.port_no,
-            root_port=True
-        ))
+        # Set the operational state of the device to ACTIVE and connect status to REACHABLE
+        yield self.adapter_agent.device_state_update(self.device_id,
+                                                     connect_status=ConnectStatus.REACHABLE,
+                                                     oper_status=OperStatus.ACTIVE)
 
-        device = self.adapter_agent.get_device(device.id)
-        device.parent_id = ld_initialized.id
-        device.oper_status = OperStatus.ACTIVE
-        self.adapter_agent.device_update(device)
-        self.logical_device_id = ld_initialized.id
+        # TODO: establish frame grpc-stream
+        # yield reactor.callInThread(self.rcv_grpc)
 
-        # Reenable all child devices
-        self.adapter_agent.update_child_devices_state(device.id,
-                                                      admin_state=AdminState.ENABLED)
+        self.start_kpi_collection(self.device_id)
 
-        # establish frame grpc-stream
-        reactor.callInThread(self.rcv_grpc)
-
-        self.start_kpi_collection(device.id)
-
-        self.log.info('re-enabled', device_id=device.id)
+        self.log.info('re-enabled', device_id=self.device_id)
 
     def delete(self):
         self.log.info('deleting', device_id=self.device_id)
-
-        # Remove all child devices
-        self.adapter_agent.delete_all_child_devices(self.device_id)
 
         self.close_channel()
         self.log.info('disabled-grpc-channel')
@@ -725,7 +657,7 @@ class PonSimOltHandler(object):
             try:
                 # Step 1: gather metrics from device
                 port_metrics = \
-                    self.pm_metrics.collect_port_metrics(self.get_channel())
+                    self.pm_metrics.collect_port_metrics(self.channel)
 
                 # Step 2: prepare the KpiEvent for submission
                 # we can time-stamp them here (or could use time derived from OLT

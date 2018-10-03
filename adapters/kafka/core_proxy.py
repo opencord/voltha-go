@@ -32,18 +32,18 @@ from adapters.common.frameio.frameio import hexify
 from adapters.common.utils.id_generation import create_cluster_logical_device_ids
 from adapters.interface import IAdapterInterface
 from adapters.protos import third_party
-from adapters.protos.device_pb2 import Device, Port, PmConfigs
+from adapters.protos.device_pb2 import Device, Port, Ports, PmConfigs
 from adapters.protos.events_pb2 import AlarmEvent, AlarmEventType, \
     AlarmEventSeverity, AlarmEventState, AlarmEventCategory
 from adapters.protos.events_pb2 import KpiEvent
 from adapters.protos.voltha_pb2 import DeviceGroup, LogicalDevice, \
-    LogicalPort, AdminState, OperStatus, AlarmFilterRuleKey, CoreInstance
+    LogicalPort, AlarmFilterRuleKey, CoreInstance
 from adapters.common.utils.registry import registry, IComponent
 from adapters.common.utils.id_generation import create_cluster_device_id
 import re
 from adapters.interface import ICoreSouthBoundInterface
 from adapters.protos.core_adapter_pb2 import StrType, BoolType, IntType
-from adapters.protos.common_pb2 import ID
+from adapters.protos.common_pb2 import ID, ConnectStatus, OperStatus
 from google.protobuf.message import Message
 from adapters.common.utils.deferred_utils import DeferredWithTimeout, TimeOutError
 
@@ -159,8 +159,17 @@ class CoreProxy(object):
     # def add_device(self, device):
     #     raise NotImplementedError()
 
+    @wrap_request(Ports)
+    @inlineCallbacks
     def get_ports(self, device_id, port_type):
-        raise NotImplementedError()
+        id = ID()
+        id.id = device_id
+        p_type = IntType()
+        p_type.val = port_type
+        res = yield self.invoke(rpc="GetPorts",
+                                device_id=id,
+                                port_type=p_type)
+        returnValue(res)
 
     def get_child_devices(self, parent_device_id):
         raise NotImplementedError()
@@ -231,20 +240,18 @@ class CoreProxy(object):
     def device_state_update(self, device_id,
                                    oper_status=None,
                                    connect_status=None):
-
         id = ID()
         id.id = device_id
         o_status = IntType()
-        if oper_status:
+        if oper_status or oper_status==OperStatus.UNKNOWN:
             o_status.val = oper_status
         else:
             o_status.val = -1
         c_status = IntType()
-        if connect_status:
+        if connect_status or connect_status==ConnectStatus.UNKNOWN:
             c_status.val = connect_status
         else:
             c_status.val = -1
-        a_status = IntType()
 
         res = yield self.invoke(rpc="DeviceStateUpdate",
                                 device_id=id,
@@ -254,34 +261,52 @@ class CoreProxy(object):
 
     @wrap_request(None)
     @inlineCallbacks
+    def port_state_update(self,
+                          device_id,
+                          port_type,
+                          port_no,
+                          oper_status):
+        id = ID()
+        id.id = device_id
+        pt = IntType()
+        pt.val = port_type
+        pNo = IntType()
+        pNo.val = port_no
+        o_status = IntType()
+        o_status.val = oper_status
+
+        res = yield self.invoke(rpc="PortStateUpdate",
+                                device_id=id,
+                                port_type=pt,
+                                port_no=pNo,
+                                oper_status=o_status)
+        returnValue(res)
+
+
+
+    @wrap_request(None)
+    @inlineCallbacks
     def child_devices_state_update(self, parent_device_id,
                                    oper_status=None,
-                                   connect_status=None,
-                                   admin_state=None):
+                                   connect_status=None):
 
         id = ID()
         id.id = parent_device_id
         o_status = IntType()
-        if oper_status:
+        if oper_status or oper_status==OperStatus.UNKNOWN:
             o_status.val = oper_status
         else:
             o_status.val = -1
         c_status = IntType()
-        if connect_status:
+        if connect_status or connect_status==ConnectStatus.UNKNOWN:
             c_status.val = connect_status
         else:
             c_status.val = -1
-        a_status = IntType()
-        if admin_state:
-            a_status.val = admin_state
-        else:
-            a_status.val = -1
 
         res = yield self.invoke(rpc="child_devices_state_update",
                                 parent_device_id=id,
                                 oper_status=o_status,
-                                connect_status=c_status,
-                                admin_state=a_status)
+                                connect_status=c_status)
         returnValue(res)
 
 

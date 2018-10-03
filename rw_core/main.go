@@ -221,7 +221,7 @@ func main() {
 	}
 
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-	log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.WarnLevel)
 
 	defer log.CleanUp()
 

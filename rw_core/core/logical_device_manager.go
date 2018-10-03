@@ -24,7 +24,6 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
 	"strings"
 	"sync"
 )
@@ -78,33 +77,36 @@ func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string)
 	return nil
 }
 
+func (ldMgr *LogicalDeviceManager) deleteLogicalDeviceAgent(logicalDeviceId string) {
+	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+	delete(ldMgr.logicalDeviceAgents, logicalDeviceId)
+}
+
+// getLogicalDevice provides a cloned most up to date logical device
 func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalDevice, error) {
-	log.Debugw("getlogicalDevice-start", log.Fields{"logicaldeviceid": id})
-	logicalDevice := ldMgr.clusterDataProxy.Get("/logical_devices/"+id, 1, false, "")
-	if logicalDevice != nil {
-		cloned := reflect.ValueOf(logicalDevice).Elem().Interface().(voltha.LogicalDevice)
-		return &cloned, nil
+	log.Debugw("getlogicalDevice", log.Fields{"logicaldeviceid": id})
+	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
+		return agent.getLogicalDevice()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
-	log.Debug("listLogicalDevices-start")
+	log.Debug("listLogicalDevices")
 	result := &voltha.LogicalDevices{}
 	ldMgr.lockLogicalDeviceAgentsMap.Lock()
 	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
 	for _, agent := range ldMgr.logicalDeviceAgents {
-		logicalDevice := ldMgr.clusterDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 1, false, "")
-		if logicalDevice != nil {
-			cloned := reflect.ValueOf(logicalDevice).Elem().Interface().(voltha.LogicalDevice)
-			result.Items = append(result.Items, &cloned)
+		if lDevice, err := agent.getLogicalDevice(); err == nil {
+			result.Items = append(result.Items, lDevice)
 		}
 	}
 	return result, nil
 }
 
 func (ldMgr *LogicalDeviceManager) CreateLogicalDevice(ctx context.Context, device *voltha.Device) (*string, error) {
-	log.Infow("creating-logical-device-start", log.Fields{"deviceId": device.Id})
+	log.Debugw("creating-logical-device", log.Fields{"deviceId": device.Id})
 	// Sanity check
 	if !device.Root {
 		return nil, errors.New("Device-not-root")
@@ -116,18 +118,74 @@ func (ldMgr *LogicalDeviceManager) CreateLogicalDevice(ctx context.Context, devi
 	// in the Device model.  May need to be moved out.
 	macAddress := device.MacAddress
 	id := strings.Replace(macAddress, ":", "", -1)
-	log.Debugw("setting-logical-device-id", log.Fields{"logicaldeviceId": id})
+	if id == "" {
+		log.Errorw("mac-address-not-set", log.Fields{"deviceId": device.Id})
+		return nil, errors.New("mac-address-not-set")
+	}
+	log.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
 	agent := NewLogicalDeviceAgent(id, device, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 	go agent.Start(ctx)
 
-	log.Info("creating-logical-device-ends")
+	log.Debug("creating-logical-device-ends")
 	return &id, nil
 }
 
+func (ldMgr *LogicalDeviceManager) DeleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
+	log.Debugw("deleting-logical-device", log.Fields{"deviceId": device.Id})
+	// Sanity check
+	if !device.Root {
+		return errors.New("Device-not-root")
+	}
+	logDeviceId := device.ParentId
+	if agent := ldMgr.getLogicalDeviceAgent(logDeviceId); agent != nil {
+		// Stop the logical device agent
+		agent.Stop(ctx)
+		//Remove the logical device agent from the Map
+		ldMgr.deleteLogicalDeviceAgent(logDeviceId)
+	}
+
+	log.Debug("deleting-logical-device-ends")
+	return nil
+}
+
+func (ldMgr *LogicalDeviceManager) getLogicalDeviceId(device *voltha.Device) (*string, error) {
+	// Device can either be a parent or a child device
+	if device.Root {
+		// Parent device.  The ID of a parent device is the logical device ID
+		return &device.ParentId, nil
+	}
+	// Device is child device
+	//	retrieve parent device using child device ID
+	if parentDevice := ldMgr.deviceMgr.getParentDevice(device); parentDevice != nil {
+		return &parentDevice.ParentId, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
+}
+
+// DeleteLogicalDevice removes the logical port associated with a child device
+func (ldMgr *LogicalDeviceManager) DeleteLogicalPort(ctx context.Context, device *voltha.Device) error {
+	log.Debugw("deleting-logical-port", log.Fields{"deviceId": device.Id})
+	// Sanity check
+	if device.Root {
+		return errors.New("Device-root")
+	}
+	logDeviceId, _ := ldMgr.getLogicalDeviceId(device)
+	if logDeviceId == nil {
+		log.Debugw("no-logical-device-present", log.Fields{"deviceId": device.Id})
+		return nil
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
+		agent.deleteLogicalPort(device)
+	}
+
+	log.Debug("deleting-logical-port-ends")
+	return nil
+}
+
 func (ldMgr *LogicalDeviceManager) AddUNILogicalPort(ctx context.Context, childDevice *voltha.Device) error {
-	log.Infow("AddUNILogicalPort-start", log.Fields{"deviceId": childDevice.Id})
+	log.Debugw("AddUNILogicalPort", log.Fields{"deviceId": childDevice.Id})
 	// Sanity check
 	if childDevice.Root {
 		return errors.New("Device-root")
@@ -137,7 +195,7 @@ func (ldMgr *LogicalDeviceManager) AddUNILogicalPort(ctx context.Context, childD
 	parentId := childDevice.ParentId
 	logDeviceId := ldMgr.deviceMgr.GetParentDeviceId(parentId)
 
-	log.Infow("AddUNILogicalPort", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
+	log.Debugw("AddUNILogicalPort", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
 
 	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
 		return agent.addUNILogicalPort(ctx, childDevice, childDevice.ProxyAddress.ChannelId)
