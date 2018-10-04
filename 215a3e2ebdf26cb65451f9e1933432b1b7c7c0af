@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a64d4606_9e7ff420",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-10-04T19:25:55Z",
+      "side": 1,
+      "message": "it keeps a watch on the transaction key.",
+      "revId": "215a3e2ebdf26cb65451f9e1933432b1b7c7c0af",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76e78776_a88711ae",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-10-04T19:25:55Z",
+      "side": 1,
+      "message": "should import the full name, i.e the one staring with github.com/",
+      "revId": "215a3e2ebdf26cb65451f9e1933432b1b7c7c0af",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "795a7fa3_d243387d",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-10-04T19:25:55Z",
+      "side": 1,
+      "message": "should this just be a kvclient instead of etcd?   later when the struct is created by New then you can assign the etcd client to it.",
+      "revId": "215a3e2ebdf26cb65451f9e1933432b1b7c7c0af",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3db6886_17306345",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-10-04T19:25:55Z",
+      "side": 1,
+      "message": "Fatal will end the go runtime.   We should just log the error.",
+      "revId": "215a3e2ebdf26cb65451f9e1933432b1b7c7c0af",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bd3eac3_985f470d",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-10-04T19:25:55Z",
+      "side": 1,
+      "message": "Since we are using structured logging, try to remove spaces in the message part and replace with \"-\".  Just to be consistent with the rest of the code base.",
+      "revId": "215a3e2ebdf26cb65451f9e1933432b1b7c7c0af",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9b4ac8f_caa1126b",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-10-04T19:25:55Z",
+      "side": 1,
+      "message": "You may want to create the watch right after the else so as not to lose any extremely fast response",
+      "revId": "215a3e2ebdf26cb65451f9e1933432b1b7c7c0af",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
