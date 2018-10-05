@@ -259,6 +259,31 @@ class CoreProxy(object):
                                 connect_status=c_status)
         returnValue(res)
 
+
+    @wrap_request(None)
+    @inlineCallbacks
+    def children_state_update(self, device_id,
+                            oper_status=None,
+                            connect_status=None):
+        id = ID()
+        id.id = device_id
+        o_status = IntType()
+        if oper_status or oper_status==OperStatus.UNKNOWN:
+            o_status.val = oper_status
+        else:
+            o_status.val = -1
+        c_status = IntType()
+        if connect_status or connect_status==ConnectStatus.UNKNOWN:
+            c_status.val = connect_status
+        else:
+            c_status.val = -1
+
+        res = yield self.invoke(rpc="ChildrenStateUpdate",
+                                device_id=id,
+                                oper_status=o_status,
+                                connect_status=c_status)
+        returnValue(res)
+
     @wrap_request(None)
     @inlineCallbacks
     def port_state_update(self,

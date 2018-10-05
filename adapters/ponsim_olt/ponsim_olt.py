@@ -48,6 +48,11 @@ from adapters.protos.openflow_13_pb2 import ofp_port
 from adapters.protos.ponsim_pb2 import FlowTable, PonSimFrame
 from adapters.protos.core_adapter_pb2 import SwitchCapability, PortCapability
 from adapters.common.utils.registry import registry
+from adapters.kafka.kafka_proxy import get_kafka_proxy
+from simplejson import dumps
+from google.protobuf.json_format import MessageToDict
+from google.protobuf.message import Message
+
 
 _ = third_party
 log = structlog.get_logger()
@@ -370,6 +375,7 @@ class PonSimOltHandler(object):
             )
         )
 
+    # TODO - change for core 2.0
     def reconcile(self, device):
         self.log.info('reconciling-OLT-device-starts')
 
@@ -537,34 +543,23 @@ class PonSimOltHandler(object):
     def reboot(self):
         self.log.info('rebooting', device_id=self.device_id)
 
-        # Update the operational status to ACTIVATING and connect status to
-        # UNREACHABLE
-        device = self.adapter_agent.get_device(self.device_id)
-        previous_oper_status = device.oper_status
-        previous_conn_status = device.connect_status
-        device.oper_status = OperStatus.ACTIVATING
-        device.connect_status = ConnectStatus.UNREACHABLE
-        self.adapter_agent.device_update(device)
+        yield self.adapter_agent.device_state_update(self.device_id, connect_status=ConnectStatus.UNREACHABLE)
 
-        # Update the child devices connect state to UNREACHABLE
-        self.adapter_agent.update_child_devices_state(self.device_id,
+       # Update the child devices connect state to UNREACHABLE
+        yield self.adapter_agent.children_state_update(self.device_id,
                                                       connect_status=ConnectStatus.UNREACHABLE)
 
         # Sleep 10 secs, simulating a reboot
         # TODO: send alert and clear alert after the reboot
         yield asleep(10)
 
-        # Change the operational status back to its previous state.  With a
-        # real OLT the operational state should be the state the device is
-        # after a reboot.
-        # Get the latest device reference
-        device = self.adapter_agent.get_device(self.device_id)
-        device.oper_status = previous_oper_status
-        device.connect_status = previous_conn_status
-        self.adapter_agent.device_update(device)
+        # Change the connection status back to REACHABLE.  With a
+        # real OLT the connection state must be the actual state
+        yield self.adapter_agent.device_state_update(self.device_id, connect_status=ConnectStatus.REACHABLE)
+
 
         # Update the child devices connect state to REACHABLE
-        self.adapter_agent.update_child_devices_state(self.device_id,
+        yield self.adapter_agent.children_state_update(self.device_id,
                                                       connect_status=ConnectStatus.REACHABLE)
 
         self.log.info('rebooted', device_id=self.device_id)
@@ -652,6 +647,8 @@ class PonSimOltHandler(object):
 
     def start_kpi_collection(self, device_id):
 
+        kafka_cluster_proxy = get_kafka_proxy()
+
         def _collect(device_id, prefix):
 
             try:
@@ -675,8 +672,11 @@ class PonSimOltHandler(object):
                     }
                 )
 
-                # Step 3: submit
-                self.adapter_agent.submit_kpis(kpi_event)
+                # Step 3: submit directlt to kafka bus
+                if kafka_cluster_proxy:
+                    if isinstance(kpi_event, Message):
+                        kpi_event = dumps(MessageToDict(kpi_event, True, True))
+                    kafka_cluster_proxy.send_message("voltha.kpis", kpi_event)
 
             except Exception as e:
                 log.exception('failed-to-submit-kpis', e=e)

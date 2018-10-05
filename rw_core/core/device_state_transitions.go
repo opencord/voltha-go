@@ -112,7 +112,7 @@ func NewTransitionMap(dMgr *DeviceManager) *TransitionMap {
 			handlers:      []TransitionHandler{dMgr.abandonDevice}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
-			deviceType:    any,
+			deviceType:    child,
 			previousState: DeviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			handlers:      []TransitionHandler{dMgr.notAllowed}})
@@ -128,14 +128,12 @@ func NewTransitionMap(dMgr *DeviceManager) *TransitionMap {
 			previousState: DeviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			handlers:      []TransitionHandler{dMgr.reEnableDevice}})
-
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
-			deviceType:    any,
+			deviceType:    parent,
 			previousState: DeviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			currentState:  DeviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.notAllowed}})
-
+			currentState:  DeviceState{Admin: voltha.AdminState_DELETED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
+			handlers:      []TransitionHandler{dMgr.deleteAllChildDevices}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,

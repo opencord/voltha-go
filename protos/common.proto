@@ -42,15 +42,17 @@ message AdminState {
         PREPROVISIONED = 1;
 
         // The device is enabled for activation and operation
-        ENABLED = 3;
+        ENABLED = 2;
 
         // The device is disabled and shall not perform its intended forwarding
         // functions other than being available for re-activation.
-        DISABLED = 2;
+        DISABLED = 3;
 
-        // The deive is in the state of image download
+        // The device is in the state of image download
         DOWNLOADING_IMAGE = 4;
 
+        // The device is marked to be deleted
+        DELETED = 5;
     }
 }
 

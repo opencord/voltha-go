@@ -39,7 +39,7 @@ type LogicalDeviceAgent struct {
 	lockLogicalDevice sync.RWMutex
 }
 
-func NewLogicalDeviceAgent(id string, device *voltha.Device, ldeviceMgr *LogicalDeviceManager, deviceMgr *DeviceManager,
+func newLogicalDeviceAgent(id string, device *voltha.Device, ldeviceMgr *LogicalDeviceManager, deviceMgr *DeviceManager,
 	cdProxy *model.Proxy) *LogicalDeviceAgent {
 	var agent LogicalDeviceAgent
 	agent.exitChannel = make(chan int, 1)
@@ -52,7 +52,8 @@ func NewLogicalDeviceAgent(id string, device *voltha.Device, ldeviceMgr *Logical
 	return &agent
 }
 
-func (agent *LogicalDeviceAgent) Start(ctx context.Context) error {
+// start creates the logical device and add it to the data model
+func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
 	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 	//Build the logical device based on information retrieved from the device adapter
 	var switchCap *ca.SwitchCapability
@@ -97,6 +98,22 @@ func (agent *LogicalDeviceAgent) Start(ctx context.Context) error {
 	return nil
 }
 
+// stop stops the logical devuce agent.  This removes the logical device from the data model.
+func (agent *LogicalDeviceAgent) stop(ctx context.Context) {
+	log.Info("stopping-logical_device-agent")
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	//Remove the logical device from the model
+	if removed := agent.clusterDataProxy.Remove("/logical_devices/"+agent.logicalDeviceId, ""); removed == nil {
+		log.Errorw("failed-to-remove-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+	} else {
+		log.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+	}
+	agent.exitChannel <- 1
+	log.Info("logical_device-agent-stopped")
+}
+
+// getLogicalDevice locks the logical device model and then retrieves the latest logical device information
 func (agent *LogicalDeviceAgent) getLogicalDevice() (*voltha.LogicalDevice, error) {
 	log.Debug("getLogicalDevice")
 	agent.lockLogicalDevice.Lock()
@@ -109,6 +126,8 @@ func (agent *LogicalDeviceAgent) getLogicalDevice() (*voltha.LogicalDevice, erro
 	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
 }
 
+// getLogicalDeviceWithoutLock retrieves a logical device from the model without locking it.   This is used only by
+// functions that have already acquired the logical device lock to the model
 func (agent *LogicalDeviceAgent) getLogicalDeviceWithoutLock() (*voltha.LogicalDevice, error) {
 	log.Debug("getLogicalDeviceWithoutLock")
 	logicalDevice := agent.clusterDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 1, false, "")
@@ -119,6 +138,7 @@ func (agent *LogicalDeviceAgent) getLogicalDeviceWithoutLock() (*voltha.LogicalD
 	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
 }
 
+// addUNILogicalPort creates a UNI port on the logical device that represents a child device
 func (agent *LogicalDeviceAgent) addUNILogicalPort(ctx context.Context, childDevice *voltha.Device, portNo uint32) error {
 	log.Infow("addUNILogicalPort-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 	// Build the logical device based on information retrieved from the device adapter
@@ -179,16 +199,4 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(device *voltha.Device) error 
 	return nil
 }
 
-func (agent *LogicalDeviceAgent) Stop(ctx context.Context) {
-	log.Info("stopping-logical_device-agent")
-	agent.lockLogicalDevice.Lock()
-	defer agent.lockLogicalDevice.Unlock()
-	//Remove the logical device from the model
-	if removed := agent.clusterDataProxy.Remove("/logical_devices/"+agent.logicalDeviceId, ""); removed == nil {
-		log.Errorw("failed-to-remove-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-	} else {
-		log.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-	}
-	agent.exitChannel <- 1
-	log.Info("logical_device-agent-stopped")
-}
+

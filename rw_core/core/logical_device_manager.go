@@ -38,7 +38,7 @@ type LogicalDeviceManager struct {
 	lockLogicalDeviceAgentsMap sync.RWMutex
 }
 
-func NewLogicalDeviceManager(deviceMgr *DeviceManager, kafkaProxy *kafka.KafkaMessagingProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
+func newLogicalDeviceManager(deviceMgr *DeviceManager, kafkaProxy *kafka.KafkaMessagingProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
 	var logicalDeviceMgr LogicalDeviceManager
 	logicalDeviceMgr.exitChannel = make(chan int, 1)
 	logicalDeviceMgr.logicalDeviceAgents = make(map[string]*LogicalDeviceAgent)
@@ -49,12 +49,12 @@ func NewLogicalDeviceManager(deviceMgr *DeviceManager, kafkaProxy *kafka.KafkaMe
 	return &logicalDeviceMgr
 }
 
-func (ldMgr *LogicalDeviceManager) Start(ctx context.Context) {
+func (ldMgr *LogicalDeviceManager) start(ctx context.Context) {
 	log.Info("starting-logical-device-manager")
 	log.Info("logical-device-manager-started")
 }
 
-func (ldMgr *LogicalDeviceManager) Stop(ctx context.Context) {
+func (ldMgr *LogicalDeviceManager) stop(ctx context.Context) {
 	log.Info("stopping-logical-device-manager")
 	ldMgr.exitChannel <- 1
 	log.Info("logical-device-manager-stopped")
@@ -105,7 +105,7 @@ func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices,
 	return result, nil
 }
 
-func (ldMgr *LogicalDeviceManager) CreateLogicalDevice(ctx context.Context, device *voltha.Device) (*string, error) {
+func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, device *voltha.Device) (*string, error) {
 	log.Debugw("creating-logical-device", log.Fields{"deviceId": device.Id})
 	// Sanity check
 	if !device.Root {
@@ -124,15 +124,15 @@ func (ldMgr *LogicalDeviceManager) CreateLogicalDevice(ctx context.Context, devi
 	}
 	log.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
-	agent := NewLogicalDeviceAgent(id, device, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
+	agent := newLogicalDeviceAgent(id, device, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
-	go agent.Start(ctx)
+	go agent.start(ctx)
 
 	log.Debug("creating-logical-device-ends")
 	return &id, nil
 }
 
-func (ldMgr *LogicalDeviceManager) DeleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
+func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("deleting-logical-device", log.Fields{"deviceId": device.Id})
 	// Sanity check
 	if !device.Root {
@@ -141,7 +141,7 @@ func (ldMgr *LogicalDeviceManager) DeleteLogicalDevice(ctx context.Context, devi
 	logDeviceId := device.ParentId
 	if agent := ldMgr.getLogicalDeviceAgent(logDeviceId); agent != nil {
 		// Stop the logical device agent
-		agent.Stop(ctx)
+		agent.stop(ctx)
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceId)
 	}
@@ -165,7 +165,7 @@ func (ldMgr *LogicalDeviceManager) getLogicalDeviceId(device *voltha.Device) (*s
 }
 
 // DeleteLogicalDevice removes the logical port associated with a child device
-func (ldMgr *LogicalDeviceManager) DeleteLogicalPort(ctx context.Context, device *voltha.Device) error {
+func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("deleting-logical-port", log.Fields{"deviceId": device.Id})
 	// Sanity check
 	if device.Root {
@@ -184,7 +184,7 @@ func (ldMgr *LogicalDeviceManager) DeleteLogicalPort(ctx context.Context, device
 	return nil
 }
 
-func (ldMgr *LogicalDeviceManager) AddUNILogicalPort(ctx context.Context, childDevice *voltha.Device) error {
+func (ldMgr *LogicalDeviceManager) addUNILogicalPort(ctx context.Context, childDevice *voltha.Device) error {
 	log.Debugw("AddUNILogicalPort", log.Fields{"deviceId": childDevice.Id})
 	// Sanity check
 	if childDevice.Root {

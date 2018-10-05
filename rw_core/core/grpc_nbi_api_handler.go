@@ -40,10 +40,32 @@ func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager) *
 		logicalDeviceMgr: lDeviceMgr}
 	return handler
 }
+
+// isTestMode is a helper function to determine a function is invoked for testing only
 func isTestMode(ctx context.Context) bool {
 	md, _ := metadata.FromIncomingContext(ctx)
 	_, exist := md[common.TestModeKeys_api_test.String()]
 	return exist
+}
+
+// waitForNilResponseOnSuccess is a helper function to wait for a response on channel ch where an nil
+// response is expected in a successful scenario
+func waitForNilResponseOnSuccess(ctx context.Context, ch chan interface{}) (*empty.Empty, error) {
+	select {
+	case res := <-ch:
+		if res == nil {
+			return new(empty.Empty), nil
+		} else if err, ok := res.(error); ok {
+			return new(empty.Empty), err
+		} else {
+			log.Warnw("unexpected-return-type", log.Fields{"result": res})
+			err = status.Errorf(codes.Internal, "%s", res)
+			return new(empty.Empty), err
+		}
+	case <-ctx.Done():
+		log.Debug("client-timeout")
+		return nil, ctx.Err()
+	}
 }
 
 func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
@@ -53,7 +75,7 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	return out, nil
 }
 
-func processEnableDevicePort(ctx context.Context, id *voltha.LogicalPortId, ch chan error) {
+func processEnableDevicePort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{}) {
 	log.Debugw("processEnableDevicePort", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
 	ch <- status.Errorf(100, "%d-%s", 100, "erreur")
 }
@@ -64,15 +86,10 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 		out := new(empty.Empty)
 		return out, nil
 	}
-	ch := make(chan error)
+	ch := make(chan interface{})
+	defer close(ch)
 	go processEnableDevicePort(ctx, id, ch)
-	select {
-	case resp := <-ch:
-		close(ch)
-		return new(empty.Empty), resp
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
@@ -126,6 +143,7 @@ func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.
 	return handler.logicalDeviceMgr.listLogicalDevices()
 }
 
+// CreateDevice creates a new parent device in the data model
 func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
 	log.Debugw("createdevice", log.Fields{"device": *device})
 	if isTestMode(ctx) {
@@ -153,75 +171,52 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 	}
 }
 
+// EnableDevice activates a device by invoking the adopt_device API on the appropriate adapter
 func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("enabledevice", log.Fields{"id": id})
 	if isTestMode(ctx) {
-		out := new(empty.Empty)
-		return out, nil
+		return new(empty.Empty), nil
 	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.enableDevice(ctx, id, ch)
-	select {
-	case res := <-ch:
-		if res == nil {
-			return new(empty.Empty), nil
-		} else if err, ok := res.(error); ok {
-			return new(empty.Empty), err
-		} else {
-			log.Warnw("enable-device-unexpected-return-type", log.Fields{"result": res})
-			err = status.Errorf(codes.Internal, "%s", res)
-			return new(empty.Empty), err
-		}
-	case <-ctx.Done():
-		log.Debug("enabledevice-client-timeout")
-		return nil, ctx.Err()
-	}
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
+// DisableDevice disables a device along with any child device it may have
 func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("disabledevice-request", log.Fields{"id": id})
 	if isTestMode(ctx) {
-		out := new(empty.Empty)
-		return out, nil
+		return new(empty.Empty), nil
 	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.disableDevice(ctx, id, ch)
-	select {
-	case res := <-ch:
-		if res == nil {
-			return new(empty.Empty), nil
-		} else if err, ok := res.(error); ok {
-			return new(empty.Empty), err
-		} else {
-			log.Warnw("disable-device-unexpected-return-type", log.Fields{"result": res})
-			err = status.Errorf(codes.Internal, "%s", res)
-			return new(empty.Empty), err
-		}
-	case <-ctx.Done():
-		log.Debug("enabledevice-client-timeout")
-		return nil, ctx.Err()
-	}
-	return nil, errors.New("Unimplemented")
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
+//RebootDevice invoked the reboot API to the corresponding adapter
 func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
-	log.Debugw("disabledevice-request", log.Fields{"id": id})
+	log.Debugw("rebootDevice-request", log.Fields{"id": id})
 	if isTestMode(ctx) {
-		out := new(empty.Empty)
-		return out, nil
+		return new(empty.Empty), nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.rebootDevice(ctx, id, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
+// DeleteDevice removes a device from the data model
 func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("deletedevice-request", log.Fields{"id": id})
 	if isTestMode(ctx) {
-		out := new(empty.Empty)
-		return out, nil
+		return new(empty.Empty), nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.deleteDevice(ctx, id, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 func (handler *APIHandler) DownloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
