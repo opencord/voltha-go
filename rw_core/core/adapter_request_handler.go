@@ -246,14 +246,12 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ca.Argument) 
 			}
 		}
 	}
-
 	log.Debugw("ChildDeviceDetected", log.Fields{"parentDeviceId": pID.Id, "parentPortNo": portNo.Val,
 		"deviceType": dt.Val, "channelId": chnlId.Val})
 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-
 	// Run child detection in it's own go routine as it can be a lengthy process
 	go rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val)
 
@@ -281,26 +279,57 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ca.Argument) (*
 				log.Warnw("cannot-unmarshal-operStatus", log.Fields{"error": err})
 				return nil, err
 			}
-			//if operStatus.Val == -1 {
-			//	operStatus = nil
-			//}
 		case "connect_status":
 			if err := ptypes.UnmarshalAny(arg.Value, connStatus); err != nil {
 				log.Warnw("cannot-unmarshal-connStatus", log.Fields{"error": err})
 				return nil, err
 			}
-			//if connStatus.Val == -1 {
-			//	connStatus = nil
-			//}
 		}
 	}
 	log.Debugw("DeviceStateUpdate", log.Fields{"deviceId": deviceId.Id, "oper-status": operStatus, "conn-status": connStatus})
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
 	go rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val), voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+	return new(empty.Empty), nil
+}
+
+func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ca.Argument) (*empty.Empty, error) {
+	if len(args) < 2 {
+		log.Warn("invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceId := &voltha.ID{}
+	operStatus := &ca.IntType{}
+	connStatus := &ca.IntType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "oper_status":
+			if err := ptypes.UnmarshalAny(arg.Value, operStatus); err != nil {
+				log.Warnw("cannot-unmarshal-operStatus", log.Fields{"error": err})
+				return nil, err
+			}
+		case "connect_status":
+			if err := ptypes.UnmarshalAny(arg.Value, connStatus); err != nil {
+				log.Warnw("cannot-unmarshal-connStatus", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("ChildrenStateUpdate", log.Fields{"deviceId": deviceId.Id, "oper-status": operStatus, "conn-status": connStatus})
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+
+	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
+	go rhp.deviceMgr.updateChildrenStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val), voltha.ConnectStatus_ConnectStatus(connStatus.Val))
 	return new(empty.Empty), nil
 }
 
@@ -369,21 +398,14 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ca.Argument) (*empty.
 			}
 		}
 	}
-
 	log.Debugw("PortCreated", log.Fields{"deviceId": deviceId.Id, "port": port})
 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-
 	// Run port creation in its own go routine
 	go rhp.deviceMgr.addPort(deviceId.Id, port)
 
-	//if err := rhp.deviceMgr.addPort(deviceId.Id, port); err != nil {
-	//	log.Debugw("addport-error", log.Fields{"deviceId": deviceId.Id, "error": err})
-	//	return nil, status.Errorf(codes.Internal, "%s", err.Error())
-	//}
-	// Return an Ack
 	return new(empty.Empty), nil
 }
 
@@ -409,7 +431,6 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ca.Argument)
 			}
 		}
 	}
-
 	log.Debugw("DevicePMConfigUpdate", log.Fields{"deviceId": pmConfigs.Id, "configs": pmConfigs,
 		"init": init})
 
@@ -420,11 +441,5 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ca.Argument)
 	// Run PM config update in its own go routine
 	go rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs)
 
-	//if err := rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs); err != nil {
-	//	log.Debugw("update-pmconfigs-error", log.Fields{"deviceId": pmConfigs.Id, "error": err})
-	//	return nil, status.Errorf(codes.Internal, "%s", err.Error())
-	//}
-	// Return an Ack
 	return new(empty.Empty), nil
-
 }

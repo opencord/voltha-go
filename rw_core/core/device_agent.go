@@ -40,6 +40,8 @@ type DeviceAgent struct {
 	lockDevice       sync.RWMutex
 }
 
+//newDeviceAgent creates a new device agent along as creating a unique ID for the device and set the device state to
+//preprovisioning
 func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceManager, cdProxy *model.Proxy) *DeviceAgent {
 	var agent DeviceAgent
 	agent.adapterProxy = ap
@@ -55,6 +57,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	return &agent
 }
 
+// start save the device to the data model and registers for callbacks on that device
 func (agent *DeviceAgent) start(ctx context.Context) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
@@ -64,12 +67,12 @@ func (agent *DeviceAgent) start(ctx context.Context) {
 		log.Errorw("failed-to-add-device", log.Fields{"deviceId": agent.deviceId})
 	}
 	agent.deviceProxy = agent.clusterDataProxy.Root.GetProxy("/devices/"+agent.deviceId, false)
-	//agent.deviceProxy = agent.clusterDataProxy.Root.Node.GetProxy("/", false)
 	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate, nil)
 	log.Debug("device-agent-started")
 }
 
-func (agent *DeviceAgent) Stop(ctx context.Context) {
+// stop stops the device agent.  Not much to do for now
+func (agent *DeviceAgent) stop(ctx context.Context) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	log.Debug("stopping-device-agent")
@@ -77,6 +80,7 @@ func (agent *DeviceAgent) Stop(ctx context.Context) {
 	log.Debug("device-agent-stopped")
 }
 
+// getDevice retrieves the latest device information from the data model
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
@@ -89,7 +93,7 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceId)
 }
 
-//getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
+// getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
 	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 1, false, ""); device != nil {
@@ -101,6 +105,7 @@ func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
 	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceId)
 }
 
+// enableDevice activates a preprovisioned or disable device
 func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
@@ -113,6 +118,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 			//TODO:  Needs customized error message
 			return nil
 		}
+		//TODO: if parent device is disabled then do not enable device
 		// Verify whether we need to adopt the device the first time
 		// TODO: A state machine for these state transitions would be better (we just have to handle
 		// a limited set of states now or it may be an overkill)
@@ -140,6 +146,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	return nil
 }
 
+//disableDevice disable a device
 func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	agent.lockDevice.Lock()
 	//defer agent.lockDevice.Unlock()
@@ -183,6 +190,70 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	return nil
 }
 
+func (agent *DeviceAgent) rebootDevice(ctx context.Context) error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("rebootDevice", log.Fields{"id": agent.deviceId})
+	// Get the most up to date the device info
+	if device, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		if device.AdminState != voltha.AdminState_DISABLED {
+			log.Debugw("device-not-disabled", log.Fields{"id": agent.deviceId})
+			//TODO:  Needs customized error message
+			return status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceId, voltha.AdminState_DISABLED)
+		}
+		// First send the request to an Adapter and wait for a response
+		if err := agent.adapterProxy.RebootDevice(ctx, device); err != nil {
+			log.Debugw("rebootDevice-error", log.Fields{"id": agent.lastData.Id, "error": err})
+			return err
+		}
+	}
+	return nil
+}
+
+func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
+	agent.lockDevice.Lock()
+	log.Debugw("deleteDevice", log.Fields{"id": agent.deviceId})
+	// Get the most up to date the device info
+	if device, err := agent.getDeviceWithoutLock(); err != nil {
+		agent.lockDevice.Unlock()
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		if device.AdminState != voltha.AdminState_DISABLED {
+			log.Debugw("device-not-disabled", log.Fields{"id": agent.deviceId})
+			//TODO:  Needs customized error message
+			agent.lockDevice.Unlock()
+			return status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceId, voltha.AdminState_DISABLED)
+		}
+		// Send the request to an Adapter and wait for a response
+		if err := agent.adapterProxy.DeleteDevice(ctx, device); err != nil {
+			log.Debugw("deleteDevice-error", log.Fields{"id": agent.lastData.Id, "error": err})
+			agent.lockDevice.Unlock()
+			return err
+		}
+		//	Set the device Admin state to DELETED in order to trigger the callback to delete
+		// child devices, if any
+		// Received an Ack (no error found above).  Now update the device in the model to the expected state
+		cloned := proto.Clone(device).(*voltha.Device)
+		cloned.AdminState = voltha.AdminState_DELETED
+		if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
+			agent.lockDevice.Unlock()
+			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		}
+		agent.lockDevice.Unlock()
+		//TODO: callback will be invoked to handle this state change
+		//For now force the state transition to happen
+		if err := agent.deviceMgr.processTransition(device, cloned); err != nil {
+			log.Warnw("process-transition-error", log.Fields{"deviceid": device.Id, "error": err})
+			return err
+		}
+
+	}
+	return nil
+}
+
+// getPorts retrieves the ports information of the device based on the port type.
 func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
 	log.Debugw("getPorts", log.Fields{"id": agent.deviceId, "portType": portType})
 	ports := &voltha.Ports{}
@@ -196,6 +267,8 @@ func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_Por
 	return ports
 }
 
+// getSwitchCapability is a helper method that a logical device agent uses to retrieve the switch capability of a
+// parent device
 func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*core_adapter.SwitchCapability, error) {
 	log.Debugw("getSwitchCapability", log.Fields{"deviceId": agent.deviceId})
 	if device, err := agent.deviceMgr.getDevice(agent.deviceId); device == nil {
@@ -211,6 +284,8 @@ func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*core_adapte
 	}
 }
 
+// getPortCapability is a helper method that a logical device agent uses to retrieve the port capability of a
+// device
 func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) (*core_adapter.PortCapability, error) {
 	log.Debugw("getPortCapability", log.Fields{"deviceId": agent.deviceId})
 	if device, err := agent.deviceMgr.getDevice(agent.deviceId); device == nil {
@@ -226,6 +301,8 @@ func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) 
 	}
 }
 
+// TODO: implement when callback from the data model is ready
+// processUpdate is a callback invoked whenever there is a change on the device manages by this device agent
 func (agent *DeviceAgent) processUpdate(args ...interface{}) interface{} {
 	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!")
 	log.Debugw("processUpdate", log.Fields{"deviceId": agent.deviceId, "args": args})
@@ -405,11 +482,20 @@ func (agent *DeviceAgent) addPeerPort(port *voltha.Port_PeerPort) error {
 				break
 			}
 		}
+		//To track an issue when adding peer-port.
+		log.Debugw("before-peer-added", log.Fields{"device": cloned})
 		// Store the device
 		afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, "")
 		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
+		//To track an issue when adding peer-port.
+		if d, ok := afterUpdate.(*voltha.Device); ok {
+			log.Debugw("after-peer-added", log.Fields{"device": d})
+		} else {
+			log.Debug("after-peer-added-incorrect-type", log.Fields{"type": reflect.ValueOf(afterUpdate).Type()})
+		}
+
 		return nil
 	}
 }

@@ -62,8 +62,8 @@ func (core *Core) Start(ctx context.Context) {
 	log.Info("starting-core")
 	core.startKafkaMessagingProxy(ctx)
 	log.Info("values", log.Fields{"kmp": core.kmp})
-	core.deviceMgr = NewDeviceManager(core.kmp, core.clusterDataProxy)
-	core.logicalDeviceMgr = NewLogicalDeviceManager(core.deviceMgr, core.kmp, core.clusterDataProxy)
+	core.deviceMgr = newDeviceManager(core.kmp, core.clusterDataProxy)
+	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.kmp, core.clusterDataProxy)
 	core.registerAdapterRequestHandler(ctx, core.deviceMgr, core.logicalDeviceMgr, core.localDataProxy, core.clusterDataProxy)
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
@@ -137,12 +137,12 @@ func (core *Core) startDeviceManager(ctx context.Context) {
 	// callbacks.  For now, until the model is ready, devicemanager will keep a reference to the
 	// logicaldevicemanager to initiate the creation of logical devices
 	log.Info("starting-DeviceManager")
-	core.deviceMgr.Start(ctx, core.logicalDeviceMgr)
+	core.deviceMgr.start(ctx, core.logicalDeviceMgr)
 	log.Info("started-DeviceManager")
 }
 
 func (core *Core) startLogicalDeviceManager(ctx context.Context) {
 	log.Info("starting-Logical-DeviceManager")
-	core.logicalDeviceMgr.Start(ctx)
+	core.logicalDeviceMgr.start(ctx)
 	log.Info("started-Logical-DeviceManager")
 }

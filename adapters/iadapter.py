@@ -109,18 +109,20 @@ class IAdapter(object):
 
     def disable_device(self, device):
         log.info('disable-device', device_id=device.id)
-        reactor.callLater(1, self.devices_handlers[device.id].disable)
-        log.debug('disable_device_done', device_id=device.id)
+        reactor.callLater(0, self.devices_handlers[device.id].disable)
+        log.debug('disable-device-done', device_id=device.id)
         return device
 
     def reenable_device(self, device):
         log.info('reenable-device', device_id=device.id)
         reactor.callLater(0, self.devices_handlers[device.id].reenable)
+        log.info('reenable-device-done', device_id=device.id)
         return device
 
     def reboot_device(self, device):
         log.info('reboot-device', device_id=device.id)
         reactor.callLater(0, self.devices_handlers[device.id].reboot)
+        log.info('reboot-device-done', device_id=device.id)
         return device
 
     def download_image(self, device, request):
@@ -139,14 +141,15 @@ class IAdapter(object):
         raise NotImplementedError()
 
     def self_test_device(self, device):
-        log.info('self-test-req', device_id=device.id)
+        log.info('self-test', device_id=device.id)
         result = reactor.callLater(0, self.devices_handlers[device.id].self_test_device)
+        log.info('self-test-done', device_id=device.id)
         return result
 
     def delete_device(self, device):
         log.info('delete-device', device_id=device.id)
-        #  TODO: Update the logical device mapping
         reactor.callLater(0, self.devices_handlers[device.id].delete)
+        log.info('delete-device-done', device_id=device.id)
         return device
 
     def get_device_details(self, device):

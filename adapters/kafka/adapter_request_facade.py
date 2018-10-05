@@ -156,10 +156,12 @@ class AdapterRequestFacade(object):
         return self.adapter.self_test_device(device)
 
     def delete_device(self, device):
-        # Remove all child devices
-        self.delete_all_child_devices(device.id)
-
-        return self.adapter.delete_device(device)
+        d = Device()
+        if device:
+            device.Unpack(d)
+            return (True, self.adapter.delete_device(d))
+        else:
+            return (False, d)
 
     def get_device_details(self, device):
         return self.adapter.get_device_details(device)

@@ -79,14 +79,6 @@ class PonSimOnuHandler(object):
         self.log.info('activating')
 
         # TODO:  Register for proxy address
-        # # first we verify that we got parent reference and proxy info
-        # assert device.parent_id
-        # assert device.proxy_address.device_id
-        # assert device.proxy_address.channel_id
-        #
-        # # register for proxied messages right away
-        # self.proxy_address = device.proxy_address
-        # self.adapter_agent.register_for_proxied_messages(device.proxy_address)
 
         # populate device info
         device.root = False
@@ -95,7 +87,7 @@ class PonSimOnuHandler(object):
         # device.connect_status = ConnectStatus.REACHABLE
         yield self.adapter_agent.device_update(device)
 
-    # register physical ports
+        # register physical ports
         self.uni_port = Port(
             port_no=2,
             label='UNI facing Ethernet port',
@@ -147,12 +139,6 @@ class PonSimOnuHandler(object):
             )
         )
 
-    # def _get_uni_port(self):
-    #     ports = self.adapter_agent.get_ports(self.device_id, Port.ETHERNET_UNI)
-    #     if ports:
-    #         # For now, we use on one uni port
-    #         return ports[0]
-
     @inlineCallbacks
     def _get_uni_port(self):
         ports = yield self.adapter_agent.get_ports(self.device_id, Port.ETHERNET_UNI)
@@ -162,12 +148,6 @@ class PonSimOnuHandler(object):
     def _get_pon_port(self):
         ports = yield self.adapter_agent.get_ports(self.device_id, Port.PON_ONU)
         returnValue(ports)
-
-    # def _get_pon_port(self):
-    #     ports = self.adapter_agent.get_ports(self.device_id, Port.PON_ONU)
-    #     if ports:
-    #         # For now, we use on one uni port
-    #         return ports[0]
 
     def reconcile(self, device):
         self.log.info('reconciling-ONU-device-starts')
@@ -228,27 +208,17 @@ class PonSimOnuHandler(object):
     def reboot(self):
         self.log.info('rebooting', device_id=self.device_id)
 
-        # Update the operational status to ACTIVATING and connect status to
-        # UNREACHABLE
-        device = self.adapter_agent.get_device(self.device_id)
-        previous_oper_status = device.oper_status
-        previous_conn_status = device.connect_status
-        device.oper_status = OperStatus.ACTIVATING
-        device.connect_status = ConnectStatus.UNREACHABLE
-        self.adapter_agent.update_device(device)
+        # Update the connect status to UNREACHABLE
+        yield self.adapter_agent.device_state_update(self.device_id, connect_status=ConnectStatus.UNREACHABLE)
 
         # Sleep 10 secs, simulating a reboot
         # TODO: send alert and clear alert after the reboot
         yield asleep(10)
 
-        # Change the operational status back to its previous state.  With a
-        # real OLT the operational state should be the state the device is
-        # after a reboot.
-        # Get the latest device reference
-        device = self.adapter_agent.get_device(self.device_id)
-        device.oper_status = previous_oper_status
-        device.connect_status = previous_conn_status
-        self.adapter_agent.update_device(device)
+        # Change the connection status back to REACHABLE.  With a
+        # real ONU the connection state must be the actual state
+        yield self.adapter_agent.device_state_update(self.device_id, connect_status=ConnectStatus.REACHABLE)
+
         self.log.info('rebooted', device_id=self.device_id)
 
     def self_test_device(self, device):
@@ -278,18 +248,6 @@ class PonSimOnuHandler(object):
     def reenable(self):
         self.log.info('re-enabling', device_id=self.device_id)
         try:
-            # Get the latest device reference
-            # device = self.adapter_agent.get_device(self.device_id)
-
-            # First we verify that we got parent reference and proxy info
-            # assert device.parent_id
-            # assert device.proxy_address.device_id
-            # assert device.proxy_address.channel_id
-
-            # Re-register for proxied messages right away
-            # self.proxy_address = device.proxy_address
-            # self.adapter_agent.register_for_proxied_messages(
-            #     device.proxy_address)
 
             # Refresh the port reference - we only use one port for now
             ports = yield self._get_uni_port()
@@ -314,47 +272,6 @@ class PonSimOnuHandler(object):
                                                    port_no=self.pon_port.port_no,
                                                    oper_status=OperStatus.ACTIVE)
 
-
-            # # Re-enable the ports on that device
-            # self.adapter_agent.enable_all_ports(self.device_id)
-
-
-            # Add the pon port reference to the parent
-            # self.adapter_agent.add_port_reference_to_parent(device.id,
-            #                                                 self.pon_port)
-
-            # Update the connect status to REACHABLE
-            # device.connect_status = ConnectStatus.REACHABLE
-            # self.adapter_agent.update_device(device)
-
-            # re-add uni port to logical device
-            # parent_device = self.adapter_agent.get_device(device.parent_id)
-            # logical_device_id = parent_device.parent_id
-            # assert logical_device_id
-            # port_no = device.proxy_address.channel_id
-            # cap = OFPPF_1GB_FD | OFPPF_FIBER
-            # self.adapter_agent.add_logical_port(logical_device_id, LogicalPort(
-            #     id='uni-{}'.format(port_no),
-            #     ofp_port=ofp_port(
-            #         port_no=port_no,
-            #         hw_addr=mac_str_to_tuple('00:00:00:00:00:%02x' % port_no),
-            #         name='uni-{}'.format(port_no),
-            #         config=0,
-            #         state=OFPPS_LIVE,
-            #         curr=cap,
-            #         advertised=cap,
-            #         peer=cap,
-            #         curr_speed=OFPPF_1GB_FD,
-            #         max_speed=OFPPF_1GB_FD
-            #     ),
-            #     device_id=device.id,
-            #     device_port_no=self.uni_port.port_no
-            # ))
-
-            # device = self.adapter_agent.get_device(device.id)
-            # device.oper_status = OperStatus.ACTIVE
-            # self.adapter_agent.update_device(device)
-
             yield self.adapter_agent.device_state_update(self.device_id, oper_status=OperStatus.ACTIVE, connect_status=ConnectStatus.REACHABLE)
 
             self.log.info('re-enabled', device_id=self.device_id)
@@ -363,8 +280,6 @@ class PonSimOnuHandler(object):
 
     def delete(self):
         self.log.info('deleting', device_id=self.device_id)
-
-        # A delete request may be received when an OLT is dsiabled
 
         # TODO:
         # 1) Remove all flows from the device

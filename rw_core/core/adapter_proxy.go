@@ -81,6 +81,116 @@ func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+
+
+func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Device) error {
+	log.Debugw("ReEnableDevice", log.Fields{"deviceId": device.Id})
+	rpc := "reenable_device"
+	topic := kafka.Topic{Name: device.Type}
+	args := make([]*kafka.KVArg, 1)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	success, result := ap.kafkaProxy.InvokeRPC(ctx, rpc, &topic, true, args...)
+	log.Debugw("ReEnableDevice-response", log.Fields{"deviceid": device.Id, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
+}
+
+func (ap *AdapterProxy) RebootDevice(ctx context.Context, device *voltha.Device) error {
+	log.Debugw("RebootDevice", log.Fields{"deviceId": device.Id})
+	rpc := "reboot_device"
+	topic := kafka.Topic{Name: device.Type}
+	args := make([]*kafka.KVArg, 1)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	success, result := ap.kafkaProxy.InvokeRPC(ctx, rpc, &topic, true, args...)
+	log.Debugw("RebootDevice-response", log.Fields{"deviceid": device.Id, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
+}
+
+func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device) error {
+	log.Debugw("DeleteDevice", log.Fields{"deviceId": device.Id})
+	rpc := "delete_device"
+	topic := kafka.Topic{Name: device.Type}
+	args := make([]*kafka.KVArg, 1)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	success, result := ap.kafkaProxy.InvokeRPC(ctx, rpc, &topic, true, args...)
+	log.Debugw("DeleteDevice-response", log.Fields{"deviceid": device.Id, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
+}
+
+func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ca.SwitchCapability, error) {
+	log.Debugw("GetOfpDeviceInfo", log.Fields{"deviceId": device.Id})
+	topic := kafka.Topic{Name: device.Type}
+	args := make([]*kafka.KVArg, 1)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	success, result := ap.kafkaProxy.InvokeRPC(ctx, "get_ofp_device_info", &topic, true, args...)
+	log.Debugw("GetOfpDeviceInfo-response", log.Fields{"deviceId": device.Id, "success": success, "result": result})
+	if success {
+		unpackResult := &ca.SwitchCapability{}
+		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+		}
+		return unpackResult, nil
+	} else {
+		unpackResult := &ca.Error{}
+		var err error
+		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		}
+		log.Debugw("GetOfpDeviceInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
+		// TODO:  Need to get the real error code
+		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
+	}
+}
+
+func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Device, portNo uint32) (*ca.PortCapability, error) {
+	log.Debugw("GetOfpPortInfo", log.Fields{"deviceId": device.Id})
+	topic := kafka.Topic{Name: device.Type}
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	pNo := &ca.IntType{Val: int64(portNo)}
+	args[1] = &kafka.KVArg{
+		Key:   "port_no",
+		Value: pNo,
+	}
+
+	success, result := ap.kafkaProxy.InvokeRPC(ctx, "get_ofp_port_info", &topic, true, args...)
+	log.Debugw("GetOfpPortInfo-response", log.Fields{"deviceid": device.Id, "success": success})
+	if success {
+		unpackResult := &ca.PortCapability{}
+		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+		}
+		return unpackResult, nil
+	} else {
+		unpackResult := &ca.Error{}
+		var err error
+		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		}
+		log.Debugw("GetOfpPortInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
+		// TODO:  Need to get the real error code
+		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
+	}
+}
+
+//TODO: Implement the functions below
+
 func (ap *AdapterProxy) AdapterDescriptor() (*voltha.Adapter, error) {
 	log.Debug("AdapterDescriptor")
 	return nil, nil
@@ -103,30 +213,6 @@ func (ap *AdapterProxy) ReconcileDevice(device *voltha.Device) error {
 
 func (ap *AdapterProxy) AbandonDevice(device voltha.Device) error {
 	log.Debug("AbandonDevice")
-	return nil
-}
-
-func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Device) error {
-	log.Debugw("ReEnableDevice", log.Fields{"deviceId": device.Id})
-	rpc := "reenable_device"
-	topic := kafka.Topic{Name: device.Type}
-	args := make([]*kafka.KVArg, 1)
-	args[0] = &kafka.KVArg{
-		Key:   "device",
-		Value: device,
-	}
-	success, result := ap.kafkaProxy.InvokeRPC(ctx, rpc, &topic, true, args...)
-	log.Debugw("ReEnableDevice-response", log.Fields{"deviceid": device.Id, "success": success})
-	return unPackResponse(rpc, device.Id, success, result)
-}
-
-func (ap *AdapterProxy) RebootDevice(device *voltha.Device) error {
-	log.Debug("RebootDevice")
-	return nil
-}
-
-func (ap *AdapterProxy) DeleteDevice(device *voltha.Device) error {
-	log.Debug("DeleteDevice")
 	return nil
 }
 
@@ -193,68 +279,4 @@ func (ap *AdapterProxy) SuppressAlarm(filter voltha.AlarmFilter) error {
 func (ap *AdapterProxy) UnSuppressAlarm(filter voltha.AlarmFilter) error {
 	log.Debug("UnSuppressAlarm")
 	return nil
-}
-
-func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ca.SwitchCapability, error) {
-	log.Debugw("GetOfpDeviceInfo", log.Fields{"deviceId": device.Id})
-	topic := kafka.Topic{Name: device.Type}
-	args := make([]*kafka.KVArg, 1)
-	args[0] = &kafka.KVArg{
-		Key:   "device",
-		Value: device,
-	}
-	success, result := ap.kafkaProxy.InvokeRPC(ctx, "get_ofp_device_info", &topic, true, args...)
-	log.Debugw("GetOfpDeviceInfo-response", log.Fields{"deviceId": device.Id, "success": success, "result": result})
-	if success {
-		unpackResult := &ca.SwitchCapability{}
-		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
-		}
-		return unpackResult, nil
-	} else {
-		unpackResult := &ca.Error{}
-		var err error
-		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-		}
-		log.Debugw("GetOfpDeviceInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
-		// TODO:  Need to get the real error code
-		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
-	}
-}
-
-func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Device, portNo uint32) (*ca.PortCapability, error) {
-	log.Debugw("GetOfpPortInfo", log.Fields{"deviceId": device.Id})
-	topic := kafka.Topic{Name: device.Type}
-	args := make([]*kafka.KVArg, 2)
-	args[0] = &kafka.KVArg{
-		Key:   "device",
-		Value: device,
-	}
-	pNo := &ca.IntType{Val: int64(portNo)}
-	args[1] = &kafka.KVArg{
-		Key:   "port_no",
-		Value: pNo,
-	}
-
-	success, result := ap.kafkaProxy.InvokeRPC(ctx, "get_ofp_port_info", &topic, true, args...)
-	log.Debugw("GetOfpPortInfo-response", log.Fields{"deviceid": device.Id, "success": success})
-	if success {
-		unpackResult := &ca.PortCapability{}
-		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
-		}
-		return unpackResult, nil
-	} else {
-		unpackResult := &ca.Error{}
-		var err error
-		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-		}
-		log.Debugw("GetOfpPortInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
-		// TODO:  Need to get the real error code
-		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
-	}
 }
