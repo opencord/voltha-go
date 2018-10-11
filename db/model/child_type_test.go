@@ -17,7 +17,6 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/protos/voltha"
-	"reflect"
 	"testing"
 )
 
@@ -41,9 +40,9 @@ func Test_ChildType_02_Device_Proto_ChildrenFields(t *testing.T) {
 
 	names := ChildrenFields(cls)
 
-	tst := reflect.ValueOf(cls).Elem().FieldByName("ImageDownloads")
-
-	t.Logf("############ Field by name : %+v\n", reflect.TypeOf(tst.Interface()))
+	//tst := reflect.ValueOf(cls).Elem().FieldByName("ImageDownloads")
+	//
+	//t.Logf("############ Field by name : %+v\n", reflect.TypeOf(tst.Interface()))
 
 	if names == nil || len(names) == 0 {
 		t.Errorf("ChildrenFields failed to return names: %+v\n", names)

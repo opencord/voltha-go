@@ -48,18 +48,16 @@ func (oc *OperationContext) Update(data interface{}) *OperationContext {
 }
 
 type Proxy struct {
-	Root      Root
-	Node      Node
+	Root      *root
 	Path      string
 	Exclusive bool
 	Callbacks map[CallbackType]map[string]CallbackTuple
 }
 
-func NewProxy(root Root, node Node, path string, exclusive bool) *Proxy {
+func NewProxy(root *root, path string, exclusive bool) *Proxy {
 	callbacks := make(map[CallbackType]map[string]CallbackTuple)
 	p := &Proxy{
 		Root:      root,
-		Node:      node,
 		Exclusive: exclusive,
 		Path:      path,
 		Callbacks: callbacks,
@@ -68,7 +66,7 @@ func NewProxy(root Root, node Node, path string, exclusive bool) *Proxy {
 }
 
 func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} {
-	return p.Node.Get(path, "", depth, deep, txid)
+	return p.Root.Get(path, "", depth, deep, txid)
 }
 
 func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) interface{} {
@@ -82,6 +80,7 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 	} else {
 		fullPath = p.Path + path
 	}
+
 	return p.Root.Update(fullPath, data, strict, txid, nil)
 }
 
@@ -126,20 +125,19 @@ func (p *Proxy) cancelTransaction(txid string) {
 	p.Root.DeleteTxBranch(txid)
 }
 
-//type CallbackFunction func(context context.Context, args ...interface{})
 type CallbackFunction func(args ...interface{}) interface{}
 type CallbackTuple struct {
 	callback CallbackFunction
 	args     []interface{}
 }
 
-func (tuple *CallbackTuple) Execute(context interface{}) interface{} {
-	newArgs := []interface{}{}
-	if context != nil {
-		newArgs = append(newArgs, context)
+func (tuple *CallbackTuple) Execute(contextArgs interface{}) interface{} {
+	args := []interface{}{}
+	args = append(args, tuple.args...)
+	if contextArgs != nil {
+		args = append(args, contextArgs)
 	}
-	newArgs = append(newArgs, tuple.args...)
-	return tuple.callback(newArgs...)
+	return tuple.callback(args...)
 }
 
 func (p *Proxy) RegisterCallback(callbackType CallbackType, callback CallbackFunction, args ...interface{}) {
@@ -169,7 +167,7 @@ func (p *Proxy) UnregisterCallback(callbackType CallbackType, callback CallbackF
 	delete(p.Callbacks[callbackType], funcHash)
 }
 
-func (p *Proxy) invoke(callback CallbackTuple, context interface{}) (result interface{}, err error) {
+func (p *Proxy) invoke(callback CallbackTuple, context ...interface{}) (result interface{}, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			errStr := fmt.Sprintf("callback error occurred: %+v", r)
@@ -183,17 +181,16 @@ func (p *Proxy) invoke(callback CallbackTuple, context interface{}) (result inte
 	return result, err
 }
 
-//func (p *Proxy) InvokeCallbacks(callbackType CallbackType, context context.Context, proceedOnError bool) {
-func (p *Proxy) InvokeCallbacks(args ...interface{}) interface{} {
+func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 	callbackType := args[0].(CallbackType)
-	context := args[1]
-	proceedOnError := args[2].(bool)
+	proceedOnError := args[1].(bool)
+	context := args[2:]
 
 	var err error
 
 	if _, exists := p.Callbacks[callbackType]; exists {
 		for _, callback := range p.Callbacks[callbackType] {
-			if context, err = p.invoke(callback, context); err != nil {
+			if result, err = p.invoke(callback, context); err != nil {
 				if !proceedOnError {
 					log.Info("An error occurred.  Stopping callback invocation")
 					break

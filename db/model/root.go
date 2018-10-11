@@ -29,18 +29,20 @@ type Root interface {
 }
 
 type root struct {
-	node
+	*node
+
+	Callbacks             []CallbackTuple
+	NotificationCallbacks []CallbackTuple
 
 	DirtyNodes            map[string][]*node
 	KvStore               *Backend
 	Loading               bool
 	RevisionClass         interface{}
-	Callbacks             []CallbackTuple
-	NotificationCallbacks []CallbackTuple
 }
 
 func NewRoot(initialData interface{}, kvStore *Backend) *root {
 	root := &root{}
+
 	root.KvStore = kvStore
 	root.DirtyNodes = make(map[string][]*node)
 	root.Loading = false
@@ -53,23 +55,15 @@ func NewRoot(initialData interface{}, kvStore *Backend) *root {
 	root.Callbacks = []CallbackTuple{}
 	root.NotificationCallbacks = []CallbackTuple{}
 
-	root.node = *NewNode(root, initialData, false, "")
+	root.node = NewNode(root, initialData,false, "")
 
 	return root
-}
-
-func (r *root) MakeRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
-	if r.RevisionClass.(reflect.Type) == reflect.TypeOf(PersistedRevision{}) {
-		return NewPersistedRevision(branch, data, children)
-	}
-
-	return NewNonPersistedRevision(branch, data, children)
 }
 
 func (r *root) MakeTxBranch() string {
 	txid_bin, _ := uuid.New().MarshalBinary()
 	txid := hex.EncodeToString(txid_bin)[:12]
-	r.DirtyNodes[txid] = []*node{&r.node}
+	r.DirtyNodes[txid] = []*node{r.node}
 	r.node.MakeBranch(txid)
 	return txid
 }
@@ -135,7 +129,7 @@ func (r *root) Update(path string, data interface{}, strict bool, txid string, m
 		result = r.node.Update(path, data, strict, "", nil)
 	}
 
-	r.ExecuteCallbacks()
+	r.node.ExecuteCallbacks()
 
 	return result
 }
@@ -161,7 +155,7 @@ func (r *root) Add(path string, data interface{}, txid string, makeBranch MakeBr
 		result = r.node.Add(path, data, "", nil)
 	}
 
-	r.ExecuteCallbacks()
+	r.node.ExecuteCallbacks()
 
 	return result
 }
@@ -187,7 +181,7 @@ func (r *root) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 		result = r.node.Remove(path, "", nil)
 	}
 
-	r.ExecuteCallbacks()
+	r.node.ExecuteCallbacks()
 
 	return result
 }
@@ -227,10 +221,6 @@ func (r *root) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	}
 }
 
-func (r *root) LoadLatest(hash string) {
-	r.node.LoadLatest(r.KvStore, hash)
-}
-
 type rootData struct {
 	Latest string            `json:latest`
 	Tags   map[string]string `json:tags`
@@ -249,10 +239,10 @@ func (r *root) LoadFromPersistence(rootClass interface{}) {
 	stop := time.Now()
 	GetProfiling().AddToInMemoryModelTime(stop.Sub(start).Seconds())
 	for tag, hash := range data.Tags {
-		r.node.LoadLatest(r.KvStore, hash)
-		r.node.Tags[tag] = r.node.Latest()
+		r.LoadLatest(hash)
+		r.Tags[tag] = r.Latest()
 	}
 
-	r.node.LoadLatest(r.KvStore, data.Latest)
+	r.LoadLatest(data.Latest)
 	r.Loading = false
 }

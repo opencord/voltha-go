@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"github.com/opencord/voltha-go/common/log"
+	"github.com/golang/protobuf/proto"
 	"reflect"
 	"sort"
 )
@@ -156,25 +156,29 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 					}
 				}
 			} else {
-				rev := npr.Children[fieldName][0]
-				childData := rev.Get(depth - 1)
-				foundEntry := false
-				for i := 0; i < childDataHolder.Len(); i++ {
-					if reflect.DeepEqual(childDataHolder.Index(i).Interface(), childData) {
-						foundEntry = true
-						break
+				if revs := npr.Children[fieldName]; revs != nil && len(revs) > 0 {
+					rev := npr.Children[fieldName][0]
+					if rev != nil {
+						childData := rev.Get(depth - 1)
+						if reflect.TypeOf(childData) == reflect.TypeOf(childDataHolder.Interface()) {
+							childDataHolder = reflect.ValueOf(childData)
+						}
 					}
-				}
-				if !foundEntry {
-					// avoid duplicates by adding if the child was not found in the holder
-					childDataHolder = reflect.Append(childDataHolder, reflect.ValueOf(childData))
 				}
 			}
 			// Merge child data with cloned object
 			reflect.ValueOf(data).Elem().FieldByName(childDataName).Set(childDataHolder)
 		}
 	}
-	return data
+
+	result := data
+
+	if result != nil {
+		clone := proto.Clone(data.(proto.Message))
+		result = reflect.ValueOf(clone).Interface()
+	}
+
+	return result
 }
 
 func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Revision {
@@ -183,7 +187,6 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 
 	newRev := reflect.ValueOf(npr).Elem().Interface().(NonPersistedRevision)
 	newRev.SetBranch(branch)
-	log.Debugf("newRev config : %+v, npr: %+v", newRev.GetConfig(), npr)
 	newRev.SetConfig(NewDataRevision(data))
 	newRev.Finalize()
 

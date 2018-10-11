@@ -23,7 +23,7 @@ import (
 )
 
 func IsProtoMessage(object interface{}) bool {
-	var ok bool
+	var ok = false
 
 	if object != nil {
 		st := reflect.TypeOf(object)
@@ -33,17 +33,29 @@ func IsProtoMessage(object interface{}) bool {
 }
 
 func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflect.Type {
+ 	prefix := ""
+	for d:=0; d< depth; d++ {
+		prefix += ">>"
+	}
 	k := obj.Kind()
 	switch k {
 	case reflect.Ptr:
+		if found {
+			return obj.Type()
+		}
+
 		t := obj.Type().Elem()
 		n := reflect.New(t)
 
-		if rc := FindOwnerType(n.Elem(), name, depth+1, false); rc != nil {
+		if rc := FindOwnerType(n.Elem(), name, depth+1, found); rc != nil {
 			return rc
 		}
 
 	case reflect.Struct:
+		if found {
+			return obj.Type()
+		}
+
 		for i := 0; i < obj.NumField(); i += 1 {
 			v := reflect.Indirect(obj)
 
@@ -53,7 +65,7 @@ func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflec
 				return FindOwnerType(obj.Field(i), name, depth+1, true)
 			}
 
-			if rc := FindOwnerType(obj.Field(i), name, depth+1, false); rc != nil {
+			if rc := FindOwnerType(obj.Field(i), name, depth+1, found); rc != nil {
 				return rc
 			}
 		}
@@ -73,7 +85,7 @@ func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflec
 				return obj.Index(i).Type()
 			}
 
-			if rc := FindOwnerType(obj.Index(i), name, depth+1, false); rc != nil {
+			if rc := FindOwnerType(obj.Index(i), name, depth+1, found); rc != nil {
 				return rc
 			}
 		}

@@ -20,6 +20,6 @@ import (
 )
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "DB_MODEL"})
+	log.AddPackage(log.JSON, log.DebugLevel, log.Fields{"instanceId": "DB_MODEL"})
 	defer log.CleanUp()
 }

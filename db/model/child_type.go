@@ -74,12 +74,12 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 				if proto.HasExtension(options, common.E_ChildNode) {
 					isContainer := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
 					meta, _ := proto.GetExtension(options, common.E_ChildNode)
-					var keyFromStr func(string) interface{}
 
-					if meta.(*common.ChildNode).GetKey() == "" {
-						//log.Debugf("Child key is empty ... moving on")
-					} else {
-						parentType := FindOwnerType(reflect.ValueOf(cls), field.GetName(), 0, false)
+					var keyFromStr func(string) interface{}
+					var ct ChildType
+
+					parentType := FindOwnerType(reflect.ValueOf(cls), field.GetName(), 0, false)
+					if meta.(*common.ChildNode).GetKey() != "" {
 						keyType := FindKeyOwner(reflect.New(parentType).Elem().Interface(), meta.(*common.ChildNode).GetKey(), 0)
 
 						switch keyType.(reflect.Type).Name() {
@@ -110,18 +110,17 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 						default:
 							log.Errorf("Key type not implemented - type: %s\n", keyType.(reflect.Type))
 						}
-
-						ct := ChildType{
-							ClassModule: parentType.String(),
-							ClassType:   parentType,
-							IsContainer: isContainer,
-							Key:         meta.(*common.ChildNode).GetKey(),
-							KeyFromStr:  keyFromStr,
-						}
-
-						names[field.GetName()] = &ct
-
 					}
+
+					ct = ChildType{
+						ClassModule: parentType.String(),
+						ClassType:   parentType,
+						IsContainer: isContainer,
+						Key:         meta.(*common.ChildNode).GetKey(),
+						KeyFromStr:  keyFromStr,
+					}
+
+					names[field.GetName()] = &ct
 				}
 			}
 		}

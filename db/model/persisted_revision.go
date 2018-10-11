@@ -34,7 +34,7 @@ type PersistedRevision struct {
 
 func NewPersistedRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
 	pr := &PersistedRevision{}
-	pr.kvStore = branch.Node.root.KvStore
+	pr.kvStore = branch.Node.Root.KvStore
 	pr.Revision = NewNonPersistedRevision(branch, data, children)
 	pr.Finalize()
 	return pr
@@ -64,7 +64,9 @@ func (pr *PersistedRevision) store() {
 	for fieldName, children := range pr.GetChildren() {
 		hashes := []string{}
 		for _, rev := range children {
-			hashes = append(hashes, rev.GetHash())
+			if rev != nil {
+				hashes = append(hashes, rev.GetHash())
+			}
 		}
 		childrenHashes[fieldName] = hashes
 	}
@@ -119,7 +121,7 @@ func (pr *PersistedRevision) Load(branch *Branch, kvStore *Backend, msgClass int
 		var children []Revision
 		for _, childHash := range childrenHashes[fieldName] {
 			childNode := node.MakeNode(reflect.New(child.ClassType).Elem().Interface(), "")
-			childNode.LoadLatest(kvStore, childHash)
+			childNode.LoadLatest(childHash)
 			childRev := childNode.Latest()
 			children = append(children, childRev)
 		}
