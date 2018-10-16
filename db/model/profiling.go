@@ -27,6 +27,8 @@ type profiling struct {
 	InMemoryModelCount    int
 	InMemoryProcessTime   float64
 	DatabaseStoreTime     float64
+	InMemoryLockTime      float64
+	InMemoryLockCount     int
 }
 
 var profiling_instance *profiling
@@ -54,6 +56,22 @@ func (p *profiling) AddToDatabaseStoreTime(period float64) {
 	p.DatabaseStoreTime += period
 }
 
+func (p *profiling) AddToInMemoryLockTime(period float64) {
+	p.InMemoryLockTime += period
+	p.InMemoryLockCount += 1
+}
+
+func (p *profiling) Reset() {
+	p.DatabaseRetrieveTime = 0
+	p.DatabaseRetrieveCount = 0
+	p.InMemoryModelTime = 0
+	p.InMemoryModelCount = 0
+	p.InMemoryProcessTime = 0
+	p.DatabaseStoreTime = 0
+	p.InMemoryLockTime = 0
+	p.InMemoryLockCount = 0
+}
+
 func (p *profiling) Report() {
 	log.Infof("[ Profiling Report ]")
 	log.Infof("Database Retrieval : %f", p.DatabaseRetrieveTime)
@@ -62,5 +80,8 @@ func (p *profiling) Report() {
 	log.Infof("In-Memory Modeling : %f", p.InMemoryModelTime)
 	log.Infof("In-Memory Modeling Count: %d", p.InMemoryModelCount)
 	log.Infof("Avg In-Memory Modeling : %f", p.InMemoryModelTime/float64(p.InMemoryModelCount))
+	log.Infof("In-Memory Locking : %f", p.InMemoryLockTime)
+	log.Infof("In-Memory Locking Count: %d", p.InMemoryLockCount)
+	log.Infof("Avg In-Memory Locking : %f", p.InMemoryLockTime/float64(p.InMemoryLockCount))
 
 }

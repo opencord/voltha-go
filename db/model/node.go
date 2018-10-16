@@ -331,10 +331,13 @@ func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 
 func (n *node) getData(rev Revision, depth int) interface{} {
 	msg := rev.Get(depth)
+	var modifiedMsg interface{}
 
 	if n.Proxy != nil {
 		log.Debug("invoking proxy GET Callbacks")
-		msg = n.Proxy.InvokeCallbacks(GET, false, msg)
+		if modifiedMsg = n.Proxy.InvokeCallbacks(GET, false, msg); modifiedMsg != nil {
+			msg = modifiedMsg
+		}
 
 	}
 	return msg
@@ -398,6 +401,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
 			childNode.Proxy = n.Proxy
+
 			newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
 
 			if newChildRev.GetHash() == childRev.GetHash() {
@@ -418,19 +422,20 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			children[idx] = newChildRev
 			rev = rev.UpdateChildren(name, children, branch)
 			branch.Latest.Drop(txid, false)
-			n.MakeLatest(branch, rev, nil)
-			return rev
+			n.Root.MakeLatest(branch, rev, nil)
+			return newChildRev
 		} else {
 			log.Errorf("cannot index into container with no keys")
 		}
 	} else {
 		childRev := rev.GetChildren()[name][0]
 		childNode := childRev.GetNode()
+		childNode.Proxy = n.Proxy
 		newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
 		rev = rev.UpdateChildren(name, []Revision{newChildRev}, branch)
 		branch.Latest.Drop(txid, false)
-		n.MakeLatest(branch, rev, nil)
-		return rev
+		n.Root.MakeLatest(branch, rev, nil)
+		return newChildRev
 	}
 	return nil
 }
@@ -461,7 +466,8 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 		rev := branch.Latest.UpdateData(data, branch)
 		changes := []ChangeTuple{{POST_UPDATE, branch.Latest.GetData(), rev.GetData()}}
 		branch.Latest.Drop(branch.Txid, true)
-		n.MakeLatest(branch, rev, changes)
+		n.Root.Proxy = n.Proxy
+		n.Root.MakeLatest(branch, rev, changes)
 		return rev
 	} else {
 		return branch.Latest
@@ -524,7 +530,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 					rev := rev.UpdateChildren(name, children, branch)
 					changes := []ChangeTuple{{POST_ADD, nil, rev.GetData()}}
 					branch.Latest.Drop(txid, false)
-					n.MakeLatest(branch, rev, changes)
+					n.Root.MakeLatest(branch, rev, changes)
 					return rev
 				}
 
@@ -547,7 +553,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 			children[idx] = newChildRev
 			rev := rev.UpdateChildren(name, children, branch)
 			branch.Latest.Drop(txid, false)
-			n.MakeLatest(branch, rev, nil)
+			n.Root.MakeLatest(branch, rev, nil)
 			return rev
 		} else {
 			log.Errorf("cannot add to non-keyed container")
@@ -614,7 +620,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				children[idx] = newChildRev
 				rev := rev.UpdateChildren(name, children, branch)
 				branch.Latest.Drop(txid, false)
-				n.MakeLatest(branch, rev, nil)
+				n.Root.MakeLatest(branch, rev, nil)
 				return rev
 			} else {
 				for _, v := range rev.GetChildren()[name] {
@@ -633,7 +639,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				children = append(children[:idx], children[idx+1:]...)
 				rev := rev.UpdateChildren(name, children, branch)
 				branch.Latest.Drop(txid, false)
-				n.MakeLatest(branch, rev, postAnnouncement)
+				n.Root.MakeLatest(branch, rev, postAnnouncement)
 				return rev
 			}
 		} else {
@@ -685,7 +691,7 @@ func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 	rev, changes := Merge3Way(forkRev, srcRev, dstRev, n.mergeChild(txid, dryRun), dryRun)
 
 	if !dryRun {
-		n.MakeLatest(dstBranch, rev, changes)
+		n.Root.MakeLatest(dstBranch, rev, changes)
 		delete(n.Branches, txid)
 	}
 
@@ -742,7 +748,7 @@ func (n *node) getProxy(path string, fullPath string, exclusive bool) *Proxy {
 		path = path[1:]
 	}
 	if path == "" {
-		return n.makeProxy(path, exclusive)
+		return n.makeProxy(path, fullPath, exclusive)
 	}
 
 	rev := n.Branches[NONE].Latest
@@ -788,7 +794,7 @@ func (n *node) getProxy(path string, fullPath string, exclusive bool) *Proxy {
 	return nil
 }
 
-func (n *node) makeProxy(fullPath string, exclusive bool) *Proxy {
+func (n *node) makeProxy(path string, fullPath string, exclusive bool) *Proxy {
 	r := &root{
 		node:                  n,
 		Callbacks:             n.Root.Callbacks,
@@ -800,7 +806,7 @@ func (n *node) makeProxy(fullPath string, exclusive bool) *Proxy {
 	}
 
 	if n.Proxy == nil {
-		n.Proxy = NewProxy(r, fullPath, exclusive)
+		n.Proxy = NewProxy(r, path, fullPath, exclusive)
 	} else {
 		if n.Proxy.Exclusive {
 			log.Error("node is already owned exclusively")

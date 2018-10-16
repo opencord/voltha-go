@@ -18,7 +18,6 @@ package model
 import (
 	"encoding/hex"
 	"github.com/google/uuid"
-	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"reflect"
@@ -26,54 +25,13 @@ import (
 	"testing"
 )
 
-type transactionTest struct {
-	Root      *root
-	Backend   *Backend
-	Proxy     *Proxy
-	DbPrefix  string
-	DbType    string
-	DbHost    string
-	DbPort    int
-	DbTimeout int
-}
-
 var (
-	tx = &transactionTest{
-		DbPrefix: "service/voltha/data/core/0001",
-		DbType:   "etcd",
-		//DbHost:    "10.102.58.0",
-		DbHost:    "localhost",
-		DbPort:    2379,
-		DbTimeout: 5,
-	}
 	txTargetDevId string
 	txDevId       string
 )
 
-func init() {
-	log.AddPackage(log.JSON, log.DebugLevel, nil)
-	log.UpdateAllLoggers(log.Fields{"instanceId": "transaction_test"})
-
-	defer log.CleanUp()
-
-	tx.Backend = NewBackend(tx.DbType, tx.DbHost, tx.DbPort, tx.DbTimeout, tx.DbPrefix)
-
-	msgClass := &voltha.Voltha{}
-	root := NewRoot(msgClass, tx.Backend)
-
-	if tx.Backend != nil {
-		tx.Root = root.Load(msgClass)
-	} else {
-		tx.Root = root
-	}
-
-	GetProfiling().Report()
-
-	tx.Proxy = tx.Root.GetProxy("/", false)
-}
-
 func Test_Transaction_1_GetDevices(t *testing.T) {
-	getTx := tx.Proxy.OpenTransaction()
+	getTx := modelTestConfig.RootProxy.OpenTransaction()
 
 	devices := getTx.Get("/devices", 1, false)
 
@@ -112,7 +70,7 @@ func Test_Transaction_2_AddDevice(t *testing.T) {
 		Ports:      ports,
 	}
 
-	addTx := tx.Proxy.OpenTransaction()
+	addTx := modelTestConfig.RootProxy.OpenTransaction()
 
 	if added := addTx.Add("/devices", device); added == nil {
 		t.Error("Failed to add device")
@@ -126,12 +84,12 @@ func Test_Transaction_3_GetDevice_PostAdd(t *testing.T) {
 
 	basePath := "/devices/" + txDevId
 
-	getDevWithPortsTx := tx.Proxy.OpenTransaction()
+	getDevWithPortsTx := modelTestConfig.RootProxy.OpenTransaction()
 	device1 := getDevWithPortsTx.Get(basePath+"/ports", 1, false)
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
-	getDevTx := tx.Proxy.OpenTransaction()
+	getDevTx := modelTestConfig.RootProxy.OpenTransaction()
 	device2 := getDevTx.Get(basePath, 0, false)
 	t.Logf("retrieved device: %+v", device2)
 
@@ -139,7 +97,7 @@ func Test_Transaction_3_GetDevice_PostAdd(t *testing.T) {
 }
 
 func Test_Transaction_4_UpdateDevice(t *testing.T) {
-	updateTx := tx.Proxy.OpenTransaction()
+	updateTx := modelTestConfig.RootProxy.OpenTransaction()
 	if retrieved := updateTx.Get("/devices/"+txTargetDevId, 1, false); retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
@@ -169,12 +127,12 @@ func Test_Transaction_5_GetDevice_PostUpdate(t *testing.T) {
 
 	basePath := "/devices/" + txDevId
 
-	getDevWithPortsTx := tx.Proxy.OpenTransaction()
+	getDevWithPortsTx := modelTestConfig.RootProxy.OpenTransaction()
 	device1 := getDevWithPortsTx.Get(basePath+"/ports", 1, false)
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
-	getDevTx := tx.Proxy.OpenTransaction()
+	getDevTx := modelTestConfig.RootProxy.OpenTransaction()
 	device2 := getDevTx.Get(basePath, 0, false)
 	t.Logf("retrieved device: %+v", device2)
 
@@ -182,7 +140,7 @@ func Test_Transaction_5_GetDevice_PostUpdate(t *testing.T) {
 }
 
 func Test_Transaction_6_RemoveDevice(t *testing.T) {
-	removeTx := tx.Proxy.OpenTransaction()
+	removeTx := modelTestConfig.RootProxy.OpenTransaction()
 	if removed := removeTx.Remove("/devices/" + txDevId); removed == nil {
 		t.Error("Failed to remove device")
 	} else {
@@ -195,8 +153,8 @@ func Test_Transaction_7_GetDevice_PostRemove(t *testing.T) {
 
 	basePath := "/devices/" + txDevId
 
-	getDevTx := tx.Proxy.OpenTransaction()
-	device := tx.Proxy.Get(basePath, 0, false, "")
+	getDevTx := modelTestConfig.RootProxy.OpenTransaction()
+	device := modelTestConfig.RootProxy.Get(basePath, 0, false, "")
 	t.Logf("retrieved device: %+v", device)
 
 	getDevTx.Commit()
