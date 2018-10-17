@@ -33,10 +33,11 @@ const (
 	default_KafkaAdapterPort = 9092
 	default_KafkaClusterHost = "10.176.215.107"
 	default_KafkaClusterPort = 9094
-	default_KVStoreType      = ConsulStoreName
+	default_KVStoreType      = EtcdStoreName
 	default_KVStoreTimeout   = 5 //in seconds
 	default_KVStoreHost      = "10.176.230.190"
-	default_KVStorePort      = 8500 // Etcd = 2379
+	default_KVStorePort      = 2379 // Consul = 8500; Etcd = 2379
+	default_KVTxnKeyDelTime  = 60
 	default_LogLevel         = 0
 	default_Banner           = false
 	default_CoreTopic        = "rwcore"
@@ -61,6 +62,7 @@ type RWCoreFlags struct {
 	KVStoreTimeout   int // in seconds
 	KVStoreHost      string
 	KVStorePort      int
+	KVTxnKeyDelTime  int
 	CoreTopic        string
 	LogLevel         int
 	Banner           bool
@@ -88,6 +90,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		KVStoreTimeout:   default_KVStoreTimeout,
 		KVStoreHost:      default_KVStoreHost,
 		KVStorePort:      default_KVStorePort,
+		KVTxnKeyDelTime:  default_KVTxnKeyDelTime,
 		CoreTopic:        default_CoreTopic,
 		LogLevel:         default_LogLevel,
 		Banner:           default_Banner,
@@ -138,6 +141,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("KV store port")
 	flag.IntVar(&(cf.KVStorePort), "kv_store_port", default_KVStorePort, help)
+
+	help = fmt.Sprintf("The time to wait before deleting a completed transaction key")
+	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", default_KVTxnKeyDelTime, help)
 
 	help = fmt.Sprintf("Log level")
 	flag.IntVar(&(cf.LogLevel), "log_level", default_LogLevel, help)
