@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99207398_8b88693b",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2018-10-17T18:15:44Z",
+      "side": 1,
+      "message": "Would it make sense to modify NewBackend to allocate the provided kvclient or create one when it is not?",
+      "revId": "07c804830bd12f37945d2d1aeef4788cf277c1cc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
