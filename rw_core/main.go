@@ -73,6 +73,7 @@ func (rw *rwCore) setKVClient() error {
 	addr := rw.config.KVStoreHost + ":" + strconv.Itoa(rw.config.KVStorePort)
 	client, err := newKVClient(rw.config.KVStoreType, addr, rw.config.KVStoreTimeout)
 	if err != nil {
+		rw.kvClient = nil
 		log.Error(err)
 		return err
 	}
@@ -131,13 +132,23 @@ func (rw *rwCore) start(ctx context.Context) {
 	//	log.Fatalw("failed-to-start-kafka-proxy", log.Fields{"err":err})
 	//}
 
+	// Setup KV Client
+	log.Debugw("create-kv-client", log.Fields{"kvstore": rw.config.KVStoreType})
+	err := rw.setKVClient()
+	if err == nil {
+		// Setup KV transaction context
+		c.SetTransactionContext(rw.config.InstanceID,
+			"service/voltha/transactions/",
+			rw.kvClient,
+			rw.config.KVStoreTimeout,
+			rw.config.KVTxnKeyDelTime)
+	}
+
 	// Create the core service
-	rw.core = c.NewCore(rw.config.InstanceID, rw.config)
+	rw.core = c.NewCore(rw.config.InstanceID, rw.config, rw.kvClient)
 
 	// start the core
 	rw.core.Start(ctx)
-
-	// Setup KV Client
 }
 
 func (rw *rwCore) stop() {

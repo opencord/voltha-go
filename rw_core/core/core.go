@@ -19,6 +19,7 @@ import (
 	"context"
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
 	"github.com/opencord/voltha-go/protos/voltha"
@@ -39,20 +40,31 @@ type Core struct {
 	clusterDataProxy  *model.Proxy
 	localDataProxy    *model.Proxy
 	exitChannel       chan int
+	kvClient          kvstore.Client
 }
 
 func init() {
 	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
-func NewCore(id string, cf *config.RWCoreFlags) *Core {
+func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client) *Core {
 	var core Core
 	core.instanceId = id
 	core.exitChannel = make(chan int, 1)
 	core.config = cf
-	// TODO: Setup the KV store
-	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, nil)
-	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, nil)
+	core.kvClient = kvClient
+
+	// Setup the KV store
+	// Do not call NewBackend constructor; it creates its own KV client
+	backend := model.Backend {
+		Client:     kvClient,
+		StoreType:  cf.KVStoreType,
+		Host:       cf.KVStoreHost,
+		Port:       cf.KVStorePort,
+		Timeout:    cf.KVStoreTimeout,
+		PathPrefix: "service/voltha"}
+	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
+	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
 	core.clusterDataProxy = core.clusterDataRoot.GetProxy("/", false)
 	core.localDataProxy = core.localDataRoot.GetProxy("/", false)
 	return &core
