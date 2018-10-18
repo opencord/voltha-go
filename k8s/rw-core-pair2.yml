@@ -1,0 +1,76 @@
+# Copyright 2018 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rw-core2
+  namespace: voltha
+spec:
+  clusterIP: None
+  ports:
+    - name: grpc
+      port: 50057
+      targetPort: 50057
+  selector:
+    app: rw-core
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rw-core2
+  namespace: voltha
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: rw-core
+  template:
+    metadata:
+      labels:
+        app: rw-core
+      annotations:
+        cni: "calico"
+    spec:
+      containers:
+        - name: voltha
+          image: voltha-rw-core
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          args:
+            - "/app/rw_core"
+            - "-kv_store_type=etcd"
+            - "-kv_store_host=etcd.$(NAMESPACE).svc.cluster.local"
+            - "-kv_store_port=2379"
+            - "-grpc_host=localhost"
+            - "-grpc_port=50057"
+            - "-banner=true"
+            - "-kafka_adapter_host=kafka.$(NAMESPACE).svc.cluster.local"
+            - "-kafka_adapter_port=9092"
+            - "-kafka_cluster_host=kafka.$(NAMESPACE).svc.cluster.local"
+            - "-kafka_cluster_port=9092"
+            - "-rw_core_topic=rwcore"
+            - "-log_level=0"
+          ports:
+            - containerPort: 50057
+              name: grpc-port
+          imagePullPolicy: IfNotPresent
+      nodeSelector:
+        nodename: k8s2
+
+
+
