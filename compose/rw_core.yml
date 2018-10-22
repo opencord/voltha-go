@@ -25,9 +25,9 @@ services:
         - -grpc_host=${DOCKER_HOST_IP}
         - -grpc_port=50057
         - -banner=true
-        - -kafka_adapter_host=10.176.230.190
+        - -kafka_adapter_host=${DOCKER_HOST_IP}
         - -kafka_adapter_port=9092
-        - -kafka_cluster_host=10.176.230.190
+        - -kafka_cluster_host=${DOCKER_HOST_IP}
         - -kafka_cluster_port=9092
         - -rw_core_topic=rwcore
         - -log_level=0

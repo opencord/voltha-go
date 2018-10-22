@@ -29,13 +29,13 @@ const (
 	default_InstanceID       = "rwcore001"
 	default_GrpcPort         = 50057
 	default_GrpcHost         = "127.0.0.1"
-	default_KafkaAdapterHost = "10.176.230.190"
+	default_KafkaAdapterHost = "127.0.0.1"
 	default_KafkaAdapterPort = 9092
-	default_KafkaClusterHost = "10.176.215.107"
+	default_KafkaClusterHost = "127.0.0.1"
 	default_KafkaClusterPort = 9094
 	default_KVStoreType      = EtcdStoreName
 	default_KVStoreTimeout   = 5 //in seconds
-	default_KVStoreHost      = "10.176.230.190"
+	default_KVStoreHost      = "127.0.0.1"
 	default_KVStorePort      = 2379 // Consul = 8500; Etcd = 2379
 	default_KVTxnKeyDelTime  = 60
 	default_LogLevel         = 0
