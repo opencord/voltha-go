@@ -28,8 +28,7 @@ Prerequite:  Start the kafka/zookeeper containers.
 
 var testLogger log.Logger
 
-
-func TestInit (t *testing.T) {
+func TestInit(t *testing.T) {
 	var err error
 	testLogger, err = log.AddPackage(log.JSON, log.ErrorLevel, nil)
 	assert.NotNil(t, testLogger)
@@ -41,7 +40,7 @@ func verifyLogLevel(t *testing.T, minimumLevel int) {
 	var success bool
 	for i := 0; i < 6; i++ {
 		success = testLogger.V(i)
-		if i == 1 && minimumLevel == 2{
+		if i == 1 && minimumLevel == 2 {
 			// TODO: Update the test when a new version of Zap logger is available.  It has a bug with that
 			// specific combination
 			continue
@@ -54,18 +53,18 @@ func verifyLogLevel(t *testing.T, minimumLevel int) {
 	}
 }
 
-func TestLogLevelDebug (t *testing.T) {
+func TestLogLevelDebug(t *testing.T) {
 	for i := 0; i < 6; i++ {
 		verifyLogLevel(t, i)
 	}
 }
 
-func TestUpdateAllLoggers (t *testing.T) {
+func TestUpdateAllLoggers(t *testing.T) {
 	err := log.UpdateAllLoggers(log.Fields{"update": "update"})
 	assert.Nil(t, err)
 }
 
-func TestUpdateLoggers (t *testing.T) {
+func TestUpdateLoggers(t *testing.T) {
 	testLogger, err := log.UpdateLogger(log.Fields{"update": "update"})
 	assert.Nil(t, err)
 	assert.NotNil(t, testLogger)

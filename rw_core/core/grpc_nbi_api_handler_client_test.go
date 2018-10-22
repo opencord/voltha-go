@@ -42,7 +42,7 @@ Prerequite:  These tests require the rw_core to run prior to executing these tes
 func setup() {
 	var err error
 
-	if err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
+	if _, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	conn, err = grpc.Dial("localhost:50057", grpc.WithInsecure())

@@ -81,8 +81,6 @@ func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
-
-
 func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("ReEnableDevice", log.Fields{"deviceId": device.Id})
 	rpc := "reenable_device"

@@ -56,7 +56,7 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client) *Core {
 
 	// Setup the KV store
 	// Do not call NewBackend constructor; it creates its own KV client
-	backend := model.Backend {
+	backend := model.Backend{
 		Client:     kvClient,
 		StoreType:  cf.KVStoreType,
 		Host:       cf.KVStoreHost,

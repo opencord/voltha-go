@@ -35,57 +35,58 @@
 package core
 
 import (
-    "time"
-    "github.com/opencord/voltha-go/db/kvstore"
-    log "github.com/opencord/voltha-go/common/log"
+	log "github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/db/kvstore"
+	"time"
 )
 
 // Transaction acquisition results
 const (
-    UNKNOWN = iota
-    SEIZED_BY_SELF
-    COMPLETED_BY_OTHER
-    ABANDONED_BY_OTHER
-    STOPPED_WAITING_FOR_OTHER
+	UNKNOWN = iota
+	SEIZED_BY_SELF
+	COMPLETED_BY_OTHER
+	ABANDONED_BY_OTHER
+	STOPPED_WAITING_FOR_OTHER
 )
 
 const (
-    TRANSACTION_COMPLETE = "TRANSACTION-COMPLETE"
+	TRANSACTION_COMPLETE = "TRANSACTION-COMPLETE"
 )
 
 type TransactionContext struct {
-    kvClient kvstore.Client
-    kvOperationTimeout int
-    owner string
-    timeToDeleteCompletedKeys int
-    txnPrefix string
+	kvClient                  kvstore.Client
+	kvOperationTimeout        int
+	owner                     string
+	timeToDeleteCompletedKeys int
+	txnPrefix                 string
 }
+
 var ctx *TransactionContext
 
-var txnState = []string {
-    "UNKNOWN",
-    "SEIZED-BY-SELF",
-    "COMPLETED-BY-OTHER",
-    "ABANDONED-BY-OTHER",
-    "STOPPED-WAITING-FOR-OTHER"}
+var txnState = []string{
+	"UNKNOWN",
+	"SEIZED-BY-SELF",
+	"COMPLETED-BY-OTHER",
+	"ABANDONED-BY-OTHER",
+	"STOPPED-WAITING-FOR-OTHER"}
 
 func init() {
-    log.AddPackage(log.JSON, log.WarnLevel, nil)
+	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
 func NewTransactionContext(
-    owner string,
-    txnPrefix string,
-    kvClient kvstore.Client,
-    kvOpTimeout int,
-    keyDeleteTime int) *TransactionContext {
+	owner string,
+	txnPrefix string,
+	kvClient kvstore.Client,
+	kvOpTimeout int,
+	keyDeleteTime int) *TransactionContext {
 
-    return &TransactionContext{
-        owner: owner,
-        txnPrefix: txnPrefix,
-        kvClient: kvClient,
-        kvOperationTimeout: kvOpTimeout,
-        timeToDeleteCompletedKeys: keyDeleteTime}
+	return &TransactionContext{
+		owner:                     owner,
+		txnPrefix:                 txnPrefix,
+		kvClient:                  kvClient,
+		kvOperationTimeout:        kvOpTimeout,
+		timeToDeleteCompletedKeys: keyDeleteTime}
 }
 
 /*
@@ -104,19 +105,19 @@ func NewTransactionContext(
  *                       TRANSACTION_COMPLETE key
  */
 func SetTransactionContext(owner string,
-    txnPrefix string,
-    kvClient kvstore.Client,
-    kvOpTimeout int,
-    keyDeleteTime int) error {
+	txnPrefix string,
+	kvClient kvstore.Client,
+	kvOpTimeout int,
+	keyDeleteTime int) error {
 
-    ctx = NewTransactionContext(owner, txnPrefix, kvClient, kvOpTimeout, keyDeleteTime)
-    return nil
+	ctx = NewTransactionContext(owner, txnPrefix, kvClient, kvOpTimeout, keyDeleteTime)
+	return nil
 }
 
 type KVTransaction struct {
-    ch chan int
-    txnId string
-    txnKey string
+	ch     chan int
+	txnId  string
+	txnKey string
 }
 
 /*
@@ -126,9 +127,9 @@ type KVTransaction struct {
  * :return: A KVTransaction instance
  */
 func NewKVTransaction(txnId string) *KVTransaction {
-    return &KVTransaction{
-        txnId: txnId,
-        txnKey: ctx.txnPrefix + txnId}
+	return &KVTransaction{
+		txnId:  txnId,
+		txnKey: ctx.txnPrefix + txnId}
 }
 
 /*
@@ -143,98 +144,96 @@ func NewKVTransaction(txnId string) *KVTransaction {
  *          false - reservation not acquired, request being processed by another core
  */
 func (c *KVTransaction) Acquired(duration int64) bool {
-    var acquired bool
-    var currOwner string = ""
-    var res int
+	var acquired bool
+	var currOwner string = ""
+	var res int
 
-    // Convert milliseconds to seconds, rounding up
-    // The reservation TTL is specified in seconds
-    durationInSecs := duration / 1000
-    if remainder := duration % 1000; remainder > 0 {
-        durationInSecs++
-    }
-    value, err := ctx.kvClient.Reserve(c.txnKey, ctx.owner, durationInSecs)
+	// Convert milliseconds to seconds, rounding up
+	// The reservation TTL is specified in seconds
+	durationInSecs := duration / 1000
+	if remainder := duration % 1000; remainder > 0 {
+		durationInSecs++
+	}
+	value, err := ctx.kvClient.Reserve(c.txnKey, ctx.owner, durationInSecs)
 
-    // If the reservation failed, do we simply abort or drop into watch mode anyway?
-    // Setting value to nil leads to watch mode
-    if value != nil {
-        if currOwner, err = kvstore.ToString(value); err != nil {
-            log.Error("unexpected-owner-type")
-            value = nil
-        }
-    }
-    if err == nil && value != nil && currOwner == ctx.owner {
-        // Process the request immediately
-        res = SEIZED_BY_SELF
-    } else {
-        // Another core instance has reserved the request
-        // Watch for reservation expiry or successful request completion
-        events := ctx.kvClient.Watch(c.txnKey)
-        log.Debugw("watch-other-server",
-            log.Fields{"owner": currOwner, "timeout": duration})
+	// If the reservation failed, do we simply abort or drop into watch mode anyway?
+	// Setting value to nil leads to watch mode
+	if value != nil {
+		if currOwner, err = kvstore.ToString(value); err != nil {
+			log.Error("unexpected-owner-type")
+			value = nil
+		}
+	}
+	if err == nil && value != nil && currOwner == ctx.owner {
+		// Process the request immediately
+		res = SEIZED_BY_SELF
+	} else {
+		// Another core instance has reserved the request
+		// Watch for reservation expiry or successful request completion
+		events := ctx.kvClient.Watch(c.txnKey)
+		log.Debugw("watch-other-server",
+			log.Fields{"owner": currOwner, "timeout": duration})
 
-        select {
-        // Add a timeout here in case we miss an event from the KV
-        case <-time.After(time.Duration(duration) * time.Millisecond):
-            // In case of missing events, let's check the transaction key
-            kvp, err := ctx.kvClient.Get(c.txnKey, ctx.kvOperationTimeout)
-            if err == nil && kvp == nil {
-                log.Debug("missed-deleted-event")
-                res = ABANDONED_BY_OTHER
-            } else if val, err := kvstore.ToString(kvp.Value);
-                err == nil && val == TRANSACTION_COMPLETE {
-                    log.Debugw("missed-put-event",
-                        log.Fields{"key": c.txnKey, "value": val})
-                    res = COMPLETED_BY_OTHER
-            } else {
-                res = STOPPED_WAITING_FOR_OTHER
-            }
+		select {
+		// Add a timeout here in case we miss an event from the KV
+		case <-time.After(time.Duration(duration) * time.Millisecond):
+			// In case of missing events, let's check the transaction key
+			kvp, err := ctx.kvClient.Get(c.txnKey, ctx.kvOperationTimeout)
+			if err == nil && kvp == nil {
+				log.Debug("missed-deleted-event")
+				res = ABANDONED_BY_OTHER
+			} else if val, err := kvstore.ToString(kvp.Value); err == nil && val == TRANSACTION_COMPLETE {
+				log.Debugw("missed-put-event",
+					log.Fields{"key": c.txnKey, "value": val})
+				res = COMPLETED_BY_OTHER
+			} else {
+				res = STOPPED_WAITING_FOR_OTHER
+			}
 
-        case event := <-events:
-            log.Debugw("received-event", log.Fields{"type": event.EventType})
-            if event.EventType == kvstore.DELETE {
-                // The other core failed to process the request; step up
-                res = ABANDONED_BY_OTHER
-            } else if event.EventType == kvstore.PUT {
-                key, e1 := kvstore.ToString(event.Key)
-                val, e2 := kvstore.ToString(event.Value)
-                if e1 == nil && key == c.txnKey && e2 == nil && val == TRANSACTION_COMPLETE {
-                    res = COMPLETED_BY_OTHER
-                    // Successful request completion has been detected
-                    // Remove the transaction key
-                    c.Delete()
-                }
-            }
-        }
-    }
-    // Clean-up: delete the transaction key after a long delay
-    go c.deleteTransactionKey()
+		case event := <-events:
+			log.Debugw("received-event", log.Fields{"type": event.EventType})
+			if event.EventType == kvstore.DELETE {
+				// The other core failed to process the request; step up
+				res = ABANDONED_BY_OTHER
+			} else if event.EventType == kvstore.PUT {
+				key, e1 := kvstore.ToString(event.Key)
+				val, e2 := kvstore.ToString(event.Value)
+				if e1 == nil && key == c.txnKey && e2 == nil && val == TRANSACTION_COMPLETE {
+					res = COMPLETED_BY_OTHER
+					// Successful request completion has been detected
+					// Remove the transaction key
+					c.Delete()
+				}
+			}
+		}
+	}
+	// Clean-up: delete the transaction key after a long delay
+	go c.deleteTransactionKey()
 
-    log.Debugw("acquire-transaction", log.Fields{"result": txnState[res]})
-    switch res {
-    case SEIZED_BY_SELF, ABANDONED_BY_OTHER, STOPPED_WAITING_FOR_OTHER:
-        acquired = true
-    default:
-        acquired = false
-    }
-    return acquired
+	log.Debugw("acquire-transaction", log.Fields{"result": txnState[res]})
+	switch res {
+	case SEIZED_BY_SELF, ABANDONED_BY_OTHER, STOPPED_WAITING_FOR_OTHER:
+		acquired = true
+	default:
+		acquired = false
+	}
+	return acquired
 }
 
 func (c *KVTransaction) deleteTransactionKey() {
-    log.Debugw("schedule-key-deletion", log.Fields{"key": c.txnKey})
-    time.Sleep(time.Duration(ctx.timeToDeleteCompletedKeys) * time.Second)
-    log.Debugw("background-key-deletion", log.Fields{"key": c.txnKey})
-    ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
+	log.Debugw("schedule-key-deletion", log.Fields{"key": c.txnKey})
+	time.Sleep(time.Duration(ctx.timeToDeleteCompletedKeys) * time.Second)
+	log.Debugw("background-key-deletion", log.Fields{"key": c.txnKey})
+	ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
 }
 
 func (c *KVTransaction) Close() error {
-    log.Debugw("close", log.Fields{"key": c.txnKey})
-    return ctx.kvClient.Put(c.txnKey, TRANSACTION_COMPLETE, ctx.kvOperationTimeout)
+	log.Debugw("close", log.Fields{"key": c.txnKey})
+	return ctx.kvClient.Put(c.txnKey, TRANSACTION_COMPLETE, ctx.kvOperationTimeout)
 }
 
 func (c *KVTransaction) Delete() error {
-    log.Debugw("delete", log.Fields{"key": c.txnKey})
-    err := ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
-    return err
+	log.Debugw("delete", log.Fields{"key": c.txnKey})
+	err := ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
+	return err
 }
-

@@ -21,8 +21,11 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
 	ca "github.com/opencord/voltha-go/protos/core_adapter"
-	"github.com/opencord/voltha-go/protos/openflow_13"
+	ofp "github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
+	fd "github.com/opencord/voltha-go/rw_core/flow_decomposition"
+	"github.com/opencord/voltha-go/rw_core/graph"
+	fu "github.com/opencord/voltha-go/rw_core/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sync"
@@ -36,6 +39,8 @@ type LogicalDeviceAgent struct {
 	ldeviceMgr        *LogicalDeviceManager
 	clusterDataProxy  *model.Proxy
 	exitChannel       chan int
+	deviceGraph       *graph.DeviceGraph
+	DefaultFlowRules  *fu.DeviceRules
 	lockLogicalDevice sync.RWMutex
 }
 
@@ -48,6 +53,7 @@ func newLogicalDeviceAgent(id string, device *voltha.Device, ldeviceMgr *Logical
 	agent.deviceMgr = deviceMgr
 	agent.clusterDataProxy = cdProxy
 	agent.ldeviceMgr = ldeviceMgr
+	//agent.deviceGraph =
 	agent.lockLogicalDevice = sync.RWMutex{}
 	return &agent
 }
@@ -63,8 +69,8 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
 		return err
 	}
 	ld := &voltha.LogicalDevice{Id: agent.logicalDeviceId, RootDeviceId: agent.rootDeviceId}
-	ld.Desc = (proto.Clone(switchCap.Desc)).(*openflow_13.OfpDesc)
-	ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*openflow_13.OfpSwitchFeatures)
+	ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
+	ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 
 	//Add logical ports to the logical device based on the number of NNI ports discovered
 	//First get the default port capability - TODO:  each NNI port may have different capabilities,
@@ -199,4 +205,225 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(device *voltha.Device) error 
 	return nil
 }
 
+func isNNIPort(portNo uint32, nniPortsNo []uint32) bool {
+	for _, pNo := range nniPortsNo {
+		if pNo == portNo {
+			return true
+		}
+	}
+	return false
+}
 
+func (agent *LogicalDeviceAgent) getPreCalculatedRoute(ingress, egress uint32) []graph.RouteHop {
+	for routeLink, route := range agent.deviceGraph.Routes {
+		if ingress == routeLink.Ingress && egress == routeLink.Egress {
+			return route
+		}
+	}
+	log.Warnw("no-route", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "ingress": ingress, "egress": egress})
+	return nil
+}
+
+func (agent *LogicalDeviceAgent) GetRoute(ingressPortNo *uint32, egressPortNo *uint32) []graph.RouteHop {
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	log.Debugw("getting-route", log.Fields{"ingress-port": ingressPortNo, "egress-port": egressPortNo})
+	// Get the updated logical device
+	var ld *ca.LogicalDevice
+	routes := make([]graph.RouteHop, 0)
+	var err error
+	if ld, err = agent.getLogicalDeviceWithoutLock(); err != nil {
+		return nil
+	}
+	nniLogicalPortsNo := make([]uint32, 0)
+	for _, logicalPort := range ld.Ports {
+		if logicalPort.RootPort {
+			nniLogicalPortsNo = append(nniLogicalPortsNo, logicalPort.OfpPort.PortNo)
+		}
+	}
+	if len(nniLogicalPortsNo) == 0 {
+		log.Errorw("no-nni-ports", log.Fields{"LogicalDeviceId": ld.Id})
+		return nil
+	}
+	//	Consider different possibilities
+	if egressPortNo != nil && ((*egressPortNo & 0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER)) {
+		log.Debugw("controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "nniPortsNo": nniLogicalPortsNo})
+		if isNNIPort(*ingressPortNo, nniLogicalPortsNo) {
+			log.Debug("returning-half-route")
+			//This is a trap on the NNI Port
+			//Return a 'half' route to make the flow decomposer logic happy
+			for routeLink, route := range agent.deviceGraph.Routes {
+				if isNNIPort(routeLink.Egress, nniLogicalPortsNo) {
+					routes = append(routes, graph.RouteHop{}) // first hop is set to empty
+					routes = append(routes, route[1])
+					return routes
+				}
+			}
+			log.Warnw("no-upstream-route", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "nniPortsNo": nniLogicalPortsNo})
+			return nil
+		}
+		//treat it as if the output port is the first NNI of the OLT
+		egressPortNo = &nniLogicalPortsNo[0]
+	}
+	//If ingress port is not specified (nil), it may be a wildcarded
+	//route if egress port is OFPP_CONTROLLER or a nni logical port,
+	//in which case we need to create a half-route where only the egress
+	//hop is filled, the first hop is nil
+	if ingressPortNo == nil && isNNIPort(*egressPortNo, nniLogicalPortsNo) {
+		// We can use the 2nd hop of any upstream route, so just find the first upstream:
+		for routeLink, route := range agent.deviceGraph.Routes {
+			if isNNIPort(routeLink.Egress, nniLogicalPortsNo) {
+				routes = append(routes, graph.RouteHop{}) // first hop is set to empty
+				routes = append(routes, route[1])
+				return routes
+			}
+		}
+		log.Warnw("no-upstream-route", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "nniPortsNo": nniLogicalPortsNo})
+		return nil
+	}
+	//If egress port is not specified (nil), we can also can return a "half" route
+	if egressPortNo == nil {
+		for routeLink, route := range agent.deviceGraph.Routes {
+			if routeLink.Ingress == *ingressPortNo {
+				routes = append(routes, route[0])
+				routes = append(routes, graph.RouteHop{})
+				return routes
+			}
+		}
+		log.Warnw("no-downstream-route", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "nniPortsNo": nniLogicalPortsNo})
+		return nil
+	}
+
+	//	Return the pre-calculated route
+	return agent.getPreCalculatedRoute(*ingressPortNo, *egressPortNo)
+}
+
+// updateRoutes updates the device routes whenever there is a device or port changes relevant to this
+// logical device.   TODO: Add more heuristics to this process to update the routes where a change has occurred
+// instead of rebuilding the entire set of routes
+func (agent *LogicalDeviceAgent) updateRoutes() {
+	if ld, err := agent.getLogicalDevice(); err == nil {
+		agent.deviceGraph.ComputeRoutes(ld.Ports)
+	}
+}
+
+func (agent *LogicalDeviceAgent) rootDeviceDefaultRules() *fu.FlowsAndGroups {
+	return fu.NewFlowsAndGroups()
+}
+
+func (agent *LogicalDeviceAgent) leafDeviceDefaultRules(deviceId string) *fu.FlowsAndGroups {
+	fg := fu.NewFlowsAndGroups()
+	var device *voltha.Device
+	var err error
+	if device, err = agent.deviceMgr.getDevice(deviceId); err != nil {
+		return fg
+	}
+	//set the upstream and downstream ports
+	upstreamPorts := make([]*voltha.Port, 0)
+	downstreamPorts := make([]*voltha.Port, 0)
+	for _, port := range device.Ports {
+		if port.Type == voltha.Port_PON_ONU || port.Type == voltha.Port_VENET_ONU {
+			upstreamPorts = append(upstreamPorts, port)
+		} else if port.Type == voltha.Port_ETHERNET_UNI {
+			downstreamPorts = append(downstreamPorts, port)
+		}
+	}
+	//it is possible that the downstream ports are not created, but the flow_decomposition has already
+	//kicked in. In such scenarios, cut short the processing and return.
+	if len(downstreamPorts) == 0 {
+		return fg
+	}
+	// set up the default flows
+	var fa *fu.FlowArgs
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fd.InPort(downstreamPorts[0].PortNo),
+			fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+		},
+		Actions: []*ofp.OfpAction{
+			fd.SetField(fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
+		},
+	}
+	fg.AddFlow(fd.MkFlowStat(fa))
+
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fd.InPort(downstreamPorts[0].PortNo),
+			fd.VlanVid(0),
+		},
+		Actions: []*ofp.OfpAction{
+			fd.PushVlan(0x8100),
+			fd.SetField(fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
+			fd.Output(upstreamPorts[0].PortNo),
+		},
+	}
+	fg.AddFlow(fd.MkFlowStat(fa))
+
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fd.InPort(upstreamPorts[0].PortNo),
+			fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan),
+		},
+		Actions: []*ofp.OfpAction{
+			fd.SetField(fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
+			fd.Output(downstreamPorts[0].PortNo),
+		},
+	}
+	fg.AddFlow(fd.MkFlowStat(fa))
+
+	return fg
+}
+
+func (agent *LogicalDeviceAgent) generateDefaultRules() *fu.DeviceRules {
+	rules := fu.NewDeviceRules()
+	var ld *voltha.LogicalDevice
+	var err error
+	if ld, err = agent.getLogicalDevice(); err != nil {
+		log.Warnw("no-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+		return rules
+	}
+
+	deviceNodeIds := agent.deviceGraph.GetDeviceNodeIds()
+	for deviceId, _ := range deviceNodeIds {
+		if deviceId == ld.RootDeviceId {
+			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
+		} else {
+			rules.AddFlowsAndGroup(deviceId, agent.leafDeviceDefaultRules(deviceId))
+		}
+	}
+	return rules
+}
+
+func (agent *LogicalDeviceAgent) GetAllDefaultRules() *fu.DeviceRules {
+	// Get latest
+	var lDevice *voltha.LogicalDevice
+	var err error
+	if lDevice, err = agent.getLogicalDevice(); err != nil {
+		return fu.NewDeviceRules()
+	}
+	if agent.DefaultFlowRules == nil { // Nothing setup yet
+		agent.deviceGraph = graph.NewDeviceGraph(agent.deviceMgr.getDevice)
+		agent.deviceGraph.ComputeRoutes(lDevice.Ports)
+		agent.DefaultFlowRules = agent.generateDefaultRules()
+	}
+	return agent.DefaultFlowRules
+}
+
+func (agent *LogicalDeviceAgent) GetWildcardInputPorts(excludePort ...uint32) []uint32 {
+	lPorts := make([]uint32, 0)
+	var exclPort uint32
+	if len(excludePort) == 1 {
+		exclPort = excludePort[0]
+	}
+	if lDevice, _ := agent.getLogicalDevice(); lDevice != nil {
+		for _, port := range lDevice.Ports {
+			if port.OfpPort.PortNo != exclPort {
+				lPorts = append(lPorts, port.OfpPort.PortNo)
+			}
+		}
+	}
+	return lPorts
+}
