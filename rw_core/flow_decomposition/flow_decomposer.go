@@ -308,7 +308,32 @@ func Ipv6Exthdr(ipv6Exthdr uint32) *ofp.OfpOxmOfbField {
 
 //frequently used extractors
 
-func GetActions(flow *ofp.OfpFlowStats) []*ofp.OfpAction {
+//func GetActions(flow *ofp.OfpFlowStats) []*ofp.OfpAction {
+//	if flow == nil {
+//		return nil
+//	}
+//	for _, instruction := range flow.Instructions {
+//		if instruction.Type == uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS) {
+//			instActions := instruction.GetActions()
+//			if instActions == nil {
+//				return nil
+//			}
+//			return instActions.Actions
+//		}
+//	}
+//	return nil
+//}
+
+func excludeAction(action *ofp.OfpAction, exclude ...ofp.OfpActionType) bool {
+	for _, actionToExclude := range exclude {
+		if action.Type == actionToExclude {
+			return true
+		}
+	}
+	return false
+}
+
+func GetActions(flow *ofp.OfpFlowStats, exclude ...ofp.OfpActionType) []*ofp.OfpAction {
 	if flow == nil {
 		return nil
 	}
@@ -318,13 +343,45 @@ func GetActions(flow *ofp.OfpFlowStats) []*ofp.OfpAction {
 			if instActions == nil {
 				return nil
 			}
-			return instActions.Actions
+			if len(exclude) == 0 {
+				return instActions.Actions
+			} else {
+				filteredAction := make([]*ofp.OfpAction, 0)
+				for _, action := range instActions.Actions {
+					if !excludeAction(action, exclude...) {
+						filteredAction = append(filteredAction, action)
+					}
+				}
+				return filteredAction
+			}
 		}
 	}
 	return nil
 }
 
-func GetOfbFields(flow *ofp.OfpFlowStats) []*ofp.OfpOxmOfbField {
+//func GetOfbFields(flow *ofp.OfpFlowStats) []*ofp.OfpOxmOfbField {
+//	if flow == nil || flow.Match == nil || flow.Match.Type != ofp.OfpMatchType_OFPMT_OXM {
+//		return nil
+//	}
+//	ofbFields := make([]*ofp.OfpOxmOfbField, 0)
+//	for _, field := range flow.Match.OxmFields {
+//		if field.OxmClass == ofp.OfpOxmClass_OFPXMC_OPENFLOW_BASIC {
+//			ofbFields = append(ofbFields, field.GetOfbField())
+//		}
+//	}
+//	return ofbFields
+//}
+
+func excludeOxmOfbField(field *ofp.OfpOxmOfbField, exclude ...ofp.OxmOfbFieldTypes) bool {
+	for _, fieldToExclude := range exclude {
+		if field.Type == fieldToExclude {
+			return true
+		}
+	}
+	return false
+}
+
+func GetOfbFields(flow *ofp.OfpFlowStats, exclude ...ofp.OxmOfbFieldTypes) []*ofp.OfpOxmOfbField {
 	if flow == nil || flow.Match == nil || flow.Match.Type != ofp.OfpMatchType_OFPMT_OXM {
 		return nil
 	}
@@ -334,7 +391,17 @@ func GetOfbFields(flow *ofp.OfpFlowStats) []*ofp.OfpOxmOfbField {
 			ofbFields = append(ofbFields, field.GetOfbField())
 		}
 	}
-	return ofbFields
+	if len(exclude) == 0 {
+		return ofbFields
+	} else {
+		filteredFields := make([]*ofp.OfpOxmOfbField, 0)
+		for _, ofbField := range ofbFields {
+			if !excludeOxmOfbField(ofbField, exclude...) {
+				filteredFields = append(filteredFields, ofbField)
+			}
+		}
+		return filteredFields
+	}
 }
 
 func GetOutPort(flow *ofp.OfpFlowStats) uint32 {
@@ -516,6 +583,7 @@ func GroupEntryFromGroupMod(mod *ofp.OfpGroupMod) *ofp.OfpGroupEntry {
 	}
 	group.Desc = &ofp.OfpGroupDesc{Type: mod.Type, GroupId: mod.GroupId, Buckets: mod.Buckets}
 	group.Stats = &ofp.OfpGroupStats{GroupId: mod.GroupId}
+	//TODO do we need to instantiate bucket bins?
 	return group
 }
 
@@ -635,8 +703,8 @@ func MkFlowStat(fa *fu.FlowArgs) *ofp.OfpFlowStats {
 	return FlowStatsEntryFromFlowModMessage(MkSimpleFlowMod(matchFields, fa.Actions, fa.Command, fa.KV))
 }
 
-func MkGroupStat(groupId uint32, buckets []*ofp.OfpBucket, command *ofp.OfpGroupModCommand) *ofp.OfpGroupEntry {
-	return GroupEntryFromGroupMod(MkMulticastGroupMod(groupId, buckets, command))
+func MkGroupStat(ga *fu.GroupArgs) *ofp.OfpGroupEntry {
+	return GroupEntryFromGroupMod(MkMulticastGroupMod(ga.GroupId, ga.Buckets, ga.Command))
 }
 
 type FlowDecomposer struct {
@@ -663,16 +731,22 @@ func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows 
 	for _, flow := range flows.Items {
 		decomposedRules = fd.decomposeFlow(agent, flow, groupMap)
 		for deviceId, flowAndGroups := range decomposedRules.Rules {
-			fmt.Println("!!!!!", deviceId, flowAndGroups)
-			deviceRules.Rules[deviceId] = fu.NewFlowsAndGroups()
+			deviceRules.CreateEntryIfNotExist(deviceId)
 			deviceRules.Rules[deviceId].AddFrom(flowAndGroups)
 		}
 	}
 	return deviceRules
 }
 
-func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop, inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules) *fu.DeviceRules {
+//processControllerBoundFlow decomposes trap flows
+func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
+	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
+
 	log.Debugw("trap-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "flow": flow})
+	deviceRules := fu.NewDeviceRules()
+
+	egressHop := route[1]
+
 	fg := fu.NewFlowsAndGroups()
 	if agent.GetDeviceGraph().IsRootPort(inPortNo) {
 		log.Debug("trap-nni")
@@ -680,16 +754,12 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(route[1].Egress), //egress_hop.egress_port.port_no
+				InPort(egressHop.Egress),
 			},
 			Actions: GetActions(flow),
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
 		fg.AddFlow(MkFlowStat(fa))
 	} else {
 		// Trap flow for UNI port
@@ -698,7 +768,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 		//inPortNo is 0 for wildcard input case, do not include upstream port for 4000 flow in input
 		var inPorts []uint32
 		if inPortNo == 0 {
-			inPorts = agent.GetWildcardInputPorts(route[1].Egress) // exclude egress_hop.egress_port.port_no
+			inPorts = agent.GetWildcardInputPorts(egressHop.Egress) // exclude egress_hop.egress_port.port_no
 		} else {
 			inPorts = []uint32{inPortNo}
 		}
@@ -708,41 +778,37 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 			fa = &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
-					InPort(route[1].Ingress), //egress_hop.ingress_port.port_no
+					InPort(egressHop.Ingress),
 					VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | inputPort),
 				},
 				Actions: []*ofp.OfpAction{
 					PushVlan(0x8100),
 					SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
-					Output(route[1].Egress),
+					Output(egressHop.Egress),
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
-			for _, val := range GetOfbFields(flow) {
-				if val.Type != IN_PORT && val.Type != VLAN_VID {
-					fa.MatchFields = append(fa.MatchFields, val)
-				}
-			}
+			fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT, VLAN_VID)...)
 			fg.AddFlow(MkFlowStat(fa))
 
 			// Downstream flow
 			fa = &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority)},
 				MatchFields: []*ofp.OfpOxmOfbField{
-					InPort(route[1].Egress), //egress_hop.ingress_port.port_no
+					InPort(egressHop.Egress),
 					VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000),
 					VlanPcp(0),
 					Metadata_ofp(uint64(inputPort)),
 				},
 				Actions: []*ofp.OfpAction{
 					PopVlan(),
-					Output(route[1].Ingress),
+					Output(egressHop.Ingress),
 				},
 			}
 			fg.AddFlow(MkFlowStat(fa))
 		}
 	}
-	deviceRules.AddFlowsAndGroup(route[1].DeviceID, fg)
+	deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 	return deviceRules
 }
 
@@ -750,8 +816,15 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 // upstream needs to get Q-in-Q treatment and that this is expressed via two flow rules, the first using the
 // goto-statement. We also assume that the inner tag is applied at the ONU, while the outer tag is
 // applied at the OLT
-func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop, inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules) *fu.DeviceRules {
+func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.LogicalDeviceAgent,
+	route []graph.RouteHop, inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
+
 	log.Debugw("upstream-non-controller-bound-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
+	deviceRules := fu.NewDeviceRules()
+
+	ingressHop := route[0]
+	egressHop := route[1]
+
 	if HasNextTable(flow) {
 		log.Debugw("has-next-table", log.Fields{"table_id": flow.TableId})
 		if outPortNo != 0 {
@@ -761,21 +834,19 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(route[0].Ingress), //ingress_hop.ingress_port.port_no
+				InPort(ingressHop.Ingress),
 			},
 			Actions: GetActions(flow),
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
-		// Agument the Actions
-		fa.Actions = append(fa.Actions, Output(route[0].Egress))
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
+
+		// Augment the Actions
+		fa.Actions = append(fa.Actions, Output(ingressHop.Egress))
+
 		fg := fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(route[0].DeviceID, fg)
+		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 	} else {
 		var actions []ofp.OfpActionType
 		var isOutputTypeInActions bool
@@ -791,41 +862,33 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 			fa = &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
-					InPort(route[0].Ingress), //ingress_hop.ingress_port.port_no
+					InPort(ingressHop.Ingress),
 				},
 				Actions: []*ofp.OfpAction{
-					Output(route[0].Egress),
+					Output(ingressHop.Egress),
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
-			for _, val := range GetOfbFields(flow) {
-				if val.Type != IN_PORT {
-					fa.MatchFields = append(fa.MatchFields, val)
-				}
-			}
+			fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
 			fg := fu.NewFlowsAndGroups()
 			fg.AddFlow(MkFlowStat(fa))
-			deviceRules.AddFlowsAndGroup(route[0].DeviceID, fg)
+			deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 
 			// parent device flow
 			fa = &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
-					InPort(route[1].Ingress), //egress_hop.ingress_port.port_no
+					InPort(egressHop.Ingress), //egress_hop.ingress_port.port_no
 				},
 				Actions: []*ofp.OfpAction{
-					Output(route[1].Egress),
+					Output(egressHop.Egress),
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
-			for _, val := range GetOfbFields(flow) {
-				if val.Type != IN_PORT {
-					fa.MatchFields = append(fa.MatchFields, val)
-				}
-			}
+			fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
 			fg = fu.NewFlowsAndGroups()
 			fg.AddFlow(MkFlowStat(fa))
-			deviceRules.AddFlowsAndGroup(route[1].DeviceID, fg)
+			deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 		} else {
 			if outPortNo == 0 {
 				log.Warnw("outPort-should-be-specified", log.Fields{"outPortNo": outPortNo})
@@ -834,38 +897,38 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 			fa = &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
-					InPort(route[1].Ingress), //egress_hop.ingress_port.port_no
+					InPort(egressHop.Ingress),
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
-			for _, val := range GetOfbFields(flow) {
-				if val.Type != IN_PORT {
-					fa.MatchFields = append(fa.MatchFields, val)
-				}
-			}
-			// Augment the Actions
-			updatedAction := make([]*ofp.OfpAction, 0)
-			for _, action := range GetActions(flow) {
-				if action.Type != OUTPUT {
-					updatedAction = append(updatedAction, action)
-				}
-			}
-			updatedAction = append(updatedAction, Output(route[1].Egress))
-			fa.Actions = updatedAction
+			fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
+
+			//Augment the actions
+			filteredAction := GetActions(flow, OUTPUT)
+			filteredAction = append(filteredAction, Output(egressHop.Egress))
+			fa.Actions = filteredAction
+
 			fg := fu.NewFlowsAndGroups()
 			fg.AddFlow(MkFlowStat(fa))
-			deviceRules.AddFlowsAndGroup(route[1].DeviceID, fg)
+			deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 		}
 	}
 	return deviceRules
 }
 
-func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop, inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules) *fu.DeviceRules {
+// processDownstreamFlowWithNextTable decomposes downstream flows containing next table ID instructions
+func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
+	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
+
 	log.Debugw("downstream-flow-with-next-table", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
+	deviceRules := fu.NewDeviceRules()
+
 	if outPortNo != 0 {
 		log.Warnw("outPort-should-not-be-specified", log.Fields{"outPortNo": outPortNo})
 	}
 	ingressHop := route[0]
+	egressHop := route[1]
+
 	if GetMetaData(flow) != 0 {
 		log.Debugw("creating-metadata-flow", log.Fields{"flow": flow})
 		portNumber := uint32(GetPortNumberFromMetadata(flow))
@@ -877,7 +940,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 				//	TODO: Delete flow
 				return deviceRules
 			case 2:
-				log.Debugw("route-found", log.Fields{"ingressHop": route[0], "egressHop": route[1]})
+				log.Debugw("route-found", log.Fields{"ingressHop": ingressHop, "egressHop": egressHop})
 				break
 			default:
 				log.Errorw("invalid-route-length", log.Fields{"routeLen": len(route)})
@@ -895,19 +958,17 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(ingressHop.Ingress), //ingress_hop.ingress_port.port_no
+				InPort(ingressHop.Ingress),
 				Metadata_ofp(innerTag),
 			},
 			Actions: GetActions(flow),
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT && val.Type != METADATA {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
-		// Agument the Actions
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT, METADATA)...)
+
+		// Augment the Actions
 		fa.Actions = append(fa.Actions, Output(ingressHop.Egress))
+
 		fg := fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
 		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
@@ -917,18 +978,16 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(ingressHop.Ingress), //ingress_hop.ingress_port.port_no
+				InPort(ingressHop.Ingress),
 			},
 			Actions: GetActions(flow),
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
-		// Agument the Actions
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
+
+		// Augment the Actions
 		fa.Actions = append(fa.Actions, Output(ingressHop.Egress))
+
 		fg := fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
 		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
@@ -936,8 +995,16 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 	return deviceRules
 }
 
-func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop, inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules) *fu.DeviceRules {
+// processUnicastFlow decomposes unicast flows
+func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
+	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
+
 	log.Debugw("unicast-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
+	deviceRules := fu.NewDeviceRules()
+
+	ingressHop := route[0]
+	egressHop := route[1]
+
 	var actions []ofp.OfpActionType
 	var isOutputTypeInActions bool
 	for _, action := range GetActions(flow) {
@@ -952,73 +1019,65 @@ func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, ro
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(route[0].Ingress), //ingress_hop.ingress_port.port_no
+				InPort(ingressHop.Ingress),
 			},
 			Actions: []*ofp.OfpAction{
-				Output(route[0].Egress),
+				Output(ingressHop.Egress),
 			},
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
+
 		fg := fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(route[0].DeviceID, fg)
+		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 
 		// Child device flow
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(route[1].Ingress), //egress_hop.ingress_port.port_no
+				InPort(egressHop.Ingress),
 			},
 			Actions: []*ofp.OfpAction{
-				Output(route[1].Egress),
+				Output(egressHop.Egress),
 			},
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
+
 		fg = fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(route[1].DeviceID, fg)
+		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 	} else {
 		var fa *fu.FlowArgs
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(route[1].Ingress), //egress_hop.ingress_port.port_no
+				InPort(egressHop.Ingress),
 			},
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
+
 		// Augment the Actions
-		updatedAction := make([]*ofp.OfpAction, 0)
-		for _, action := range GetActions(flow) {
-			if action.Type != OUTPUT {
-				updatedAction = append(updatedAction, action)
-			}
-		}
-		updatedAction = append(updatedAction, Output(route[1].Egress))
-		fa.Actions = updatedAction
+		filteredAction := GetActions(flow, OUTPUT)
+		filteredAction = append(filteredAction, Output(egressHop.Egress))
+		fa.Actions = filteredAction
+
 		fg := fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(route[1].DeviceID, fg)
+		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 	}
 	return deviceRules
 }
 
-func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop, inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules, grpId uint32, groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
+// processMulticastFlow decompose multicast flows
+func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
+	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, grpId uint32,
+	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
+
 	log.Debugw("multicast-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
+	deviceRules := fu.NewDeviceRules()
 
 	//having no Group yet is the same as having a Group with no buckets
 	var grp *ofp.OfpGroupEntry
@@ -1048,14 +1107,18 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, 
 			//	TODO: Delete flow
 			return deviceRules
 		case 2:
-			log.Debugw("route-found", log.Fields{"ingressHop": route[0], "egressHop": route[1]})
+			log.Debugw("route-found", log.Fields{"ingressHop": route2[0], "egressHop": route2[1]})
 			break
 		default:
 			log.Errorw("invalid-route-length", log.Fields{"routeLen": len(route)})
 			return deviceRules
 		}
 
-		if route[0].Ingress != route2[0].Ingress {
+		ingressHop := route[0]
+		ingressHop2 := route2[0]
+		egressHop := route2[1]
+
+		if ingressHop.Ingress != ingressHop2.Ingress {
 			log.Errorw("mc-ingress-hop-hop2-mismatch", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "comment": "ignoring flow"})
 			return deviceRules
 		}
@@ -1064,53 +1127,47 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, 
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(route[0].Ingress), //ingress_hop.ingress_port.port_no
+				InPort(ingressHop.Ingress),
 			},
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
+
 		// Augment the Actions
-		updatedAction := make([]*ofp.OfpAction, 0)
-		for _, action := range GetActions(flow) {
-			if action.Type != GROUP {
-				updatedAction = append(updatedAction, action)
-			}
-		}
-		updatedAction = append(updatedAction, PopVlan())
-		updatedAction = append(updatedAction, Output(route[1].Ingress))
-		fa.Actions = updatedAction
+		filteredAction := GetActions(flow, GROUP)
+		filteredAction = append(filteredAction, PopVlan())
+		filteredAction = append(filteredAction, Output(route2[1].Ingress))
+		fa.Actions = filteredAction
+
 		fg := fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(route[0].DeviceID, fg)
+		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 
 		// Set the child device flow
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(route[1].Ingress), //egress_hop.ingress_port.port_no
+				InPort(egressHop.Ingress),
 			},
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		for _, val := range GetOfbFields(flow) {
-			if val.Type != IN_PORT && val.Type != VLAN_VID && val.Type != VLAN_PCP {
-				fa.MatchFields = append(fa.MatchFields, val)
-			}
-		}
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT, VLAN_VID, VLAN_PCP)...)
+
 		// Augment the Actions
-		otherActions = append(otherActions, Output(route[1].Egress))
+		otherActions = append(otherActions, Output(egressHop.Egress))
 		fa.Actions = otherActions
+
 		fg = fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(route[1].DeviceID, fg)
+		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 	}
 	return deviceRules
 }
 
-func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *ofp.OfpFlowStats, groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
+// decomposeFlow decomposes a flow for a logical device into flows for each physical device
+func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *ofp.OfpFlowStats,
+	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
+
 	inPortNo := GetInPort(flow)
 	outPortNo := GetOutPort(flow)
 
@@ -1131,32 +1188,27 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 	}
 
 	var ingressDevice *voltha.Device
-	//var egressDevice *voltha.Device
 	var err error
 	if ingressDevice, err = fd.deviceMgr.GetDevice(route[0].DeviceID); err != nil {
 		log.Errorw("ingress-device-not-found", log.Fields{"deviceId": route[0].DeviceID})
 		return deviceRules
 	}
-	//if egressDevice, err = fd.deviceMgr.getDevice(route[1].DeviceID); err != nil {
-	//	log.Errorw("egress-device-not-found", log.Fields{"deviceId": route[1].DeviceID})
-	//	return deviceRules
-	//}
 
 	isDownstream := ingressDevice.Root
 	isUpstream := !isDownstream
 
 	// Process controller bound flow
 	if outPortNo != 0 && (outPortNo&0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER) {
-		deviceRules = fd.processControllerBoundFlow(agent, route, inPortNo, outPortNo, flow, deviceRules)
+		deviceRules = fd.processControllerBoundFlow(agent, route, inPortNo, outPortNo, flow)
 	} else {
 		if isUpstream {
-			deviceRules = fd.processUpstreamNonControllerBoundFlow(agent, route, inPortNo, outPortNo, flow, deviceRules)
+			deviceRules = fd.processUpstreamNonControllerBoundFlow(agent, route, inPortNo, outPortNo, flow)
 		} else if HasNextTable(flow) {
-			deviceRules = fd.processDownstreamFlowWithNextTable(agent, route, inPortNo, outPortNo, flow, deviceRules)
+			deviceRules = fd.processDownstreamFlowWithNextTable(agent, route, inPortNo, outPortNo, flow)
 		} else if outPortNo != 0 { // Unicast
-			deviceRules = fd.processUnicastFlow(agent, route, inPortNo, outPortNo, flow, deviceRules)
+			deviceRules = fd.processUnicastFlow(agent, route, inPortNo, outPortNo, flow)
 		} else if grpId := GetGroup(flow); grpId != 0 { //Multicast
-			deviceRules = fd.processMulticastFlow(agent, route, inPortNo, outPortNo, flow, deviceRules, grpId, groupMap)
+			deviceRules = fd.processMulticastFlow(agent, route, inPortNo, outPortNo, flow, grpId, groupMap)
 		}
 	}
 	return deviceRules

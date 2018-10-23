@@ -32,6 +32,12 @@ type FlowArgs struct {
 	KV          OfpFlowModArgs
 }
 
+type GroupArgs struct {
+	GroupId uint32
+	Buckets []*ofp.OfpBucket
+	Command *ofp.OfpGroupModCommand
+}
+
 type FlowsAndGroups struct {
 	Flows  *ordered_map.OrderedMap
 	Groups *ordered_map.OrderedMap
@@ -160,5 +166,16 @@ func (dr *DeviceRules) String() string {
 }
 
 func (dr *DeviceRules) AddFlowsAndGroup(deviceId string, fg *FlowsAndGroups) {
+	if _, ok := dr.Rules[deviceId]; !ok {
+		dr.Rules[deviceId] = NewFlowsAndGroups()
+	}
 	dr.Rules[deviceId] = fg
+}
+
+// CreateEntryIfNotExist creates a new deviceId in the Map if it does not exist and assigns an
+// empty FlowsAndGroups to it.  Otherwise, it does nothing.
+func (dr *DeviceRules) CreateEntryIfNotExist(deviceId string) {
+	if _, ok := dr.Rules[deviceId]; !ok {
+		dr.Rules[deviceId] = NewFlowsAndGroups()
+	}
 }

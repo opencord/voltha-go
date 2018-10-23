@@ -27,15 +27,10 @@ import (
 	"testing"
 )
 
-const (
-	maxOnuOnPort4 int = 1
-	maxOnuOnPort5 int = 1
-)
-
 func init() {
-	log.AddPackage(log.JSON, log.DebugLevel, nil)
+	log.AddPackage(log.JSON, log.WarnLevel, nil)
 	log.UpdateAllLoggers(log.Fields{"instanceId": "flow-descomposition"})
-	log.SetAllLogLevel(log.DebugLevel)
+	log.SetAllLogLevel(log.WarnLevel)
 }
 
 type testDeviceManager struct {
@@ -50,8 +45,8 @@ func newTestDeviceManager() *testDeviceManager {
 		Root:     true,
 		ParentId: "logical_device",
 		Ports: []*voltha.Port{
-			&voltha.Port{PortNo: 1, Label: "pon"},
-			&voltha.Port{PortNo: 2, Label: "nni"},
+			{PortNo: 1, Label: "pon"},
+			{PortNo: 2, Label: "nni"},
 		},
 	}
 	tdm.devices["onu1"] = &voltha.Device{
@@ -59,8 +54,8 @@ func newTestDeviceManager() *testDeviceManager {
 		Root:     false,
 		ParentId: "olt",
 		Ports: []*voltha.Port{
-			&voltha.Port{PortNo: 1, Label: "pon"},
-			&voltha.Port{PortNo: 2, Label: "uni"},
+			{PortNo: 1, Label: "pon"},
+			{PortNo: 2, Label: "uni"},
 		},
 	}
 	tdm.devices["onu2"] = &voltha.Device{
@@ -68,8 +63,8 @@ func newTestDeviceManager() *testDeviceManager {
 		Root:     false,
 		ParentId: "olt",
 		Ports: []*voltha.Port{
-			&voltha.Port{PortNo: 1, Label: "pon"},
-			&voltha.Port{PortNo: 2, Label: "uni"},
+			{PortNo: 1, Label: "pon"},
+			{PortNo: 2, Label: "uni"},
 		},
 	}
 	tdm.devices["onu3"] = &voltha.Device{
@@ -77,8 +72,8 @@ func newTestDeviceManager() *testDeviceManager {
 		Root:     false,
 		ParentId: "olt",
 		Ports: []*voltha.Port{
-			&voltha.Port{PortNo: 1, Label: "pon"},
-			&voltha.Port{PortNo: 2, Label: "uni"},
+			{PortNo: 1, Label: "pon"},
+			{PortNo: 2, Label: "uni"},
 		},
 	}
 	tdm.devices["onu4"] = &voltha.Device{
@@ -86,8 +81,8 @@ func newTestDeviceManager() *testDeviceManager {
 		Root:     false,
 		ParentId: "olt",
 		Ports: []*voltha.Port{
-			&voltha.Port{PortNo: 1, Label: "pon"},
-			&voltha.Port{PortNo: 2, Label: "uni"},
+			{PortNo: 1, Label: "pon"},
+			{PortNo: 2, Label: "uni"},
 		},
 	}
 	return &tdm
@@ -97,7 +92,7 @@ func (tdm *testDeviceManager) GetDevice(deviceId string) (*voltha.Device, error)
 	if d, ok := tdm.devices[deviceId]; ok {
 		return d, nil
 	}
-	return nil, errors.New("Absent")
+	return nil, errors.New("ABSENT.")
 }
 
 type testFlowDecomposer struct {
@@ -127,12 +122,12 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	//DOWNSTREAM ROUTES
 
 	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 1}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "onu1",
 			Ingress:  tfd.dMgr.devices["onu1"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["onu1"].Ports[1].PortNo,
@@ -140,36 +135,36 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	}
 
 	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 2}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "onu2",
 			Ingress:  tfd.dMgr.devices["onu2"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["onu2"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 3}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "onu3",
 			Ingress:  tfd.dMgr.devices["onu3"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["onu3"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 4}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "onu4",
 			Ingress:  tfd.dMgr.devices["onu4"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["onu4"].Ports[1].PortNo,
@@ -179,48 +174,48 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	//UPSTREAM DATA PLANE
 
 	tfd.routes[graph.OFPortLink{Ingress: 1, Egress: 10}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu1",
 			Ingress:  tfd.dMgr.devices["onu1"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu1"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 2, Egress: 10}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu2",
 			Ingress:  tfd.dMgr.devices["onu2"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu2"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 3, Egress: 10}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu3",
 			Ingress:  tfd.dMgr.devices["onu3"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu3"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 4, Egress: 10}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu4",
 			Ingress:  tfd.dMgr.devices["onu4"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu4"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -231,48 +226,48 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 
 	// openflow port 0 means absence of a port - go/protobuf interpretation
 	tfd.routes[graph.OFPortLink{Ingress: 1, Egress: 0}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu1",
 			Ingress:  tfd.dMgr.devices["onu1"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu1"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 2, Egress: 0}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu2",
 			Ingress:  tfd.dMgr.devices["onu2"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu2"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 3, Egress: 0}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu3",
 			Ingress:  tfd.dMgr.devices["onu3"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu3"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
 	tfd.routes[graph.OFPortLink{Ingress: 4, Egress: 0}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "onu4",
 			Ingress:  tfd.dMgr.devices["onu4"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["onu4"].Ports[0].PortNo,
 		},
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -282,17 +277,17 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	// DOWNSTREAM NEXT TABLE BASED
 
 	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 0}] = []graph.RouteHop{
-		graph.RouteHop{
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
 		},
-		graph.RouteHop{}, // 2nd hop is not known yet
+		{}, // 2nd hop is not known yet
 	}
 
 	tfd.routes[graph.OFPortLink{Ingress: 0, Egress: 10}] = []graph.RouteHop{
-		graph.RouteHop{}, // 1st hop is wildcard
-		graph.RouteHop{
+		{}, // 1st hop is wildcard
+		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -395,7 +390,7 @@ func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort ...uint32) []ui
 	if len(excludePort) == 1 {
 		exclPort = excludePort[0]
 	}
-	for portno, _ := range tfd.logicalPorts {
+	for portno := range tfd.logicalPorts {
 		if portno != exclPort {
 			lPorts = append(lPorts, portno)
 		}
@@ -445,9 +440,9 @@ func TestEapolReRouteRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	device_rules := tfd.fd.DecomposeRules(tfd, flows, groups)
-	onu1FlowAndGroup := device_rules.Rules["onu1"]
-	oltFlowAndGroup := device_rules.Rules["olt"]
+	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	onu1FlowAndGroup := deviceRules.Rules["onu1"]
+	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
 	assert.Equal(t, 2, oltFlowAndGroup.Flows.Len())
@@ -525,9 +520,9 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	device_rules := tfd.fd.DecomposeRules(tfd, flows, groups)
-	onu1FlowAndGroup := device_rules.Rules["onu1"]
-	oltFlowAndGroup := device_rules.Rules["olt"]
+	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	onu1FlowAndGroup := deviceRules.Rules["onu1"]
+	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
 	assert.Equal(t, 2, oltFlowAndGroup.Flows.Len())
@@ -586,80 +581,227 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 }
 
-//func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
-//
-//	var fa *fu.FlowArgs
-//	fa = &fu.FlowArgs{
-//		KV: fu.OfpFlowModArgs{"priority": 500, "table_id":1},
-//		MatchFields: []*ofp.OfpOxmOfbField{
-//			InPort(1),
-//			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
-//			VlanPcp(0),
-//		},
-//		Actions: []*ofp.OfpAction{
-//			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101)),
-//		},
-//	}
-//
-//	var fa2 *fu.FlowArgs
-//	fa2 = &fu.FlowArgs{
-//		KV: fu.OfpFlowModArgs{"priority": 500},
-//		MatchFields: []*ofp.OfpOxmOfbField{
-//			InPort(1),
-//			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
-//			VlanPcp(0),
-//		},
-//		Actions: []*ofp.OfpAction{
-//			PushVlan(0x8100),
-//			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 1000)),
-//			SetField(VlanPcp(0)),
-//			Output(10),
-//		},
-//	}
-//
-//	flows := ofp.Flows{Items:[]*ofp.OfpFlowStats{MkFlowStat(fa), MkFlowStat(fa2)}}
-//	groups := ofp.FlowGroups{}
-//	tfd := newTestFlowDecomposer(newTestDeviceManager())
-//
-//	device_rules := tfd.fd.DecomposeRules(tfd, flows, groups)
-//	onu1FlowAndGroup := device_rules.Rules["onu1"]
-//	oltFlowAndGroup := device_rules.Rules["olt"]
-//	assert.Equal(t, 2, onu1FlowAndGroup.Flows.Len())
-//	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
-//	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
-//	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
-//
-//	fa = &fu.FlowArgs{
-//		KV: fu.OfpFlowModArgs{"priority": 500},
-//		MatchFields: []*ofp.OfpOxmOfbField{
-//			InPort(2),
-//			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
-//			VlanPcp(0),
-//		},
-//		Actions: []*ofp.OfpAction{
-//			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101)),
-//			Output(1),
-//		},
-//	}
-//	expectedOnu1Flow := MkFlowStat(fa)
-//	derivedFlow := onu1FlowAndGroup.GetFlow(1)
-//	assert.Equal(t, expectedOnu1Flow.String(), derivedFlow.String())
-//
-//	fa = &fu.FlowArgs{
-//		KV: fu.OfpFlowModArgs{"priority": 500},
-//		MatchFields: []*ofp.OfpOxmOfbField{
-//			InPort(1),
-//			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
-//			VlanPcp(0),
-//		},
-//		Actions: []*ofp.OfpAction{
-//			PushVlan(0x8100),
-//			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 1000)),
-//			SetField(VlanPcp(0)),
-//			Output(2),
-//		},
-//	}
-//	expectedOltFlow := MkFlowStat(fa)
-//	derivedFlow = oltFlowAndGroup.GetFlow(0)
-//	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
-//}
+func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
+
+	var fa *fu.FlowArgs
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(1),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101)),
+		},
+	}
+
+	var fa2 *fu.FlowArgs
+	fa2 = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(1),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			PushVlan(0x8100),
+			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 1000)),
+			SetField(VlanPcp(0)),
+			Output(10),
+		},
+	}
+
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{MkFlowStat(fa), MkFlowStat(fa2)}}
+	groups := ofp.FlowGroups{}
+	tfd := newTestFlowDecomposer(newTestDeviceManager())
+
+	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	onu1FlowAndGroup := deviceRules.Rules["onu1"]
+	oltFlowAndGroup := deviceRules.Rules["olt"]
+	assert.Equal(t, 2, onu1FlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
+	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
+
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101)),
+			Output(1),
+		},
+	}
+	expectedOnu1Flow := MkFlowStat(fa)
+	derivedFlow := onu1FlowAndGroup.GetFlow(1)
+	assert.Equal(t, expectedOnu1Flow.String(), derivedFlow.String())
+
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(1),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			PushVlan(0x8100),
+			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 1000)),
+			SetField(VlanPcp(0)),
+			Output(2),
+		},
+	}
+	expectedOltFlow := MkFlowStat(fa)
+	derivedFlow = oltFlowAndGroup.GetFlow(0)
+	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
+}
+
+func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
+	var fa1 *fu.FlowArgs
+	fa1 = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(10),
+			Metadata_ofp((1000 << 32) | 1),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			PopVlan(),
+		},
+	}
+
+	var fa2 *fu.FlowArgs
+	fa2 = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(10),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
+			Output(1),
+		},
+	}
+
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{MkFlowStat(fa1), MkFlowStat(fa2)}}
+	groups := ofp.FlowGroups{}
+	tfd := newTestFlowDecomposer(newTestDeviceManager())
+
+	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	onu1FlowAndGroup := deviceRules.Rules["onu1"]
+	oltFlowAndGroup := deviceRules.Rules["olt"]
+	assert.Equal(t, 2, onu1FlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
+	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
+
+	fa1 = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			Metadata_ofp(1000),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			PopVlan(),
+			Output(1),
+		},
+	}
+	expectedOltFlow := MkFlowStat(fa1)
+	derivedFlow := oltFlowAndGroup.GetFlow(0)
+	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
+
+	fa1 = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(1),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
+			VlanPcp(0),
+		},
+		Actions: []*ofp.OfpAction{
+			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
+			Output(2),
+		},
+	}
+	expectedOnu1Flow := MkFlowStat(fa1)
+	derivedFlow = onu1FlowAndGroup.GetFlow(1)
+	assert.Equal(t, expectedOnu1Flow.String(), derivedFlow.String())
+}
+
+func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
+	var fa *fu.FlowArgs
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(10),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 170),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			Group(10),
+		},
+	}
+
+	var ga *fu.GroupArgs
+	ga = &fu.GroupArgs{
+		GroupId: 10,
+		Buckets: []*ofp.OfpBucket{
+			{Actions: []*ofp.OfpAction{
+				PopVlan(),
+				Output(1),
+			},
+			},
+		},
+	}
+
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{MkFlowStat(fa)}}
+	groups := ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{MkGroupStat(ga)}}
+	tfd := newTestFlowDecomposer(newTestDeviceManager())
+
+	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	onu1FlowAndGroup := deviceRules.Rules["onu1"]
+	oltFlowAndGroup := deviceRules.Rules["olt"]
+	assert.Equal(t, 2, onu1FlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
+	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
+
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 170),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			PopVlan(),
+			Output(1),
+		},
+	}
+	expectedOltFlow := MkFlowStat(fa)
+	derivedFlow := oltFlowAndGroup.GetFlow(0)
+	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
+
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(1),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			Output(2),
+		},
+	}
+	expectedOnu1Flow := MkFlowStat(fa)
+	derivedFlow = onu1FlowAndGroup.GetFlow(1)
+	assert.Equal(t, expectedOnu1Flow.String(), derivedFlow.String())
+}
