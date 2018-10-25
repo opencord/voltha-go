@@ -1,0 +1,106 @@
+# Copyright 2018 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Ponsim OLT adapter
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: adapter-ponsim-olt
+  namespace: voltha
+spec:
+  clusterIP: None
+  selector:
+    app: adapter-ponsim-olt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adapter-ponsim-olt
+  namespace: voltha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adapter-ponsim-olt
+  template:
+    metadata:
+      labels:
+        app: adapter-ponsim-olt
+      annotations:
+        cni: "calico"
+    spec:
+      containers:
+        - name: adapter-ponsim-olt
+          image: voltha-adapter-ponsim-olt
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          args:
+            - "/adapters/adapters/ponsim_olt/main.py"
+            - "-v"
+            - "--name=ponsim_olt"
+            - "--kafka_adapter=kafka.$(NAMESPACE).svc.cluster.local:9092"
+            - "--kafka_cluster=kafka.$(NAMESPACE).svc.cluster.local:9092"
+            - "--core_topic=rwcore"
+          imagePullPolicy: IfNotPresent
+---
+
+# Ponsim ONU adapter
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: adapter-ponsim-onu
+  namespace: voltha
+spec:
+  clusterIP: None
+  selector:
+    app: adapter-ponsim-onu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adapter-ponsim-onu
+  namespace: voltha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adapter-ponsim-onu
+  template:
+    metadata:
+      labels:
+        app: adapter-ponsim-onu
+      annotations:
+        cni: "calico"
+    spec:
+      containers:
+        - name: adapter-ponsim-onu
+          image: voltha-adapter-ponsim-onu
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          args:
+            - "/adapters/adapters/ponsim_onu/main.py"
+            - "-v"
+            - "--name=ponsim_onu"
+            - "--kafka_adapter=kafka.$(NAMESPACE).svc.cluster.local:9092"
+            - "--kafka_cluster=kafka.$(NAMESPACE).svc.cluster.local:9092"
+            - "--core_topic=rwcore"
+          imagePullPolicy: IfNotPresent
