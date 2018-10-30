@@ -75,11 +75,6 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	return out, nil
 }
 
-func processEnableDevicePort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{}) {
-	log.Debugw("processEnableDevicePort", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
-	ch <- status.Errorf(100, "%d-%s", 100, "erreur")
-}
-
 func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
 	log.Debugw("EnableLogicalDevicePort-request", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
 	if isTestMode(ctx) {
@@ -88,7 +83,7 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 	}
 	ch := make(chan interface{})
 	defer close(ch)
-	go processEnableDevicePort(ctx, id, ch)
+	go handler.logicalDeviceMgr.enableLogicalPort(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -98,7 +93,10 @@ func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *vol
 		out := new(empty.Empty)
 		return out, nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.logicalDeviceMgr.disableLogicalPort(ctx, id, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flow *openflow_13.FlowTableUpdate) (*empty.Empty, error) {
@@ -107,7 +105,10 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 		out := new(empty.Empty)
 		return out, nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.logicalDeviceMgr.updateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context, flow *openflow_13.FlowGroupTableUpdate) (*empty.Empty, error) {
@@ -116,13 +117,16 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 		out := new(empty.Empty)
 		return out, nil
 	}
-	return nil, errors.New("Unimplemented")
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.logicalDeviceMgr.updateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // GetDevice must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
 	log.Debugw("GetDevice-request", log.Fields{"id": id})
-	return handler.deviceMgr.getDevice(id.Id)
+	return handler.deviceMgr.GetDevice(id.Id)
 }
 
 // GetDevice must be implemented in the read-only containers - should it also be implemented here?
@@ -141,6 +145,12 @@ func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) 
 func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
 	log.Debug("ListLogicalDevices")
 	return handler.logicalDeviceMgr.listLogicalDevices()
+}
+
+// ListLogicalDevicePorts must be implemented in the read-only containers - should it also be implemented here?
+func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
+	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
+	return handler.logicalDeviceMgr.ListLogicalDevicePorts(ctx, id.Id)
 }
 
 // CreateDevice creates a new parent device in the data model

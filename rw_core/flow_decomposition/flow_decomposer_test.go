@@ -94,6 +94,12 @@ func (tdm *testDeviceManager) GetDevice(deviceId string) (*voltha.Device, error)
 	}
 	return nil, errors.New("ABSENT.")
 }
+func (tdm *testDeviceManager) IsRootDevice(deviceId string) (bool, error) {
+	if d, ok := tdm.devices[deviceId]; ok {
+		return d.Root, nil
+	}
+	return false, errors.New("ABSENT.")
+}
 
 type testFlowDecomposer struct {
 	dMgr         *testDeviceManager
@@ -372,8 +378,8 @@ func (tfd *testFlowDecomposer) GetDeviceLogicalId() string {
 	return ""
 }
 
-func (tfd *testFlowDecomposer) GetLogicalDevice() *voltha.LogicalDevice {
-	return nil
+func (tfd *testFlowDecomposer) GetLogicalDevice() (*voltha.LogicalDevice, error) {
+	return nil, nil
 }
 
 func (tfd *testFlowDecomposer) GetDeviceGraph() *graph.DeviceGraph {
@@ -398,19 +404,19 @@ func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort ...uint32) []ui
 	return lPorts
 }
 
-func (tfd *testFlowDecomposer) GetRoute(ingressPortNo *uint32, egressPortNo *uint32) []graph.RouteHop {
+func (tfd *testFlowDecomposer) GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop {
 	var portLink graph.OFPortLink
-	if egressPortNo == nil {
+	if egressPortNo == 0 {
 		portLink.Egress = 0
-	} else if *egressPortNo&0x7fffffff == uint32(ofp.OfpPortNo_OFPP_CONTROLLER) {
+	} else if egressPortNo&0x7fffffff == uint32(ofp.OfpPortNo_OFPP_CONTROLLER) {
 		portLink.Egress = 10
 	} else {
-		portLink.Egress = *egressPortNo
+		portLink.Egress = egressPortNo
 	}
-	if ingressPortNo == nil {
+	if ingressPortNo == 0 {
 		portLink.Ingress = 0
 	} else {
-		portLink.Ingress = *ingressPortNo
+		portLink.Ingress = ingressPortNo
 	}
 	for key, val := range tfd.routes {
 		if key.Ingress == portLink.Ingress && key.Egress == portLink.Egress {
@@ -472,7 +478,7 @@ func TestEapolReRouteRuleDecomposition(t *testing.T) {
 		Actions: []*ofp.OfpAction{
 			PushVlan(0x8100),
 			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
-			Output(2),
+			Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
 	expectedOltFlow := MkFlowStat(fa)
@@ -556,7 +562,7 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 		Actions: []*ofp.OfpAction{
 			PushVlan(0x8100),
 			SetField(VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
-			Output(2),
+			Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
 	expectedOltFlow := MkFlowStat(fa)

@@ -114,20 +114,21 @@ class PonSimOnuHandler(object):
         yield self.adapter_agent.device_state_update(device.id, connect_status=ConnectStatus.REACHABLE, oper_status=OperStatus.ACTIVE)
 
 
+    # TODO: Return only port specific info
     def get_ofp_port_info(self, device, port_no):
         # Since the adapter created the device port then it has the reference of the port to
-        # return the capability.   TODO:  Do a lookup on the NNI port number and return the
+        # return the capability.   TODO:  Do a lookup on the UNI port number and return the
         # appropriate attributes
         self.log.info('get_ofp_port_info', port_no=port_no, device_id=device.id)
         # port_no = device.proxy_address.channel_id
         cap = OFPPF_1GB_FD | OFPPF_FIBER
         return PortCapability(
             port = LogicalPort (
-                id='uni-{}'.format(port_no),
+                # id='uni-{}'.format(port_no),
                 ofp_port=ofp_port(
-                    port_no=port_no,
+                    # port_no=port_no,
                     hw_addr=mac_str_to_tuple('00:00:00:00:00:%02x' % port_no),
-                    name='uni-{}'.format(port_no),
+                    # name='uni-{}'.format(port_no),
                     config=0,
                     state=OFPPS_LIVE,
                     curr=cap,
@@ -135,7 +136,9 @@ class PonSimOnuHandler(object):
                     peer=cap,
                     curr_speed=OFPPF_1GB_FD,
                     max_speed=OFPPF_1GB_FD
-                )
+                ),
+                device_id=device.id,
+                device_port_no=port_no
             )
         )
 

@@ -20,6 +20,7 @@ import (
 	"github.com/cevaris/ordered_map"
 	"github.com/gogo/protobuf/proto"
 	ofp "github.com/opencord/voltha-go/protos/openflow_13"
+	"strings"
 )
 
 type OfpFlowModArgs map[string]uint64
@@ -80,6 +81,28 @@ func (fg *FlowsAndGroups) GetFlow(index int) *ofp.OfpFlowStats {
 		pos += 1
 	}
 	return nil
+}
+
+func (fg *FlowsAndGroups) ListFlows() []*ofp.OfpFlowStats {
+	flows := make([]*ofp.OfpFlowStats, 0)
+	iter := fg.Flows.IterFunc()
+	for kv, ok := iter(); ok; kv, ok = iter() {
+		if protoMsg, isMsg := kv.Value.(*ofp.OfpFlowStats); isMsg {
+			flows = append(flows, protoMsg)
+		}
+	}
+	return flows
+}
+
+func (fg *FlowsAndGroups) ListGroups() []*ofp.OfpGroupEntry {
+	groups := make([]*ofp.OfpGroupEntry, 0)
+	iter := fg.Groups.IterFunc()
+	for kv, ok := iter(); ok; kv, ok = iter() {
+		if protoMsg, isMsg := kv.Value.(*ofp.OfpGroupEntry); isMsg {
+			groups = append(groups, protoMsg)
+		}
+	}
+	return groups
 }
 
 func (fg *FlowsAndGroups) String() string {
@@ -154,6 +177,23 @@ func (dr *DeviceRules) Copy() *DeviceRules {
 	return copyDR
 }
 
+func (dr *DeviceRules) ClearFlows(deviceId string) {
+	if _, exist := dr.Rules[deviceId]; exist {
+		dr.Rules[deviceId].Flows = ordered_map.NewOrderedMap()
+	}
+}
+
+func (dr *DeviceRules) AddFlow(deviceId string, flow *ofp.OfpFlowStats) {
+	if _, exist := dr.Rules[deviceId]; !exist {
+		dr.Rules[deviceId] = NewFlowsAndGroups()
+	}
+	dr.Rules[deviceId].AddFlow(flow)
+}
+
+func (dr *DeviceRules) GetRules() map[string]*FlowsAndGroups {
+	return dr.Rules
+}
+
 func (dr *DeviceRules) String() string {
 	var buffer bytes.Buffer
 	for key, value := range dr.Rules {
@@ -178,4 +218,160 @@ func (dr *DeviceRules) CreateEntryIfNotExist(deviceId string) {
 	if _, ok := dr.Rules[deviceId]; !ok {
 		dr.Rules[deviceId] = NewFlowsAndGroups()
 	}
+}
+
+/*
+ *  Common flow routines
+ */
+
+//FindOverlappingFlows return a list of overlapping flow(s) where mod is the flow request
+func FindOverlappingFlows(flows []*ofp.OfpFlowStats, mod *ofp.OfpFlowMod) []*ofp.OfpFlowStats {
+	return nil //TODO - complete implementation
+}
+
+// FindFlowById returns the index of the flow in the flows array if present. Otherwise, it returns -1
+func FindFlowById(flows []*ofp.OfpFlowStats, flow *ofp.OfpFlowStats) int {
+	for idx, f := range flows {
+		if flow.Id == f.Id {
+			return idx
+		}
+	}
+	return -1
+}
+
+// FindFlows returns the index in flows where flow if present.  Otherwise, it returns -1
+func FindFlows(flows []*ofp.OfpFlowStats, flow *ofp.OfpFlowStats) int {
+	for idx, f := range flows {
+		if FlowMatch(f, flow) {
+			return idx
+		}
+	}
+	return -1
+}
+
+//FlowMatch returns true if two flows matches on the following flow attributes:
+//TableId, Priority, Flags, Cookie, Match
+func FlowMatch(f1 *ofp.OfpFlowStats, f2 *ofp.OfpFlowStats) bool {
+	keysMatter := []string{"TableId", "Priority", "Flags", "Cookie", "Match"}
+	for _, key := range keysMatter {
+		switch key {
+		case "TableId":
+			if f1.TableId != f2.TableId {
+				return false
+			}
+		case "Priority":
+			if f1.Priority != f2.Priority {
+				return false
+			}
+		case "Flags":
+			if f1.Flags != f2.Flags {
+				return false
+			}
+		case "Cookie":
+			if f1.Cookie != f2.Cookie {
+				return false
+			}
+		case "Match":
+			if strings.Compare(f1.Match.String(), f2.Match.String()) != 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+//FlowMatchesMod returns True if given flow is "covered" by the wildcard flow_mod, taking into consideration of
+//both exact matches as well as masks-based match fields if any. Otherwise return False
+func FlowMatchesMod(flow *ofp.OfpFlowStats, mod *ofp.OfpFlowMod) bool {
+	//Check if flow.cookie is covered by mod.cookie and mod.cookie_mask
+	if (flow.Cookie & mod.CookieMask) != (mod.Cookie & mod.CookieMask) {
+		return false
+	}
+
+	//Check if flow.table_id is covered by flow_mod.table_id
+	if mod.TableId != uint32(ofp.OfpTable_OFPTT_ALL) && flow.TableId != mod.TableId {
+		return false
+	}
+
+	//Check out_port
+	if (mod.OutPort&0x7fffffff) != uint32(ofp.OfpPortNo_OFPP_ANY) && !FlowHasOutPort(flow, mod.OutPort) {
+		return false
+	}
+
+	//	Check out_group
+	if (mod.OutGroup&0x7fffffff) != uint32(ofp.OfpGroup_OFPG_ANY) && !FlowHasOutGroup(flow, mod.OutGroup) {
+		return false
+	}
+
+	//Priority is ignored
+
+	//Check match condition
+	//If the flow_mod match field is empty, that is a special case and indicates the flow entry matches
+	if (mod.Match == nil) || (mod.Match.OxmFields == nil) {
+		//If we got this far and the match is empty in the flow spec, than the flow matches
+		return true
+	} // TODO : implement the flow match analysis
+	return false
+
+}
+
+//FlowHasOutPort returns True if flow has a output command with the given out_port
+func FlowHasOutPort(flow *ofp.OfpFlowStats, outPort uint32) bool {
+	for _, instruction := range flow.Instructions {
+		if instruction.Type == uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS) {
+			if instruction.GetActions() == nil {
+				return false
+			}
+			for _, action := range instruction.GetActions().Actions {
+				if action.Type == ofp.OfpActionType_OFPAT_OUTPUT {
+					if (action.GetOutput() != nil) && (action.GetOutput().Port == outPort) {
+						return true
+					}
+				}
+
+			}
+		}
+	}
+	return false
+}
+
+//FlowHasOutGroup return True if flow has a output command with the given out_group
+func FlowHasOutGroup(flow *ofp.OfpFlowStats, groupID uint32) bool {
+	for _, instruction := range flow.Instructions {
+		if instruction.Type == uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS) {
+			if instruction.GetActions() == nil {
+				return false
+			}
+			for _, action := range instruction.GetActions().Actions {
+				if action.Type == ofp.OfpActionType_OFPAT_GROUP {
+					if (action.GetGroup() != nil) && (action.GetGroup().GroupId == groupID) {
+						return true
+					}
+				}
+
+			}
+		}
+	}
+	return false
+}
+
+//FindGroup returns index of group if found, else returns -1
+func FindGroup(groups []*ofp.OfpGroupEntry, groupId uint32) int {
+	for idx, group := range groups {
+		if group.Desc.GroupId == groupId {
+			return idx
+		}
+	}
+	return -1
+}
+
+func FlowsDeleteByGroupId(flows []*ofp.OfpFlowStats, groupId uint32) (bool, []*ofp.OfpFlowStats) {
+	toKeep := make([]*ofp.OfpFlowStats, 0)
+
+	for _, f := range flows {
+		if !FlowHasOutGroup(f, groupId) {
+			toKeep = append(toKeep, f)
+		}
+	}
+	return len(toKeep) < len(flows), toKeep
 }

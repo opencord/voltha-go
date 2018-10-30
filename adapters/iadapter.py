@@ -159,8 +159,9 @@ class IAdapter(object):
         log.info('bulk-flow-update', device_id=device.id,
                  flows=flows, groups=groups)
         assert len(groups.items) == 0
-        handler = self.devices_handlers[device.id]
-        return handler.update_flow_table(flows.items)
+        reactor.callLater(0, self.devices_handlers[device.id].update_flow_table, flows.items)
+        return device
+
 
     def update_flows_incrementally(self, device, flow_changes, group_changes):
         log.info('incremental-flow-update', device_id=device.id,
@@ -172,11 +173,12 @@ class IAdapter(object):
         handler = self.devices_handlers[device.id]
         # Remove flows
         if len(flow_changes.to_remove.items) != 0:
-            handler.remove_from_flow_table(flow_changes.to_remove.items)
+            reactor.callLater(0, handler.remove_from_flow_table, flow_changes.to_remove.items)
 
         # Add flows
         if len(flow_changes.to_add.items) != 0:
-            handler.add_to_flow_table(flow_changes.to_add.items)
+            reactor.callLater(0, handler.add_to_flow_table, flow_changes.to_add.items)
+        return device
 
     def update_pm_config(self, device, pm_config):
         log.info("adapter-update-pm-config", device=device,
