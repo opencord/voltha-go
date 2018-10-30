@@ -24,4 +24,5 @@ import "github.com/opencord/voltha-go/protos/voltha"
 // DeviceManager represents a generic device manager
 type DeviceManager interface {
 	GetDevice(string) (*voltha.Device, error)
+	IsRootDevice(string) (bool, error)
 }

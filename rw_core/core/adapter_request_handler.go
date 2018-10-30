@@ -17,6 +17,7 @@ package core
 
 import (
 	"errors"
+	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/common/log"
@@ -25,7 +26,6 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
 )
 
 type AdapterRequestHandlerProxy struct {
@@ -83,7 +83,7 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ca.Argument) (*voltha.D
 	}
 
 	// Get the device via the device manager
-	if device, err := rhp.deviceMgr.getDevice(pID.Id); err != nil {
+	if device, err := rhp.deviceMgr.GetDevice(pID.Id); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
 	} else {
 		return device, nil
@@ -96,16 +96,17 @@ func (rhp *AdapterRequestHandlerProxy) mergeDeviceInfoFromAdapter(device *voltha
 	//		First retrieve the most up to date device info
 	var currentDevice *voltha.Device
 	var err error
-	if currentDevice, err = rhp.deviceMgr.getDevice(device.Id); err != nil {
+	if currentDevice, err = rhp.deviceMgr.GetDevice(device.Id); err != nil {
 		return nil, err
 	}
-	cloned := reflect.ValueOf(currentDevice).Elem().Interface().(voltha.Device)
+	cloned := proto.Clone(currentDevice).(*voltha.Device)
 	cloned.Root = device.Root
 	cloned.Vendor = device.Vendor
 	cloned.Model = device.Model
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
-	return &cloned, nil
+	cloned.Vlan = device.Vlan
+	return cloned, nil
 }
 
 func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ca.Argument) (*empty.Empty, error) {

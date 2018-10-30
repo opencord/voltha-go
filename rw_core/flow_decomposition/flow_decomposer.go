@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	ofp "github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
@@ -175,7 +176,7 @@ func VlanVid(vlanVid uint32) *ofp.OfpOxmOfbField {
 }
 
 func VlanPcp(vlanPcp uint32) *ofp.OfpOxmOfbField {
-	return &ofp.OfpOxmOfbField{Type: VLAN_VID, Value: &ofp.OfpOxmOfbField_VlanPcp{VlanPcp: vlanPcp}}
+	return &ofp.OfpOxmOfbField{Type: VLAN_PCP, Value: &ofp.OfpOxmOfbField_VlanPcp{VlanPcp: vlanPcp}}
 }
 
 func IpDscp(ipDscp uint32) *ofp.OfpOxmOfbField {
@@ -341,6 +342,37 @@ func GetActions(flow *ofp.OfpFlowStats, exclude ...ofp.OfpActionType) []*ofp.Ofp
 		}
 	}
 	return nil
+}
+
+func UpdateOutputPortByActionType(flow *ofp.OfpFlowStats, actionType uint32, toPort uint32) *ofp.OfpFlowStats {
+	if flow == nil {
+		return nil
+	}
+	nFlow := (proto.Clone(flow)).(*ofp.OfpFlowStats)
+	nFlow.Instructions = nil
+	nInsts := make([]*ofp.OfpInstruction, 0)
+	for _, instruction := range flow.Instructions {
+		if instruction.Type == actionType {
+			instActions := instruction.GetActions()
+			if instActions == nil {
+				return nil
+			}
+			nActions := make([]*ofp.OfpAction, 0)
+			for _, action := range instActions.Actions {
+				if action.GetOutput() != nil {
+					nActions = append(nActions, Output(toPort))
+				} else {
+					nActions = append(nActions, action)
+				}
+			}
+			instructionAction := ofp.OfpInstruction_Actions{Actions: &ofp.OfpInstructionActions{Actions: nActions}}
+			nInsts = append(nInsts, &ofp.OfpInstruction{Type: uint32(APPLY_ACTIONS), Data: &instructionAction})
+		} else {
+			nInsts = append(nInsts, instruction)
+		}
+	}
+	nFlow.Instructions = nInsts
+	return nFlow
 }
 
 func excludeOxmOfbField(field *ofp.OfpOxmOfbField, exclude ...ofp.OxmOfbFieldTypes) bool {
@@ -709,6 +741,42 @@ func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows 
 	return deviceRules
 }
 
+// Handles special case of any controller-bound flow for a parent device
+func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(flow *ofp.OfpFlowStats,
+	dr *fu.DeviceRules) *fu.DeviceRules {
+	EAPOL := EthType(0x888e)
+	IGMP := IpProto(2)
+	UDP := IpProto(17)
+
+	newDeviceRules := dr.Copy()
+	//	Check whether we are dealing with a parent device
+	for deviceId, fg := range dr.GetRules() {
+		if root, _ := fd.deviceMgr.IsRootDevice(deviceId); root {
+			newDeviceRules.ClearFlows(deviceId)
+			for i := 0; i < fg.Flows.Len(); i++ {
+				f := fg.GetFlow(i)
+				UpdateOutPortNo := false
+				for _, field := range GetOfbFields(f) {
+					UpdateOutPortNo = (field.String() == EAPOL.String())
+					UpdateOutPortNo = UpdateOutPortNo || (field.String() == IGMP.String())
+					UpdateOutPortNo = UpdateOutPortNo || (field.String() == UDP.String())
+					if UpdateOutPortNo {
+						break
+					}
+				}
+				if UpdateOutPortNo {
+					f = UpdateOutputPortByActionType(f, uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS),
+						uint32(ofp.OfpPortNo_OFPP_CONTROLLER))
+				}
+				// Update flow Id as a change in the instruction field will result in a new flow ID
+				f.Id = hashFlowStats(f)
+				newDeviceRules.AddFlow(deviceId, (proto.Clone(f)).(*ofp.OfpFlowStats))
+			}
+		}
+	}
+	return newDeviceRules
+}
+
 //processControllerBoundFlow decomposes trap flows
 func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
 	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
@@ -904,7 +972,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 		log.Debugw("creating-metadata-flow", log.Fields{"flow": flow})
 		portNumber := uint32(GetPortNumberFromMetadata(flow))
 		if portNumber != 0 {
-			recalculatedRoute := agent.GetRoute(&inPortNo, &portNumber)
+			recalculatedRoute := agent.GetRoute(inPortNo, portNumber)
 			switch len(recalculatedRoute) {
 			case 0:
 				log.Errorw("no-route-double-tag", log.Fields{"inPortNo": inPortNo, "outPortNo": portNumber, "comment": "deleting-flow", "metadata": GetMetaData64Bit(flow)})
@@ -1071,7 +1139,7 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, 
 			}
 		}
 
-		route2 := agent.GetRoute(&inPortNo, &outPortNo)
+		route2 := agent.GetRoute(inPortNo, outPortNo)
 		switch len(route2) {
 		case 0:
 			log.Errorw("mc-no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "comment": "deleting flow"})
@@ -1144,7 +1212,7 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 
 	deviceRules := fu.NewDeviceRules()
 
-	route := agent.GetRoute(&inPortNo, &outPortNo)
+	route := agent.GetRoute(inPortNo, outPortNo)
 	switch len(route) {
 	case 0:
 		log.Errorw("no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "comment": "deleting-flow"})
@@ -1182,5 +1250,6 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 			deviceRules = fd.processMulticastFlow(agent, route, inPortNo, outPortNo, flow, grpId, groupMap)
 		}
 	}
+	deviceRules = fd.updateOutputPortForControllerBoundFlowForParentDevide(flow, deviceRules)
 	return deviceRules
 }

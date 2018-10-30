@@ -23,6 +23,7 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
 	"github.com/opencord/voltha-go/protos/core_adapter"
+	ofp "github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -167,12 +168,20 @@ func (dMgr *DeviceManager) deleteDevice(ctx context.Context, id *voltha.ID, ch c
 	sendResponse(ctx, ch, res)
 }
 
-func (dMgr *DeviceManager) getDevice(id string) (*voltha.Device, error) {
-	log.Debugw("getDevice", log.Fields{"deviceid": id})
+func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
+	log.Debugw("GetDevice", log.Fields{"deviceid": id})
 	if agent := dMgr.getDeviceAgent(id); agent != nil {
 		return agent.getDevice()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
+}
+
+func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
+	device, err := dMgr.GetDevice(id)
+	if err != nil {
+		return false, err
+	}
+	return device.Root, nil
 }
 
 func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
@@ -216,6 +225,21 @@ func (dMgr *DeviceManager) addPort(deviceId string, port *voltha.Port) error {
 	} else {
 		return status.Errorf(codes.NotFound, "%s", deviceId)
 	}
+}
+
+func (dMgr *DeviceManager) updateFlows(deviceId string, flows []*ofp.OfpFlowStats) error {
+	log.Debugw("updateFlows", log.Fields{"deviceid": deviceId})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.updateFlows(flows)
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceId)
+}
+
+func (dMgr *DeviceManager) updateGroups(deviceId string, groups []*ofp.OfpGroupEntry) error {
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.updateGroups(groups)
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
 func (dMgr *DeviceManager) updatePmConfigs(deviceId string, pmConfigs *voltha.PmConfigs) error {
@@ -262,7 +286,7 @@ func (dMgr *DeviceManager) updateChildrenStatus(deviceId string, operStatus volt
 	log.Debugw("updateChildrenStatus", log.Fields{"parentDeviceid": deviceId, "operStatus": operStatus, "connStatus": connStatus})
 	var parentDevice *voltha.Device
 	var err error
-	if parentDevice, err = dMgr.getDevice(deviceId); err != nil {
+	if parentDevice, err = dMgr.GetDevice(deviceId); err != nil {
 		return status.Errorf(codes.Aborted, "%s", err.Error())
 	}
 	var childDeviceIds []string
@@ -356,11 +380,17 @@ func (dMgr *DeviceManager) deleteLogicalDevice(cDevice *voltha.Device) error {
 	return nil
 }
 
-func (dMgr *DeviceManager) deleteLogicalPort(cDevice *voltha.Device) error {
+func (dMgr *DeviceManager) deleteLogicalPort(device *voltha.Device) error {
 	log.Info("deleteLogicalPort")
 	var err error
-	if err = dMgr.logicalDeviceMgr.deleteLogicalPort(nil, cDevice); err != nil {
-		log.Warnw("deleteLogical-port-error", log.Fields{"deviceId": cDevice.Id})
+	// Get the logical port associated with this device
+	var lPortId *voltha.LogicalPortId
+	if lPortId, err = dMgr.logicalDeviceMgr.getLogicalPortId(device); err != nil {
+		log.Warnw("getLogical-port-error", log.Fields{"deviceId": device.Id})
+		return err
+	}
+	if err = dMgr.logicalDeviceMgr.deleteLogicalPort(nil, lPortId); err != nil {
+		log.Warnw("deleteLogical-port-error", log.Fields{"deviceId": device.Id})
 		return err
 	}
 	return nil
@@ -372,7 +402,7 @@ func (dMgr *DeviceManager) getParentDevice(childDevice *voltha.Device) *voltha.D
 		// childDevice is the parent device
 		return childDevice
 	}
-	parentDevice, _ := dMgr.getDevice(childDevice.ParentId)
+	parentDevice, _ := dMgr.GetDevice(childDevice.ParentId)
 	return parentDevice
 }
 
@@ -502,7 +532,7 @@ func (dMgr *DeviceManager) UpdateDeviceAttribute(deviceId string, attribute stri
 }
 
 func (dMgr *DeviceManager) GetParentDeviceId(deviceId string) *string {
-	if device, _ := dMgr.getDevice(deviceId); device != nil {
+	if device, _ := dMgr.GetDevice(deviceId); device != nil {
 		log.Infow("GetParentDeviceId", log.Fields{"deviceId": device.Id, "parentId": device.ParentId})
 		return &device.ParentId
 	}

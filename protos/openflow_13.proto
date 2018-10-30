@@ -2278,6 +2278,7 @@ message FlowChanges {
 message FlowGroupChanges {
     FlowGroups to_add = 1;
     FlowGroups to_remove = 2;
+    FlowGroups to_update = 3;
 }
 
 message PacketIn {
