@@ -323,7 +323,15 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	childDevice.ParentId = parentDeviceId
 	childDevice.ParentPortNo = uint32(parentPortNo)
 	childDevice.Root = false
-	childDevice.ProxyAddress = &voltha.Device_ProxyAddress{ChannelId: uint32(channelId)}
+
+	//Get parent device type
+	parent, err := dMgr.GetDevice(parentDeviceId)
+	if err != nil {
+		log.Error("no-parent-found", log.Fields{"parentId":parentDeviceId})
+		return status.Errorf(codes.NotFound, "%s", parentDeviceId)
+	}
+
+	childDevice.ProxyAddress = &voltha.Device_ProxyAddress{DeviceId: parentDeviceId, DeviceType: parent.Type, ChannelId: uint32(channelId)}
 
 	// Create and start a device agent for that device
 	agent := newDeviceAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.clusterDataProxy)
@@ -386,7 +394,7 @@ func (dMgr *DeviceManager) deleteLogicalPort(device *voltha.Device) error {
 	// Get the logical port associated with this device
 	var lPortId *voltha.LogicalPortId
 	if lPortId, err = dMgr.logicalDeviceMgr.getLogicalPortId(device); err != nil {
-		log.Warnw("getLogical-port-error", log.Fields{"deviceId": device.Id})
+		log.Warnw("getLogical-port-error", log.Fields{"deviceId": device.Id, "error": err})
 		return err
 	}
 	if err = dMgr.logicalDeviceMgr.deleteLogicalPort(nil, lPortId); err != nil {

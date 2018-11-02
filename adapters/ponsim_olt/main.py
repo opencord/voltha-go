@@ -18,30 +18,33 @@
 """Ponsim OLT Adapter main entry point"""
 
 import argparse
-import arrow
 import os
 import time
 
+import arrow
 import yaml
+from packaging.version import Version
 from simplejson import dumps
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 from zope.interface import implementer
-from adapters.protos import third_party
+
 from adapters.common.structlog_setup import setup_logging, update_logging
+from adapters.common.utils.asleep import asleep
+from adapters.common.utils.deferred_utils import TimeOutError
 from adapters.common.utils.dockerhelpers import get_my_containers_name
 from adapters.common.utils.nethelpers import get_my_primary_local_ipv4, \
     get_my_primary_interface
-from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
 from adapters.common.utils.registry import registry, IComponent
-from packaging.version import Version
-from adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, get_messaging_proxy
-from adapters.ponsim_olt.ponsim_olt import PonSimOltAdapter
-from adapters.protos.adapter_pb2 import AdapterConfig, Adapter
+from adapters.kafka.adapter_proxy import AdapterProxy
 from adapters.kafka.adapter_request_facade import AdapterRequestFacade
 from adapters.kafka.core_proxy import CoreProxy
-from adapters.common.utils.deferred_utils import TimeOutError
-from adapters.common.utils.asleep import asleep
+from adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
+    get_messaging_proxy
+from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
+from adapters.ponsim_olt.ponsim_olt import PonSimOltAdapter
+from adapters.protos import third_party
+from adapters.protos.adapter_pb2 import AdapterConfig, Adapter
 
 _ = third_party
 
@@ -358,8 +361,13 @@ class Main(object):
                 core_topic=self.core_topic,
                 my_listening_topic=self.listening_topic)
 
+            self.adapter_proxy = AdapterProxy(
+                kafka_proxy=None,
+                core_topic=self.core_topic,
+                my_listening_topic=self.listening_topic)
+
             ponsim_olt_adapter = PonSimOltAdapter(
-                adapter_agent=self.core_proxy, config=config)
+                core_proxy=self.core_proxy, adapter_proxy=self.adapter_proxy, config=config)
             ponsim_request_handler = AdapterRequestFacade(
                 adapter=ponsim_olt_adapter)
 
@@ -376,6 +384,7 @@ class Main(object):
             ).start()
 
             self.core_proxy.kafka_proxy = get_messaging_proxy()
+            self.adapter_proxy.kafka_proxy = get_messaging_proxy()
 
             # retry for ever
             res = yield self._register_with_core(-1)

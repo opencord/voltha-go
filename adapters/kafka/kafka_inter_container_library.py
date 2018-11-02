@@ -14,27 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from zope.interface import Interface, implementer
-from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
+import time
+from uuid import uuid4
+
+import structlog
+from afkak.client import KafkaClient
+from afkak.consumer import OFFSET_LATEST, Consumer
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue, Deferred, \
     DeferredQueue, gatherResults
-from afkak.client import KafkaClient
-from afkak.consumer import OFFSET_LATEST, Consumer
-import structlog
-from adapters.common.utils import asleep
-from adapters.protos.core_adapter_pb2 import MessageType, Argument, \
-    InterContainerRequestBody, InterContainerMessage, Header, InterContainerResponseBody
-import time
-from uuid import uuid4
-from adapters.common.utils.registry import IComponent
+from zope.interface import implementer
 
+from adapters.common.utils import asleep
+from adapters.common.utils.registry import IComponent
+from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
+from adapters.protos.core_adapter_pb2 import MessageType, Argument, \
+    InterContainerRequestBody, InterContainerMessage, Header, \
+    InterContainerResponseBody
 
 log = structlog.get_logger()
+
 
 class KafkaMessagingError(BaseException):
     def __init__(self, error):
         self.error = error
+
 
 @implementer(IComponent)
 class IKafkaMessagingProxy(object):
@@ -115,7 +119,6 @@ class IKafkaMessagingProxy(object):
         except Exception as e:
             log.exception("Failed-to-start-proxy", e=e)
 
-
     def stop(self):
         """
         Invoked to stop the kafka proxy
@@ -134,7 +137,6 @@ class IKafkaMessagingProxy(object):
             log.debug("Messaging-proxy-stopped.")
         except Exception as e:
             log.exception("Exception-when-stopping-messaging-proxy:", e=e)
-
 
     @inlineCallbacks
     def _wait_until_topic_is_ready(self, client, topic):
@@ -165,7 +167,8 @@ class IKafkaMessagingProxy(object):
                              for partition in partitions]
                 self.topic_consumer_map[topic] = consumers
 
-            log.debug("_subscribe", topic=topic, consumermap=self.topic_consumer_map)
+            log.debug("_subscribe", topic=topic,
+                      consumermap=self.topic_consumer_map)
 
             if target_cls is not None and callback is None:
                 # Scenario #1
@@ -409,6 +412,7 @@ class IKafkaMessagingProxy(object):
         Default internal method invoked for every batch of messages received
         from Kafka.
         """
+
         def _toDict(args):
             """
             Convert a repeatable Argument type into a python dictionary
@@ -443,24 +447,6 @@ class IKafkaMessagingProxy(object):
             message.ParseFromString(val)
 
             if message.header.type == MessageType.Value("REQUEST"):
-                # if self.num_messages == 0:
-                #     self.init_time = int(round(time.time() * 1000))
-                #     self.init_received_time = message.header.timestamp
-                #     log.debug("INIT_TIME", time=self.init_time,
-                #               time_sent=message.header.timestamp)
-                # self.num_messages = self.num_messages + 1
-                #
-                # self.total_time = self.total_time + current_time - message.header.timestamp
-                #
-                # if self.num_messages % 10 == 0:
-                #     log.debug("TOTAL_TIME ...",
-                #               num=self.num_messages,
-                #               total=self.total_time,
-                #               duration=current_time - self.init_time,
-                #               time_since_first_msg=current_time - self.init_received_time,
-                #               average=self.total_time / 10)
-                #     self.total_time = 0
-
                 # Get the target class for that specific topic
                 targetted_topic = self._to_string(message.header.to_topic)
                 msg_body = InterContainerRequestBody()
@@ -497,16 +483,6 @@ class IKafkaMessagingProxy(object):
             elif message.header.type == MessageType.Value("RESPONSE"):
                 trns_id = self._to_string(message.header.id)
                 if trns_id in self.transaction_id_deferred_map:
-                    # self.num_responses = self.num_responses + 1
-                    # self.total_time_responses = self.total_time_responses + current_time - \
-                    #                             message.header.timestamp
-                    # if self.num_responses % 10 == 0:
-                    #     log.debug("TOTAL RESPONSES ...",
-                    #               num=self.num_responses,
-                    #               total=self.total_time_responses,
-                    #               average=self.total_time_responses / 10)
-                    #     self.total_time_responses = 0
-
                     resp = self._parse_response(val)
 
                     self.transaction_id_deferred_map[trns_id].callback(resp)
@@ -568,9 +544,9 @@ class IKafkaMessagingProxy(object):
                 self.transaction_id_deferred_map[
                     self._to_string(request.header.id)] = wait_for_result
 
-            log.debug("BEFORE-SENDING", to_topic=to_topic, from_topic=reply_topic)
             yield self._send_kafka_message(to_topic, request)
-            log.debug("AFTER-SENDING", to_topic=to_topic, from_topic=reply_topic)
+            log.debug("message-sent", to_topic=to_topic,
+                      from_topic=reply_topic)
 
             if response_required:
                 res = yield wait_for_result

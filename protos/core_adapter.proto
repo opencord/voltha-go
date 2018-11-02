@@ -74,3 +74,34 @@ message SwitchCapability {
 message PortCapability {
     LogicalPort port = 1;
 }
+
+message InterAdapterMessageType {
+    enum Types {
+        FLOW_REQUEST = 0;
+        FLOW_RESPONSE = 1;
+        OMCI_REQUEST = 2;
+        OMCI_RESPONSE = 3;
+        METRICS_REQUEST = 4;
+        METRICS_RESPONSE = 5;
+    }
+}
+
+message InterAdapterHeader {
+    string id = 1;
+    InterAdapterMessageType.Types type = 2;
+    string from_topic = 3;
+    string to_topic = 4;
+    string to_device_id = 5;
+    string proxy_device_id = 6;
+    int64 timestamp = 7;
+}
+
+message InterAdapterResponseBody {
+    bool success = 1;
+    google.protobuf.Any result = 2;
+}
+
+message InterAdapterMessage {
+    InterAdapterHeader header = 1;
+    google.protobuf.Any body = 2;
+}

@@ -19,14 +19,15 @@ ARG TAG=latest
 FROM ${REGISTRY}${REPOSITORY}voltha-protoc:${TAG} as builder
 MAINTAINER Voltha Community <info@opennetworking.org>
 
-COPY adapters/protos/third_party/google/api/*.proto /protos/google/api/
-COPY adapters/docker/config/Makefile.protos /protos/google/api/Makefile.protos
+COPY protos/third_party/google/api/*.proto /protos/google/api/
+COPY docker/config/Makefile.protos /protos/google/api/Makefile.protos
+COPY protos/*.proto /protos/voltha/
+COPY docker/config/Makefile.protos /protos/voltha/Makefile.protos
+
 WORKDIR /protos
 RUN make -f google/api/Makefile.protos google_api
 RUN touch /protos/google/__init__.py /protos/google/api/__init__.py
 
-COPY protos/*.proto /protos/voltha/
-COPY adapters/docker/config/Makefile.protos /protos/voltha/Makefile.protos
 WORKDIR /protos/voltha
 RUN make -f Makefile.protos build
 

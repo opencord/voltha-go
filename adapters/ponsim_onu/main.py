@@ -40,6 +40,9 @@ from adapters.ponsim_onu.ponsim_onu import PonSimOnuAdapter
 from adapters.protos.adapter_pb2 import AdapterConfig, Adapter
 from adapters.kafka.adapter_request_facade import AdapterRequestFacade
 from adapters.kafka.core_proxy import CoreProxy
+
+from adapters.kafka.adapter_proxy import AdapterProxy
+
 from adapters.common.utils.deferred_utils import TimeOutError
 from adapters.common.utils.asleep import asleep
 
@@ -357,8 +360,13 @@ class Main(object):
                 core_topic=self.core_topic,
                 my_listening_topic=self.listening_topic)
 
+            self.adapter_proxy = AdapterProxy(
+                kafka_proxy=None,
+                core_topic=self.core_topic,
+                my_listening_topic=self.listening_topic)
+
             ponsim_onu_adapter = PonSimOnuAdapter(
-                adapter_agent=self.core_proxy, config=config)
+                core_proxy=self.core_proxy, adapter_proxy=self.adapter_proxy, config=config)
             ponsim_request_handler = AdapterRequestFacade(
                 adapter=ponsim_onu_adapter)
 
@@ -374,6 +382,7 @@ class Main(object):
             ).start()
 
             self.core_proxy.kafka_proxy = get_messaging_proxy()
+            self.adapter_proxy.kafka_proxy = get_messaging_proxy()
 
             # retry for ever
             res = yield self._register_with_core(-1)

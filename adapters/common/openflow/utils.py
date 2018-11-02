@@ -85,6 +85,7 @@ PBB_ISID = ofp.OFPXMT_OFB_PBB_ISID
 TUNNEL_ID = ofp.OFPXMT_OFB_TUNNEL_ID
 IPV6_EXTHDR = ofp.OFPXMT_OFB_IPV6_EXTHDR
 
+
 # ofp_action_* shortcuts
 
 def output(port, max_len=ofp.OFPCML_MAX):
@@ -93,11 +94,13 @@ def output(port, max_len=ofp.OFPCML_MAX):
         output=ofp.ofp_action_output(port=port, max_len=max_len)
     )
 
+
 def mpls_ttl(ttl):
     return action(
         type=SET_MPLS_TTL,
         mpls_ttl=ofp.ofp_action_mpls_ttl(mpls_ttl=ttl)
     )
+
 
 def push_vlan(eth_type):
     return action(
@@ -105,10 +108,12 @@ def push_vlan(eth_type):
         push=ofp.ofp_action_push(ethertype=eth_type)
     )
 
+
 def pop_vlan():
     return action(
         type=POP_VLAN
     )
+
 
 def pop_mpls(eth_type):
     return action(
@@ -116,17 +121,20 @@ def pop_mpls(eth_type):
         pop_mpls=ofp.ofp_action_pop_mpls(ethertype=eth_type)
     )
 
+
 def group(group_id):
     return action(
         type=GROUP,
         group=ofp.ofp_action_group(group_id=group_id)
     )
 
+
 def nw_ttl(nw_ttl):
     return action(
         type=NW_TTL,
         nw_ttl=ofp.ofp_action_nw_ttl(nw_ttl=nw_ttl)
     )
+
 
 def set_field(field):
     return action(
@@ -137,6 +145,7 @@ def set_field(field):
                 ofb_field=field))
     )
 
+
 def experimenter(experimenter, data):
     return action(
         type=EXPERIMENTER,
@@ -144,124 +153,164 @@ def experimenter(experimenter, data):
             experimenter=experimenter, data=data)
     )
 
+
 # ofb_field generators (incomplete set)
 
 def in_port(_in_port):
     return ofb_field(type=IN_PORT, port=_in_port)
 
+
 def in_phy_port(_in_phy_port):
     return ofb_field(type=IN_PHY_PORT, port=_in_phy_port)
+
 
 def metadata(_table_metadata):
     return ofb_field(type=METADATA, table_metadata=_table_metadata)
 
+
 def eth_dst(_eth_dst):
     return ofb_field(type=ETH_DST, table_metadata=_eth_dst)
+
 
 def eth_src(_eth_src):
     return ofb_field(type=ETH_SRC, table_metadata=_eth_src)
 
+
 def eth_type(_eth_type):
     return ofb_field(type=ETH_TYPE, eth_type=_eth_type)
+
 
 def vlan_vid(_vlan_vid):
     return ofb_field(type=VLAN_VID, vlan_vid=_vlan_vid)
 
+
 def vlan_pcp(_vlan_pcp):
     return ofb_field(type=VLAN_PCP, vlan_pcp=_vlan_pcp)
+
 
 def ip_dscp(_ip_dscp):
     return ofb_field(type=IP_DSCP, ip_dscp=_ip_dscp)
 
+
 def ip_ecn(_ip_ecn):
     return ofb_field(type=IP_ECN, ip_ecn=_ip_ecn)
+
 
 def ip_proto(_ip_proto):
     return ofb_field(type=IP_PROTO, ip_proto=_ip_proto)
 
+
 def ipv4_src(_ipv4_src):
     return ofb_field(type=IPV4_SRC, ipv4_src=_ipv4_src)
+
 
 def ipv4_dst(_ipv4_dst):
     return ofb_field(type=IPV4_DST, ipv4_dst=_ipv4_dst)
 
+
 def tcp_src(_tcp_src):
     return ofb_field(type=TCP_SRC, tcp_src=_tcp_src)
+
 
 def tcp_dst(_tcp_dst):
     return ofb_field(type=TCP_DST, tcp_dst=_tcp_dst)
 
+
 def udp_src(_udp_src):
     return ofb_field(type=UDP_SRC, udp_src=_udp_src)
+
 
 def udp_dst(_udp_dst):
     return ofb_field(type=UDP_DST, udp_dst=_udp_dst)
 
+
 def sctp_src(_sctp_src):
     return ofb_field(type=SCTP_SRC, sctp_src=_sctp_src)
+
 
 def sctp_dst(_sctp_dst):
     return ofb_field(type=SCTP_DST, sctp_dst=_sctp_dst)
 
+
 def icmpv4_type(_icmpv4_type):
     return ofb_field(type=ICMPV4_TYPE, icmpv4_type=_icmpv4_type)
+
 
 def icmpv4_code(_icmpv4_code):
     return ofb_field(type=ICMPV4_CODE, icmpv4_code=_icmpv4_code)
 
+
 def arp_op(_arp_op):
     return ofb_field(type=ARP_OP, arp_op=_arp_op)
+
 
 def arp_spa(_arp_spa):
     return ofb_field(type=ARP_SPA, arp_spa=_arp_spa)
 
+
 def arp_tpa(_arp_tpa):
     return ofb_field(type=ARP_TPA, arp_tpa=_arp_tpa)
+
 
 def arp_sha(_arp_sha):
     return ofb_field(type=ARP_SHA, arp_sha=_arp_sha)
 
+
 def arp_tha(_arp_tha):
     return ofb_field(type=ARP_THA, arp_tha=_arp_tha)
+
 
 def ipv6_src(_ipv6_src):
     return ofb_field(type=IPV6_SRC, arp_tha=_ipv6_src)
 
+
 def ipv6_dst(_ipv6_dst):
     return ofb_field(type=IPV6_DST, arp_tha=_ipv6_dst)
+
 
 def ipv6_flabel(_ipv6_flabel):
     return ofb_field(type=IPV6_FLABEL, arp_tha=_ipv6_flabel)
 
+
 def ipmpv6_type(_icmpv6_type):
     return ofb_field(type=ICMPV6_TYPE, arp_tha=_icmpv6_type)
+
 
 def icmpv6_code(_icmpv6_code):
     return ofb_field(type=ICMPV6_CODE, arp_tha=_icmpv6_code)
 
+
 def ipv6_nd_target(_ipv6_nd_target):
     return ofb_field(type=IPV6_ND_TARGET, arp_tha=_ipv6_nd_target)
+
 
 def ofb_ipv6_nd_sll(_ofb_ipv6_nd_sll):
     return ofb_field(type=OFB_IPV6_ND_SLL, arp_tha=_ofb_ipv6_nd_sll)
 
+
 def ipv6_nd_tll(_ipv6_nd_tll):
     return ofb_field(type=IPV6_ND_TLL, arp_tha=_ipv6_nd_tll)
+
 
 def mpls_label(_mpls_label):
     return ofb_field(type=MPLS_LABEL, arp_tha=_mpls_label)
 
+
 def mpls_tc(_mpls_tc):
     return ofb_field(type=MPLS_TC, arp_tha=_mpls_tc)
+
 
 def mpls_bos(_mpls_bos):
     return ofb_field(type=MPLS_BOS, arp_tha=_mpls_bos)
 
+
 def pbb_isid(_pbb_isid):
     return ofb_field(type=PBB_ISID, arp_tha=_pbb_isid)
 
+
 def tunnel_id(_tunnel_id):
     return ofb_field(type=TUNNEL_ID, arp_tha=_tunnel_id)
+
 
 def ipv6_exthdr(_ipv6_exthdr):
     return ofb_field(type=IPV6_EXTHDR, arp_tha=_ipv6_exthdr)
@@ -277,6 +326,7 @@ def get_actions(flow):
         if instruction.type == ofp.OFPIT_APPLY_ACTIONS:
             return instruction.actions.actions
 
+
 def get_ofb_fields(flow):
     assert isinstance(flow, ofp.ofp_flow_stats)
     assert flow.match.type == ofp.OFPMT_OXM
@@ -286,11 +336,13 @@ def get_ofb_fields(flow):
         ofb_fields.append(field.ofb_field)
     return ofb_fields
 
+
 def get_out_port(flow):
     for action in get_actions(flow):
         if action.type == OUTPUT:
             return action.output.port
     return None
+
 
 def get_in_port(flow):
     for field in get_ofb_fields(flow):
@@ -298,11 +350,13 @@ def get_in_port(flow):
             return field.port
     return None
 
+
 def get_goto_table_id(flow):
     for instruction in flow.instructions:
         if instruction.type == ofp.OFPIT_GOTO_TABLE:
             return instruction.goto_table.table_id
     return None
+
 
 def get_metadata(flow):
     ''' legacy get method (only want lower 32 bits '''
@@ -310,6 +364,7 @@ def get_metadata(flow):
         if field.type == METADATA:
             return field.table_metadata & 0xffffffff
     return None
+
 
 def get_metadata_64_bit(flow):
     for field in get_ofb_fields(flow):
@@ -364,17 +419,20 @@ def get_inner_tag_from_metadata(flow):
 def has_next_table(flow):
     return get_goto_table_id(flow) is not None
 
+
 def get_group(flow):
     for action in get_actions(flow):
         if action.type == GROUP:
             return action.group.group_id
     return None
 
+
 def has_group(flow):
     return get_group(flow) is not None
 
+
 def mk_oxm_fields(match_fields):
-    oxm_fields=[
+    oxm_fields = [
         ofp.ofp_oxm_field(
             oxm_class=ofp.OFPXMC_OPENFLOW_BASIC,
             ofb_field=field
@@ -383,12 +441,14 @@ def mk_oxm_fields(match_fields):
 
     return oxm_fields
 
+
 def mk_instructions_from_actions(actions):
     instructions_action = ofp.ofp_instruction_actions()
     instructions_action.actions.extend(actions)
     instruction = ofp.ofp_instruction(type=ofp.OFPIT_APPLY_ACTIONS,
                                       actions=instructions_action)
     return [instruction]
+
 
 def mk_simple_flow_mod(match_fields, actions, command=ofp.OFPFC_ADD,
                        next_table_id=None, **kw):

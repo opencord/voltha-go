@@ -243,11 +243,12 @@ message Device {
 
     message ProxyAddress {
         string device_id = 1;  // Which device to use as proxy to this device
-        uint32 channel_id = 2;  // Sub-address within proxy
-        uint32 channel_group_id = 5; // Channel Group index
-        string channel_termination = 6; // Channel Termination name
-        uint32 onu_id = 3; // onu identifier; optional
-        uint32 onu_session_id = 4; // session identifier for the ONU; optional
+        string device_type = 2; // The device type of the proxy device to use as the adapter name
+        uint32 channel_id = 3;  // Sub-address within proxy
+        uint32 channel_group_id = 4; // Channel Group index
+        string channel_termination = 5; // Channel Termination name
+        uint32 onu_id = 6; // onu identifier; optional
+        uint32 onu_session_id = 7; // session identifier for the ONU; optional
     };
 
     // Device contact MAC address (format: "xx:xx:xx:xx:xx:xx")

@@ -15,35 +15,18 @@
 #
 
 """
-Agent to play gateway between CORE and an individual adapter.
+This facade handles kafka-formatted messages from the Core, extracts the kafka
+formatting and forwards the request to the concrete handler.
 """
-from uuid import uuid4
 
-import arrow
-import structlog
-from google.protobuf.json_format import MessageToJson
-from scapy.packet import Packet
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from zope.interface import implementer
 
-from adapters.common.event_bus import EventBusClient
-from adapters.common.frameio.frameio import hexify
-from adapters.common.utils.id_generation import create_cluster_logical_device_ids
 from adapters.interface import IAdapterInterface
+from adapters.protos.core_adapter_pb2 import IntType, InterAdapterMessage
 from adapters.protos.device_pb2 import Device
-
-from adapters.protos import third_party
-from adapters.protos.device_pb2 import Device, Port, PmConfigs
-from adapters.protos.events_pb2 import AlarmEvent, AlarmEventType, \
-    AlarmEventSeverity, AlarmEventState, AlarmEventCategory
-from adapters.protos.events_pb2 import KpiEvent
-from adapters.protos.voltha_pb2 import DeviceGroup, LogicalDevice, \
-    LogicalPort, AdminState, OperStatus, AlarmFilterRuleKey
-from adapters.common.utils.registry import registry
-from adapters.common.utils.id_generation import create_cluster_device_id
-from adapters.protos.core_adapter_pb2 import IntType
-from adapters.protos.openflow_13_pb2 import FlowChanges, FlowGroups, Flows, FlowGroupChanges
-import re
+from adapters.protos.openflow_13_pb2 import FlowChanges, FlowGroups, Flows, \
+    FlowGroupChanges
 
 
 class MacAddressError(BaseException):
@@ -106,7 +89,6 @@ class AdapterRequestFacade(object):
         port_no.Unpack(p)
 
         return True, self.adapter.get_ofp_port_info(d, p.val)
-
 
     def reconcile_device(self, device):
         return self.adapter.reconcile_device(device)
@@ -207,3 +189,11 @@ class AdapterRequestFacade(object):
     def unsuppress_alarm(self, filter):
         return self.adapter.unsuppress_alarm(filter)
 
+    def process_inter_adapter_message(self, msg):
+        m = InterAdapterMessage()
+        if msg:
+            msg.Unpack(m)
+        else:
+            return (False, m)
+
+        return (True, self.adapter.process_inter_adapter_message(m))
