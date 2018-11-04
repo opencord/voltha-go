@@ -38,10 +38,12 @@ class CoreProxy(ContainerProxy):
 
     @ContainerProxy.wrap_request(CoreInstance)
     @inlineCallbacks
-    def register(self, adapter):
+    def register(self, adapter, deviceTypes):
         log.debug("register")
         try:
-            res = yield self.invoke(rpc="Register", adapter=adapter)
+            res = yield self.invoke(rpc="Register",
+                                    adapter=adapter,
+                                    deviceTypes=deviceTypes)
             log.info("registration-returned", res=res)
             returnValue(res)
         except Exception as e:

@@ -44,7 +44,7 @@ from adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
 from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
 from adapters.ponsim_olt.ponsim_olt import PonSimOltAdapter
 from adapters.protos import third_party
-from adapters.protos.adapter_pb2 import AdapterConfig, Adapter
+from adapters.protos.adapter_pb2 import AdapterConfig
 
 _ = third_party
 
@@ -284,6 +284,7 @@ class Main(object):
         if not args.no_banner:
             print_banner(self.log)
 
+        self.adapter = None
         # Create a unique instance id using the passed-in instance id and
         # UTC timestamp
         current_time = arrow.utcnow().timestamp
@@ -366,10 +367,11 @@ class Main(object):
                 core_topic=self.core_topic,
                 my_listening_topic=self.listening_topic)
 
-            ponsim_olt_adapter = PonSimOltAdapter(
-                core_proxy=self.core_proxy, adapter_proxy=self.adapter_proxy, config=config)
-            ponsim_request_handler = AdapterRequestFacade(
-                adapter=ponsim_olt_adapter)
+            self.adapter = PonSimOltAdapter(core_proxy=self.core_proxy,
+                                            adapter_proxy=self.adapter_proxy,
+                                            config=config)
+
+            ponsim_request_handler = AdapterRequestFacade(adapter=self.adapter)
 
             yield registry.register(
                 'kafka_adapter_proxy',
@@ -423,15 +425,14 @@ class Main(object):
 
     @inlineCallbacks
     def _register_with_core(self, retries):
-        # Send registration to Core with adapter specs
-        adapter = Adapter()
-        adapter.id =  self.args.name
-        adapter.vendor = self.args.name
-        adapter.version = self.ponsim_olt_adapter_version
         while 1:
             try:
-                resp = yield self.core_proxy.register(adapter)
-                self.log.info('registration-response', response=resp)
+                resp = yield self.core_proxy.register(
+                    self.adapter.adapter_descriptor(),
+                    self.adapter.device_types())
+                if resp:
+                    self.log.info('registered-with-core',
+                                  coreId=resp.instance_id)
                 returnValue(resp)
             except TimeOutError as e:
                 self.log.warn("timeout-when-registering-with-core", e=e)

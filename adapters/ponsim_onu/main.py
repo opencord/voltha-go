@@ -18,33 +18,33 @@
 """Ponsim ONU Adapter main entry point"""
 
 import argparse
-import arrow
 import os
 import time
 
+import arrow
 import yaml
+from packaging.version import Version
 from simplejson import dumps
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 from zope.interface import implementer
-from adapters.protos import third_party
+
 from adapters.common.structlog_setup import setup_logging, update_logging
+from adapters.common.utils.asleep import asleep
+from adapters.common.utils.deferred_utils import TimeOutError
 from adapters.common.utils.dockerhelpers import get_my_containers_name
 from adapters.common.utils.nethelpers import get_my_primary_local_ipv4, \
     get_my_primary_interface
-from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
 from adapters.common.utils.registry import registry, IComponent
-from packaging.version import Version
-from adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, get_messaging_proxy
-from adapters.ponsim_onu.ponsim_onu import PonSimOnuAdapter
-from adapters.protos.adapter_pb2 import AdapterConfig, Adapter
+from adapters.kafka.adapter_proxy import AdapterProxy
 from adapters.kafka.adapter_request_facade import AdapterRequestFacade
 from adapters.kafka.core_proxy import CoreProxy
-
-from adapters.kafka.adapter_proxy import AdapterProxy
-
-from adapters.common.utils.deferred_utils import TimeOutError
-from adapters.common.utils.asleep import asleep
+from adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
+    get_messaging_proxy
+from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
+from adapters.ponsim_onu.ponsim_onu import PonSimOnuAdapter
+from adapters.protos import third_party
+from adapters.protos.adapter_pb2 import AdapterConfig
 
 _ = third_party
 
@@ -283,6 +283,7 @@ class Main(object):
         if not args.no_banner:
             print_banner(self.log)
 
+        self.adapter = None
         # Create a unique instance id using the passed-in instance id and
         # UTC timestamp
         current_time = arrow.utcnow().timestamp
@@ -365,10 +366,11 @@ class Main(object):
                 core_topic=self.core_topic,
                 my_listening_topic=self.listening_topic)
 
-            ponsim_onu_adapter = PonSimOnuAdapter(
-                core_proxy=self.core_proxy, adapter_proxy=self.adapter_proxy, config=config)
+            self.adapter = PonSimOnuAdapter(
+                core_proxy=self.core_proxy, adapter_proxy=self.adapter_proxy,
+                config=config)
             ponsim_request_handler = AdapterRequestFacade(
-                adapter=ponsim_onu_adapter)
+                adapter=self.adapter)
 
             yield registry.register(
                 'kafka_adapter_proxy',
@@ -421,15 +423,15 @@ class Main(object):
 
     @inlineCallbacks
     def _register_with_core(self, retries):
-        # Send registration to Core with adapter specs
-        adapter = Adapter()
-        adapter.id =  self.args.name
-        adapter.vendor = self.args.name
-        adapter.version = self.ponsim_olt_adapter_version
         while 1:
             try:
-                resp = yield self.core_proxy.register(adapter)
-                self.log.info('registration-response', response=resp)
+                resp = yield self.core_proxy.register(
+                    self.adapter.adapter_descriptor(),
+                    self.adapter.device_types())
+                if resp:
+                    self.log.info('registered-with-core',
+                                  coreId=resp.instance_id)
+
                 returnValue(resp)
             except TimeOutError as e:
                 self.log.warn("timeout-when-registering-with-core", e=e)

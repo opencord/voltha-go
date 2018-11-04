@@ -30,14 +30,16 @@ import (
 
 type AdapterRequestHandlerProxy struct {
 	TestMode         bool
+	coreInstanceId	string
 	deviceMgr        *DeviceManager
 	lDeviceMgr       *LogicalDeviceManager
 	localDataProxy   *model.Proxy
 	clusterDataProxy *model.Proxy
 }
 
-func NewAdapterRequestHandlerProxy(dMgr *DeviceManager, ldMgr *LogicalDeviceManager, cdProxy *model.Proxy, ldProxy *model.Proxy) *AdapterRequestHandlerProxy {
+func NewAdapterRequestHandlerProxy(coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager, cdProxy *model.Proxy, ldProxy *model.Proxy) *AdapterRequestHandlerProxy {
 	var proxy AdapterRequestHandlerProxy
+	proxy.coreInstanceId = coreInstanceId
 	proxy.deviceMgr = dMgr
 	proxy.lDeviceMgr = ldMgr
 	proxy.clusterDataProxy = cdProxy
@@ -46,23 +48,34 @@ func NewAdapterRequestHandlerProxy(dMgr *DeviceManager, ldMgr *LogicalDeviceMana
 }
 
 func (rhp *AdapterRequestHandlerProxy) Register(args []*ca.Argument) (*voltha.CoreInstance, error) {
-	if len(args) != 1 {
+	if len(args) != 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	adapter := &voltha.Adapter{}
-	if err := ptypes.UnmarshalAny(args[0].Value, adapter); err != nil {
-		log.Warnw("cannot-unmarshal-adapter", log.Fields{"error": err})
-		return nil, err
+	deviceTypes := &voltha.DeviceTypes{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "adapter":
+			if err := ptypes.UnmarshalAny(arg.Value, adapter); err != nil {
+				log.Warnw("cannot-unmarshal-adapter", log.Fields{"error": err})
+				return nil, err
+			}
+		case "deviceTypes":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceTypes); err != nil {
+				log.Warnw("cannot-unmarshal-device-types", log.Fields{"error": err})
+				return nil, err
+			}
+		}
 	}
-	log.Debugw("Register", log.Fields{"Adapter": *adapter})
+	log.Debugw("Register", log.Fields{"Adapter": *adapter, "DeviceTypes": deviceTypes, "coreId": rhp.coreInstanceId})
 	// TODO process the request and store the data in the KV store
 
 	if rhp.TestMode { // Execute only for test cases
 		return &voltha.CoreInstance{InstanceId: "CoreInstance"}, nil
 	}
-	return &voltha.CoreInstance{InstanceId: "CoreInstance"}, nil
+	return &voltha.CoreInstance{InstanceId: rhp.coreInstanceId}, nil
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ca.Argument) (*voltha.Device, error) {

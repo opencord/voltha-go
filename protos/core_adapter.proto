@@ -97,8 +97,8 @@ message InterAdapterHeader {
 }
 
 message InterAdapterResponseBody {
-    bool success = 1;
-    google.protobuf.Any result = 2;
+    bool status = 1;
+    google.protobuf.Any body = 2;
 }
 
 message InterAdapterMessage {

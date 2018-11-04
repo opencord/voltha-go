@@ -56,7 +56,7 @@ class AdapterProxy(ContainerProxy):
                                    to_adapter,
                                    to_device_id=None,
                                    proxy_device_id=None,
-                                   message_no=None):
+                                   message_id=None):
         """
         Sends a message directly to an adapter. This is typically used to send
         proxied messages from one adapter to another.  An initial ACK response
@@ -73,7 +73,7 @@ class AdapterProxy(ContainerProxy):
         :param proxy_device_id: The ID of the device which will proxy that
         message. If it's None then there is no specific device to proxy the
         message.  Its interpretation is adapter specific.
-        :param message_no: A unique number for this transaction that the
+        :param message_id: A unique number for this transaction that the
         adapter may use to correlate a request and an async response.
         """
 
@@ -91,8 +91,8 @@ class AdapterProxy(ContainerProxy):
             h.to_device_id = self._to_string(to_device_id)
             h.proxy_device_id = self._to_string(proxy_device_id)
 
-            if message_no:
-                h.id = self._to_string(message_no)
+            if message_id:
+                h.id = self._to_string(message_id)
             else:
                 h.id = uuid4().hex
 

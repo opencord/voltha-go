@@ -49,7 +49,7 @@ from adapters.protos.openflow_13_pb2 import OFPPS_LIVE, OFPPF_FIBER, \
     OFPC_GROUP_STATS, OFPC_PORT_STATS, OFPC_TABLE_STATS, OFPC_FLOW_STATS, \
     ofp_switch_features, ofp_desc
 from adapters.protos.openflow_13_pb2 import ofp_port
-from adapters.protos.ponsim_pb2 import FlowTable, PonSimFrame
+from adapters.protos.ponsim_pb2 import FlowTable, PonSimFrame, PonSimMetricsRequest
 
 _ = third_party
 log = structlog.get_logger()
@@ -454,7 +454,7 @@ class PonSimOltHandler(object):
                     res = stub.UpdateFlowTable(f)
                     # Send response back
                     reply = InterAdapterResponseBody()
-                    reply.success = True
+                    reply.status = True
                     self.log.info('sending-response-back', reply=reply)
                     yield self.adapter_proxy.send_inter_adapter_message(
                         msg=reply,
@@ -462,7 +462,27 @@ class PonSimOltHandler(object):
                         from_adapter=self.adapter.name,
                         to_adapter=request.header.from_topic,
                         to_device_id=request.header.to_device_id,
-                        message_no=request.header.id
+                        message_id=request.header.id
+                    )
+            elif request.header.type == InterAdapterMessageType.METRICS_REQUEST:
+                m = PonSimMetricsRequest()
+                if request.body:
+                    request.body.Unpack(m)
+                    stub = ponsim_pb2.PonSimStub(self.channel)
+                    self.log.info('proxying onu stats request', port=m.port)
+                    res = stub.GetStats(m)
+                    # Send response back
+                    reply = InterAdapterResponseBody()
+                    reply.status = True
+                    reply.body.Pack(res)
+                    self.log.info('sending-response-back', reply=reply)
+                    yield self.adapter_proxy.send_inter_adapter_message(
+                        msg=reply,
+                        type=InterAdapterMessageType.METRICS_RESPONSE,
+                        from_adapter=self.adapter.name,
+                        to_adapter=request.header.from_topic,
+                        to_device_id=request.header.to_device_id,
+                        message_id=request.header.id
                     )
         except Exception as e:
             self.log.exception("error-processing-inter-adapter-message", e=e)
@@ -537,6 +557,8 @@ class PonSimOltHandler(object):
 
         self.close_channel()
         self.log.info('disabled-grpc-channel')
+
+        self.stop_kpi_collection()
 
         # TODO:
         # 1) Remove all flows from the device
@@ -624,7 +646,7 @@ class PonSimOltHandler(object):
                     }
                 )
 
-                # Step 3: submit directlt to kafka bus
+                # Step 3: submit directly to the kafka bus
                 if kafka_cluster_proxy:
                     if isinstance(kpi_event, Message):
                         kpi_event = dumps(MessageToDict(kpi_event, True, True))

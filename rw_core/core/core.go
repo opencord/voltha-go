@@ -56,27 +56,29 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client) *Core {
 
 	// Setup the KV store
 	// Do not call NewBackend constructor; it creates its own KV client
-	backend := model.Backend{
-		Client:     kvClient,
-		StoreType:  cf.KVStoreType,
-		Host:       cf.KVStoreHost,
-		Port:       cf.KVStorePort,
-		Timeout:    cf.KVStoreTimeout,
-		PathPrefix: "service/voltha"}
-	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
-	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
+	// Commented the backend for now until the issue between the model and the KV store
+	// is resolved.
+	//backend := model.Backend{
+	//	Client:     kvClient,
+	//	StoreType:  cf.KVStoreType,
+	//	Host:       cf.KVStoreHost,
+	//	Port:       cf.KVStorePort,
+	//	Timeout:    cf.KVStoreTimeout,
+	//	PathPrefix: "service/voltha"}
+	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, nil)
+	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, nil)
 	core.clusterDataProxy = core.clusterDataRoot.GetProxy("/", false)
 	core.localDataProxy = core.localDataRoot.GetProxy("/", false)
 	return &core
 }
 
 func (core *Core) Start(ctx context.Context) {
-	log.Info("starting-core")
+	log.Info("starting-core", log.Fields{"coreId": core.instanceId})
 	core.startKafkaMessagingProxy(ctx)
 	log.Info("values", log.Fields{"kmp": core.kmp})
 	core.deviceMgr = newDeviceManager(core.kmp, core.clusterDataProxy)
 	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.kmp, core.clusterDataProxy)
-	core.registerAdapterRequestHandler(ctx, core.deviceMgr, core.logicalDeviceMgr, core.localDataProxy, core.clusterDataProxy)
+	core.registerAdapterRequestHandler(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.localDataProxy, core.clusterDataProxy)
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
 	go core.startGRPCService(ctx)
@@ -135,9 +137,9 @@ func (core *Core) startKafkaMessagingProxy(ctx context.Context) error {
 	return nil
 }
 
-func (core *Core) registerAdapterRequestHandler(ctx context.Context, dMgr *DeviceManager, ldMgr *LogicalDeviceManager,
+func (core *Core) registerAdapterRequestHandler(ctx context.Context, coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager,
 	cdProxy *model.Proxy, ldProxy *model.Proxy) error {
-	requestProxy := NewAdapterRequestHandlerProxy(dMgr, ldMgr, cdProxy, ldProxy)
+	requestProxy := NewAdapterRequestHandlerProxy(coreInstanceId, dMgr, ldMgr, cdProxy, ldProxy)
 	core.kmp.SubscribeWithTarget(kafka.Topic{Name: core.config.CoreTopic}, requestProxy)
 
 	log.Info("request-handlers")
