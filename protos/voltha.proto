@@ -452,6 +452,20 @@ service VolthaService {
         };
     }
 
+    // Stream control packets to the dataplane
+    rpc StreamPacketsOut (stream openflow_13.PacketOut) returns (google.protobuf.Empty) {
+        // This does not have an HTTP representation
+    }
+
+    // Receive control packet stream
+    rpc ReceivePacketsIn (google.protobuf.Empty) returns (stream openflow_13.PacketIn) {
+        // This does not have an HTTP representation
+    }
+
+    rpc ReceiveChangeEvents (google.protobuf.Empty) returns (stream openflow_13.ChangeEvent) {
+        // This does not have an HTTP representation
+    }
+
     rpc CreateAlarmFilter(AlarmFilter) returns(AlarmFilter) {
         option (google.api.http) = {
             post: "/api/v1/alarm_filters"
@@ -494,6 +508,9 @@ service VolthaService {
         option (google.api.http) = {
             post: "/api/v1/devices/{id}/self_test"
         };
+    }
+
+    rpc Subscribe (OfAgentSubscriber) returns (OfAgentSubscriber) {
     }
 }
 

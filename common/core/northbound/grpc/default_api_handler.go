@@ -261,3 +261,32 @@ func (handler *DefaultAPIHandler) SelfTest(ctx context.Context, id *voltha.ID) (
 	log.Debugw("SelfTest-request", log.Fields{"id": id})
 	return nil, errors.New("UnImplemented")
 }
+
+func (handler *DefaultAPIHandler) StreamPacketsOut(packetsOut voltha.VolthaService_StreamPacketsOutServer) error {
+	log.Debugw("StreamPacketsOut-request", log.Fields{"packetsOut": packetsOut})
+	return errors.New("UnImplemented")
+}
+
+func (handler *DefaultAPIHandler) ReceivePacketsIn(
+	empty *empty.Empty,
+	packetsIn voltha.VolthaService_ReceivePacketsInServer,
+) error {
+	log.Debugw("ReceivePacketsIn-request", log.Fields{"packetsIn": packetsIn})
+	return errors.New("UnImplemented")
+}
+
+func (handler *DefaultAPIHandler) ReceiveChangeEvents(
+	empty *empty.Empty,
+	changeEvents voltha.VolthaService_ReceiveChangeEventsServer,
+) error {
+	log.Debugw("ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
+	return errors.New("UnImplemented")
+}
+
+func (handler *DefaultAPIHandler) Subscribe(
+	ctx context.Context,
+	ofAgent *voltha.OfAgentSubscriber,
+) (*voltha.OfAgentSubscriber, error) {
+	log.Debugw("Subscribe-request", log.Fields{"ofAgent": ofAgent})
+	return nil, errors.New("UnImplemented")
+}
