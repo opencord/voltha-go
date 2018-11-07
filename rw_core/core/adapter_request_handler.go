@@ -457,3 +457,41 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ca.Argument)
 
 	return new(empty.Empty), nil
 }
+
+
+func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ca.Argument) (*empty.Empty, error) {
+	if len(args) < 3 {
+		log.Warn("invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceId := &voltha.ID{}
+	portNo := &ca.IntType{}
+	packet := &ca.Packet{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port":
+			if err := ptypes.UnmarshalAny(arg.Value, portNo); err != nil {
+				log.Warnw("cannot-unmarshal-port-no", log.Fields{"error": err})
+				return nil, err
+			}
+		case "packet":
+			if err := ptypes.UnmarshalAny(arg.Value, packet); err != nil {
+				log.Warnw("cannot-unmarshal-packet", log.Fields{"error": err})
+				return nil, err
+			}
+
+		}
+	}
+	log.Debugw("PacketIn", log.Fields{"deviceId": deviceId.Id, "port": portNo.Val,  "packet": packet})
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+	go rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), packet.Payload)
+	return new(empty.Empty), nil
+}

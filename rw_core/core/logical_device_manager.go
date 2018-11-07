@@ -324,3 +324,23 @@ func (ldMgr *LogicalDeviceManager) disableLogicalPort(ctx context.Context, id *v
 	}
 	sendAPIResponse(ctx, ch, res)
 }
+
+func (ldMgr *LogicalDeviceManager) packetOut( packetOut *openflow_13.PacketOut) {
+	log.Debugw("packetOut", log.Fields{"logicalDeviceId": packetOut.Id})
+	if agent := ldMgr.getLogicalDeviceAgent(packetOut.Id); agent != nil {
+		agent.packetOut(packetOut.PacketOut)
+	} else {
+		log.Error("logical-device-not-exist", log.Fields{"logicalDeviceId": packetOut.Id})
+	}
+}
+
+func (ldMgr *LogicalDeviceManager) packetIn(logicalDeviceId string, port uint32, packet []byte) error {
+	log.Debugw("packetIn", log.Fields{"logicalDeviceId": logicalDeviceId, "port": port})
+	if agent := ldMgr.getLogicalDeviceAgent(logicalDeviceId); agent != nil {
+		agent.packetIn(port, packet)
+	} else {
+		log.Error("logical-device-not-exist", log.Fields{"logicalDeviceId": logicalDeviceId})
+	}
+	return nil
+}
+

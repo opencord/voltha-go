@@ -23,9 +23,9 @@ from structlog import get_logger
 from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import implementer
 
-from adapters.common.utils.consulhelpers import get_endpoint_from_consul
-from adapters.common.utils.registry import IComponent
-from adapters.kafka.event_bus_publisher import EventBusPublisher
+from python.common.utils.consulhelpers import get_endpoint_from_consul
+from python.common.utils.registry import IComponent
+from event_bus_publisher import EventBusPublisher
 
 log = get_logger()
 

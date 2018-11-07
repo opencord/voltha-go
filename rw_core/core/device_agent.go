@@ -33,6 +33,7 @@ import (
 
 type DeviceAgent struct {
 	deviceId         string
+	deviceType 		string
 	lastData         *voltha.Device
 	adapterProxy     *AdapterProxy
 	deviceMgr        *DeviceManager
@@ -60,6 +61,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 		cloned.Vlan = device.ProxyAddress.ChannelId
 	}
 	agent.deviceId = cloned.Id
+	agent.deviceType = cloned.Type
 	agent.lastData = cloned
 	agent.deviceMgr = deviceMgr
 	agent.exitChannel = make(chan int, 1)
@@ -367,6 +369,16 @@ func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) 
 		return portCap, nil
 	}
 }
+
+func (agent *DeviceAgent) packetOut(outPort uint32, packet *ofp.OfpPacketOut) error {
+	//	Send packet to adapter
+	if err := agent.adapterProxy.packetOut(agent.deviceType, agent.deviceId, outPort, packet); err != nil {
+		log.Debugw("packet-out-error", log.Fields{"id": agent.lastData.Id, "error": err})
+		return err
+	}
+	return nil
+}
+
 
 // TODO: implement when callback from the data model is ready
 // processUpdate is a callback invoked whenever there is a change on the device manages by this device agent

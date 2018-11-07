@@ -25,7 +25,7 @@ from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import Message
 from simplejson import dumps
 
-from adapters.common.event_bus import EventBusClient
+from python.common.event_bus import EventBusClient
 
 log = structlog.get_logger()
 

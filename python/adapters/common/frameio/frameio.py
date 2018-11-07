@@ -40,10 +40,10 @@ from scapy.data import ETH_P_ALL
 from twisted.internet import reactor
 from zope.interface import implementer
 
-from adapters.common.utils.registry import IComponent
+from python.common.utils.registry import IComponent
 
 if sys.platform.startswith('linux'):
-    from adapters.common.frameio.third_party.oftest import afpacket, netutils
+    from third_party.oftest import afpacket, netutils
 elif sys.platform == 'darwin':
     from scapy.arch import pcapdnet, BIOCIMMEDIATE, dnet
 

@@ -22,11 +22,11 @@ formatting and forwards the request to the concrete handler.
 from twisted.internet.defer import inlineCallbacks
 from zope.interface import implementer
 
-from adapters.interface import IAdapterInterface
-from adapters.protos.core_adapter_pb2 import IntType, InterAdapterMessage
-from adapters.protos.device_pb2 import Device
-from adapters.protos.openflow_13_pb2 import FlowChanges, FlowGroups, Flows, \
-    FlowGroupChanges
+from python.adapters.interface import IAdapterInterface
+from python.protos.core_adapter_pb2 import IntType, InterAdapterMessage, StrType, Error, ErrorCode
+from python.protos.device_pb2 import Device
+from python.protos.openflow_13_pb2 import FlowChanges, FlowGroups, Flows, \
+    FlowGroupChanges, ofp_packet_out
 
 
 class MacAddressError(BaseException):
@@ -68,7 +68,8 @@ class AdapterRequestFacade(object):
             device.Unpack(d)
             return True, self.adapter.adopt_device(d)
         else:
-            return False, d
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
 
     def get_ofp_device_info(self, device):
         d = Device()
@@ -76,17 +77,22 @@ class AdapterRequestFacade(object):
             device.Unpack(d)
             return True, self.adapter.get_ofp_device_info(d)
         else:
-            return False, d
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
 
     def get_ofp_port_info(self, device, port_no):
         d = Device()
         if device:
             device.Unpack(d)
         else:
-            return (False, d)
-
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
         p = IntType()
-        port_no.Unpack(p)
+        if port_no:
+            port_no.Unpack(p)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="port-no-invalid")
 
         return True, self.adapter.get_ofp_port_info(d, p.val)
 
@@ -102,7 +108,8 @@ class AdapterRequestFacade(object):
             device.Unpack(d)
             return True, self.adapter.disable_device(d)
         else:
-            return False, d
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
 
     def reenable_device(self, device):
         d = Device()
@@ -110,7 +117,8 @@ class AdapterRequestFacade(object):
             device.Unpack(d)
             return True, self.adapter.reenable_device(d)
         else:
-            return False, d
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
 
     def reboot_device(self, device):
         d = Device()
@@ -118,7 +126,8 @@ class AdapterRequestFacade(object):
             device.Unpack(d)
             return (True, self.adapter.reboot_device(d))
         else:
-            return (False, d)
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
 
     def download_image(self, device, request):
         return self.adapter.download_image(device, request)
@@ -144,7 +153,8 @@ class AdapterRequestFacade(object):
             device.Unpack(d)
             return (True, self.adapter.delete_device(d))
         else:
-            return (False, d)
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
 
     def get_device_details(self, device):
         return self.adapter.get_device_details(device)
@@ -154,8 +164,8 @@ class AdapterRequestFacade(object):
         if device:
             device.Unpack(d)
         else:
-            return (False, d)
-
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
         f = Flows()
         if flows:
             flows.Unpack(f)
@@ -171,8 +181,8 @@ class AdapterRequestFacade(object):
         if device:
             device.Unpack(d)
         else:
-            return (False, d)
-
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
         f = FlowChanges()
         if flow_changes:
             flow_changes.Unpack(f)
@@ -194,6 +204,33 @@ class AdapterRequestFacade(object):
         if msg:
             msg.Unpack(m)
         else:
-            return (False, m)
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="msg-invalid")
 
         return (True, self.adapter.process_inter_adapter_message(m))
+
+
+    def receive_packet_out(self, deviceId, outPort, packet):
+        d_id = StrType()
+        if deviceId:
+            deviceId.Unpack(d_id)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="deviceid-invalid")
+
+        op = IntType
+        if outPort:
+            outPort.Unpack(op)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="outport-invalid")
+
+        p = ofp_packet_out()
+        if packet:
+            packet.Unpack(p)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="packet-invalid")
+
+        return (True, self.adapter.receive_packet_out(d_id, op, p))
+

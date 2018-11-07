@@ -21,7 +21,7 @@ Some consul related convenience functions
 from structlog import get_logger
 from consul import Consul
 from random import randint
-from common.utils.nethelpers import get_my_primary_local_ipv4
+from nethelpers import get_my_primary_local_ipv4
 
 log = get_logger()
 

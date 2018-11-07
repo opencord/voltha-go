@@ -21,9 +21,15 @@ message BoolType {
     bool val = 1;
 }
 
-enum ErrorCode {
+message Packet {
+    bytes payload = 1;
+}
+
+message ErrorCode {
+    enum codes {
         UNSUPPORTED_REQUEST = 0;
         INVALID_PARAMETERS = 1;
+    }
 }
 
 message Error {

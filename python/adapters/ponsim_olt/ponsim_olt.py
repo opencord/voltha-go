@@ -23,6 +23,8 @@ import grpc
 import structlog
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.json_format import MessageToDict
+from scapy.layers.inet import Raw
+import json
 from google.protobuf.message import Message
 from grpc._channel import _Rendezvous
 from scapy.layers.l2 import Ether, Dot1Q
@@ -31,25 +33,25 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 
-from adapters.common.frameio.frameio import BpfProgramFilter, hexify
-from adapters.common.utils.asleep import asleep
-from adapters.common.utils.registry import registry
-from adapters.iadapter import OltAdapter
-from adapters.kafka.kafka_proxy import get_kafka_proxy
-from adapters.protos import ponsim_pb2
-from adapters.protos import third_party
-from adapters.protos.common_pb2 import OperStatus, ConnectStatus
-from adapters.protos.core_adapter_pb2 import SwitchCapability, PortCapability, \
+from python.adapters.common.frameio.frameio import BpfProgramFilter, hexify
+from python.common.utils.asleep import asleep
+from python.common.utils.registry import registry
+from python.adapters.iadapter import OltAdapter
+from python.adapters.kafka.kafka_proxy import get_kafka_proxy
+from python.protos import ponsim_pb2
+from python.protos import third_party
+from python.protos.common_pb2 import OperStatus, ConnectStatus
+from python.protos.core_adapter_pb2 import SwitchCapability, PortCapability, \
     InterAdapterMessageType, InterAdapterResponseBody
-from adapters.protos.device_pb2 import Port, PmConfig, PmConfigs
-from adapters.protos.events_pb2 import KpiEvent, KpiEventType, MetricValuePairs
-from adapters.protos.logical_device_pb2 import LogicalPort
-from adapters.protos.openflow_13_pb2 import OFPPS_LIVE, OFPPF_FIBER, \
+from python.protos.device_pb2 import Port, PmConfig, PmConfigs
+from python.protos.events_pb2 import KpiEvent, KpiEventType, MetricValuePairs
+from python.protos.logical_device_pb2 import LogicalPort
+from python.protos.openflow_13_pb2 import OFPPS_LIVE, OFPPF_FIBER, \
     OFPPF_1GB_FD, \
     OFPC_GROUP_STATS, OFPC_PORT_STATS, OFPC_TABLE_STATS, OFPC_FLOW_STATS, \
     ofp_switch_features, ofp_desc
-from adapters.protos.openflow_13_pb2 import ofp_port
-from adapters.protos.ponsim_pb2 import FlowTable, PonSimFrame, PonSimMetricsRequest
+from python.protos.openflow_13_pb2 import ofp_port
+from python.protos.ponsim_pb2 import FlowTable, PonSimFrame, PonSimMetricsRequest
 
 _ = third_party
 log = structlog.get_logger()
@@ -157,33 +159,11 @@ class AdapterAlarms:
         self.device = device
         self.lc = None
 
+    # TODO: Implement code to send to kafka cluster directly instead of
+    # going through the voltha core.
     def send_alarm(self, context_data, alarm_data):
-        try:
-            current_context = {}
-            for key, value in context_data.__dict__.items():
-                current_context[key] = str(value)
-
-            alarm_event = self.adapter.adapter_agent.create_alarm(
-                resource_id=self.device.id,
-                description="{}.{} - {}".format(self.adapter.name,
-                                                self.device.id,
-                                                alarm_data[
-                                                    'description']) if 'description' in alarm_data else None,
-                type=alarm_data['type'] if 'type' in alarm_data else None,
-                category=alarm_data[
-                    'category'] if 'category' in alarm_data else None,
-                severity=alarm_data[
-                    'severity'] if 'severity' in alarm_data else None,
-                state=alarm_data['state'] if 'state' in alarm_data else None,
-                raised_ts=alarm_data['ts'] if 'ts' in alarm_data else 0,
-                context=current_context
-            )
-
-            self.adapter.adapter_agent.submit_alarm(self.device.id,
-                                                    alarm_event)
-
-        except Exception as e:
-            log.exception('failed-to-send-alarm', e=e)
+        log.debug("send-alarm-not-implemented")
+        return
 
 
 class PonSimOltAdapter(OltAdapter):
@@ -379,6 +359,27 @@ class PonSimOltHandler(object):
     def reconcile(self, device):
         self.log.info('reconciling-OLT-device')
 
+    def _rcv_frame(self, frame):
+        pkt = Ether(frame)
+
+        if pkt.haslayer(Dot1Q):
+            outer_shim = pkt.getlayer(Dot1Q)
+
+            if isinstance(outer_shim.payload, Dot1Q):
+                inner_shim = outer_shim.payload
+                cvid = inner_shim.vlan
+                popped_frame = (
+                        Ether(src=pkt.src, dst=pkt.dst, type=inner_shim.type) /
+                        inner_shim.payload
+                )
+                self.log.info('sending-packet-in',device_id=self.device_id, port=cvid)
+                self.core_proxy.send_packet_in(device_id=self.device_id,
+                                               port=cvid,
+                                               packet=str(popped_frame))
+            elif pkt.haslayer(Raw):
+                raw_data = json.loads(pkt.getlayer(Raw).load)
+                self.alarms.send_alarm(self, raw_data)
+
     @inlineCallbacks
     def rcv_grpc(self):
         """
@@ -504,7 +505,7 @@ class PonSimOltHandler(object):
         out_port = self.nni_port.port_no if egress_port == self.nni_port.port_no else 1
 
         # send over grpc stream
-        stub = ponsim_pb2.PonSimStub(self.get_channel())
+        stub = ponsim_pb2.PonSimStub(self.channel)
         frame = PonSimFrame(id=self.device_id, payload=str(out_pkt),
                             out_port=out_port)
         stub.SendFrame(frame)

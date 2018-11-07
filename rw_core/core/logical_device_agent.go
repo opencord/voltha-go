@@ -1023,3 +1023,19 @@ func (agent *LogicalDeviceAgent) groupTableUpdated(args ...interface{}) interfac
 	}
 	return nil
 }
+
+func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut ) {
+	log.Debugw("packet-out", log.Fields{"packet": packet.GetInPort()})
+	outPort := fd.GetPacketOutPort(packet)
+	//frame := packet.GetData()
+	//TODO: Use a channel between the logical agent and the device agent
+	agent.deviceMgr.packetOut(agent.rootDeviceId, outPort, packet)
+}
+
+
+func (agent *LogicalDeviceAgent) packetIn(port uint32, packet []byte) {
+	log.Debugw("packet-in", log.Fields{"port": port, "packet": packet})
+	packet_in := fd.MkPacketIn(port, packet)
+	log.Debugw("sending-packet-in", log.Fields{"packet-in": packet_in})
+}
+

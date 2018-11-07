@@ -21,11 +21,11 @@ import structlog
 from google.protobuf.message import Message
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-from adapters.kafka.container_proxy import ContainerProxy
-from adapters.protos.common_pb2 import ID, ConnectStatus, OperStatus
-from adapters.protos.core_adapter_pb2 import StrType, BoolType, IntType
-from adapters.protos.device_pb2 import Device, Ports
-from adapters.protos.voltha_pb2 import CoreInstance
+from container_proxy import ContainerProxy
+from python.protos.common_pb2 import ID, ConnectStatus, OperStatus
+from python.protos.core_adapter_pb2 import StrType, BoolType, IntType, Packet
+from python.protos.device_pb2 import Device, Ports
+from python.protos.voltha_pb2 import CoreInstance
 
 log = structlog.get_logger()
 
@@ -243,7 +243,8 @@ class CoreProxy(ContainerProxy):
         b = BoolType()
         b.val = init
         res = yield self.invoke(rpc="DevicePMConfigUpdate",
-                                device_pm_config=device_pm_config, init=b)
+                                device_pm_config=device_pm_config,
+                                init=b)
         returnValue(res)
 
     @ContainerProxy.wrap_request(None)
@@ -252,7 +253,8 @@ class CoreProxy(ContainerProxy):
         log.debug("port_created")
         proto_id = ID()
         proto_id.id = device_id
-        res = yield self.invoke(rpc="PortCreated", device_id=proto_id,
+        res = yield self.invoke(rpc="PortCreated",
+                                device_id=proto_id,
                                 port=port)
         returnValue(res)
 
@@ -274,5 +276,16 @@ class CoreProxy(ContainerProxy):
     def image_download_deleted(img_dnld):
         raise NotImplementedError()
 
-    def packet_in(device_id, egress_port_no, packet):
-        raise NotImplementedError()
+    def send_packet_in(self, device_id, port, packet):
+        log.debug("send_packet_in")
+        proto_id = ID()
+        proto_id.id = device_id
+        p = IntType()
+        p.val = port
+        pac = Packet()
+        pac.payload = packet
+        res = yield self.invoke(rpc="PacketIn",
+                                device_id=proto_id,
+                                port=p,
+                                packet=pac)
+        returnValue(res)
