@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ba6f955_726bf01c",
+        "filename": "python/adapters/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1000196
+      },
+      "writtenOn": "2018-11-07T19:47:40Z",
+      "side": 1,
+      "message": "Should this not be \u0027cd python/adapters\u0027?",
+      "range": {
+        "startLine": 12,
+        "startChar": 3,
+        "endLine": 12,
+        "endChar": 9
+      },
+      "revId": "5aadea07caa4003c6a936b6db62ab13f1c73bd55",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
