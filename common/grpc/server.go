@@ -17,12 +17,11 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"net"
-	"strconv"
-	"strings"
 )
 
 /*
@@ -85,10 +84,8 @@ func NewGrpcServer(
 Start prepares the GRPC server and starts servicing requests
 */
 func (s *GrpcServer) Start(ctx context.Context) {
-	host := strings.Join([]string{
-		s.address,
-		strconv.Itoa(int(s.port)),
-	}, ":")
+
+	host := fmt.Sprintf("%s:%d", s.address, s.port)
 
 	lis, err := net.Listen("tcp", host)
 	if err != nil {

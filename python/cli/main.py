@@ -90,8 +90,7 @@ class VolthaCli(Cmd):
 
     def __init__(self, voltha_grpc, voltha_sim_rest, global_request=False):
 
-        VolthaCli.voltha_grpc = "localhost:50057"
-        # VolthaCli.voltha_grpc = voltha_grpc
+        VolthaCli.voltha_grpc = voltha_grpc
         VolthaCli.voltha_sim_rest = voltha_sim_rest
         VolthaCli.global_request = global_request
         Cmd.__init__(self)

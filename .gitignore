@@ -55,5 +55,8 @@ adapters/venv-darwin
 *.log
 
 # Files copied over during make
-adapters/protos/*.proto
+python/protos/*.proto
+
+# voltha cli history
+python/cli/.voltha_cli_history
 

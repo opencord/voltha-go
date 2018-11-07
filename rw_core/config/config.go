@@ -28,7 +28,7 @@ const (
 	EtcdStoreName            = "etcd"
 	default_InstanceID       = "rwcore001"
 	default_GrpcPort         = 50057
-	default_GrpcHost         = "127.0.0.1"
+	default_GrpcHost         = ""
 	default_KafkaAdapterHost = "127.0.0.1"
 	default_KafkaAdapterPort = 9092
 	default_KafkaClusterHost = "127.0.0.1"
