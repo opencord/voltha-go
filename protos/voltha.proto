@@ -445,25 +445,28 @@ service VolthaService {
         option (voltha.yang_xml_tag).xml_tag = 'device_groups';
     }
 
+    // Stream control packets to the dataplane
+    rpc StreamPacketsOut(stream openflow_13.PacketOut)
+        returns(google.protobuf.Empty) {
+        // This does not have an HTTP representation
+    }
+
+    // Receive control packet stream
+    rpc ReceivePacketsIn(google.protobuf.Empty)
+        returns(stream openflow_13.PacketIn) {
+        // This does not have an HTTP representation
+    }
+
+    rpc ReceiveChangeEvents(google.protobuf.Empty)
+        returns(stream openflow_13.ChangeEvent) {
+        // This does not have an HTTP representation
+    }
+
     // Get additional information on a device group
     rpc GetDeviceGroup(ID) returns(DeviceGroup) {
         option (google.api.http) = {
             get: "/api/v1/device_groups/{id}"
         };
-    }
-
-    // Stream control packets to the dataplane
-    rpc StreamPacketsOut (stream openflow_13.PacketOut) returns (google.protobuf.Empty) {
-        // This does not have an HTTP representation
-    }
-
-    // Receive control packet stream
-    rpc ReceivePacketsIn (google.protobuf.Empty) returns (stream openflow_13.PacketIn) {
-        // This does not have an HTTP representation
-    }
-
-    rpc ReceiveChangeEvents (google.protobuf.Empty) returns (stream openflow_13.ChangeEvent) {
-        // This does not have an HTTP representation
     }
 
     rpc CreateAlarmFilter(AlarmFilter) returns(AlarmFilter) {

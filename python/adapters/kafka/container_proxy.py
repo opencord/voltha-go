@@ -23,9 +23,9 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import failure
 from zope.interface import implementer
 
-from adapters.common.utils.deferred_utils import DeferredWithTimeout, \
+from python.common.utils.deferred_utils import DeferredWithTimeout, \
     TimeOutError
-from adapters.common.utils.registry import IComponent
+from python.common.utils.registry import IComponent
 
 log = structlog.get_logger()
 

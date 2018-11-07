@@ -362,6 +362,34 @@ func (dMgr *DeviceManager) processTransition(previous *voltha.Device, current *v
 	return nil
 }
 
+func (dMgr *DeviceManager) packetOut(deviceId string, outPort uint32, packet *ofp.OfpPacketOut) error {
+	log.Debugw("packetOut", log.Fields{"deviceId": deviceId, "outPort": outPort})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.packetOut(outPort, packet)
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceId)
+}
+
+func (dMgr *DeviceManager) PacketIn(deviceId string, port uint32, packet []byte) error {
+	log.Debugw("PacketIn", log.Fields{"deviceId": deviceId, "port": port})
+	// Get the logical device Id based on the deviceId
+	var device *voltha.Device
+	var err error
+	if device, err = dMgr.GetDevice(deviceId); err != nil {
+		log.Errorw("device-not-found", log.Fields{"deviceId": deviceId})
+		return err
+	}
+	if !device.Root{
+		log.Errorw("device-not-root", log.Fields{"deviceId": deviceId})
+		return status.Errorf(codes.FailedPrecondition, "%s", deviceId)
+	}
+
+	if err := dMgr.logicalDeviceMgr.packetIn(device.ParentId, port, packet); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (dMgr *DeviceManager) createLogicalDevice(cDevice *voltha.Device) error {
 	log.Info("createLogicalDevice")
 	var logicalId *string

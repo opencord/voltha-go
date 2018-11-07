@@ -250,6 +250,33 @@ func (ap *AdapterProxy) SelfTestDevice(device voltha.Device) (*voltha.SelfTestRe
 	return nil, nil
 }
 
+func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort uint32, packet *openflow_13.OfpPacketOut) error {
+	log.Debugw("packetOut", log.Fields{"deviceId": deviceId})
+	topic := kafka.Topic{Name: deviceType}
+	rpc := "receive_packet_out"
+	dId := &ca.StrType{Val:deviceId}
+	args := make([]*kafka.KVArg, 3)
+	args[0] = &kafka.KVArg{
+		Key:   "deviceId",
+		Value: dId,
+	}
+	op := &ca.IntType{Val:int64(outPort)}
+	args[1] = &kafka.KVArg{
+		Key:   "outPort",
+		Value: op,
+	}
+	args[2] = &kafka.KVArg{
+		Key:   "packet",
+		Value: packet,
+	}
+
+	// TODO:  Do we need to wait for an ACK on a packet Out?
+	success, result := ap.kafkaProxy.InvokeRPC(nil, rpc, &topic, false, args...)
+	log.Debugw("packetOut", log.Fields{"deviceid": deviceId, "success": success})
+	return unPackResponse(rpc, deviceId, success, result)
+}
+
+
 func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups) error {
 	log.Debugw("UpdateFlowsBulk", log.Fields{"deviceId": device.Id})
 	topic := kafka.Topic{Name: device.Type}

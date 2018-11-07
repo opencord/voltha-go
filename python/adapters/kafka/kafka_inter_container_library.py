@@ -25,10 +25,10 @@ from twisted.internet.defer import inlineCallbacks, returnValue, Deferred, \
     DeferredQueue, gatherResults
 from zope.interface import implementer
 
-from adapters.common.utils import asleep
-from adapters.common.utils.registry import IComponent
-from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
-from adapters.protos.core_adapter_pb2 import MessageType, Argument, \
+from python.common.utils import asleep
+from python.common.utils.registry import IComponent
+from kafka_proxy import KafkaProxy, get_kafka_proxy
+from python.protos.core_adapter_pb2 import MessageType, Argument, \
     InterContainerRequestBody, InterContainerMessage, Header, \
     InterContainerResponseBody
 

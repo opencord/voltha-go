@@ -21,9 +21,9 @@ Agent to play gateway between adapters.
 import structlog
 from uuid import uuid4
 from twisted.internet.defer import inlineCallbacks, returnValue
-from adapters.kafka.container_proxy import ContainerProxy
-from adapters.protos import third_party
-from adapters.protos.core_adapter_pb2 import InterAdapterHeader, \
+from container_proxy import ContainerProxy
+from python.protos import third_party
+from python.protos.core_adapter_pb2 import InterAdapterHeader, \
     InterAdapterMessage
 import time
 

@@ -407,6 +407,18 @@ func GetOfbFields(flow *ofp.OfpFlowStats, exclude ...ofp.OxmOfbFieldTypes) []*of
 	}
 }
 
+func GetPacketOutPort(packet *ofp.OfpPacketOut) uint32 {
+	if packet == nil {
+		return 0
+	}
+	for _, action := range packet.GetActions() {
+		if action.Type == OUTPUT {
+			return action.GetOutput().Port
+		}
+	}
+	return 0
+}
+
 func GetOutPort(flow *ofp.OfpFlowStats) uint32 {
 	if flow == nil {
 		return 0
@@ -694,6 +706,24 @@ func setVariadicModAttributes(mod *ofp.OfpFlowMod, args fu.OfpFlowModArgs) *ofp.
 		}
 	}
 	return mod
+}
+
+func MkPacketIn(port uint32, packet []byte) *ofp.OfpPacketIn {
+	packetIn := &ofp.OfpPacketIn{
+		Reason: ofp.OfpPacketInReason_OFPR_ACTION,
+		Match: &ofp.OfpMatch{
+			Type: ofp.OfpMatchType_OFPMT_OXM,
+			OxmFields: []*ofp.OfpOxmField{
+				{
+					OxmClass:ofp.OfpOxmClass_OFPXMC_OPENFLOW_BASIC,
+					Field: &ofp.OfpOxmField_OfbField{
+						OfbField: InPort(port)},
+				},
+			},
+		},
+		Data:packet,
+	}
+	return packetIn
 }
 
 // MkFlowStat is a helper method to build flows

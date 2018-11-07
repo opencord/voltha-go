@@ -29,22 +29,22 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 from zope.interface import implementer
 
-from adapters.common.structlog_setup import setup_logging, update_logging
-from adapters.common.utils.asleep import asleep
-from adapters.common.utils.deferred_utils import TimeOutError
-from adapters.common.utils.dockerhelpers import get_my_containers_name
-from adapters.common.utils.nethelpers import get_my_primary_local_ipv4, \
+from python.common.structlog_setup import setup_logging, update_logging
+from python.common.utils.asleep import asleep
+from python.common.utils.deferred_utils import TimeOutError
+from python.common.utils.dockerhelpers import get_my_containers_name
+from python.common.utils.nethelpers import get_my_primary_local_ipv4, \
     get_my_primary_interface
-from adapters.common.utils.registry import registry, IComponent
-from adapters.kafka.adapter_proxy import AdapterProxy
-from adapters.kafka.adapter_request_facade import AdapterRequestFacade
-from adapters.kafka.core_proxy import CoreProxy
-from adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
+from python.common.utils.registry import registry, IComponent
+from python.adapters.kafka.adapter_proxy import AdapterProxy
+from python.adapters.kafka.adapter_request_facade import AdapterRequestFacade
+from python.adapters.kafka.core_proxy import CoreProxy
+from python.adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
     get_messaging_proxy
-from adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
-from adapters.ponsim_onu.ponsim_onu import PonSimOnuAdapter
-from adapters.protos import third_party
-from adapters.protos.adapter_pb2 import AdapterConfig
+from python.adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
+from ponsim_onu import PonSimOnuAdapter
+from python.protos import third_party
+from python.protos.adapter_pb2 import AdapterConfig
 
 _ = third_party
 

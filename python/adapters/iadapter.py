@@ -22,13 +22,13 @@ import structlog
 from twisted.internet import reactor
 from zope.interface import implementer
 
-from adapters.interface import IAdapterInterface
-from adapters.protos.adapter_pb2 import Adapter
-from adapters.protos.adapter_pb2 import AdapterConfig
-from adapters.protos.common_pb2 import AdminState
-from adapters.protos.common_pb2 import LogLevel
-from adapters.protos.device_pb2 import DeviceType, DeviceTypes
-from adapters.protos.health_pb2 import HealthStatus
+from interface import IAdapterInterface
+from python.protos.adapter_pb2 import Adapter
+from python.protos.adapter_pb2 import AdapterConfig
+from python.protos.common_pb2 import AdminState
+from python.protos.common_pb2 import LogLevel
+from python.protos.device_pb2 import DeviceType, DeviceTypes
+from python.protos.health_pb2 import HealthStatus
 
 log = structlog.get_logger()
 
@@ -273,7 +273,7 @@ class OltAdapter(IAdapter):
         handler.send_proxied_message(proxy_address, msg)
 
     def process_inter_adapter_message(self, msg):
-        log.info('process-inter-adapter-message', msg=msg)
+        log.debug('process-inter-adapter-message', msg=msg)
         # Unpack the header to know which device needs to handle this message
         handler = None
         if msg.header.proxy_device_id:
@@ -286,18 +286,11 @@ class OltAdapter(IAdapter):
         if handler:
             reactor.callLater(0, handler.process_inter_adapter_message, msg)
 
-    def receive_packet_out(self, logical_device_id, egress_port_no, msg):
-        def ldi_to_di(ldi):
-            di = self.logical_device_id_to_root_device_id.get(ldi)
-            if di is None:
-                logical_device = self.core_proxy.get_logical_device(ldi)
-                di = logical_device.root_device_id
-                self.logical_device_id_to_root_device_id[ldi] = di
-            return di
-
-        device_id = ldi_to_di(logical_device_id)
+    def receive_packet_out(self, device_id, egress_port_no, msg):
+        log.info('receive_packet_out', device_id=device_id,
+                 egress_port=egress_port_no, msg=msg)
         handler = self.devices_handlers[device_id]
-        handler.packet_out(egress_port_no, msg)
+        handler.packet_out(egress_port_no, msg.data)
 
 
 """

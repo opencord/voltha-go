@@ -1,3 +1,4 @@
+---
 # Copyright 2018 the original author or authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,3 +12,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+version: "2"
+services:
+  cli:
+    image: "${REGISTRY}${REPOSITORY}voltha-cli:latest"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      DOCKER_HOST_IP: "${DOCKER_HOST_IP}"
+    entrypoint:
+    - /voltha/python/cli/setup.sh
+    - -g 192.168.0.14:50057
+    networks:
+    - default
+    ports:
+    - "5022:22"
+
+networks:
+  default:
+    driver: bridge
