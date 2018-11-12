@@ -80,6 +80,7 @@ Now, start the CLI.
 
 ```$xslt
 ssh -p 5022 voltha@localhost
+password for 'voltha' user is 'admin'. You can see Dockerfile.cli for password as well
 ```
 
 Perform the provisioning
