@@ -3,6 +3,9 @@
 The build and development environment of a Voltha Adapter is left to the developer's choice.  The 
 environment used below is the macOS. 
 
+# Create fresh build setup
+When creating a fresh build setup various packages, applications and libraries are required to Build successfully. Please refer BUILD_ENV.md for details to create fresh setup on your choice of OS. This file will increment as new setups are created on difference OSes.
+
 ### Build
 
 To build the adapters (so far Ponsim OLT and Ponsim ONU adapters) and dependent containers follow 
