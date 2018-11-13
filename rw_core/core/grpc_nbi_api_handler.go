@@ -189,14 +189,14 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 		return &voltha.Device{Id: device.Id}, nil
 	}
 
-	txn, err := handler.createKvTransaction(ctx)
-	if txn == nil {
-		return &voltha.Device{}, err
-	} else if txn.Acquired(MAX_RESPONSE_TIME) {
-		defer txn.Close()   // Ensure active core signals "done" to standby
-	} else {
-		return &voltha.Device{}, nil
-	}
+	//txn, err := handler.createKvTransaction(ctx)
+	//if txn == nil {
+	//	return &voltha.Device{}, err
+	//} else if txn.Acquired(MAX_RESPONSE_TIME) {
+	//	defer txn.Close()   // Ensure active core signals "done" to standby
+	//} else {
+	//	return &voltha.Device{}, nil
+	//}
 
 	ch := make(chan interface{})
 	defer close(ch)
@@ -227,14 +227,14 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 		return new(empty.Empty), nil
 	}
 
-	txn, err := handler.createKvTransaction(ctx)
-	if txn == nil {
-		return new(empty.Empty), err
-	} else if txn.Acquired(MAX_RESPONSE_TIME) {
-		defer txn.Close()   // Ensure active core signals "done" to standby
-	} else {
-		return new(empty.Empty), nil
-	}
+	//txn, err := handler.createKvTransaction(ctx)
+	//if txn == nil {
+	//	return new(empty.Empty), err
+	//} else if txn.Acquired(MAX_RESPONSE_TIME) {
+	//	defer txn.Close()   // Ensure active core signals "done" to standby
+	//} else {
+	//	return new(empty.Empty), nil
+	//}
 
 	ch := make(chan interface{})
 	defer close(ch)
