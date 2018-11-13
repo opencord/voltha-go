@@ -3,6 +3,11 @@
 The build and development environment of a Voltha Adapter is left to the developer's choice.  The 
 environment used below is the macOS. 
 
+# Create fresh build setup
+When creating a fresh build setup various packages, applications and libraries are required to Build successfully.
+Please refer BUILD_ENV.md for details to create fresh setup on your choice of OS.
+This file will increment as new setups are created on difference OSes.
+
 ### Build
 
 To build the adapters (so far Ponsim OLT and Ponsim ONU adapters) and dependent containers follow 
@@ -76,7 +81,7 @@ docker-compose -f compose/ponsim_onu.yml up -d
 
 First get the IP address of the Ponsim OLT container by using the docker inspect command.
 
-Now, start the CLI.
+Now, start the CLI. Password for 'voltha' user is 'admin'. Please see Dockerfile.cli for passwords
 
 ```$xslt
 ssh -p 5022 voltha@localhost
