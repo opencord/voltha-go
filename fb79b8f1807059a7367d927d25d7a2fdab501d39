@@ -16,6 +16,24 @@
       "revId": "fb79b8f1807059a7367d927d25d7a2fdab501d39",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a28531d_a8aa6556",
+        "filename": "python/adapters/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000502
+      },
+      "writtenOn": "2018-11-14T08:36:10Z",
+      "side": 1,
+      "message": "Done. Can you pls +2 for CR",
+      "parentUuid": "a2fd8a7c_7a463d16",
+      "revId": "fb79b8f1807059a7367d927d25d7a2fdab501d39",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
