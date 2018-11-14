@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03b65481_e6b17e61",
+        "filename": "python/adapters/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-11-14T14:35:43Z",
+      "side": 1,
+      "message": "This works only under the python directory.  Pls mention it as well.  Thanks.",
+      "revId": "f094a48fdd40a59b0593d5d3e8194ca6bda82d04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
