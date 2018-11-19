@@ -40,8 +40,8 @@ var (
 )
 
 func Test_ConcurrentProxy_1_1_Add_NewDevice(t *testing.T) {
-	devIdBin, _ := uuid.New().MarshalBinary()
-	devId = "0001" + hex.EncodeToString(devIdBin)[:12]
+	devIDBin, _ := uuid.New().MarshalBinary()
+	devID = "0001" + hex.EncodeToString(devIDBin)[:12]
 
 	preAddExecuted := false
 	postAddExecuted := false
@@ -49,14 +49,14 @@ func Test_ConcurrentProxy_1_1_Add_NewDevice(t *testing.T) {
 	modelTestConfig.RootProxy.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
 	modelTestConfig.RootProxy.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
 
-	device.Id = devId
+	device.Id = devID
 	if added := modelTestConfig.RootProxy.Add("/devices", device, ""); added == nil {
 		t.Error("Failed to add device")
 	} else {
 		t.Logf("Added device : %+v", added)
 	}
 
-	if d := modelTestConfig.RootProxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+	if d := modelTestConfig.RootProxy.Get("/devices/"+devID, 0, false, ""); !reflect.ValueOf(d).IsValid() {
 		t.Error("Failed to find added device")
 	} else {
 		djson, _ := json.Marshal(d)
@@ -74,9 +74,9 @@ func Test_ConcurrentProxy_1_1_Add_NewDevice(t *testing.T) {
 func Test_ConcurrentProxy_1_Add_ExistingDevice(t *testing.T) {
 	t.Parallel()
 
-	device.Id = devId
+	device.Id = devID
 	if added := modelTestConfig.RootProxy.Add("/devices", device, ""); added == nil {
-		t.Logf("Successfully detected that the device already exists: %s", devId)
+		t.Logf("Successfully detected that the device already exists: %s", devID)
 	} else {
 		t.Errorf("A new device should not have been created : %+v", added)
 	}
@@ -97,7 +97,7 @@ func Test_ConcurrentProxy_Get_AllDevices(t *testing.T) {
 
 func Test_ConcurrentProxy_Get_Update_DeviceAdminState(t *testing.T) {
 	t.Parallel()
-	if retrieved := modelTestConfig.RootProxy.Get("/devices/"+devId, 1, false, ""); retrieved == nil {
+	if retrieved := modelTestConfig.RootProxy.Get("/devices/"+devID, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
 		retrieved.(*voltha.Device).AdminState = voltha.AdminState_DISABLED
@@ -116,12 +116,12 @@ func Test_ConcurrentProxy_Get_Update_DeviceAdminState(t *testing.T) {
 			"POST_UPDATE instructions (root proxy)", &postUpdateExecuted,
 		)
 
-		if afterUpdate := modelTestConfig.RootProxy.Update("/devices/"+devId, retrieved, false, ""); afterUpdate == nil {
+		if afterUpdate := modelTestConfig.RootProxy.Update("/devices/"+devID, retrieved, false, ""); afterUpdate == nil {
 			t.Error("Failed to update device")
 		} else {
 			t.Logf("Updated device : %+v", afterUpdate.(Revision).GetData())
 		}
-		if d := modelTestConfig.RootProxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		if d := modelTestConfig.RootProxy.Get("/devices/"+devID, 0, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated device (root proxy)")
 		} else {
 			djson, _ := json.Marshal(d)
@@ -140,8 +140,8 @@ func Test_ConcurrentProxy_Get_Update_DeviceAdminState(t *testing.T) {
 func Test_ConcurrentProxy_Get_SingleDevice(t *testing.T) {
 	//t.Parallel()
 
-	if d := modelTestConfig.RootProxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
-		t.Errorf("Failed to find device : %s", devId)
+	if d := modelTestConfig.RootProxy.Get("/devices/"+devID, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		t.Errorf("Failed to find device : %s", devID)
 	} else {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found device: %s", string(djson))
@@ -152,8 +152,8 @@ func Test_ConcurrentProxy_Get_SingleDevice(t *testing.T) {
 func Test_ConcurrentProxy_Get_SingleDeviceFlows(t *testing.T) {
 	t.Parallel()
 
-	if d := modelTestConfig.RootProxy.Get("/devices/"+devId+"/flows", 0, false, ""); !reflect.ValueOf(d).IsValid() {
-		t.Errorf("Failed to find device : %s", devId)
+	if d := modelTestConfig.RootProxy.Get("/devices/"+devID+"/flows", 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		t.Errorf("Failed to find device : %s", devID)
 	} else {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found device: %s", string(djson))
@@ -163,8 +163,8 @@ func Test_ConcurrentProxy_Get_SingleDeviceFlows(t *testing.T) {
 
 func Test_ConcurrentProxy_Get_SingleDevicePorts(t *testing.T) {
 	t.Parallel()
-	if d := modelTestConfig.RootProxy.Get("/devices/"+devId+"/ports", 0, false, ""); !reflect.ValueOf(d).IsValid() {
-		t.Errorf("Failed to find device : %s", devId)
+	if d := modelTestConfig.RootProxy.Get("/devices/"+devID+"/ports", 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		t.Errorf("Failed to find device : %s", devID)
 	} else {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found device: %s", string(djson))
@@ -175,7 +175,7 @@ func Test_ConcurrentProxy_Get_SingleDevicePorts(t *testing.T) {
 func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 	t.Parallel()
 
-	if retrieved := modelTestConfig.RootProxy.Get("/devices/"+devId, 1, false, ""); retrieved == nil {
+	if retrieved := modelTestConfig.RootProxy.Get("/devices/"+devID, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
 		var fwVersion int
@@ -183,7 +183,7 @@ func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 			fwVersion = 0
 		} else {
 			fwVersion, _ = strconv.Atoi(retrieved.(*voltha.Device).FirmwareVersion)
-			fwVersion += 1
+			fwVersion++
 		}
 
 		preUpdateExecuted := false
@@ -202,12 +202,12 @@ func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 
 		retrieved.(*voltha.Device).FirmwareVersion = strconv.Itoa(fwVersion)
 
-		if afterUpdate := modelTestConfig.RootProxy.Update("/devices/"+devId, retrieved, false, ""); afterUpdate == nil {
+		if afterUpdate := modelTestConfig.RootProxy.Update("/devices/"+devID, retrieved, false, ""); afterUpdate == nil {
 			t.Error("Failed to update device")
 		} else {
 			t.Logf("Updated device : %+v", afterUpdate.(Revision).GetData())
 		}
-		if d := modelTestConfig.RootProxy.Get("/devices/"+devId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		if d := modelTestConfig.RootProxy.Get("/devices/"+devID, 0, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated device (root proxy)")
 		} else {
 			djson, _ := json.Marshal(d)
@@ -227,7 +227,7 @@ func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 //	t.Parallel()
 //
 //	// Get a device proxy and update a specific port
-//	//devflowsProxy := modelTestConfig.Root.GetProxy("/devices/"+devId+"/flows", false)
+//	//devflowsProxy := modelTestConfig.Root.CreateProxy("/devices/"+devID+"/flows", false)
 //	flows := modelTestConfig.RootProxy.Get("/", 0, false, "")
 //	flows.([]interface{})[0].(*openflow_13.Flows).Items[0].TableId = 2244
 //
@@ -245,26 +245,26 @@ func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 //		"POST_UPDATE instructions (flows proxy)", &postUpdateExecuted,
 //	)
 //
-//	kvFlows := modelTestConfig.RootProxy.Get("/devices/"+devId+"/flows", 0, false, "")
+//	kvFlows := modelTestConfig.RootProxy.Get("/devices/"+devID+"/flows", 0, false, "")
 //
 //	if reflect.DeepEqual(flows, kvFlows) {
 //		t.Errorf("Local changes have changed the KV store contents -  local:%+v, kv: %+v", flows, kvFlows)
 //	}
 //
-//	if updated := modelTestConfig.RootProxy.Update("/devices/"+devId+"/flows", flows.([]interface{})[0], false, ""); updated == nil {
+//	if updated := modelTestConfig.RootProxy.Update("/devices/"+devID+"/flows", flows.([]interface{})[0], false, ""); updated == nil {
 //		t.Error("Failed to update flow")
 //	} else {
 //		t.Logf("Updated flows : %+v", updated)
 //	}
 //
-//	if d := modelTestConfig.RootProxy.Get("/devices/"+devId+"/flows", 0, false, ""); d == nil {
+//	if d := modelTestConfig.RootProxy.Get("/devices/"+devID+"/flows", 0, false, ""); d == nil {
 //		t.Error("Failed to find updated flows (flows proxy)")
 //	} else {
 //		djson, _ := json.Marshal(d)
 //		t.Logf("Found flows (flows proxy): %s", string(djson))
 //	}
 //
-//	if d := modelTestConfig.RootProxy.Get("/devices/"+devId+"/flows", 0, false, ""); !reflect.ValueOf(d).IsValid() {
+//	if d := modelTestConfig.RootProxy.Get("/devices/"+devID+"/flows", 0, false, ""); !reflect.ValueOf(d).IsValid() {
 //		t.Error("Failed to find updated flows (root proxy)")
 //	} else {
 //		djson, _ := json.Marshal(d)
@@ -294,16 +294,16 @@ func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 //		"POST_REMOVE instructions (root proxy)", &postRemoveExecuted,
 //	)
 //
-//	if removed := modelTestConfig.RootProxy.Remove("/devices/"+devId, ""); removed == nil {
+//	if removed := modelTestConfig.RootProxy.Remove("/devices/"+devID, ""); removed == nil {
 //		t.Error("Failed to remove device")
 //	} else {
 //		t.Logf("Removed device : %+v", removed)
 //	}
-//	if d := modelTestConfig.RootProxy.Get("/devices/"+devId, 0, false, ""); reflect.ValueOf(d).IsValid() {
+//	if d := modelTestConfig.RootProxy.Get("/devices/"+devID, 0, false, ""); reflect.ValueOf(d).IsValid() {
 //		djson, _ := json.Marshal(d)
 //		t.Errorf("Device was not removed - %s", djson)
 //	} else {
-//		t.Logf("Device was removed: %s", devId)
+//		t.Logf("Device was removed: %s", devID)
 //	}
 //
 //	if !preRemoveExecuted {
@@ -344,7 +344,7 @@ func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 //			b.Error("Failed to update device")
 //		} else {
 //			if d := modelTestConfig.RootProxy.Get("/devices/"+target.Id, 0, false, ""); !reflect.ValueOf(d).IsValid() {
-//				b.Errorf("Failed to find device : %s", devId)
+//				b.Errorf("Failed to find device : %s", devID)
 //			} else {
 //				//djson, _ := json.Marshal(d)
 //				//b.Logf("Checking updated device device: %s", string(djson))
@@ -369,7 +369,7 @@ func Test_ConcurrentProxy_Get_Update_DeviceFirmware(t *testing.T) {
 //
 //	for n := 0; n < b.N; n++ {
 //		if d := modelTestConfig.RootProxy.Get("/devices/"+target.Id, 0, false, ""); !reflect.ValueOf(d).IsValid() {
-//			b.Errorf("Failed to find device : %s", devId)
+//			b.Errorf("Failed to find device : %s", devID)
 //		} else {
 //			//djson, _ := json.Marshal(d)
 //			//b.Logf("Found device: %s", string(djson))
@@ -401,7 +401,7 @@ func Benchmark_ConcurrentProxy_UpdateFirmware(b *testing.B) {
 				fwVersion = 0
 			} else {
 				fwVersion, _ = strconv.Atoi(target.FirmwareVersion)
-				fwVersion += 1
+				fwVersion++
 			}
 
 			target.FirmwareVersion = strconv.Itoa(fwVersion)
@@ -411,7 +411,7 @@ func Benchmark_ConcurrentProxy_UpdateFirmware(b *testing.B) {
 				b.Error("Failed to update device")
 			} else {
 				if d := modelTestConfig.RootProxy.Get("/devices/"+target.Id, 0, false, ""); !reflect.ValueOf(d).IsValid() {
-					b.Errorf("Failed to find device : %s", devId)
+					b.Errorf("Failed to find device : %s", devID)
 				} else if d.(*voltha.Device).FirmwareVersion != target.FirmwareVersion {
 					b.Errorf("Firmware was not uptaded - expected: %s, actual: %s",
 						target.FirmwareVersion,
@@ -446,7 +446,7 @@ func Benchmark_ConcurrentProxy_GetDevice(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			if d := modelTestConfig.RootProxy.Get("/devices/"+target.Id, 0, false, ""); !reflect.ValueOf(d).IsValid() {
-				b.Errorf("Failed to find device : %s", devId)
+				b.Errorf("Failed to find device : %s", devID)
 			} else {
 				//djson, _ := json.Marshal(d)
 				//b.Logf("Found device: %s", string(djson))

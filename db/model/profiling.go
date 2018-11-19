@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -20,7 +21,9 @@ import (
 	"sync"
 )
 
+// Profiling is used to store performance details collected at runtime
 type profiling struct {
+	sync.RWMutex
 	DatabaseRetrieveTime  float64
 	DatabaseRetrieveCount int
 	InMemoryModelTime     float64
@@ -31,37 +34,65 @@ type profiling struct {
 	InMemoryLockCount     int
 }
 
-var profiling_instance *profiling
-var profiling_once sync.Once
+var profilingInstance *profiling
+var profilingOnce sync.Once
 
+// GetProfiling returns a singleton instance of the Profiling structure
 func GetProfiling() *profiling {
-	profiling_once.Do(func() {
-		profiling_instance = &profiling{}
+	profilingOnce.Do(func() {
+		profilingInstance = &profiling{}
 	})
-	return profiling_instance
+	return profilingInstance
 }
 
+// AddToDatabaseRetrieveTime appends a time period to retrieve data from the database
 func (p *profiling) AddToDatabaseRetrieveTime(period float64) {
+	p.Lock()
+	defer p.Unlock()
+
 	p.DatabaseRetrieveTime += period
-	p.DatabaseRetrieveCount += 1
+	p.DatabaseRetrieveCount++
 }
+
+// AddToInMemoryModelTime appends a time period to construct/deconstruct data in memory
 func (p *profiling) AddToInMemoryModelTime(period float64) {
+	p.Lock()
+	defer p.Unlock()
+
 	p.InMemoryModelTime += period
-	p.InMemoryModelCount += 1
+	p.InMemoryModelCount++
 }
+
+// AddToInMemoryProcessTime appends a time period to process data
 func (p *profiling) AddToInMemoryProcessTime(period float64) {
+	p.Lock()
+	defer p.Unlock()
+
 	p.InMemoryProcessTime += period
 }
+
+// AddToDatabaseStoreTime appends a time period to store data in the database
 func (p *profiling) AddToDatabaseStoreTime(period float64) {
+	p.Lock()
+	defer p.Unlock()
+
 	p.DatabaseStoreTime += period
 }
 
+// AddToInMemoryLockTime appends a time period when a code block was locked
 func (p *profiling) AddToInMemoryLockTime(period float64) {
+	p.Lock()
+	defer p.Unlock()
+
 	p.InMemoryLockTime += period
-	p.InMemoryLockCount += 1
+	p.InMemoryLockCount++
 }
 
+// Reset initializes the profile counters
 func (p *profiling) Reset() {
+	p.Lock()
+	defer p.Unlock()
+
 	p.DatabaseRetrieveTime = 0
 	p.DatabaseRetrieveCount = 0
 	p.InMemoryModelTime = 0
@@ -72,7 +103,11 @@ func (p *profiling) Reset() {
 	p.InMemoryLockCount = 0
 }
 
+// Report will provide the current profile counter status
 func (p *profiling) Report() {
+	p.Lock()
+	defer p.Unlock()
+
 	log.Infof("[ Profiling Report ]")
 	log.Infof("Database Retrieval : %f", p.DatabaseRetrieveTime)
 	log.Infof("Database Retrieval Count : %d", p.DatabaseRetrieveCount)

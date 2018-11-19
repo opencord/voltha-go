@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -21,6 +22,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -28,7 +30,9 @@ import (
 //TODO: missing retry stuff
 //TODO: missing proper logging
 
+// Backend structure holds details for accessing the kv store
 type Backend struct {
+	sync.RWMutex
 	Client     kvstore.Client
 	StoreType  string
 	Host       string
@@ -37,6 +41,7 @@ type Backend struct {
 	PathPrefix string
 }
 
+// NewBackend creates a new instance of a Backend structure
 func NewBackend(storeType string, host string, port int, timeout int, pathPrefix string) *Backend {
 	var err error
 
@@ -70,23 +75,53 @@ func (b *Backend) makePath(key string) string {
 	path := fmt.Sprintf("%s/%s", b.PathPrefix, key)
 	return path
 }
+
+// List retrieves one or more items that match the specified key
 func (b *Backend) List(key string) (map[string]*kvstore.KVPair, error) {
-	return b.Client.List(b.makePath(key), b.Timeout)
+	b.Lock()
+	defer b.Unlock()
+
+	formattedPath := b.makePath(key)
+	log.Debugf("List key: %s, path: %s", key, formattedPath)
+
+	return b.Client.List(formattedPath, b.Timeout)
 }
+
+// Get retrieves an item that matches the specified key
 func (b *Backend) Get(key string) (*kvstore.KVPair, error) {
+	b.Lock()
+	defer b.Unlock()
+
 	formattedPath := b.makePath(key)
 	log.Debugf("Get key: %s, path: %s", key, formattedPath)
+
 	start := time.Now()
 	err, pair := b.Client.Get(formattedPath, b.Timeout)
 	stop := time.Now()
+
 	GetProfiling().AddToDatabaseRetrieveTime(stop.Sub(start).Seconds())
+
 	return err, pair
 }
+
+// Put stores an item value under the specifed key
 func (b *Backend) Put(key string, value interface{}) error {
+	b.Lock()
+	defer b.Unlock()
+
 	formattedPath := b.makePath(key)
 	log.Debugf("Put key: %s, value: %+v, path: %s", key, string(value.([]byte)), formattedPath)
+
 	return b.Client.Put(formattedPath, value, b.Timeout)
 }
+
+// Delete removes an item under the specified key
 func (b *Backend) Delete(key string) error {
-	return b.Client.Delete(b.makePath(key), b.Timeout)
+	b.Lock()
+	defer b.Unlock()
+
+	formattedPath := b.makePath(key)
+	log.Debugf("Delete key: %s, path: %s", key, formattedPath)
+
+	return b.Client.Delete(formattedPath, b.Timeout)
 }

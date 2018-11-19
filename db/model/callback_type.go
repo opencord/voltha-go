@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
+// CallbackType is an enumerated value to express when a callback should be executed
 type CallbackType uint8
 
+// Enumerated list of callback types
 const (
 	GET CallbackType = iota
 	PRE_UPDATE

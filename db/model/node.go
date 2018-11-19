@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 // TODO: proper error handling
@@ -23,13 +24,17 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"reflect"
+	"runtime/debug"
 	"strings"
+	"sync"
 )
 
+// When a branch has no transaction id, everything gets stored in NONE
 const (
 	NONE string = "none"
 )
 
+// Node interface is an abstraction of the node data structure
 type Node interface {
 	MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple)
 
@@ -47,14 +52,12 @@ type Node interface {
 	DeleteTxBranch(txid string)
 	FoldTxBranch(txid string)
 
-	GetProxy(path string, exclusive bool) *Proxy
-
-	ExecuteCallbacks()
-	AddCallback(callback CallbackFunction, args ...interface{})
-	AddNotificationCallback(callback CallbackFunction, args ...interface{})
+	CreateProxy(path string, exclusive bool) *Proxy
+	GetProxy() *Proxy
 }
 
 type node struct {
+	sync.RWMutex
 	Root      *root
 	Type      interface{}
 	Branches  map[string]*Branch
@@ -64,12 +67,14 @@ type node struct {
 	AutoPrune bool
 }
 
+// ChangeTuple holds details of modifications made to a revision
 type ChangeTuple struct {
 	Type         CallbackType
 	PreviousData interface{}
 	LatestData   interface{}
 }
 
+// NewNode creates a new instance of the node data structure
 func NewNode(root *root, initialData interface{}, autoPrune bool, txid string) *node {
 	n := &node{}
 
@@ -85,6 +90,9 @@ func NewNode(root *root, initialData interface{}, autoPrune bool, txid string) *
 		dataCopy := proto.Clone(initialData.(proto.Message))
 		n.initialize(dataCopy, txid)
 	} else if reflect.ValueOf(initialData).IsValid() {
+		// FIXME: this block does not reflect the original implementation
+		// it should be checking if the provided initial_data is already a type!??!
+		// it should be checked before IsProtoMessage
 		n.Type = reflect.ValueOf(initialData).Interface()
 	} else {
 		// not implemented error
@@ -94,39 +102,33 @@ func NewNode(root *root, initialData interface{}, autoPrune bool, txid string) *
 	return n
 }
 
+// MakeNode creates a new node in the tree
 func (n *node) MakeNode(data interface{}, txid string) *node {
 	return NewNode(n.Root, data, true, txid)
 }
 
+// MakeRevision create a new revision of the node in the tree
 func (n *node) MakeRevision(branch *Branch, data interface{}, children map[string][]Revision) Revision {
-	if n.Root.RevisionClass.(reflect.Type) == reflect.TypeOf(PersistedRevision{}) {
-		return NewPersistedRevision(branch, data, children)
-	}
-
-	return NewNonPersistedRevision(branch, data, children)
+	return n.GetRoot().MakeRevision(branch, data, children)
 }
 
-func (n *node) MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
-	n.makeLatest(branch, revision, changeAnnouncement)
-}
+// makeLatest will mark the revision of a node as being the latest
 func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
-	if _, ok := branch.Revisions[revision.GetHash()]; !ok {
-		branch.Revisions[revision.GetHash()] = revision
-	}
+	branch.AddRevision(revision)
 
-	if branch.Latest == nil || revision.GetHash() != branch.Latest.GetHash() {
-		branch.Latest = revision
+	if branch.GetLatest() == nil || revision.GetHash() != branch.GetLatest().GetHash() {
+		branch.SetLatest(revision)
 	}
 
 	if changeAnnouncement != nil && branch.Txid == "" {
-		if n.Proxy != nil {
+		if n.GetProxy() != nil {
 			for _, change := range changeAnnouncement {
 				log.Debugf("invoking callback - changeType: %+v, previous:%+v, latest: %+v",
 					change.Type,
 					change.PreviousData,
 					change.LatestData)
-				n.Root.AddCallback(
-					n.Proxy.InvokeCallbacks,
+				n.GetRoot().AddCallback(
+					n.GetProxy().InvokeCallbacks,
 					change.Type,
 					true,
 					change.PreviousData,
@@ -139,7 +141,7 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 				change.Type,
 				change.PreviousData,
 				change.LatestData)
-			n.Root.AddNotificationCallback(
+			n.GetRoot().AddNotificationCallback(
 				n.makeEventBus().Advertise,
 				change.Type,
 				revision.GetHash(),
@@ -149,27 +151,24 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	}
 }
 
+// Latest returns the latest revision of node with or without the transaction id
 func (n *node) Latest(txid ...string) Revision {
 	var branch *Branch
-	var exists bool
 
 	if len(txid) > 0 && txid[0] != "" {
-		if branch, exists = n.Branches[txid[0]]; exists {
-			return branch.Latest
+		if branch = n.GetBranch(txid[0]); branch != nil {
+			return branch.GetLatest()
 		}
-	} else if branch, exists = n.Branches[NONE]; exists {
-		return branch.Latest
+	} else if branch = n.GetBranch(NONE); branch != nil {
+		return branch.GetLatest()
 	}
 	return nil
 }
 
-func (n *node) GetHash(hash string) Revision {
-	return n.Branches[NONE].Revisions[hash]
-}
-
+// initialize prepares the content of a node along with its possible ramifications
 func (n *node) initialize(data interface{}, txid string) {
-	var children map[string][]Revision
-	children = make(map[string][]Revision)
+	n.Lock()
+	children := make(map[string][]Revision)
 	for fieldName, field := range ChildrenFields(n.Type) {
 		_, fieldValue := GetAttributeValue(data, fieldName, 0)
 
@@ -181,7 +180,9 @@ func (n *node) initialize(data interface{}, txid string) {
 					for i := 0; i < fieldValue.Len(); i++ {
 						v := fieldValue.Index(i)
 
-						rev := n.MakeNode(v.Interface(), txid).Latest(txid)
+						if rev := n.MakeNode(v.Interface(), txid).Latest(txid); rev != nil {
+							children[fieldName] = append(children[fieldName], rev)
+						}
 
 						_, key := GetAttributeValue(v.Interface(), field.Key, 0)
 						for _, k := range keysSeen {
@@ -189,59 +190,60 @@ func (n *node) initialize(data interface{}, txid string) {
 								log.Errorf("duplicate key - %s", k)
 							}
 						}
-						children[fieldName] = append(children[fieldName], rev)
 						keysSeen = append(keysSeen, key.String())
 					}
 
 				} else {
 					for i := 0; i < fieldValue.Len(); i++ {
 						v := fieldValue.Index(i)
-						children[fieldName] = append(children[fieldName], n.MakeNode(v.Interface(), txid).Latest())
+						if newNodeRev := n.MakeNode(v.Interface(), txid).Latest(); newNodeRev != nil {
+							children[fieldName] = append(children[fieldName], newNodeRev)
+						}
 					}
 				}
 			} else {
-				children[fieldName] = append(children[fieldName], n.MakeNode(fieldValue.Interface(), txid).Latest())
+				if newNodeRev := n.MakeNode(fieldValue.Interface(), txid).Latest(); newNodeRev != nil {
+					children[fieldName] = append(children[fieldName], newNodeRev)
+				}
 			}
 		} else {
 			log.Errorf("field is invalid - %+v", fieldValue)
 		}
 	}
-	// FIXME: ClearField???  No such method in go protos.  Reset?
-	//data.ClearField(field_name)
+	n.Unlock()
+
 	branch := NewBranch(n, "", nil, n.AutoPrune)
 	rev := n.MakeRevision(branch, data, children)
 	n.makeLatest(branch, rev, nil)
 
 	if txid == "" {
-		n.Branches[NONE] = branch
+		n.SetBranch(NONE, branch)
 	} else {
-		n.Branches[txid] = branch
+		n.SetBranch(txid, branch)
 	}
 }
 
+// findRevByKey retrieves a specific revision from a node tree
 func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) (int, Revision) {
+	n.Lock()
+	defer n.Unlock()
 	for i, rev := range revs {
 		dataValue := reflect.ValueOf(rev.GetData())
 		dataStruct := GetAttributeStructure(rev.GetData(), keyName, 0)
 
 		fieldValue := dataValue.Elem().FieldByName(dataStruct.Name)
 
-		//log.Debugf("fieldValue: %+v, type: %+v, value: %+v", fieldValue.Interface(), fieldValue.Type(), value)
 		a := fmt.Sprintf("%s", fieldValue.Interface())
 		b := fmt.Sprintf("%s", value)
 		if a == b {
-			return i, rev
+			return i, revs[i]
 		}
 	}
-
-	log.Errorf("key %s=%s not found", keyName, value)
 
 	return -1, nil
 }
 
-//
-// Get operation
-//
+// Get retrieves the data from a node tree that resides at the specified path
 func (n *node) Get(path string, hash string, depth int, deep bool, txid string) interface{} {
 	if deep {
 		depth = -1
@@ -254,20 +256,20 @@ func (n *node) Get(path string, hash string, depth int, deep bool, txid string) 
 	var branch *Branch
 	var rev Revision
 
-	// FIXME: should empty txid be cleaned up?
-	if branch = n.Branches[txid]; txid == "" || branch == nil {
-		branch = n.Branches[NONE]
+	if branch = n.GetBranch(txid); txid == "" || branch == nil {
+		branch = n.GetBranch(NONE)
 	}
 
 	if hash != "" {
-		rev = branch.Revisions[hash]
+		rev = branch.GetRevision(hash)
 	} else {
-		rev = branch.Latest
+		rev = branch.GetLatest()
 	}
 
 	return n.getPath(rev, path, depth)
 }
 
+// getPath traverses the specified path and retrieves the data associated to it
 func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 	if path == "" {
 		return n.getData(rev, depth)
@@ -286,8 +288,10 @@ func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 	field := names[name]
 
 	if field.IsContainer {
+		children := make([]Revision, len(rev.GetChildren()[name]))
+		copy(children, rev.GetChildren()[name])
+
 		if field.Key != "" {
-			children := rev.GetChildren()[name]
 			if path != "" {
 				partition = strings.SplitN(path, "/", 2)
 				key := partition[0]
@@ -314,60 +318,57 @@ func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 				// TODO: raise error
 				return response
 			}
-			for _, childRev := range rev.GetChildren()[name] {
+			for _, childRev := range children {
 				childNode := childRev.GetNode()
 				value := childNode.getData(childRev, depth)
 				response = append(response, value)
 			}
 			return response
 		}
-	} else {
-		childRev := rev.GetChildren()[name][0]
-		childNode := childRev.GetNode()
-		return childNode.getPath(childRev, path, depth)
 	}
-	return nil
+
+	childRev := rev.GetChildren()[name][0]
+	childNode := childRev.GetNode()
+	return childNode.getPath(childRev, path, depth)
 }
 
+// getData retrieves the data from a node revision
 func (n *node) getData(rev Revision, depth int) interface{} {
-	msg := rev.Get(depth)
+	msg := rev.GetBranch().GetLatest().Get(depth)
 	var modifiedMsg interface{}
 
-	if n.Proxy != nil {
-		log.Debug("invoking proxy GET Callbacks")
-		if modifiedMsg = n.Proxy.InvokeCallbacks(GET, false, msg); modifiedMsg != nil {
+	if n.GetProxy() != nil {
+		log.Debug("invoking proxy GET Callbacks : %+v", msg)
+		if modifiedMsg = n.GetProxy().InvokeCallbacks(GET, false, msg); modifiedMsg != nil {
 			msg = modifiedMsg
 		}
 
 	}
+
 	return msg
 }
 
-//
-// Update operation
-//
+// Update changes the content of a node at the specified path with the provided data
 func (n *node) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
-	// FIXME: is this required ... a bit overkill to take out a "/"
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
 
 	var branch *Branch
-	var ok bool
 	if txid == "" {
-		branch = n.Branches[NONE]
-	} else if branch, ok = n.Branches[txid]; !ok {
+		branch = n.GetBranch(NONE)
+	} else if branch = n.GetBranch(txid); &branch == nil {
 		branch = makeBranch(n)
 	}
 
-	log.Debugf("Branch data : %+v, Passed data: %+v", branch.Latest.GetData(), data)
-
+	if branch.GetLatest() != nil {
+		log.Debugf("Branch data : %+v, Passed data: %+v", branch.GetLatest().GetData(), data)
+	}
 	if path == "" {
 		return n.doUpdate(branch, data, strict)
 	}
 
-	// TODO missing some code here...
-	rev := branch.Latest
+	rev := branch.GetLatest()
 
 	partition := strings.SplitN(path, "/", 2)
 	name := partition[0]
@@ -393,14 +394,12 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 				path = partition[1]
 			}
 			keyValue := field.KeyFromStr(key)
-			// TODO. Est-ce que le copy ne fonctionne pas? dois-je plutôt faire un clone de chaque item?
-			for _, v := range rev.GetChildren()[name] {
-				revCopy := reflect.ValueOf(v).Interface().(Revision)
-				children = append(children, revCopy)
-			}
+
+			children = make([]Revision, len(rev.GetChildren()[name]))
+			copy(children, rev.GetChildren()[name])
+
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
-			childNode.Proxy = n.Proxy
 
 			newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
 
@@ -409,39 +408,45 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 					log.Debug("clear-hash - %s %+v", newChildRev.GetHash(), newChildRev)
 					newChildRev.ClearHash()
 				}
-				return branch.Latest
+				return branch.GetLatest()
 			}
 
 			_, newKey := GetAttributeValue(newChildRev.GetData(), field.Key, 0)
-			log.Debugf("newKey is %s", newKey.Interface())
+
 			_newKeyType := fmt.Sprintf("%s", newKey)
 			_keyValueType := fmt.Sprintf("%s", keyValue)
+
 			if _newKeyType != _keyValueType {
 				log.Errorf("cannot change key field")
 			}
+
 			children[idx] = newChildRev
-			rev = rev.UpdateChildren(name, children, branch)
-			branch.Latest.Drop(txid, false)
-			n.Root.MakeLatest(branch, rev, nil)
+
+			updatedRev := rev.UpdateChildren(name, children, branch)
+			branch.GetLatest().Drop(txid, false)
+			n.makeLatest(branch, updatedRev, nil)
+
 			return newChildRev
+
 		} else {
 			log.Errorf("cannot index into container with no keys")
 		}
 	} else {
 		childRev := rev.GetChildren()[name][0]
 		childNode := childRev.GetNode()
-		childNode.Proxy = n.Proxy
 		newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
-		rev = rev.UpdateChildren(name, []Revision{newChildRev}, branch)
-		branch.Latest.Drop(txid, false)
-		n.Root.MakeLatest(branch, rev, nil)
+		updatedRev := rev.UpdateChildren(name, []Revision{newChildRev}, branch)
+		rev.Drop(txid, false)
+		n.makeLatest(branch, updatedRev, nil)
 		return newChildRev
 	}
 	return nil
 }
 
 func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision {
-	log.Debugf("Comparing types - expected: %+v, actual: %+v", reflect.ValueOf(n.Type).Type(), reflect.TypeOf(data))
+	log.Debugf("Comparing types - expected: %+v, actual: %+v &&&&&& %s", reflect.ValueOf(n.Type).Type(),
+		reflect.TypeOf(data),
+		string(debug.Stack()))
 
 	if reflect.TypeOf(data) != reflect.ValueOf(n.Type).Type() {
 		// TODO raise error
@@ -454,33 +459,33 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 	//	return nil
 	//}
 
-	if n.Proxy != nil {
+	if n.GetProxy() != nil {
 		log.Debug("invoking proxy PRE_UPDATE Callbacks")
-		n.Proxy.InvokeCallbacks(PRE_UPDATE, false, branch.Latest.GetData(), data)
+		n.GetProxy().InvokeCallbacks(PRE_UPDATE, false, branch.GetLatest(), data)
 	}
-	if !reflect.DeepEqual(branch.Latest.GetData(), data) {
+
+	if branch.GetLatest().GetData().(proto.Message).String() != data.(proto.Message).String() {
 		if strict {
 			// TODO: checkAccessViolations(data, Branch.GetLatest.data)
 			log.Debugf("checking access violations")
 		}
-		rev := branch.Latest.UpdateData(data, branch)
-		changes := []ChangeTuple{{POST_UPDATE, branch.Latest.GetData(), rev.GetData()}}
+
+		rev := branch.GetLatest().UpdateData(data, branch)
+		changes := []ChangeTuple{{POST_UPDATE, branch.GetLatest().GetData(), rev.GetData()}}
 
 		// FIXME VOL-1293: the following statement corrupts the kv when using a subproxy (commenting for now)
 		// FIXME VOL-1293 cont'd: need to figure out the required conditions otherwise we are not cleaning up entries
-		//branch.Latest.Drop(branch.Txid, true)
+		//branch.GetLatest().Drop(branch.Txid, true)
 
-		n.Root.Proxy = n.Proxy
-		n.Root.MakeLatest(branch, rev, changes)
+		n.makeLatest(branch, rev, changes)
+
 		return rev
-	} else {
-		return branch.Latest
 	}
+
+	return branch.GetLatest()
 }
 
-//
-// Add operation
-//
+// Add inserts a new node at the specified path with the provided data
 func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -491,14 +496,13 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 	}
 
 	var branch *Branch
-	var ok bool
 	if txid == "" {
-		branch = n.Branches[NONE]
-	} else if branch, ok = n.Branches[txid]; !ok {
+		branch = n.GetBranch(NONE)
+	} else if branch = n.GetBranch(txid); branch == nil {
 		branch = makeBranch(n)
 	}
 
-	rev := branch.Latest
+	rev := branch.GetLatest()
 
 	partition := strings.SplitN(path, "/", 2)
 	name := partition[0]
@@ -510,37 +514,39 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 	}
 
 	field := ChildrenFields(n.Type)[name]
+
 	var children []Revision
 
 	if field.IsContainer {
 		if path == "" {
 			if field.Key != "" {
-				if n.Proxy != nil {
+				if n.GetProxy() != nil {
 					log.Debug("invoking proxy PRE_ADD Callbacks")
-					n.Proxy.InvokeCallbacks(PRE_ADD, false, data)
+					n.GetProxy().InvokeCallbacks(PRE_ADD, false, data)
 				}
 
-				for _, v := range rev.GetChildren()[name] {
-					revCopy := reflect.ValueOf(v).Interface().(Revision)
-					children = append(children, revCopy)
-				}
+				children = make([]Revision, len(rev.GetChildren()[name]))
+				copy(children, rev.GetChildren()[name])
+
 				_, key := GetAttributeValue(data, field.Key, 0)
+
 				if _, exists := n.findRevByKey(children, field.Key, key.String()); exists != nil {
 					// TODO raise error
 					log.Errorf("duplicate key found: %s", key.String())
-				} else {
-					childRev := n.MakeNode(data, txid).Latest(txid)
-					children = append(children, childRev)
-					rev := rev.UpdateChildren(name, children, branch)
-					changes := []ChangeTuple{{POST_ADD, nil, rev.GetData()}}
-					branch.Latest.Drop(txid, false)
-					n.Root.MakeLatest(branch, rev, changes)
-					return rev
+					return exists
 				}
+				childRev := n.MakeNode(data, txid).Latest(txid)
+				children = append(children, childRev)
+				rev = rev.UpdateChildren(name, children, branch)
+				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
 
-			} else {
-				log.Errorf("cannot add to non-keyed container")
+				rev.Drop(txid, false)
+				n.makeLatest(branch, rev, changes)
+
+				return childRev
 			}
+			log.Errorf("cannot add to non-keyed container")
+
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]
@@ -550,27 +556,33 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 				path = partition[1]
 			}
 			keyValue := field.KeyFromStr(key)
+
+			children = make([]Revision, len(rev.GetChildren()[name]))
 			copy(children, rev.GetChildren()[name])
+
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
+
 			childNode := childRev.GetNode()
 			newChildRev := childNode.Add(path, data, txid, makeBranch)
+
 			children[idx] = newChildRev
-			rev := rev.UpdateChildren(name, children, branch)
-			branch.Latest.Drop(txid, false)
-			n.Root.MakeLatest(branch, rev, nil)
-			return rev
+
+			rev = rev.UpdateChildren(name, branch.GetLatest().GetChildren()[name], branch)
+			rev.Drop(txid, false)
+			n.makeLatest(branch, rev.GetBranch().GetLatest(), nil)
+
+			return newChildRev
 		} else {
 			log.Errorf("cannot add to non-keyed container")
 		}
 	} else {
 		log.Errorf("cannot add to non-container field")
 	}
+
 	return nil
 }
 
-//
-// Remove operation
-//
+// Remove eliminates a node at the specified path
 func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) Revision {
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -580,14 +592,13 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 		log.Errorf("cannot remove for non-container mode")
 	}
 	var branch *Branch
-	var ok bool
 	if txid == "" {
-		branch = n.Branches[NONE]
-	} else if branch, ok = n.Branches[txid]; !ok {
+		branch = n.GetBranch(NONE)
+	} else if branch = n.GetBranch(txid); branch == nil {
 		branch = makeBranch(n)
 	}
 
-	rev := branch.Latest
+	rev := branch.GetLatest()
 
 	partition := strings.SplitN(path, "/", 2)
 	name := partition[0]
@@ -613,42 +624,36 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				path = partition[1]
 			}
 			keyValue := field.KeyFromStr(key)
+			children = make([]Revision, len(rev.GetChildren()[name]))
+			copy(children, rev.GetChildren()[name])
 			if path != "" {
-				for _, v := range rev.GetChildren()[name] {
-					newV := reflect.ValueOf(v).Interface().(Revision)
-					children = append(children, newV)
-				}
 				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 				childNode := childRev.GetNode()
 				newChildRev := childNode.Remove(path, txid, makeBranch)
 				children[idx] = newChildRev
 				rev := rev.UpdateChildren(name, children, branch)
-				branch.Latest.Drop(txid, false)
-				n.Root.MakeLatest(branch, rev, nil)
-				return rev
-			} else {
-				for _, v := range rev.GetChildren()[name] {
-					newV := reflect.ValueOf(v).Interface().(Revision)
-					children = append(children, newV)
-				}
-				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
-				if n.Proxy != nil {
-					data := childRev.GetData()
-					n.Proxy.InvokeCallbacks(PRE_REMOVE, false, data)
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data, nil})
-				} else {
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
-				}
-				childRev.Drop(txid, true)
-				children = append(children[:idx], children[idx+1:]...)
-				rev := rev.UpdateChildren(name, children, branch)
-				branch.Latest.Drop(txid, false)
-				n.Root.MakeLatest(branch, rev, postAnnouncement)
+				branch.GetLatest().Drop(txid, false)
+				n.makeLatest(branch, rev, nil)
 				return rev
 			}
-		} else {
-			log.Errorf("cannot add to non-keyed container")
+			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
+			if n.GetProxy() != nil {
+				data := childRev.GetData()
+				n.GetProxy().InvokeCallbacks(PRE_REMOVE, false, data)
+				postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data, nil})
+			} else {
+				postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
+			}
+			childRev.Drop(txid, true)
+			children = append(children[:idx], children[idx+1:]...)
+			rev := rev.UpdateChildren(name, children, branch)
+			branch.GetLatest().Drop(txid, false)
+			n.makeLatest(branch, rev, postAnnouncement)
+			return rev
+
 		}
+		log.Errorf("cannot add to non-keyed container")
+
 	} else {
 		log.Errorf("cannot add to non-container field")
 	}
@@ -658,16 +663,21 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Branching ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// MakeBranchFunction is a type for function references intented to create a branch
 type MakeBranchFunction func(*node) *Branch
 
+// MakeBranch creates a new branch for the provided transaction id
 func (n *node) MakeBranch(txid string) *Branch {
-	branchPoint := n.Branches[NONE].Latest
+	branchPoint := n.GetBranch(NONE).GetLatest()
 	branch := NewBranch(n, txid, branchPoint, true)
-	n.Branches[txid] = branch
+	n.SetBranch(txid, branch)
 	return branch
 }
 
+// DeleteBranch removes a branch with the specified id
 func (n *node) DeleteBranch(txid string) {
+	n.Lock()
+	defer n.Unlock()
 	delete(n.Branches, txid)
 }
 
@@ -684,19 +694,20 @@ func (n *node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
 	return f
 }
 
+// MergeBranch will integrate the contents of a transaction branch within the latest branch of a given node
 func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
-	srcBranch := n.Branches[txid]
-	dstBranch := n.Branches[NONE]
+	srcBranch := n.GetBranch(txid)
+	dstBranch := n.GetBranch(NONE)
 
 	forkRev := srcBranch.Origin
-	srcRev := srcBranch.Latest
-	dstRev := dstBranch.Latest
+	srcRev := srcBranch.GetLatest()
+	dstRev := dstBranch.GetLatest()
 
 	rev, changes := Merge3Way(forkRev, srcRev, dstRev, n.mergeChild(txid, dryRun), dryRun)
 
 	if !dryRun {
-		n.Root.MakeLatest(dstBranch, rev, changes)
-		delete(n.Branches, txid)
+		n.makeLatest(dstBranch, rev, changes)
+		n.DeleteBranch(txid)
 	}
 
 	// TODO: return proper error when one occurs
@@ -707,8 +718,8 @@ func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 
 //func (n *node) diff(hash1, hash2, txid string) {
 //	branch := n.Branches[txid]
-//	rev1 := branch.get(hash1)
-//	rev2 := branch.get(hash2)
+//	rev1 := branch.GetHash(hash1)
+//	rev2 := branch.GetHash(hash2)
 //
 //	if rev1.GetHash() == rev2.GetHash() {
 //		// empty patch
@@ -740,14 +751,12 @@ func (n *node) hasChildren(data interface{}) bool {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ node Proxy ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-func (n *node) GetProxy(path string, exclusive bool) *Proxy {
-	//r := NewRoot(n.Type, n.KvStore)
-	//r.node = n
-	//r.KvStore = n.KvStore
-
-	return n.getProxy(path, path, exclusive)
+// CreateProxy returns a reference to a sub-tree of the data model
+func (n *node) CreateProxy(path string, exclusive bool) *Proxy {
+	return n.createProxy(path, path, exclusive)
 }
-func (n *node) getProxy(path string, fullPath string, exclusive bool) *Proxy {
+
+func (n *node) createProxy(path string, fullPath string, exclusive bool) *Proxy {
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -755,7 +764,7 @@ func (n *node) getProxy(path string, fullPath string, exclusive bool) *Proxy {
 		return n.makeProxy(path, fullPath, exclusive)
 	}
 
-	rev := n.Branches[NONE].Latest
+	rev := n.GetBranch(NONE).GetLatest()
 	partition := strings.SplitN(path, "/", 2)
 	name := partition[0]
 	if len(partition) < 2 {
@@ -765,7 +774,7 @@ func (n *node) getProxy(path string, fullPath string, exclusive bool) *Proxy {
 	}
 
 	field := ChildrenFields(n.Type)[name]
-	if field != nil && field.IsContainer {
+	if field.IsContainer {
 		if path == "" {
 			log.Error("cannot proxy a container field")
 		} else if field.Key != "" {
@@ -778,31 +787,31 @@ func (n *node) getProxy(path string, fullPath string, exclusive bool) *Proxy {
 			}
 			keyValue := field.KeyFromStr(key)
 			var children []Revision
-			for _, v := range rev.GetChildren()[name] {
-				newV := reflect.ValueOf(v).Interface().(Revision)
-				children = append(children, newV)
-			}
+			children = make([]Revision, len(rev.GetChildren()[name]))
+			copy(children, rev.GetChildren()[name])
 			_, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
 
-			return childNode.getProxy(path, fullPath, exclusive)
+			return childNode.createProxy(path, fullPath, exclusive)
 		} else {
 			log.Error("cannot index into container with no keys")
 		}
 	} else {
 		childRev := rev.GetChildren()[name][0]
 		childNode := childRev.GetNode()
-		return childNode.getProxy(path, fullPath, exclusive)
+		return childNode.createProxy(path, fullPath, exclusive)
 	}
 
 	return nil
 }
 
 func (n *node) makeProxy(path string, fullPath string, exclusive bool) *Proxy {
+	n.Lock()
+	defer n.Unlock()
 	r := &root{
 		node:                  n,
-		Callbacks:             n.Root.Callbacks,
-		NotificationCallbacks: n.Root.NotificationCallbacks,
+		Callbacks:             n.Root.GetCallbacks(),
+		NotificationCallbacks: n.Root.GetNotificationCallbacks(),
 		DirtyNodes:            n.Root.DirtyNodes,
 		KvStore:               n.Root.KvStore,
 		Loading:               n.Root.Loading,
@@ -810,16 +819,19 @@ func (n *node) makeProxy(path string, fullPath string, exclusive bool) *Proxy {
 	}
 
 	if n.Proxy == nil {
-		n.Proxy = NewProxy(r, path, fullPath, exclusive)
+		n.Proxy = NewProxy(r, n, path, fullPath, exclusive)
 	} else {
 		if n.Proxy.Exclusive {
 			log.Error("node is already owned exclusively")
 		}
 	}
+
 	return n.Proxy
 }
 
 func (n *node) makeEventBus() *EventBus {
+	n.Lock()
+	defer n.Unlock()
 	if n.EventBus == nil {
 		n.EventBus = NewEventBus()
 	}
@@ -828,14 +840,44 @@ func (n *node) makeEventBus() *EventBus {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Persistence Loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// LoadLatest accesses the persistent storage to construct the data model based on the stored information
 func (n *node) LoadLatest(hash string) {
 	branch := NewBranch(n, "", nil, n.AutoPrune)
 	pr := &PersistedRevision{}
-	rev := pr.Load(branch, n.Root.KvStore, n.Type, hash)
+	rev := pr.Load(branch, n.GetRoot().KvStore, n.Type, hash)
 	n.makeLatest(branch, rev, nil)
-	n.Branches[NONE] = branch
+	n.SetBranch(NONE, branch)
 }
 
-func (n *node) ExecuteCallbacks() {
-	n.Root.ExecuteCallbacks()
+func (n *node) SetProxy(proxy *Proxy) {
+	n.Lock()
+	defer n.Unlock()
+	n.Proxy = proxy
+}
+
+func (n *node) GetProxy() *Proxy {
+	n.Lock()
+	defer n.Unlock()
+	return n.Proxy
+}
+
+func (n *node) GetBranch(key string) *Branch {
+	n.Lock()
+	defer n.Unlock()
+	if branch, exists := n.Branches[key]; exists {
+		return branch
+	}
+	return nil
+}
+
+func (n *node) SetBranch(key string, branch *Branch) {
+	n.Lock()
+	defer n.Unlock()
+	n.Branches[key] = branch
+}
+
+func (n *node) GetRoot() *root {
+	n.Lock()
+	defer n.Unlock()
+	return n.Root
 }

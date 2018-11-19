@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -22,6 +23,7 @@ import (
 	"strings"
 )
 
+// IsProtoMessage determines if the specified implements proto.Message type
 func IsProtoMessage(object interface{}) bool {
 	var ok = false
 
@@ -32,6 +34,7 @@ func IsProtoMessage(object interface{}) bool {
 	return ok
 }
 
+// FindOwnerType will traverse a data structure and find the parent type of the specified object
 func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflect.Type {
  	prefix := ""
 	for d:=0; d< depth; d++ {
@@ -56,7 +59,7 @@ func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflec
 			return obj.Type()
 		}
 
-		for i := 0; i < obj.NumField(); i += 1 {
+		for i := 0; i < obj.NumField(); i++ {
 			v := reflect.Indirect(obj)
 
 			json := strings.Split(v.Type().Field(i).Tag.Get("json"), ",")
@@ -74,13 +77,13 @@ func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflec
 		n := reflect.New(obj.Type())
 		n.Elem().Set(s)
 
-		for i := 0; i < n.Elem().Len(); i += 1 {
+		for i := 0; i < n.Elem().Len(); i++ {
 			if found {
 				return reflect.ValueOf(n.Elem().Index(i).Interface()).Type()
 			}
 		}
 
-		for i := 0; i < obj.Len(); i += 1 {
+		for i := 0; i < obj.Len(); i++ {
 			if found {
 				return obj.Index(i).Type()
 			}
@@ -96,6 +99,7 @@ func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflec
 	return nil
 }
 
+// FindKeyOwner will traverse a structure to find the owner type of the specified name
 func FindKeyOwner(iface interface{}, name string, depth int) interface{} {
 	obj := reflect.ValueOf(iface)
 	k := obj.Kind()
@@ -126,7 +130,7 @@ func FindKeyOwner(iface interface{}, name string, depth int) interface{} {
 		n := reflect.New(obj.Type())
 		n.Elem().Set(s)
 
-		for i := 0; i < n.Elem().Len(); i += 1 {
+		for i := 0; i < n.Elem().Len(); i++ {
 			if rc := FindKeyOwner(n.Elem().Index(i).Interface(), name, depth+1); rc != nil {
 				return rc
 			}
@@ -138,6 +142,7 @@ func FindKeyOwner(iface interface{}, name string, depth int) interface{} {
 	return nil
 }
 
+// GetAttributeValue traverse a structure to find the value of an attribute
 // FIXME: Need to figure out if GetAttributeValue and GetAttributeStructure can become one
 // Code is repeated in both, but outputs have a different purpose
 // Left as-is for now to get things working
@@ -181,7 +186,7 @@ func GetAttributeValue(data interface{}, name string, depth int) (string, reflec
 		n := reflect.New(obj.Type())
 		n.Elem().Set(s)
 
-		for i := 0; i < obj.Len(); i += 1 {
+		for i := 0; i < obj.Len(); i++ {
 			if attribName, attribValue = GetAttributeValue(obj.Index(i).Interface(), name, depth+1); attribValue.IsValid() {
 				return attribName, attribValue
 			}
@@ -194,6 +199,7 @@ func GetAttributeValue(data interface{}, name string, depth int) (string, reflec
 
 }
 
+// GetAttributeStructure will traverse a structure to find the data structure for the named attribute
 // FIXME: See GetAttributeValue(...) comment
 func GetAttributeStructure(data interface{}, name string, depth int) reflect.StructField {
 	var result reflect.StructField
@@ -234,7 +240,7 @@ func GetAttributeStructure(data interface{}, name string, depth int) reflect.Str
 		n := reflect.New(obj.Type())
 		n.Elem().Set(s)
 
-		for i := 0; i < obj.Len(); i += 1 {
+		for i := 0; i < obj.Len(); i++ {
 			if rc := GetAttributeStructure(obj.Index(i).Interface(), name, depth+1); rc.Name != "" {
 				return rc
 			}
@@ -248,7 +254,7 @@ func GetAttributeStructure(data interface{}, name string, depth int) reflect.Str
 
 }
 
-func Clone2(a interface{}) interface{} {
+func clone2(a interface{}) interface{} {
 	b := reflect.ValueOf(a)
 	buff := new(bytes.Buffer)
 	enc := gob.NewEncoder(buff)
@@ -259,7 +265,7 @@ func Clone2(a interface{}) interface{} {
 	return b.Interface()
 }
 
-func Clone(a, b interface{}) interface{} {
+func clone(a, b interface{}) interface{} {
 	buff := new(bytes.Buffer)
 	enc := gob.NewEncoder(buff)
 	dec := gob.NewDecoder(buff)

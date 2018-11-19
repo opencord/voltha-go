@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -26,20 +27,21 @@ import (
 	"sync"
 )
 
-type singleton struct {
-	ChildrenFieldsCache map[interface{}]map[string]*ChildType
+type singletonChildTypeCache struct {
+	Cache map[interface{}]map[string]*ChildType
 }
 
-var instance *singleton
-var once sync.Once
+var instanceChildTypeCache *singletonChildTypeCache
+var onceChildTypeCache sync.Once
 
-func GetInstance() *singleton {
-	once.Do(func() {
-		instance = &singleton{}
+func getChildTypeCache() *singletonChildTypeCache {
+	onceChildTypeCache.Do(func() {
+		instanceChildTypeCache = &singletonChildTypeCache{}
 	})
-	return instance
+	return instanceChildTypeCache
 }
 
+// ChildType structure contains construct details of an object
 type ChildType struct {
 	ClassModule string
 	ClassType   reflect.Type
@@ -48,22 +50,22 @@ type ChildType struct {
 	KeyFromStr  func(s string) interface{}
 }
 
+// ChildrenFields retrieves list of child objects associated to a given interface
 func ChildrenFields(cls interface{}) map[string]*ChildType {
 	if cls == nil {
 		return nil
 	}
 	var names map[string]*ChildType
-	var names_exist bool
+	var namesExist bool
 
-	if GetInstance().ChildrenFieldsCache == nil {
-		GetInstance().ChildrenFieldsCache = make(map[interface{}]map[string]*ChildType)
+	if getChildTypeCache().Cache == nil {
+		getChildTypeCache().Cache = make(map[interface{}]map[string]*ChildType)
 	}
 
 	msgType := reflect.TypeOf(cls)
+	inst := getChildTypeCache()
 
-	inst := GetInstance()
-
-	if names, names_exist = inst.ChildrenFieldsCache[msgType.String()]; !names_exist {
+	if names, namesExist = inst.Cache[msgType.String()]; !namesExist {
 		names = make(map[string]*ChildType)
 
 		_, md := desc.ForMessage(cls.(desc.Message))
@@ -125,7 +127,9 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 			}
 		}
 
-		GetInstance().ChildrenFieldsCache[msgType.String()] = names
+		getChildTypeCache().Cache[msgType.String()] = names
+	} else {
+		log.Debugf("Cache entry for %s: %+v", msgType.String(), inst.Cache[msgType.String()])
 	}
 
 	return names

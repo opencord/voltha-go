@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -20,13 +21,16 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 )
 
+// EventBusClient is an abstraction layer structure to communicate with an event bus mechanism
 type EventBusClient struct {
 }
 
+// NewEventBusClient creates a new EventBusClient instance
 func NewEventBusClient() *EventBusClient {
 	return &EventBusClient{}
 }
 
+// Publish sends a event to the bus
 func (ebc *EventBusClient) Publish(topic string, event voltha.ConfigEvent) {
 	log.Debugf("publishing event:%+v, topic:%s\n", event, topic)
 }

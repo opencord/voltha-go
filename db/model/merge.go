@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
 	"github.com/opencord/voltha-go/common/log"
-	"reflect"
 )
 
 func revisionsAreEqual(a, b []Revision) bool {
@@ -65,17 +65,17 @@ func newChangeAnalysis(lst1, lst2 []Revision, keyName string) *changeAnalysis {
 		_, v := GetAttributeValue(rev.GetData(), keyName, 0)
 		changes.KeyMap2[v.String()] = i
 	}
-	for v, _ := range changes.KeyMap2 {
+	for v := range changes.KeyMap2 {
 		if _, ok := changes.KeyMap1[v]; !ok {
 			changes.AddedKeys[v] = struct{}{}
 		}
 	}
-	for v, _ := range changes.KeyMap1 {
+	for v := range changes.KeyMap1 {
 		if _, ok := changes.KeyMap2[v]; !ok {
 			changes.RemovedKeys[v] = struct{}{}
 		}
 	}
-	for v, _ := range changes.KeyMap1 {
+	for v := range changes.KeyMap1 {
 		if _, ok := changes.KeyMap2[v]; ok && lst1[changes.KeyMap1[v]].GetHash() != lst2[changes.KeyMap2[v]].GetHash() {
 			changes.ChangedKeys[v] = struct{}{}
 		}
@@ -84,6 +84,7 @@ func newChangeAnalysis(lst1, lst2 []Revision, keyName string) *changeAnalysis {
 	return changes
 }
 
+// Merge3Way takes care of combining the revision contents of the same data set
 func Merge3Way(
 	forkRev, srcRev, dstRev Revision,
 	mergeChildFunc func(Revision) Revision,
@@ -101,7 +102,14 @@ func Merge3Way(
 		configChanged = true
 	}
 
-	newChildren := reflect.ValueOf(dstRev.GetChildren()).Interface().(map[string][]Revision)
+	//newChildren := reflect.ValueOf(dstRev.GetChildren()).Interface().(map[string][]Revision)
+	newChildren := make(map[string][]Revision)
+	for entryName, childrenEntry := range dstRev.GetChildren() {
+		//newRev.Children[entryName] = append(newRev.Children[entryName], childrenEntry...)
+		newChildren[entryName] = make([]Revision, len(childrenEntry))
+		copy(newChildren[entryName], childrenEntry)
+	}
+
 	childrenFields := ChildrenFields(forkRev.GetData())
 
 	for fieldName, field := range childrenFields {
@@ -140,9 +148,10 @@ func Merge3Way(
 			if revisionsAreEqual(dstList, forkList) {
 				src := newChangeAnalysis(forkList, srcList, field.Key)
 
-				newList := reflect.ValueOf(srcList).Interface().([]Revision)
+				newList := make([]Revision, len(srcList))
+				copy(newList, srcList)
 
-				for key, _ := range src.AddedKeys {
+				for key := range src.AddedKeys {
 					idx := src.KeyMap2[key]
 					newRev := mergeChildFunc(newList[idx])
 
@@ -152,12 +161,12 @@ func Merge3Way(
 						changes = append(changes, ChangeTuple{POST_ADD, newList[idx].GetData(), newRev.GetData()})
 					}
 				}
-				for key, _ := range src.RemovedKeys {
+				for key := range src.RemovedKeys {
 					oldRev := forkList[src.KeyMap1[key]]
 					revsToDiscard = append(revsToDiscard, oldRev)
 					changes = append(changes, ChangeTuple{POST_REMOVE, oldRev.GetData(), nil})
 				}
-				for key, _ := range src.ChangedKeys {
+				for key := range src.ChangedKeys {
 					idx := src.KeyMap2[key]
 					newRev := mergeChildFunc(newList[idx])
 
@@ -174,9 +183,10 @@ func Merge3Way(
 				src := newChangeAnalysis(forkList, srcList, field.Key)
 				dst := newChangeAnalysis(forkList, dstList, field.Key)
 
-				newList := reflect.ValueOf(dstList).Interface().([]Revision)
+				newList := make([]Revision, len(dstList))
+				copy(newList, dstList)
 
-				for key, _ := range src.AddedKeys {
+				for key := range src.AddedKeys {
 					if _, exists := dst.AddedKeys[key]; exists {
 						childDstRev := dstList[dst.KeyMap2[key]]
 						childSrcRev := srcList[src.KeyMap2[key]]
@@ -191,7 +201,7 @@ func Merge3Way(
 						changes = append(changes, ChangeTuple{POST_ADD, srcList[src.KeyMap2[key]], newRev.GetData()})
 					}
 				}
-				for key, _ := range src.ChangedKeys {
+				for key := range src.ChangedKeys {
 					if _, removed := dst.RemovedKeys[key]; removed {
 						log.Error("conflict error - revision has been removed")
 					} else if _, changed := dst.ChangedKeys[key]; changed {
@@ -212,7 +222,7 @@ func Merge3Way(
 				}
 
 				// TODO: how do i sort this map in reverse order?
-				for key, _ := range src.RemovedKeys {
+				for key := range src.RemovedKeys {
 					if _, changed := dst.ChangedKeys[key]; changed {
 						log.Error("conflict error - revision has changed")
 					}
@@ -236,7 +246,7 @@ func Merge3Way(
 		}
 	}
 
-	if !dryRun {
+	if !dryRun && len(newChildren) > 0{
 		if configChanged {
 			rev = srcRev
 		} else {
@@ -247,15 +257,15 @@ func Merge3Way(
 			discarded.Drop("", true)
 		}
 
-		dstRev.GetBranch().Latest.Drop("", configChanged)
+		dstRev.GetBranch().GetLatest().Drop("", configChanged)
 		rev = rev.UpdateAllChildren(newChildren, dstRev.GetBranch())
 
 		if configChanged {
-			changes = append(changes, ChangeTuple{POST_UPDATE, dstRev.GetBranch().Latest.GetData(), rev.GetData()})
+			// FIXME: what type of previous/latest data do we want to show? Specific node or Root
+			changes = append(changes, ChangeTuple{POST_UPDATE, dstRev.GetBranch().GetLatest().GetData(), rev.GetData()})
 		}
 		return rev, changes
-	} else {
-		return nil, nil
-
 	}
+
+	return nil, nil
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -22,13 +23,15 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 )
 
+// EventBus contains the details required to communicate with the event bus mechanism
 type EventBus struct {
 	client *EventBusClient
 	topic  string
 }
 
+// ignoredCallbacks keeps a list of callbacks that should not be advertised on the event bus
 var (
-	IGNORED_CALLBACKS = map[CallbackType]struct{}{
+	ignoredCallbacks = map[CallbackType]struct{}{
 		PRE_ADD:         {},
 		GET:             {},
 		POST_LISTCHANGE: {},
@@ -37,6 +40,7 @@ var (
 	}
 )
 
+// NewEventBus creates a new instance of the EventBus structure
 func NewEventBus() *EventBus {
 	bus := &EventBus{
 		client: NewEventBusClient(),
@@ -45,13 +49,13 @@ func NewEventBus() *EventBus {
 	return bus
 }
 
-//func (bus *EventBus) Advertise(eventType CallbackType, data interface{}, hash string) {
+// Advertise will publish the provided information to the event bus
 func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	eventType := args[0].(CallbackType)
 	hash := args[1].(string)
 	data := args[2:]
 
-	if _, ok := IGNORED_CALLBACKS[eventType]; ok {
+	if _, ok := ignoredCallbacks[eventType]; ok {
 		log.Debugf("ignoring event - type:%s, data:%+v", eventType, data)
 	}
 	var kind voltha.ConfigEventType_ConfigEventType
@@ -68,14 +72,14 @@ func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	var err error
 	if IsProtoMessage(data) {
 		if msg, err = proto.Marshal(data[0].(proto.Message)); err != nil {
-			log.Errorf("problem marshalling proto data: %+v, err:%s", data[0], err.Error())
+			log.Debugf("problem marshalling proto data: %+v, err:%s", data[0], err.Error())
 		}
 	} else if data[0] != nil {
 		if msg, err = json.Marshal(data[0]); err != nil {
-			log.Errorf("problem marshalling json data: %+v, err:%s", data[0], err.Error())
+			log.Debugf("problem marshalling json data: %+v, err:%s", data[0], err.Error())
 		}
 	} else {
-		log.Errorf("no data to advertise : %+v", data[0])
+		log.Debugf("no data to advertise : %+v", data[0])
 	}
 
 	event := voltha.ConfigEvent{

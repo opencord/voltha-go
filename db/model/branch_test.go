@@ -58,7 +58,7 @@ func Test_ConfigBranch_AddRevision(t *testing.T) {
 }
 
 func Test_ConfigBranch_GetRevision(t *testing.T) {
-	rev := BRANCH.get(HASH)
+	rev := BRANCH.GetRevision(HASH)
 	t.Logf("Got revision for hash:%s rev:%+v\n", HASH, rev)
 }
 func Test_ConfigBranch_LatestRevision(t *testing.T) {

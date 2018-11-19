@@ -27,13 +27,13 @@ func Test_Utils_Clone(t *testing.T) {
 		FirmwareVersion: "someversion",
 	}
 	b := &voltha.Device{}
-	Clone(reflect.ValueOf(a).Interface(), b)
+	clone(reflect.ValueOf(a).Interface(), b)
 	t.Logf("A: %+v, B: %+v", a, b)
 	b.Id = "12345"
 	t.Logf("A: %+v, B: %+v", a, b)
 
 	var c *voltha.Device
-	c = Clone2(a).(*voltha.Device)
+	c = clone2(a).(*voltha.Device)
 	t.Logf("A: %+v, C: %+v", a, c)
 	c.Id = "12345"
 	t.Logf("A: %+v, C: %+v", a, c)

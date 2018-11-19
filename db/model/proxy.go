@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -26,6 +27,7 @@ import (
 	"sync"
 )
 
+// OperationContext holds details on the information used during an operation
 type OperationContext struct {
 	Path      string
 	Data      interface{}
@@ -33,6 +35,7 @@ type OperationContext struct {
 	ChildKey  string
 }
 
+// NewOperationContext instantiates a new OperationContext structure
 func NewOperationContext(path string, data interface{}, fieldName string, childKey string) *OperationContext {
 	oc := &OperationContext{
 		Path:      path,
@@ -43,27 +46,32 @@ func NewOperationContext(path string, data interface{}, fieldName string, childK
 	return oc
 }
 
+// Update applies new data to the context structure
 func (oc *OperationContext) Update(data interface{}) *OperationContext {
 	oc.Data = data
 	return oc
 }
 
+// Proxy holds the information for a specific location with the data model
 type Proxy struct {
-	sync.Mutex
+	sync.RWMutex
 	Root      *root
+	Node      *node
 	Path      string
 	FullPath  string
 	Exclusive bool
-	Callbacks map[CallbackType]map[string]CallbackTuple
+	Callbacks map[CallbackType]map[string]*CallbackTuple
 }
 
-func NewProxy(root *root, path string, fullPath string, exclusive bool) *Proxy {
-	callbacks := make(map[CallbackType]map[string]CallbackTuple)
+// NewProxy instantiates a new proxy to a specific location
+func NewProxy(root *root, node *node, path string, fullPath string, exclusive bool) *Proxy {
+	callbacks := make(map[CallbackType]map[string]*CallbackTuple)
 	if fullPath == "/" {
 		fullPath = ""
 	}
 	p := &Proxy{
 		Root:      root,
+		Node:      node,
 		Exclusive: exclusive,
 		Path:      path,
 		FullPath:  fullPath,
@@ -72,9 +80,73 @@ func NewProxy(root *root, path string, fullPath string, exclusive bool) *Proxy {
 	return p
 }
 
+// GetRoot returns the root attribute of the proxy
+func (p *Proxy) GetRoot() *root {
+	p.Lock()
+	defer p.Unlock()
+	return p.Root
+}
+
+// getPath returns the path attribute of the proxy
+func (p *Proxy) getPath() string {
+	p.Lock()
+	defer p.Unlock()
+	return p.Path
+}
+
+// getFullPath returns the full path attribute of the proxy
+func (p *Proxy) getFullPath() string {
+	p.Lock()
+	defer p.Unlock()
+	return p.FullPath
+}
+
+// getCallbacks returns the full list of callbacks associated to the proxy
+func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTuple {
+	p.Lock()
+	defer p.Unlock()
+	if cb, exists := p.Callbacks[callbackType]; exists {
+		return cb
+	}
+	return nil
+}
+
+// getCallback returns a specific callback matching the type and function hash
+func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *CallbackTuple {
+	p.Lock()
+	defer p.Unlock()
+	if tuple, exists := p.Callbacks[callbackType][funcHash]; exists {
+		return tuple
+	}
+	return nil
+}
+
+// setCallbacks applies a callbacks list to a type
+func (p *Proxy) setCallbacks(callbackType CallbackType, callbacks map[string]*CallbackTuple) {
+	p.Lock()
+	defer p.Unlock()
+	p.Callbacks[callbackType] = callbacks
+}
+
+// setCallback applies a callback to a type and hash value
+func (p *Proxy) setCallback(callbackType CallbackType, funcHash string, tuple *CallbackTuple) {
+	p.Lock()
+	defer p.Unlock()
+	p.Callbacks[callbackType][funcHash] = tuple
+}
+
+// DeleteCallback removes a callback matching the type and hash
+func (p *Proxy) DeleteCallback(callbackType CallbackType, funcHash string) {
+	p.Lock()
+	defer p.Unlock()
+	delete(p.Callbacks[callbackType], funcHash)
+}
+
+// parseForControlledPath verifies if a proxy path matches a pattern
+// for locations that need to be access controlled.
 func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled bool) {
-	// TODO: Add other path prefixes they may need control
-	if strings.HasPrefix(path, "/devices") {
+	// TODO: Add other path prefixes that may need control
+	if strings.HasPrefix(path, "/devices") || strings.HasPrefix(path, "/logical_devices"){
 		split := strings.SplitN(path, "/", -1)
 		switch len(split) {
 		case 2:
@@ -91,28 +163,29 @@ func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled
 	return pathLock, controlled
 }
 
+// Get will retrieve information from the data model at the specified path location
 func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} {
 	var effectivePath string
 	if path == "/" {
-		effectivePath = p.FullPath
+		effectivePath = p.getFullPath()
 	} else {
-		effectivePath = p.FullPath + path
+		effectivePath = p.getFullPath() + path
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	var pac interface{}
-	var exists bool
+	log.Debugf("Path: %s, Effective: %s, PathLock: %s", path, effectivePath, pathLock)
 
-	p.Lock()
-	if pac, exists = GetProxyAccessControl().Cache.LoadOrStore(path, NewProxyAccessControl(p, pathLock)); !exists {
-		defer GetProxyAccessControl().Cache.Delete(pathLock)
-	}
-	p.Unlock()
+	pac := PAC().ReservePath(effectivePath, p, pathLock)
+	defer PAC().ReleasePath(pathLock)
+	pac.SetProxy(p)
 
-	return pac.(ProxyAccessControl).Get(path, depth, deep, txid, controlled)
+	rv := pac.Get(path, depth, deep, txid, controlled)
+
+	return rv
 }
 
+// Update will modify information in the data model at the specified location with the provided data
 func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
@@ -121,27 +194,54 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 	var fullPath string
 	var effectivePath string
 	if path == "/" {
-		fullPath = p.Path
-		effectivePath = p.FullPath
+		fullPath = p.getPath()
+		effectivePath = p.getFullPath()
 	} else {
-		fullPath = p.Path + path
-		effectivePath = p.FullPath + path
+		fullPath = p.getPath() + path
+		effectivePath = p.getFullPath()
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	var pac interface{}
-	var exists bool
+	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
 
-	p.Lock()
-	if pac, exists = GetProxyAccessControl().Cache.LoadOrStore(path, NewProxyAccessControl(p, pathLock)); !exists {
-		defer GetProxyAccessControl().Cache.Delete(pathLock)
-	}
-	p.Unlock()
+	pac := PAC().ReservePath(effectivePath, p, pathLock)
+	defer PAC().ReleasePath(pathLock)
+	pac.SetProxy(p)
 
-	return pac.(ProxyAccessControl).Update(fullPath, data, strict, txid, controlled)
+	return pac.Update(fullPath, data, strict, txid, controlled)
 }
 
+// AddWithID will insert new data at specified location.
+// This method also allows the user to specify the ID of the data entry to ensure
+// that access control is active while inserting the information.
+func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string) interface{} {
+	if !strings.HasPrefix(path, "/") {
+		log.Errorf("invalid path: %s", path)
+		return nil
+	}
+	var fullPath string
+	var effectivePath string
+	if path == "/" {
+		fullPath = p.getPath()
+		effectivePath = p.getFullPath()
+	} else {
+		fullPath = p.getPath() + path
+		effectivePath = p.getFullPath() + path + "/" + id
+	}
+
+	pathLock, controlled := p.parseForControlledPath(effectivePath)
+
+	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
+
+	pac := PAC().ReservePath(path, p, pathLock)
+	defer PAC().ReleasePath(pathLock)
+	pac.SetProxy(p)
+
+	return pac.Add(fullPath, data, txid, controlled)
+}
+
+// Add will insert new data at specified location.
 func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
@@ -150,27 +250,25 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 	var fullPath string
 	var effectivePath string
 	if path == "/" {
-		fullPath = p.Path
-		effectivePath = p.FullPath
+		fullPath = p.getPath()
+		effectivePath = p.getFullPath()
 	} else {
-		fullPath = p.Path + path
-		effectivePath = p.FullPath + path
+		fullPath = p.getPath() + path
+		effectivePath = p.getFullPath() + path
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	var pac interface{}
-	var exists bool
+	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
 
-	p.Lock()
-	if pac, exists = GetProxyAccessControl().Cache.LoadOrStore(path, NewProxyAccessControl(p, pathLock)); !exists {
-		defer GetProxyAccessControl().Cache.Delete(pathLock)
-	}
-	p.Unlock()
+	pac := PAC().ReservePath(path, p, pathLock)
+	defer PAC().ReleasePath(pathLock)
+	pac.SetProxy(p)
 
-	return pac.(ProxyAccessControl).Add(fullPath, data, txid, controlled)
+	return pac.Add(fullPath, data, txid, controlled)
 }
 
+// Remove will delete an entry at the specified location
 func (p *Proxy) Remove(path string, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
@@ -179,83 +277,99 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 	var fullPath string
 	var effectivePath string
 	if path == "/" {
-		fullPath = p.Path
-		effectivePath = p.FullPath
+		fullPath = p.getPath()
+		effectivePath = p.getFullPath()
 	} else {
-		fullPath = p.Path + path
-		effectivePath = p.FullPath + path
+		fullPath = p.getPath() + path
+		effectivePath = p.getFullPath() + path
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	var pac interface{}
-	var exists bool
+	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
 
-	p.Lock()
-	if pac, exists = GetProxyAccessControl().Cache.LoadOrStore(path, NewProxyAccessControl(p, pathLock)); !exists {
-		defer GetProxyAccessControl().Cache.Delete(pathLock)
-	}
-	p.Unlock()
+	pac := PAC().ReservePath(effectivePath, p, pathLock)
+	defer PAC().ReleasePath(pathLock)
+	pac.SetProxy(p)
 
-	return pac.(ProxyAccessControl).Remove(fullPath, txid, controlled)
+	return pac.Remove(fullPath, txid, controlled)
 }
 
+// OpenTransaction creates a new transaction branch to isolate operations made to the data model
 func (p *Proxy) OpenTransaction() *Transaction {
-	txid := p.Root.MakeTxBranch()
+	txid := p.GetRoot().MakeTxBranch()
 	return NewTransaction(p, txid)
 }
 
+// commitTransaction will apply and merge modifications made in the transaction branch to the data model
 func (p *Proxy) commitTransaction(txid string) {
-	p.Root.FoldTxBranch(txid)
+	p.GetRoot().FoldTxBranch(txid)
 }
 
+// cancelTransaction will terminate a transaction branch along will all changes within it
 func (p *Proxy) cancelTransaction(txid string) {
-	p.Root.DeleteTxBranch(txid)
+	p.GetRoot().DeleteTxBranch(txid)
 }
 
+// CallbackFunction is a type used to define callback functions
 type CallbackFunction func(args ...interface{}) interface{}
+
+// CallbackTuple holds the function and arguments details of a callback
 type CallbackTuple struct {
 	callback CallbackFunction
 	args     []interface{}
 }
 
-func (tuple *CallbackTuple) Execute(contextArgs interface{}) interface{} {
+// Execute will process the a callback with its provided arguments
+func (tuple *CallbackTuple) Execute(contextArgs []interface{}) interface{} {
 	args := []interface{}{}
-	args = append(args, tuple.args...)
-	if contextArgs != nil {
-		args = append(args, contextArgs)
+
+	for _, ta := range tuple.args {
+		args = append(args, ta)
 	}
+
+	if contextArgs != nil {
+		for _, ca := range contextArgs {
+			args = append(args, ca)
+		}
+	}
+
 	return tuple.callback(args...)
 }
 
+// RegisterCallback associates a callback to the proxy
 func (p *Proxy) RegisterCallback(callbackType CallbackType, callback CallbackFunction, args ...interface{}) {
-	if _, exists := p.Callbacks[callbackType]; !exists {
-		p.Callbacks[callbackType] = make(map[string]CallbackTuple)
+	if p.getCallbacks(callbackType) == nil {
+		p.setCallbacks(callbackType, make(map[string]*CallbackTuple))
 	}
 	funcName := runtime.FuncForPC(reflect.ValueOf(callback).Pointer()).Name()
 	log.Debugf("value of function: %s", funcName)
 	funcHash := fmt.Sprintf("%x", md5.Sum([]byte(funcName)))[:12]
 
-	p.Callbacks[callbackType][funcHash] = CallbackTuple{callback, args}
+	p.setCallback(callbackType, funcHash, &CallbackTuple{callback, args})
 }
 
+// UnregisterCallback removes references to a callback within a proxy
 func (p *Proxy) UnregisterCallback(callbackType CallbackType, callback CallbackFunction, args ...interface{}) {
-	if _, exists := p.Callbacks[callbackType]; !exists {
+	if p.getCallbacks(callbackType) == nil {
 		log.Errorf("no such callback type - %s", callbackType.String())
 		return
 	}
-	// TODO: Not sure if this is the best way to do it.
+
 	funcName := runtime.FuncForPC(reflect.ValueOf(callback).Pointer()).Name()
-	log.Debugf("value of function: %s", funcName)
 	funcHash := fmt.Sprintf("%x", md5.Sum([]byte(funcName)))[:12]
-	if _, exists := p.Callbacks[callbackType][funcHash]; !exists {
+
+	log.Debugf("value of function: %s", funcName)
+
+	if p.getCallback(callbackType, funcHash) == nil {
 		log.Errorf("function with hash value: '%s' not registered with callback type: '%s'", funcHash, callbackType)
 		return
 	}
-	delete(p.Callbacks[callbackType], funcHash)
+
+	p.DeleteCallback(callbackType, funcHash)
 }
 
-func (p *Proxy) invoke(callback CallbackTuple, context ...interface{}) (result interface{}, err error) {
+func (p *Proxy) invoke(callback *CallbackTuple, context []interface{}) (result interface{}, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			errStr := fmt.Sprintf("callback error occurred: %+v", r)
@@ -269,6 +383,7 @@ func (p *Proxy) invoke(callback CallbackTuple, context ...interface{}) (result i
 	return result, err
 }
 
+// InvokeCallbacks executes all callbacks associated to a specific type
 func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 	callbackType := args[0].(CallbackType)
 	proceedOnError := args[1].(bool)
@@ -276,8 +391,9 @@ func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 
 	var err error
 
-	if _, exists := p.Callbacks[callbackType]; exists {
-		for _, callback := range p.Callbacks[callbackType] {
+	if callbacks := p.getCallbacks(callbackType); callbacks != nil {
+		p.Lock()
+		for _, callback := range callbacks {
 			if result, err = p.invoke(callback, context); err != nil {
 				if !proceedOnError {
 					log.Info("An error occurred.  Stopping callback invocation")
@@ -286,6 +402,8 @@ func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 				log.Info("An error occurred.  Invoking next callback")
 			}
 		}
+		p.Unlock()
 	}
+
 	return result
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -25,33 +26,37 @@ import (
 	"reflect"
 )
 
+// DataRevision stores the data associated to a revision along with its calculated checksum hash value
 type DataRevision struct {
 	Data interface{}
 	Hash string
 }
 
-func NewDataRevision(data interface{}) *DataRevision {
-	cdr := &DataRevision{}
-	cdr.Data = data
-	cdr.Hash = cdr.hashData(data)
+// NewDataRevision creates a new instance of a DataRevision structure
+func NewDataRevision(root *root, data interface{}) *DataRevision {
+	dr := DataRevision{}
+	dr.Data = data
+	dr.Hash = dr.hashData(root, data)
 
-	return cdr
+	return &dr
 }
 
-func (cr *DataRevision) hashData(data interface{}) string {
+func (dr *DataRevision) hashData(root *root, data interface{}) string {
 	var buffer bytes.Buffer
 
 	if IsProtoMessage(data) {
 		if pbdata, err := proto.Marshal(data.(proto.Message)); err != nil {
-			log.Errorf("problem to marshal protobuf data --> err: %s", err.Error())
+			log.Debugf("problem to marshal protobuf data --> err: %s", err.Error())
 		} else {
 			buffer.Write(pbdata)
+			// To ensure uniqueness in case data is nil, also include data type
+			buffer.Write([]byte(reflect.TypeOf(data).String()))
 		}
 
 	} else if reflect.ValueOf(data).IsValid() {
 		dataObj := reflect.New(reflect.TypeOf(data).Elem())
 		if json, err := json.Marshal(dataObj.Interface()); err != nil {
-			log.Errorf("problem to marshal data --> err: %s", err.Error())
+			log.Debugf("problem to marshal data --> err: %s", err.Error())
 		} else {
 			buffer.Write(json)
 		}
@@ -59,6 +64,10 @@ func (cr *DataRevision) hashData(data interface{}) string {
 		dataObj := reflect.New(reflect.TypeOf(data).Elem())
 		buffer.Write(dataObj.Bytes())
 	}
+
+	// Add the root pointer that owns the current data for extra uniqueness
+	rootPtr := fmt.Sprintf("%p", root)
+	buffer.Write([]byte(rootPtr))
 
 	return fmt.Sprintf("%x", md5.Sum(buffer.Bytes()))[:12]
 }

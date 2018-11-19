@@ -24,10 +24,10 @@ import (
 
  */
 func Test_ChildType_01_CacheIsEmpty(t *testing.T) {
-	if GetInstance().ChildrenFieldsCache != nil || len(GetInstance().ChildrenFieldsCache) > 0 {
-		t.Errorf("GetInstance().ChildrenFieldsCache should be empty: %+v\n", GetInstance().ChildrenFieldsCache)
+	if getChildTypeCache().Cache != nil || len(getChildTypeCache().Cache) > 0 {
+		t.Errorf("getChildTypeCache().Cache should be empty: %+v\n", getChildTypeCache().Cache)
 	}
-	t.Logf("GetInstance().ChildrenFieldsCache is empty - %+v\n", GetInstance().ChildrenFieldsCache)
+	t.Logf("getChildTypeCache().Cache is empty - %+v\n", getChildTypeCache().Cache)
 }
 
 /*
@@ -54,17 +54,17 @@ func Test_ChildType_02_Device_Proto_ChildrenFields(t *testing.T) {
 
  */
 func Test_ChildType_03_CacheHasOneEntry(t *testing.T) {
-	if GetInstance().ChildrenFieldsCache == nil || len(GetInstance().ChildrenFieldsCache) != 1 {
-		t.Errorf("GetInstance().ChildrenFieldsCache should have one entry: %+v\n", GetInstance().ChildrenFieldsCache)
+	if getChildTypeCache().Cache == nil || len(getChildTypeCache().Cache) != 1 {
+		t.Errorf("getChildTypeCache().Cache should have one entry: %+v\n", getChildTypeCache().Cache)
 	}
-	t.Logf("GetInstance().ChildrenFieldsCache has one entry: %+v\n", GetInstance().ChildrenFieldsCache)
+	t.Logf("getChildTypeCache().Cache has one entry: %+v\n", getChildTypeCache().Cache)
 }
 
 /*
 
  */
-func Test_ChildType_04_ChildrenFieldsCache_Keys(t *testing.T) {
-	for k := range GetInstance().ChildrenFieldsCache {
-		t.Logf("GetInstance().ChildrenFieldsCache Key:%+v\n", k)
+func Test_ChildType_04_Cache_Keys(t *testing.T) {
+	for k := range getChildTypeCache().Cache {
+		t.Logf("getChildTypeCache().Cache Key:%+v\n", k)
 	}
 }
