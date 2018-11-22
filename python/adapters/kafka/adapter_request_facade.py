@@ -21,12 +21,15 @@ formatting and forwards the request to the concrete handler.
 
 from twisted.internet.defer import inlineCallbacks
 from zope.interface import implementer
+from twisted.internet import reactor
 
 from python.adapters.interface import IAdapterInterface
 from python.protos.core_adapter_pb2 import IntType, InterAdapterMessage, StrType, Error, ErrorCode
 from python.protos.device_pb2 import Device
 from python.protos.openflow_13_pb2 import FlowChanges, FlowGroups, Flows, \
     FlowGroupChanges, ofp_packet_out
+from python.adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
+    get_messaging_proxy
 
 
 class MacAddressError(BaseException):
@@ -62,11 +65,26 @@ class AdapterRequestFacade(object):
     def stop(self):
         self.log.debug('stopping')
 
+
+    def createKafkaDeviceTopic(self, deviceId):
+        kafka_proxy = get_messaging_proxy()
+        device_topic = kafka_proxy.get_default_topic() + "_" + deviceId
+        kafka_proxy.subscribe(topic=device_topic, target_cls=self)
+
     def adopt_device(self, device):
         d = Device()
         if device:
             device.Unpack(d)
-            return True, self.adapter.adopt_device(d)
+
+            result = self.adapter.adopt_device(d)
+            # return True, self.adapter.adopt_device(d)
+
+            # Before we return, create a device specific topic to handle all
+            # subsequent requests from the Core. This adapter instance will
+            # handle all requests for that device
+            reactor.callLater(0, self.createKafkaDeviceTopic, d.id)
+
+            return True, result
         else:
             return False, Error(code=ErrorCode.INVALID_PARAMETERS,
                                 reason="device-invalid")
@@ -151,7 +169,16 @@ class AdapterRequestFacade(object):
         d = Device()
         if device:
             device.Unpack(d)
-            return (True, self.adapter.delete_device(d))
+            result = self.adapter.delete_device(d)
+            # return (True, self.adapter.delete_device(d))
+
+            # Before we return, delete the device specific topic as we will no
+            # longer receive requests from the Core for that device
+            kafka_proxy = get_messaging_proxy()
+            device_topic = kafka_proxy.get_default_topic() + "/" + d.id
+            kafka_proxy.unsubscribe(topic=device_topic)
+
+            return (True, result)
         else:
             return False, Error(code=ErrorCode.INVALID_PARAMETERS,
                                 reason="device-invalid")

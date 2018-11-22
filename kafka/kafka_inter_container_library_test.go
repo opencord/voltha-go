@@ -21,38 +21,35 @@ import (
 )
 
 func TestDefaultKafkaProxy(t *testing.T) {
-	actualResult, error := NewKafkaMessagingProxy()
+	actualResult, error := NewInterContainerProxy()
 	assert.Equal(t, error, nil)
-	assert.Equal(t, actualResult.KafkaHost, DefaultKafkaHost)
-	assert.Equal(t, actualResult.KafkaPort, DefaultKafkaPort)
-	assert.Equal(t, actualResult.TargetInterface, interface{}(nil))
-	assert.Equal(t, actualResult.DefaultTopic.Name, "Core")
+	assert.Equal(t, actualResult.kafkaHost, DefaultKafkaHost)
+	assert.Equal(t, actualResult.kafkaPort, DefaultKafkaPort)
+	assert.Equal(t, actualResult.defaultRequestHandlerInterface, interface{}(nil))
 }
 
 func TestKafkaProxyOptionHost(t *testing.T) {
-	actualResult, error := NewKafkaMessagingProxy(KafkaHost("10.20.30.40"))
+	actualResult, error := NewInterContainerProxy(InterContainerHost("10.20.30.40"))
 	assert.Equal(t, error, nil)
-	assert.Equal(t, actualResult.KafkaHost, "10.20.30.40")
-	assert.Equal(t, actualResult.KafkaPort, DefaultKafkaPort)
-	assert.Equal(t, actualResult.TargetInterface, interface{}(nil))
-	assert.Equal(t, actualResult.DefaultTopic.Name, "Core")
+	assert.Equal(t, actualResult.kafkaHost, "10.20.30.40")
+	assert.Equal(t, actualResult.kafkaPort, DefaultKafkaPort)
+	assert.Equal(t, actualResult.defaultRequestHandlerInterface, interface{}(nil))
 }
 
 func TestKafkaProxyOptionPort(t *testing.T) {
-	actualResult, error := NewKafkaMessagingProxy(KafkaPort(1020))
+	actualResult, error := NewInterContainerProxy(InterContainerPort(1020))
 	assert.Equal(t, error, nil)
-	assert.Equal(t, actualResult.KafkaHost, DefaultKafkaHost)
-	assert.Equal(t, actualResult.KafkaPort, 1020)
-	assert.Equal(t, actualResult.TargetInterface, interface{}(nil))
-	assert.Equal(t, actualResult.DefaultTopic.Name, "Core")
+	assert.Equal(t, actualResult.kafkaHost, DefaultKafkaHost)
+	assert.Equal(t, actualResult.kafkaPort, 1020)
+	assert.Equal(t, actualResult.defaultRequestHandlerInterface, interface{}(nil))
 }
 
 func TestKafkaProxyOptionTopic(t *testing.T) {
-	actualResult, error := NewKafkaMessagingProxy(DefaultTopic(&Topic{Name: "Adapter"}))
+	actualResult, error := NewInterContainerProxy(DefaultTopic(&Topic{Name: "Adapter"}))
 	assert.Equal(t, error, nil)
-	assert.Equal(t, actualResult.KafkaHost, DefaultKafkaHost)
-	assert.Equal(t, actualResult.KafkaPort, DefaultKafkaPort)
-	assert.Equal(t, actualResult.TargetInterface, interface{}(nil))
+	assert.Equal(t, actualResult.kafkaHost, DefaultKafkaHost)
+	assert.Equal(t, actualResult.kafkaPort, DefaultKafkaPort)
+	assert.Equal(t, actualResult.defaultRequestHandlerInterface, interface{}(nil))
 	assert.Equal(t, actualResult.DefaultTopic.Name, "Adapter")
 }
 
@@ -64,24 +61,23 @@ func (m *myInterface) doSomething() {
 
 func TestKafkaProxyOptionTargetInterface(t *testing.T) {
 	var m *myInterface
-	actualResult, error := NewKafkaMessagingProxy(TargetInterface(m))
+	actualResult, error := NewInterContainerProxy(RequestHandlerInterface(m))
 	assert.Equal(t, error, nil)
-	assert.Equal(t, actualResult.KafkaHost, DefaultKafkaHost)
-	assert.Equal(t, actualResult.KafkaPort, DefaultKafkaPort)
-	assert.Equal(t, actualResult.TargetInterface, m)
-	assert.Equal(t, actualResult.DefaultTopic.Name, "Core")
+	assert.Equal(t, actualResult.kafkaHost, DefaultKafkaHost)
+	assert.Equal(t, actualResult.kafkaPort, DefaultKafkaPort)
+	assert.Equal(t, actualResult.defaultRequestHandlerInterface, m)
 }
 
 func TestKafkaProxyChangeAllOptions(t *testing.T) {
 	var m *myInterface
-	actualResult, error := NewKafkaMessagingProxy(
-		KafkaHost("10.20.30.40"),
-		KafkaPort(1020),
+	actualResult, error := NewInterContainerProxy(
+		InterContainerHost("10.20.30.40"),
+		InterContainerPort(1020),
 		DefaultTopic(&Topic{Name: "Adapter"}),
-		TargetInterface(m))
+		RequestHandlerInterface(m))
 	assert.Equal(t, error, nil)
-	assert.Equal(t, actualResult.KafkaHost, "10.20.30.40")
-	assert.Equal(t, actualResult.KafkaPort, 1020)
-	assert.Equal(t, actualResult.TargetInterface, m)
+	assert.Equal(t, actualResult.kafkaHost, "10.20.30.40")
+	assert.Equal(t, actualResult.kafkaPort, 1020)
+	assert.Equal(t, actualResult.defaultRequestHandlerInterface, m)
 	assert.Equal(t, actualResult.DefaultTopic.Name, "Adapter")
 }

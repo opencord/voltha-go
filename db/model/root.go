@@ -48,7 +48,7 @@ type root struct {
 	Loading       bool
 	RevisionClass interface{}
 
-	mutex    sync.RWMutex
+	mutex sync.RWMutex
 }
 
 // NewRoot creates an new instance of a root object
@@ -116,12 +116,12 @@ func (r *root) ExecuteCallbacks() {
 	for len(r.Callbacks) > 0 {
 		callback := r.Callbacks[0]
 		r.Callbacks = r.Callbacks[1:]
-		callback.Execute(nil)
+		go callback.Execute(nil)
 	}
 	for len(r.NotificationCallbacks) > 0 {
 		callback := r.NotificationCallbacks[0]
 		r.NotificationCallbacks = r.NotificationCallbacks[1:]
-		callback.Execute(nil)
+		go callback.Execute(nil)
 	}
 }
 

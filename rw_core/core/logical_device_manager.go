@@ -33,18 +33,18 @@ type LogicalDeviceManager struct {
 	logicalDeviceAgents        map[string]*LogicalDeviceAgent
 	deviceMgr                  *DeviceManager
 	adapterProxy               *AdapterProxy
-	kafkaProxy                 *kafka.KafkaMessagingProxy
+	kafkaICProxy               *kafka.InterContainerProxy
 	clusterDataProxy           *model.Proxy
 	exitChannel                chan int
 	lockLogicalDeviceAgentsMap sync.RWMutex
 }
 
-func newLogicalDeviceManager(deviceMgr *DeviceManager, kafkaProxy *kafka.KafkaMessagingProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
+func newLogicalDeviceManager(deviceMgr *DeviceManager, kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
 	var logicalDeviceMgr LogicalDeviceManager
 	logicalDeviceMgr.exitChannel = make(chan int, 1)
 	logicalDeviceMgr.logicalDeviceAgents = make(map[string]*LogicalDeviceAgent)
 	logicalDeviceMgr.deviceMgr = deviceMgr
-	logicalDeviceMgr.kafkaProxy = kafkaProxy
+	logicalDeviceMgr.kafkaICProxy = kafkaICProxy
 	logicalDeviceMgr.clusterDataProxy = cdProxy
 	logicalDeviceMgr.lockLogicalDeviceAgentsMap = sync.RWMutex{}
 	return &logicalDeviceMgr
@@ -325,7 +325,7 @@ func (ldMgr *LogicalDeviceManager) disableLogicalPort(ctx context.Context, id *v
 	sendAPIResponse(ctx, ch, res)
 }
 
-func (ldMgr *LogicalDeviceManager) packetOut( packetOut *openflow_13.PacketOut) {
+func (ldMgr *LogicalDeviceManager) packetOut(packetOut *openflow_13.PacketOut) {
 	log.Debugw("packetOut", log.Fields{"logicalDeviceId": packetOut.Id})
 	if agent := ldMgr.getLogicalDeviceAgent(packetOut.Id); agent != nil {
 		agent.packetOut(packetOut.PacketOut)
@@ -343,4 +343,3 @@ func (ldMgr *LogicalDeviceManager) packetIn(logicalDeviceId string, port uint32,
 	}
 	return nil
 }
-

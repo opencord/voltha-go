@@ -30,7 +30,7 @@ import (
 
 type AdapterRequestHandlerProxy struct {
 	TestMode         bool
-	coreInstanceId	string
+	coreInstanceId   string
 	deviceMgr        *DeviceManager
 	lDeviceMgr       *LogicalDeviceManager
 	localDataProxy   *model.Proxy
@@ -458,7 +458,6 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ca.Argument)
 	return new(empty.Empty), nil
 }
 
-
 func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ca.Argument) (*empty.Empty, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
@@ -488,7 +487,7 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ca.Argument) (*empty.Emp
 
 		}
 	}
-	log.Debugw("PacketIn", log.Fields{"deviceId": deviceId.Id, "port": portNo.Val,  "packet": packet})
+	log.Debugw("PacketIn", log.Fields{"deviceId": deviceId.Id, "port": portNo.Val, "packet": packet})
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}

@@ -30,6 +30,7 @@ from python.protos.common_pb2 import LogLevel
 from python.protos.device_pb2 import DeviceType, DeviceTypes
 from python.protos.health_pb2 import HealthStatus
 
+
 log = structlog.get_logger()
 
 

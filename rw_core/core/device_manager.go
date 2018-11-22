@@ -36,19 +36,19 @@ type DeviceManager struct {
 	deviceAgents        map[string]*DeviceAgent
 	adapterProxy        *AdapterProxy
 	logicalDeviceMgr    *LogicalDeviceManager
-	kafkaProxy          *kafka.KafkaMessagingProxy
+	kafkaICProxy        *kafka.InterContainerProxy
 	stateTransitions    *TransitionMap
 	clusterDataProxy    *model.Proxy
 	exitChannel         chan int
 	lockDeviceAgentsMap sync.RWMutex
 }
 
-func newDeviceManager(kafkaProxy *kafka.KafkaMessagingProxy, cdProxy *model.Proxy) *DeviceManager {
+func newDeviceManager(kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy) *DeviceManager {
 	var deviceMgr DeviceManager
 	deviceMgr.exitChannel = make(chan int, 1)
 	deviceMgr.deviceAgents = make(map[string]*DeviceAgent)
-	deviceMgr.adapterProxy = NewAdapterProxy(kafkaProxy)
-	deviceMgr.kafkaProxy = kafkaProxy
+	deviceMgr.adapterProxy = NewAdapterProxy(kafkaICProxy)
+	deviceMgr.kafkaICProxy = kafkaICProxy
 	deviceMgr.clusterDataProxy = cdProxy
 	deviceMgr.lockDeviceAgentsMap = sync.RWMutex{}
 	return &deviceMgr
@@ -327,7 +327,7 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	//Get parent device type
 	parent, err := dMgr.GetDevice(parentDeviceId)
 	if err != nil {
-		log.Error("no-parent-found", log.Fields{"parentId":parentDeviceId})
+		log.Error("no-parent-found", log.Fields{"parentId": parentDeviceId})
 		return status.Errorf(codes.NotFound, "%s", parentDeviceId)
 	}
 
@@ -350,7 +350,7 @@ func (dMgr *DeviceManager) processTransition(previous *voltha.Device, current *v
 	// This will be triggered on every update to the device.
 	handlers := dMgr.stateTransitions.GetTransitionHandler(previous, current)
 	if handlers == nil {
-		log.Debugw("handlers-not-found", log.Fields{"deviceId": current.Id})
+		log.Debugw("no-op-transition", log.Fields{"deviceId": current.Id})
 		return nil
 	}
 	for _, handler := range handlers {
@@ -379,7 +379,7 @@ func (dMgr *DeviceManager) PacketIn(deviceId string, port uint32, packet []byte)
 		log.Errorw("device-not-found", log.Fields{"deviceId": deviceId})
 		return err
 	}
-	if !device.Root{
+	if !device.Root {
 		log.Errorw("device-not-root", log.Fields{"deviceId": deviceId})
 		return status.Errorf(codes.FailedPrecondition, "%s", deviceId)
 	}

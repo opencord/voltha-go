@@ -715,13 +715,13 @@ func MkPacketIn(port uint32, packet []byte) *ofp.OfpPacketIn {
 			Type: ofp.OfpMatchType_OFPMT_OXM,
 			OxmFields: []*ofp.OfpOxmField{
 				{
-					OxmClass:ofp.OfpOxmClass_OFPXMC_OPENFLOW_BASIC,
+					OxmClass: ofp.OfpOxmClass_OFPXMC_OPENFLOW_BASIC,
 					Field: &ofp.OfpOxmField_OfbField{
 						OfbField: InPort(port)},
 				},
 			},
 		},
-		Data:packet,
+		Data: packet,
 	}
 	return packetIn
 }

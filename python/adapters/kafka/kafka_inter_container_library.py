@@ -152,6 +152,12 @@ class IKafkaMessagingProxy(object):
             log.info('reconnected-to-consul', after_retries=self.retries)
             self.retries = 0
 
+    def get_target_cls(self):
+        return self.target_cls
+
+    def get_default_topic(self):
+        return self.default_topic
+
     @inlineCallbacks
     def _subscribe(self, topic, callback=None, target_cls=None):
         try:
@@ -332,12 +338,13 @@ class IKafkaMessagingProxy(object):
             request_body = InterContainerRequestBody()
             request.header.id = transaction_id
             request.header.type = MessageType.Value("REQUEST")
-            request.header.from_topic = self.default_topic
+            request.header.from_topic = reply_topic
             request.header.to_topic = to_topic
 
             response_required = False
             if reply_topic:
                 request_body.reply_to_topic = reply_topic
+                request_body.response_required = True
                 response_required = True
 
             request.header.timestamp = int(round(time.time() * 1000))
@@ -350,8 +357,6 @@ class IKafkaMessagingProxy(object):
                     request_body.args.extend([arg])
                 except Exception as e:
                     log.exception("Failed-parsing-value", e=e)
-            request_body.reply_to_topic = self.default_topic
-            request_body.response_required = response_required
             request.body.Pack(request_body)
             return request, transaction_id, response_required
         except Exception as e:
@@ -479,7 +484,7 @@ class IKafkaMessagingProxy(object):
                                 response.header.to_topic)
                             self._send_kafka_message(res_topic, response)
 
-                        log.debug("Response-sent", response=response.body)
+                        log.debug("Response-sent", response=response.body, to_topic=res_topic)
             elif message.header.type == MessageType.Value("RESPONSE"):
                 trns_id = self._to_string(message.header.id)
                 if trns_id in self.transaction_id_deferred_map:

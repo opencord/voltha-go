@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-const MAX_RESPONSE_TIME = 500   // milliseconds
+const MAX_RESPONSE_TIME = 500 // milliseconds
 
 type APIHandler struct {
 	deviceMgr        *DeviceManager
@@ -58,9 +58,9 @@ func isTestMode(ctx context.Context) bool {
 // and create a KV transaction for that serial number for the current core.
 func (handler *APIHandler) createKvTransaction(ctx context.Context) (*KVTransaction, error) {
 	var (
-		err error
-		ok bool
-		md metadata.MD
+		err    error
+		ok     bool
+		md     metadata.MD
 		serNum []string
 	)
 	if md, ok = metadata.FromIncomingContext(ctx); !ok {
