@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9299dd80_a0e2e973",
+        "filename": "rw_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000196
+      },
+      "writtenOn": "2018-11-23T15:21:16Z",
+      "side": 1,
+      "message": "Aren\u0027t we setting up 2 clients here: a \"KV client\" and a \"Kafka msg client\"?  The etcd KV client uses gRPC and not a message bus.",
+      "range": {
+        "startLine": 112,
+        "startChar": 13,
+        "endLine": 112,
+        "endChar": 22
+      },
+      "revId": "43c8212e3aba66bff565601bb6143a599dd1c421",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
