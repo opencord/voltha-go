@@ -323,8 +323,10 @@ class CoreProxy(ContainerProxy):
     def image_download_deleted(img_dnld):
         raise NotImplementedError()
 
+    @ContainerProxy.wrap_request(None)
+    @inlineCallbacks
     def send_packet_in(self, device_id, port, packet):
-        log.debug("send_packet_in")
+        log.debug("send_packet_in", device_id=device_id)
         proto_id = ID()
         proto_id.id = device_id
         p = IntType()
