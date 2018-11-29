@@ -28,7 +28,8 @@ services:
   # Single-node kafka service
   #
   kafka:
-    image: "wurstmeister/kafka:1.1.0"
+#    image: "wurstmeister/kafka:1.1.0"
+    image: "wurstmeister/kafka:2.11-2.0.1"
     ports:
      - 9092:9092
     environment:
