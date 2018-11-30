@@ -17,7 +17,7 @@ For advanced developers this may provide a more comfortable developer environmen
 
 Get the Voltha-go repository:
 ```
-git clone ssh://<your-user-ID>@gerrit.opencord.org:29418/voltha-go
+git clone https://gerrit.opencord.org/voltha-go
 cd voltha-go
 ```
 
@@ -39,7 +39,8 @@ go get -u github.com/golang/protobuf/protoc-gen-go   # protoc plugin for Go
 go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 go get -u github.com/gogo/protobuf/proto   # Clone function
 go get -u go.uber.org/zap   # logger
-go get -u github.com/Shopify/sarama   # kafka
+go get -u gopkg.in/Shopify/sarama.v1   # kafka client
+go get -u github.com/bsm/sarama-cluster
 go get -u github.com/google/uuid
 go get -u github.com/cevaris/ordered_map
 go get -u github.com/gyuho/goraph
