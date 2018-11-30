@@ -50,7 +50,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
           args:
-            - "/adapters/adapters/ponsim_olt/main.py"
+            - "/voltha/python/adapters/ponsim_olt/main.py"
             - "-v"
             - "--name=ponsim_olt"
             - "--kafka_adapter=kafka.$(NAMESPACE).svc.cluster.local:9092"
@@ -97,7 +97,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
           args:
-            - "/adapters/adapters/ponsim_onu/main.py"
+            - "/voltha/python/adapters/ponsim_onu/main.py"
             - "-v"
             - "--name=ponsim_onu"
             - "--kafka_adapter=kafka.$(NAMESPACE).svc.cluster.local:9092"
