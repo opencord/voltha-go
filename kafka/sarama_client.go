@@ -109,13 +109,25 @@ func ProducerFlushMaxMessages(num int) SaramaClientOption {
 	}
 }
 
-func ReturnOnErrors(opt bool) SaramaClientOption {
+func ProducerMaxRetries(num int) SaramaClientOption {
+	return func(args *SaramaClient) {
+		args.producerRetryMax = num
+	}
+}
+
+func ProducerRetryBackoff(duration time.Duration) SaramaClientOption {
+	return func(args *SaramaClient) {
+		args.producerRetryBackOff = duration
+	}
+}
+
+func ProducerReturnOnErrors(opt bool) SaramaClientOption {
 	return func(args *SaramaClient) {
 		args.producerReturnErrors = opt
 	}
 }
 
-func ReturnOnSuccess(opt bool) SaramaClientOption {
+func ProducerReturnOnSuccess(opt bool) SaramaClientOption {
 	return func(args *SaramaClient) {
 		args.producerReturnSuccess = opt
 	}
@@ -376,6 +388,16 @@ func (sc *SaramaClient) Send(msg interface{}, topic *Topic, keys ...string) erro
 
 	// Send message to kafka
 	sc.producer.Input() <- kafkaMsg
+
+	// Wait for result
+	// TODO: Use a lock or a different mechanism to ensure the response received corresponds to the message sent.
+	select {
+	case ok := <-sc.producer.Successes():
+		log.Debugw("message-sent", log.Fields{"status":ok})
+	case notOk := <-sc.producer.Errors():
+		log.Debugw("error-sending", log.Fields{"status":notOk})
+		return notOk
+	}
 	return nil
 }
 

@@ -77,16 +77,20 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 	}
 	// Use a device topic for the response as we are the only core handling requests for this device
 	replyToTopic := kafka.CreateSubTopic(ap.kafkaICProxy.DefaultTopic.Name, device.Id)
+	if err := ap.kafkaICProxy.SubscribeWithDefaultRequestHandler(replyToTopic); err != nil {
+		log.Errorw("Unable-to-subscribe-new-topic", log.Fields{"topic": replyToTopic, "error": err})
+		return err
+	}
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &topic, &replyToTopic, true, args...)
 	log.Debugw("AdoptDevice-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
-	if success {
-		// From now on, any unsolicited requests from the adapters for this device will come over the device topic.
-		// We should therefore include the replyToTopic as part of the target when unsolicited messages come in.
-		if err := ap.kafkaICProxy.SubscribeWithDefaultRequestHandler(replyToTopic); err != nil {
-			log.Errorw("Unable-to-subscribe-new-topic", log.Fields{"topic": replyToTopic, "error": err})
-			return err
-		}
-	}
+	//if success {
+	//	// From now on, any unsolicited requests from the adapters for this device will come over the device topic.
+	//	// We should therefore include the replyToTopic as part of the target when unsolicited messages come in.
+	//	if err := ap.kafkaICProxy.SubscribeWithDefaultRequestHandler(replyToTopic); err != nil {
+	//		log.Errorw("Unable-to-subscribe-new-topic", log.Fields{"topic": replyToTopic, "error": err})
+	//		return err
+	//	}
+	//}
 	return unPackResponse(rpc, device.Id, success, result)
 }
 

@@ -33,7 +33,7 @@ const (
 	DefaultProducerFlushFrequency   = 5
 	DefaultProducerFlushMessages    = 1
 	DefaultProducerFlushMaxmessages = 5
-	DefaultProducerReturnSuccess    = false
+	DefaultProducerReturnSuccess    = true
 	DefaultProducerReturnErrors     = true
 	DefaultProducerRetryMax         = 3
 	DefaultProducerRetryBackoff     = time.Millisecond * 100

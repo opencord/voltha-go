@@ -589,7 +589,7 @@ func (kp *InterContainerProxy) handleRequest(msg *ca.InterContainerMessage, targ
 			// partitions.
 			replyTopic := &Topic{Name: msg.Header.FromTopic}
 			key := GetDeviceIdFromTopic(*replyTopic)
-			log.Debugw("sending-response-to-kafka", log.Fields{"rpc": requestBody.Rpc, "header": msg.Header, "key": key})
+			log.Debugw("sending-response-to-kafka", log.Fields{"rpc": requestBody.Rpc, "header": icm.Header, "key": key})
 			// TODO: handle error response.
 			kp.kafkaClient.Send(icm, replyTopic, key)
 		}

@@ -136,6 +136,25 @@ class KafkaProxy(object):
             log.exception('failed-get-kafka-producer', e=e)
             return
 
+
+    # @inlineCallbacks
+    # def wait_until_topic_is_ready(self, topic):
+    #     #  Assumes "auto.create.topics.enable" is set in the broker
+    #     #  configuration
+    #     e = True
+    #     while e:
+    #         yield self.kclient.load_metadata_for_topics(topic)
+    #         e = self.kclient.metadata_error_for_topic(topic)
+    #         if e:
+    #             log.debug("Topic-not-ready-retrying...", topic=topic)
+
+
+    @inlineCallbacks
+    def create_topic(self, topic):
+        # Assume auto create is enabled on the broker configuration
+        yield self.wait_until_topic_is_ready(topic)
+
+
     @inlineCallbacks
     def send_message(self, topic, msg):
         assert topic is not None

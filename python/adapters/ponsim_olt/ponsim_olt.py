@@ -304,7 +304,6 @@ class PonSimOltHandler(object):
             reactor.callInThread(self.rcv_grpc)
             self.log.info('started-frame-grpc-stream')
 
-            # TODO
             # Start collecting stats from the device after a brief pause
             self.start_kpi_collection(device.id)
         except Exception as e:
@@ -359,6 +358,7 @@ class PonSimOltHandler(object):
     def reconcile(self, device):
         self.log.info('reconciling-OLT-device')
 
+    @inlineCallbacks
     def _rcv_frame(self, frame):
         pkt = Ether(frame)
 
@@ -373,7 +373,7 @@ class PonSimOltHandler(object):
                         inner_shim.payload
                 )
                 self.log.info('sending-packet-in',device_id=self.device_id, port=cvid)
-                self.core_proxy.send_packet_in(device_id=self.device_id,
+                yield self.core_proxy.send_packet_in(device_id=self.device_id,
                                                port=cvid,
                                                packet=str(popped_frame))
             elif pkt.haslayer(Raw):
@@ -398,7 +398,7 @@ class PonSimOltHandler(object):
             for frame in self.frames:
                 self.log.info('received-grpc-frame',
                               frame_len=len(frame.payload))
-                self._rcv_frame(frame.payload)
+                yield self._rcv_frame(frame.payload)
 
         except _Rendezvous, e:
             log.warn('grpc-connection-lost', message=e.message)
