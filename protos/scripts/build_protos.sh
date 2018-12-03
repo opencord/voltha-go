@@ -30,6 +30,7 @@ export VOLTHA_PB="\
     $SRC_DIR/health.proto \
     $SRC_DIR/logical_device.proto \
     $SRC_DIR/ponsim.proto \
+    $SRC_DIR/openolt.proto \
     $SRC_DIR/voltha.proto"
 
 export COMMON_PB="\
