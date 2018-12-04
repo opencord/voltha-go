@@ -21,7 +21,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-go/protos/core_adapter"
+	ic "github.com/opencord/voltha-go/protos/inter_container"
 	ofp "github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
 	fu "github.com/opencord/voltha-go/rw_core/utils"
@@ -326,12 +326,12 @@ func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_Por
 
 // getSwitchCapability is a helper method that a logical device agent uses to retrieve the switch capability of a
 // parent device
-func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*core_adapter.SwitchCapability, error) {
+func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*ic.SwitchCapability, error) {
 	log.Debugw("getSwitchCapability", log.Fields{"deviceId": agent.deviceId})
 	if device, err := agent.deviceMgr.GetDevice(agent.deviceId); device == nil {
 		return nil, err
 	} else {
-		var switchCap *core_adapter.SwitchCapability
+		var switchCap *ic.SwitchCapability
 		var err error
 		if switchCap, err = agent.adapterProxy.GetOfpDeviceInfo(ctx, device); err != nil {
 			log.Debugw("getSwitchCapability-error", log.Fields{"id": device.Id, "error": err})
@@ -343,12 +343,12 @@ func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*core_adapte
 
 // getPortCapability is a helper method that a logical device agent uses to retrieve the port capability of a
 // device
-func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) (*core_adapter.PortCapability, error) {
+func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) (*ic.PortCapability, error) {
 	log.Debugw("getPortCapability", log.Fields{"deviceId": agent.deviceId})
 	if device, err := agent.deviceMgr.GetDevice(agent.deviceId); device == nil {
 		return nil, err
 	} else {
-		var portCap *core_adapter.PortCapability
+		var portCap *ic.PortCapability
 		var err error
 		if portCap, err = agent.adapterProxy.GetOfpPortInfo(ctx, device, portNo); err != nil {
 			log.Debugw("getPortCapability-error", log.Fields{"id": device.Id, "error": err})

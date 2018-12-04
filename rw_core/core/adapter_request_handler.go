@@ -22,7 +22,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
-	ca "github.com/opencord/voltha-go/protos/core_adapter"
+	ic "github.com/opencord/voltha-go/protos/inter_container"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -47,7 +47,7 @@ func NewAdapterRequestHandlerProxy(coreInstanceId string, dMgr *DeviceManager, l
 	return &proxy
 }
 
-func (rhp *AdapterRequestHandlerProxy) Register(args []*ca.Argument) (*voltha.CoreInstance, error) {
+func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.CoreInstance, error) {
 	if len(args) != 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -78,7 +78,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ca.Argument) (*voltha.Co
 	return &voltha.CoreInstance{InstanceId: rhp.coreInstanceId}, nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ca.Argument) (*voltha.Device, error) {
+func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) != 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -99,6 +99,7 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ca.Argument) (*voltha.D
 	if device, err := rhp.deviceMgr.GetDevice(pID.Id); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
 	} else {
+		log.Debugw("GetDevice-response", log.Fields{"deviceId": pID.Id})
 		return device, nil
 	}
 }
@@ -122,7 +123,7 @@ func (rhp *AdapterRequestHandlerProxy) mergeDeviceInfoFromAdapter(device *voltha
 	return cloned, nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) != 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -151,7 +152,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ca.Argument) (*empty
 	return new(empty.Empty), nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ca.Argument) (*voltha.Device, error) {
+func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) < 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -170,14 +171,14 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ca.Argument) (*vol
 	return nil, nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ca.Argument) (*voltha.Ports, error) {
+func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Ports, error) {
 	if len(args) != 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	deviceId := &voltha.ID{}
-	pt := &ca.IntType{}
+	pt := &ic.IntType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
@@ -202,7 +203,7 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ca.Argument) (*voltha.Po
 	return rhp.deviceMgr.getPorts(nil, deviceId.Id, voltha.Port_PortType(pt.Val))
 }
 
-func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ca.Argument) (*voltha.Device, error) {
+func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) != 1 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -225,7 +226,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ca.Argument) (*vo
 // ChildDeviceDetected is invoked when a child device is detected.  The following
 // parameters are expected:
 // {parent_device_id, parent_port_no, child_device_type, proxy_address, admin_state, **kw)
-func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 4 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -233,9 +234,9 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ca.Argument) 
 	}
 
 	pID := &voltha.ID{}
-	portNo := &ca.IntType{}
-	dt := &ca.StrType{}
-	chnlId := &ca.IntType{}
+	portNo := &ic.IntType{}
+	dt := &ic.StrType{}
+	chnlId := &ic.IntType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "parent_device_id":
@@ -272,15 +273,15 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ca.Argument) 
 	return new(empty.Empty), nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	deviceId := &voltha.ID{}
-	operStatus := &ca.IntType{}
-	connStatus := &ca.IntType{}
+	operStatus := &ic.IntType{}
+	connStatus := &ic.IntType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
@@ -309,15 +310,15 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ca.Argument) (*
 	return new(empty.Empty), nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	deviceId := &voltha.ID{}
-	operStatus := &ca.IntType{}
-	connStatus := &ca.IntType{}
+	operStatus := &ic.IntType{}
+	connStatus := &ic.IntType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
@@ -347,16 +348,16 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ca.Argument) 
 	return new(empty.Empty), nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	deviceId := &voltha.ID{}
-	portType := &ca.IntType{}
-	portNo := &ca.IntType{}
-	operStatus := &ca.IntType{}
+	portType := &ic.IntType{}
+	portNo := &ic.IntType{}
+	operStatus := &ic.IntType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
@@ -390,7 +391,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ca.Argument) (*em
 	return new(empty.Empty), nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) != 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -423,14 +424,14 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ca.Argument) (*empty.
 	return new(empty.Empty), nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) != 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	pmConfigs := &voltha.PmConfigs{}
-	init := &ca.BoolType{}
+	init := &ic.BoolType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_pm_config":
@@ -458,15 +459,15 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ca.Argument)
 	return new(empty.Empty), nil
 }
 
-func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ca.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	deviceId := &voltha.ID{}
-	portNo := &ca.IntType{}
-	packet := &ca.Packet{}
+	portNo := &ic.IntType{}
+	packet := &ic.Packet{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":

@@ -34,7 +34,7 @@ from python.adapters.iadapter import OnuAdapter
 from python.adapters.kafka.kafka_proxy import get_kafka_proxy
 from python.protos import third_party
 from python.protos.common_pb2 import OperStatus, ConnectStatus, AdminState
-from python.protos.core_adapter_pb2 import PortCapability, \
+from python.protos.inter_container_pb2 import PortCapability, \
     InterAdapterMessageType, InterAdapterResponseBody
 from python.protos.device_pb2 import Port, PmConfig, PmConfigs
 from python.protos.events_pb2 import KpiEvent, KpiEventType, MetricValuePairs

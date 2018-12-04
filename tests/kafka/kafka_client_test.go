@@ -22,7 +22,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	kk "github.com/opencord/voltha-go/kafka"
-	ca "github.com/opencord/voltha-go/protos/core_adapter"
+	ic "github.com/opencord/voltha-go/protos/inter_container"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -63,7 +63,7 @@ func init() {
 	numMessageToSend = 1
 }
 
-func waitForMessage(ch <-chan *ca.InterContainerMessage, doneCh chan string, maxMessages int) {
+func waitForMessage(ch <-chan *ic.InterContainerMessage, doneCh chan string, maxMessages int) {
 	totalTime = 0
 	totalMessageReceived = 0
 	mytime := time.Now()
@@ -92,17 +92,17 @@ startloop:
 func sendMessages(topic *kk.Topic, numMessages int, fn sendToKafka) error {
 	// Loop for numMessages
 	for i := 0; i < numMessages; i++ {
-		msg := &ca.InterContainerMessage{}
-		msg.Header = &ca.Header{
+		msg := &ic.InterContainerMessage{}
+		msg.Header = &ic.Header{
 			Id:        uuid.New().String(),
-			Type:      ca.MessageType_REQUEST,
+			Type:      ic.MessageType_REQUEST,
 			FromTopic: topic.Name,
 			ToTopic:   topic.Name,
 			Timestamp: time.Now().UnixNano(),
 		}
 		var marshalledArg *any.Any
 		var err error
-		body := &ca.InterContainerRequestBody{Rpc: "testRPC", Args: []*ca.Argument{}}
+		body := &ic.InterContainerRequestBody{Rpc: "testRPC", Args: []*ic.Argument{}}
 		if marshalledArg, err = ptypes.MarshalAny(body); err != nil {
 			log.Warnw("cannot-marshal-request", log.Fields{"error": err})
 			return err
@@ -116,7 +116,7 @@ func sendMessages(topic *kk.Topic, numMessages int, fn sendToKafka) error {
 }
 
 func runWithPartionConsumer(topic *kk.Topic, numMessages int, doneCh chan string) error {
-	var ch <-chan *ca.InterContainerMessage
+	var ch <-chan *ic.InterContainerMessage
 	var err error
 	if ch, err = partionClient.Subscribe(topic); err != nil {
 		return nil
@@ -130,7 +130,7 @@ func runWithPartionConsumer(topic *kk.Topic, numMessages int, doneCh chan string
 }
 
 func runWithGroupConsumer(topic *kk.Topic, numMessages int, doneCh chan string) error {
-	var ch <-chan *ca.InterContainerMessage
+	var ch <-chan *ic.InterContainerMessage
 	var err error
 	if ch, err = groupClient.Subscribe(topic); err != nil {
 		return nil

@@ -23,7 +23,7 @@ from uuid import uuid4
 from twisted.internet.defer import inlineCallbacks, returnValue
 from container_proxy import ContainerProxy
 from python.protos import third_party
-from python.protos.core_adapter_pb2 import InterAdapterHeader, \
+from python.protos.inter_container_pb2 import InterAdapterHeader, \
     InterAdapterMessage
 import time
 

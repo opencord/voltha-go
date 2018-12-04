@@ -23,7 +23,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/kafka"
-	ca "github.com/opencord/voltha-go/protos/core_adapter"
+	ic "github.com/opencord/voltha-go/protos/inter_container"
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
 	"os"
@@ -43,7 +43,7 @@ type rwCore struct {
 	kafkaClient kafka.Client
 	core        *c.Core
 	//For test
-	receiverChannels []<-chan *ca.InterContainerMessage
+	receiverChannels []<-chan *ic.InterContainerMessage
 }
 
 func init() {
@@ -73,7 +73,7 @@ func newKafkaClient(clientType string, host string, port int) (kafka.Client, err
 			kafka.ProducerReturnOnErrors(true),
 			kafka.ProducerReturnOnSuccess(true),
 			kafka.ProducerMaxRetries(6),
-			kafka.ProducerRetryBackoff(time.Millisecond * 30)), nil
+			kafka.ProducerRetryBackoff(time.Millisecond*30)), nil
 	}
 	return nil, errors.New("unsupported-client-type")
 }
@@ -83,7 +83,7 @@ func newRWCore(cf *config.RWCoreFlags) *rwCore {
 	rwCore.config = cf
 	rwCore.halted = false
 	rwCore.exitChannel = make(chan int, 1)
-	rwCore.receiverChannels = make([]<-chan *ca.InterContainerMessage, 0)
+	rwCore.receiverChannels = make([]<-chan *ic.InterContainerMessage, 0)
 	return &rwCore
 }
 

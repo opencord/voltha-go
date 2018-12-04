@@ -131,7 +131,8 @@ func (core *Core) startKafkaMessagingProxy(ctx context.Context) error {
 		kafka.InterContainerHost(core.config.KafkaAdapterHost),
 		kafka.InterContainerPort(core.config.KafkaAdapterPort),
 		kafka.MsgClient(core.kafkaClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: core.config.CoreTopic})); err != nil {
+		kafka.DefaultTopic(&kafka.Topic{Name: core.config.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: core.config.AffinityRouterTopic})); err != nil {
 		log.Errorw("fail-to-create-kafka-proxy", log.Fields{"error": err})
 		return err
 	}

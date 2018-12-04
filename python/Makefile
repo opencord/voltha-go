@@ -189,7 +189,11 @@ install-protoc:
 	make -C voltha/protos install-protoc
 
 clean:
-	find voltha -name '*.pyc' | xargs rm -f
+	find . -name '*.pyc' | xargs rm -f
+	rm -f ./protos/*_pb2.py
+	rm -f ./protos/*_pb2_grpc.py
+	rm -f ./protos/*.desc
+	rm -f ./protos/*.proto
 
 distclean: clean
 	rm -rf ${VENVDIR}

@@ -5,7 +5,7 @@ import "openflow_13.proto";
 import public "logical_device.proto";
 
 
-option go_package = "github.com/opencord/voltha-go/protos/core_adapter";
+option go_package = "github.com/opencord/voltha-go/protos/inter_container";
 
 package voltha;
 
@@ -40,6 +40,7 @@ message Error {
 enum MessageType {
     REQUEST = 0;
     RESPONSE = 1;
+    DEVICE_DISCOVERED=2;
 }
 
 message Header {
@@ -79,6 +80,12 @@ message SwitchCapability {
 
 message PortCapability {
     LogicalPort port = 1;
+}
+
+message DeviceDiscovered {
+    string id = 1;
+    string parent_id = 2;
+    string device_type = 3;
 }
 
 message InterAdapterMessageType {

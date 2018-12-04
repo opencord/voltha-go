@@ -37,7 +37,7 @@ export COMMON_PB="\
     $SRC_DIR/meta.proto \
     $SRC_DIR/yang_options.proto"
 
-export CORE_ADAPTER_PB="$SRC_DIR/core_adapter.proto"
+export INTER_CONTAINER_PB="$SRC_DIR/inter_container.proto"
 export SCHEMA_PB="$SRC_DIR/schema.proto"
 export IETF_PB="$SRC_DIR/ietf_interfaces.proto"
 export OF_PB="$SRC_DIR/openflow_13.proto"
@@ -46,7 +46,7 @@ export OMCI_PB="$SRC_DIR/omci*.proto"
 export PB_VARS="\
     VOLTHA_PB \
     COMMON_PB \
-    CORE_ADAPTER_PB \
+    INTER_CONTAINER_PB \
     SCHEMA_PB \
     IETF_PB \
     OF_PB \

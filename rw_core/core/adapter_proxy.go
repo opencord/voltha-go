@@ -21,7 +21,7 @@ import (
 	a "github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/kafka"
-	ca "github.com/opencord/voltha-go/protos/core_adapter"
+	ic "github.com/opencord/voltha-go/protos/inter_container"
 	"github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"google.golang.org/grpc/codes"
@@ -43,7 +43,7 @@ func unPackResponse(rpc string, deviceId string, success bool, response *a.Any) 
 	if success {
 		return nil
 	} else {
-		unpackResult := &ca.Error{}
+		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(response, unpackResult); err != nil {
 			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
@@ -170,7 +170,7 @@ func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device)
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
-func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ca.SwitchCapability, error) {
+func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) {
 	log.Debugw("GetOfpDeviceInfo", log.Fields{"deviceId": device.Id})
 	toTopic := kafka.CreateSubTopic(device.Type, device.Id)
 	args := make([]*kafka.KVArg, 1)
@@ -183,14 +183,14 @@ func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Dev
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_device_info", &toTopic, &replyToTopic, true, args...)
 	log.Debugw("GetOfpDeviceInfo-response", log.Fields{"deviceId": device.Id, "success": success, "result": result})
 	if success {
-		unpackResult := &ca.SwitchCapability{}
+		unpackResult := &ic.SwitchCapability{}
 		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
 			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return unpackResult, nil
 	} else {
-		unpackResult := &ca.Error{}
+		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
 			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
@@ -201,7 +201,7 @@ func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Dev
 	}
 }
 
-func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Device, portNo uint32) (*ca.PortCapability, error) {
+func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Device, portNo uint32) (*ic.PortCapability, error) {
 	log.Debugw("GetOfpPortInfo", log.Fields{"deviceId": device.Id})
 	toTopic := kafka.CreateSubTopic(device.Type, device.Id)
 	args := make([]*kafka.KVArg, 2)
@@ -209,7 +209,7 @@ func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Devic
 		Key:   "device",
 		Value: device,
 	}
-	pNo := &ca.IntType{Val: int64(portNo)}
+	pNo := &ic.IntType{Val: int64(portNo)}
 	args[1] = &kafka.KVArg{
 		Key:   "port_no",
 		Value: pNo,
@@ -219,14 +219,14 @@ func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Devic
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_port_info", &toTopic, &replyToTopic, true, args...)
 	log.Debugw("GetOfpPortInfo-response", log.Fields{"deviceid": device.Id, "success": success})
 	if success {
-		unpackResult := &ca.PortCapability{}
+		unpackResult := &ic.PortCapability{}
 		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
 			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return unpackResult, nil
 	} else {
-		unpackResult := &ca.Error{}
+		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
 			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
@@ -303,13 +303,13 @@ func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort ui
 	log.Debugw("packetOut", log.Fields{"deviceId": deviceId})
 	toTopic := kafka.CreateSubTopic(deviceType, deviceId)
 	rpc := "receive_packet_out"
-	dId := &ca.StrType{Val: deviceId}
+	dId := &ic.StrType{Val: deviceId}
 	args := make([]*kafka.KVArg, 3)
 	args[0] = &kafka.KVArg{
 		Key:   "deviceId",
 		Value: dId,
 	}
-	op := &ca.IntType{Val: int64(outPort)}
+	op := &ic.IntType{Val: int64(outPort)}
 	args[1] = &kafka.KVArg{
 		Key:   "outPort",
 		Value: op,

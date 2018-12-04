@@ -22,7 +22,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
-	"github.com/opencord/voltha-go/protos/core_adapter"
+	ic "github.com/opencord/voltha-go/protos/inter_container"
 	ofp "github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"google.golang.org/grpc/codes"
@@ -249,7 +249,7 @@ func (dMgr *DeviceManager) updatePmConfigs(deviceId string, pmConfigs *voltha.Pm
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
-func (dMgr *DeviceManager) getSwitchCapability(ctx context.Context, deviceId string) (*core_adapter.SwitchCapability, error) {
+func (dMgr *DeviceManager) getSwitchCapability(ctx context.Context, deviceId string) (*ic.SwitchCapability, error) {
 	log.Debugw("getSwitchCapability", log.Fields{"deviceid": deviceId})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent.getSwitchCapability(ctx)
@@ -266,7 +266,7 @@ func (dMgr *DeviceManager) getPorts(ctx context.Context, deviceId string, portTy
 
 }
 
-func (dMgr *DeviceManager) getPortCapability(ctx context.Context, deviceId string, portNo uint32) (*core_adapter.PortCapability, error) {
+func (dMgr *DeviceManager) getPortCapability(ctx context.Context, deviceId string, portNo uint32) (*ic.PortCapability, error) {
 	log.Debugw("getPortCapability", log.Fields{"deviceid": deviceId})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent.getPortCapability(ctx, portNo)
@@ -340,8 +340,11 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 
 	// Activate the child device
 	if agent := dMgr.getDeviceAgent(agent.deviceId); agent != nil {
-		return agent.enableDevice(nil)
+		go agent.enableDevice(nil)
 	}
+
+	// Publish on the messaging bus that we have discovered new devices
+	go dMgr.kafkaICProxy.DeviceDiscovered(agent.deviceId, deviceType, parentDeviceId)
 
 	return nil
 }

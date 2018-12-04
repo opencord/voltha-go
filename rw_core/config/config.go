@@ -24,51 +24,53 @@ import (
 
 // RW Core service default constants
 const (
-	ConsulStoreName          = "consul"
-	EtcdStoreName            = "etcd"
-	default_InstanceID       = "rwcore001"
-	default_GrpcPort         = 50057
-	default_GrpcHost         = ""
-	default_KafkaAdapterHost = "127.0.0.1"
-	default_KafkaAdapterPort = 9092
-	default_KafkaClusterHost = "127.0.0.1"
-	default_KafkaClusterPort = 9094
-	default_KVStoreType      = EtcdStoreName
-	default_KVStoreTimeout   = 5 //in seconds
-	default_KVStoreHost      = "127.0.0.1"
-	default_KVStorePort      = 2379 // Consul = 8500; Etcd = 2379
-	default_KVTxnKeyDelTime  = 60
-	default_LogLevel         = 0
-	default_Banner           = false
-	default_CoreTopic        = "rwcore"
-	default_RWCoreEndpoint   = "rwcore"
-	default_RWCoreKey        = "pki/voltha.key"
-	default_RWCoreCert       = "pki/voltha.crt"
-	default_RWCoreCA         = "pki/voltha-CA.pem"
+	ConsulStoreName               = "consul"
+	EtcdStoreName                 = "etcd"
+	default_InstanceID            = "rwcore001"
+	default_GrpcPort              = 50057
+	default_GrpcHost              = ""
+	default_KafkaAdapterHost      = "127.0.0.1"
+	default_KafkaAdapterPort      = 9092
+	default_KafkaClusterHost      = "127.0.0.1"
+	default_KafkaClusterPort      = 9094
+	default_KVStoreType           = EtcdStoreName
+	default_KVStoreTimeout        = 5 //in seconds
+	default_KVStoreHost           = "127.0.0.1"
+	default_KVStorePort           = 2379 // Consul = 8500; Etcd = 2379
+	default_KVTxnKeyDelTime       = 60
+	default_LogLevel              = 0
+	default_Banner                = false
+	default_CoreTopic             = "rwcore"
+	default_RWCoreEndpoint        = "rwcore"
+	default_RWCoreKey             = "pki/voltha.key"
+	default_RWCoreCert            = "pki/voltha.crt"
+	default_RWCoreCA              = "pki/voltha-CA.pem"
+	default_Affinity_Router_Topic = "affinityRouter"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
 type RWCoreFlags struct {
 	// Command line parameters
-	InstanceID       string
-	RWCoreEndpoint   string
-	GrpcHost         string
-	GrpcPort         int
-	KafkaAdapterHost string
-	KafkaAdapterPort int
-	KafkaClusterHost string
-	KafkaClusterPort int
-	KVStoreType      string
-	KVStoreTimeout   int // in seconds
-	KVStoreHost      string
-	KVStorePort      int
-	KVTxnKeyDelTime  int
-	CoreTopic        string
-	LogLevel         int
-	Banner           bool
-	RWCoreKey        string
-	RWCoreCert       string
-	RWCoreCA         string
+	InstanceID          string
+	RWCoreEndpoint      string
+	GrpcHost            string
+	GrpcPort            int
+	KafkaAdapterHost    string
+	KafkaAdapterPort    int
+	KafkaClusterHost    string
+	KafkaClusterPort    int
+	KVStoreType         string
+	KVStoreTimeout      int // in seconds
+	KVStoreHost         string
+	KVStorePort         int
+	KVTxnKeyDelTime     int
+	CoreTopic           string
+	LogLevel            int
+	Banner              bool
+	RWCoreKey           string
+	RWCoreCert          string
+	RWCoreCA            string
+	AffinityRouterTopic string
 }
 
 func init() {
@@ -78,25 +80,26 @@ func init() {
 // NewRWCoreFlags returns a new RWCore config
 func NewRWCoreFlags() *RWCoreFlags {
 	var rwCoreFlag = RWCoreFlags{ // Default values
-		InstanceID:       default_InstanceID,
-		RWCoreEndpoint:   default_RWCoreEndpoint,
-		GrpcHost:         default_GrpcHost,
-		GrpcPort:         default_GrpcPort,
-		KafkaAdapterHost: default_KafkaAdapterHost,
-		KafkaAdapterPort: default_KafkaAdapterPort,
-		KafkaClusterHost: default_KafkaClusterHost,
-		KafkaClusterPort: default_KafkaClusterPort,
-		KVStoreType:      default_KVStoreType,
-		KVStoreTimeout:   default_KVStoreTimeout,
-		KVStoreHost:      default_KVStoreHost,
-		KVStorePort:      default_KVStorePort,
-		KVTxnKeyDelTime:  default_KVTxnKeyDelTime,
-		CoreTopic:        default_CoreTopic,
-		LogLevel:         default_LogLevel,
-		Banner:           default_Banner,
-		RWCoreKey:        default_RWCoreKey,
-		RWCoreCert:       default_RWCoreCert,
-		RWCoreCA:         default_RWCoreCA,
+		InstanceID:          default_InstanceID,
+		RWCoreEndpoint:      default_RWCoreEndpoint,
+		GrpcHost:            default_GrpcHost,
+		GrpcPort:            default_GrpcPort,
+		KafkaAdapterHost:    default_KafkaAdapterHost,
+		KafkaAdapterPort:    default_KafkaAdapterPort,
+		KafkaClusterHost:    default_KafkaClusterHost,
+		KafkaClusterPort:    default_KafkaClusterPort,
+		KVStoreType:         default_KVStoreType,
+		KVStoreTimeout:      default_KVStoreTimeout,
+		KVStoreHost:         default_KVStoreHost,
+		KVStorePort:         default_KVStorePort,
+		KVTxnKeyDelTime:     default_KVTxnKeyDelTime,
+		CoreTopic:           default_CoreTopic,
+		LogLevel:            default_LogLevel,
+		Banner:              default_Banner,
+		RWCoreKey:           default_RWCoreKey,
+		RWCoreCert:          default_RWCoreCert,
+		RWCoreCA:            default_RWCoreCA,
+		AffinityRouterTopic: default_Affinity_Router_Topic,
 	}
 	return &rwCoreFlag
 }
@@ -129,6 +132,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("RW Core topic")
 	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", default_CoreTopic, help)
+
+	help = fmt.Sprintf("Affinity Router topic")
+	flag.StringVar(&(cf.AffinityRouterTopic), "affinity_router_topic", default_Affinity_Router_Topic, help)
 
 	help = fmt.Sprintf("KV store type")
 	flag.StringVar(&(cf.KVStoreType), "kv_store_type", default_KVStoreType, help)

@@ -23,7 +23,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 from container_proxy import ContainerProxy
 from python.protos.common_pb2 import ID, ConnectStatus, OperStatus
-from python.protos.core_adapter_pb2 import StrType, BoolType, IntType, Packet
+from python.protos.inter_container_pb2 import StrType, BoolType, IntType, Packet
 from python.protos.device_pb2 import Device, Ports
 from python.protos.voltha_pb2 import CoreInstance
 

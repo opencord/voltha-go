@@ -22,7 +22,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
-	ca "github.com/opencord/voltha-go/protos/core_adapter"
+	ic "github.com/opencord/voltha-go/protos/inter_container"
 	ofp "github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
 	fd "github.com/opencord/voltha-go/rw_core/flow_decomposition"
@@ -68,7 +68,7 @@ func newLogicalDeviceAgent(id string, device *voltha.Device, ldeviceMgr *Logical
 func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
 	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 	//Build the logical device based on information retrieved from the device adapter
-	var switchCap *ca.SwitchCapability
+	var switchCap *ic.SwitchCapability
 	var err error
 	if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceId); err != nil {
 		log.Errorw("error-creating-logical-device", log.Fields{"error": err})
@@ -88,7 +88,7 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
 	if nniPorts, err = agent.deviceMgr.getPorts(ctx, agent.rootDeviceId, voltha.Port_ETHERNET_NNI); err != nil {
 		log.Errorw("error-creating-logical-port", log.Fields{"error": err})
 	}
-	var portCap *ca.PortCapability
+	var portCap *ic.PortCapability
 	for _, port := range nniPorts.Items {
 		log.Infow("!!!!!!!NNI PORTS", log.Fields{"NNI": port})
 		if portCap, err = agent.deviceMgr.getPortCapability(ctx, agent.rootDeviceId, port.PortNo); err != nil {
@@ -223,7 +223,6 @@ func (agent *LogicalDeviceAgent) updateLogicalDeviceFlowGroupsWithoutLock(flowGr
 	return nil
 }
 
-
 // getLogicalDeviceWithoutLock retrieves a logical device from the model without locking it.   This is used only by
 // functions that have already acquired the logical device lock to the model
 func (agent *LogicalDeviceAgent) getLogicalDeviceWithoutLock() (*voltha.LogicalDevice, error) {
@@ -240,7 +239,7 @@ func (agent *LogicalDeviceAgent) getLogicalDeviceWithoutLock() (*voltha.LogicalD
 func (agent *LogicalDeviceAgent) addUNILogicalPort(ctx context.Context, childDevice *voltha.Device) error {
 	log.Infow("addUNILogicalPort-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 	// Build the logical device based on information retrieved from the device adapter
-	var portCap *ca.PortCapability
+	var portCap *ic.PortCapability
 	var err error
 
 	//Get UNI port number
@@ -326,7 +325,6 @@ func (agent *LogicalDeviceAgent) updateGroupTable(ctx context.Context, groupMod 
 	return status.Errorf(codes.Internal,
 		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, groupMod.GetCommand())
 }
-
 
 //updateFlowGroupsWithoutLock updates the flows in the logical device without locking the logical device.  This function
 //must only be called by a function that is holding the lock on the logical device
@@ -737,7 +735,7 @@ func (agent *LogicalDeviceAgent) getPreCalculatedRoute(ingress, egress uint32) [
 func (agent *LogicalDeviceAgent) GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop {
 	log.Debugw("getting-route", log.Fields{"ingress-port": ingressPortNo, "egress-port": egressPortNo})
 	// Get the updated logical device
-	var ld *ca.LogicalDevice
+	var ld *ic.LogicalDevice
 	routes := make([]graph.RouteHop, 0)
 	var err error
 	if ld, err = agent.getLogicalDeviceWithoutLock(); err != nil {
