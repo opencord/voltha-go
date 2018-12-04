@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98aba3b8_05638ddc",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000196
+      },
+      "writtenOn": "2018-12-04T16:35:43Z",
+      "side": 1,
+      "message": "Will there be a required change to the args list in the rw-core docker-compose file or k8s manifest?",
+      "revId": "79232702b90e6111866d04ca88d37b24a5145b1b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
