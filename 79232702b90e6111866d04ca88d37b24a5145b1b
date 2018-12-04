@@ -16,6 +16,24 @@
       "revId": "79232702b90e6111866d04ca88d37b24a5145b1b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d7ea92a_0d6ef390",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-12-04T16:38:00Z",
+      "side": 1,
+      "message": "No.  This is only required if we want to change the name of the affinity router topic which has a default of \"affinityRouter\".",
+      "parentUuid": "98aba3b8_05638ddc",
+      "revId": "79232702b90e6111866d04ca88d37b24a5145b1b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
