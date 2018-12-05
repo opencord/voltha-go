@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c42083f3_bec215a9",
+        "filename": "BUILD.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-12-05T16:06:27Z",
+      "side": 1,
+      "message": "We no longer need this dependency, since we are using the sarama.v1 which pulls the latest stable and released version",
+      "revId": "202b076032bafdaa1aaa7d5b4c8ae6527516eacd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
