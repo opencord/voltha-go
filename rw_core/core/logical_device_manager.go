@@ -32,6 +32,7 @@ import (
 type LogicalDeviceManager struct {
 	logicalDeviceAgents        map[string]*LogicalDeviceAgent
 	deviceMgr                  *DeviceManager
+	grpcNbiHdlr                *APIHandler
 	adapterProxy               *AdapterProxy
 	kafkaICProxy               *kafka.InterContainerProxy
 	clusterDataProxy           *model.Proxy
@@ -48,6 +49,10 @@ func newLogicalDeviceManager(deviceMgr *DeviceManager, kafkaICProxy *kafka.Inter
 	logicalDeviceMgr.clusterDataProxy = cdProxy
 	logicalDeviceMgr.lockLogicalDeviceAgentsMap = sync.RWMutex{}
 	return &logicalDeviceMgr
+}
+
+func (ldMgr *LogicalDeviceManager) setGrpcNbiHandler(grpcNbiHandler *APIHandler) {
+	ldMgr.grpcNbiHdlr = grpcNbiHandler
 }
 
 func (ldMgr *LogicalDeviceManager) start(ctx context.Context) {

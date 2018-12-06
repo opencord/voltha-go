@@ -32,7 +32,7 @@ type Core struct {
 	deviceMgr         *DeviceManager
 	logicalDeviceMgr  *LogicalDeviceManager
 	grpcServer        *grpcserver.GrpcServer
-	grpcNBIAPIHanfler *APIHandler
+	grpcNBIAPIHandler *APIHandler
 	config            *config.RWCoreFlags
 	kmp               *kafka.InterContainerProxy
 	clusterDataRoot   model.Root
@@ -106,12 +106,13 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false)
 	log.Info("grpc-server-created")
 
-	core.grpcNBIAPIHanfler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr)
+	core.grpcNBIAPIHandler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr)
+	core.logicalDeviceMgr.setGrpcNbiHandler(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
 		voltha.RegisterVolthaServiceServer(
 			gs,
-			core.grpcNBIAPIHanfler,
+			core.grpcNBIAPIHandler,
 		)
 	}
 

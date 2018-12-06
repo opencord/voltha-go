@@ -35,6 +35,7 @@ ln -s ~/repos/voltha-go $GOPATH/src/github.com/opencord/voltha-go
 
 ```
 go get -u google.golang.org/grpc   # gRPC
+go get -u github.com/golang-collections/go-datastructures/queue
 go get -u github.com/golang/protobuf/protoc-gen-go   # protoc plugin for Go
 go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 go get -u github.com/gogo/protobuf/proto   # Clone function
