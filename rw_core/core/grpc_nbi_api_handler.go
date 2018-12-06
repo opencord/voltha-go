@@ -18,6 +18,7 @@ package core
 import (
 	"context"
 	"errors"
+	"github.com/golang-collections/go-datastructures/queue"
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-go/common/log"
@@ -36,6 +37,7 @@ const MAX_RESPONSE_TIME = 500 // milliseconds
 type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
+	packetInQueue     *queue.Queue
 	da.DefaultAPIHandler
 }
 
@@ -43,6 +45,8 @@ func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager) *
 	handler := &APIHandler{
 		deviceMgr:        deviceMgr,
 		logicalDeviceMgr: lDeviceMgr,
+		// TODO: Figure out what the 'hint' parameter to queue.New does
+		packetInQueue:    queue.New(10),
 	}
 	return handler
 }
@@ -388,7 +392,10 @@ func (handler *APIHandler) StreamPacketsOut(
 func (handler *APIHandler) sendPacketIn(deviceId string, packet *openflow_13.OfpPacketIn) {
 	packetIn := openflow_13.PacketIn{Id: deviceId, PacketIn: packet}
 	log.Debugw("sendPacketIn", log.Fields{"packetIn": packetIn})
-	// TODO: put the packet in the queue
+	// Enqueue the packet
+	if err := handler.packetInQueue.Put(packetIn); err != nil {
+		log.Errorw("failed-to-enqueue-packet", log.Fields{"error": err})
+	}
 }
 
 func (handler *APIHandler) ReceivePacketsIn(
@@ -398,12 +405,15 @@ func (handler *APIHandler) ReceivePacketsIn(
 	log.Debugw("ReceivePacketsIn-request", log.Fields{"packetsIn": packetsIn})
 
 	for {
-		// TODO: need to retrieve packet from queue
-		packet := &openflow_13.PacketIn{}
-		time.Sleep(time.Duration(5) * time.Second)
-		err := packetsIn.Send(packet)
-		if err != nil {
-			log.Errorw("Failed to send packet", log.Fields{"error": err})
+		// Dequeue a packet
+		if packets, err := handler.packetInQueue.Get(1); err == nil {
+			log.Debugw("dequeued-packet", log.Fields{"packet": packets[0]})
+			if packet, ok := packets[0].(openflow_13.PacketIn); ok {
+				log.Debugw("sending-packet-in", log.Fields{"packet": packet})
+				if err := packetsIn.Send(&packet); err != nil {
+					log.Errorw("failed-to-send-packet", log.Fields{"error": err})
+				}
+			}
 		}
 	}
 	log.Debugw("ReceivePacketsIn-request-done", log.Fields{"packetsIn": packetsIn})

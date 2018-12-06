@@ -1050,5 +1050,6 @@ func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 func (agent *LogicalDeviceAgent) packetIn(port uint32, packet []byte) {
 	log.Debugw("packet-in", log.Fields{"port": port, "packet": packet})
 	packet_in := fd.MkPacketIn(port, packet)
+	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, packet_in)
 	log.Debugw("sending-packet-in", log.Fields{"packet-in": packet_in})
 }

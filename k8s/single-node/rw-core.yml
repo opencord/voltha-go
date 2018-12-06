@@ -60,7 +60,6 @@ spec:
             - "-kv_store_type=etcd"
             - "-kv_store_host=etcd.$(NAMESPACE).svc.cluster.local"
             - "-kv_store_port=2379"
-            - "-grpc_host=rw-core.$(NAMESPACE).svc.cluster.local"
             - "-grpc_port=50057"
             - "-banner=true"
             - "-kafka_adapter_host=kafka.$(NAMESPACE).svc.cluster.local"
