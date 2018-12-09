@@ -227,6 +227,7 @@ func (n *node) initialize(data interface{}, txid string) {
 func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) (int, Revision) {
 	n.Lock()
 	defer n.Unlock()
+
 	for i, rev := range revs {
 		dataValue := reflect.ValueOf(rev.GetData())
 		dataStruct := GetAttributeStructure(rev.GetData(), keyName, 0)
@@ -266,7 +267,20 @@ func (n *node) Get(path string, hash string, depth int, deep bool, txid string) 
 		rev = branch.GetLatest()
 	}
 
-	return n.getPath(rev, path, depth)
+	var result interface{}
+	if result = n.getPath(rev.GetBranch().GetLatest(), path, depth);
+		reflect.ValueOf(result).IsValid() && reflect.ValueOf(result).IsNil() && n.Root.KvStore != nil {
+		// We got nothing from memory, try to pull it from persistence
+		var prList []interface{}
+		if pr := rev.LoadFromPersistence(path, txid); pr != nil {
+			for _, revEntry := range pr {
+				prList = append(prList, revEntry.GetData())
+			}
+			result = prList
+		}
+	}
+
+	return result
 }
 
 // getPath traverses the specified path and retrieves the data associated to it
@@ -357,7 +371,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 	var branch *Branch
 	if txid == "" {
 		branch = n.GetBranch(NONE)
-	} else if branch = n.GetBranch(txid); &branch == nil {
+	} else if branch = n.GetBranch(txid); branch == nil {
 		branch = makeBranch(n)
 	}
 
@@ -420,6 +434,8 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 				log.Errorf("cannot change key field")
 			}
 
+			// Prefix the hash value with the data type (e.g. devices, logical_devices, adapters)
+			newChildRev.SetHash(name + "/" + _keyValueType)
 			children[idx] = newChildRev
 
 			updatedRev := rev.UpdateChildren(name, children, branch)
@@ -438,8 +454,10 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 		updatedRev := rev.UpdateChildren(name, []Revision{newChildRev}, branch)
 		rev.Drop(txid, false)
 		n.makeLatest(branch, updatedRev, nil)
+
 		return newChildRev
 	}
+
 	return nil
 }
 
@@ -536,6 +554,9 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 					return exists
 				}
 				childRev := n.MakeNode(data, txid).Latest(txid)
+
+				// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
+				childRev.SetHash(name + "/" + key.String())
 				children = append(children, childRev)
 				rev = rev.UpdateChildren(name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
@@ -753,15 +774,15 @@ func (n *node) hasChildren(data interface{}) bool {
 
 // CreateProxy returns a reference to a sub-tree of the data model
 func (n *node) CreateProxy(path string, exclusive bool) *Proxy {
-	return n.createProxy(path, path, exclusive)
+	return n.createProxy(path, path, n, exclusive)
 }
 
-func (n *node) createProxy(path string, fullPath string, exclusive bool) *Proxy {
+func (n *node) createProxy(path string, fullPath string, parentNode *node, exclusive bool) *Proxy {
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
 	if path == "" {
-		return n.makeProxy(path, fullPath, exclusive)
+		return n.makeProxy(path, fullPath, parentNode, exclusive)
 	}
 
 	rev := n.GetBranch(NONE).GetLatest()
@@ -792,20 +813,20 @@ func (n *node) createProxy(path string, fullPath string, exclusive bool) *Proxy 
 			_, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
 
-			return childNode.createProxy(path, fullPath, exclusive)
+			return childNode.createProxy(path, fullPath, n, exclusive)
 		} else {
 			log.Error("cannot index into container with no keys")
 		}
 	} else {
 		childRev := rev.GetChildren()[name][0]
 		childNode := childRev.GetNode()
-		return childNode.createProxy(path, fullPath, exclusive)
+		return childNode.createProxy(path, fullPath, n, exclusive)
 	}
 
 	return nil
 }
 
-func (n *node) makeProxy(path string, fullPath string, exclusive bool) *Proxy {
+func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusive bool) *Proxy {
 	n.Lock()
 	defer n.Unlock()
 	r := &root{
@@ -819,7 +840,7 @@ func (n *node) makeProxy(path string, fullPath string, exclusive bool) *Proxy {
 	}
 
 	if n.Proxy == nil {
-		n.Proxy = NewProxy(r, n, path, fullPath, exclusive)
+		n.Proxy = NewProxy(r, n, parentNode, path, fullPath, exclusive)
 	} else {
 		if n.Proxy.Exclusive {
 			log.Error("node is already owned exclusively")
@@ -838,17 +859,6 @@ func (n *node) makeEventBus() *EventBus {
 	return n.EventBus
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Persistence Loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// LoadLatest accesses the persistent storage to construct the data model based on the stored information
-func (n *node) LoadLatest(hash string) {
-	branch := NewBranch(n, "", nil, n.AutoPrune)
-	pr := &PersistedRevision{}
-	rev := pr.Load(branch, n.GetRoot().KvStore, n.Type, hash)
-	n.makeLatest(branch, rev, nil)
-	n.SetBranch(NONE, branch)
-}
-
 func (n *node) SetProxy(proxy *Proxy) {
 	n.Lock()
 	defer n.Unlock()
@@ -864,8 +874,10 @@ func (n *node) GetProxy() *Proxy {
 func (n *node) GetBranch(key string) *Branch {
 	n.Lock()
 	defer n.Unlock()
-	if branch, exists := n.Branches[key]; exists {
-		return branch
+	if n.Branches != nil {
+		if branch, exists := n.Branches[key]; exists {
+			return branch
+		}
 	}
 	return nil
 }

@@ -36,7 +36,7 @@ type ModelTestConfig struct {
 
 var (
 	modelTestConfig = &ModelTestConfig{
-		DbPrefix: "service/voltha/data/core/0001",
+		DbPrefix: "service/voltha",
 		DbType:   "etcd",
 		DbHost:   "localhost",
 		//DbHost:    "10.106.153.44",
@@ -110,11 +110,11 @@ func init() {
 	root := NewRoot(msgClass, modelTestConfig.Backend)
 	//root := NewRoot(msgClass, nil)
 
-	if modelTestConfig.Backend != nil {
-		modelTestConfig.Root = root.Load(msgClass)
-	} else {
-		modelTestConfig.Root = root
-	}
+	//if modelTestConfig.Backend != nil {
+	//modelTestConfig.Root = root.Load(msgClass)
+	//} else {
+	modelTestConfig.Root = root
+	//}
 
 	GetProfiling().Report()
 

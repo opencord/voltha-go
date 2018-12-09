@@ -16,7 +16,7 @@
 package model
 
 type Revision interface {
-	Finalize()
+	Finalize(bool)
 	SetConfig(revision *DataRevision)
 	GetConfig() *DataRevision
 	Drop(txid string, includeConfig bool)
@@ -30,6 +30,7 @@ type Revision interface {
 	Get(int) interface{}
 	GetData() interface{}
 	GetNode() *node
+	LoadFromPersistence(path string, txid string) []Revision
 	UpdateData(data interface{}, branch *Branch) Revision
 	UpdateChildren(name string, children []Revision, branch *Branch) Revision
 	UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision

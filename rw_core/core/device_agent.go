@@ -51,7 +51,9 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	var agent DeviceAgent
 	agent.adapterProxy = ap
 	cloned := (proto.Clone(device)).(*voltha.Device)
-	cloned.Id = CreateDeviceId()
+	if cloned.Id == "" {
+		cloned.Id = CreateDeviceId()
+	}
 	cloned.AdminState = voltha.AdminState_PREPROVISIONED
 	cloned.FlowGroups = &ofp.FlowGroups{Items: nil}
 	cloned.Flows = &ofp.Flows{Items: nil}
@@ -180,15 +182,13 @@ func (agent *DeviceAgent) updateFlows(flows []*ofp.OfpFlowStats) error {
 	} else {
 		oldData = proto.Clone(storedData.Flows).(*voltha.Flows)
 		log.Debugw("updateFlows", log.Fields{"deviceId": agent.deviceId, "flows": flows, "old": oldData})
+
 		// store the changed data
-		storedData.Flows.Items = flows
-		afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, storedData, false, "")
+		afterUpdate := agent.flowProxy.Update("/", &ofp.Flows{Items: flows}, false, "")
 		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
 
-		// For now, force the callback to occur
-		go agent.flowTableUpdated(oldData, &ofp.Flows{Items: flows})
 		return nil
 	}
 }
@@ -196,21 +196,16 @@ func (agent *DeviceAgent) updateFlows(flows []*ofp.OfpFlowStats) error {
 func (agent *DeviceAgent) updateGroups(groups []*ofp.OfpGroupEntry) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	var oldData *voltha.FlowGroups
 	log.Debugw("updateGroups", log.Fields{"deviceId": agent.deviceId, "groups": groups})
-	if storedData, err := agent.getDeviceWithoutLock(); err != nil {
+	if _, err := agent.getDeviceWithoutLock(); err != nil {
 		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
 	} else {
-		oldData = proto.Clone(storedData.FlowGroups).(*voltha.FlowGroups)
 		// store the changed data
-		storedData.FlowGroups.Items = groups
-		afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, storedData, false, "")
+		afterUpdate := agent.groupProxy.Update("/", &ofp.FlowGroups{Items: groups}, false, "")
 		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
 
-		// For now, force the callback to occur
-		go agent.groupTableUpdated(oldData, &ofp.FlowGroups{Items: groups})
 		return nil
 	}
 }

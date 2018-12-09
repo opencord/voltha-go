@@ -55,56 +55,50 @@ func (oc *OperationContext) Update(data interface{}) *OperationContext {
 // Proxy holds the information for a specific location with the data model
 type Proxy struct {
 	sync.RWMutex
-	Root      *root
-	Node      *node
-	Path      string
-	FullPath  string
-	Exclusive bool
-	Callbacks map[CallbackType]map[string]*CallbackTuple
+	Root        *root
+	Node        *node
+	ParentNode  *node
+	Path        string
+	FullPath    string
+	Exclusive   bool
+	Callbacks   map[CallbackType]map[string]*CallbackTuple
 }
 
 // NewProxy instantiates a new proxy to a specific location
-func NewProxy(root *root, node *node, path string, fullPath string, exclusive bool) *Proxy {
+func NewProxy(root *root, node *node, parentNode *node, path string, fullPath string, exclusive bool) *Proxy {
 	callbacks := make(map[CallbackType]map[string]*CallbackTuple)
 	if fullPath == "/" {
 		fullPath = ""
 	}
 	p := &Proxy{
-		Root:      root,
-		Node:      node,
-		Exclusive: exclusive,
-		Path:      path,
-		FullPath:  fullPath,
-		Callbacks: callbacks,
+		Root:        root,
+		Node:        node,
+		ParentNode:  parentNode,
+		Exclusive:   exclusive,
+		Path:        path,
+		FullPath:    fullPath,
+		Callbacks:   callbacks,
 	}
 	return p
 }
 
 // GetRoot returns the root attribute of the proxy
 func (p *Proxy) GetRoot() *root {
-	p.Lock()
-	defer p.Unlock()
 	return p.Root
 }
 
 // getPath returns the path attribute of the proxy
 func (p *Proxy) getPath() string {
-	p.Lock()
-	defer p.Unlock()
 	return p.Path
 }
 
 // getFullPath returns the full path attribute of the proxy
 func (p *Proxy) getFullPath() string {
-	p.Lock()
-	defer p.Unlock()
 	return p.FullPath
 }
 
 // getCallbacks returns the full list of callbacks associated to the proxy
 func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTuple {
-	p.Lock()
-	defer p.Unlock()
 	if cb, exists := p.Callbacks[callbackType]; exists {
 		return cb
 	}
@@ -113,8 +107,6 @@ func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTupl
 
 // getCallback returns a specific callback matching the type and function hash
 func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *CallbackTuple {
-	p.Lock()
-	defer p.Unlock()
 	if tuple, exists := p.Callbacks[callbackType][funcHash]; exists {
 		return tuple
 	}
@@ -146,7 +138,10 @@ func (p *Proxy) DeleteCallback(callbackType CallbackType, funcHash string) {
 // for locations that need to be access controlled.
 func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled bool) {
 	// TODO: Add other path prefixes that may need control
-	if strings.HasPrefix(path, "/devices") || strings.HasPrefix(path, "/logical_devices"){
+	if strings.HasPrefix(path, "/devices") ||
+		strings.HasPrefix(path, "/logical_devices") ||
+		strings.HasPrefix(path, "/adapters") {
+
 		split := strings.SplitN(path, "/", -1)
 		switch len(split) {
 		case 2:

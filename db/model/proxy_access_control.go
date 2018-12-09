@@ -167,7 +167,7 @@ func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid strin
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
 	// The data traversal through reflection currently corrupts the content
 
-	return pac.getProxy().GetRoot().Get(path, "", 0, deep, txid)
+	return pac.getProxy().GetRoot().Get(path, "", depth, deep, txid)
 }
 
 // Update changes the content of the data model at the specified location with the provided data
@@ -177,7 +177,12 @@ func (pac *proxyAccessControl) Update(path string, data interface{}, strict bool
 		defer pac.unlock()
 		log.Debugf("controlling update, stack = %s", string(debug.Stack()))
 	}
-	return pac.getProxy().GetRoot().Update(path, data, strict, txid, nil).GetData()
+	result := pac.getProxy().GetRoot().Update(path, data, strict, txid, nil)
+
+	if result != nil {
+		return result.GetData()
+	}
+	return nil
 }
 
 // Add creates a new data model entry at the specified location with the provided data
@@ -187,8 +192,12 @@ func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, c
 		defer pac.unlock()
 		log.Debugf("controlling add, stack = %s", string(debug.Stack()))
 	}
-	return pac.getProxy().GetRoot().Add(path, data, txid, nil).GetData()
+	result := pac.getProxy().GetRoot().Add(path, data, txid, nil)
 
+	if result != nil {
+		return result.GetData()
+	}
+	return nil
 }
 
 // Remove discards information linked to the data model path

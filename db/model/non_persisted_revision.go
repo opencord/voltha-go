@@ -15,7 +15,6 @@
  */
 package model
 
-import "C"
 import (
 	"bytes"
 	"crypto/md5"
@@ -57,7 +56,6 @@ func NewNonPersistedRevision(root *root, branch *Branch, data interface{}, child
 	r.Branch = branch
 	r.Config = NewDataRevision(root, data)
 	r.Children = children
-	r.Finalize()
 	return r
 }
 
@@ -130,7 +128,7 @@ func (npr *NonPersistedRevision) GetNode() *node {
 	return npr.Branch.Node
 }
 
-func (npr *NonPersistedRevision) Finalize() {
+func (npr *NonPersistedRevision) Finalize(skipOnExist bool) {
 	GetRevCache().Lock()
 	defer GetRevCache().Unlock()
 
@@ -244,7 +242,7 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 		newRev.Children[entryName] = append(newRev.Children[entryName], childrenEntry...)
 	}
 
-	newRev.Finalize()
+	newRev.Finalize(false)
 
 	return &newRev
 }
@@ -266,7 +264,7 @@ func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision
 	newRev.Config = NewDataRevision(npr.Root, npr.Config.Data)
 	newRev.Hash = npr.Hash
 	newRev.Branch = branch
-	newRev.Finalize()
+	newRev.Finalize(false)
 
 	return &newRev
 }
@@ -284,7 +282,7 @@ func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revisio
 		newRev.Children[entryName] = make([]Revision, len(childrenEntry))
 		copy(newRev.Children[entryName], childrenEntry)
 	}
-	newRev.Finalize()
+	newRev.Finalize(false)
 
 	return newRev
 }
@@ -300,4 +298,8 @@ func (npr *NonPersistedRevision) Drop(txid string, includeConfig bool) {
 		delete(GetRevCache().Cache, npr.Config.Hash)
 	}
 	delete(GetRevCache().Cache, npr.Hash)
+}
+
+func (npr *NonPersistedRevision) LoadFromPersistence(path string, txid string) []Revision {
+	return nil
 }

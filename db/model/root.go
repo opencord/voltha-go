@@ -19,17 +19,16 @@ package model
 import (
 	"encoding/hex"
 	"encoding/json"
+	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	"reflect"
 	"sync"
-	"time"
 )
 
 // Root is used to provide an abstraction to the base root structure
 type Root interface {
 	Node
-	Load(rootClass interface{}) *root
 
 	ExecuteCallbacks()
 	AddCallback(callback CallbackFunction, args ...interface{})
@@ -165,6 +164,22 @@ func (r *root) AddNotificationCallback(callback CallbackFunction, args ...interf
 	r.NotificationCallbacks = append(r.NotificationCallbacks, CallbackTuple{callback, args})
 }
 
+func (r *root) syncParent(childRev Revision, txid string) {
+	data := proto.Clone(r.Proxy.ParentNode.Latest().GetData().(proto.Message))
+
+	for fieldName, _ := range ChildrenFields(data) {
+		childDataName, childDataHolder := GetAttributeValue(data, fieldName, 0)
+		if reflect.TypeOf(childRev.GetData()) == reflect.TypeOf(childDataHolder.Interface()) {
+			childDataHolder = reflect.ValueOf(childRev.GetData())
+			reflect.ValueOf(data).Elem().FieldByName(childDataName).Set(childDataHolder)
+		}
+	}
+
+	r.Proxy.ParentNode.Latest().SetConfig(NewDataRevision(r.Proxy.ParentNode.Root, data))
+	r.Proxy.ParentNode.Latest(txid).Finalize(false)
+}
+
+
 // Update modifies the content of an object at a given path with the provided data
 func (r *root) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
@@ -185,6 +200,12 @@ func (r *root) Update(path string, data interface{}, strict bool, txid string, m
 		result = r.node.Update(path, data, strict, txid, trackDirty)
 	} else {
 		result = r.node.Update(path, data, strict, "", nil)
+	}
+
+	if r.Proxy.FullPath != r.Proxy.Path {
+		r.syncParent(result, txid)
+	} else {
+		result.Finalize(false)
 	}
 
 	r.node.GetRoot().ExecuteCallbacks()
@@ -214,8 +235,10 @@ func (r *root) Add(path string, data interface{}, txid string, makeBranch MakeBr
 		result = r.node.Add(path, data, "", nil)
 	}
 
-	r.node.GetRoot().ExecuteCallbacks()
-
+	if result != nil {
+		result.Finalize(true)
+		r.node.GetRoot().ExecuteCallbacks()
+	}
 	return result
 }
 
@@ -244,15 +267,6 @@ func (r *root) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 	r.node.GetRoot().ExecuteCallbacks()
 
 	return result
-}
-
-// Load retrieves data from a persistent storage
-func (r *root) Load(rootClass interface{}) *root {
-	//fakeKvStore := &Backend{}
-	//root := NewRoot(rootClass, nil)
-	//root.KvStore = r.KvStore
-	r.loadFromPersistence(rootClass)
-	return r
 }
 
 // MakeLatest updates a branch with the latest node revision
@@ -294,25 +308,4 @@ func (r *root) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 type rootData struct {
 	Latest string            `json:latest`
 	Tags   map[string]string `json:tags`
-}
-
-func (r *root) loadFromPersistence(rootClass interface{}) {
-	var data rootData
-
-	r.Loading = true
-	blob, _ := r.KvStore.Get("root")
-
-	start := time.Now()
-	if err := json.Unmarshal(blob.Value.([]byte), &data); err != nil {
-		log.Errorf("problem to unmarshal blob - error:%s\n", err.Error())
-	}
-	stop := time.Now()
-	GetProfiling().AddToInMemoryModelTime(stop.Sub(start).Seconds())
-	for tag, hash := range data.Tags {
-		r.node.LoadLatest(hash)
-		r.node.Tags[tag] = r.node.Latest()
-	}
-
-	r.node.LoadLatest(data.Latest)
-	r.Loading = false
 }

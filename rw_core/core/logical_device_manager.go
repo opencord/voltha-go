@@ -106,17 +106,39 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalD
 }
 
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
-	log.Debug("listLogicalDevices")
+	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	ldMgr.lockLogicalDeviceAgentsMap.Lock()
-	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
-	for _, agent := range ldMgr.logicalDeviceAgents {
-		if lDevice, err := agent.GetLogicalDevice(); err == nil {
-			result.Items = append(result.Items, lDevice)
+	if logicalDevices := ldMgr.clusterDataProxy.Get("/logical_devices", 0, false, ""); logicalDevices != nil {
+		for _, logicalDevice := range logicalDevices.([]interface{}) {
+			if agent := ldMgr.getLogicalDeviceAgent(logicalDevice.(*voltha.LogicalDevice).Id); agent == nil {
+				agent = newLogicalDeviceAgent(
+					logicalDevice.(*voltha.LogicalDevice).Id,
+					logicalDevice.(*voltha.LogicalDevice).RootDeviceId,
+					ldMgr,
+					ldMgr.deviceMgr,
+					ldMgr.clusterDataProxy,
+				)
+				ldMgr.addLogicalDeviceAgentToMap(agent)
+				go agent.start(nil)
+			}
+			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
 	}
 	return result, nil
 }
+
+//func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
+//	log.Debug("listLogicalDevices")
+//	result := &voltha.LogicalDevices{}
+//	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+//	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+//	for _, agent := range ldMgr.logicalDeviceAgents {
+//		if lDevice, err := agent.GetLogicalDevice(); err == nil {
+//			result.Items = append(result.Items, lDevice)
+//		}
+//	}
+//	return result, nil
+//}
 
 func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, device *voltha.Device) (*string, error) {
 	log.Debugw("creating-logical-device", log.Fields{"deviceId": device.Id})
@@ -137,7 +159,7 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	}
 	log.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
-	agent := newLogicalDeviceAgent(id, device, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
+	agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 	go agent.start(ctx)
 

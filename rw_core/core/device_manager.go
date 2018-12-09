@@ -18,7 +18,6 @@ package core
 import (
 	"context"
 	"errors"
-	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
@@ -184,19 +183,36 @@ func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
 	return device.Root, nil
 }
 
+// GetDevice retrieves the latest device information from the data model
 func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	log.Debug("ListDevices")
 	result := &voltha.Devices{}
-	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
-	for _, agent := range dMgr.deviceAgents {
-		if device, err := agent.getDevice(); err == nil {
-			cloned := proto.Clone(device).(*voltha.Device)
-			result.Items = append(result.Items, cloned)
+	if devices := dMgr.clusterDataProxy.Get("/devices", 0, false, ""); devices != nil {
+		for _, device := range devices.([]interface{}) {
+			if agent := dMgr.getDeviceAgent(device.(*voltha.Device).Id); agent == nil {
+				agent = newDeviceAgent(dMgr.adapterProxy, device.(*voltha.Device), dMgr, dMgr.clusterDataProxy)
+				dMgr.addDeviceAgentToMap(agent)
+				agent.start(nil)
+			}
+			result.Items = append(result.Items, device.(*voltha.Device))
 		}
 	}
 	return result, nil
 }
+
+//func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
+//	log.Debug("ListDevices")
+//	result := &voltha.Devices{}
+//	dMgr.lockDeviceAgentsMap.Lock()
+//	defer dMgr.lockDeviceAgentsMap.Unlock()
+//	for _, agent := range dMgr.deviceAgents {
+//		if device, err := agent.getDevice(); err == nil {
+//			//cloned := proto.Clone(device).(*voltha.Device)
+//			result.Items = append(result.Items, device)
+//		}
+//	}
+//	return result, nil
+//}
 
 func (dMgr *DeviceManager) updateDevice(device *voltha.Device) error {
 	log.Debugw("updateDevice", log.Fields{"deviceid": device.Id, "device": device})
