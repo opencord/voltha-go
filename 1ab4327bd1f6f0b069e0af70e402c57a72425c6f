@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6736c7a_8630a0a3",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-12-10T14:37:46Z",
+      "side": 1,
+      "message": "Since these are all root level paths for storage then it is better to have it defined somewhere and referred here.   If we add a new path then we do not need to change this code.",
+      "revId": "1ab4327bd1f6f0b069e0af70e402c57a72425c6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf61110b_d08b9178",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-12-10T14:37:46Z",
+      "side": 1,
+      "message": "A more appropriate name would be good as it is not doing just a list.",
+      "revId": "1ab4327bd1f6f0b069e0af70e402c57a72425c6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83f05e92_8d7516cc",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2018-12-10T14:37:46Z",
+      "side": 1,
+      "message": "A better name for this function is desirable as it is doing much more than listing devices.",
+      "revId": "1ab4327bd1f6f0b069e0af70e402c57a72425c6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
