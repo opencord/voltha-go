@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	ic "github.com/opencord/voltha-go/protos/inter_container"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 )
@@ -178,7 +179,7 @@ func (kp *InterContainerProxy) Stop() {
 }
 
 // DeviceDiscovered publish the discovered device onto the kafka messaging bus
-func (kp *InterContainerProxy) DeviceDiscovered(deviceId string, deviceType string, parentId string) error {
+func (kp *InterContainerProxy) DeviceDiscovered(deviceId string, deviceType string, parentId string, publisher string) error {
 	log.Debugw("sending-device-discovery-msg", log.Fields{"deviceId": deviceId})
 	//	Simple validation
 	if deviceId == "" || deviceType == "" {
@@ -197,6 +198,7 @@ func (kp *InterContainerProxy) DeviceDiscovered(deviceId string, deviceType stri
 		Id:         deviceId,
 		DeviceType: deviceType,
 		ParentId:   parentId,
+		Publisher:publisher,
 	}
 
 	var marshalledData *any.Any
@@ -560,6 +562,9 @@ func encodeResponse(request *ic.InterContainerMessage, success bool, returnedVal
 
 func CallFuncByName(myClass interface{}, funcName string, params ...interface{}) (out []reflect.Value, err error) {
 	myClassValue := reflect.ValueOf(myClass)
+	// Capitalize the first letter in the funcName to workaround the first capital letters required to
+	// invoke a function from a different package
+	funcName = strings.Title(funcName)
 	m := myClassValue.MethodByName(funcName)
 	if !m.IsValid() {
 		return make([]reflect.Value, 0), fmt.Errorf("method-not-found \"%s\"", funcName)

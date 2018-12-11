@@ -86,6 +86,7 @@ message DeviceDiscovered {
     string id = 1;
     string parent_id = 2;
     string device_type = 3;
+    string publisher = 4;
 }
 
 message InterAdapterMessageType {
