@@ -524,7 +524,7 @@ func TestDeviceDiscovery(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 
 	// Send the message
-	go testProxy.DeviceDiscovered("TestDeviceId", "TestDevicetype", "TestParentId")
+	go testProxy.DeviceDiscovered("TestDeviceId", "TestDevicetype", "TestParentId", "myPODName")
 
 	msg := <-waitingChannel
 	totalTime := (time.Now().UnixNano() - msg.Header.Timestamp) / int64(time.Millisecond)
@@ -536,6 +536,7 @@ func TestDeviceDiscovery(t *testing.T) {
 	assert.Equal(t, dd.Id, "TestDeviceId")
 	assert.Equal(t, dd.DeviceType, "TestDevicetype")
 	assert.Equal(t, dd.ParentId, "TestParentId")
+	assert.Equal(t, dd.Publisher, "myPODName")
 	log.Debugw("TotalTime", log.Fields{"time": totalTime})
 }
 

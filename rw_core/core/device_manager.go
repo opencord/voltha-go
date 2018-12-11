@@ -38,16 +38,18 @@ type DeviceManager struct {
 	kafkaICProxy        *kafka.InterContainerProxy
 	stateTransitions    *TransitionMap
 	clusterDataProxy    *model.Proxy
+	coreInstanceId string
 	exitChannel         chan int
 	lockDeviceAgentsMap sync.RWMutex
 }
 
-func newDeviceManager(kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy) *DeviceManager {
+func newDeviceManager(kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy, coreInstanceId string) *DeviceManager {
 	var deviceMgr DeviceManager
 	deviceMgr.exitChannel = make(chan int, 1)
 	deviceMgr.deviceAgents = make(map[string]*DeviceAgent)
 	deviceMgr.adapterProxy = NewAdapterProxy(kafkaICProxy)
 	deviceMgr.kafkaICProxy = kafkaICProxy
+	deviceMgr.coreInstanceId = coreInstanceId
 	deviceMgr.clusterDataProxy = cdProxy
 	deviceMgr.lockDeviceAgentsMap = sync.RWMutex{}
 	return &deviceMgr
@@ -360,7 +362,7 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	}
 
 	// Publish on the messaging bus that we have discovered new devices
-	go dMgr.kafkaICProxy.DeviceDiscovered(agent.deviceId, deviceType, parentDeviceId)
+	go dMgr.kafkaICProxy.DeviceDiscovered(agent.deviceId, deviceType, parentDeviceId, dMgr.coreInstanceId)
 
 	return nil
 }

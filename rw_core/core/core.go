@@ -75,28 +75,28 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 }
 
 func (core *Core) Start(ctx context.Context) {
-	log.Info("starting-core", log.Fields{"coreId": core.instanceId})
+	log.Info("starting-adaptercore", log.Fields{"coreId": core.instanceId})
 	core.startKafkaMessagingProxy(ctx)
 	log.Info("values", log.Fields{"kmp": core.kmp})
-	core.deviceMgr = newDeviceManager(core.kmp, core.clusterDataProxy)
+	core.deviceMgr = newDeviceManager(core.kmp, core.clusterDataProxy, core.instanceId)
 	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.kmp, core.clusterDataProxy)
 	core.registerAdapterRequestHandler(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.clusterDataProxy, core.localDataProxy)
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
 	go core.startGRPCService(ctx)
 
-	log.Info("core-started")
+	log.Info("adaptercore-started")
 }
 
 func (core *Core) Stop(ctx context.Context) {
-	log.Info("stopping-core")
+	log.Info("stopping-adaptercore")
 	core.exitChannel <- 1
 	// Stop all the started services
 	core.grpcServer.Stop()
 	core.logicalDeviceMgr.stop(ctx)
 	core.deviceMgr.stop(ctx)
 	core.kmp.Stop()
-	log.Info("core-stopped")
+	log.Info("adaptercore-stopped")
 }
 
 //startGRPCService creates the grpc service handlers, registers it to the grpc server
