@@ -38,7 +38,7 @@ type DeviceManager struct {
 	kafkaICProxy        *kafka.InterContainerProxy
 	stateTransitions    *TransitionMap
 	clusterDataProxy    *model.Proxy
-	coreInstanceId string
+	coreInstanceId      string
 	exitChannel         chan int
 	lockDeviceAgentsMap sync.RWMutex
 }

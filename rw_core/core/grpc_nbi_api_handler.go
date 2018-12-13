@@ -37,7 +37,7 @@ const MAX_RESPONSE_TIME = 500 // milliseconds
 type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
-	packetInQueue     *queue.Queue
+	packetInQueue    *queue.Queue
 	da.DefaultAPIHandler
 }
 
@@ -46,7 +46,7 @@ func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager) *
 		deviceMgr:        deviceMgr,
 		logicalDeviceMgr: lDeviceMgr,
 		// TODO: Figure out what the 'hint' parameter to queue.New does
-		packetInQueue:    queue.New(10),
+		packetInQueue: queue.New(10),
 	}
 	return handler
 }

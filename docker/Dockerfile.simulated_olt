@@ -1,0 +1,47 @@
+# -------------
+# Build stage
+
+FROM golang:1.9.2-alpine AS build-env
+
+# Install required packages
+RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
+
+# Prepare directory structure
+RUN ["mkdir", "-p", "/src", "src/protos"]
+RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
+RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
+
+# Copy files
+ADD adapters/simulated_olt $GOPATH/src/github.com/opencord/voltha-go/adapters/simulated_olt
+ADD adapters/common $GOPATH/src/github.com/opencord/voltha-go/adapters/common
+ADD adapters/*.go $GOPATH/src/github.com/opencord/voltha-go/adapters/
+ADD common $GOPATH/src/github.com/opencord/voltha-go/common
+ADD db $GOPATH/src/github.com/opencord/voltha-go/db
+ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
+
+# Copy required proto files
+# ... VOLTHA proos
+ADD protos/*.proto /src/protos/
+ADD protos/scripts/* /src/protos/
+
+# Install golang protobuf
+RUN go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+RUN go get -u github.com/golang/protobuf/protoc-gen-go
+
+# Compile protobuf files
+RUN sh /src/protos/build_protos.sh /src/protos
+
+# Build simulated_olt
+RUN cd $GOPATH/src/github.com/opencord/voltha-go/adapters/simulated_olt && go get -d ./... && rm -rf $GOPATH/src/go.etcd.io/etcd/vendor/golang.org/x/net/trace && go build -o /src/simulated_olt
+
+# -------------
+# Image creation stage
+
+FROM alpine:3.6
+
+# Set the working directory
+WORKDIR /app
+
+# Copy required files
+COPY --from=build-env /src/simulated_olt /app/
+

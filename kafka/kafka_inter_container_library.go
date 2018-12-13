@@ -198,7 +198,7 @@ func (kp *InterContainerProxy) DeviceDiscovered(deviceId string, deviceType stri
 		Id:         deviceId,
 		DeviceType: deviceType,
 		ParentId:   parentId,
-		Publisher:publisher,
+		Publisher:  publisher,
 	}
 
 	var marshalledData *any.Any

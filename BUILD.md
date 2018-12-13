@@ -54,7 +54,7 @@ cd voltha-go
 protos/scripts/build_protos.sh protos
 ```
 
-### Building and running Voltha
+### Building Voltha Core
 A fatal error occurs if Voltha is built and executed at this stage:
 ```
 > go run rw_core/main.go
@@ -72,3 +72,44 @@ or from a docker image built via:
 ```
 make rw_core
 ```
+
+### Building and running Ponsim OLT and ONU Adapters
+Please refer to the README.md file under the ```python``` directory
+
+
+### Building Simulated OLT and ONU Adapters
+Simulated OLT, ONU and rw_core can be build together:
+```
+make build
+```
+or they via be individually built:
+```
+make rw_core
+make simulated_olt
+make simulated_onu
+```
+
+### Running rw_core, Simulated OLT and ONU Adapters
+In the example below we are using the docker-compose command to run these containers locally.
+```
+DOCKER_HOST_IP=<Host IP> docker-compose -f compose/docker-compose-zk-kafka-test.yml up -d
+DOCKER_HOST_IP=<Host IP> docker-compose -f compose/docker-compose-etcd.yml up -d
+DOCKER_HOST_IP=<Host IP> docker-compose -f compose/rw_core.yml up -d
+DOCKER_HOST_IP=<Host IP> docker-compose -f compose/compose/adapters-simulated.yml up -d
+```
+
+You should see the following containers up and running
+
+```$xslt
+CONTAINER ID        IMAGE                           COMMAND                  CREATED              STATUS              PORTS                                                                      NAMES
+338fd67c2029        voltha-adapter-simulated-onu    "/app/simulated_onu …"   37 seconds ago       Up 36 seconds                                                                                  compose_adapter_simulated_onu_1_a39b1a9d27d5
+15b159bab626        voltha-adapter-simulated-olt    "/app/simulated_olt …"   37 seconds ago       Up 36 seconds                                                                                  compose_adapter_simulated_olt_1_b5407c23b483
+401128a1755f        voltha-rw-core                  "/app/rw_core -kv_st…"   About a minute ago   Up About a minute   0.0.0.0:50057->50057/tcp                                                   compose_rw_core_1_36cd5e255edf
+ba4eb9384f5b        quay.io/coreos/etcd:v3.2.9      "etcd --name=etcd0 -…"   About a minute ago   Up About a minute   0.0.0.0:2379->2379/tcp, 0.0.0.0:32775->2380/tcp, 0.0.0.0:32774->4001/tcp   compose_etcd_1_368cd0bc1421
+55f74277a530        wurstmeister/kafka:2.11-2.0.1   "start-kafka.sh"         2 minutes ago        Up 2 minutes        0.0.0.0:9092->9092/tcp                                                     compose_kafka_1_a8631e438fe2
+fb60076d8b3e        wurstmeister/zookeeper:latest   "/bin/sh -c '/usr/sb…"   2 minutes ago        Up 2 minutes        22/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:2181->2181/tcp                         compose_zookeeper_1_7ff68af103cf
+```
+
+
+
+

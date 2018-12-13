@@ -69,6 +69,8 @@ type SaramaClient struct {
 	doneCh                        chan int
 	topicToConsumerChannelMap     map[string]*consumerChannels
 	lockTopicToConsumerChannelMap sync.RWMutex
+	topicLockMap                  map[string]*sync.RWMutex
+	lockOfTopicLockMap            sync.RWMutex
 }
 
 type SaramaClientOption func(*SaramaClient)
@@ -187,7 +189,8 @@ func NewSaramaClient(opts ...SaramaClientOption) *SaramaClient {
 	}
 
 	client.lockTopicToConsumerChannelMap = sync.RWMutex{}
-
+	client.topicLockMap = make(map[string]*sync.RWMutex)
+	client.lockOfTopicLockMap = sync.RWMutex{}
 	return client
 }
 
@@ -261,6 +264,9 @@ func (sc *SaramaClient) Stop() {
 
 //CreateTopic creates a topic on the Kafka Broker.
 func (sc *SaramaClient) CreateTopic(topic *Topic, numPartition int, repFactor int) error {
+	sc.lockTopic(topic)
+	defer sc.unLockTopic(topic)
+
 	// Set the topic details
 	topicDetail := &sarama.TopicDetail{}
 	topicDetail.NumPartitions = int32(numPartition)
@@ -286,6 +292,9 @@ func (sc *SaramaClient) CreateTopic(topic *Topic, numPartition int, repFactor in
 
 //DeleteTopic removes a topic from the kafka Broker
 func (sc *SaramaClient) DeleteTopic(topic *Topic) error {
+	sc.lockTopic(topic)
+	defer sc.unLockTopic(topic)
+
 	// Remove the topic from the broker
 	if err := sc.cAdmin.DeleteTopic(topic.Name); err != nil {
 		if err == sarama.ErrUnknownTopicOrPartition {
@@ -308,6 +317,9 @@ func (sc *SaramaClient) DeleteTopic(topic *Topic) error {
 // Subscribe registers a caller to a topic. It returns a channel that the caller can use to receive
 // messages from that topic
 func (sc *SaramaClient) Subscribe(topic *Topic) (<-chan *ic.InterContainerMessage, error) {
+	sc.lockTopic(topic)
+	defer sc.unLockTopic(topic)
+
 	log.Debugw("subscribe", log.Fields{"topic": topic.Name})
 
 	// If a consumers already exist for that topic then resuse it
@@ -352,6 +364,9 @@ func (sc *SaramaClient) Subscribe(topic *Topic) (<-chan *ic.InterContainerMessag
 
 //UnSubscribe unsubscribe a consumer from a given topic
 func (sc *SaramaClient) UnSubscribe(topic *Topic, ch <-chan *ic.InterContainerMessage) error {
+	sc.lockTopic(topic)
+	defer sc.unLockTopic(topic)
+
 	log.Debugw("unsubscribing-channel-from-topic", log.Fields{"topic": topic.Name})
 	err := sc.removeChannelFromConsumerChannelMap(*topic, ch)
 	return err
@@ -415,6 +430,26 @@ func (sc *SaramaClient) createClusterAdmin() error {
 	}
 	sc.cAdmin = cAdmin
 	return nil
+}
+
+func (sc *SaramaClient) lockTopic(topic *Topic) {
+	sc.lockOfTopicLockMap.Lock()
+	if _, exist := sc.topicLockMap[topic.Name]; exist {
+		sc.lockOfTopicLockMap.Unlock()
+		sc.topicLockMap[topic.Name].Lock()
+	} else {
+		sc.topicLockMap[topic.Name] = &sync.RWMutex{}
+		sc.lockOfTopicLockMap.Unlock()
+		sc.topicLockMap[topic.Name].Lock()
+	}
+}
+
+func (sc *SaramaClient) unLockTopic(topic *Topic) {
+	sc.lockOfTopicLockMap.Lock()
+	defer sc.lockOfTopicLockMap.Unlock()
+	if _, exist := sc.topicLockMap[topic.Name]; exist {
+		sc.topicLockMap[topic.Name].Unlock()
+	}
 }
 
 func (sc *SaramaClient) addTopicToConsumerChannelMap(id string, arg *consumerChannels) {
