@@ -11,6 +11,11 @@ message ID {
     string id = 1;
 }
 
+// Represents a list of IDs
+message IDs {
+    repeated ID items = 1;
+}
+
 enum TestModeKeys {
     api_test=0;
 }

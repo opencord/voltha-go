@@ -60,15 +60,15 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 	// Do not call NewBackend constructor; it creates its own KV client
 	// Commented the backend for now until the issue between the model and the KV store
 	// is resolved.
-	//backend := model.Backend{
-	//	MsgClient:     kvClient,
-	//	StoreType:  cf.KVStoreType,
-	//	Host:       cf.KVStoreHost,
-	//	Port:       cf.KVStorePort,
-	//	Timeout:    cf.KVStoreTimeout,
-	//	PathPrefix: "service/voltha"}
-	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, nil)
-	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, nil)
+	backend := model.Backend{
+		Client:     kvClient,
+		StoreType:  cf.KVStoreType,
+		Host:       cf.KVStoreHost,
+		Port:       cf.KVStorePort,
+		Timeout:    cf.KVStoreTimeout,
+		PathPrefix: "service/voltha"}
+	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
+	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
 	core.clusterDataProxy = core.clusterDataRoot.CreateProxy("/", false)
 	core.localDataProxy = core.localDataRoot.CreateProxy("/", false)
 	return &core

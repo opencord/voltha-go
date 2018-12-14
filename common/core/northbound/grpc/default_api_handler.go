@@ -117,6 +117,19 @@ func (handler *DefaultAPIHandler) ListDevices(ctx context.Context, empty *empty.
 	return nil, errors.New("UnImplemented")
 }
 
+func (handler *DefaultAPIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty) (*voltha.IDs, error) {
+	log.Debug("ListDeviceIDs-request")
+	return nil, errors.New("UnImplemented")
+}
+
+func (handler *DefaultAPIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
+	if ids != nil {
+		log.Debugw("ReconcileDevices-request", log.Fields{"length": len(ids.Items)})
+		return nil, errors.New("UnImplemented")
+	}
+	return nil, errors.New("ids-null")
+}
+
 func (handler *DefaultAPIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
 	log.Debugw("GetDevice-request", log.Fields{"id": id})
 	return nil, errors.New("UnImplemented")

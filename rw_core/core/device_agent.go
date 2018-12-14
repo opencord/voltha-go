@@ -285,18 +285,15 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 			agent.lockDevice.Unlock()
 			return status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceId, voltha.AdminState_DISABLED)
 		}
-		// Send the request to an Adapter and wait for a response
-		if err := agent.adapterProxy.DeleteDevice(ctx, device); err != nil {
-			log.Debugw("deleteDevice-error", log.Fields{"id": agent.lastData.Id, "error": err})
-			agent.lockDevice.Unlock()
-			return err
+		if device.AdminState != voltha.AdminState_PREPROVISIONED {
+			// Send the request to an Adapter and wait for a response
+			if err := agent.adapterProxy.DeleteDevice(ctx, device); err != nil {
+				log.Debugw("deleteDevice-error", log.Fields{"id": agent.lastData.Id, "error": err})
+				agent.lockDevice.Unlock()
+				return err
+			}
 		}
-		//	Set the device Admin state to DELETED in order to trigger the callback to delete
-		// child devices, if any
-		// Received an Ack (no error found above).  Now update the device in the model to the expected state
-		cloned := proto.Clone(device).(*voltha.Device)
-		cloned.AdminState = voltha.AdminState_DELETED
-		if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
+		if removed := agent.clusterDataProxy.Remove("/devices/"+agent.deviceId, ""); removed == nil {
 			agent.lockDevice.Unlock()
 			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
 		}

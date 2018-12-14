@@ -168,6 +168,29 @@ func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) 
 	return handler.deviceMgr.ListDevices()
 }
 
+// ListDeviceIds returns the list of device ids managed by a voltha core
+func (handler *APIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty) (*voltha.IDs, error) {
+	log.Debug("ListDeviceIDs")
+	if isTestMode(ctx) {
+		out := &voltha.IDs{Items: make([]*voltha.ID, 0)}
+		return out, nil
+	}
+	return handler.deviceMgr.ListDeviceIds()
+}
+
+//ReconcileDevices is a request to a voltha core to managed a list of devices  based on their IDs
+func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
+	log.Debug("ReconcileDevices")
+	if isTestMode(ctx) {
+		out := new(empty.Empty)
+		return out, nil
+	}
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.ReconcileDevices(ctx, ids, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
+}
+
 // GetLogicalDevice must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	log.Debugw("GetLogicalDevice-request", log.Fields{"id": id})

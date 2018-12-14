@@ -104,6 +104,16 @@ func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 	return nil
 }
 
+func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
+	dMgr.lockDeviceAgentsMap.Lock()
+	defer dMgr.lockDeviceAgentsMap.Unlock()
+	result := &voltha.IDs{Items: make([]*voltha.ID, 0)}
+	for key, _ := range dMgr.deviceAgents {
+		result.Items = append(result.Items, &voltha.ID{Id: key})
+	}
+	return result
+}
+
 func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Device, ch chan interface{}) {
 	log.Debugw("createDevice", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
 
@@ -202,19 +212,46 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	return result, nil
 }
 
-//func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
-//	log.Debug("ListDevices")
-//	result := &voltha.Devices{}
-//	dMgr.lockDeviceAgentsMap.Lock()
-//	defer dMgr.lockDeviceAgentsMap.Unlock()
-//	for _, agent := range dMgr.deviceAgents {
-//		if device, err := agent.getDevice(); err == nil {
-//			//cloned := proto.Clone(device).(*voltha.Device)
-//			result.Items = append(result.Items, device)
-//		}
-//	}
-//	return result, nil
-//}
+// ListDeviceIds retrieves the latest device IDs information from the data model (memory data only)
+func (dMgr *DeviceManager) ListDeviceIds() (*voltha.IDs, error) {
+	log.Debug("ListDeviceIDs")
+	// Report only device IDs that are in the device agent map
+	return dMgr.listDeviceIdsFromMap(), nil
+}
+
+//ReconcileDevices is a request to a voltha core to managed a list of devices based on their IDs
+func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs, ch chan interface{}) {
+	log.Debug("ReconcileDevices")
+	var res interface{}
+	if ids != nil {
+		toReconcile := len(ids.Items)
+		reconciled := 0
+		for _, id := range ids.Items {
+			//	 Act on the device only if its not present in the agent map
+			if agent := dMgr.getDeviceAgent(id.Id); agent == nil {
+				//	Device Id not in memory
+				log.Debugw("reconciling-device", log.Fields{"id": id.Id})
+				// Load device from model
+				if device := dMgr.clusterDataProxy.Get("/devices/"+id.Id, 0, false, ""); device != nil {
+					agent = newDeviceAgent(dMgr.adapterProxy, device.(*voltha.Device), dMgr, dMgr.clusterDataProxy)
+					dMgr.addDeviceAgentToMap(agent)
+					agent.start(nil)
+					reconciled += 1
+				} else {
+					log.Warnw("device-inexistent", log.Fields{"id": id.Id})
+				}
+			} else {
+				reconciled += 1
+			}
+		}
+		if toReconcile != reconciled {
+			res = status.Errorf(codes.DataLoss, "less-device-reconciled:%d/%d", reconciled, toReconcile)
+		}
+	} else {
+		res = status.Errorf(codes.InvalidArgument, "empty-list-of-ids")
+	}
+	sendResponse(ctx, ch, res)
+}
 
 func (dMgr *DeviceManager) updateDevice(device *voltha.Device) error {
 	log.Debugw("updateDevice", log.Fields{"deviceid": device.Id, "device": device})

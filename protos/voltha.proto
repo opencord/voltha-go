@@ -269,6 +269,23 @@ service VolthaService {
         option (voltha.yang_xml_tag).xml_tag = 'devices';
     }
 
+    // List all physical devices IDs controlled by the Voltha cluster
+    rpc ListDeviceIds(google.protobuf.Empty) returns(IDs) {
+        option (google.api.http) = {
+            get: "/api/v1/deviceids"
+        };
+        option (voltha.yang_xml_tag).xml_tag = 'id';
+        option (voltha.yang_xml_tag).list_items_name = 'items';
+    }
+
+    // Request to a voltha Core to reconcile a set of devices based on their IDs
+    rpc ReconcileDevices(IDs) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/deviceids"
+            body: "*"
+        };
+    }
+
     // Get more information on a given physical device
     rpc GetDevice(ID) returns(Device) {
         option (google.api.http) = {
