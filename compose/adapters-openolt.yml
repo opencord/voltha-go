@@ -26,8 +26,8 @@ services:
       "/voltha/python/adapters/openolt/main.py",
       "-v",
       "--name=openolt",
-      "--kafka_adapter=${DOCKER_HOST_IP}:9093",
-      "--kafka_cluster=${DOCKER_HOST_IP}:9093",
+      "--kafka_adapter=${DOCKER_HOST_IP}:9092",
+      "--kafka_cluster=${DOCKER_HOST_IP}:9092",
       "--core_topic=rwcore"
     ]
     networks:
