@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b54ced0e_2ecf5ce2",
+        "filename": "protos/device.proto",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000187
+      },
+      "writtenOn": "2018-12-19T17:57:34Z",
+      "side": 1,
+      "message": "This option is not supported in 2.0. It will most likely just be ignored.",
+      "revId": "5f89fb69958e2b137ec3857317b9936b93702876",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
