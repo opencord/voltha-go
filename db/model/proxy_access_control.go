@@ -25,7 +25,8 @@ import (
 
 type singletonProxyAccessControl struct {
 	sync.RWMutex
-	cache map[string]ProxyAccessControl
+	cache sync.Map
+	reservedCount int
 }
 
 var instanceProxyAccessControl *singletonProxyAccessControl
@@ -34,35 +35,37 @@ var onceProxyAccessControl sync.Once
 // PAC provides access to the proxy access control singleton instance
 func PAC() *singletonProxyAccessControl {
 	onceProxyAccessControl.Do(func() {
-		instanceProxyAccessControl = &singletonProxyAccessControl{cache: make(map[string]ProxyAccessControl)}
+		instanceProxyAccessControl = &singletonProxyAccessControl{}
 	})
 	return instanceProxyAccessControl
 }
 
 // ReservePath will apply access control for a specific path within the model
-func (singleton *singletonProxyAccessControl) ReservePath(path string, proxy *Proxy, pathLock string) ProxyAccessControl {
+func (singleton *singletonProxyAccessControl) ReservePath(path string, proxy *Proxy, pathLock string) *proxyAccessControl {
 	singleton.Lock()
 	defer singleton.Unlock()
-	var pac ProxyAccessControl
-	var exists bool
-	if pac, exists = singleton.cache[path]; !exists {
-		pac = NewProxyAccessControl(proxy, pathLock)
-		singleton.cache[path] = pac
-	}
-
-	if exists {
-		log.Debugf("PAC exists for path: %s... re-using", path)
+	singleton.reservedCount++
+	if pac, exists := singleton.cache.Load(pathLock); !exists {
+		log.Debugf("Creating new PAC entry for path:%s pathLock:%s", path, pathLock)
+		newPac := NewProxyAccessControl(proxy, pathLock)
+		singleton.cache.Store(pathLock,newPac)
+		return newPac
 	} else {
-		log.Debugf("PAC does not exists for path: %s... creating", path)
+		log.Debugf("Re-using existing PAC entry for path:%s pathLock:%s", path, pathLock)
+		return pac.(*proxyAccessControl)
 	}
-	return pac
 }
 
 // ReleasePath will remove access control for a specific path within the model
 func (singleton *singletonProxyAccessControl) ReleasePath(pathLock string) {
 	singleton.Lock()
 	defer singleton.Unlock()
-	delete(singleton.cache, pathLock)
+
+	singleton.reservedCount--
+
+	if singleton.reservedCount == 0 {
+		singleton.cache.Delete(pathLock)
+	}
 }
 
 // ProxyAccessControl is the abstraction interface to the base proxyAccessControl structure
@@ -86,7 +89,7 @@ type proxyAccessControl struct {
 }
 
 // NewProxyAccessControl creates a new instance of an access control structure
-func NewProxyAccessControl(proxy *Proxy, path string) ProxyAccessControl {
+func NewProxyAccessControl(proxy *Proxy, path string) *proxyAccessControl {
 	return &proxyAccessControl{
 		Proxy:    proxy,
 		Path:     path,
@@ -190,7 +193,7 @@ func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, c
 	if control {
 		pac.lock()
 		defer pac.unlock()
-		log.Debugf("controlling add, stack = %s", string(debug.Stack()))
+		log.Debugf("controlling add %s, stack = %s", pac.Path, string(debug.Stack()))
 	}
 	result := pac.getProxy().GetRoot().Add(path, data, txid, nil)
 

@@ -16,7 +16,10 @@
 
 package model
 
-import "sync"
+import (
+	"github.com/opencord/voltha-go/common/log"
+	"sync"
+)
 
 // TODO: implement weak references or something equivalent
 // TODO: missing proper logging
@@ -47,6 +50,14 @@ func NewBranch(node *node, txid string, origin Revision, autoPrune bool) *Branch
 func (b *Branch) SetLatest(latest Revision) {
 	b.Lock()
 	defer b.Unlock()
+
+	if b.Latest != nil {
+		log.Debugf("Switching latest from <%s> to <%s>", b.Latest.GetHash(), latest.GetHash())
+		b.Latest.Drop(b.Txid, false)
+	} else {
+		log.Debugf("Switching latest from <NIL> to <%s>", latest.GetHash())
+	}
+
 
 	b.Latest = latest
 }

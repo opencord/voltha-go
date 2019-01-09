@@ -810,10 +810,10 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 			var children []Revision
 			children = make([]Revision, len(rev.GetChildren()[name]))
 			copy(children, rev.GetChildren()[name])
-			_, childRev := n.findRevByKey(children, field.Key, keyValue)
-			childNode := childRev.GetNode()
-
-			return childNode.createProxy(path, fullPath, n, exclusive)
+			if _, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil {
+				childNode := childRev.GetNode()
+				return childNode.createProxy(path, fullPath, n, exclusive)
+			}
 		} else {
 			log.Error("cannot index into container with no keys")
 		}
@@ -823,6 +823,7 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 		return childNode.createProxy(path, fullPath, n, exclusive)
 	}
 
+	log.Warnf("Cannot create proxy - latest rev:%s, all revs:%+v", rev.GetHash(), n.GetBranch(NONE).Revisions)
 	return nil
 }
 

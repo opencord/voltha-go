@@ -20,6 +20,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"github.com/opencord/voltha-go/common/log"
 	"reflect"
 	"sort"
 	"sync"
@@ -248,25 +249,37 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 }
 
 func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision, branch *Branch) Revision {
-	npr.mutex.Lock()
-	defer npr.mutex.Unlock()
+	updatedRev := *npr
 
-	newRev := NonPersistedRevision{}
-	newRev.Children = make(map[string][]Revision)
-	for entryName, childrenEntry := range npr.Children {
-		newRev.Children[entryName] = make([]Revision, len(childrenEntry))
-		copy(newRev.Children[entryName], childrenEntry)
+	// Verify if the map contains already contains an entry matching the name value
+	// If so, we need to retain the contents of that entry and merge them with the provided children revision list
+	if _, exists := updatedRev.Children[name]; exists {
+		// Go through all child hashes and save their index within the map
+		existChildMap := make(map[string]int)
+		for i, child := range updatedRev.Children[name] {
+			existChildMap[child.GetHash()] = i
+		}
+
+		// Identify the revisions that are not present in the existing list and add them
+		for _, newChild := range children {
+			if _, childExists := existChildMap[newChild.GetHash()]; !childExists {
+				updatedRev.Children[name] = append(updatedRev.Children[name], newChild)
+			}
+		}
+	} else {
+		// Map entry does not exist, thus just create a new entry and assign the provided revisions
+		updatedRev.Children[name] = make([]Revision, len(children))
+		copy(updatedRev.Children[name], children)
 	}
 
-	newRev.Children[name] = make([]Revision, len(children))
-	copy(newRev.Children[name], children)
+	log.Debugf("Updated Children map entries: %+v", updatedRev.GetChildren())
 
-	newRev.Config = NewDataRevision(npr.Root, npr.Config.Data)
-	newRev.Hash = npr.Hash
-	newRev.Branch = branch
-	newRev.Finalize(false)
+	updatedRev.Config = NewDataRevision(npr.Root, npr.Config.Data)
+	updatedRev.Hash = npr.Hash
+	updatedRev.Branch = branch
+	updatedRev.Finalize(false)
 
-	return &newRev
+	return &updatedRev
 }
 
 func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision {

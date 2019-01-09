@@ -78,7 +78,7 @@ func (agent *DeviceAgent) start(ctx context.Context) {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("starting-device-agent", log.Fields{"device": agent.lastData})
 	// Add the initial device to the local model
-	if added := agent.clusterDataProxy.Add("/devices", agent.lastData, ""); added == nil {
+	if added := agent.clusterDataProxy.AddWithID("/devices", agent.deviceId, agent.lastData, ""); added == nil {
 		log.Errorw("failed-to-add-device", log.Fields{"deviceId": agent.deviceId})
 	}
 	agent.deviceProxy = agent.clusterDataProxy.Root.CreateProxy("/devices/"+agent.deviceId, false)
