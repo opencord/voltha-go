@@ -33,12 +33,12 @@ import (
 
 // Initialize the logger - gets the default until the main function setup the logger
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	log.AddPackage(log.JSON, log.DebugLevel, nil)
 }
 
 const (
 	DefaultMaxRetries     = 3
-	DefaultRequestTimeout = 500 // 500 milliseconds - to handle a wider latency range
+	DefaultRequestTimeout = 3000 // 3000 milliseconds - to handle a wider latency range
 )
 
 // requestHandlerChannel represents an interface associated with a channel.  Whenever, an event is
@@ -172,7 +172,7 @@ func (kp *InterContainerProxy) Stop() {
 	log.Info("stopping-intercontainer-proxy")
 	kp.doneCh <- 1
 	// TODO : Perform cleanup
-	//kp.kafkaClient.Stop()
+	kp.kafkaClient.Stop()
 	//kp.deleteAllTopicRequestHandlerChannelMap()
 	//kp.deleteAllTopicResponseChannelMap()
 	//kp.deleteAllTransactionIdToChannelMap()
@@ -331,6 +331,7 @@ func (kp *InterContainerProxy) SubscribeWithDefaultRequestHandler(topic Topic) e
 	var err error
 	if ch, err = kp.kafkaClient.Subscribe(&topic); err != nil {
 		log.Errorw("failed-to-subscribe", log.Fields{"error": err, "topic": topic.Name})
+		return err
 	}
 	kp.addToTopicRequestHandlerChannelMap(topic.Name, &requestHandlerChannel{requesthandlerInterface: kp.defaultRequestHandlerInterface, ch: ch})
 
@@ -676,7 +677,7 @@ startloop:
 	for {
 		select {
 		case msg := <-subscribedCh:
-			//log.Debugw("message-received", log.Fields{"msg": msg, "fromTopic": msg.Header.FromTopic})
+			log.Debugw("message-received", log.Fields{"msg": msg, "fromTopic": msg.Header.FromTopic})
 			if msg.Header.Type == ic.MessageType_RESPONSE {
 				go kp.dispatchResponse(msg)
 			}
@@ -700,6 +701,7 @@ func (kp *InterContainerProxy) subscribeForResponse(topic Topic, trnsId string) 
 	// First check whether we already have a channel listening for response on that topic.  If there is
 	// already one then it will be reused.  If not, it will be created.
 	if !kp.isTopicSubscribedForResponse(topic.Name) {
+		log.Debugw("not-subscribed-for-response", log.Fields{"topic": topic.Name, "trnsid": trnsId})
 		var subscribedCh <-chan *ic.InterContainerMessage
 		var err error
 		if subscribedCh, err = kp.kafkaClient.Subscribe(&topic); err != nil {
