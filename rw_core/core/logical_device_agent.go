@@ -75,7 +75,16 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
 		log.Errorw("error-creating-logical-device", log.Fields{"error": err})
 		return err
 	}
+
 	ld := &voltha.LogicalDevice{Id: agent.logicalDeviceId, RootDeviceId: agent.rootDeviceId}
+
+	// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
+	var datapathID uint64
+	if datapathID, err = CreateDataPathId(agent.logicalDeviceId); err != nil {
+		log.Errorw("error-creating-datapath-id", log.Fields{"error": err})
+		return err
+	}
+	ld.DatapathId = datapathID
 	ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
 	ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 	ld.Flows = &ofp.Flows{Items: nil}
@@ -596,7 +605,7 @@ func (agent *LogicalDeviceAgent) groupModify(groupMod *ofp.OfpGroupMod) error {
 	groupsChanged := false
 	groupId := groupMod.GroupId
 	if idx := fu.FindGroup(groups, groupId); idx == -1 {
-		return errors.New(fmt.Sprintf("group-absent:%s", groupId))
+		return errors.New(fmt.Sprintf("group-absent:%d", groupId))
 	} else {
 		//replace existing group entry with new group definition
 		groupEntry := fd.GroupEntryFromGroupMod(groupMod)
@@ -878,7 +887,7 @@ func (agent *LogicalDeviceAgent) generateDefaultRules() *fu.DeviceRules {
 	}
 
 	deviceNodeIds := agent.deviceGraph.GetDeviceNodeIds()
-	for deviceId, _ := range deviceNodeIds {
+	for deviceId := range deviceNodeIds {
 		if deviceId == ld.RootDeviceId {
 			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
 		} else {
@@ -960,9 +969,14 @@ func (agent *LogicalDeviceAgent) flowTableUpdated(args ...interface{}) interface
 	deviceRules := agent.flowDecomposer.DecomposeRules(agent, *latestData, *groups)
 	log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
+	var err error
 	for deviceId, value := range deviceRules.GetRules() {
-		agent.deviceMgr.updateFlows(deviceId, value.ListFlows())
-		agent.deviceMgr.updateGroups(deviceId, value.ListGroups())
+		if err = agent.deviceMgr.updateFlows(deviceId, value.ListFlows()); err != nil {
+			log.Error("update-flows-failed", log.Fields{"deviceID":deviceId})
+		}
+		if err = agent.deviceMgr.updateGroups(deviceId, value.ListGroups()); err != nil {
+			log.Error("update-groups-failed", log.Fields{"deviceID":deviceId})
+		}
 	}
 
 	return nil
@@ -996,11 +1010,16 @@ func (agent *LogicalDeviceAgent) groupTableUpdated(args ...interface{}) interfac
 	log.Debugw("groupsinfo", log.Fields{"groups": latestData, "flows": flows})
 	deviceRules := agent.flowDecomposer.DecomposeRules(agent, *flows, *latestData)
 	log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
+	var err error
 	for deviceId, value := range deviceRules.GetRules() {
-		agent.deviceMgr.updateFlows(deviceId, value.ListFlows())
-		agent.deviceMgr.updateGroups(deviceId, value.ListGroups())
-	}
+		if err = agent.deviceMgr.updateFlows(deviceId, value.ListFlows()); err != nil {
+			log.Error("update-flows-failed", log.Fields{"deviceID":deviceId})
+		}
+		if err = agent.deviceMgr.updateGroups(deviceId, value.ListGroups()); err != nil {
+			log.Error("update-groups-failed", log.Fields{"deviceID":deviceId})
+		}
 
+	}
 	return nil
 }
 
@@ -1009,12 +1028,14 @@ func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 	outPort := fd.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
-	agent.deviceMgr.packetOut(agent.rootDeviceId, outPort, packet)
+	if err := agent.deviceMgr.packetOut(agent.rootDeviceId, outPort, packet); err != nil {
+		log.Error("packetout-failed", log.Fields{"logicalDeviceID":agent.rootDeviceId})
+	}
 }
 
 func (agent *LogicalDeviceAgent) packetIn(port uint32, packet []byte) {
 	log.Debugw("packet-in", log.Fields{"port": port, "packet": packet})
-	packet_in := fd.MkPacketIn(port, packet)
-	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, packet_in)
-	log.Debugw("sending-packet-in", log.Fields{"packet-in": packet_in})
+	packetIn := fd.MkPacketIn(port, packet)
+	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, packetIn)
+	log.Debugw("sending-packet-in", log.Fields{"packet-in": packetIn})
 }

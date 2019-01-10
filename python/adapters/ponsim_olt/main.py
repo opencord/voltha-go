@@ -63,8 +63,8 @@ defs = dict(
     core_topic=os.environ.get('CORE_TOPIC', 'rwcore'),
     interface=os.environ.get('INTERFACE', get_my_primary_interface()),
     instance_id=os.environ.get('INSTANCE_ID', os.environ.get('HOSTNAME', '1')),
-    kafka_adapter=os.environ.get('KAFKA_ADAPTER', '192.168.0.20:9092'),
-    kafka_cluster=os.environ.get('KAFKA_CLUSTER', '10.100.198.220:9092'),
+    kafka_adapter=os.environ.get('KAFKA_ADAPTER', '172.20.10.3:9092'),
+    kafka_cluster=os.environ.get('KAFKA_CLUSTER', '172.20.10.3:9092'),
     backend=os.environ.get('BACKEND', 'none'),
     retry_interval=os.environ.get('RETRY_INTERVAL', 2),
     heartbeat_topic=os.environ.get('HEARTBEAT_TOPIC', "adapters.heartbeat"),
@@ -380,7 +380,7 @@ class Main(object):
                     # TODO: Add KV Store object reference
                     kv_store=self.args.backend,
                     default_topic=self.args.name,
-                    # Needs to assign a real class
+                    group_id_prefix=self.args.instance_id,
                     target_cls=ponsim_request_handler
                 )
             ).start()
