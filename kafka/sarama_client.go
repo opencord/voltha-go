@@ -722,19 +722,17 @@ func (sc *SaramaClient) consumeFromAPartition(topic *Topic, consumer sarama.Part
 startloop:
 	for {
 		select {
-		case err := <-consumer.Errors():
-			if err != nil {
+		case err, ok := <-consumer.Errors():
+			if ok {
 				log.Warnw("partition-consumers-error", log.Fields{"error": err})
 			} else {
-				// There is a race condition when this loop is stopped and the consumer is closed where
-				// the actual error comes as nil
-				log.Warn("partition-consumers-error")
+				// Channel is closed
+				break startloop
 			}
-		case msg := <-consumer.Messages():
+		case msg, ok := <-consumer.Messages():
 			//log.Debugw("message-received", log.Fields{"msg": msg, "receivedTopic": msg.Topic})
-			if msg == nil {
-				// There is a race condition when this loop is stopped and the consumer is closed where
-				// the actual msg comes as nil
+			if !ok {
+				// channel is closed
 				break startloop
 			}
 			msgBody := msg.Value
@@ -755,33 +753,19 @@ startloop:
 func (sc *SaramaClient) consumeGroupMessages(topic *Topic, consumer *scc.Consumer, consumerChnls *consumerChannels) {
 	log.Debugw("starting-group-consumption-loop", log.Fields{"topic": topic.Name})
 
-	//go func() {
-	//	for msg := range consumer.Errors() {
-	//		log.Warnw("group-consumers-error", log.Fields{"error": msg.Error()})
-	//	}
-	//}()
-	//
-	//go func() {
-	//	for ntf := range consumer.Notifications() {
-	//		log.Debugw("group-received-notification", log.Fields{"notification": ntf})
-	//	}
-	//}()
-
 startloop:
 	for {
 		select {
-		case err := <-consumer.Errors():
-			if err != nil {
+		case err, ok := <-consumer.Errors():
+			if ok {
 				log.Warnw("group-consumers-error", log.Fields{"topic": topic.Name, "error": err})
 			} else {
-				// There is a race condition when this loop is stopped and the consumer is closed where
-				// the actual error comes as nil
-				log.Warnw("group-consumers-error-nil", log.Fields{"topic": topic.Name})
+				// channel is closed
+				break startloop
 			}
-		case msg := <-consumer.Messages():
-			if msg == nil {
-				// There is a race condition when this loop is stopped and the consumer is closed where
-				// the actual msg comes as nil
+		case msg, ok := <-consumer.Messages():
+			if !ok {
+				// Channel closed
 				break startloop
 			}
 			log.Debugw("message-received", log.Fields{"msg": msg, "receivedTopic": msg.Topic})
@@ -911,6 +895,7 @@ func removeChannel(channels []chan *ic.InterContainerMessage, ch <-chan *ic.Inte
 		if channel == ch {
 			channels[len(channels)-1], channels[i] = channels[i], channels[len(channels)-1]
 			close(channel)
+			log.Debug("channel-closed")
 			return channels[:len(channels)-1]
 		}
 	}

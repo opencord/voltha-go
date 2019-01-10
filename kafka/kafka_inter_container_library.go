@@ -269,7 +269,16 @@ func (kp *InterContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 		// Remove the subscription for a response on return
 		defer kp.unSubscribeForResponse(protoRequest.Header.Id)
 		select {
-		case msg := <-ch:
+		case msg, ok := <-ch:
+			if !ok {
+				log.Warnw("channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
+				protoError := &ic.Error{Reason: "channel-closed"}
+				var marshalledArg *any.Any
+				if marshalledArg, err = ptypes.MarshalAny(protoError); err != nil {
+					return false, nil // Should never happen
+				}
+				return false, marshalledArg
+			}
 			log.Debugw("received-response", log.Fields{"rpc": rpc, "msgHeader": msg.Header})
 			var responseBody *ic.InterContainerResponseBody
 			var err error
@@ -467,9 +476,14 @@ func (kp *InterContainerProxy) deleteAllTransactionIdToChannelMap() {
 
 func (kp *InterContainerProxy) DeleteTopic(topic Topic) error {
 	// If we have any consumers on that topic we need to close them
-	kp.deleteFromTopicResponseChannelMap(topic.Name)
-	kp.deleteFromTopicRequestHandlerChannelMap(topic.Name)
+	if err := kp.deleteFromTopicResponseChannelMap(topic.Name); err != nil {
+		log.Errorw("delete-from-topic-responsechannelmap-failed", log.Fields{"error": err})
+	}
+	if err := kp.deleteFromTopicRequestHandlerChannelMap(topic.Name); err != nil {
+		log.Errorw("delete-from-topic-requesthandlerchannelmap-failed", log.Fields{"error": err})
+	}
 	kp.deleteTopicTransactionIdToChannelMap(topic.Name)
+
 	return kp.kafkaClient.DeleteTopic(&topic)
 }
 
@@ -676,8 +690,13 @@ func (kp *InterContainerProxy) waitForResponseLoop(subscribedCh <-chan *ic.Inter
 startloop:
 	for {
 		select {
-		case msg := <-subscribedCh:
-			log.Debugw("message-received", log.Fields{"msg": msg, "fromTopic": msg.Header.FromTopic})
+		case msg, ok := <-subscribedCh:
+			if !ok {
+				log.Debugw("channel-closed", log.Fields{"topic": topic.Name})
+				break startloop
+			}
+			log.Debugw("message-received", log.Fields{"msg": msg})
+			//log.Debugw("message-received", log.Fields{"msg": msg, "fromTopic": msg.Header.FromTopic})
 			if msg.Header.Type == ic.MessageType_RESPONSE {
 				go kp.dispatchResponse(msg)
 			}

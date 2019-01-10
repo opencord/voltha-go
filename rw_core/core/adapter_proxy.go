@@ -158,14 +158,11 @@ func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device)
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, args...)
 	log.Debugw("DeleteDevice-response", log.Fields{"deviceid": device.Id, "success": success})
 
-	// We no longer need to have a target against that topic as we won't receive any unsolicited messages on that
-	// topic
-	if err := ap.kafkaICProxy.UnSubscribeFromRequestHandler(replyToTopic); err != nil {
-		log.Errorw("Unable-to-subscribe-from-target", log.Fields{"topic": replyToTopic, "error": err})
+	// We no longer need to have this device topic as we won't receive any unsolicited messages on it
+	if err := ap.kafkaICProxy.DeleteTopic(replyToTopic); err != nil {
+		log.Errorw("Unable-to-delete-topic", log.Fields{"topic": replyToTopic, "error": err})
 		return err
 	}
-	// Now delete the topic altogether
-	ap.kafkaICProxy.DeleteTopic(replyToTopic)
 
 	return unPackResponse(rpc, device.Id, success, result)
 }
