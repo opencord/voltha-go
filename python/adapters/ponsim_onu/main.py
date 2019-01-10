@@ -379,6 +379,7 @@ class Main(object):
                     # TODO: Add KV Store object reference
                     kv_store=self.args.backend,
                     default_topic=self.args.name,
+                    group_id_prefix=self.args.instance_id,
                     target_cls=ponsim_request_handler
                 )
             ).start()

@@ -62,7 +62,7 @@ func newKVClient(storeType string, address string, timeout int) (kvstore.Client,
 	return nil, errors.New("unsupported-kv-store")
 }
 
-func newKafkaClient(clientType string, host string, port int) (kafka.Client, error) {
+func newKafkaClient(clientType string, host string, port int, instanceID string) (kafka.Client, error) {
 
 	log.Infow("kafka-client-type", log.Fields{"client": clientType})
 	switch clientType {
@@ -70,9 +70,15 @@ func newKafkaClient(clientType string, host string, port int) (kafka.Client, err
 		return kafka.NewSaramaClient(
 			kafka.Host(host),
 			kafka.Port(port),
+			kafka.ConsumerType(kafka.GroupCustomer),
 			kafka.ProducerReturnOnErrors(true),
 			kafka.ProducerReturnOnSuccess(true),
 			kafka.ProducerMaxRetries(6),
+			kafka.NumPartitions(3),
+			kafka.ConsumerGroupName(instanceID),
+			kafka.ConsumerGroupPrefix(instanceID),
+			kafka.AutoCreateTopic(false),
+			kafka.ProducerFlushFrequency(5),
 			kafka.ProducerRetryBackoff(time.Millisecond*30)), nil
 	}
 	return nil, errors.New("unsupported-client-type")
@@ -126,7 +132,7 @@ func (rw *rwCore) start(ctx context.Context) {
 	}
 
 	// Setup Kafka Client
-	if rw.kafkaClient, err = newKafkaClient("sarama", rw.config.KafkaAdapterHost, rw.config.KafkaAdapterPort); err != nil {
+	if rw.kafkaClient, err = newKafkaClient("sarama", rw.config.KafkaAdapterHost, rw.config.KafkaAdapterPort, rw.config.InstanceID); err != nil {
 		log.Fatal("Unsupported-kafka-client")
 	}
 
@@ -219,7 +225,7 @@ func main() {
 	}
 
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
 
 	defer log.CleanUp()
 

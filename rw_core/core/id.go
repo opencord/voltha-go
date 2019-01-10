@@ -18,7 +18,10 @@ package core
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	m "math/rand"
+	"strconv"
 )
 
 func randomHex(n int) (string, error) {
@@ -48,4 +51,17 @@ func CreateLogicalDeviceId() string {
 func CreateLogicalPortId() uint32 {
 	//	A logical port is a uint32
 	return m.Uint32()
+}
+
+func CreateDataPathId(idInHexString string) (uint64, error) {
+	if idInHexString == "" {
+		return 0, errors.New("id-empty")
+	}
+	// First prepend 0x to the string
+	newId := fmt.Sprintf("0x%s", idInHexString)
+	if d, err := strconv.ParseUint(newId, 0, 64); err != nil {
+		return 0, err
+	} else {
+		return d, nil
+	}
 }

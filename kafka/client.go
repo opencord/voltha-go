@@ -26,9 +26,13 @@ const (
 )
 
 const (
+	GroupIdKey = "groupId"
+)
+
+const (
 	DefaultKafkaHost                = "127.0.0.1"
 	DefaultKafkaPort                = 9092
-	DefaultGroupName                = "rw_core"
+	DefaultGroupName                = "voltha"
 	DefaultSleepOnError             = 1
 	DefaultProducerFlushFrequency   = 5
 	DefaultProducerFlushMessages    = 1
@@ -51,7 +55,7 @@ type Client interface {
 	Stop()
 	CreateTopic(topic *Topic, numPartition int, repFactor int) error
 	DeleteTopic(topic *Topic) error
-	Subscribe(topic *Topic) (<-chan *ca.InterContainerMessage, error)
+	Subscribe(topic *Topic, kvArgs ...*KVArg) (<-chan *ca.InterContainerMessage, error)
 	UnSubscribe(topic *Topic, ch <-chan *ca.InterContainerMessage) error
 	Send(msg interface{}, topic *Topic, keys ...string) error
 }
