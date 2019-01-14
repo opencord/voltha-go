@@ -21,7 +21,7 @@ echo $SRC_DIR
 export MAPS=Mgoogle/protobuf/descriptor.proto=github.com/golang/protobuf/protoc-gen-go/descriptor
 export INCS="\
     -I $SRC_DIR \
-    -I $GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis"
+    -I /usr/local/include/googleapis"
 
 export VOLTHA_PB="\
     $SRC_DIR/adapter.proto \

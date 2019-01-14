@@ -46,6 +46,8 @@ go get -u github.com/google/uuid
 go get -u github.com/cevaris/ordered_map
 go get -u github.com/gyuho/goraph
 go get -u go.etcd.io/etcd   # etcd client
+go install ./vendor/github.com/golang/protobuf/protoc-gen-go 
+git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
 ```
 
 ### Building the protobufs
@@ -54,7 +56,7 @@ cd voltha-go
 protos/scripts/build_protos.sh protos
 ```
 
-### Building Voltha Core
+### Building and Running Voltha Core locally
 A fatal error occurs if Voltha is built and executed at this stage:
 ```
 > go run rw_core/main.go
@@ -71,6 +73,27 @@ go run rw_core/main.go
 or from a docker image built via:
 ```
 make rw_core
+```
+
+### Building and Running Voltha Core in a container
+We are using ```dep``` (https://github.com/golang/dep) for package management.  This means all the 
+necessary dependencies are located under the vendor directory.   Whenever, a new package is added to the 
+project, please run "dep ensure" to update the appropriate deb files as well as the vendor library.
+
+*Note*: For some reasons (to be investigated) deb does not detect the ```github.com/cores/etcd``` dependency
+correctly.  It had to be added manually.  This means everytime a ```dep ensure``` is executed the etcd dependency will 
+be removed along as with the directory under the vendor directory.   Until this issue is resolved, please
+run ```dep ensure -add  github.com/coreos/etcd```  everytime a "dep ensure" is executed.
+
+To build the voltha core:
+```
+make rw_core
+```
+
+To run the voltha core (example below uses docker compose to run the core locally in a container - replace `````<Host IP>````` 
+with your host IP):
+```
+DOCKER_HOST_IP=<Host IP> docker-compose -f compose/rw_core.yml up -d
 ```
 
 ### Building and running Ponsim OLT and ONU Adapters

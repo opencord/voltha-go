@@ -10,29 +10,30 @@ RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
 RUN ["mkdir", "-p", "/src", "src/protos"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
 RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
-#RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
-
 
 # Copy files
 ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
 ADD common $GOPATH/src/github.com/opencord/voltha-go/common
 ADD db $GOPATH/src/github.com/opencord/voltha-go/db
 ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
+ADD vendor $GOPATH/src/github.com/opencord/voltha-go/vendor
 
 # Copy required proto files
 # ... VOLTHA proos
 ADD protos/*.proto /src/protos/
 ADD protos/scripts/* /src/protos/
 
+WORKDIR $GOPATH/src/github.com/opencord/voltha-go
+
 # Install golang protobuf
-RUN go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-RUN go get -u github.com/golang/protobuf/protoc-gen-go
+RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
+RUN go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 
 # Compile protobuf files
 RUN sh /src/protos/build_protos.sh /src/protos
 
 # Build rw_core
-RUN cd $GOPATH/src/github.com/opencord/voltha-go/rw_core && go get -d ./... && rm -rf $GOPATH/src/go.etcd.io/etcd/vendor/golang.org/x/net/trace && go build -o /src/rw_core
+RUN cd rw_core && go build -o /src/rw_core
 
 # -------------
 # Image creation stage
