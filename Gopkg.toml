@@ -107,11 +107,11 @@ required = [
   name = "go.uber.org/zap"
   version = "1.9.1"
 
-[[constraint]]
+[[override]]
   branch = "master"
   name = "golang.org/x/net"
 
-[[constraint]]
+[[override]]
   branch = "master"
   name = "google.golang.org/genproto"
 

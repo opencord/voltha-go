@@ -30,6 +30,8 @@ services:
       "--kafka_cluster_port=9092",
       "--core_topic=rwcore",
       "--simulator_topic=simulated_olt",
+      "--kv_store_host=${DOCKER_HOST_IP}",
+      "--kv_store_port=2379",
       "--onu_number=1"
     ]
     networks:
@@ -49,6 +51,8 @@ services:
       "--kafka_cluster_host=${DOCKER_HOST_IP}",
       "--kafka_cluster_port=9092",
       "--core_topic=rwcore",
+      "--kv_store_host=${DOCKER_HOST_IP}",
+      "--kv_store_port=2379",
       "--simulator_topic=simulated_onu",
     ]
     networks:

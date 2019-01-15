@@ -1,33 +1,37 @@
 # -------------
 # Build stage
 
-FROM golang:1.9.2-alpine AS build-env
+FROM golang:1.10.7-alpine AS build-env
 
 # Install required packages
 RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
+
+# Install protobuf requirements
+RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
+RUN go get github.com/golang/protobuf/protoc-gen-go
+RUN go get google.golang.org/genproto/googleapis/api/annotations
 
 # Prepare directory structure
 RUN ["mkdir", "-p", "/src", "src/protos"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
 RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
 
+WORKDIR $GOPATH/src/github.com/opencord/voltha-go
+
 # Copy files
-ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
-ADD common $GOPATH/src/github.com/opencord/voltha-go/common
-ADD db $GOPATH/src/github.com/opencord/voltha-go/db
-ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
-ADD vendor $GOPATH/src/github.com/opencord/voltha-go/vendor
+ADD rw_core ./rw_core
+ADD common ./common
+ADD db ./db
+ADD kafka ./kafka
+ADD vendor ./vendor
+
+# Install the protoc-gen-go
+RUN go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 
 # Copy required proto files
 # ... VOLTHA proos
 ADD protos/*.proto /src/protos/
 ADD protos/scripts/* /src/protos/
-
-WORKDIR $GOPATH/src/github.com/opencord/voltha-go
-
-# Install golang protobuf
-RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
-RUN go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 
 # Compile protobuf files
 RUN sh /src/protos/build_protos.sh /src/protos
@@ -38,7 +42,7 @@ RUN cd rw_core && go build -o /src/rw_core
 # -------------
 # Image creation stage
 
-FROM alpine:3.6
+FROM alpine:3.8
 
 # Set the working directory
 WORKDIR /app
