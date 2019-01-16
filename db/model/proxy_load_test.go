@@ -227,7 +227,7 @@ func traverseBranches(revision Revision, depth int) {
 	//	tlog.Debugf("%sbranchIndex: %s", prefix, brIdx)
 	//	traverseBranches(brRev, depth+1)
 	//}
-	for childrenI, children := range revision.GetChildren() {
+	for childrenI, children := range revision.GetAllChildren() {
 		tlog.Debugf("%schildrenIndex: %s, length: %d", prefix, childrenI, len(children))
 
 		for _, subrev := range children {

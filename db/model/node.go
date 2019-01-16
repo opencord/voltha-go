@@ -302,8 +302,8 @@ func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 	field := names[name]
 
 	if field != nil && field.IsContainer {
-		children := make([]Revision, len(rev.GetChildren()[name]))
-		copy(children, rev.GetChildren()[name])
+		children := make([]Revision, len(rev.GetChildren(name)))
+		copy(children, rev.GetChildren(name))
 
 		if field.Key != "" {
 			if path != "" {
@@ -341,7 +341,7 @@ func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 		}
 	}
 
-	childRev := rev.GetChildren()[name][0]
+	childRev := rev.GetChildren(name)[0]
 	childNode := childRev.GetNode()
 	return childNode.getPath(childRev, path, depth)
 }
@@ -409,8 +409,8 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			}
 			keyValue := field.KeyFromStr(key)
 
-			children = make([]Revision, len(rev.GetChildren()[name]))
-			copy(children, rev.GetChildren()[name])
+			children = make([]Revision, len(rev.GetChildren(name)))
+			copy(children, rev.GetChildren(name))
 
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
@@ -448,7 +448,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			log.Errorf("cannot index into container with no keys")
 		}
 	} else {
-		childRev := rev.GetChildren()[name][0]
+		childRev := rev.GetChildren(name)[0]
 		childNode := childRev.GetNode()
 		newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
 		updatedRev := rev.UpdateChildren(name, []Revision{newChildRev}, branch)
@@ -543,8 +543,8 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 					n.GetProxy().InvokeCallbacks(PRE_ADD, false, data)
 				}
 
-				children = make([]Revision, len(rev.GetChildren()[name]))
-				copy(children, rev.GetChildren()[name])
+				children = make([]Revision, len(rev.GetChildren(name)))
+				copy(children, rev.GetChildren(name))
 
 				_, key := GetAttributeValue(data, field.Key, 0)
 
@@ -582,8 +582,8 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 			}
 			keyValue := field.KeyFromStr(key)
 
-			children = make([]Revision, len(rev.GetChildren()[name]))
-			copy(children, rev.GetChildren()[name])
+			children = make([]Revision, len(rev.GetChildren(name)))
+			copy(children, rev.GetChildren(name))
 
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 
@@ -592,7 +592,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 			children[idx] = newChildRev
 
-			rev = rev.UpdateChildren(name, branch.GetLatest().GetChildren()[name], branch)
+			rev = rev.UpdateChildren(name, branch.GetLatest().GetChildren(name), branch)
 			rev.Drop(txid, false)
 			n.makeLatest(branch, rev.GetBranch().GetLatest(), nil)
 
@@ -649,14 +649,14 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				path = partition[1]
 			}
 			keyValue := field.KeyFromStr(key)
-			children = make([]Revision, len(rev.GetChildren()[name]))
-			copy(children, rev.GetChildren()[name])
+			children = make([]Revision, len(rev.GetChildren(name)))
+			copy(children, rev.GetChildren(name))
 			if path != "" {
 				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 				childNode := childRev.GetNode()
 				newChildRev := childNode.Remove(path, txid, makeBranch)
 				children[idx] = newChildRev
-				rev := rev.UpdateChildren(name, children, branch)
+				rev.SetChildren(name, children)
 				branch.GetLatest().Drop(txid, false)
 				n.makeLatest(branch, rev, nil)
 				return rev
@@ -671,7 +671,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 			}
 			childRev.Drop(txid, true)
 			children = append(children[:idx], children[idx+1:]...)
-			rev := rev.UpdateChildren(name, children, branch)
+			rev.SetChildren(name, children)
 			branch.GetLatest().Drop(txid, false)
 			n.makeLatest(branch, rev, postAnnouncement)
 			return rev
@@ -812,8 +812,8 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 			}
 			keyValue := field.KeyFromStr(key)
 			var children []Revision
-			children = make([]Revision, len(rev.GetChildren()[name]))
-			copy(children, rev.GetChildren()[name])
+			children = make([]Revision, len(rev.GetChildren(name)))
+			copy(children, rev.GetChildren(name))
 			if _, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil {
 				childNode := childRev.GetNode()
 				return childNode.createProxy(path, fullPath, n, exclusive)
@@ -822,7 +822,7 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 			log.Error("cannot index into container with no keys")
 		}
 	} else {
-		childRev := rev.GetChildren()[name][0]
+		childRev := rev.GetChildren(name)[0]
 		childNode := childRev.GetNode()
 		return childNode.createProxy(path, fullPath, n, exclusive)
 	}
