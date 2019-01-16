@@ -741,10 +741,7 @@ func (kp *InterContainerProxy) subscribeForResponse(topic Topic, trnsId string) 
 
 func (kp *InterContainerProxy) unSubscribeForResponse(trnsId string) error {
 	log.Debugw("unsubscribe-for-response", log.Fields{"trnsId": trnsId})
-	if _, exist := kp.transactionIdToChannelMap[trnsId]; exist {
-		// The delete operation will close the channel
-		kp.deleteFromTransactionIdToChannelMap(trnsId)
-	}
+	kp.deleteFromTransactionIdToChannelMap(trnsId)
 	return nil
 }
 
