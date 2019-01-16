@@ -25,6 +25,7 @@ type Revision interface {
 	SetHash(hash string)
 	GetHash() string
 	ClearHash()
+	SetupWatch(key string)
 	SetBranch(branch *Branch)
 	GetBranch() *Branch
 	Get(int) interface{}

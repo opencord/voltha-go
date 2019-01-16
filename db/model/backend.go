@@ -55,7 +55,12 @@ func NewBackend(storeType string, host string, port int, timeout int, pathPrefix
 
 	address := host + ":" + strconv.Itoa(port)
 	if b.Client, err = b.newClient(address, timeout); err != nil {
-		log.Errorf("failed to create a new kv Client - %s", err.Error())
+		log.Errorw("failed-to-create-kv-client",
+			log.Fields{
+				"type": storeType, "host": host, "port": port,
+				"timeout": timeout, "prefix": pathPrefix,
+				"error": err.Error(),
+			})
 	}
 
 	return b
@@ -68,7 +73,7 @@ func (b *Backend) newClient(address string, timeout int) (kvstore.Client, error)
 	case "etcd":
 		return kvstore.NewEtcdClient(address, timeout)
 	}
-	return nil, errors.New("Unsupported KV store")
+	return nil, errors.New("unsupported-kv-store")
 }
 
 func (b *Backend) makePath(key string) string {
@@ -82,7 +87,7 @@ func (b *Backend) List(key string) (map[string]*kvstore.KVPair, error) {
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugf("List key: %s, path: %s", key, formattedPath)
+	log.Debugw("listing-key", log.Fields{"key": key, "path": formattedPath})
 
 	return b.Client.List(formattedPath, b.Timeout)
 }
@@ -93,7 +98,7 @@ func (b *Backend) Get(key string) (*kvstore.KVPair, error) {
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugf("Get key: %s, path: %s", key, formattedPath)
+	log.Debugw("getting-key", log.Fields{"key": key, "path": formattedPath})
 
 	start := time.Now()
 	err, pair := b.Client.Get(formattedPath, b.Timeout)
@@ -110,7 +115,7 @@ func (b *Backend) Put(key string, value interface{}) error {
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugf("Put key: %s, value: %+v, path: %s", key, string(value.([]byte)), formattedPath)
+	log.Debugw("putting-key", log.Fields{"key": key, "value": string(value.([]byte)), "path": formattedPath})
 
 	return b.Client.Put(formattedPath, value, b.Timeout)
 }
@@ -121,7 +126,29 @@ func (b *Backend) Delete(key string) error {
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugf("Delete key: %s, path: %s", key, formattedPath)
+	log.Debugw("deleting-key", log.Fields{"key": key, "path": formattedPath})
 
 	return b.Client.Delete(formattedPath, b.Timeout)
+}
+
+// CreateWatch starts watching events for the specified key
+func (b *Backend) CreateWatch(key string) chan *kvstore.Event {
+	b.Lock()
+	defer b.Unlock()
+
+	formattedPath := b.makePath(key)
+	log.Debugw("creating-key-watch", log.Fields{"key": key, "path": formattedPath})
+
+	return b.Client.Watch(formattedPath)
+}
+
+// DeleteWatch stops watching events for the specified key
+func (b *Backend) DeleteWatch(key string, ch chan *kvstore.Event) {
+	b.Lock()
+	defer b.Unlock()
+
+	formattedPath := b.makePath(key)
+	log.Debugw("deleting-key-watch", log.Fields{"key": key, "path": formattedPath})
+
+	b.Client.CloseWatch(formattedPath, ch)
 }

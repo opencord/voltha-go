@@ -301,7 +301,7 @@ func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 	names := ChildrenFields(n.Type)
 	field := names[name]
 
-	if field.IsContainer {
+	if field != nil && field.IsContainer {
 		children := make([]Revision, len(rev.GetChildren()[name]))
 		copy(children, rev.GetChildren()[name])
 
@@ -557,6 +557,10 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 				// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
 				childRev.SetHash(name + "/" + key.String())
+
+				// Create watch for <component>/<key>
+				childRev.SetupWatch(childRev.GetHash())
+				
 				children = append(children, childRev)
 				rev = rev.UpdateChildren(name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
