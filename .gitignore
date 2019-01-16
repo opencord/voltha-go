@@ -31,10 +31,11 @@ adapters/venv-linux
 adapters/venv-darwin
 
 # Protobuf output files
-**/*_pb2.py
-**/*_pb2_grpc.py
-**/*.pb.go
-**/*.desc
+python/**/*_pb2.py
+python/**/*_pb2_grpc.py
+python/**/*.desc
+protos/**/*.pb.go
+protos/**/*.desc
 
 # Editors
 *.bak
