@@ -42,6 +42,7 @@ export SCHEMA_PB="$SRC_DIR/schema.proto"
 export IETF_PB="$SRC_DIR/ietf_interfaces.proto"
 export OF_PB="$SRC_DIR/openflow_13.proto"
 export OMCI_PB="$SRC_DIR/omci*.proto"
+export AFROUTER_PB="$SRC_DIR/afrouter.proto"
 
 export PB_VARS="\
     VOLTHA_PB \
@@ -50,7 +51,11 @@ export PB_VARS="\
     SCHEMA_PB \
     IETF_PB \
     OF_PB \
-    OMCI_PB"
+    OMCI_PB \
+    AFROUTER_PB"
+
+export OTHER_INCLUDES="/usr/local/include/googleapis"
+export PROTO_DESC_FILE="${SRC_DIR}/voltha.pb"
 
 for pb_var in $PB_VARS
 do
@@ -58,3 +63,5 @@ do
     echo "Compiling $pbs"
     protoc --go_out=$MAPS,plugins=grpc:$GOPATH/src $INCS $pbs
 done
+
+protoc -I ${SRC_DIR} -I ${OTHER_INCLUDES} --include_imports --include_source_info --descriptor_set_out=${PROTO_DESC_FILE} ${SRC_DIR}/*.proto

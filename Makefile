@@ -54,7 +54,7 @@ DOCKER_IMAGE_LIST = \
 	rw_core
 
 
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core protos kafka db tests python simulators k8s
+.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core protos kafka db tests python simulators k8s afrouter arouterd
 
 # This should to be the first and default target in this Makefile
 help:
@@ -80,30 +80,21 @@ $(DIRS_CLEAN):
 
 build: containers
 
-containers: rw_core simulated_olt simulated_onu
+containers: rw_core simulated_olt simulated_onu afrouter arouterd
 
-ifneq ($(VOLTHA_BUILD),docker)
+afrouter:
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}arouter:${TAG} -f docker/Dockerfile.arouter .
+
+arouterd:
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}arouterd:${TAG} -f docker/Dockerfile.arouterd .
+
 rw_core:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-rw-core:${TAG} -f docker/Dockerfile.rw_core .
-else
-rw_core:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-rw-core:${TAG} -f docker/Dockerfile.rw_core_d .
-endif
 
-ifneq ($(VOLTHA_BUILD),docker)
 simulated_olt:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-olt:${TAG} -f docker/Dockerfile.simulated_olt .
-else
-simulated_olt:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-olt:${TAG} -f docker/Dockerfile.simulated_olt_d .
-endif
 
-ifneq ($(VOLTHA_BUILD),docker)
 simulated_onu:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
-else
-simulated_onu:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu_d .
-endif
 
 # end file
