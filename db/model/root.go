@@ -202,10 +202,12 @@ func (r *root) Update(path string, data interface{}, strict bool, txid string, m
 		result = r.node.Update(path, data, strict, "", nil)
 	}
 
-	if r.Proxy.FullPath != r.Proxy.Path {
-		r.syncParent(result, txid)
-	} else {
-		result.Finalize(false)
+	if result != nil {
+		if r.Proxy.FullPath != r.Proxy.Path {
+			r.syncParent(result, txid)
+		} else {
+			result.Finalize(false)
+		}
 	}
 
 	r.node.GetRoot().ExecuteCallbacks()

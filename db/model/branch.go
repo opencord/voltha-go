@@ -53,7 +53,6 @@ func (b *Branch) SetLatest(latest Revision) {
 
 	if b.Latest != nil {
 		log.Debugf("Switching latest from <%s> to <%s>", b.Latest.GetHash(), latest.GetHash())
-		b.Latest.Drop(b.Txid, false)
 	} else {
 		log.Debugf("Switching latest from <NIL> to <%s>", latest.GetHash())
 	}

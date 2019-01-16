@@ -233,6 +233,11 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 
+	if npr.Config.Data != nil && npr.Config.Data == data {
+		log.Debugw("stored-data-matches-latest", log.Fields{"stored": npr.Config.Data, "provided": data})
+		return nil
+	}
+
 	newRev := NonPersistedRevision{}
 	newRev.Config = NewDataRevision(npr.Root, data)
 	newRev.Hash = npr.Hash
@@ -249,7 +254,10 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 }
 
 func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision, branch *Branch) Revision {
-	updatedRev := *npr
+	npr.mutex.Lock()
+	defer npr.mutex.Unlock()
+
+	updatedRev := npr
 
 	// Verify if the map contains already contains an entry matching the name value
 	// If so, we need to retain the contents of that entry and merge them with the provided children revision list
@@ -272,14 +280,12 @@ func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision
 		copy(updatedRev.Children[name], children)
 	}
 
-	log.Debugf("Updated Children map entries: %+v", updatedRev.GetChildren())
-
 	updatedRev.Config = NewDataRevision(npr.Root, npr.Config.Data)
 	updatedRev.Hash = npr.Hash
 	updatedRev.Branch = branch
 	updatedRev.Finalize(false)
 
-	return &updatedRev
+	return updatedRev
 }
 
 func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision {
@@ -304,9 +310,6 @@ func (npr *NonPersistedRevision) Drop(txid string, includeConfig bool) {
 	GetRevCache().Lock()
 	defer GetRevCache().Unlock()
 
-	npr.mutex.Lock()
-	defer npr.mutex.Unlock()
-
 	if includeConfig {
 		delete(GetRevCache().Cache, npr.Config.Hash)
 	}
@@ -314,5 +317,10 @@ func (npr *NonPersistedRevision) Drop(txid string, includeConfig bool) {
 }
 
 func (npr *NonPersistedRevision) LoadFromPersistence(path string, txid string) []Revision {
+	// stub... required by interface
 	return nil
+}
+
+func (npr *NonPersistedRevision) SetupWatch(key string) {
+	// stub ... required by interface
 }
