@@ -80,11 +80,6 @@ We are using ```dep``` (https://github.com/golang/dep) for package management.  
 necessary dependencies are located under the vendor directory.   Whenever, a new package is added to the 
 project, please run "dep ensure" to update the appropriate deb files as well as the vendor library.
 
-*Note*: For some reasons (to be investigated) deb does not detect the ```github.com/cores/etcd``` dependency
-correctly.  It had to be added manually.  This means everytime a ```dep ensure``` is executed the etcd dependency will 
-be removed along as with the directory under the vendor directory.   Until this issue is resolved, please
-run ```dep ensure -add  github.com/coreos/etcd```  everytime a "dep ensure" is executed.
-
 To build the voltha core:
 ```
 make rw_core
