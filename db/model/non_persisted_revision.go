@@ -72,16 +72,33 @@ func (npr *NonPersistedRevision) GetConfig() *DataRevision {
 	return npr.Config
 }
 
-func (npr *NonPersistedRevision) SetChildren(children map[string][]Revision) {
+func (npr *NonPersistedRevision) SetAllChildren(children map[string][]Revision) {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	npr.Children = children
 }
 
-func (npr *NonPersistedRevision) GetChildren() map[string][]Revision {
+func (npr *NonPersistedRevision) SetChildren(name string, children []Revision) {
+	npr.mutex.Lock()
+	defer npr.mutex.Unlock()
+	if _, exists := npr.Children[name]; exists {
+		npr.Children[name] = children
+	}
+}
+
+func (npr *NonPersistedRevision) GetAllChildren() map[string][]Revision {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	return npr.Children
+}
+
+func (npr *NonPersistedRevision) GetChildren(name string) []Revision {
+	npr.mutex.Lock()
+	defer npr.mutex.Unlock()
+	if _, exists := npr.Children[name]; exists {
+		return npr.Children[name]
+	}
+	return nil
 }
 
 func (npr *NonPersistedRevision) SetHash(hash string) {
@@ -188,7 +205,7 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 		for fieldName, field := range ChildrenFields(latestRev.GetData()) {
 			childDataName, childDataHolder := GetAttributeValue(data, fieldName, 0)
 			if field.IsContainer {
-				for _, rev := range latestRev.GetChildren()[fieldName] {
+				for _, rev := range latestRev.GetChildren(fieldName) {
 					childData := rev.Get(depth - 1)
 					foundEntry := false
 					for i := 0; i < childDataHolder.Len(); i++ {
@@ -204,8 +221,8 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 					}
 				}
 			} else {
-				if revs := latestRev.GetChildren()[fieldName]; revs != nil && len(revs) > 0 {
-					rev := latestRev.GetChildren()[fieldName][0]
+				if revs := latestRev.GetChildren(fieldName); revs != nil && len(revs) > 0 {
+					rev := latestRev.GetChildren(fieldName)[0]
 					if rev != nil {
 						childData := rev.Get(depth - 1)
 						if reflect.TypeOf(childData) == reflect.TypeOf(childDataHolder.Interface()) {

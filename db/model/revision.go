@@ -20,8 +20,10 @@ type Revision interface {
 	SetConfig(revision *DataRevision)
 	GetConfig() *DataRevision
 	Drop(txid string, includeConfig bool)
-	SetChildren(children map[string][]Revision)
-	GetChildren() map[string][]Revision
+	SetChildren(name string, children []Revision)
+	GetChildren(name string) []Revision
+	SetAllChildren(children map[string][]Revision)
+	GetAllChildren() map[string][]Revision
 	SetHash(hash string)
 	GetHash() string
 	ClearHash()

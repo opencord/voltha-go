@@ -33,9 +33,11 @@ type PersistedRevision struct {
 	Revision
 	Compress bool
 
-	events  chan *kvstore.Event `json:"-"`
-	kvStore *Backend            `json:"-"`
-	mutex   sync.RWMutex        `json:"-"`
+	events    chan *kvstore.Event `json:"-"`
+	kvStore   *Backend            `json:"-"`
+	mutex     sync.RWMutex        `json:"-"`
+	isStored  bool
+	isWatched bool
 }
 
 // NewPersistedRevision creates a new instance of a PersistentRevision structure
@@ -83,6 +85,7 @@ func (pr *PersistedRevision) store(skipOnExist bool) {
 		} else {
 			log.Debugw("storing-revision-config",
 				log.Fields{"hash": pr.GetHash(), "data": pr.GetConfig().Data})
+			pr.isStored = true
 		}
 	}
 }
@@ -94,6 +97,8 @@ func (pr *PersistedRevision) SetupWatch(key string) {
 		log.Debugw("setting-watch", log.Fields{"key": key})
 
 		pr.events = pr.kvStore.CreateWatch(key)
+
+		pr.isWatched = true
 
 		// Start watching
 		go pr.startWatching()
@@ -176,8 +181,8 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 						if field.Key != "" {
 							// e.g. /logical_devices/abcde --> path="" name=logical_devices key=abcde
 							if field.Key != "" {
-								children = make([]Revision, len(rev.GetChildren()[name]))
-								copy(children, rev.GetChildren()[name])
+								children = make([]Revision, len(rev.GetChildren(name)))
+								copy(children, rev.GetChildren(name))
 
 								_, key := GetAttributeValue(data.Interface(), field.Key, 0)
 
@@ -208,8 +213,8 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 						}
 						keyValue := field.KeyFromStr(key)
 
-						children = make([]Revision, len(rev.GetChildren()[name]))
-						copy(children, rev.GetChildren()[name])
+						children = make([]Revision, len(rev.GetChildren(name)))
+						copy(children, rev.GetChildren(name))
 
 						idx, childRev := rev.GetBranch().Node.findRevByKey(children, field.Key, keyValue)
 
@@ -217,7 +222,7 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 
 						children[idx] = newChildRev[0]
 
-						rev := rev.UpdateChildren(name, rev.GetChildren()[name], rev.GetBranch())
+						rev := rev.UpdateChildren(name, rev.GetChildren(name), rev.GetBranch())
 						rev.GetBranch().Node.makeLatest(rev.GetBranch(), rev, nil)
 
 						response = append(response, newChildRev[0])
@@ -284,17 +289,24 @@ func (pr *PersistedRevision) Drop(txid string, includeConfig bool) {
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 	if pr.kvStore != nil && txid == "" {
-		if includeConfig {
-			if err := pr.kvStore.Delete(pr.GetConfig().Hash); err != nil {
-				log.Errorw("failed-to-remove-revision-config", log.Fields{"hash": pr.GetConfig().Hash, "error": err.Error()})
+		if pr.isStored {
+			if includeConfig {
+				if err := pr.kvStore.Delete(pr.GetConfig().Hash); err != nil {
+					log.Errorw("failed-to-remove-revision-config", log.Fields{"hash": pr.GetConfig().Hash, "error": err.Error()})
+				}
+			}
+
+			if err := pr.kvStore.Delete(pr.GetHash()); err != nil {
+				log.Errorw("failed-to-remove-revision", log.Fields{"hash": pr.GetHash(), "error": err.Error()})
+			} else {
+				pr.isStored = false
+			}
+
+			if pr.isWatched {
+				pr.kvStore.DeleteWatch(pr.GetHash(), pr.events)
+				pr.isWatched = false
 			}
 		}
-
-		if err := pr.kvStore.Delete(pr.GetHash()); err != nil {
-			log.Errorw("failed-to-remove-revision", log.Fields{"hash": pr.GetHash(), "error": err.Error()})
-		}
-
-		pr.kvStore.DeleteWatch(pr.GetConfig().Hash, pr.events)
 
 	} else {
 		if includeConfig {

@@ -102,9 +102,9 @@ func Merge3Way(
 		configChanged = true
 	}
 
-	//newChildren := reflect.ValueOf(dstRev.GetChildren()).Interface().(map[string][]Revision)
+	//newChildren := reflect.ValueOf(dstRev.GetAllChildren()).Interface().(map[string][]Revision)
 	newChildren := make(map[string][]Revision)
-	for entryName, childrenEntry := range dstRev.GetChildren() {
+	for entryName, childrenEntry := range dstRev.GetAllChildren() {
 		//newRev.Children[entryName] = append(newRev.Children[entryName], childrenEntry...)
 		newChildren[entryName] = make([]Revision, len(childrenEntry))
 		copy(newChildren[entryName], childrenEntry)
@@ -113,9 +113,9 @@ func Merge3Way(
 	childrenFields := ChildrenFields(forkRev.GetData())
 
 	for fieldName, field := range childrenFields {
-		forkList := forkRev.GetChildren()[fieldName]
-		srcList := srcRev.GetChildren()[fieldName]
-		dstList := dstRev.GetChildren()[fieldName]
+		forkList := forkRev.GetChildren(fieldName)
+		srcList := srcRev.GetChildren(fieldName)
+		dstList := dstRev.GetChildren(fieldName)
 
 		if revisionsAreEqual(dstList, srcList) {
 			for _, rev := range srcList {
