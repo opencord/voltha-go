@@ -32,6 +32,9 @@ import (
 	"time"
 )
 
+//TODO:  Move this Tag into the proto file
+const OF_CONTROLLER_TAG= "voltha_backend_name"
+
 const MAX_RESPONSE_TIME = 500 // milliseconds
 
 type APIHandler struct {
@@ -81,6 +84,29 @@ func (handler *APIHandler) createKvTransaction(ctx context.Context) (*KVTransact
 	return txn, nil
 }
 
+// isOFControllerRequest is a helper function to determine if a request was initiated
+// from the OpenFlow controller (or its proxy, e.g. OFAgent)
+func isOFControllerRequest(ctx context.Context) bool {
+	var (
+		ok    bool
+		md    metadata.MD
+		value []string
+	)
+	if md, ok = metadata.FromIncomingContext(ctx); !ok {
+		// No metadata
+		return false
+	}
+	if value, ok = md[OF_CONTROLLER_TAG]; !ok {
+		// No OFAgent field in metadata
+		return false
+	}
+	if value[0] == "" {
+		// OFAgent has not set a field value
+		return false
+	}
+	return true
+}
+
 // waitForNilResponseOnSuccess is a helper function to wait for a response on channel ch where an nil
 // response is expected in a successful scenario
 func waitForNilResponseOnSuccess(ctx context.Context, ch chan interface{}) (*empty.Empty, error) {
@@ -114,6 +140,17 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 		out := new(empty.Empty)
 		return out, nil
 	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
+	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.logicalDeviceMgr.enableLogicalPort(ctx, id, ch)
@@ -125,6 +162,17 @@ func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *vol
 	if isTestMode(ctx) {
 		out := new(empty.Empty)
 		return out, nil
+	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
 	}
 	ch := make(chan interface{})
 	defer close(ch)
@@ -138,6 +186,17 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 		out := new(empty.Empty)
 		return out, nil
 	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
+	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.logicalDeviceMgr.updateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
@@ -149,6 +208,17 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 	if isTestMode(ctx) {
 		out := new(empty.Empty)
 		return out, nil
+	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
 	}
 	ch := make(chan interface{})
 	defer close(ch)
@@ -185,6 +255,17 @@ func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 		out := new(empty.Empty)
 		return out, nil
 	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
+	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.ReconcileDevices(ctx, ids, ch)
@@ -216,15 +297,16 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 		return &voltha.Device{Id: device.Id}, nil
 	}
 
-	//txn, err := handler.createKvTransaction(ctx)
-	//if txn == nil {
-	//	return &voltha.Device{}, err
-	//} else if txn.Acquired(MAX_RESPONSE_TIME) {
-	//	defer txn.Close()   // Ensure active core signals "done" to standby
-	//} else {
-	//	return &voltha.Device{}, nil
-	//}
-
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return &voltha.Device{}, err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return &voltha.Device{}, errors.New("failed-to-seize-request")
+		}
+	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.createDevice(ctx, device, ch)
@@ -254,15 +336,16 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 		return new(empty.Empty), nil
 	}
 
-	//txn, err := handler.createKvTransaction(ctx)
-	//if txn == nil {
-	//	return new(empty.Empty), err
-	//} else if txn.Acquired(MAX_RESPONSE_TIME) {
-	//	defer txn.Close()   // Ensure active core signals "done" to standby
-	//} else {
-	//	return new(empty.Empty), nil
-	//}
-
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
+	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.enableDevice(ctx, id, ch)
@@ -274,6 +357,17 @@ func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*e
 	log.Debugw("disabledevice-request", log.Fields{"id": id})
 	if isTestMode(ctx) {
 		return new(empty.Empty), nil
+	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
 	}
 	ch := make(chan interface{})
 	defer close(ch)
@@ -287,6 +381,17 @@ func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*em
 	if isTestMode(ctx) {
 		return new(empty.Empty), nil
 	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
+	}
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.rebootDevice(ctx, id, ch)
@@ -298,6 +403,17 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 	log.Debugw("deletedevice-request", log.Fields{"id": id})
 	if isTestMode(ctx) {
 		return new(empty.Empty), nil
+	}
+
+	if isOFControllerRequest(ctx) {
+		txn, err := handler.createKvTransaction(ctx)
+		if txn == nil {
+			return new(empty.Empty), err
+		} else if txn.Acquired(MAX_RESPONSE_TIME) {
+			defer txn.Close() // Ensure active core signals "done" to standby
+		} else {
+			return new(empty.Empty), errors.New("failed-to-seize-request")
+		}
 	}
 	ch := make(chan interface{})
 	defer close(ch)
@@ -389,8 +505,8 @@ func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha
 
 func (handler *APIHandler) forwardPacketOut(packet *openflow_13.PacketOut) {
 	log.Debugw("forwardPacketOut-request", log.Fields{"packet": packet})
-	//agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id)
-	//agent.packetOut(packet.PacketOut)
+	agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id)
+	agent.packetOut(packet.PacketOut)
 }
 func (handler *APIHandler) StreamPacketsOut(
 	packets voltha.VolthaService_StreamPacketsOutServer,
