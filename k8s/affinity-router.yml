@@ -12,41 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1beta1
+kind: Deployment
 metadata:
   name: afrouter
   namespace: voltha
-  labels:
-    app: afrouter
-  annotations:
-    cni: "calico"
 spec:
-  containers:
-  - name: arouter
-    image: volthacore/afrouter:testing
-    imagePullPolicy: Always
-    volumeMounts:
-    - name: config-volume
-      mountPath: /app/config
-    ports:
-    - containerPort: 55555
-    command: ["/app/afrouter"]
-    args: ["-config", "/app/config/arouter.voltha3.json"]
-  - name: envoy
-    image: volthacore/envoy
-    volumeMounts:
-    - name: config-volume
-      mountPath: /envoy/config
-    ports:
-    - containerPort: 8192
-    - containerPort: 50555
-  - name: arouterd
-    image: volthacore/afrouterd:testing
-    command: ["/app/arouterd"]
-    imagePullPolicy: Always
-  restartPolicy: Never
-  volumes:
-    - name: config-volume
-      configMap:
-        name: afrouter-config
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: afrouter
+      annotations:
+        cni: "calico"
+    spec:
+      containers:
+      - name: arouter
+        image: volthacore/afrouter:testing
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        ports:
+        - containerPort: 55555
+        command: ["/app/afrouter"]
+        args: ["-config", "/app/config/arouter.voltha3.json"]
+      - name: envoy
+        image: volthacore/envoy
+        volumeMounts:
+        - name: config-volume
+          mountPath: /envoy/config
+        ports:
+        - containerPort: 8192
+        - containerPort: 50555
+      - name: arouterd
+        image: volthacore/afrouterd:testing
+        command: ["/app/arouterd"]
+        imagePullPolicy: Always
+      restartPolicy: Always
+      volumes:
+        - name: config-volume
+          configMap:
+            name: afrouter-config
