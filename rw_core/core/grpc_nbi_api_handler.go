@@ -128,9 +128,13 @@ func waitForNilResponseOnSuccess(ctx context.Context, ch chan interface{}) (*emp
 }
 
 func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
-	log.Debugw("UpdateLogLevel-request", log.Fields{"newloglevel": logging.Level, "intval": int(logging.Level)})
+	log.Debugw("UpdateLogLevel-request", log.Fields{"package": logging.PackageName, "intval": int(logging.Level)})
 	out := new(empty.Empty)
-	log.SetPackageLogLevel(logging.PackageName, int(logging.Level))
+	if logging.PackageName == "" {
+		log.SetAllLogLevel(int(logging.Level))
+	} else {
+		log.SetPackageLogLevel(logging.PackageName, int(logging.Level))
+	}
 	return out, nil
 }
 

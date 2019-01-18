@@ -16,7 +16,6 @@
 package log
 
 import (
-	"github.com/opencord/voltha-go/common/log"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/grpclog"
 	"testing"
@@ -26,17 +25,17 @@ import (
 Prerequite:  Start the kafka/zookeeper containers.
 */
 
-var testLogger log.Logger
+var testLogger Logger
 
 func TestInit(t *testing.T) {
 	var err error
-	testLogger, err = log.AddPackage(log.JSON, log.ErrorLevel, nil)
+	testLogger, err = AddPackage(JSON, ErrorLevel, nil)
 	assert.NotNil(t, testLogger)
 	assert.Nil(t, err)
 }
 
 func verifyLogLevel(t *testing.T, minimumLevel int) {
-	log.SetAllLogLevel(minimumLevel)
+	SetAllLogLevel(minimumLevel)
 	var success bool
 	for i := 0; i < 6; i++ {
 		success = testLogger.V(i)
@@ -60,19 +59,47 @@ func TestLogLevelDebug(t *testing.T) {
 }
 
 func TestUpdateAllLoggers(t *testing.T) {
-	err := log.UpdateAllLoggers(log.Fields{"update": "update"})
+	err := UpdateAllLoggers(Fields{"update": "update"})
 	assert.Nil(t, err)
 }
 
 func TestUpdateLoggers(t *testing.T) {
-	testLogger, err := log.UpdateLogger(log.Fields{"update": "update"})
+	testLogger, err := UpdateLogger(Fields{"update": "update"})
 	assert.Nil(t, err)
 	assert.NotNil(t, testLogger)
 }
 
 func TestUseAsGrpcLoggerV2(t *testing.T) {
 	var grpcLogger grpclog.LoggerV2
-	thisLogger, _ := log.AddPackage(log.JSON, log.ErrorLevel, nil)
+	thisLogger, _ := AddPackage(JSON, ErrorLevel, nil)
 	grpcLogger = thisLogger
 	assert.NotNil(t, grpcLogger)
+}
+
+func TestUpdateLogLevel(t *testing.T) {
+	//	Let's create a bunch of logger each with a separate package
+	myLoggers := make(map[string]Logger)
+	pkgNames := []string{"/rw_core/core", "/db/model", "/kafka"}
+	for _, name := range pkgNames {
+		myLoggers[name], _ = AddPackage(JSON, ErrorLevel, nil, []string{name}...)
+	}
+	//Test updates to log levels
+	levels := []int{0, 1, 2, 3, 4, 5}
+	for _, expectedLevel := range levels {
+		for _, name := range pkgNames {
+			SetPackageLogLevel(name, expectedLevel)
+			l, err := GetPackageLogLevel(name)
+			assert.Nil(t, err)
+			assert.Equal(t, l, expectedLevel)
+		}
+	}
+	//Test set all package level
+	for _, expectedLevel := range levels {
+		SetAllLogLevel(expectedLevel)
+		for _, name := range pkgNames {
+			l, err := GetPackageLogLevel(name)
+			assert.Nil(t, err)
+			assert.Equal(t, l, expectedLevel)
+		}
+	}
 }

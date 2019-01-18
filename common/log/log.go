@@ -125,7 +125,7 @@ type logger struct {
 	parent *zp.Logger
 }
 
-func parseAtomicLevel(l int) zp.AtomicLevel {
+func intToAtomicLevel(l int) zp.AtomicLevel {
 	switch l {
 	case DebugLevel:
 		return zp.NewAtomicLevelAt(zc.DebugLevel)
@@ -143,12 +143,12 @@ func parseAtomicLevel(l int) zp.AtomicLevel {
 	return zp.NewAtomicLevelAt(zc.ErrorLevel)
 }
 
-func parseLevel(l int) zc.Level {
+func intToLevel(l int) zc.Level {
 	switch l {
 	case DebugLevel:
 		return zc.DebugLevel
 	case InfoLevel:
-		return InfoLevel
+		return zc.InfoLevel
 	case WarnLevel:
 		return zc.WarnLevel
 	case ErrorLevel:
@@ -161,9 +161,28 @@ func parseLevel(l int) zc.Level {
 	return zc.ErrorLevel
 }
 
+func levelToInt(l zc.Level) int {
+	switch l {
+	case zc.DebugLevel:
+		return DebugLevel
+	case zc.InfoLevel:
+		return InfoLevel
+	case zc.WarnLevel:
+		return WarnLevel
+	case zc.ErrorLevel:
+		return ErrorLevel
+	case zc.PanicLevel:
+		return PanicLevel
+	case FatalLevel:
+		return FatalLevel
+	}
+	return ErrorLevel
+}
+
+
 func getDefaultConfig(outputType string, level int, defaultFields Fields) zp.Config {
 	return zp.Config{
-		Level:            parseAtomicLevel(level),
+		Level:            intToAtomicLevel(level),
 		Encoding:         outputType,
 		Development:      true,
 		OutputPaths:      []string{"stdout"},
@@ -210,14 +229,23 @@ func SetDefaultLogger(outputType string, level int, defaultFields Fields) (Logge
 //instead of using the publicly available functions in this log package then a number of functionalities will not
 // be available to it, notably log tracing with filename.functionname.linenumber annotation.
 //
-func AddPackage(outputType string, level int, defaultFields Fields) (Logger, error) {
+// pkgNames parameter should be used for testing only as this function detects the caller's package.
+func AddPackage(outputType string, level int, defaultFields Fields, pkgNames ...string) (Logger, error) {
 	if cfgs == nil {
 		cfgs = make(map[string]zp.Config)
 	}
 	if loggers == nil {
 		loggers = make(map[string]*logger)
 	}
-	pkgName, _, _, _ := getCallerInfo()
+
+	var pkgName string
+	for _, name := range pkgNames {
+		pkgName = name
+		break
+	}
+	if pkgName == "" {
+		pkgName, _, _, _ = getCallerInfo()
+	}
 
 	if _, exist := loggers[pkgName]; exist {
 		return loggers[pkgName], nil
@@ -294,60 +322,7 @@ func UpdateLogger(defaultFields Fields) (Logger, error) {
 	return loggers[pkgName], nil
 }
 
-//SetPackageLogLevel dynamically sets the log level of a given package to level.  This is typically invoked at an
-// application level during debugging
-func SetPackageLogLevel(packageName string, level int) {
-	// Get proper config
-	if cfg, ok := cfgs[packageName]; ok {
-		switch level {
-		case DebugLevel:
-			cfg.Level.SetLevel(zc.DebugLevel)
-		case InfoLevel:
-			cfg.Level.SetLevel(zc.InfoLevel)
-		case WarnLevel:
-			cfg.Level.SetLevel(zc.WarnLevel)
-		case ErrorLevel:
-			cfg.Level.SetLevel(zc.ErrorLevel)
-		case PanicLevel:
-			cfg.Level.SetLevel(zc.PanicLevel)
-		case FatalLevel:
-			cfg.Level.SetLevel(zc.FatalLevel)
-		default:
-			cfg.Level.SetLevel(zc.ErrorLevel)
-		}
-	}
-}
-
-//SetAllLogLevel sets the log level of all registered packages to level
-func SetAllLogLevel(level int) {
-	// Get proper config
-	for _, cfg := range cfgs {
-		switch level {
-		case DebugLevel:
-			cfg.Level.SetLevel(zc.DebugLevel)
-		case InfoLevel:
-			cfg.Level.SetLevel(zc.InfoLevel)
-		case WarnLevel:
-			cfg.Level.SetLevel(zc.WarnLevel)
-		case ErrorLevel:
-			cfg.Level.SetLevel(zc.ErrorLevel)
-		case PanicLevel:
-			cfg.Level.SetLevel(zc.PanicLevel)
-		case FatalLevel:
-			cfg.Level.SetLevel(zc.FatalLevel)
-		default:
-			cfg.Level.SetLevel(zc.ErrorLevel)
-		}
-	}
-}
-
-//SetLogLevel sets the log level for the logger corresponding to the caller's package
-func SetLogLevel(level int) error {
-	pkgName, _, _, _ := getCallerInfo()
-	if _, exist := cfgs[pkgName]; !exist {
-		return errors.New(fmt.Sprint("unregistered-package-%s", pkgName))
-	}
-	cfg := cfgs[pkgName]
+func setLevel(cfg zp.Config, level int) {
 	switch level {
 	case DebugLevel:
 		cfg.Level.SetLevel(zc.DebugLevel)
@@ -364,6 +339,41 @@ func SetLogLevel(level int) error {
 	default:
 		cfg.Level.SetLevel(zc.ErrorLevel)
 	}
+}
+
+//SetPackageLogLevel dynamically sets the log level of a given package to level.  This is typically invoked at an
+// application level during debugging
+func SetPackageLogLevel(packageName string, level int) {
+	// Get proper config
+	if cfg, ok := cfgs[packageName]; ok {
+		setLevel(cfg, level)
+	}
+}
+
+//SetAllLogLevel sets the log level of all registered packages to level
+func SetAllLogLevel(level int) {
+	// Get proper config
+	for _, cfg := range cfgs {
+		setLevel(cfg, level)
+	}
+}
+
+//GetPackageLogLevel returns the current log level of a package.
+func GetPackageLogLevel(packageName string) (int, error) {
+	if cfg, ok := cfgs[packageName]; ok {
+		return levelToInt(cfg.Level.Level()), nil
+	}
+	return 0, errors.New(fmt.Sprintf("unknown-package-%s", packageName))
+}
+
+//SetLogLevel sets the log level for the logger corresponding to the caller's package
+func SetLogLevel(level int) error {
+	pkgName, _, _, _ := getCallerInfo()
+	if _, exist := cfgs[pkgName]; !exist {
+		return errors.New(fmt.Sprintf("unregistered-package-%s", pkgName))
+	}
+	cfg := cfgs[pkgName]
+	setLevel(cfg, level)
 	return nil
 }
 
@@ -593,7 +603,7 @@ func (l logger) Warningf(format string, args ...interface{}) {
 
 // V reports whether verbosity level l is at least the requested verbose level.
 func (l logger) V(level int) bool {
-	return l.parent.Core().Enabled(parseLevel(level))
+	return l.parent.Core().Enabled(intToLevel(level))
 }
 
 // With returns a logger initialized with the key-value pairs

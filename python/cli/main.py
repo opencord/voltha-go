@@ -156,6 +156,41 @@ class VolthaCli(Cmd):
         while self.history:
             self.history.pop()
 
+    @options([
+        make_option('-p', '--package', action="store", dest='package',
+                    help="Package Name"),
+        make_option('-l', '--level', action='store', dest='level'),
+    ])
+    def do_log(self, line, opts):
+
+        def logLevel(level):
+            switcher= {
+                "DEBUG": 0,
+                "INFO":1,
+                "WARNING":2,
+                "ERROR":3,
+                "CRITICAL":4,
+                "FATAL":5
+            }
+            return switcher.get(level, 3)
+
+        if opts.level is None:
+            return
+
+        stub = self.get_stub()
+        kw = dict()
+        if opts.package:
+            kw['package_name'] = "github.com/opencord/voltha-go/" + opts.package
+
+        kw['level'] = logLevel(opts.level.upper())
+
+        try:
+            logging = voltha_pb2.Logging(**kw)
+            stub.UpdateLogLevel(logging)
+            self.poutput('success')
+        except Exception as e:
+            self.poutput('Exception - {})'.format(e))
+
     def do_launch(self, line):
         """If Voltha is not running yet, launch it"""
         raise NotImplementedError('not implemented yet')
@@ -266,21 +301,6 @@ class VolthaCli(Cmd):
             completions = [d for d in self.logical_device_ids()
                            if d.startswith(text)]
         return completions
-
-    def do_xpon(self, line):
-        """xpon <optional> [device_ID] - Enter xpon level command mode"""
-        device_id = line.strip()
-        if device_id:
-            stub = self.get_stub()
-            try:
-                res = stub.GetDevice(voltha_pb2.ID(id=device_id))
-            except Exception:
-                self.poutput(
-                    self.colorize('Error: ', 'red') + 'No device id ' +
-                    self.colorize(device_id, 'blue') + ' is found')
-                return
-        sub = XponCli(self.get_channel, device_id)
-        sub.cmdloop()
 
     def do_omci(self, line):
         """omci <device_ID> - Enter OMCI level command mode"""
