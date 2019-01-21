@@ -54,7 +54,7 @@ DOCKER_IMAGE_LIST = \
 	rw_core
 
 
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core protos kafka db tests python simulators k8s afrouter arouterd
+.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core protos kafka db tests python simulators k8s afrouter arouterd base
 
 # This should to be the first and default target in this Makefile
 help:
@@ -80,7 +80,10 @@ $(DIRS_CLEAN):
 
 build: containers
 
-containers: rw_core simulated_olt simulated_onu afrouter arouterd
+containers: base rw_core simulated_olt simulated_onu afrouter arouterd
+
+base:
+	docker build $(DOCKER_BUILD_ARGS) -t base:latest -f docker/Dockerfile.base .
 
 afrouter:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}arouter:${TAG} -f docker/Dockerfile.arouter .
