@@ -13,6 +13,7 @@ RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/go
 RUN ["mkdir", "-p", "/src", "src/protos"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
 RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
+RUN ["mkdir", "-p", "/share"]
 
 # Install golang protobuf
 #RUN go get github.com/golang/protobuf/protoc-gen-go
@@ -49,26 +50,4 @@ RUN go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 # Compile protobuf files
 RUN sh /src/protos/build_protos.sh /src/protos
 
-# Build rw_core
-#RUN cd afrouter && go build -o /src/afrouter
-
-
-# -------------
-# Image creation stage
-
-#FROM alpine:3.6
-
-# Set the working directory
-#WORKDIR /app
-
-# Copy required files
-#COPY --from=build-env /src/afrouter /app/
-#COPY --from=build-env /src/arouter.json /app/
-#COPY --from=build-env /src/protos/voltha.pb /app/
-#WORKDIR config
-#WORKDIR /app
-
-#CMD cd /app && ./arouter -config config/arouter.voltha2.json
-
-# Set the config volume
-
+VOLUME /share

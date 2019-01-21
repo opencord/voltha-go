@@ -671,23 +671,44 @@ func setAffinity(client pb.ConfigurationClient, ids map[string]struct{}, backend
 	}
 }
 
+func getBackendForCore(coreId string, coreGroups [][]*rwPod) string {
+	for _,v := range(coreGroups) {
+		for _,v2 := range(v) {
+			if v2.name == coreId {
+				return v2.backend
+			}
+		}
+	}
+	log.Errorf("No backend found for core %s\n", coreId)
+	return ""
+}
+
 func monitorDiscovery(client pb.ConfigurationClient,
-						ch <-chan *ic.InterContainerMessage) {
+						ch <-chan *ic.InterContainerMessage,
+						coreGroups [][]*rwPod) {
+	var id map[string]struct{} = make(map[string]struct{})
+
 	select {
 	case msg := <-ch:
 		log.Debugf("Received a device discovery notification")
-		_ = msg
-		requestBody := &ic.InterContainerRequestBody{}
-		if err := ptypes.UnmarshalAny(msg.Body, requestBody); err != nil {
+		device := &ic.DeviceDiscovered{}
+		if err := ptypes.UnmarshalAny(msg.Body, device); err != nil {
 			log.Errorf("Could not unmarshal received notification %v", msg)
 		} else {
-			// Do something with the message here
+			// Set the affinity of the discovered device.
+			if be := getBackendForCore(device.Id, coreGroups); be != "" {
+				id[device.Id]=struct{}{}
+				setAffinity(client, id, be)
+			} else {
+				log.Error("Cant use an empty string as a backend name")
+			}
 		}
 		break
 	}
 }
 
-func startDiscoveryMonitor(client pb.ConfigurationClient) error {
+func startDiscoveryMonitor(client pb.ConfigurationClient,
+							coreGroups [][]*rwPod) error {
 	var ch <-chan *ic.InterContainerMessage
 	// Connect to kafka for discovery events
 	topic := &kafka.Topic{Name: "AffinityRouter"}
@@ -698,7 +719,7 @@ func startDiscoveryMonitor(client pb.ConfigurationClient) error {
 		log.Error("Could not subscribe to the 'AffinityRouter' channel, discovery disabled")
 		return err
 	}
-	go monitorDiscovery(client, ch)
+	go monitorDiscovery(client, ch, coreGroups)
 	return nil
 }
 
@@ -816,7 +837,7 @@ func main() {
 	}
 
 	log.Debug("Starting discovery monitoring")
-	startDiscoveryMonitor(client)
+	startDiscoveryMonitor(client, coreGroups)
 
 	log.Debugf("Starting core monitoring")
 	startCoreMonitor(client, clientset, coreFltr, coreGroups) // Never returns

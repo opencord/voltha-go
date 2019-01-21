@@ -86,10 +86,10 @@ base:
 	docker build $(DOCKER_BUILD_ARGS) -t base:latest -f docker/Dockerfile.base .
 
 afrouter:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}arouter:${TAG} -f docker/Dockerfile.arouter .
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouter:${TAG} -f docker/Dockerfile.arouter .
 
 arouterd:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}arouterd:${TAG} -f docker/Dockerfile.arouterd .
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouterd:${TAG} -f docker/Dockerfile.arouterd .
 
 rw_core:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-rw-core:${TAG} -f docker/Dockerfile.rw_core .
