@@ -1,0 +1,109 @@
+# Copyright 2019 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# simulated OLT adapter
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: adapter-simulated-olt
+  namespace: voltha
+spec:
+  clusterIP: None
+  selector:
+    app: adapter-simulated-olt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adapter-simulated-olt
+  namespace: voltha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adapter-simulated-olt
+  template:
+    metadata:
+      labels:
+        app: adapter-simulated-olt
+      annotations:
+        cni: "calico"
+    spec:
+      containers:
+        - name: adapter-simulated-olt
+          image: voltha-adapter-simulated-olt
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          args:
+            - "/app/simulated_olt"
+            - "--kafka_adapter_host=kafka.$(NAMESPACE).svc.cluster.local"
+            - "--kafka_adapter_port=9092"
+            - "--kafka_cluster_host=kafka.$(NAMESPACE).svc.cluster.local"
+            - "--kafka_cluster_port=9092"
+            - "--core_topic=rwcore"
+            - "--simulator_topic=simulated_olt"
+            - "--onu_number=1"
+          imagePullPolicy: IfNotPresent
+---
+
+# simulated ONU adapter
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: adapter-simulated-onu
+  namespace: voltha
+spec:
+  clusterIP: None
+  selector:
+    app: adapter-simulated-onu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adapter-simulated-onu
+  namespace: voltha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adapter-simulated-onu
+  template:
+    metadata:
+      labels:
+        app: adapter-simulated-onu
+      annotations:
+        cni: "calico"
+    spec:
+      containers:
+        - name: adapter-simulated-onu
+          image: voltha-adapter-simulated-onu
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          args:
+            - "/app/simulated_onu"
+            - "--kafka_adapter_host=kafka.$(NAMESPACE).svc.cluster.local"
+            - "--kafka_adapter_port=9092"
+            - "--kafka_cluster_host=kafka.$(NAMESPACE).svc.cluster.local"
+            - "--kafka_cluster_port=9092"
+            - "--core_topic=rwcore"
+            - "--simulator_topic=simulated_onu"
+          imagePullPolicy: IfNotPresent
