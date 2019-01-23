@@ -1,0 +1,40 @@
+module github.com/opencord/voltha-go
+
+require (
+	github.com/DataDog/zstd v1.3.5
+	github.com/Shopify/sarama v1.20.1
+	github.com/armon/go-metrics v0.0.0-20160717043458-3df31a1ada83
+	github.com/bsm/sarama-cluster v2.1.15+incompatible
+	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
+	github.com/coreos/etcd v3.3.11+incompatible
+	github.com/davecgh/go-spew v1.1.1
+	github.com/eapache/go-resiliency v1.1.0
+	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21
+	github.com/eapache/queue v1.1.0
+	github.com/gogo/protobuf v1.2.0
+	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
+	github.com/golang/protobuf v1.2.0
+	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
+	github.com/google/uuid v1.1.0
+	github.com/gyuho/goraph v0.0.0-20160328020532-d460590d53a9
+	github.com/hashicorp/consul v1.4.0
+	github.com/hashicorp/go-cleanhttp v0.0.0-20171218145408-d5fe4b57a186
+	github.com/hashicorp/go-rootcerts v0.0.0-20160503143440-6bb64b370b90
+	github.com/hashicorp/serf v0.0.0-20180809141758-19bbd39e421b
+	github.com/mitchellh/go-homedir v1.0.0
+	github.com/mitchellh/mapstructure v0.0.0-20181001021442-5a380f224700
+	github.com/pierrec/lz4 v0.0.0-20181005164709-635575b42742
+	github.com/pmezard/go-difflib v1.0.0
+	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
+	github.com/stretchr/testify v1.3.0
+	go.etcd.io/etcd v3.3.11+incompatible
+	go.uber.org/atomic v1.2.0
+	go.uber.org/multierr v1.1.0
+	go.uber.org/zap v1.9.1
+	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
+	golang.org/x/sys v0.0.0-20190114130336-2be517255631
+	golang.org/x/text v0.3.0
+	google.golang.org/genproto v0.0.0-20190111180523-db91494dd46c
+	google.golang.org/grpc v1.17.0
+	gopkg.in/Shopify/sarama.v1 v1.20.1
+)
