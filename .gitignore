@@ -36,6 +36,7 @@ python/**/*_pb2_grpc.py
 python/**/*.desc
 protos/**/*.pb.go
 protos/**/*.desc
+protos/voltha.pb
 
 # Editors
 *.bak
