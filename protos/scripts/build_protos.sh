@@ -29,6 +29,7 @@ export VOLTHA_PB="\
     $SRC_DIR/events.proto \
     $SRC_DIR/health.proto \
     $SRC_DIR/logical_device.proto \
+    $SRC_DIR/omci_mib_db.proto \
     $SRC_DIR/ponsim.proto \
     $SRC_DIR/voltha.proto"
 
