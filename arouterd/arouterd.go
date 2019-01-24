@@ -155,12 +155,12 @@ func getRwPods(cs *kubernetes.Clientset, coreFilter * regexp.Regexp) []*rwPod {
 
 func reconcilePodDeviceIds(pod * rwPod, ids map[string]struct{}) bool {
 	var idList cmn.IDs
-	for k,_ := range(ids) {
+	for k,_ := range ids  {
 		 idList.Items = append(idList.Items, &cmn.ID{Id:k})
 	}
 	conn,err := connect(pod.ipAddr+":50057")
 	defer conn.Close()
-	if (err != nil) {
+	if err != nil {
 		log.Debugf("Could not query devices from %s, could not connect", pod.name)
 		return false
 	}
@@ -179,7 +179,7 @@ func queryPodDeviceIds(pod * rwPod) map[string]struct{} {
 	// Open a connection to the pod
 	// port 50057
 	conn, err := connect(pod.ipAddr+":50057")
-	if (err != nil) {
+	if err != nil {
 		log.Debugf("Could not query devices from %s, could not connect", pod.name)
 		return rtrn
 	}
@@ -706,8 +706,8 @@ func setAffinity(client pb.ConfigurationClient, ids map[string]struct{}, backend
 }
 
 func getBackendForCore(coreId string, coreGroups [][]*rwPod) string {
-	for _,v := range(coreGroups) {
-		for _,v2 := range(v) {
+	for _,v := range coreGroups {
+		for _,v2 := range v {
 			if v2.name == coreId {
 				return v2.backend
 			}
@@ -757,12 +757,6 @@ func startDiscoveryMonitor(client pb.ConfigurationClient,
 	return nil
 }
 
-func deepCopyCoreGroups(coreGroups [][]*rwPod) ([][]*rwPod) {
-	var rtrn [][]*rwPod
-	return rtrn
-}
-
-
 // Determines which items in core groups
 // have changed based on the list provided
 // and returns a coreGroup with only the changed
@@ -775,12 +769,12 @@ func getAddrDiffs(coreGroups [][]*rwPod, rwPods []*rwPod) ([][]*rwPod, []*rwPod)
 	log.Debug("Get addr diffs")
 
 	// Start with an empty array
-	for k,_ := range(rtrn) {
+	for k,_ := range rtrn {
 		rtrn[k] = make([]*rwPod, 2)
 	}
 
 	// Build a list with only the new items
-	for _,v := range(rwPods) {
+	for _,v := range rwPods {
 		if hasIpAddr(coreGroups, v.ipAddr) == false {
 			nList = append(nList, v)
 		}
@@ -788,8 +782,8 @@ func getAddrDiffs(coreGroups [][]*rwPod, rwPods []*rwPod) ([][]*rwPod, []*rwPod)
 	}
 
 	// Now build the coreGroups with only the changed items
-	for k1,v1 := range(coreGroups) {
-		for k2,v2 := range(v1) {
+	for k1,v1 := range coreGroups {
+		for k2,v2 := range v1 {
 			if _,ok := ipAddrs[v2.ipAddr]; ok == false {
 				rtrn[k1][k2] = v2
 			}
@@ -808,14 +802,14 @@ func reconcileAddrDiffs(coreGroupDiffs [][]*rwPod, rwPodDiffs []*rwPod) ([][]*rw
 
 	log.Debug("Reconciling diffs")
 	log.Debug("Building server list")
-	for _,v := range(rwPodDiffs) {
+	for _,v := range rwPodDiffs {
 		log.Debugf("Adding %v to the server list", *v)
 		srvrs[v.node] = append(srvrs[v.node], v)
 	}
 
-	for k1,v1 := range(coreGroupDiffs) {
+	for k1,v1 := range coreGroupDiffs {
 		log.Debugf("k1:%v, v1:%v", k1,v1)
-		for k2,v2 :=  range(v1) {
+		for k2,v2 :=  range v1 {
 			log.Debugf("k2:%v, v2:%v", k2,v2)
 			if v2 == nil { // Nothing to do here
 				continue
@@ -847,8 +841,8 @@ func applyAddrDiffs(client pb.ConfigurationClient, coreGroups [][]*rwPod, rwPods
 	// entries and then reconcile the device ids on the core
 	// that's in the new entry with the device ids of it's
 	// active-active peer.
-	for k1,v1 := range(coreGroups) {
-		for k2,v2 := range(v1) {
+	for k1,v1 := range coreGroups {
+		for k2,v2 := range v1 {
 			if newEntries[k1][k2] != nil {
 				// TODO: Missing is the case where bothe the primary
 				// and the secondary core crash and come back.
@@ -914,8 +908,8 @@ func startCoreMonitor(client pb.ConfigurationClient,
 }
 
 func hasIpAddr(coreGroups [][]*rwPod, ipAddr string) bool {
-	for _,v1 := range(coreGroups) {
-		for _,v2 := range(v1) {
+	for _,v1 := range coreGroups {
+		for _,v2 := range v1 {
 			if v2.ipAddr == ipAddr {
 				return true
 			}
