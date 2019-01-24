@@ -54,7 +54,7 @@ DOCKER_IMAGE_LIST = \
 	rw_core
 
 
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core protos kafka db tests python simulators k8s afrouter arouterd base
+.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core ro_core protos kafka db tests python simulators k8s afrouter arouterd base
 
 # This should to be the first and default target in this Makefile
 help:
@@ -64,6 +64,7 @@ help:
 	@echo "build        : Build the docker images.\n\
                If this is the first time you are building, choose \"make build\" option."
 	@echo "rw_core      : Build the rw_core docker container"
+	@echo "ro_core      : Build the ro_core docker container"
 	@echo
 
 
@@ -80,7 +81,7 @@ $(DIRS_CLEAN):
 
 build: containers
 
-containers: base rw_core simulated_olt simulated_onu afrouter arouterd
+containers: base rw_core ro_core simulated_olt simulated_onu afrouter arouterd
 
 base:
 	docker build $(DOCKER_BUILD_ARGS) -t base:latest -f docker/Dockerfile.base .
@@ -93,6 +94,9 @@ arouterd:
 
 rw_core:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-rw-core:${TAG} -f docker/Dockerfile.rw_core .
+
+ro_core:
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-ro-core:${TAG} -f docker/Dockerfile.ro_core .
 
 simulated_olt:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-olt:${TAG} -f docker/Dockerfile.simulated_olt .
