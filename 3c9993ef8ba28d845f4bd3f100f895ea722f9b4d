@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "44d406f7_4a639e54",
+        "filename": "k8s/ro-core-pair1.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-01-24T17:32:49Z",
+      "side": 1,
+      "message": "Fine.  I will create a single file with replicas of 1",
+      "parentUuid": "50791dbe_dae7ae30",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a2f6398_db7bd009",
         "filename": "ro_core/config/config.go",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "91907442_c49e91a6",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-01-24T17:32:49Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "5a2f6398_db7bd009",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd13b356_437843a4",
         "filename": "ro_core/core/adapter_proxy.go",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2019-01-24T16:53:11Z",
       "side": 1,
       "message": "This file should not be required.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2267679_7b0173d5",
+        "filename": "ro_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-01-24T17:32:49Z",
+      "side": 1,
+      "message": "there are refs from device agent ... e.g. getPortCapability \u0026 getSwitchCapability.\n\nI will see if i can exclude it.",
+      "parentUuid": "fd13b356_437843a4",
       "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -121,6 +175,24 @@
     },
     {
       "key": {
+        "uuid": "c315a971_92234c8b",
+        "filename": "ro_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-01-24T17:32:49Z",
+      "side": 1,
+      "message": "Probably not.",
+      "parentUuid": "586016f4_e3c0ed02",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "340cb033_b3e45271",
         "filename": "ro_core/core/device_manager.go",
         "patchSetId": 1
@@ -172,6 +244,24 @@
     },
     {
       "key": {
+        "uuid": "6db4ad7f_c161655e",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-01-24T17:32:49Z",
+      "side": 1,
+      "message": "I know.  It\u0027s returning anything right now.  Shall i remove it for now?",
+      "parentUuid": "7dbbb5ba_27ba3408",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56eac420_eddd981f",
         "filename": "ro_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 1
@@ -200,6 +290,24 @@
       "writtenOn": "2019-01-24T16:53:11Z",
       "side": 1,
       "message": "Do we need this file?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d49bc24_054d03b8",
+        "filename": "ro_core/core/id.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-01-24T17:32:49Z",
+      "side": 1,
+      "message": "There are some refs.  Will try to remove those if possible",
+      "parentUuid": "ed7c286e_aa666db5",
       "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
