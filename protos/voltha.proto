@@ -88,7 +88,7 @@ message CoreInstance {
 
 message CoreInstances {
     option (yang_message_rule) = CREATE_BOTH_GROUPING_AND_CONTAINER;
-    repeated string items = 1;
+    repeated CoreInstance items = 1;
 }
 
 // Voltha represents the Voltha cluster data.  Each Core instance will hold a subset of
@@ -105,9 +105,11 @@ message Voltha {
 
     repeated Device devices = 4 [(child_node) = {key: "id"}];
 
-    repeated DeviceGroup device_groups = 5 [(child_node) = {key: "id"}];
+    repeated DeviceType device_types = 5 [(child_node) = {key: "id"}];
 
-    repeated AlarmFilter alarm_filters = 6 [(child_node) = {key: "id"}];
+    repeated DeviceGroup device_groups = 6 [(child_node) = {key: "id"}];
+
+    repeated AlarmFilter alarm_filters = 7 [(child_node) = {key: "id"}];
 
     repeated
         omci.MibDeviceData omci_mib_database = 28
