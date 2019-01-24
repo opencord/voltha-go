@@ -316,7 +316,7 @@ class AdapterRequestFacade(object):
             return False, Error(code=ErrorCode.INVALID_PARAMETERS,
                                 reason="deviceid-invalid")
 
-        op = IntType
+        op = IntType()
         if outPort:
             outPort.Unpack(op)
         else:
