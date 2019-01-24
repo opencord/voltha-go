@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+PACKAGES ?= $(shell go list ./... | grep -v /vendor/)
 
 ifeq ($(TAG),)
 TAG := latest
@@ -54,7 +55,7 @@ DOCKER_IMAGE_LIST = \
 	rw_core
 
 
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core protos kafka db tests python simulators k8s afrouter arouterd base
+.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core protos kafka db tests python simulators k8s afrouter arouterd base coverage unit-test-coverage test
 
 # This should to be the first and default target in this Makefile
 help:
@@ -99,5 +100,17 @@ simulated_olt:
 
 simulated_onu:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
+        
+coverage:
+	@hash gocovmerge > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get -u github.com/wadey/gocovmerge; \
+	fi
+	gocovmerge $(shell find . -type f -name "coverage.out") > coverage.all;\
+
+unit-test-coverage:
+	for PKG in $(PACKAGES); do go test -cover -coverprofile $$GOPATH/src/$$PKG/coverage.out $$PKG || exit 1; done;
+
+test:
+	for PKG in $(PACKAGES); do go test $$PKG || exit 1; done;
 
 # end file
