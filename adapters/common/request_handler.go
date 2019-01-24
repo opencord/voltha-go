@@ -203,22 +203,22 @@ func (rhp *RequestHandlerProxy) Process_inter_adapter_message(args []*ic.Argumen
 	return new(empty.Empty), nil
 }
 
-func (rhp *RequestHandlerProxy) Download_image(args []*ic.Argument) (*empty.Empty, error) {
-	return new(empty.Empty), nil
+func (rhp *RequestHandlerProxy) Download_image(args []*ic.Argument) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
 }
 
-func (rhp *RequestHandlerProxy) Get_image_download_status(args []*ic.Argument) (*empty.Empty, error) {
-	return new(empty.Empty), nil
+func (rhp *RequestHandlerProxy) Get_image_download_status(args []*ic.Argument) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
 }
 
-func (rhp *RequestHandlerProxy) Cancel_image_download(args []*ic.Argument) (*empty.Empty, error) {
-	return new(empty.Empty), nil
+func (rhp *RequestHandlerProxy) Cancel_image_download(args []*ic.Argument) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
 }
 
-func (rhp *RequestHandlerProxy) Activate_image_update(args []*ic.Argument) (*empty.Empty, error) {
-	return new(empty.Empty), nil
+func (rhp *RequestHandlerProxy) Activate_image_update(args []*ic.Argument) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
 }
 
-func (rhp *RequestHandlerProxy) Revert_image_update(args []*ic.Argument) (*empty.Empty, error) {
-	return new(empty.Empty), nil
+func (rhp *RequestHandlerProxy) Revert_image_update(args []*ic.Argument) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
 }

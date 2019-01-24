@@ -110,6 +110,7 @@ message ImageDownload {
         DOWNLOAD_STARTED = 3;
         DOWNLOAD_FAILED = 4;
         DOWNLOAD_UNSUPPORTED = 5;
+        DOWNLOAD_CANCELLED = 6;
     }
 
     enum ImageDownloadFailureReason {
@@ -123,9 +124,10 @@ message ImageDownload {
     enum ImageActivateState {
         IMAGE_UNKNOWN = 0;
         IMAGE_INACTIVE = 1;
-        IMAGE_ACTIVATE = 2;
+        IMAGE_ACTIVATING = 2;
         IMAGE_ACTIVE = 3;
-        IMAGE_REVERT = 4;
+        IMAGE_REVERTING = 4;
+        IMAGE_REVERTED = 5;
     }
 
     // Device Identifier

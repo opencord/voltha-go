@@ -495,3 +495,34 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 	go rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), packet.Payload)
 	return new(empty.Empty), nil
 }
+
+
+func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) (*empty.Empty, error) {
+	if len(args) < 2 {
+		log.Warn("invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceId := &voltha.ID{}
+	img := &voltha.ImageDownload{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "image_download":
+			if err := ptypes.UnmarshalAny(arg.Value, img); err != nil {
+				log.Warnw("cannot-unmarshal-imgaeDownload", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("UpdateImageDownload", log.Fields{"deviceId": deviceId.Id, "image-download": img})
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+	go rhp.deviceMgr.updateImageDownload(deviceId.Id, img)
+	return new(empty.Empty), nil
+}
