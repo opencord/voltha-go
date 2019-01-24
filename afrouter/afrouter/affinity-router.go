@@ -42,7 +42,7 @@ type AffinityRouter struct {
 	curBknd **backend
 }
 
-func NewAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router,error) {
+func newAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router,error) {
 	var err error = nil
 	var rtrn_err bool = false
 	// Validate the configuration
@@ -181,7 +181,7 @@ func NewAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router,error) 
 	// Create the backend cluster or link to an existing one 
 	ok := true
 	if dr.bkndClstr, ok = bClusters[config.backendCluster.Name]; ok == false {
-		if dr.bkndClstr, err = NewBackendCluster(config.backendCluster); err != nil {
+		if dr.bkndClstr, err = newBackendCluster(config.backendCluster); err != nil {
 			log.Errorf("Could not create a backend for router %s", config.Name)
 			rtrn_err = true
 		}

@@ -41,7 +41,7 @@ func newMethodRouter(config *RouterConfig) (Router, error) {
 	}
 	for _,rtv := range config.Routes {
 		var idx1 string
-		r,err := newRouter(config, &rtv)
+		r,err := newSubRouter(config, &rtv)
 		if err != nil {
 			return nil, err
 		}

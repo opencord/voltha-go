@@ -32,7 +32,7 @@ type RoundRobinRouter struct {
 	curBknd **backend
 }
 
-func NewRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
+func newRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 	var err error = nil
 	var rtrn_err bool = false
 	// Validate the configuration
@@ -74,7 +74,7 @@ func NewRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, erro
 	// Create the backend cluster or link to an existing one 
 	ok := true
 	if rr.bkndClstr, ok = bClusters[config.backendCluster.Name]; ok == false {
-		if rr.bkndClstr, err = NewBackendCluster(config.backendCluster); err != nil {
+		if rr.bkndClstr, err = newBackendCluster(config.backendCluster); err != nil {
 			log.Errorf("Could not create a backend for router %s", config.Name)
 			rtrn_err = true
 		}

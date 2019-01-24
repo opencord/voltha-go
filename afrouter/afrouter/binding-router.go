@@ -121,7 +121,7 @@ func (br BindingRouter) Route(sel interface{}) (*backend) {
 	return nil
 }
 
-func NewBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
+func newBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 	var rtrn_err bool = false
 	var err error = nil
 	log.Debugf("Creating binding router %s",config.Name)
@@ -213,7 +213,7 @@ func NewBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) 
 	// Create the backend cluster or link to an existing one 
 	ok := true
 	if br.bkndClstr, ok = bClusters[config.backendCluster.Name]; ok == false {
-		if br.bkndClstr, err = NewBackendCluster(config.backendCluster); err != nil {
+		if br.bkndClstr, err = newBackendCluster(config.backendCluster); err != nil {
 			log.Errorf("Could not create a backend for router %s", config.Name)
 			rtrn_err = true
 		}

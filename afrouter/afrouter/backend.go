@@ -121,7 +121,7 @@ type beClStrms struct {
 //TODO: Move the backend type (active/active etc) to the cluster
 // level. All backends should really be of the same type.
 // Create a new backend cluster
-func NewBackendCluster(conf *BackendClusterConfig) (*backendCluster, error) {
+func newBackendCluster(conf *BackendClusterConfig) (*backendCluster, error) {
 	var err error = nil
 	var rtrn_err bool = false
 	var be *backend

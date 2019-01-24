@@ -49,7 +49,7 @@ func NewArouterProxy(conf *Configuration) (*ArouterProxy, error) {
 	arProxy = &ArouterProxy{servers:make(map[string]*server)}
 	// Create all the servers listed in the configuration
 	for _,s := range conf.Servers {
-	    if ns, err := NewServer(&s); err != nil {
+	    if ns, err := newServer(&s); err != nil {
 		    log.Error("Configuration failed")
 		    return nil, err
 	    } else {
@@ -59,7 +59,7 @@ func NewArouterProxy(conf *Configuration) (*ArouterProxy, error) {
 
 	// TODO: The API is not mandatory, check if it's even in the config before
 	// trying to create it. If it isn't then don't bother but log a warning.
-	if api,err := NewApi(&conf.Api, arProxy); err != nil {
+	if api,err := newApi(&conf.Api, arProxy); err != nil {
 		return nil, err
 	} else {
 		arProxy.api = api

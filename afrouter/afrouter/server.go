@@ -63,7 +63,7 @@ var mthdSlicerExp string = `^/([a-zA-Z][a-zA-Z0-9]+)\.([a-zA-Z][a-zA-Z0-9]+)/([a
 var mthdSlicer *regexp.Regexp // The compiled regex to extract the package/service/method
 
 
-func NewServer(config *ServerConfig) (*server,error) {
+func newServer(config *ServerConfig) (*server,error) {
 	var err error = nil
 	var rtrn_err bool = false
 	var srvr *server
@@ -114,7 +114,7 @@ func NewServer(config *ServerConfig) (*server,error) {
 		log.Debugf("Configuring the routers for server %s", srvr.name)
 		for p,r := range config.routers {
 			log.Debugf("Processing router %s for package %s", r.Name,p)
-		    if dr,err := NewRouter(r); err != nil {
+		    if dr,err := newRouter(r); err != nil {
 			    log.Error(err)
 			    return nil, err
 		    } else {

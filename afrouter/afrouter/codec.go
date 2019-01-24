@@ -29,11 +29,11 @@ func Codec() grpc.Codec {
 	return CodecWithParent(&protoCodec{})
 }
 
-func CodecWithParent(fallback grpc.Codec) grpc.Codec {
-	return &rawCodec{fallback}
+func CodecWithParent(parent grpc.Codec) grpc.Codec {
+	return &transparentRoutingCodec{parent}
 }
 
-type rawCodec struct {
+type transparentRoutingCodec struct {
 	parentCodec grpc.Codec
 }
 
@@ -58,19 +58,19 @@ type nbFrame struct {
 	metaVal string
 }
 
-func (c *rawCodec) Marshal(v interface{}) ([]byte, error) {
+func (cdc *transparentRoutingCodec) Marshal(v interface{}) ([]byte, error) {
 	switch t := v.(type) {
 		case *sbFrame:
 			return t.payload, nil
 		case *nbFrame:
 			return t.payload, nil
 		default:
-			return c.parentCodec.Marshal(v)
+			return cdc.parentCodec.Marshal(v)
 	}
 
 }
 
-func (c *rawCodec) Unmarshal(data []byte, v interface{}) error {
+func (cdc *transparentRoutingCodec) Unmarshal(data []byte, v interface{}) error {
 	switch t := v.(type) {
 		case *sbFrame:
 			t.payload = data
@@ -85,15 +85,15 @@ func (c *rawCodec) Unmarshal(data []byte, v interface{}) error {
 			log.Debugf("Routing returned %v for method %s", t.be, t.mthdSlice[REQ_METHOD])
 			return nil
 		default:
-			return c.parentCodec.Unmarshal(data,v)
+			return cdc.parentCodec.Unmarshal(data,v)
 	}
 }
 
-func (c *rawCodec) String() string {
-	return fmt.Sprintf("proxy>%s", c.parentCodec.String())
+func (cdc *transparentRoutingCodec) String() string {
+	return fmt.Sprintf("%s", cdc.parentCodec.String())
 }
 
-// protoCodec is a Codec implementation with protobuf. It is the default rawCodec for gRPC.
+// protoCodec is a Codec implementation with protobuf. It is the default Codec for gRPC.
 type protoCodec struct{}
 
 func (protoCodec) Marshal(v interface{}) ([]byte, error) {
@@ -105,5 +105,5 @@ func (protoCodec) Unmarshal(data []byte, v interface{}) error {
 }
 
 func (protoCodec) String() string {
-	return "proto"
+	return "protoCodec"
 }

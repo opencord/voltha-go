@@ -38,7 +38,7 @@ type ArouterApi struct {
 	ar *ArouterProxy
 }
 
-func NewApi(config *ApiConfig, ar *ArouterProxy) (*ArouterApi, error) {
+func newApi(config *ApiConfig, ar *ArouterProxy) (*ArouterApi, error) {
 	var rtrn_err bool
 	// Create a seperate server and listener for the API
 	// Validate the ip address if one is provided

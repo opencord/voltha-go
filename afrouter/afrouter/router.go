@@ -47,7 +47,7 @@ type Router interface {
 	GetMetaKeyVal(serverStream grpc.ServerStream) (string,string,error)
 }
 
-func NewRouter(config *RouterConfig) (Router, error) {
+func newRouter(config *RouterConfig) (Router, error) {
 	r,err := newMethodRouter(config)
 	if  err == nil {
 		allRouters[r.Name()] = r
@@ -55,23 +55,23 @@ func NewRouter(config *RouterConfig) (Router, error) {
 	return r, err
 }
 
-func newRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
+func newSubRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 	idx := strIndex(rTypeNames, config.Type)
 	switch idx {
 	case RT_RPC_AFFINITY_MESSAGE:
-		r,err := NewAffinityRouter(rconf, config)
+		r,err := newAffinityRouter(rconf, config)
 		if err == nil {
 			allRouters[rconf.Name+config.Name] = r
 		}
 		return r, err
 	case RT_BINDING:
-		r,err := NewBindingRouter(rconf, config)
+		r,err := newBindingRouter(rconf, config)
 		if err == nil {
 			allRouters[rconf.Name+config.Name] = r
 		}
 		return r, err
 	case RT_ROUND_ROBIN:
-		r,err := NewRoundRobinRouter(rconf, config)
+		r,err := newRoundRobinRouter(rconf, config)
 		if err == nil {
 			allRouters[rconf.Name+config.Name] = r
 		}
