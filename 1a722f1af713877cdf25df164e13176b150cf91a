@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07121c23_f9cecf68",
+        "filename": "k8s/ro-core.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T18:35:18Z",
+      "side": 1,
+      "message": "Kafka?",
+      "revId": "1a722f1af713877cdf25df164e13176b150cf91a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74c13ac5_69057e1e",
+        "filename": "k8s/single-node/ro-core.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T18:35:18Z",
+      "side": 1,
+      "message": "You really like kafka :)",
+      "revId": "1a722f1af713877cdf25df164e13176b150cf91a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
