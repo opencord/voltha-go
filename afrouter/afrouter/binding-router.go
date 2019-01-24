@@ -203,7 +203,7 @@ func NewBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) 
 
 	// This has already been validated bfore this function
 	// is called so just use it.
-	for idx := range(rTypeNames) {
+	for idx := range rTypeNames {
 		if config.Type == rTypeNames[idx] {
 			br.routerType = idx
 			break

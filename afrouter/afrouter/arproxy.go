@@ -48,7 +48,7 @@ type ArouterProxy struct {
 func NewArouterProxy(conf *Configuration) (*ArouterProxy, error) {
 	arProxy = &ArouterProxy{servers:make(map[string]*server)}
 	// Create all the servers listed in the configuration
-	for _,s := range(conf.Servers) {
+	for _,s := range conf.Servers {
 	    if ns, err := NewServer(&s); err != nil {
 		    log.Error("Configuration failed")
 		    return nil, err

@@ -75,10 +75,10 @@ func cleanExit(err error) {
 			}
 		}
 	}
-	for _,cl := range(bClusters) {
-		for _, bknd := range(cl.backends) {
+	for _,cl := range bClusters {
+		for _, bknd := range cl.backends {
 			log.Debugf("Closing backend %s", bknd.name)
-			for _,conn := range(bknd.connections) {
+			for _,conn := range bknd.connections {
 				log.Debugf("Closing connection %s", conn.name)
 				conn.close()
 			}

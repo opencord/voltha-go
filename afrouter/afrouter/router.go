@@ -57,32 +57,28 @@ func NewRouter(config *RouterConfig) (Router, error) {
 
 func newRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 	idx := strIndex(rTypeNames, config.Type)
-	//for idx := range(rTypeNames) {
-		//if config.Type == rTypeNames[idx] {
-			switch idx {
-			case RT_RPC_AFFINITY_MESSAGE:
-				r,err := NewAffinityRouter(rconf, config)
-				if err == nil {
-					allRouters[rconf.Name+config.Name] = r
-				}
-				return r, err
-			case RT_BINDING:
-				r,err := NewBindingRouter(rconf, config)
-				if err == nil {
-					allRouters[rconf.Name+config.Name] = r
-				}
-				return r, err
-			case RT_ROUND_ROBIN:
-				r,err := NewRoundRobinRouter(rconf, config)
-				if err == nil {
-					allRouters[rconf.Name+config.Name] = r
-				}
-				return r, err
-			default:
-				return nil, errors.New(fmt.Sprintf("Internal error, undefined router type: %s", config.Type))
-			}
+	switch idx {
+	case RT_RPC_AFFINITY_MESSAGE:
+		r,err := NewAffinityRouter(rconf, config)
+		if err == nil {
+			allRouters[rconf.Name+config.Name] = r
+		}
+		return r, err
+	case RT_BINDING:
+		r,err := NewBindingRouter(rconf, config)
+		if err == nil {
+			allRouters[rconf.Name+config.Name] = r
+		}
+		return r, err
+	case RT_ROUND_ROBIN:
+		r,err := NewRoundRobinRouter(rconf, config)
+		if err == nil {
+			allRouters[rconf.Name+config.Name] = r
+		}
+		return r, err
+	default:
+		return nil, errors.New(fmt.Sprintf("Internal error, undefined router type: %s", config.Type))
+	}
 
-		//}
-	//}
 	return nil, errors.New(fmt.Sprintf("Unrecognized router type '%s'",config.Type))
 }

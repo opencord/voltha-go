@@ -39,7 +39,7 @@ func newMethodRouter(config *RouterConfig) (Router, error) {
 	if len(config.Routes) == 0 {
 		return nil, errors.New(fmt.Sprintf("Router %s must have at least one route", config.Name))
 	}
-	for _,rtv := range(config.Routes) {
+	for _,rtv := range config.Routes {
 		var idx1 string
 		r,err := newRouter(config, &rtv)
 		if err != nil {
@@ -71,7 +71,7 @@ func newMethodRouter(config *RouterConfig) (Router, error) {
 				}
 			}
 		default:
-			for _,m := range(rtv.Methods) {
+			for _,m := range rtv.Methods {
 				log.Debugf("Setting router '%s' for method '%s'",r.Name(),m)
 				if _,ok := mr.mthdRt[idx1][m]; ok == false {
 					mr.mthdRt[idx1][m] = r
@@ -107,7 +107,7 @@ func (mr MethodRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string,str
     }
 
 	// Determine if one of the method routing keys exists in the metadata
-	for k,_ := range(mr.mthdRt) {
+	for k,_ := range mr.mthdRt {
 		if  _,ok := md[k]; ok == true {
 			rtrnV = md[k][0]
 			rtrnK = k

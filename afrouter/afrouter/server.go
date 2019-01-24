@@ -112,7 +112,7 @@ func NewServer(config *ServerConfig) (*server,error) {
 		}
 		// Create the routers
 		log.Debugf("Configuring the routers for server %s", srvr.name)
-		for p,r := range(config.routers) {
+		for p,r := range config.routers {
 			log.Debugf("Processing router %s for package %s", r.Name,p)
 		    if dr,err := NewRouter(r); err != nil {
 			    log.Error(err)

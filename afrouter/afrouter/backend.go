@@ -136,7 +136,7 @@ func NewBackendCluster(conf *BackendClusterConfig) (*backendCluster, error) {
 	bClusters[bc.name] = bc
 	bc.startSerialNumberSource() // Serial numberere for active/active backends
 	idx := 0
-	for _, bec := range(conf.Backends) {
+	for _, bec := range conf.Backends {
 		if bec.Name == "" {
 			log.Errorf("A backend must have a name in cluster %s\n", conf.Name)
 			rtrn_err = true
@@ -512,7 +512,7 @@ func (strms *beClStrms) sendAll(f *nbFrame) error {
 	var rtrn error
 
 	atLeastOne := false
-	for _,strm := range(strms.strms) {
+	for _,strm := range strms.strms {
 		if strm != nil {
 			if err := strm.strm.SendMsg(f); err != nil {
 				strm.s2cRtrn = err
@@ -523,7 +523,7 @@ func (strms *beClStrms) sendAll(f *nbFrame) error {
 	// If one of the streams succeeded, declare success
 	// if none did pick an error and return it.
 	if atLeastOne == true {
-		for _,strm := range(strms.strms) {
+		for _,strm := range strms.strms {
 			if strm != nil {
 				rtrn = strm.s2cRtrn
 				if rtrn == nil {
@@ -605,7 +605,7 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 	// Connections can consist of just a name. This allows for dynamic configuration
 	// at a later time.
 	// TODO: validate that there is one connection for all but active/active backends
-	for _,cnConf := range(conf.Connections) {
+	for _,cnConf := range conf.Connections {
 		if cnConf.Name == "" {
 			log.Errorf("A connection must have a name for backend %s in cluster %s",
 						conf.Name, clusterName)

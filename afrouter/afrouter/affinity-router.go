@@ -97,7 +97,7 @@ func NewAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router,error) 
 
 	// This has already been validated bfore this function
 	// is called so just use it.
-	for idx := range(rTypeNames) {
+	for idx := range rTypeNames {
 		if config.Type == rTypeNames[idx] {
 			dr.routerType = idx
 			break
@@ -125,25 +125,25 @@ func NewAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router,error) 
 		field string
 	}
 	var msgs map[key]byte = make(map[key]byte)
-	for _,f := range(dr.protoDescriptor.File) {
+	for _,f := range dr.protoDescriptor.File {
 		// Build a temporary map of message types by name.
-		for _,m := range(f.MessageType) {
-			for _,fld := range(m.Field) {
+		for _,m := range f.MessageType {
+			for _,fld := range m.Field {
 				log.Debugf("Processing message '%s', field '%s'", *m.Name, *fld.Name)
 				msgs[key{*m.Name, *fld.Name}] = byte(*fld.Number)
 			}
 		}
 	}
 	log.Debugf("The map contains: %v", msgs)
-	for _,f := range(dr.protoDescriptor.File) {
+	for _,f := range dr.protoDescriptor.File {
 		if *f.Package == rconf.ProtoPackage {
-			for _, s:= range(f.Service) {
+			for _, s:= range f.Service {
 				if *s.Name == rconf.ProtoService {
 					log.Debugf("Loading package data '%s' for service '%s' for router '%s'", *f.Package, *s.Name, dr.name)
 					// Now create a map keyed by method name with the value being the
 					// field number of the route selector.
 					var ok bool
-					for _,m := range(s.Method) {
+					for _,m := range s.Method {
 						// Find the input type in the messages and extract the
 						// field number and save it for future reference.
 						log.Debugf("Processing method '%s'",*m.Name)

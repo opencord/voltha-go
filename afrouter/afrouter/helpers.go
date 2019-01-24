@@ -18,7 +18,7 @@
 package afrouter
 
 func strIndex(ar []string, match string) int {
-	for idx := range(ar) {
+	for idx := range ar {
 		if ar[idx] == match {
 			return idx
 		}

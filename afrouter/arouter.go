@@ -33,7 +33,7 @@ func main() {
 
 
 	conf,err := afrouter.ParseCmd()
-	if(err != nil) {
+	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
@@ -47,7 +47,7 @@ func main() {
 
 	// Parse the config file
 	err = conf.LoadConfig()
-	if(err != nil) {
+	if err != nil {
 		log.Error(err)
 		return
 	}
