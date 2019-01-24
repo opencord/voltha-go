@@ -583,6 +583,113 @@ func (dMgr *DeviceManager) addUNILogicalPort(cDevice *voltha.Device) error {
 	return nil
 }
 
+
+func (dMgr *DeviceManager) downloadImage(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
+	log.Debugw("downloadImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	var res interface{}
+	var err error
+	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+		if res, err = agent.downloadImage(ctx, img); err != nil {
+			log.Debugw("downloadImage-failed", log.Fields{"err": err, "imageName": img.Name})
+			res = err
+		}
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", img.Id)
+	}
+	sendResponse(ctx, ch, res)
+}
+
+func (dMgr *DeviceManager) cancelImageDownload(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
+	log.Debugw("cancelImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	var res interface{}
+	var err error
+	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+		if res, err = agent.cancelImageDownload(ctx, img); err != nil {
+			log.Debugw("cancelImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
+			res = err
+		}
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", img.Id)
+	}
+	sendResponse(ctx, ch, res)
+}
+
+func (dMgr *DeviceManager) activateImage(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
+	log.Debugw("activateImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	var res interface{}
+	var err error
+	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+		if res, err = agent.activateImage(ctx, img); err != nil {
+			log.Debugw("activateImage-failed", log.Fields{"err": err, "imageName": img.Name})
+			res = err
+		}
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", img.Id)
+	}
+	sendResponse(ctx, ch, res)
+}
+
+func (dMgr *DeviceManager) revertImage(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
+	log.Debugw("revertImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	var res interface{}
+	var err error
+	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+		if res, err = agent.revertImage(ctx, img); err != nil {
+			log.Debugw("revertImage-failed", log.Fields{"err": err, "imageName": img.Name})
+			res = err
+		}
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", img.Id)
+	}
+	sendResponse(ctx, ch, res)
+}
+
+func (dMgr *DeviceManager) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
+	log.Debugw("getImageDownloadStatus", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	var res interface{}
+	var err error
+	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+		if res, err = agent.getImageDownloadStatus(ctx, img); err != nil {
+			log.Debugw("getImageDownloadStatus-failed", log.Fields{"err": err, "imageName": img.Name})
+			res = err
+		}
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", img.Id)
+	}
+	sendResponse(ctx, ch, res)
+}
+
+
+func (dMgr *DeviceManager) updateImageDownload(deviceId string, img *voltha.ImageDownload) error {
+	log.Debugw("updateImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		if err := agent.updateImageDownload(img); err != nil {
+			log.Debugw("updateImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
+			return err
+		}
+	} else {
+		return status.Errorf(codes.NotFound, "%s", img.Id)
+	}
+	return nil
+}
+
+func (dMgr *DeviceManager) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+	log.Debugw("getImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+		return agent.getImageDownload(ctx, img)
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", img.Id)
+}
+
+func (dMgr *DeviceManager) listImageDownloads(ctx context.Context, deviceId string) (*voltha.ImageDownloads, error) {
+	log.Debugw("listImageDownloads", log.Fields{"deviceId": deviceId})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.listImageDownloads(ctx, deviceId)
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", deviceId)
+}
+
+
 func (dMgr *DeviceManager) activateDevice(cDevice *voltha.Device) error {
 	log.Info("activateDevice")
 	return nil

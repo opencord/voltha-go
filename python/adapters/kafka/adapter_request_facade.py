@@ -26,7 +26,7 @@ from twisted.internet import reactor
 from afkak.consumer import OFFSET_LATEST, OFFSET_EARLIEST
 from python.adapters.interface import IAdapterInterface
 from python.protos.inter_container_pb2 import IntType, InterAdapterMessage, StrType, Error, ErrorCode
-from python.protos.device_pb2 import Device
+from python.protos.device_pb2 import Device, ImageDownload
 from python.protos.openflow_13_pb2 import FlowChanges, FlowGroups, Flows, \
     FlowGroupChanges, ofp_packet_out
 from python.adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
@@ -153,19 +153,85 @@ class AdapterRequestFacade(object):
                                 reason="device-invalid")
 
     def download_image(self, device, request):
-        return self.adapter.download_image(device, request)
+        d = Device()
+        if device:
+            device.Unpack(d)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
+        img = ImageDownload()
+        if request:
+            request.Unpack(img)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="port-no-invalid")
+
+        return True, self.adapter.download_image(device, request)
 
     def get_image_download_status(self, device, request):
-        return self.adapter.get_image_download_status(device, request)
+        d = Device()
+        if device:
+            device.Unpack(d)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
+        img = ImageDownload()
+        if request:
+            request.Unpack(img)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="port-no-invalid")
+
+        return True, self.adapter.get_image_download_status(device, request)
 
     def cancel_image_download(self, device, request):
-        return self.adapter.cancel_image_download(device, request)
+        d = Device()
+        if device:
+            device.Unpack(d)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
+        img = ImageDownload()
+        if request:
+            request.Unpack(img)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="port-no-invalid")
+
+        return True, self.adapter.cancel_image_download(device, request)
 
     def activate_image_update(self, device, request):
-        return self.adapter.activate_image_update(device, request)
+        d = Device()
+        if device:
+            device.Unpack(d)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
+        img = ImageDownload()
+        if request:
+            request.Unpack(img)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="port-no-invalid")
+
+        return True, self.adapter.activate_image_update(device, request)
 
     def revert_image_update(self, device, request):
-        return self.adapter.revert_image_update(device, request)
+        d = Device()
+        if device:
+            device.Unpack(d)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="device-invalid")
+        img = ImageDownload()
+        if request:
+            request.Unpack(img)
+        else:
+            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                reason="port-no-invalid")
+
+        return True, self.adapter.revert_image_update(device, request)
+
 
     def self_test(self, device):
         return self.adapter.self_test_device(device)

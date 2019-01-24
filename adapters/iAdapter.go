@@ -44,9 +44,9 @@ type IAdapter interface {
 	Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapability, error)
 	Get_ofp_port_info(device *voltha.Device, port_no int64) (*ic.PortCapability, error)
 	Process_inter_adapter_message(msg *ic.InterAdapterMessage) error
-	Download_image(device *voltha.Device, request *voltha.ImageDownload) error
-	Get_image_download_status(device *voltha.Device, request *voltha.ImageDownload) error
-	Cancel_image_download(device *voltha.Device, request *voltha.ImageDownload) error
-	Activate_image_update(device *voltha.Device, request *voltha.ImageDownload) error
-	Revert_image_update(device *voltha.Device, request *voltha.ImageDownload) error
+	Download_image(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
+	Get_image_download_status(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
+	Cancel_image_download(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
+	Activate_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
+	Revert_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
 }

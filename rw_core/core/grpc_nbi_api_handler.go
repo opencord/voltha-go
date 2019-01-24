@@ -37,6 +37,13 @@ const OF_CONTROLLER_TAG= "voltha_backend_name"
 
 const MAX_RESPONSE_TIME = 500 // milliseconds
 
+const (
+	IMAGE_DOWNLOAD = iota
+	CANCEL_IMAGE_DOWNLOAD     = iota
+	ACTIVATE_IMAGE = iota
+	REVERT_IMAGE = iota
+)
+
 type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
@@ -425,6 +432,67 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
+func (handler *APIHandler) acquireTransaction(ctx context.Context) (*KVTransaction, error) {
+	txn, err := handler.createKvTransaction(ctx)
+	if txn == nil {
+		return nil,  err
+	} else if txn.Acquired(MAX_RESPONSE_TIME) {
+		return txn, nil
+	} else {
+		txn.Close()
+		return nil, errors.New("failed-to-seize-request")
+	}
+}
+
+// processImageRequest is a helper method to execute an image download request
+func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.ImageDownload, requestType int) (*common.OperationResp, error) {
+	log.Debugw("processImageDownload", log.Fields{"img": *img, "requestType": requestType})
+	if isTestMode(ctx) {
+		resp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
+		return resp, nil
+	}
+
+	if txn, err := handler.acquireTransaction(ctx); err != nil {
+		return &common.OperationResp{}, err
+	} else {
+		defer txn.Close()
+	}
+
+	failedresponse := &common.OperationResp{Code:voltha.OperationResp_OPERATION_FAILURE}
+
+	ch := make(chan interface{})
+	defer close(ch)
+	switch requestType {
+	case IMAGE_DOWNLOAD:
+		go handler.deviceMgr.downloadImage(ctx, img, ch)
+	case CANCEL_IMAGE_DOWNLOAD:
+		go handler.deviceMgr.cancelImageDownload(ctx, img, ch)
+	case ACTIVATE_IMAGE:
+		go handler.deviceMgr.activateImage(ctx, img, ch)
+	case REVERT_IMAGE:
+		go handler.deviceMgr.revertImage(ctx, img, ch)
+	default:
+		log.Warn("invalid-request-type", log.Fields{"requestType": requestType})
+		return failedresponse, status.Errorf(codes.InvalidArgument, "%d", requestType)
+	}
+	select {
+	case res := <-ch:
+		if res != nil {
+			if err, ok := res.(error); ok {
+				return failedresponse, err
+			}
+			if opResp, ok := res.(*common.OperationResp); ok {
+				return opResp, nil
+			}
+		}
+		log.Warnw("download-image-unexpected-return-type", log.Fields{"result": res})
+		return failedresponse, status.Errorf(codes.Internal, "%s", res)
+	case <-ctx.Done():
+		log.Debug("downloadImage-client-timeout")
+		return nil, ctx.Err()
+	}
+}
+
 func (handler *APIHandler) DownloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	log.Debugw("DownloadImage-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
@@ -432,35 +500,108 @@ func (handler *APIHandler) DownloadImage(ctx context.Context, img *voltha.ImageD
 		return resp, nil
 	}
 
-	return nil, errors.New("UnImplemented")
+	return handler.processImageRequest(ctx, img, IMAGE_DOWNLOAD)
 }
 
 func (handler *APIHandler) CancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
-	log.Debugw("CancelImageDownload-request", log.Fields{"img": *img})
+	log.Debugw("cancelImageDownload-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
 		resp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 		return resp, nil
 	}
-	return nil, errors.New("UnImplemented")
+	return handler.processImageRequest(ctx, img, CANCEL_IMAGE_DOWNLOAD)
 }
 
 func (handler *APIHandler) ActivateImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
-	log.Debugw("ActivateImageUpdate-request", log.Fields{"img": *img})
+	log.Debugw("activateImageUpdate-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
 		resp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 		return resp, nil
 	}
-	return nil, errors.New("UnImplemented")
+
+	return handler.processImageRequest(ctx, img, ACTIVATE_IMAGE)
 }
 
 func (handler *APIHandler) RevertImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
-	log.Debugw("RevertImageUpdate-request", log.Fields{"img": *img})
+	log.Debugw("revertImageUpdate-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
 		resp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 		return resp, nil
 	}
-	return nil, errors.New("UnImplemented")
+
+	return handler.processImageRequest(ctx, img, REVERT_IMAGE)
 }
+
+func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+	log.Debugw("getImageDownloadStatus-request", log.Fields{"img": *img})
+	if isTestMode(ctx) {
+		resp := &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_SUCCEEDED}
+		return resp, nil
+	}
+
+	failedresponse := &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
+
+	if txn, err := handler.acquireTransaction(ctx); err != nil {
+		return  failedresponse, err
+	} else {
+		defer txn.Close()
+	}
+
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.getImageDownloadStatus(ctx, img, ch)
+
+	select {
+	case res := <-ch:
+		if res != nil {
+			if err, ok := res.(error); ok {
+				return failedresponse, err
+			}
+			if downloadResp, ok := res.(*voltha.ImageDownload); ok {
+				return downloadResp, nil
+			}
+		}
+		log.Warnw("download-image-status", log.Fields{"result": res})
+		return failedresponse, status.Errorf(codes.Internal, "%s", res)
+	case <-ctx.Done():
+		log.Debug("downloadImage-client-timeout")
+		return failedresponse, ctx.Err()
+	}
+}
+
+func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+	log.Debugw("GetImageDownload-request", log.Fields{"img": *img})
+	if isTestMode(ctx) {
+		resp := &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_SUCCEEDED}
+		return resp, nil
+	}
+
+	if download, err := handler.deviceMgr.getImageDownload(ctx, img); err != nil {
+		return &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_UNKNOWN}, err
+	} else {
+		return download, nil
+	}
+}
+
+func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
+	log.Debugw("ListImageDownloads-request", log.Fields{"deviceId": id.Id})
+	if isTestMode(ctx) {
+		resp := &voltha.ImageDownloads{Items:[]*voltha.ImageDownload{}}
+		return resp, nil
+	}
+
+	if downloads, err := handler.deviceMgr.listImageDownloads(ctx, id.Id); err != nil {
+		failedResp := &voltha.ImageDownloads{
+			Items:[]*voltha.ImageDownload{
+				&voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_UNKNOWN},
+		},
+		}
+		return failedResp, err
+	} else {
+		return downloads, nil
+	}
+}
+
 
 func (handler *APIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
 	log.Debugw("UpdateDevicePmConfigs-request", log.Fields{"configs": *configs})
@@ -559,8 +700,7 @@ func (handler *APIHandler) ReceivePacketsIn(
 			}
 		}
 	}
-	log.Debugw("ReceivePacketsIn-request-done", log.Fields{"packetsIn": packetsIn})
-	return nil
+	//TODO: FInd an elegant way to get out of the above loop when the Core is stopped
 }
 
 func (handler *APIHandler) sendChangeEvent(deviceId string, portStatus *openflow_13.OfpPortStatus) {
@@ -586,8 +726,8 @@ func (handler *APIHandler) ReceiveChangeEvents(
 			log.Errorw("Failed to send change event", log.Fields{"error": err})
 		}
 	}
-	return nil
-}
+	// TODO: put the packet in the queue
+	}
 
 func (handler *APIHandler) Subscribe(
 	ctx context.Context,
