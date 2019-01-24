@@ -33,6 +33,24 @@
       "revId": "1a722f1af713877cdf25df164e13176b150cf91a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79a81ef0_5df47a56",
+        "filename": "k8s/single-node/ro-core.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-01-24T18:46:47Z",
+      "side": 1,
+      "message": "I missed these ones.  I didn\u0027t grep in the top folder",
+      "parentUuid": "74c13ac5_69057e1e",
+      "revId": "1a722f1af713877cdf25df164e13176b150cf91a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
