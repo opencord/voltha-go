@@ -1,0 +1,293 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50791dbe_dae7ae30",
+        "filename": "k8s/ro-core-pair1.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "You may want to change the name ro-core-pairx since ro_core do not come in pairs, they are fully stateless and we can start any number of them, not just 3.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2f6398_db7bd009",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Please remove all reference to kafka",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd13b356_437843a4",
+        "filename": "ro_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "This file should not be required.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e209b0a6_388f3a2b",
+        "filename": "ro_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Not needed file.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca5138c4_65da4f81",
+        "filename": "ro_core/core/common_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Maybe naming this as DataModelProxy is a clearer name?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed6b6c54_8186d35e",
+        "filename": "ro_core/core/common_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Maybe DataModelProxyManager is a better name?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "586016f4_e3c0ed02",
+        "filename": "ro_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Do we need all these callbacks?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "340cb033_b3e45271",
+        "filename": "ro_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Please remove all kafka reference.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28137ec4_1c37e380",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Since you are already in a ro_core then the comments need to be updated.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7dbbb5ba_27ba3408",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Does this return a list of rw_cores and ro_cores?   As far as I know we do not save the data in the etcd for now.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56eac420_eddd981f",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "This will not be implemented by a ro_core",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed7c286e_aa666db5",
+        "filename": "ro_core/core/id.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Do we need this file?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bee0ea4_f54de316",
+        "filename": "ro_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Do we need all these logic?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d20afffe_82cd9c6b",
+        "filename": "ro_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "We do not use the transaction in the ro_core",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72ba036c_bd1316fe",
+        "filename": "ro_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Do we need this file?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ec50b9f_7ee32f58",
+        "filename": "ro_core/graph/device_graph.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "Do we need these?",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87773a8d_bc4de0cc",
+        "filename": "ro_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-01-24T16:53:11Z",
+      "side": 1,
+      "message": "You may want to remove all reference to kafka.  Can be done in a separate Jira.",
+      "revId": "3c9993ef8ba28d845f4bd3f100f895ea722f9b4d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
