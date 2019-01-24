@@ -29,7 +29,6 @@ export VOLTHA_PB="\
     $SRC_DIR/events.proto \
     $SRC_DIR/health.proto \
     $SRC_DIR/logical_device.proto \
-    $SRC_DIR/omci_mib_db.proto \
     $SRC_DIR/ponsim.proto \
     $SRC_DIR/voltha.proto"
 
@@ -44,6 +43,7 @@ export IETF_PB="$SRC_DIR/ietf_interfaces.proto"
 export OF_PB="$SRC_DIR/openflow_13.proto"
 export OMCI_PB="$SRC_DIR/omci*.proto"
 export AFROUTER_PB="$SRC_DIR/afrouter.proto"
+export OMCI_PB="$SRC_DIR/omci_mib_db.proto"
 
 export PB_VARS="\
     VOLTHA_PB \
@@ -53,7 +53,8 @@ export PB_VARS="\
     IETF_PB \
     OF_PB \
     OMCI_PB \
-    AFROUTER_PB"
+    AFROUTER_PB \
+	OMCI_PB"
 
 export OTHER_INCLUDES="/usr/local/include/googleapis"
 export PROTO_DESC_FILE="${SRC_DIR}/voltha.pb"

@@ -37,7 +37,7 @@ func ParseCmd() (*Configuration, error) {
 	config.GrpcLog = cmdParse.Bool("grpclog", false, "Enable GRPC logging")
 
 	err := cmdParse.Parse(os.Args[1:]);
-	if(err != nil) {
+	if err != nil {
 		//return err
 		return nil, errors.New("Error parsing the command line");
 	}
@@ -192,14 +192,14 @@ func (conf * Configuration) LoadConfig() error {
 
 	// Resolve router references for the servers
 	log.Debug("Resolving references in the config file");
-	for k,_ := range(conf.Servers) {
+	for k,_ := range conf.Servers {
 		//s.routers =make(map[string]*RouterConfig)
 		conf.Servers[k].routers = make(map[string]*RouterConfig)
-		for _,rPkg := range(conf.Servers[k].Routers) {
+		for _,rPkg := range conf.Servers[k].Routers {
 			var found bool = false
 			// Locate the router "r" in the top lever Routers array
 			log.Debugf("Resolving router reference to router '%s' from server '%s'",rPkg.Router, conf.Servers[k].Name)
-			for rk, _ := range(conf.Routers) {
+			for rk, _ := range conf.Routers {
 				if conf.Routers[rk].Name == rPkg.Router && !found {
 					log.Debugf("Reference to router '%s' found for package '%s'", rPkg.Router, rPkg.Package)
 					conf.Servers[k].routers[rPkg.Package] = &conf.Routers[rk]
@@ -224,11 +224,11 @@ func (conf * Configuration) LoadConfig() error {
 	}
 
 	// Resolve backend references for the routers
-	for rk,rv := range(conf.Routers) {
-		for rtk,rtv := range(rv.Routes) {
+	for rk,rv := range conf.Routers {
+		for rtk,rtv := range rv.Routes {
 			var found bool = false
 			log.Debugf("Resolving backend reference to %s from router %s",rtv.BackendCluster, rv.Name)
-			for bek,bev := range(conf.BackendClusters) {
+			for bek,bev := range conf.BackendClusters {
 				log.Debugf("Checking cluster %s", conf.BackendClusters[bek].Name)
 				if rtv.BackendCluster == bev.Name && !found {
 					conf.Routers[rk].Routes[rtk].backendCluster = &conf.BackendClusters[bek]
