@@ -29,6 +29,8 @@ services:
         - -kafka_cluster_host=${DOCKER_HOST_IP}
         - -kafka_cluster_port=9092
         - -rw_core_topic=rwcore
+        - -kv_store_data_prefix=service/voltha
+        - -in_competing_mode=false
         - -log_level=0
     ports:
       - 50057:50057
