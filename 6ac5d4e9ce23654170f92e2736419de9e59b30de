@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "081b0bf3_ce6dee23",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1000196
+      },
+      "writtenOn": "2019-01-25T14:06:58Z",
+      "side": 1,
+      "message": "Moving the txn.Acquired call to a single spot forces all APIs to use the same timeout, which must be the maximum of all request processing times.",
+      "revId": "6ac5d4e9ce23654170f92e2736419de9e59b30de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f85990d_038f289d",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000196
+      },
+      "writtenOn": "2019-01-25T14:06:58Z",
+      "side": 1,
+      "message": "If the txn is not acquired then it should not be closed. The Close method writes a special string \"TRANSACTION-COMPLETE\" to the txn key and if the key has not been acquired, the write should not succeed.  Only the core that acquired the txn  should close it.",
+      "revId": "6ac5d4e9ce23654170f92e2736419de9e59b30de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
