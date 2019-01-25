@@ -42,6 +42,9 @@ RUN cd rw_core && go build -o /src/rw_core
 # Image creation stage
 
 FROM alpine:3.8
+RUN apk update && apk add --no-cache ca-certificates && rm -rf /var/cache/apk/*
+COPY ./voltha.crt /usr/local/share/ca-certificates/voltha.crt
+RUN update-ca-certificates
 
 # Set the working directory
 WORKDIR /app
