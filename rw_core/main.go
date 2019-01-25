@@ -124,11 +124,14 @@ func (rw *rwCore) start(ctx context.Context) {
 	err := rw.setKVClient()
 	if err == nil {
 		// Setup KV transaction context
-		c.SetTransactionContext(rw.config.InstanceID,
-			"service/voltha/transactions/",
+		txnPrefix := rw.config.KVStoreDataPrefix + "/transactions/"
+		if err = c.SetTransactionContext(rw.config.InstanceID,
+			txnPrefix,
 			rw.kvClient,
 			rw.config.KVStoreTimeout,
-			rw.config.KVTxnKeyDelTime)
+			rw.config.KVTxnKeyDelTime); err != nil {
+			log.Fatal("creating-transaction-context-failed")
+		}
 	}
 
 	// Setup Kafka Client
