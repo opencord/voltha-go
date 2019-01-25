@@ -35,7 +35,7 @@ import (
 //TODO:  Move this Tag into the proto file
 const OF_CONTROLLER_TAG= "voltha_backend_name"
 
-const MAX_RESPONSE_TIME = 500 // milliseconds
+const MAX_RESPONSE_TIME = int64(500) // milliseconds
 
 const (
 	IMAGE_DOWNLOAD = iota
@@ -48,13 +48,15 @@ type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
 	packetInQueue    *queue.Queue
+	coreInCompetingMode bool
 	da.DefaultAPIHandler
 }
 
-func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager) *APIHandler {
+func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, inCompetingMode bool) *APIHandler {
 	handler := &APIHandler{
 		deviceMgr:        deviceMgr,
 		logicalDeviceMgr: lDeviceMgr,
+		coreInCompetingMode:inCompetingMode,
 		// TODO: Figure out what the 'hint' parameter to queue.New does
 		packetInQueue: queue.New(10),
 	}
@@ -94,24 +96,35 @@ func (handler *APIHandler) createKvTransaction(ctx context.Context) (*KVTransact
 // isOFControllerRequest is a helper function to determine if a request was initiated
 // from the OpenFlow controller (or its proxy, e.g. OFAgent)
 func isOFControllerRequest(ctx context.Context) bool {
-	var (
-		ok    bool
-		md    metadata.MD
-		value []string
-	)
-	if md, ok = metadata.FromIncomingContext(ctx); !ok {
-		// No metadata
-		return false
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		// Metadata in context
+		if _, ok = md[OF_CONTROLLER_TAG]; ok {
+			// OFAgent field in metadata
+			return true
+		}
 	}
-	if value, ok = md[OF_CONTROLLER_TAG]; !ok {
-		// No OFAgent field in metadata
-		return false
+	return false
+}
+
+// competeForTransaction is a helper function to determine whether every request needs to compete with another
+// Core to execute the request
+func (handler *APIHandler) competeForTransaction() bool {
+	return handler.coreInCompetingMode
+}
+
+func (handler *APIHandler) acquireTransaction(ctx context.Context, maxTimeout ...int64) (*KVTransaction, error) {
+	timeout := MAX_RESPONSE_TIME
+	if len(maxTimeout) > 0 {
+		timeout = maxTimeout[0]
 	}
-	if value[0] == "" {
-		// OFAgent has not set a field value
-		return false
+	txn, err := handler.createKvTransaction(ctx)
+	if txn == nil {
+		return nil,  err
+	} else if txn.Acquired(timeout) {
+		return txn, nil
+	} else {
+		return nil, errors.New("failed-to-seize-request")
 	}
-	return true
 }
 
 // waitForNilResponseOnSuccess is a helper function to wait for a response on channel ch where an nil
@@ -152,16 +165,14 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 		return out, nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
 			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
 		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+			defer txn.Close()
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.logicalDeviceMgr.enableLogicalPort(ctx, id, ch)
@@ -175,16 +186,14 @@ func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *vol
 		return out, nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
 			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
 		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+			defer txn.Close()
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.logicalDeviceMgr.disableLogicalPort(ctx, id, ch)
@@ -198,16 +207,16 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 		return out, nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
-			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
-		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+	if handler.competeForTransaction() {
+		if !isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
+			if txn, err := handler.acquireTransaction(ctx); err != nil {
+				return new(empty.Empty), err
+			} else {
+				defer txn.Close()
+			}
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.logicalDeviceMgr.updateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
@@ -221,16 +230,16 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 		return out, nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
-			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
-		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+	if handler.competeForTransaction() {
+		if !isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
+			if txn, err := handler.acquireTransaction(ctx); err != nil {
+				return new(empty.Empty), err
+			} else {
+				defer txn.Close()
+			}
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.logicalDeviceMgr.updateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
@@ -267,16 +276,8 @@ func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 		return out, nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
-			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
-		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
-		}
-	}
+	// No need to grab a transaction as this request is core specific
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.ReconcileDevices(ctx, ids, ch)
@@ -308,16 +309,14 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 		return &voltha.Device{Id: device.Id}, nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
 			return &voltha.Device{}, err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
 		} else {
-			return &voltha.Device{}, errors.New("failed-to-seize-request")
+			defer txn.Close()
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.createDevice(ctx, device, ch)
@@ -347,16 +346,14 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 		return new(empty.Empty), nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
 			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
 		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+			defer txn.Close()
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.enableDevice(ctx, id, ch)
@@ -370,16 +367,14 @@ func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*e
 		return new(empty.Empty), nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
 			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
 		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+			defer txn.Close()
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.disableDevice(ctx, id, ch)
@@ -393,16 +388,14 @@ func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*em
 		return new(empty.Empty), nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
 			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
 		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+			defer txn.Close()
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.rebootDevice(ctx, id, ch)
@@ -416,32 +409,18 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 		return new(empty.Empty), nil
 	}
 
-	if isOFControllerRequest(ctx) {
-		txn, err := handler.createKvTransaction(ctx)
-		if txn == nil {
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
 			return new(empty.Empty), err
-		} else if txn.Acquired(MAX_RESPONSE_TIME) {
-			defer txn.Close() // Ensure active core signals "done" to standby
 		} else {
-			return new(empty.Empty), errors.New("failed-to-seize-request")
+			defer txn.Close()
 		}
 	}
+
 	ch := make(chan interface{})
 	defer close(ch)
 	go handler.deviceMgr.deleteDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
-}
-
-func (handler *APIHandler) acquireTransaction(ctx context.Context) (*KVTransaction, error) {
-	txn, err := handler.createKvTransaction(ctx)
-	if txn == nil {
-		return nil,  err
-	} else if txn.Acquired(MAX_RESPONSE_TIME) {
-		return txn, nil
-	} else {
-		txn.Close()
-		return nil, errors.New("failed-to-seize-request")
-	}
 }
 
 // processImageRequest is a helper method to execute an image download request
@@ -452,10 +431,12 @@ func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.
 		return resp, nil
 	}
 
-	if txn, err := handler.acquireTransaction(ctx); err != nil {
-		return &common.OperationResp{}, err
-	} else {
-		defer txn.Close()
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
+			return &common.OperationResp{}, err
+		} else {
+			defer txn.Close()
+		}
 	}
 
 	failedresponse := &common.OperationResp{Code:voltha.OperationResp_OPERATION_FAILURE}
@@ -541,10 +522,12 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 
 	failedresponse := &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
 
-	if txn, err := handler.acquireTransaction(ctx); err != nil {
-		return  failedresponse, err
-	} else {
-		defer txn.Close()
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireTransaction(ctx); err != nil {
+			return failedresponse, err
+		} else {
+			defer txn.Close()
+		}
 	}
 
 	ch := make(chan interface{})

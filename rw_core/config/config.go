@@ -26,33 +26,35 @@ import (
 const (
 	ConsulStoreName               = "consul"
 	EtcdStoreName                 = "etcd"
-	default_InstanceID            = "rwcore001"
-	default_GrpcPort              = 50057
-	default_GrpcHost              = ""
-	default_KafkaAdapterHost      = "127.0.0.1"
-	default_KafkaAdapterPort      = 9092
-	default_KafkaClusterHost      = "127.0.0.1"
-	default_KafkaClusterPort      = 9094
-	default_KVStoreType           = EtcdStoreName
-	default_KVStoreTimeout        = 5 //in seconds
-	default_KVStoreHost           = "127.0.0.1"
-	default_KVStorePort           = 2379 // Consul = 8500; Etcd = 2379
-	default_KVTxnKeyDelTime       = 60
-	default_LogLevel              = 0
-	default_Banner                = false
-	default_CoreTopic             = "rwcore"
-	default_RWCoreEndpoint        = "rwcore"
-	default_RWCoreKey             = "pki/voltha.key"
-	default_RWCoreCert            = "pki/voltha.crt"
-	default_RWCoreCA              = "pki/voltha-CA.pem"
-	default_Affinity_Router_Topic = "affinityRouter"
+	default_InstanceID           = "rwcore001"
+	default_GrpcPort             = 50057
+	default_GrpcHost             = ""
+	default_KafkaAdapterHost     = "127.0.0.1"
+	default_KafkaAdapterPort     = 9092
+	default_KafkaClusterHost     = "127.0.0.1"
+	default_KafkaClusterPort     = 9094
+	default_KVStoreType          = EtcdStoreName
+	default_KVStoreTimeout       = 5 //in seconds
+	default_KVStoreHost         = "127.0.0.1"
+	default_KVStorePort         = 2379 // Consul = 8500; Etcd = 2379
+	default_KVTxnKeyDelTime     = 60
+	default_KVStoreDataPrefix   = "service/voltha"
+	default_LogLevel            = 0
+	default_Banner              = false
+	default_CoreTopic           = "rwcore"
+	default_RWCoreEndpoint      = "rwcore"
+	default_RWCoreKey           = "pki/voltha.key"
+	default_RWCoreCert          = "pki/voltha.crt"
+	default_RWCoreCA            = "pki/voltha-CA.pem"
+	default_AffinityRouterTopic = "affinityRouter"
+	default_InCompetingMode     = true
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
 type RWCoreFlags struct {
 	// Command line parameters
-	InstanceID          string
-	RWCoreEndpoint      string
+	InstanceID           string
+	RWCoreEndpoint       string
 	GrpcHost            string
 	GrpcPort            int
 	KafkaAdapterHost    string
@@ -64,6 +66,7 @@ type RWCoreFlags struct {
 	KVStoreHost         string
 	KVStorePort         int
 	KVTxnKeyDelTime     int
+	KVStoreDataPrefix   string
 	CoreTopic           string
 	LogLevel            int
 	Banner              bool
@@ -71,6 +74,7 @@ type RWCoreFlags struct {
 	RWCoreCert          string
 	RWCoreCA            string
 	AffinityRouterTopic string
+	InCompetingMode     bool
 }
 
 func init() {
@@ -87,11 +91,12 @@ func NewRWCoreFlags() *RWCoreFlags {
 		KafkaAdapterHost:    default_KafkaAdapterHost,
 		KafkaAdapterPort:    default_KafkaAdapterPort,
 		KafkaClusterHost:    default_KafkaClusterHost,
-		KafkaClusterPort:    default_KafkaClusterPort,
-		KVStoreType:         default_KVStoreType,
+		KafkaClusterPort:     default_KafkaClusterPort,
+		KVStoreType:          default_KVStoreType,
 		KVStoreTimeout:      default_KVStoreTimeout,
 		KVStoreHost:         default_KVStoreHost,
 		KVStorePort:         default_KVStorePort,
+		KVStoreDataPrefix:   default_KVStoreDataPrefix,
 		KVTxnKeyDelTime:     default_KVTxnKeyDelTime,
 		CoreTopic:           default_CoreTopic,
 		LogLevel:            default_LogLevel,
@@ -99,7 +104,8 @@ func NewRWCoreFlags() *RWCoreFlags {
 		RWCoreKey:           default_RWCoreKey,
 		RWCoreCert:          default_RWCoreCert,
 		RWCoreCA:            default_RWCoreCA,
-		AffinityRouterTopic: default_Affinity_Router_Topic,
+		AffinityRouterTopic: default_AffinityRouterTopic,
+		InCompetingMode:     default_InCompetingMode,
 	}
 	return &rwCoreFlag
 }
@@ -134,7 +140,10 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", default_CoreTopic, help)
 
 	help = fmt.Sprintf("Affinity Router topic")
-	flag.StringVar(&(cf.AffinityRouterTopic), "affinity_router_topic", default_Affinity_Router_Topic, help)
+	flag.StringVar(&(cf.AffinityRouterTopic), "affinity_router_topic", default_AffinityRouterTopic, help)
+
+	help = fmt.Sprintf("In competing Mode - two cores competing to handle a transaction ")
+	flag.BoolVar(&cf.InCompetingMode, "in_competing_mode", default_InCompetingMode, help)
 
 	help = fmt.Sprintf("KV store type")
 	flag.StringVar(&(cf.KVStoreType), "kv_store_type", default_KVStoreType, help)
@@ -150,6 +159,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The time to wait before deleting a completed transaction key")
 	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", default_KVTxnKeyDelTime, help)
+
+	help = fmt.Sprintf("KV store data prefix")
+	flag.StringVar(&(cf.KVStoreDataPrefix), "kv_store_data_prefix", default_KVStoreDataPrefix, help)
 
 	help = fmt.Sprintf("Log level")
 	flag.IntVar(&(cf.LogLevel), "log_level", default_LogLevel, help)
