@@ -200,12 +200,13 @@ class IAdapter(object):
         log.info("adapter-update-pm-config", device=device,
                  pm_config=pm_config)
         handler = self.devices_handlers[device.id]
-        handler.update_pm_config(device, pm_config)
+        if handler:
+            reactor.callLater(0, handler.update_pm_config, device, pm_config)
 
     def process_inter_adapter_message(self, msg):
         raise NotImplementedError()
 
-    def receive_packet_out(self, logical_device_id, egress_port_no, msg):
+    def receive_packet_out(self, device_id, egress_port_no, msg):
         raise NotImplementedError()
 
     def suppress_alarm(self, filter):
@@ -288,10 +289,14 @@ class OltAdapter(IAdapter):
             reactor.callLater(0, handler.process_inter_adapter_message, msg)
 
     def receive_packet_out(self, device_id, egress_port_no, msg):
-        log.info('receive_packet_out', device_id=device_id,
-                 egress_port=egress_port_no, msg=msg)
-        handler = self.devices_handlers[device_id]
-        handler.packet_out(egress_port_no, msg.data)
+        try:
+            log.info('receive_packet_out', device_id=device_id,
+                     egress_port=egress_port_no, msg=msg)
+            handler = self.devices_handlers[device_id]
+            if handler:
+                reactor.callLater(0, handler.packet_out, egress_port_no, msg.data)
+        except Exception, e:
+            log.exception('packet-out-failure', e=e)
 
 
 """

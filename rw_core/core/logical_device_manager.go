@@ -285,7 +285,11 @@ func (ldMgr *LogicalDeviceManager) addUNILogicalPort(ctx context.Context, childD
 	log.Debugw("AddUNILogicalPort", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
 
 	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
-		return agent.addUNILogicalPort(ctx, childDevice)
+		if err := agent.addUNILogicalPort(ctx, childDevice); err != nil {
+			return err
+		}
+		// Update the device routes - let it run in its own go routine as it can take time
+		go agent.updateRoutes()
 	}
 	return status.Errorf(codes.NotFound, "%s", childDevice.Id)
 }

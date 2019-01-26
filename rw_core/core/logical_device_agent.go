@@ -110,12 +110,12 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
 		lp.DeviceId = agent.rootDeviceId
 		lp.Id = fmt.Sprintf("nni-%d", port.PortNo)
 		lp.OfpPort.PortNo = port.PortNo
-		lp.OfpPort.Name = portCap.Port.Id
+		lp.OfpPort.Name = lp.Id
 		lp.DevicePortNo = port.PortNo
 		ld.Ports = append(ld.Ports, lp)
 	}
 	agent.lockLogicalDevice.Lock()
-	defer agent.lockLogicalDevice.Unlock()
+	//defer agent.lockLogicalDevice.Unlock()
 	// Save the logical device
 	if added := agent.clusterDataProxy.AddWithID("/logical_devices", ld.Id, ld, ""); added == nil {
 		log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
@@ -132,6 +132,11 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
 
 	agent.flowProxy.RegisterCallback(model.POST_UPDATE, agent.flowTableUpdated)
 	agent.groupProxy.RegisterCallback(model.POST_UPDATE, agent.groupTableUpdated)
+
+	agent.lockLogicalDevice.Unlock()
+
+	// Setup the device graph
+	go agent.setupDeviceGraph()
 
 	return nil
 }
@@ -255,7 +260,7 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(ctx context.Context, childDev
 	if ldevice, err := agent.getLogicalDeviceWithoutLock(); err != nil {
 		return status.Error(codes.NotFound, agent.logicalDeviceId)
 	} else {
-		log.Infow("!!!!!!!!!!!ADDING-UNI", log.Fields{"deviceId": childDevice.Id})
+		log.Debugw("adding-uni", log.Fields{"deviceId": childDevice.Id})
 		portCap.Port.RootPort = false
 		//TODO: For now use the channel id assigned by the OLT as logical port number
 		lPortNo := childDevice.ProxyAddress.ChannelId
@@ -265,6 +270,7 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(ctx context.Context, childDev
 		portCap.Port.DeviceId = childDevice.Id
 		portCap.Port.DevicePortNo = uniPort
 		portCap.Port.DeviceId = childDevice.Id
+
 		ldevice.Ports = append(ldevice.Ports, portCap.Port)
 		return agent.updateLogicalDeviceWithoutLock(ldevice)
 	}
@@ -959,9 +965,6 @@ func (agent *LogicalDeviceAgent) flowTableUpdated(args ...interface{}) interface
 		return nil
 	}
 
-	// Ensure the device graph has been setup
-	agent.setupDeviceGraph()
-
 	var groups *ofp.FlowGroups
 	lDevice, _ := agent.getLogicalDeviceWithoutLock()
 	groups = lDevice.FlowGroups
@@ -1000,9 +1003,6 @@ func (agent *LogicalDeviceAgent) groupTableUpdated(args ...interface{}) interfac
 		log.Debug("flow-update-not-required")
 		return nil
 	}
-
-	// Ensure the device graph has been setup
-	agent.setupDeviceGraph()
 
 	var flows *ofp.Flows
 	lDevice, _ := agent.getLogicalDeviceWithoutLock()

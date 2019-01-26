@@ -199,6 +199,8 @@ class PonSimOnuHandler(object):
         device.root = False
         device.vendor = 'ponsim'
         device.model = 'n/a'
+        device.serial_number = device.id
+        device.mac_address = "AA:BB:CC:DD:E0:00"
         yield self.core_proxy.device_update(device)
 
         # Now set the initial PM configuration for this device
@@ -250,7 +252,7 @@ class PonSimOnuHandler(object):
         return PortCapability(
             port=LogicalPort(
                 ofp_port=ofp_port(
-                    hw_addr=mac_str_to_tuple('00:00:00:00:00:%02x' % port_no),
+                    hw_addr=mac_str_to_tuple('AA:BB:CC:DD:E0:%02x' % port_no),
                     config=0,
                     state=OFPPS_LIVE,
                     curr=cap,

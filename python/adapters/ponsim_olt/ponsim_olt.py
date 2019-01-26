@@ -340,7 +340,7 @@ class PonSimOltHandler(object):
             port=LogicalPort(
                 ofp_port=ofp_port(
                     hw_addr=mac_str_to_tuple(
-                        '00:00:00:00:00:%02x' % port_no),
+                        'AA:BB:CC:DD:EE:%02x' % port_no),
                     config=0,
                     state=OFPPS_LIVE,
                     curr=cap,
@@ -491,24 +491,28 @@ class PonSimOltHandler(object):
     def packet_out(self, egress_port, msg):
         self.log.info('sending-packet-out', egress_port=egress_port,
                       msg=hexify(msg))
-        pkt = Ether(msg)
-        out_pkt = pkt
-        if egress_port != self.nni_port.port_no:
-            # don't do the vlan manipulation for the NNI port, vlans are already correct
-            out_pkt = (
-                    Ether(src=pkt.src, dst=pkt.dst) /
-                    Dot1Q(vlan=egress_port, type=pkt.type) /
-                    pkt.payload
-            )
+        try:
+            pkt = Ether(msg)
+            out_pkt = pkt
+            if egress_port != self.nni_port.port_no:
+                # don't do the vlan manipulation for the NNI port, vlans are already correct
+                out_pkt = (
+                        Ether(src=pkt.src, dst=pkt.dst) /
+                        Dot1Q(vlan=egress_port, type=pkt.type) /
+                        pkt.payload
+                )
 
-        # TODO need better way of mapping logical ports to PON ports
-        out_port = self.nni_port.port_no if egress_port == self.nni_port.port_no else 1
+            # TODO need better way of mapping logical ports to PON ports
+            out_port = self.nni_port.port_no if egress_port == self.nni_port.port_no else 1
 
-        # send over grpc stream
-        stub = ponsim_pb2.PonSimStub(self.channel)
-        frame = PonSimFrame(id=self.device_id, payload=str(out_pkt),
-                            out_port=out_port)
-        stub.SendFrame(frame)
+            # send over grpc stream
+            stub = ponsim_pb2.PonSimStub(self.channel)
+            frame = PonSimFrame(id=self.device_id, payload=str(out_pkt),
+                                out_port=out_port)
+            stub.SendFrame(frame)
+        except Exception as e:
+            self.log.exception("error-processing-packet-out", e=e)
+
 
     @inlineCallbacks
     def reboot(self):

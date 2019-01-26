@@ -309,26 +309,29 @@ class AdapterRequestFacade(object):
 
 
     def receive_packet_out(self, deviceId, outPort, packet):
-        d_id = StrType()
-        if deviceId:
-            deviceId.Unpack(d_id)
-        else:
-            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
-                                reason="deviceid-invalid")
+        try:
+            d_id = StrType()
+            if deviceId:
+                deviceId.Unpack(d_id)
+            else:
+                return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                    reason="deviceid-invalid")
 
-        op = IntType()
-        if outPort:
-            outPort.Unpack(op)
-        else:
-            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
-                                reason="outport-invalid")
+            op = IntType()
+            if outPort:
+                outPort.Unpack(op)
+            else:
+                return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                    reason="outport-invalid")
 
-        p = ofp_packet_out()
-        if packet:
-            packet.Unpack(p)
-        else:
-            return False, Error(code=ErrorCode.INVALID_PARAMETERS,
-                                reason="packet-invalid")
+            p = ofp_packet_out()
+            if packet:
+                packet.Unpack(p)
+            else:
+                return False, Error(code=ErrorCode.INVALID_PARAMETERS,
+                                    reason="packet-invalid")
 
-        return (True, self.adapter.receive_packet_out(d_id, op, p))
+            return (True, self.adapter.receive_packet_out(d_id.val, op.val, p))
+        except Exception as e:
+            log.exception("error-processing-receive_packet_out", e=e)
 
