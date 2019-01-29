@@ -99,7 +99,7 @@ func (so *SimulatedOLT) getDeviceHandler(deviceId string) *DeviceHandler {
 func (so *SimulatedOLT) createDeviceTopic(device *voltha.Device) error {
 	log.Infow("create-device-topic", log.Fields{"deviceId": device.Id})
 	deviceTopic := kafka.Topic{Name: so.kafkaICProxy.DefaultTopic.Name + "_" + device.Id}
-	if err := so.kafkaICProxy.SubscribeWithDefaultRequestHandler(deviceTopic); err != nil {
+	if err := so.kafkaICProxy.SubscribeWithDefaultRequestHandler(deviceTopic, kafka.OffsetOldest); err != nil {
 		log.Infow("create-device-topic-failed", log.Fields{"deviceId": device.Id, "error": err})
 		return err
 	}

@@ -209,7 +209,7 @@ func (conf * Configuration) LoadConfig() error {
 						log.Debugf("Reference to router '%s' found for package '%s'", rPkg.Router, rPkg.Package)
 						conf.Servers[k].routers[rPkg.Package] = &conf.Routers[rk]
 					} else {
-						err := errors.New(fmt.Sprintf("Duplicate router '%s' defined for package '%s'",rPkg.Package))
+						err := errors.New(fmt.Sprintf("Duplicate router '%s' defined for package '%s'",rPkg.Router, rPkg.Package))
 						log.Error(err)
 						return err
 					}

@@ -26,7 +26,13 @@ const (
 )
 
 const (
+	OffsetNewest = -1
+	OffsetOldest = -2
+)
+
+const (
 	GroupIdKey = "groupId"
+	Offset = "offset"
 )
 
 const (
