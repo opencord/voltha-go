@@ -316,7 +316,7 @@ func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDo
 		}
 		// Save the image
 		clonedImg := proto.Clone(img).(*voltha.ImageDownload)
-		clonedImg.State = voltha.ImageDownload_DOWNLOAD_REQUESTED
+		clonedImg.DownloadState = voltha.ImageDownload_DOWNLOAD_REQUESTED
 		cloned := proto.Clone(device).(*voltha.Device)
 		if cloned.ImageDownloads == nil {
 			cloned.ImageDownloads = []*voltha.ImageDownload{clonedImg}
@@ -363,7 +363,7 @@ func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.I
 		cloned := proto.Clone(device).(*voltha.Device)
 		for _, image := range cloned.ImageDownloads {
 			if image.Id == img.Id && image.Name == img.Name {
-				image.State = voltha.ImageDownload_DOWNLOAD_CANCELLED
+				image.DownloadState = voltha.ImageDownload_DOWNLOAD_CANCELLED
 			}
 		}
 
@@ -488,15 +488,15 @@ func (agent *DeviceAgent) updateImageDownload(img *voltha.ImageDownload) error{
 		clonedImages := make([]*voltha.ImageDownload, len(cloned.ImageDownloads))
 		for _, image := range cloned.ImageDownloads {
 			if image.Id == img.Id && image.Name == img.Name {
-				if image.State != voltha.ImageDownload_DOWNLOAD_CANCELLED {
+				if image.DownloadState != voltha.ImageDownload_DOWNLOAD_CANCELLED {
 					clonedImages = append(clonedImages, img)
 				}
 			}
 		}
 		cloned.ImageDownloads = clonedImages
 		// Set the Admin state to enabled if required
-		if (img.State != voltha.ImageDownload_DOWNLOAD_REQUESTED &&
-			img.State != voltha.ImageDownload_DOWNLOAD_STARTED) ||
+		if (img.DownloadState != voltha.ImageDownload_DOWNLOAD_REQUESTED &&
+			img.DownloadState != voltha.ImageDownload_DOWNLOAD_STARTED) ||
 			(img.ImageState != voltha.ImageDownload_IMAGE_ACTIVATING){
 			cloned.AdminState = voltha.AdminState_ENABLED
 		}

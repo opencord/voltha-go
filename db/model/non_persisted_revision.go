@@ -250,9 +250,9 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 
-	if npr.Config.Data != nil && npr.Config.Data == data {
+	if npr.Config.Data != nil && npr.Config.hashData(npr.Root, data) == npr.Config.Hash {
 		log.Debugw("stored-data-matches-latest", log.Fields{"stored": npr.Config.Data, "provided": data})
-		return nil
+		return npr
 	}
 
 	newRev := NonPersistedRevision{}
@@ -285,10 +285,13 @@ func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision
 			existChildMap[child.GetHash()] = i
 		}
 
-		// Identify the revisions that are not present in the existing list and add them
 		for _, newChild := range children {
 			if _, childExists := existChildMap[newChild.GetHash()]; !childExists {
+				// revision is not present in the existing list... add it
 				updatedRev.Children[name] = append(updatedRev.Children[name], newChild)
+			} else {
+				// replace
+				updatedRev.Children[name][existChildMap[newChild.GetHash()]] = newChild
 			}
 		}
 	} else {

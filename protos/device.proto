@@ -144,7 +144,7 @@ message ImageDownload {
     uint32 crc = 4;
 
     // Download state
-    ImageDownloadState state = 5;
+    ImageDownloadState download_state = 5;
 
     // Downloaded version
     string image_version = 6;
