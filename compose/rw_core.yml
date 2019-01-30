@@ -31,6 +31,8 @@ services:
         - -rw_core_topic=rwcore
         - -kv_store_data_prefix=service/voltha
         - -in_competing_mode=false
+        - -timeout_long_request=3000
+        - -timeout_request=300
         - -log_level=0
     ports:
       - 50057:50057

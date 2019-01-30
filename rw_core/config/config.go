@@ -48,6 +48,8 @@ const (
 	default_RWCoreCA            = "pki/voltha-CA.pem"
 	default_AffinityRouterTopic = "affinityRouter"
 	default_InCompetingMode     = true
+	default_LongRunningRequestTimeout = int64(2000)
+	default_DefaultRequestTimeout = int64(500)
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -75,6 +77,8 @@ type RWCoreFlags struct {
 	RWCoreCA            string
 	AffinityRouterTopic string
 	InCompetingMode     bool
+	LongRunningRequestTimeout int64
+	DefaultRequestTimeout int64
 }
 
 func init() {
@@ -106,6 +110,8 @@ func NewRWCoreFlags() *RWCoreFlags {
 		RWCoreCA:            default_RWCoreCA,
 		AffinityRouterTopic: default_AffinityRouterTopic,
 		InCompetingMode:     default_InCompetingMode,
+		DefaultRequestTimeout:default_DefaultRequestTimeout,
+		LongRunningRequestTimeout:default_LongRunningRequestTimeout,
 	}
 	return &rwCoreFlag
 }
@@ -165,6 +171,12 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Log level")
 	flag.IntVar(&(cf.LogLevel), "log_level", default_LogLevel, help)
+
+	help = fmt.Sprintf("Timeout for long running request")
+	flag.Int64Var(&(cf.LongRunningRequestTimeout), "timeout_long_request", default_LongRunningRequestTimeout, help)
+
+	help = fmt.Sprintf("Default timeout for regular request")
+	flag.Int64Var(&(cf.DefaultRequestTimeout), "timeout_request", default_DefaultRequestTimeout, help)
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&cf.Banner, "banner", default_Banner, help)

@@ -35,7 +35,7 @@ import (
 //TODO:  Move this Tag into the proto file
 const OF_CONTROLLER_TAG= "voltha_backend_name"
 
-const MAX_RESPONSE_TIME = int64(500) // milliseconds
+//const MAX_RESPONSE_TIME = int64(500) // milliseconds
 
 const (
 	IMAGE_DOWNLOAD = iota
@@ -49,14 +49,18 @@ type APIHandler struct {
 	logicalDeviceMgr *LogicalDeviceManager
 	packetInQueue    *queue.Queue
 	coreInCompetingMode bool
+	longRunningRequestTimeout int64
+	defaultRequestTimeout int64
 	da.DefaultAPIHandler
 }
 
-func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, inCompetingMode bool) *APIHandler {
+func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, inCompetingMode bool, longRunningRequestTimeout int64, defaultRequestTimeout int64 ) *APIHandler {
 	handler := &APIHandler{
 		deviceMgr:        deviceMgr,
 		logicalDeviceMgr: lDeviceMgr,
 		coreInCompetingMode:inCompetingMode,
+		longRunningRequestTimeout:longRunningRequestTimeout,
+		defaultRequestTimeout:defaultRequestTimeout,
 		// TODO: Figure out what the 'hint' parameter to queue.New does
 		packetInQueue: queue.New(10),
 	}
@@ -113,10 +117,11 @@ func (handler *APIHandler) competeForTransaction() bool {
 }
 
 func (handler *APIHandler) acquireTransaction(ctx context.Context, maxTimeout ...int64) (*KVTransaction, error) {
-	timeout := MAX_RESPONSE_TIME
+	timeout := handler.defaultRequestTimeout
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
 	}
+	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
 	txn, err := handler.createKvTransaction(ctx)
 	if txn == nil {
 		return nil,  err
@@ -347,7 +352,7 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.acquireTransaction(ctx); err != nil {
+		if txn, err := handler.acquireTransaction(ctx, handler.longRunningRequestTimeout); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
