@@ -131,7 +131,13 @@ StopWatchLoop:
 				if dataPair, err := pr.kvStore.Get(pr.GetHash()); err != nil || dataPair == nil {
 					log.Errorw("update-in-memory--key-retrieval-failed", log.Fields{"key": pr.GetHash(), "error": err})
 				} else {
-					pr.UpdateData(dataPair.Value, pr.GetBranch())
+					data := reflect.New(reflect.TypeOf(pr.GetData()).Elem())
+
+					if err := proto.Unmarshal(dataPair.Value.([]byte), data.Interface().(proto.Message)); err != nil {
+						log.Errorw("update-in-memory--unmarshal-failed", log.Fields{"key": pr.GetHash(), "error": err})
+					} else {
+						pr.UpdateData(data.Interface(), pr.GetBranch())
+					}
 				}
 
 			default:

@@ -521,11 +521,11 @@ func (handler *APIHandler) RevertImageUpdate(ctx context.Context, img *voltha.Im
 func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("getImageDownloadStatus-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
-		resp := &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_SUCCEEDED}
+		resp := &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_SUCCEEDED}
 		return resp, nil
 	}
 
-	failedresponse := &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
+	failedresponse := &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
 
 	if handler.competeForTransaction() {
 		if txn, err := handler.acquireTransaction(ctx); err != nil {
@@ -560,12 +560,12 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("GetImageDownload-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
-		resp := &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_SUCCEEDED}
+		resp := &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_SUCCEEDED}
 		return resp, nil
 	}
 
 	if download, err := handler.deviceMgr.getImageDownload(ctx, img); err != nil {
-		return &voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_UNKNOWN}, err
+		return &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}, err
 	} else {
 		return download, nil
 	}
@@ -581,7 +581,7 @@ func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID
 	if downloads, err := handler.deviceMgr.listImageDownloads(ctx, id.Id); err != nil {
 		failedResp := &voltha.ImageDownloads{
 			Items:[]*voltha.ImageDownload{
-				&voltha.ImageDownload{State: voltha.ImageDownload_DOWNLOAD_UNKNOWN},
+				&voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN},
 		},
 		}
 		return failedResp, err

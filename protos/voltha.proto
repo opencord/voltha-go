@@ -146,7 +146,7 @@ service VolthaService {
     // Get more information on a given physical device
     rpc UpdateLogLevel(Logging) returns(google.protobuf.Empty) {
         option (google.api.http) = {
-            get: "/api/v1/devices/{id}"
+            get: "/api/v1/logs"
         };
     }
 
