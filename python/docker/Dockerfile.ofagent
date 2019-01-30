@@ -15,6 +15,7 @@ ARG TAG=latest
 ARG REGISTRY=
 ARG REPOSITORY=
 
+FROM ${REGISTRY}${REPOSITORY}voltha-protos:${TAG} as protos
 FROM ${REGISTRY}${REPOSITORY}voltha-base:${TAG}
 
 MAINTAINER Voltha Community <info@opennetworking.org>
@@ -33,11 +34,16 @@ RUN apt-get update && \
     rm -f *.deb
 
 # Bundle app source
-RUN mkdir /ofagent && touch /ofagent/__init__.py
+RUN mkdir -p /ofagent/ofagent/protos/third_party/google/api  && \
+        touch   /ofagent/__init__.py \
+                /ofagent/ofagent/protos/third_party/google/__init__.py \
+                /ofagent/ofagent/protos/third_party/google/api/__init__.py
 ENV PYTHONPATH=/ofagent
 COPY common /ofagent/common
 COPY ofagent /ofagent/ofagent
 COPY pki /ofagent/pki
+COPY --from=protos /protos/voltha /ofagent/ofagent/protos
+COPY --from=protos /protos/google/api /ofagent/ofagent/protos/third_party/google/api
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
