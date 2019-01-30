@@ -111,7 +111,7 @@ help:
 	@echo "adapter_ponsim_olt       : Build the ponsim olt adapter docker container"
 	@echo "adapter_ponsim_onu       : Build the ponsim olt adapter docker container"
 	@echo "adapter_openolt       : Build the openolt adapter docker container"
-	@echo "ofagent      : Build the openolt adapter docker container"
+	@echo "ofagent      : Build the openflow agent docker container"
 	@echo "tag          : Tag a set of images"
 	@echo "push         : Push the docker images to an external repository"
 	@echo "pull         : Pull the docker images from a repository"
@@ -146,7 +146,7 @@ $(DIRS_FLAKE8):
 
 build: protoc protos containers
 
-containers: base adapter_ponsim_olt adapter_ponsim_onu adapter_openolt ofagent
+containers: base adapter_ponsim_olt adapter_ponsim_onu adapter_openolt ofagent cli
 
 base:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base .
