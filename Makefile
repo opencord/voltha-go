@@ -89,6 +89,9 @@ base:
 afrouter:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouter:${TAG} -f docker/Dockerfile.arouter .
 
+afrouterTest:
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afroutertest:${TAG} -f docker/Dockerfile.arouterTest .
+
 arouterd:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouterd:${TAG} -f docker/Dockerfile.arouterd .
 
