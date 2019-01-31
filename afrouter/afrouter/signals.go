@@ -48,6 +48,7 @@ func signalHandler() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, os.Interrupt)
 	signal.Notify(sigchan, syscall.SIGTERM)
+	signal.Notify(sigchan, syscall.SIGKILL)
 
 	// Block until we receive a signal on the channel
 	<-sigchan

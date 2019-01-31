@@ -1,0 +1,87 @@
+{
+	"environment":{
+		"cmdLine":"afrouter -config arouter_test.json",
+		"protoFiles": [
+			{
+				"importPath":"github.com/opencord/voltha-go/protos/",
+				"service":"VolthaService",
+				"package":"voltha"
+			}
+		],
+		"imports": [
+			 "github.com/golang/protobuf/ptypes/empty",
+			 "github.com/opencord/voltha-go/protos/openflow_13"
+		],
+		"protoDesc":"voltha.pb",
+		"protoSubst": [
+			{
+				"from":"google.protobuf.Empty",
+				"to":"empty.Empty"
+			}
+		],
+		"clients": [
+			{
+				"name":"client",
+				"port":"5000"
+			}
+		],
+		"servers": [
+			{
+				"name":"core11",
+				"port":"5011"
+			},
+			{
+				"name":"core12",
+				"port":"5012"
+			},
+			{
+				"name":"core21",
+				"port":"5021"
+			},
+			{
+				"name":"core22",
+				"port":"5022"
+			},
+			{
+				"name":"core31",
+				"port":"5031"
+			},
+			{
+				"name":"core32",
+				"port":"5032"
+			}
+		]
+	},
+	"tests":[
+		{
+			"name":"Test CreateDevice",
+			"send": {
+				"client":"client",
+				"method":"CreateDevice",
+				"param":"{Type:\"simulated_olt\"}",
+				"expect":"{Id:\"abcd1234\",Type:\"simulated_olt\"}",
+				"_meta":""
+			},
+			"servers": [
+				{
+					"name":"core11",
+					"meta": [
+						{
+							"key":"voltha_serial_number",
+							"value":"0"
+						}
+					]
+				},
+				{
+					"name":"core12",
+					"meta": [
+						{
+							"key":"voltha_serial_number",
+							"value":"0"
+						}
+					]
+				}
+			]
+		}
+	]
+}
