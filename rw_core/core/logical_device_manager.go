@@ -291,7 +291,7 @@ func (ldMgr *LogicalDeviceManager) addUNILogicalPort(ctx context.Context, childD
 		// Update the device routes - let it run in its own go routine as it can take time
 		go agent.updateRoutes()
 	}
-	return status.Errorf(codes.NotFound, "%s", childDevice.Id)
+	return nil
 }
 
 func (ldMgr *LogicalDeviceManager) updateFlowTable(ctx context.Context, id string, flow *openflow_13.OfpFlowMod, ch chan interface{}) {

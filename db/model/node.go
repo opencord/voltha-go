@@ -801,7 +801,8 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 	field := ChildrenFields(n.Type)[name]
 	if field.IsContainer {
 		if path == "" {
-			log.Error("cannot proxy a container field")
+			//log.Error("cannot proxy a container field")
+			return n.makeProxy(path, fullPath, parentNode, exclusive)
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]

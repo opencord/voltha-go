@@ -36,6 +36,7 @@ type DeviceAgent struct {
 	deviceType       string
 	lastData         *voltha.Device
 	adapterProxy     *AdapterProxy
+	adapterMgr *AdapterManager
 	deviceMgr        *DeviceManager
 	clusterDataProxy *model.Proxy
 	deviceProxy      *model.Proxy
@@ -66,6 +67,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	agent.deviceType = cloned.Type
 	agent.lastData = cloned
 	agent.deviceMgr = deviceMgr
+	agent.adapterMgr = deviceMgr.adapterMgr
 	agent.exitChannel = make(chan int, 1)
 	agent.clusterDataProxy = cdProxy
 	agent.lockDevice = sync.RWMutex{}
@@ -136,9 +138,20 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	log.Debugw("enableDevice", log.Fields{"id": agent.deviceId})
+
 	if device, err := agent.getDeviceWithoutLock(); err != nil {
 		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
 	} else {
+		// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
+		// pre-provisionned with the required adapter not registered.   At this stage, since we need to communicate
+		// with the adapter then we need to know the adapter that will handle this request
+		if adapterName, err := agent.adapterMgr.getAdapterName(device.Type); err != nil {
+			log.Warnw("no-adapter-registered-for-device-type", log.Fields{"deviceType": device.Type, "deviceAdapter": device.Adapter})
+			return err
+		} else {
+			device.Adapter = adapterName
+		}
+
 		if device.AdminState == voltha.AdminState_ENABLED {
 			log.Debugw("device-already-enabled", log.Fields{"id": agent.deviceId})
 			//TODO:  Needs customized error message
@@ -795,7 +808,7 @@ func (agent *DeviceAgent) addPeerPort(port *voltha.Port_PeerPort) error {
 }
 
 //flowTableUpdated is the callback after flows have been updated in the model to push them
-//to the adapters
+//to the adapterAgents
 func (agent *DeviceAgent) flowTableUpdated(args ...interface{}) interface{} {
 	log.Debugw("flowTableUpdated-callback", log.Fields{"argsLen": len(args)})
 
@@ -829,11 +842,9 @@ func (agent *DeviceAgent) flowTableUpdated(args ...interface{}) interface{} {
 	}
 	groups := device.FlowGroups
 
-	// Send update to adapters
-	// TODO: Check whether the device supports incremental flow changes
-	// Assume false for test
-	acceptsAddRemoveFlowUpdates := false
-	if !acceptsAddRemoveFlowUpdates {
+	// Send update to adapterAgents
+	dType := agent.adapterMgr.getDeviceType(device.Type)
+	if !dType.AcceptsAddRemoveFlowUpdates {
 		if err := agent.adapterProxy.UpdateFlowsBulk(device, latestData, groups); err != nil {
 			log.Debugw("update-flow-bulk-error", log.Fields{"id": agent.lastData.Id, "error": err})
 			return err
@@ -871,7 +882,7 @@ func (agent *DeviceAgent) flowTableUpdated(args ...interface{}) interface{} {
 }
 
 //groupTableUpdated is the callback after group table has been updated in the model to push them
-//to the adapters
+//to the adapterAgents
 func (agent *DeviceAgent) groupTableUpdated(args ...interface{}) interface{} {
 	log.Debugw("groupTableUpdated-callback", log.Fields{"argsLen": len(args)})
 
@@ -905,7 +916,7 @@ func (agent *DeviceAgent) groupTableUpdated(args ...interface{}) interface{} {
 	}
 	flows := device.Flows
 
-	// Send update to adapters
+	// Send update to adapterAgents
 	// TODO: Check whether the device supports incremental flow changes
 	// Assume false for test
 	acceptsAddRemoveFlowUpdates := false

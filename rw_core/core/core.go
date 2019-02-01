@@ -33,6 +33,7 @@ type Core struct {
 	logicalDeviceMgr  *LogicalDeviceManager
 	grpcServer        *grpcserver.GrpcServer
 	grpcNBIAPIHandler *APIHandler
+	adapterMgr *AdapterManager
 	config            *config.RWCoreFlags
 	kmp               *kafka.InterContainerProxy
 	clusterDataRoot   model.Root
@@ -80,14 +81,16 @@ func (core *Core) Start(ctx context.Context) {
 		log.Fatal("Failure-starting-kafkaMessagingProxy")
 	}
 	log.Info("values", log.Fields{"kmp": core.kmp})
-	core.deviceMgr = newDeviceManager(core.kmp, core.clusterDataProxy, core.instanceId)
+	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.kmp, core.clusterDataProxy, core.adapterMgr, core.instanceId)
 	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.kmp, core.clusterDataProxy)
-	if err := core.registerAdapterRequestHandler(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
+	if err := core.registerAdapterRequestHandler(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
 		log.Fatal("Failure-registering-adapterRequestHandler")
 	}
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
 	go core.startGRPCService(ctx)
+	go core.startAdapterManager(ctx)
 
 	log.Info("adaptercore-started")
 }
@@ -110,7 +113,7 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false)
 	log.Info("grpc-server-created")
 
-	core.grpcNBIAPIHandler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
+	core.grpcNBIAPIHandler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 	core.logicalDeviceMgr.setGrpcNbiHandler(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
@@ -152,8 +155,8 @@ func (core *Core) startKafkaMessagingProxy(ctx context.Context) error {
 }
 
 func (core *Core) registerAdapterRequestHandler(ctx context.Context, coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager,
-	cdProxy *model.Proxy, ldProxy *model.Proxy) error {
-	requestProxy := NewAdapterRequestHandlerProxy(coreInstanceId, dMgr, ldMgr, cdProxy, ldProxy)
+	aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy) error {
+	requestProxy := NewAdapterRequestHandlerProxy(coreInstanceId, dMgr, ldMgr, aMgr, cdProxy, ldProxy)
 	core.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: core.config.CoreTopic}, requestProxy)
 
 	log.Info("request-handlers")
@@ -164,13 +167,19 @@ func (core *Core) startDeviceManager(ctx context.Context) {
 	// TODO: Interaction between the logicaldevicemanager and devicemanager should mostly occur via
 	// callbacks.  For now, until the model is ready, devicemanager will keep a reference to the
 	// logicaldevicemanager to initiate the creation of logical devices
-	log.Info("starting-DeviceManager")
+	log.Info("DeviceManager-Starting...")
 	core.deviceMgr.start(ctx, core.logicalDeviceMgr)
-	log.Info("started-DeviceManager")
+	log.Info("DeviceManager-Started")
 }
 
 func (core *Core) startLogicalDeviceManager(ctx context.Context) {
-	log.Info("starting-Logical-DeviceManager")
+	log.Info("Logical-DeviceManager-Starting...")
 	core.logicalDeviceMgr.start(ctx)
-	log.Info("started-Logical-DeviceManager")
+	log.Info("Logical-DeviceManager-Started")
+}
+
+func (core *Core) startAdapterManager(ctx context.Context) {
+	log.Info("Adapter-Manager-Starting...")
+	core.adapterMgr.start(ctx)
+	log.Info("Adapter-Manager-Started")
 }

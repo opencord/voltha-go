@@ -17,7 +17,7 @@ message DeviceType {
     // Unique name for the device type
     string id = 1;
 
-    // Unique venor id for the device type applicable to ONU
+    // Unique vendor id for the device type applicable to ONU
     // 4 bytes of vendor id from ONU serial number
     string vendor_id = 5;
 
@@ -26,12 +26,9 @@ message DeviceType {
     // Name of the adapter that handles device type
     string adapter = 2;
 
-    // Capabilitities
-
+    // Capabilities
     bool accepts_bulk_flow_update = 3;
     bool accepts_add_remove_flow_updates = 4;
-    bool accepts_direct_logical_flows_update = 7;
-
 }
 
 // A plurality of device types

@@ -47,6 +47,7 @@ const (
 type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
+	adapterMgr *AdapterManager
 	packetInQueue    *queue.Queue
 	coreInCompetingMode bool
 	longRunningRequestTimeout int64
@@ -54,10 +55,11 @@ type APIHandler struct {
 	da.DefaultAPIHandler
 }
 
-func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, inCompetingMode bool, longRunningRequestTimeout int64, defaultRequestTimeout int64 ) *APIHandler {
+func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, adapterMgr *AdapterManager, inCompetingMode bool, longRunningRequestTimeout int64, defaultRequestTimeout int64 ) *APIHandler {
 	handler := &APIHandler{
 		deviceMgr:        deviceMgr,
 		logicalDeviceMgr: lDeviceMgr,
+		adapterMgr:adapterMgr,
 		coreInCompetingMode:inCompetingMode,
 		longRunningRequestTimeout:longRunningRequestTimeout,
 		defaultRequestTimeout:defaultRequestTimeout,
@@ -299,6 +301,13 @@ func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) 
 func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
 	log.Debug("ListLogicalDevices")
 	return handler.logicalDeviceMgr.listLogicalDevices()
+}
+
+
+// ListAdapters returns the contents of all adapters known to the system
+func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
+	log.Debug("ListDevices")
+	return handler.adapterMgr.listAdapters(ctx)
 }
 
 // ListLogicalDevicePorts must be implemented in the read-only containers - should it also be implemented here?

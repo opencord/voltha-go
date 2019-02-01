@@ -33,17 +33,19 @@ type AdapterRequestHandlerProxy struct {
 	coreInstanceId   string
 	deviceMgr        *DeviceManager
 	lDeviceMgr       *LogicalDeviceManager
+	adapterMgr *AdapterManager
 	localDataProxy   *model.Proxy
 	clusterDataProxy *model.Proxy
 }
 
-func NewAdapterRequestHandlerProxy(coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager, cdProxy *model.Proxy, ldProxy *model.Proxy) *AdapterRequestHandlerProxy {
+func NewAdapterRequestHandlerProxy(coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager, aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy) *AdapterRequestHandlerProxy {
 	var proxy AdapterRequestHandlerProxy
 	proxy.coreInstanceId = coreInstanceId
 	proxy.deviceMgr = dMgr
 	proxy.lDeviceMgr = ldMgr
 	proxy.clusterDataProxy = cdProxy
 	proxy.localDataProxy = ldProxy
+	proxy.adapterMgr = aMgr
 	return &proxy
 }
 
@@ -70,12 +72,11 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 		}
 	}
 	log.Debugw("Register", log.Fields{"Adapter": *adapter, "DeviceTypes": deviceTypes, "coreId": rhp.coreInstanceId})
-	// TODO process the request and store the data in the KV store
 
 	if rhp.TestMode { // Execute only for test cases
 		return &voltha.CoreInstance{InstanceId: "CoreInstance"}, nil
 	}
-	return &voltha.CoreInstance{InstanceId: rhp.coreInstanceId}, nil
+	return rhp.adapterMgr.registerAdapter(adapter, deviceTypes), nil
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.Device, error) {
