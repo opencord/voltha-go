@@ -34,6 +34,7 @@ import (
 type DeviceManager struct {
 	deviceAgents        map[string]*DeviceAgent
 	adapterProxy        *AdapterProxy
+	adapterMgr *AdapterManager
 	logicalDeviceMgr    *LogicalDeviceManager
 	kafkaICProxy        *kafka.InterContainerProxy
 	stateTransitions    *TransitionMap
@@ -43,7 +44,7 @@ type DeviceManager struct {
 	lockDeviceAgentsMap sync.RWMutex
 }
 
-func newDeviceManager(kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy, coreInstanceId string) *DeviceManager {
+func newDeviceManager(kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy, adapterMgr *AdapterManager, coreInstanceId string) *DeviceManager {
 	var deviceMgr DeviceManager
 	deviceMgr.exitChannel = make(chan int, 1)
 	deviceMgr.deviceAgents = make(map[string]*DeviceAgent)
@@ -51,6 +52,7 @@ func newDeviceManager(kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Pr
 	deviceMgr.kafkaICProxy = kafkaICProxy
 	deviceMgr.coreInstanceId = coreInstanceId
 	deviceMgr.clusterDataProxy = cdProxy
+	deviceMgr.adapterMgr= adapterMgr
 	deviceMgr.lockDeviceAgentsMap = sync.RWMutex{}
 	return &deviceMgr
 }

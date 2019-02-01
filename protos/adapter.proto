@@ -22,7 +22,7 @@ message AdapterConfig {
 // Adapter (software plugin)
 message Adapter {
 
-    // Unique name of adapter, matching the python packate name under
+    // Unique name of adapter, matching the python package name under
     // voltha/adapters.
     string id = 1 [(access) = READ_ONLY];
     string vendor = 2 [(access) = READ_ONLY];
@@ -33,8 +33,6 @@ message Adapter {
 
     // Custom descriptors and custom configuration
     google.protobuf.Any additional_description = 64 [(access) = READ_ONLY];
-
-    repeated string logical_device_ids = 4;  // Logical devices "owned"
 
 }
 
