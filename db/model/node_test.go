@@ -22,11 +22,12 @@ import (
 	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
+	"reflect"
 	"testing"
 )
 
-func Test_Node_01_New(t *testing.T) {
-	ports := []*voltha.Port{
+var (
+	TestNode_Port = []*voltha.Port{
 		{
 			PortNo:     123,
 			Label:      "test-etcd_port-0",
@@ -37,7 +38,8 @@ func Test_Node_01_New(t *testing.T) {
 			Peers:      []*voltha.Port_PeerPort{},
 		},
 	}
-	data := &voltha.Device{
+
+	TestNode_Device = &voltha.Device{
 		Id:              "Config-SomeNode-01-new-test",
 		Type:            "simulated_olt",
 		Root:            true,
@@ -60,16 +62,33 @@ func Test_Node_01_New(t *testing.T) {
 		Reason:          "",
 		ConnectStatus:   common.ConnectStatus_REACHABLE,
 		Custom:          &any.Any{},
-		Ports:           ports,
+		Ports:           TestNode_Port,
 		Flows:           &openflow_13.Flows{},
 		FlowGroups:      &openflow_13.FlowGroups{},
 		PmConfigs:       &voltha.PmConfigs{},
 		ImageDownloads:  []*voltha.ImageDownload{},
 	}
-	root := &root{}
-	txid := fmt.Sprintf("%x", md5.Sum([]byte("node_transaction_id")))
 
-	node := NewNode(root, data, true, txid)
+	TestNode_Data = TestNode_Device
 
-	t.Logf("new SomeNode created : %+v\n", node)
+	TestNode_Txid = fmt.Sprintf("%x", md5.Sum([]byte("node_transaction_id")))
+	TestNode_Root = &root{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
+)
+
+// Exercise node creation code
+// This test will
+func TestNode_01_NewNode(t *testing.T) {
+	node := NewNode(TestNode_Root, TestNode_Data, false, TestNode_Txid)
+
+	if reflect.ValueOf(node.Type).Type() != reflect.TypeOf(TestNode_Data) {
+		t.Errorf("Node type does not match original data type: %+v", reflect.ValueOf(node.Type).Type())
+	} else if node.GetBranch(TestNode_Txid) == nil || node.GetBranch(TestNode_Txid).Latest == nil {
+		t.Errorf("No branch associated to txid: %s", TestNode_Txid)
+	} else if node.GetBranch(TestNode_Txid).Latest == nil {
+		t.Errorf("Branch has no latest revision : %s", TestNode_Txid)
+	} else if node.GetBranch(TestNode_Txid).GetLatest().GetConfig() == nil {
+		t.Errorf("Latest revision has no assigned data: %+v", node.GetBranch(TestNode_Txid).GetLatest())
+	}
+
+	t.Logf("Created new node successfully : %+v\n", node)
 }

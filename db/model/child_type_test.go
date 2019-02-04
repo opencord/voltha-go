@@ -17,53 +17,31 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/protos/voltha"
+	"reflect"
 	"testing"
 )
 
-/*
-
- */
-func Test_ChildType_01_CacheIsEmpty(t *testing.T) {
-	if getChildTypeCache().Cache != nil || len(getChildTypeCache().Cache) > 0 {
-		t.Errorf("getChildTypeCache().Cache should be empty: %+v\n", getChildTypeCache().Cache)
-	}
-	t.Logf("getChildTypeCache().Cache is empty - %+v\n", getChildTypeCache().Cache)
-}
-
-/*
-
- */
-func Test_ChildType_02_Device_Proto_ChildrenFields(t *testing.T) {
-
+// Dissect a proto message by extracting all the children fields
+func TestChildType_01_Device_Proto_ChildrenFields(t *testing.T) {
 	var cls *voltha.Device
-	//cls = &voltha.Device{Id:"testing-Config-rev-id"}
 
+	t.Logf("Extracting children fields from proto type: %s", reflect.TypeOf(cls))
 	names := ChildrenFields(cls)
+	t.Logf("Extracting children field names: %+v", names)
 
-	//tst := reflect.ValueOf(cls).Elem().FieldByName("ImageDownloads")
-	//
-	//t.Logf("############ Field by name : %+v\n", reflect.TypeOf(tst.Interface()))
-
-	if names == nil || len(names) == 0 {
-		t.Errorf("ChildrenFields failed to return names: %+v\n", names)
+	expectedKeys := []string{"ports", "flows", "flow_groups", "image_downloads", "pm_configs"}
+	for _, key := range expectedKeys {
+		if _, exists := names[key]; !exists {
+			t.Errorf("Missing key:%s from class type:%s", key, reflect.TypeOf(cls))
+		}
 	}
-	t.Logf("ChildrenFields returned names: %+v\n", names)
 }
 
-/*
-
- */
-func Test_ChildType_03_CacheHasOneEntry(t *testing.T) {
-	if getChildTypeCache().Cache == nil || len(getChildTypeCache().Cache) != 1 {
-		t.Errorf("getChildTypeCache().Cache should have one entry: %+v\n", getChildTypeCache().Cache)
+// Verify that the cache contains an entry for types on which ChildrenFields was performed
+func TestChildType_02_Cache_Keys(t *testing.T) {
+	if _, exists := getChildTypeCache().Cache[reflect.TypeOf(&voltha.Device{}).String()]; !exists {
+		t.Errorf("getChildTypeCache().Cache should have an entry of type: %+v\n", reflect.TypeOf(&voltha.Device{}).String())
 	}
-	t.Logf("getChildTypeCache().Cache has one entry: %+v\n", getChildTypeCache().Cache)
-}
-
-/*
-
- */
-func Test_ChildType_04_Cache_Keys(t *testing.T) {
 	for k := range getChildTypeCache().Cache {
 		t.Logf("getChildTypeCache().Cache Key:%+v\n", k)
 	}

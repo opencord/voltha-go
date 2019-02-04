@@ -89,7 +89,7 @@ func (b *Branch) GetRevision(hash string) Revision {
 	b.Lock()
 	defer b.Unlock()
 
-	if revision, ok := b.Revisions[hash]; !ok {
+	if revision, ok := b.Revisions[hash]; ok {
 		return revision
 	}
 

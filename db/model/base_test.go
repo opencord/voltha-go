@@ -17,9 +17,8 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/protos/common"
-	"github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
+	"runtime/debug"
 	"sync"
 )
 
@@ -34,113 +33,28 @@ type ModelTestConfig struct {
 	DbTimeout int
 }
 
-var (
-	modelTestConfig = &ModelTestConfig{
-		DbPrefix: "service/voltha",
-		DbType:   "etcd",
-		DbHost:   "localhost",
-		//DbHost:    "10.106.153.44",
-		DbPort:    2379,
-		DbTimeout: 5,
-	}
-
-	logports = []*voltha.LogicalPort{
-		{
-			Id:           "123",
-			DeviceId:     "logicalport-0-device-id",
-			DevicePortNo: 123,
-			RootPort:     false,
-		},
-	}
-	ports = []*voltha.Port{
-		{
-			PortNo:     123,
-			Label:      "test-port-0",
-			Type:       voltha.Port_PON_OLT,
-			AdminState: common.AdminState_ENABLED,
-			OperStatus: common.OperStatus_ACTIVE,
-			DeviceId:   "etcd_port-0-device-id",
-			Peers:      []*voltha.Port_PeerPort{},
-		},
-	}
-
-	stats = &openflow_13.OfpFlowStats{
-		Id: 1111,
-	}
-	flows = &openflow_13.Flows{
-		Items: []*openflow_13.OfpFlowStats{stats},
-	}
-	device = &voltha.Device{
-		Id:         devID,
-		Type:       "simulated_olt",
-		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
-		AdminState: voltha.AdminState_PREPROVISIONED,
-		Flows:      flows,
-		Ports:      ports,
-	}
-
-	logicalDevice = &voltha.LogicalDevice{
-		Id:         devID,
-		DatapathId: 0,
-		Ports:      logports,
-		Flows:      flows,
-	}
-
-	devID          string
-	ldevID         string
-	targetDevID    string
-	targetLogDevID string
-)
-
-func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
-	log.UpdateAllLoggers(log.Fields{"instanceId": "MODEL_TEST"})
-
-	defer log.CleanUp()
-
-	modelTestConfig.Backend = NewBackend(
-		modelTestConfig.DbType,
-		modelTestConfig.DbHost,
-		modelTestConfig.DbPort,
-		modelTestConfig.DbTimeout,
-		modelTestConfig.DbPrefix,
-	)
-
-	msgClass := &voltha.Voltha{}
-	root := NewRoot(msgClass, modelTestConfig.Backend)
-	//root := NewRoot(msgClass, nil)
-
-	//if modelTestConfig.Backend != nil {
-	//modelTestConfig.Root = root.Load(msgClass)
-	//} else {
-	modelTestConfig.Root = root
-	//}
-
-	GetProfiling().Report()
-
-	modelTestConfig.RootProxy = modelTestConfig.Root.node.CreateProxy("/", false)
-}
-
 func commonCallback(args ...interface{}) interface{} {
 	log.Infof("Running common callback - arg count: %s", len(args))
 
-	for i := 0; i < len(args); i++ {
-		log.Infof("ARG %d : %+v", i, args[i])
-	}
+	//for i := 0; i < len(args); i++ {
+	//	log.Infof("ARG %d : %+v", i, args[i])
+	//}
 
 	mutex := sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	execStatus := args[1].(*bool)
 
 	// Inform the caller that the callback was executed
-	mutex.Lock()
 	*execStatus = true
-	mutex.Unlock()
+	log.Infof("Changed value of exec status to true - stack:%s", string(debug.Stack()))
 
 	return nil
 }
 
 func commonCallback2(args ...interface{}) interface{} {
-	log.Infof("Running common callback - arg count: %s", len(args))
+	log.Infof("Running common2 callback - arg count: %s %+v", len(args), args)
 
 	return nil
 }

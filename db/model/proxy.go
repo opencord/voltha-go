@@ -193,7 +193,7 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 		effectivePath = p.getFullPath()
 	} else {
 		fullPath = p.getPath() + path
-		effectivePath = p.getFullPath()
+		effectivePath = p.getFullPath() + path
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)

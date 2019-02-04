@@ -21,35 +21,40 @@ import (
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/voltha"
-	"reflect"
 	"strconv"
 	"testing"
 )
 
 var (
-	txTargetDevID string
-	txDevID       string
+	TestTransaction_Root           *root
+	TestTransaction_RootProxy      *Proxy
+	TestTransaction_TargetDeviceId string
+	TestTransaction_DeviceId       string
 )
 
-func Test_Transaction_1_GetDevices(t *testing.T) {
-	getTx := modelTestConfig.RootProxy.OpenTransaction()
-
-	devices := getTx.Get("/devices", 1, false)
-
-	if len(devices.([]interface{})) == 0 {
-		t.Error("there are no available devices to retrieve")
-	} else {
-		// Save the target device id for later tests
-		txTargetDevID = devices.([]interface{})[0].(*voltha.Device).Id
-		t.Logf("retrieved devices: %+v", devices)
-	}
-
-	getTx.Commit()
+func init() {
+	TestTransaction_Root = NewRoot(&voltha.Voltha{}, nil)
+	TestTransaction_RootProxy = TestTransaction_Root.node.CreateProxy("/", false)
 }
+//func TestTransaction_1_GetDevices(t *testing.T) {
+//	getTx := TestTransaction_RootProxy.OpenTransaction()
+//
+//	devices := getTx.Get("/devices", 1, false)
+//
+//	if len(devices.([]interface{})) == 0 {
+//		t.Error("there are no available devices to retrieve")
+//	} else {
+//		// Save the target device id for later tests
+//		TestTransaction_TargetDeviceId = devices.([]interface{})[0].(*voltha.Device).Id
+//		t.Logf("retrieved devices: %+v", devices)
+//	}
+//
+//	getTx.Commit()
+//}
 
-func Test_Transaction_2_AddDevice(t *testing.T) {
+func TestTransaction_2_AddDevice(t *testing.T) {
 	devIDBin, _ := uuid.New().MarshalBinary()
-	txDevID = "0001" + hex.EncodeToString(devIDBin)[:12]
+	TestTransaction_DeviceId = "0001" + hex.EncodeToString(devIDBin)[:12]
 
 	ports := []*voltha.Port{
 		{
@@ -64,43 +69,43 @@ func Test_Transaction_2_AddDevice(t *testing.T) {
 	}
 
 	device := &voltha.Device{
-		Id:         txDevID,
+		Id:         TestTransaction_DeviceId,
 		Type:       "simulated_olt",
 		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
 		AdminState: voltha.AdminState_PREPROVISIONED,
 		Ports:      ports,
 	}
 
-	addTx := modelTestConfig.RootProxy.OpenTransaction()
+	addTx := TestTransaction_RootProxy.OpenTransaction()
 
 	if added := addTx.Add("/devices", device); added == nil {
 		t.Error("Failed to add device")
 	} else {
-		txTargetDevID = added.(*voltha.Device).Id
+		TestTransaction_TargetDeviceId = added.(*voltha.Device).Id
 		t.Logf("Added device : %+v", added)
 	}
 	addTx.Commit()
 }
 
-func Test_Transaction_3_GetDevice_PostAdd(t *testing.T) {
+func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 
-	basePath := "/devices/" + txDevID
+	basePath := "/devices/" + TestTransaction_DeviceId
 
-	getDevWithPortsTx := modelTestConfig.RootProxy.OpenTransaction()
+	getDevWithPortsTx := TestTransaction_RootProxy.OpenTransaction()
 	device1 := getDevWithPortsTx.Get(basePath+"/ports", 1, false)
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
-	getDevTx := modelTestConfig.RootProxy.OpenTransaction()
+	getDevTx := TestTransaction_RootProxy.OpenTransaction()
 	device2 := getDevTx.Get(basePath, 0, false)
 	t.Logf("retrieved device: %+v", device2)
 
 	getDevTx.Commit()
 }
 
-func Test_Transaction_4_UpdateDevice(t *testing.T) {
-	updateTx := modelTestConfig.RootProxy.OpenTransaction()
-	if retrieved := updateTx.Get("/devices/"+txTargetDevID, 1, false); retrieved == nil {
+func TestTransaction_4_UpdateDevice(t *testing.T) {
+	updateTx := TestTransaction_RootProxy.OpenTransaction()
+	if retrieved := updateTx.Get("/devices/"+TestTransaction_TargetDeviceId, 1, false); retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
 		var fwVersion int
@@ -111,39 +116,39 @@ func Test_Transaction_4_UpdateDevice(t *testing.T) {
 			fwVersion++
 		}
 
-		cloned := reflect.ValueOf(retrieved).Elem().Interface().(voltha.Device)
-		cloned.FirmwareVersion = strconv.Itoa(fwVersion)
-		t.Logf("Before update : %+v", cloned)
+		//cloned := reflect.ValueOf(retrieved).Elem().Interface().(voltha.Device)
+		retrieved.(*voltha.Device).FirmwareVersion = strconv.Itoa(fwVersion)
+		t.Logf("Before update : %+v", retrieved)
 
 		// FIXME: The makeBranch passed in function is nil or not being executed properly!!!!!
-		if afterUpdate := updateTx.Update("/devices/"+txTargetDevID, &cloned, false); afterUpdate == nil {
+		if afterUpdate := updateTx.Update("/devices/"+TestTransaction_TargetDeviceId, retrieved, false); afterUpdate == nil {
 			t.Error("Failed to update device")
 		} else {
-			t.Logf("Updated device : %+v", afterUpdate.(Revision).GetData())
+			t.Logf("Updated device : %+v", afterUpdate)
 		}
 	}
 	updateTx.Commit()
 }
 
-func Test_Transaction_5_GetDevice_PostUpdate(t *testing.T) {
+func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 
-	basePath := "/devices/" + txDevID
+	basePath := "/devices/" + TestTransaction_DeviceId
 
-	getDevWithPortsTx := modelTestConfig.RootProxy.OpenTransaction()
+	getDevWithPortsTx := TestTransaction_RootProxy.OpenTransaction()
 	device1 := getDevWithPortsTx.Get(basePath+"/ports", 1, false)
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
-	getDevTx := modelTestConfig.RootProxy.OpenTransaction()
+	getDevTx := TestTransaction_RootProxy.OpenTransaction()
 	device2 := getDevTx.Get(basePath, 0, false)
 	t.Logf("retrieved device: %+v", device2)
 
 	getDevTx.Commit()
 }
 
-func Test_Transaction_6_RemoveDevice(t *testing.T) {
-	removeTx := modelTestConfig.RootProxy.OpenTransaction()
-	if removed := removeTx.Remove("/devices/" + txDevID); removed == nil {
+func TestTransaction_6_RemoveDevice(t *testing.T) {
+	removeTx := TestTransaction_RootProxy.OpenTransaction()
+	if removed := removeTx.Remove("/devices/" + TestTransaction_DeviceId); removed == nil {
 		t.Error("Failed to remove device")
 	} else {
 		t.Logf("Removed device : %+v", removed)
@@ -151,12 +156,12 @@ func Test_Transaction_6_RemoveDevice(t *testing.T) {
 	removeTx.Commit()
 }
 
-func Test_Transaction_7_GetDevice_PostRemove(t *testing.T) {
+func TestTransaction_7_GetDevice_PostRemove(t *testing.T) {
 
-	basePath := "/devices/" + txDevID
+	basePath := "/devices/" + TestTransaction_DeviceId
 
-	getDevTx := modelTestConfig.RootProxy.OpenTransaction()
-	device := modelTestConfig.RootProxy.Get(basePath, 0, false, "")
+	getDevTx := TestTransaction_RootProxy.OpenTransaction()
+	device := TestTransaction_RootProxy.Get(basePath, 0, false, "")
 	t.Logf("retrieved device: %+v", device)
 
 	getDevTx.Commit()

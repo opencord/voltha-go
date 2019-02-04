@@ -18,7 +18,9 @@ package model
 import (
 	"encoding/hex"
 	"encoding/json"
+	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
 	"math/rand"
@@ -28,37 +30,96 @@ import (
 )
 
 var (
-	ldevProxy *Proxy
-	devProxy *Proxy
-	flowProxy *Proxy
+	TestProxy_Root                  *root
+	TestProxy_Root_LogicalDevice    *Proxy
+	TestProxy_Root_Device           *Proxy
+	TestProxy_DeviceId              string
+	TestProxy_LogicalDeviceId       string
+	TestProxy_TargetDeviceId        string
+	TestProxy_TargetLogicalDeviceId string
+	TestProxy_LogicalPorts          []*voltha.LogicalPort
+	TestProxy_Ports                 []*voltha.Port
+	TestProxy_Stats                 *openflow_13.OfpFlowStats
+	TestProxy_Flows                 *openflow_13.Flows
+	TestProxy_Device                *voltha.Device
+	TestProxy_LogicalDevice         *voltha.LogicalDevice
 )
 
 func init() {
-	ldevProxy = modelTestConfig.Root.node.CreateProxy("/", false)
-	devProxy = modelTestConfig.Root.node.CreateProxy("/", false)
+	//log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"})
+	//log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
+	TestProxy_Root = NewRoot(&voltha.Voltha{}, nil)
+	TestProxy_Root_LogicalDevice = TestProxy_Root.CreateProxy("/", false)
+	TestProxy_Root_Device = TestProxy_Root.CreateProxy("/", false)
+
+	TestProxy_LogicalPorts = []*voltha.LogicalPort{
+		{
+			Id:           "123",
+			DeviceId:     "logicalport-0-device-id",
+			DevicePortNo: 123,
+			RootPort:     false,
+		},
+	}
+	TestProxy_Ports = []*voltha.Port{
+		{
+			PortNo:     123,
+			Label:      "test-port-0",
+			Type:       voltha.Port_PON_OLT,
+			AdminState: common.AdminState_ENABLED,
+			OperStatus: common.OperStatus_ACTIVE,
+			DeviceId:   "etcd_port-0-device-id",
+			Peers:      []*voltha.Port_PeerPort{},
+		},
+	}
+
+	TestProxy_Stats = &openflow_13.OfpFlowStats{
+		Id: 1111,
+	}
+	TestProxy_Flows = &openflow_13.Flows{
+		Items: []*openflow_13.OfpFlowStats{TestProxy_Stats},
+	}
+	TestProxy_Device = &voltha.Device{
+		Id:         TestProxy_DeviceId,
+		Type:       "simulated_olt",
+		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
+		AdminState: voltha.AdminState_PREPROVISIONED,
+		Flows:      TestProxy_Flows,
+		Ports:      TestProxy_Ports,
+	}
+
+	TestProxy_LogicalDevice = &voltha.LogicalDevice{
+		Id:         TestProxy_DeviceId,
+		DatapathId: 0,
+		Ports:      TestProxy_LogicalPorts,
+		Flows:      TestProxy_Flows,
+	}
 }
 
-func Test_Proxy_1_1_1_Add_NewDevice(t *testing.T) {
+func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 	devIDBin, _ := uuid.New().MarshalBinary()
-	devID = "0001" + hex.EncodeToString(devIDBin)[:12]
-	device.Id = devID
+	TestProxy_DeviceId = "0001" + hex.EncodeToString(devIDBin)[:12]
+	TestProxy_Device.Id = TestProxy_DeviceId
 
 	preAddExecuted := false
 	postAddExecuted := false
 
+	devicesProxy := TestProxy_Root.node.CreateProxy("/devices", false)
+	devicesProxy.RegisterCallback(PRE_ADD, commonCallback2, "PRE_ADD Device container changes")
+	devicesProxy.RegisterCallback(POST_ADD, commonCallback2, "POST_ADD Device container changes")
+
 	// Register ADD instructions callbacks
-	devProxy.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
-	devProxy.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
+	TestProxy_Root_Device.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
+	TestProxy_Root_Device.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
 
 	// Add the device
-	if added := devProxy.Add("/devices", device, ""); added == nil {
+	if added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, ""); added == nil {
 		t.Error("Failed to add device")
 	} else {
 		t.Logf("Added device : %+v", added)
 	}
 
 	// Verify that the added device can now be retrieved
-	if d := devProxy.Get("/devices/"+devID, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+	if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_DeviceId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
 		t.Error("Failed to find added device")
 	} else {
 		djson, _ := json.Marshal(d)
@@ -73,45 +134,42 @@ func Test_Proxy_1_1_1_Add_NewDevice(t *testing.T) {
 	}
 }
 
-func Test_Proxy_1_1_2_Add_ExistingDevice(t *testing.T) {
-	device.Id = devID
+func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
+	TestProxy_Device.Id = TestProxy_DeviceId
 
-	if added := devProxy.Add("/devices", device, ""); added == nil {
-		t.Logf("Successfully detected that the device already exists: %s", devID)
-	} else {
-		t.Errorf("A new device should not have been created : %+v", added)
+	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "");
+	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_Device).Interface().(proto.Message).String() {
+		t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
 	}
-
 }
 
-func Test_Proxy_1_2_1_Get_AllDevices(t *testing.T) {
-	devices := devProxy.Get("/devices", 1, false, "")
+func TestProxy_1_2_1_Get_AllDevices(t *testing.T) {
+	devices := TestProxy_Root_Device.Get("/devices", 1, false, "")
 
 	if len(devices.([]interface{})) == 0 {
 		t.Error("there are no available devices to retrieve")
 	} else {
 		// Save the target device id for later tests
-		targetDevID = devices.([]interface{})[0].(*voltha.Device).Id
+		TestProxy_TargetDeviceId = devices.([]interface{})[0].(*voltha.Device).Id
 		t.Logf("retrieved all devices: %+v", devices)
 	}
 }
 
-func Test_Proxy_1_2_2_Get_SingleDevice(t *testing.T) {
-	if d := devProxy.Get("/devices/"+targetDevID, 0, false, ""); !reflect.ValueOf(d).IsValid() {
-		t.Errorf("Failed to find device : %s", targetDevID)
+func TestProxy_1_2_2_Get_SingleDevice(t *testing.T) {
+	if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_TargetDeviceId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		t.Errorf("Failed to find device : %s", TestProxy_TargetDeviceId)
 	} else {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found device: %s", string(djson))
 	}
-
 }
 
-func Test_Proxy_1_3_1_Update_Device(t *testing.T) {
+func TestProxy_1_3_1_Update_Device(t *testing.T) {
 	var fwVersion int
 	preUpdateExecuted := false
 	postUpdateExecuted := false
 
-	if retrieved := devProxy.Get("/devices/"+targetDevID, 1, false, ""); retrieved == nil {
+	if retrieved := TestProxy_Root_Device.Get("/devices/"+TestProxy_TargetDeviceId, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
 		t.Logf("Found raw device (root proxy): %+v", retrieved)
@@ -125,24 +183,24 @@ func Test_Proxy_1_3_1_Update_Device(t *testing.T) {
 
 		retrieved.(*voltha.Device).FirmwareVersion = strconv.Itoa(fwVersion)
 
-		devProxy.RegisterCallback(
+		TestProxy_Root_Device.RegisterCallback(
 			PRE_UPDATE,
 			commonCallback,
 			"PRE_UPDATE instructions (root proxy)", &preUpdateExecuted,
 		)
-		devProxy.RegisterCallback(
+		TestProxy_Root_Device.RegisterCallback(
 			POST_UPDATE,
 			commonCallback,
 			"POST_UPDATE instructions (root proxy)", &postUpdateExecuted,
 		)
 
-		if afterUpdate := devProxy.Update("/devices/"+targetDevID, retrieved, false, ""); afterUpdate == nil {
+		if afterUpdate := TestProxy_Root_Device.Update("/devices/"+TestProxy_TargetDeviceId, retrieved, false, ""); afterUpdate == nil {
 			t.Error("Failed to update device")
 		} else {
 			t.Logf("Updated device : %+v", afterUpdate)
 		}
 
-		if d := devProxy.Get("/devices/"+targetDevID, 1, false, ""); !reflect.ValueOf(d).IsValid() {
+		if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_TargetDeviceId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated device (root proxy)")
 		} else {
 			djson, _ := json.Marshal(d)
@@ -158,46 +216,46 @@ func Test_Proxy_1_3_1_Update_Device(t *testing.T) {
 	}
 }
 
-func Test_Proxy_1_3_2_Update_DeviceFlows(t *testing.T) {
+func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	// Get a device proxy and update a specific port
-	flowProxy = modelTestConfig.Root.node.CreateProxy("/devices/"+devID+"/flows", false)
-	flows := flowProxy.Get("/", 0, false, "")
+	devFlowsProxy := TestProxy_Root.node.CreateProxy("/devices/"+TestProxy_DeviceId+"/flows", false)
+	flows := devFlowsProxy.Get("/", 0, false, "")
 	flows.(*openflow_13.Flows).Items[0].TableId = 2244
 
 	preUpdateExecuted := false
 	postUpdateExecuted := false
 
-	flowProxy.RegisterCallback(
+	devFlowsProxy.RegisterCallback(
 		PRE_UPDATE,
 		commonCallback,
 		"PRE_UPDATE instructions (flows proxy)", &preUpdateExecuted,
 	)
-	flowProxy.RegisterCallback(
+	devFlowsProxy.RegisterCallback(
 		POST_UPDATE,
 		commonCallback,
 		"POST_UPDATE instructions (flows proxy)", &postUpdateExecuted,
 	)
 
-	kvFlows := flowProxy.Get("/", 0, false, "")
+	kvFlows := devFlowsProxy.Get("/", 0, false, "")
 
 	if reflect.DeepEqual(flows, kvFlows) {
 		t.Errorf("Local changes have changed the KV store contents -  local:%+v, kv: %+v", flows, kvFlows)
 	}
 
-	if updated := flowProxy.Update("/", flows.(*openflow_13.Flows), false, ""); updated == nil {
+	if updated := devFlowsProxy.Update("/", flows.(*openflow_13.Flows), false, ""); updated == nil {
 		t.Error("Failed to update flow")
 	} else {
 		t.Logf("Updated flows : %+v", updated)
 	}
 
-	if d := flowProxy.Get("/", 0, false, ""); d == nil {
+	if d := devFlowsProxy.Get("/", 0, false, ""); d == nil {
 		t.Error("Failed to find updated flows (flows proxy)")
 	} else {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found flows (flows proxy): %s", string(djson))
 	}
 
-	if d := devProxy.Get("/devices/"+devID+"/flows", 1, false, ""); !reflect.ValueOf(d).IsValid() {
+	if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_DeviceId+"/flows", 1, false, ""); !reflect.ValueOf(d).IsValid() {
 		t.Error("Failed to find updated flows (root proxy)")
 	} else {
 		djson, _ := json.Marshal(d)
@@ -212,61 +270,61 @@ func Test_Proxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	}
 }
 
-func Test_Proxy_1_4_1_Remove_Device(t *testing.T) {
+func TestProxy_1_4_1_Remove_Device(t *testing.T) {
 	preRemoveExecuted := false
 	postRemoveExecuted := false
 
-	modelTestConfig.RootProxy.RegisterCallback(
+	TestProxy_Root_Device.RegisterCallback(
 		PRE_REMOVE,
 		commonCallback,
 		"PRE_REMOVE instructions (root proxy)", &preRemoveExecuted,
 	)
-	modelTestConfig.RootProxy.RegisterCallback(
+	TestProxy_Root_Device.RegisterCallback(
 		POST_REMOVE,
 		commonCallback,
 		"POST_REMOVE instructions (root proxy)", &postRemoveExecuted,
 	)
 
-	if removed := modelTestConfig.RootProxy.Remove("/devices/"+devID, ""); removed == nil {
+	if removed := TestProxy_Root_Device.Remove("/devices/"+TestProxy_DeviceId, ""); removed == nil {
 		t.Error("Failed to remove device")
 	} else {
 		t.Logf("Removed device : %+v", removed)
 	}
-	if d := modelTestConfig.RootProxy.Get("/devices/"+devID, 0, false, ""); reflect.ValueOf(d).IsValid() {
+	if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_DeviceId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
 	} else {
-		t.Logf("Device was removed: %s", devID)
+		t.Logf("Device was removed: %s", TestProxy_DeviceId)
 	}
 
 	if !preRemoveExecuted {
-		t.Error("PRE_UPDATE callback was not executed")
+		t.Error("PRE_REMOVE callback was not executed")
 	}
 	if !postRemoveExecuted {
-		t.Error("POST_UPDATE callback was not executed")
+		t.Error("POST_REMOVE callback was not executed")
 	}
 }
 
-func Test_Proxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
+func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 
 	ldIDBin, _ := uuid.New().MarshalBinary()
-	ldevID = "0001" + hex.EncodeToString(ldIDBin)[:12]
-	logicalDevice.Id = ldevID
+	TestProxy_LogicalDeviceId = "0001" + hex.EncodeToString(ldIDBin)[:12]
+	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
 
 	preAddExecuted := false
 	postAddExecuted := false
 
 	// Register
-	ldevProxy.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
-	ldevProxy.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
+	TestProxy_Root_LogicalDevice.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
+	TestProxy_Root_LogicalDevice.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
 
-	if added := ldevProxy.Add("/logical_devices", logicalDevice, ""); added == nil {
+	if added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, ""); added == nil {
 		t.Error("Failed to add logical device")
 	} else {
 		t.Logf("Added logical device : %+v", added)
 	}
 
-	if ld := ldevProxy.Get("/logical_devices/"+ldevID, 0, false, ""); !reflect.ValueOf(ld).IsValid() {
+	if ld := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, ""); !reflect.ValueOf(ld).IsValid() {
 		t.Error("Failed to find added logical device")
 	} else {
 		ldJSON, _ := json.Marshal(ld)
@@ -281,31 +339,30 @@ func Test_Proxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 	}
 }
 
-func Test_Proxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
-	logicalDevice.Id = ldevID
-	if added := ldevProxy.Add("/logical_devices", logicalDevice, ""); added == nil {
-		t.Logf("Successfully detected that the logical device already exists: %s", ldevID)
-	} else {
-		t.Errorf("A new logical device should not have been created : %+v", added)
-	}
+func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
+	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
 
+	added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, "");
+	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_LogicalDevice).Interface().(proto.Message).String() {
+		t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
+	}
 }
 
-func Test_Proxy_2_2_1_Get_AllLogicalDevices(t *testing.T) {
-	logicalDevices := ldevProxy.Get("/logical_devices", 1, false, "")
+func TestProxy_2_2_1_Get_AllLogicalDevices(t *testing.T) {
+	logicalDevices := TestProxy_Root_LogicalDevice.Get("/logical_devices", 1, false, "")
 
 	if len(logicalDevices.([]interface{})) == 0 {
 		t.Error("there are no available logical devices to retrieve")
 	} else {
 		// Save the target device id for later tests
-		targetLogDevID = logicalDevices.([]interface{})[0].(*voltha.LogicalDevice).Id
+		TestProxy_TargetLogicalDeviceId = logicalDevices.([]interface{})[0].(*voltha.LogicalDevice).Id
 		t.Logf("retrieved all logical devices: %+v", logicalDevices)
 	}
 }
 
-func Test_Proxy_2_2_2_Get_SingleLogicalDevice(t *testing.T) {
-	if ld := ldevProxy.Get("/logical_devices/"+targetLogDevID, 0, false, ""); !reflect.ValueOf(ld).IsValid() {
-		t.Errorf("Failed to find logical device : %s", targetLogDevID)
+func TestProxy_2_2_2_Get_SingleLogicalDevice(t *testing.T) {
+	if ld := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_TargetLogicalDeviceId, 0, false, ""); !reflect.ValueOf(ld).IsValid() {
+		t.Errorf("Failed to find logical device : %s", TestProxy_TargetLogicalDeviceId)
 	} else {
 		ldJSON, _ := json.Marshal(ld)
 		t.Logf("Found logical device: %s", string(ldJSON))
@@ -313,12 +370,12 @@ func Test_Proxy_2_2_2_Get_SingleLogicalDevice(t *testing.T) {
 
 }
 
-func Test_Proxy_2_3_1_Update_LogicalDevice(t *testing.T) {
+func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 	var fwVersion int
 	preUpdateExecuted := false
 	postUpdateExecuted := false
 
-	if retrieved := ldevProxy.Get("/logical_devices/"+targetLogDevID, 1, false, ""); retrieved == nil {
+	if retrieved := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_TargetLogicalDeviceId, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get logical device")
 	} else {
 		t.Logf("Found raw logical device (root proxy): %+v", retrieved)
@@ -330,12 +387,12 @@ func Test_Proxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 			fwVersion++
 		}
 
-		ldevProxy.RegisterCallback(
+		TestProxy_Root_LogicalDevice.RegisterCallback(
 			PRE_UPDATE,
 			commonCallback,
 			"PRE_UPDATE instructions (root proxy)", &preUpdateExecuted,
 		)
-		ldevProxy.RegisterCallback(
+		TestProxy_Root_LogicalDevice.RegisterCallback(
 			POST_UPDATE,
 			commonCallback,
 			"POST_UPDATE instructions (root proxy)", &postUpdateExecuted,
@@ -343,13 +400,13 @@ func Test_Proxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 
 		retrieved.(*voltha.LogicalDevice).RootDeviceId = strconv.Itoa(fwVersion)
 
-		if afterUpdate := ldevProxy.Update("/logical_devices/"+targetLogDevID, retrieved, false,
+		if afterUpdate := TestProxy_Root_LogicalDevice.Update("/logical_devices/"+TestProxy_TargetLogicalDeviceId, retrieved, false,
 			""); afterUpdate == nil {
 			t.Error("Failed to update logical device")
 		} else {
 			t.Logf("Updated logical device : %+v", afterUpdate)
 		}
-		if d := ldevProxy.Get("/logical_devices/"+targetLogDevID, 1, false, ""); !reflect.ValueOf(d).IsValid() {
+		if d := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_TargetLogicalDeviceId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated logical device (root proxy)")
 		} else {
 			djson, _ := json.Marshal(d)
@@ -366,9 +423,9 @@ func Test_Proxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 	}
 }
 
-func Test_Proxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
+func TestProxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
 	// Get a device proxy and update a specific port
-	ldFlowsProxy := modelTestConfig.Root.node.CreateProxy("/logical_devices/"+ldevID+"/flows", false)
+	ldFlowsProxy := TestProxy_Root.node.CreateProxy("/logical_devices/"+TestProxy_LogicalDeviceId+"/flows", false)
 	flows := ldFlowsProxy.Get("/", 0, false, "")
 	flows.(*openflow_13.Flows).Items[0].TableId = rand.Uint32()
 	t.Logf("before updated flows: %+v", flows)
@@ -401,7 +458,7 @@ func Test_Proxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
 		t.Logf("Found flows (flows proxy): %s", string(djson))
 	}
 
-	if d := modelTestConfig.RootProxy.Get("/logical_devices/"+ldevID+"/flows", 0, false,
+	if d := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_LogicalDeviceId+"/flows", 0, false,
 		""); !reflect.ValueOf(d).IsValid() {
 		t.Error("Failed to find updated logical device flows (root proxy)")
 	} else {
@@ -410,38 +467,38 @@ func Test_Proxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
 	}
 }
 
-func Test_Proxy_2_4_1_Remove_Device(t *testing.T) {
+func TestProxy_2_4_1_Remove_Device(t *testing.T) {
 	preRemoveExecuted := false
 	postRemoveExecuted := false
 
-	ldevProxy.RegisterCallback(
+	TestProxy_Root_LogicalDevice.RegisterCallback(
 		PRE_REMOVE,
 		commonCallback,
 		"PRE_REMOVE instructions (root proxy)", &preRemoveExecuted,
 	)
-	ldevProxy.RegisterCallback(
+	TestProxy_Root_LogicalDevice.RegisterCallback(
 		POST_REMOVE,
 		commonCallback,
 		"POST_REMOVE instructions (root proxy)", &postRemoveExecuted,
 	)
 
-	if removed := ldevProxy.Remove("/logical_devices/"+ldevID, ""); removed == nil {
+	if removed := TestProxy_Root_LogicalDevice.Remove("/logical_devices/"+TestProxy_LogicalDeviceId, ""); removed == nil {
 		t.Error("Failed to remove logical device")
 	} else {
 		t.Logf("Removed device : %+v", removed)
 	}
-	if d := ldevProxy.Get("/logical_devices/"+ldevID, 0, false, ""); reflect.ValueOf(d).IsValid() {
+	if d := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
 	} else {
-		t.Logf("Device was removed: %s", ldevID)
+		t.Logf("Device was removed: %s", TestProxy_LogicalDeviceId)
 	}
 
 	if !preRemoveExecuted {
-		t.Error("PRE_UPDATE callback was not executed")
+		t.Error("PRE_REMOVE callback was not executed")
 	}
 	if !postRemoveExecuted {
-		t.Error("POST_UPDATE callback was not executed")
+		t.Error("POST_REMOVE callback was not executed")
 	}
 }
 
@@ -449,35 +506,35 @@ func Test_Proxy_2_4_1_Remove_Device(t *testing.T) {
 // Callback tests
 // -----------------------------
 
-func Test_Proxy_Callbacks_1_Register(t *testing.T) {
-	modelTestConfig.RootProxy.RegisterCallback(PRE_ADD, firstCallback, "abcde", "12345")
+func TestProxy_Callbacks_1_Register(t *testing.T) {
+	TestProxy_Root_Device.RegisterCallback(PRE_ADD, firstCallback, "abcde", "12345")
 
 	m := make(map[string]string)
 	m["name"] = "fghij"
-	modelTestConfig.RootProxy.RegisterCallback(PRE_ADD, secondCallback, m, 1.2345)
+	TestProxy_Root_Device.RegisterCallback(PRE_ADD, secondCallback, m, 1.2345)
 
 	d := &voltha.Device{Id: "12345"}
-	modelTestConfig.RootProxy.RegisterCallback(PRE_ADD, thirdCallback, "klmno", d)
+	TestProxy_Root_Device.RegisterCallback(PRE_ADD, thirdCallback, "klmno", d)
 }
 
-func Test_Proxy_Callbacks_2_Invoke_WithNoInterruption(t *testing.T) {
-	modelTestConfig.RootProxy.InvokeCallbacks(PRE_ADD, false, nil)
+func TestProxy_Callbacks_2_Invoke_WithNoInterruption(t *testing.T) {
+	TestProxy_Root_Device.InvokeCallbacks(PRE_ADD, false, nil)
 }
 
-func Test_Proxy_Callbacks_3_Invoke_WithInterruption(t *testing.T) {
-	modelTestConfig.RootProxy.InvokeCallbacks(PRE_ADD, true, nil)
+func TestProxy_Callbacks_3_Invoke_WithInterruption(t *testing.T) {
+	TestProxy_Root_Device.InvokeCallbacks(PRE_ADD, true, nil)
 }
 
-func Test_Proxy_Callbacks_4_Unregister(t *testing.T) {
-	modelTestConfig.RootProxy.UnregisterCallback(PRE_ADD, firstCallback)
-	modelTestConfig.RootProxy.UnregisterCallback(PRE_ADD, secondCallback)
-	modelTestConfig.RootProxy.UnregisterCallback(PRE_ADD, thirdCallback)
+func TestProxy_Callbacks_4_Unregister(t *testing.T) {
+	TestProxy_Root_Device.UnregisterCallback(PRE_ADD, firstCallback)
+	TestProxy_Root_Device.UnregisterCallback(PRE_ADD, secondCallback)
+	TestProxy_Root_Device.UnregisterCallback(PRE_ADD, thirdCallback)
 }
 
-//func Test_Proxy_Callbacks_5_Add(t *testing.T) {
-//	modelTestConfig.RootProxy.Root.AddCallback(modelTestConfig.RootProxy.InvokeCallbacks, POST_UPDATE, false, "some data", "some new data")
+//func TestProxy_Callbacks_5_Add(t *testing.T) {
+//	TestProxy_Root_Device.Root.AddCallback(TestProxy_Root_Device.InvokeCallbacks, POST_UPDATE, false, "some data", "some new data")
 //}
 //
-//func Test_Proxy_Callbacks_6_Execute(t *testing.T) {
-//	modelTestConfig.RootProxy.Root.ExecuteCallbacks()
+//func TestProxy_Callbacks_6_Execute(t *testing.T) {
+//	TestProxy_Root_Device.Root.ExecuteCallbacks()
 //}

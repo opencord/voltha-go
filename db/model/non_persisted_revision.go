@@ -150,8 +150,9 @@ func (npr *NonPersistedRevision) Finalize(skipOnExist bool) {
 	GetRevCache().Lock()
 	defer GetRevCache().Unlock()
 
-	npr.Hash = npr.hashContent()
-
+	if !skipOnExist {
+		npr.Hash = npr.hashContent()
+	}
 	if _, exists := GetRevCache().Cache[npr.Hash]; !exists {
 		GetRevCache().Cache[npr.Hash] = npr
 	}

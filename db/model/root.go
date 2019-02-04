@@ -91,6 +91,7 @@ func (r *root) DeleteTxBranch(txid string) {
 		dirtyNode.DeleteBranch(txid)
 	}
 	delete(r.DirtyNodes, txid)
+	delete(r.node.Branches, txid)
 }
 
 // FoldTxBranch will merge the contents of a transaction branch with the root object

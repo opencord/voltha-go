@@ -30,9 +30,10 @@ import (
 )
 
 var (
-	ltDevProxy *Proxy
-	plt        *proxyLoadTest
-	tlog       log.Logger
+	BenchmarkProxy_Root        *root
+	BenchmarkProxy_DeviceProxy *Proxy
+	BenchmarkProxy_PLT         *proxyLoadTest
+	BenchmarkProxy_Logger      log.Logger
 )
 
 type proxyLoadChanges struct {
@@ -71,25 +72,27 @@ func (plt *proxyLoadTest) SetPostUpdateExecuted(status bool) {
 	defer plt.Unlock()
 	plt.postUpdateExecuted = status
 }
+
 func init() {
-	tlog, _ = log.AddPackage(log.JSON, log.DebugLevel, nil)
-	log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
-	defer log.CleanUp()
+	BenchmarkProxy_Root = NewRoot(&voltha.Voltha{}, nil)
 
-	ltDevProxy = modelTestConfig.Root.node.CreateProxy("/", false)
+	BenchmarkProxy_Logger, _ = log.AddPackage(log.JSON, log.InfoLevel, nil)
+	//log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
+
+	BenchmarkProxy_DeviceProxy = BenchmarkProxy_Root.node.CreateProxy("/", false)
 	// Register ADD instructions callbacks
-	plt = &proxyLoadTest{}
+	BenchmarkProxy_PLT = &proxyLoadTest{}
 
-	ltDevProxy.RegisterCallback(PRE_ADD, commonCallbackFunc, "PRE_ADD", plt.SetPreAddExecuted)
-	ltDevProxy.RegisterCallback(POST_ADD, commonCallbackFunc, "POST_ADD", plt.SetPostAddExecuted)
+	BenchmarkProxy_DeviceProxy.RegisterCallback(PRE_ADD, commonCallbackFunc, "PRE_ADD", BenchmarkProxy_PLT.SetPreAddExecuted)
+	BenchmarkProxy_DeviceProxy.RegisterCallback(POST_ADD, commonCallbackFunc, "POST_ADD", BenchmarkProxy_PLT.SetPostAddExecuted)
 
 	//// Register UPDATE instructions callbacks
-	ltDevProxy.RegisterCallback(PRE_UPDATE, commonCallbackFunc, "PRE_UPDATE", plt.SetPreUpdateExecuted)
-	ltDevProxy.RegisterCallback(POST_UPDATE, commonCallbackFunc, "POST_UPDATE", plt.SetPostUpdateExecuted)
+	BenchmarkProxy_DeviceProxy.RegisterCallback(PRE_UPDATE, commonCallbackFunc, "PRE_UPDATE", BenchmarkProxy_PLT.SetPreUpdateExecuted)
+	BenchmarkProxy_DeviceProxy.RegisterCallback(POST_UPDATE, commonCallbackFunc, "POST_UPDATE", BenchmarkProxy_PLT.SetPostUpdateExecuted)
 
 }
 
-func Benchmark_ProxyLoad_AddDevice(b *testing.B) {
+func BenchmarkProxy_AddDevice(b *testing.B) {
 	defer GetProfiling().Report()
 	b.RunParallel(func(pb *testing.PB) {
 		b.Log("Started adding devices")
@@ -125,46 +128,46 @@ func Benchmark_ProxyLoad_AddDevice(b *testing.B) {
 			ltDevID := "0001" + hex.EncodeToString(ltDevIDBin)[:12]
 			ltDevice.Id = ltDevID
 
-			plt.SetPreAddExecuted(false)
-			plt.SetPostAddExecuted(false)
+			BenchmarkProxy_PLT.SetPreAddExecuted(false)
+			BenchmarkProxy_PLT.SetPostAddExecuted(false)
 
 			var added interface{}
 			// Add the device
-			if added = ltDevProxy.AddWithID("/devices", ltDevID, ltDevice, ""); added == nil {
-				tlog.Errorf("Failed to add device: %+v", ltDevice)
+			if added = BenchmarkProxy_DeviceProxy.AddWithID("/devices", ltDevID, ltDevice, ""); added == nil {
+				BenchmarkProxy_Logger.Errorf("Failed to add device: %+v", ltDevice)
 				continue
 			} else {
-				tlog.Infof("Device was added 1: %+v", added)
+				BenchmarkProxy_Logger.Infof("Device was added 1: %+v", added)
 			}
 
-			plt.Lock()
-			plt.addedDevices = append(plt.addedDevices, added.(*voltha.Device).Id)
-			plt.Unlock()
+			BenchmarkProxy_PLT.Lock()
+			BenchmarkProxy_PLT.addedDevices = append(BenchmarkProxy_PLT.addedDevices, added.(*voltha.Device).Id)
+			BenchmarkProxy_PLT.Unlock()
 		}
 	})
 
-	tlog.Infof("Number of added devices : %d", len(plt.addedDevices))
+	BenchmarkProxy_Logger.Infof("Number of added devices : %d", len(BenchmarkProxy_PLT.addedDevices))
 }
 
-func Benchmark_ProxyLoad_UpdateFirmware(b *testing.B) {
+func BenchmarkProxy_UpdateFirmware(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			//for i:=0; i < b.N; i++ {
 
-			if len(plt.addedDevices) > 0 {
+			if len(BenchmarkProxy_PLT.addedDevices) > 0 {
 				var target interface{}
-				randomID := plt.addedDevices[rand.Intn(len(plt.addedDevices))]
-				firmProxy := modelTestConfig.Root.node.CreateProxy("/", false)
+				randomID := BenchmarkProxy_PLT.addedDevices[rand.Intn(len(BenchmarkProxy_PLT.addedDevices))]
+				firmProxy := BenchmarkProxy_Root.node.CreateProxy("/", false)
 				if target = firmProxy.Get("/devices/"+randomID, 0, false,
 					""); !reflect.ValueOf(target).IsValid() {
-					tlog.Errorf("Failed to find device: %s %+v", randomID, target)
+					BenchmarkProxy_Logger.Errorf("Failed to find device: %s %+v", randomID, target)
 					continue
 				}
 
-				plt.SetPreUpdateExecuted(false)
-				plt.SetPostUpdateExecuted(false)
-				firmProxy.RegisterCallback(PRE_UPDATE, commonCallbackFunc, "PRE_UPDATE", plt.SetPreUpdateExecuted)
-				firmProxy.RegisterCallback(POST_UPDATE, commonCallbackFunc, "POST_UPDATE", plt.SetPostUpdateExecuted)
+				BenchmarkProxy_PLT.SetPreUpdateExecuted(false)
+				BenchmarkProxy_PLT.SetPostUpdateExecuted(false)
+				firmProxy.RegisterCallback(PRE_UPDATE, commonCallbackFunc, "PRE_UPDATE", BenchmarkProxy_PLT.SetPreUpdateExecuted)
+				firmProxy.RegisterCallback(POST_UPDATE, commonCallbackFunc, "POST_UPDATE", BenchmarkProxy_PLT.SetPostUpdateExecuted)
 
 				var fwVersion int
 
@@ -182,31 +185,31 @@ func Benchmark_ProxyLoad_UpdateFirmware(b *testing.B) {
 				var updated interface{}
 				if updated = firmProxy.Update("/devices/"+randomID, target.(*voltha.Device), false,
 					""); updated == nil {
-					tlog.Errorf("Failed to update device: %+v", target)
+					BenchmarkProxy_Logger.Errorf("Failed to update device: %+v", target)
 					continue
 				} else {
-					tlog.Infof("Device was updated : %+v", updated)
+					BenchmarkProxy_Logger.Infof("Device was updated : %+v", updated)
 
 				}
 
 				if d := firmProxy.Get("/devices/"+randomID, 0, false,
 					""); !reflect.ValueOf(d).IsValid() {
-					tlog.Errorf("Failed to get device: %s", randomID)
+					BenchmarkProxy_Logger.Errorf("Failed to get device: %s", randomID)
 					continue
 				} else if d.(*voltha.Device).FirmwareVersion == after {
-					tlog.Infof("Imm Device was updated with new value: %s %+v", randomID, d)
+					BenchmarkProxy_Logger.Infof("Imm Device was updated with new value: %s %+v", randomID, d)
 				} else if d.(*voltha.Device).FirmwareVersion == before {
-					tlog.Errorf("Imm Device kept old value: %s %+v %+v", randomID, d, target)
+					BenchmarkProxy_Logger.Errorf("Imm Device kept old value: %s %+v %+v", randomID, d, target)
 				} else {
-					tlog.Errorf("Imm Device has unknown value: %s %+v %+v", randomID, d, target)
+					BenchmarkProxy_Logger.Errorf("Imm Device has unknown value: %s %+v %+v", randomID, d, target)
 				}
 
-				plt.Lock()
-				plt.updatedFirmwares = append(
-					plt.updatedFirmwares,
+				BenchmarkProxy_PLT.Lock()
+				BenchmarkProxy_PLT.updatedFirmwares = append(
+					BenchmarkProxy_PLT.updatedFirmwares,
 					proxyLoadChanges{ID: randomID, Before: before, After: after},
 				)
-				plt.Unlock()
+				BenchmarkProxy_PLT.Unlock()
 			}
 		}
 	})
@@ -221,14 +224,14 @@ func traverseBranches(revision Revision, depth int) {
 		prefix += "  "
 	}
 
-	tlog.Debugf("%sRevision: %s %+v", prefix, revision.GetHash(), revision.GetData())
+	BenchmarkProxy_Logger.Debugf("%sRevision: %s %+v", prefix, revision.GetHash(), revision.GetData())
 
 	//for brIdx, brRev := range revision.GetBranch().Revisions {
-	//	tlog.Debugf("%sbranchIndex: %s", prefix, brIdx)
+	//	BenchmarkProxy_Logger.Debugf("%sbranchIndex: %s", prefix, brIdx)
 	//	traverseBranches(brRev, depth+1)
 	//}
 	for childrenI, children := range revision.GetAllChildren() {
-		tlog.Debugf("%schildrenIndex: %s, length: %d", prefix, childrenI, len(children))
+		BenchmarkProxy_Logger.Debugf("%schildrenIndex: %s, length: %d", prefix, childrenI, len(children))
 
 		for _, subrev := range children {
 			//subrev.GetBranch().Latest
@@ -237,13 +240,13 @@ func traverseBranches(revision Revision, depth int) {
 	}
 
 }
-func Benchmark_ProxyLoad_UpdateFlows(b *testing.B) {
+func BenchmarkProxy_UpdateFlows(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if len(plt.addedDevices) > 0 {
-				randomID := plt.addedDevices[rand.Intn(len(plt.addedDevices))]
+			if len(BenchmarkProxy_PLT.addedDevices) > 0 {
+				randomID := BenchmarkProxy_PLT.addedDevices[rand.Intn(len(BenchmarkProxy_PLT.addedDevices))]
 
-				flowsProxy := modelTestConfig.Root.node.CreateProxy("/devices/"+randomID+"/flows", false)
+				flowsProxy := BenchmarkProxy_Root.node.CreateProxy("/devices/"+randomID+"/flows", false)
 				flows := flowsProxy.Get("/", 0, false, "")
 
 				before := flows.(*openflow_13.Flows).Items[0].TableId
@@ -263,80 +266,69 @@ func Benchmark_ProxyLoad_UpdateFlows(b *testing.B) {
 				if updated = flowsProxy.Update("/", flows.(*openflow_13.Flows), false, ""); updated == nil {
 					b.Errorf("Failed to update flows for device: %+v", flows)
 				} else {
-					tlog.Infof("Flows were updated : %+v", updated)
+					BenchmarkProxy_Logger.Infof("Flows were updated : %+v", updated)
 				}
-				plt.Lock()
-				plt.updatedFlows = append(
-					plt.updatedFlows,
+				BenchmarkProxy_PLT.Lock()
+				BenchmarkProxy_PLT.updatedFlows = append(
+					BenchmarkProxy_PLT.updatedFlows,
 					proxyLoadChanges{ID: randomID, Before: before, After: after},
 				)
-				plt.Unlock()
+				BenchmarkProxy_PLT.Unlock()
 			}
 		}
 	})
 }
 
-func Benchmark_ProxyLoad_GetDevices(b *testing.B) {
-	traverseBranches(ltDevProxy.Root.node.Branches[NONE].GetLatest(), 0)
+func BenchmarkProxy_GetDevices(b *testing.B) {
+	//traverseBranches(BenchmarkProxy_DeviceProxy.Root.node.Branches[NONE].GetLatest(), 0)
 
-	for i := 0; i < len(plt.addedDevices); i++ {
-		devToGet := plt.addedDevices[i]
+	for i := 0; i < len(BenchmarkProxy_PLT.addedDevices); i++ {
+		devToGet := BenchmarkProxy_PLT.addedDevices[i]
 		// Verify that the added device can now be retrieved
-		if d := ltDevProxy.Get("/devices/"+devToGet, 0, false,
+		if d := BenchmarkProxy_DeviceProxy.Get("/devices/"+devToGet, 0, false,
 			""); !reflect.ValueOf(d).IsValid() {
-			tlog.Errorf("Failed to get device: %s", devToGet)
+			BenchmarkProxy_Logger.Errorf("Failed to get device: %s", devToGet)
 			continue
 		} else {
-			tlog.Infof("Got device: %s %+v", devToGet, d)
+			BenchmarkProxy_Logger.Infof("Got device: %s %+v", devToGet, d)
 		}
 	}
 }
 
-func Benchmark_ProxyLoad_GetUpdatedFirmware(b *testing.B) {
-	for i := 0; i < len(plt.updatedFirmwares); i++ {
-		devToGet := plt.updatedFirmwares[i].ID
+func BenchmarkProxy_GetUpdatedFirmware(b *testing.B) {
+	for i := 0; i < len(BenchmarkProxy_PLT.updatedFirmwares); i++ {
+		devToGet := BenchmarkProxy_PLT.updatedFirmwares[i].ID
 		// Verify that the updated device can be retrieved and that the updates were actually applied
-		if d := ltDevProxy.Get("/devices/"+devToGet, 0, false,
+		if d := BenchmarkProxy_DeviceProxy.Get("/devices/"+devToGet, 0, false,
 			""); !reflect.ValueOf(d).IsValid() {
-			tlog.Errorf("Failed to get device: %s", devToGet)
+			BenchmarkProxy_Logger.Errorf("Failed to get device: %s", devToGet)
 			continue
-		} else if d.(*voltha.Device).FirmwareVersion == plt.updatedFirmwares[i].After.(string) {
-			tlog.Infof("Device was updated with new value: %s %+v", devToGet, d)
-		} else if d.(*voltha.Device).FirmwareVersion == plt.updatedFirmwares[i].Before.(string) {
-			tlog.Errorf("Device kept old value: %s %+v %+v", devToGet, d, plt.updatedFirmwares[i])
+		} else if d.(*voltha.Device).FirmwareVersion == BenchmarkProxy_PLT.updatedFirmwares[i].After.(string) {
+			BenchmarkProxy_Logger.Infof("Device was updated with new value: %s %+v", devToGet, d)
+		} else if d.(*voltha.Device).FirmwareVersion == BenchmarkProxy_PLT.updatedFirmwares[i].Before.(string) {
+			BenchmarkProxy_Logger.Errorf("Device kept old value: %s %+v %+v", devToGet, d, BenchmarkProxy_PLT.updatedFirmwares[i])
 		} else {
-			tlog.Errorf("Device has unknown value: %s %+v %+v", devToGet, d, plt.updatedFirmwares[i])
+			BenchmarkProxy_Logger.Errorf("Device has unknown value: %s %+v %+v", devToGet, d, BenchmarkProxy_PLT.updatedFirmwares[i])
 		}
 	}
 }
 
-func Benchmark_ProxyLoad_GetUpdatedFlows(b *testing.B) {
+func BenchmarkProxy_GetUpdatedFlows(b *testing.B) {
 	var d interface{}
-	for i := 0; i < len(plt.updatedFlows); i++ {
-		devToGet := plt.updatedFlows[i].ID
+	for i := 0; i < len(BenchmarkProxy_PLT.updatedFlows); i++ {
+		devToGet := BenchmarkProxy_PLT.updatedFlows[i].ID
 		// Verify that the updated device can be retrieved and that the updates were actually applied
-		flowsProxy := modelTestConfig.Root.node.CreateProxy("/devices/"+devToGet+"/flows", false)
+		flowsProxy := BenchmarkProxy_Root.node.CreateProxy("/devices/"+devToGet+"/flows", false)
 		if d = flowsProxy.Get("/", 0, false,
 			""); !reflect.ValueOf(d).IsValid() {
-			tlog.Errorf("Failed to get device flows: %s", devToGet)
+			BenchmarkProxy_Logger.Errorf("Failed to get device flows: %s", devToGet)
 			continue
-		} else if d.(*openflow_13.Flows).Items[0].TableId == plt.updatedFlows[i].After.(uint32) {
-			tlog.Infof("Device was updated with new flow value: %s %+v", devToGet, d)
-		} else if d.(*openflow_13.Flows).Items[0].TableId == plt.updatedFlows[i].Before.(uint32) {
-			tlog.Errorf("Device kept old flow value: %s %+v %+v", devToGet, d, plt.updatedFlows[i])
+		} else if d.(*openflow_13.Flows).Items[0].TableId == BenchmarkProxy_PLT.updatedFlows[i].After.(uint32) {
+			BenchmarkProxy_Logger.Infof("Device was updated with new flow value: %s %+v", devToGet, d)
+		} else if d.(*openflow_13.Flows).Items[0].TableId == BenchmarkProxy_PLT.updatedFlows[i].Before.(uint32) {
+			BenchmarkProxy_Logger.Errorf("Device kept old flow value: %s %+v %+v", devToGet, d, BenchmarkProxy_PLT.updatedFlows[i])
 		} else {
-			tlog.Errorf("Device has unknown flow value: %s %+v %+v", devToGet, d, plt.updatedFlows[i])
+			BenchmarkProxy_Logger.Errorf("Device has unknown flow value: %s %+v %+v", devToGet, d, BenchmarkProxy_PLT.updatedFlows[i])
 		}
-		//if d = ltDevProxy.Get("/devices/"+devToGet, 0, false,
-		//	""); !reflect.ValueOf(d).IsValid() {
-		//	tlog.Errorf("Failed to get device: %s", devToGet)
-		//	continue
-		//} else if d.(*voltha.Device).Flows.Items[0].TableId == plt.updatedFlows[i].After.(uint32) {
-		//	tlog.Infof("Device was updated with new flow value: %s %+v", devToGet, d)
-		//} else if d.(*voltha.Device).Flows.Items[0].TableId == plt.updatedFlows[i].Before.(uint32) {
-		//	tlog.Errorf("Device kept old flow value: %s %+v %+v", devToGet, d, plt.updatedFlows[i])
-		//} else {
-		//	tlog.Errorf("Device has unknown flow value: %s %+v %+v", devToGet, d, plt.updatedFlows[i])
-		//}
 	}
 }

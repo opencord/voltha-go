@@ -415,6 +415,11 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 			childNode := childRev.GetNode()
 
+			// Save proxy in child node to ensure callbacks are called later on
+			if childNode.Proxy == nil {
+				childNode.Proxy = n.Proxy
+			}
+
 			newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
 
 			if newChildRev.GetHash() == childRev.GetHash() {
@@ -439,6 +444,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			children[idx] = newChildRev
 
 			updatedRev := rev.UpdateChildren(name, children, branch)
+
 			branch.GetLatest().Drop(txid, false)
 			n.makeLatest(branch, updatedRev, nil)
 
@@ -553,14 +559,14 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 					log.Errorf("duplicate key found: %s", key.String())
 					return exists
 				}
-				childRev := n.MakeNode(data, txid).Latest(txid)
+				childRev := n.MakeNode(data, "").Latest()
 
 				// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
 				childRev.SetHash(name + "/" + key.String())
 
 				// Create watch for <component>/<key>
 				childRev.SetupWatch(childRev.GetHash())
-				
+
 				children = append(children, childRev)
 				rev = rev.UpdateChildren(name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
@@ -590,9 +596,12 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 			childNode := childRev.GetNode()
 			newChildRev := childNode.Add(path, data, txid, makeBranch)
 
+			// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
+			childRev.SetHash(name + "/" + keyValue.(string))
+
 			children[idx] = newChildRev
 
-			rev = rev.UpdateChildren(name, branch.GetLatest().GetChildren(name), branch)
+			rev = rev.UpdateChildren(name, children, branch)
 			rev.Drop(txid, false)
 			n.makeLatest(branch, rev.GetBranch().GetLatest(), nil)
 
@@ -654,12 +663,15 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 			if path != "" {
 				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 				childNode := childRev.GetNode()
+				if childNode.Proxy == nil {
+					childNode.Proxy = n.Proxy
+				}
 				newChildRev := childNode.Remove(path, txid, makeBranch)
 				children[idx] = newChildRev
 				rev.SetChildren(name, children)
 				branch.GetLatest().Drop(txid, false)
 				n.makeLatest(branch, rev, nil)
-				return rev
+				return nil
 			}
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 			if n.GetProxy() != nil {
@@ -731,7 +743,9 @@ func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 	rev, changes := Merge3Way(forkRev, srcRev, dstRev, n.mergeChild(txid, dryRun), dryRun)
 
 	if !dryRun {
-		n.makeLatest(dstBranch, rev, changes)
+		if rev != nil {
+			n.makeLatest(dstBranch, rev, changes)
+		}
 		n.DeleteBranch(txid)
 	}
 
@@ -880,6 +894,7 @@ func (n *node) GetProxy() *Proxy {
 func (n *node) GetBranch(key string) *Branch {
 	n.Lock()
 	defer n.Unlock()
+
 	if n.Branches != nil {
 		if branch, exists := n.Branches[key]; exists {
 			return branch
