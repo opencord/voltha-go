@@ -217,6 +217,10 @@ func (c *KVTransaction) Acquired(duration int64) bool {
 	default:
 		acquired = false
 	}
+	// Ensure the request watcher does not reply before the request server
+	if !acquired {
+		time.Sleep(1 * time.Second)
+	}
 	return acquired
 }
 

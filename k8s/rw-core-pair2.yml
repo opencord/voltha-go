@@ -68,6 +68,9 @@ spec:
             - "-kafka_cluster_host=kafka.$(NAMESPACE).svc.cluster.local"
             - "-kafka_cluster_port=9092"
             - "-rw_core_topic=rwcore"
+            - "-kv_store_data_prefix=service/voltha"
+            - "-in_competing_mode=true"
+            - "-timeout_long_request=5000"
             - "-log_level=0"
           ports:
             - containerPort: 50057
