@@ -78,6 +78,7 @@ type assoc struct {
 	strategy int
 	location int
 	field string // Used only if location is protobuf
+	key string
 }
 
 type beConnection struct {
@@ -125,7 +126,7 @@ func newBackendCluster(conf *BackendClusterConfig) (*backendCluster, error) {
 	var err error = nil
 	var rtrn_err bool = false
 	var be *backend
-	log.Debug("Creating a backend cluster with %v", conf)
+	log.Debugf("Creating a backend cluster with %v", conf)
 	// Validate the configuration
 	if conf.Name == "" {
 		log.Error("A backend cluster must have a name")
@@ -598,6 +599,14 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 		rtrn_err = true
 	}
 	be.activeAssoc.field = conf.Association.Field
+
+	if conf.Association.Key == "" && be.activeAssoc.location == AL_HEADER {
+		log.Errorf("An association key must be provided if the backend "+
+					"type is active/active and the location is set to header "+
+					"for backend %s in cluster %s", conf.Name, clusterName)
+		rtrn_err = true
+	}
+	be.activeAssoc.key = conf.Association.Key
 	if rtrn_err {
 		return nil, errors.New("Backend configuration failed")
 	}
@@ -605,6 +614,15 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 	// Connections can consist of just a name. This allows for dynamic configuration
 	// at a later time.
 	// TODO: validate that there is one connection for all but active/active backends
+	if len(conf.Connections) > 1 && be.activeAssoc.strategy != BE_ACTIVE_ACTIVE {
+		log.Errorf("Only one connection must be specified if the association "+
+				   "strategy is not set to 'active_active'")
+		rtrn_err = true
+	}
+	if len(conf.Connections) == 0 {
+		log.Errorf("At least one connection must be specified")
+		rtrn_err = true
+	}
 	for _,cnConf := range conf.Connections {
 		if cnConf.Name == "" {
 			log.Errorf("A connection must have a name for backend %s in cluster %s",

@@ -91,7 +91,7 @@ type BindingConfig struct {
 
 type OverrideConfig struct {
 	Methods []string `json:"methods"`
-	Method []string `json:"method"`
+	Method string `json:"method"`
 	RouteField string `json:"routing_field"`
 }
 
@@ -113,6 +113,7 @@ type AssociationConfig struct {
 	Strategy string `json:"strategy"`
 	Location string `json:"location"`
 	Field string `json:"field"`
+	Key string `json:"key"`
 }
 
 type ConnectionConfig struct {
@@ -183,7 +184,10 @@ func (conf * Configuration) LoadConfig() error {
 		return err
 	}
 
-	json.Unmarshal(configBytes, conf)
+	if err := json.Unmarshal(configBytes, conf); err != nil {
+		log.Errorf("Unmarshaling of the configuratino file failed: %v", err)
+		return err
+	}
 
 	// Now resolve references to different config objects in the
 	// config file. Currently there are 2 possible references
