@@ -327,19 +327,26 @@ func (aMgr *AdapterManager) adapterUpdated(args ...interface{}) interface{} {
 	var ok bool
 	if previousData, ok = args[0].(*voltha.Adapters); !ok {
 		log.Errorw("invalid-args", log.Fields{"args0": args[0]})
+		return nil
 	}
 	if latestData, ok = args[1].(*voltha.Adapters); !ok {
 		log.Errorw("invalid-args", log.Fields{"args1": args[1]})
-	}
-
-	if reflect.DeepEqual(previousData.Items, latestData.Items) {
-		log.Debug("update-not-required")
 		return nil
 	}
 
-	for _, adapter := range latestData.Items {
-		aMgr.updateAdapter(adapter)
+	if previousData != nil && latestData != nil {
+		if reflect.DeepEqual(previousData.Items, latestData.Items) {
+			log.Debug("update-not-required")
+			return nil
+		}
 	}
+
+	if latestData != nil {
+		for _, adapter := range latestData.Items {
+			aMgr.updateAdapter(adapter)
+		}
+	}
+
 	return nil
 }
 
@@ -353,18 +360,25 @@ func (aMgr *AdapterManager) deviceTypesUpdated(args ...interface{}) interface{} 
 	var ok bool
 	if previousData, ok = args[0].(*voltha.DeviceTypes); !ok {
 		log.Errorw("invalid-args", log.Fields{"args0": args[0]})
-	}
-	if latestData, ok = args[1].(*voltha.DeviceTypes); !ok {
-		log.Errorw("invalid-args", log.Fields{"args1": args[1]})
-	}
-
-	if reflect.DeepEqual(previousData.Items, latestData.Items) {
-		log.Debug("update-not-required")
 		return nil
 	}
 
-	for _, dType := range latestData.Items {
-		aMgr.updateDeviceType(dType)
+	if latestData, ok = args[1].(*voltha.DeviceTypes); !ok {
+		log.Errorw("invalid-args", log.Fields{"args1": args[1]})
+		return nil
+	}
+
+	if previousData != nil && latestData != nil {
+		if reflect.DeepEqual(previousData.Items, latestData.Items) {
+			log.Debug("update-not-required")
+			return nil
+		}
+	}
+
+	if latestData != nil {
+		for _, dType := range latestData.Items {
+			aMgr.updateDeviceType(dType)
+		}
 	}
 	return nil
 }
