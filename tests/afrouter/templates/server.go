@@ -136,12 +136,16 @@ func  (ts {{$.Name}}TestServer) {{.Name}}(ctx context.Context, in *{{.Param}}) (
 	// Send the server information back to the test framework
 	ts.control.incmg <- r
 	// Read the value that needs to be returned from the channel
-	d := <-ts.control.replyData
-	switch r := d.repl.(type) {
-		case *{{.Rtrn}}:
-			return r, nil
-		default:
-			return nil, errors.New("Mismatched type in call to {{.Name}}")
+	select {
+	case d := <-ts.control.replyData:
+		switch r := d.repl.(type) {
+			case *{{.Rtrn}}:
+				return r, nil
+			default:
+				return nil, errors.New("Mismatched type in call to {{.Name}}")
+		}
+	default:
+		return nil, errors.New("Nothing in the reply data channel in call to {{.Name}}, sending nil")
 	}
 	return &{{.Rtrn}}{},nil
 }

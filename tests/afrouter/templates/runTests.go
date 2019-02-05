@@ -18,10 +18,10 @@
 package main
 
 import (
-	"fmt"
-	"time"
 	"errors"
 	"encoding/json"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 	"github.com/opencord/voltha-go/common/log"
 	{{range .Imports}}
 	_ "{{.}}"
@@ -31,22 +31,40 @@ import (
 	{{end}}
 )
 
+func resetChannels() {
+	// Drain all channels of data
+	for _,v := range servers {
+		done := false
+		for {
+			select {
+			case _ = <-v.incmg:
+			case _ = <-v.replyData:
+			default:
+				done = true
+			}
+			if done == true {
+				break
+			}
+		}
+	}
+}
+
 func runTests() {
 	{{range $k,$v := .Tests}}
 	if err := test{{$k}}(); err == nil {
-		resFile.Write([]byte("\tTest Successful\n"))
+		resFile.testLog("\tTest Successful\n")
 	} else {
-		resFile.Write([]byte("\tTest Failed\n"))
+		resFile.testLog("\tTest Failed\n")
 	}
+	resetChannels()
 	{{end}}
-	time.Sleep(5 * time.Second)
 }
 
 {{range $k,$v := .Tests}}
 func test{{$k}}() error {
 	var rtrn error = nil
 	// Announce the test being run
-	resFile.Write([]byte("******************** Running test case: {{$v.Name}}\n"))
+	resFile.testLog("******************** Running test case: {{$v.Name}}\n")
 	// Acquire the client used to run the test
 	cl := clients["{{$v.Send.Client}}"]
 	// Create the server's reply data structure
@@ -54,19 +72,36 @@ func test{{$k}}() error {
 	// Send the reply data structure to each of the servers
 	{{range $s := .Srvr}}
 	if servers["{{$s.Name}}"] == nil {
-		log.Error("Server '{{$s.Name}}' is nil")
-		return errors.New("GAAK")
+		err := errors.New("Server '{{$s.Name}}' is nil")
+		log.Error(err)
+		return err
 	}
-	servers["{{$s.Name}}"].replyData <- repl
+	select {
+	case servers["{{$s.Name}}"].replyData <- repl:
+	default:
+		err := errors.New("Could not provide server {{$s.Name}} with reply data")
+		log.Error(err)
+		return err
+	}
 	{{end}}
 
 	// Now call the RPC with the data provided
 	if expct,err := json.Marshal(repl.repl); err != nil {
 		log.Errorf("Marshaling the reply for test {{$v.Name}}: %v",err)
 	} else {
-		if err := cl.send("{{$v.Send.Method}}",
+		// Create the context for the call
+		ctx := context.Background()
+		{{range $m := $v.Send.MetaData}}
+		ctx = metadata.AppendToOutgoingContext(ctx, "{{$m.Key}}", "{{$m.Val}}")
+		{{end}}
+		var md map[string]string = make(map[string]string)
+		{{range $m := $v.Send.ExpectMeta}}
+			md["{{$m.Key}}"] = "{{$m.Val}}"
+		{{end}}
+		expectMd := metadata.New(md)
+		if err := cl.send("{{$v.Send.Method}}", ctx,
 							&{{$v.Send.ParamType}}{{$v.Send.Param}},
-							string(expct)); err != nil {
+							string(expct), expectMd); err != nil {
 			log.Errorf("Test case {{$v.Name}} failed!: %v", err)
 
 		}
@@ -83,21 +118,26 @@ func test{{$k}}() error {
 	}
 	{{range $s := .Srvr}}
 	s = servers["{{$s.Name}}"]
-	i = <-s.incmg
-	if i.payload != payload {
-		log.Errorf("Mismatched payload for test {{$v.Name}}, %s:%s", i.payload, payload)
-		resFile.Write([]byte(fmt.Sprintf("Mismatched payload expected %s, got %s\n", payload, i.payload)))
-		rtrn = errors.New("Failed")
-	}
-	{{range $m := $s.Meta}}
-	if mv,ok := i.meta["{{$m.Key}}"]; ok == true {
-		if "{{$m.Val}}" != mv[0] {
-			log.Errorf("Mismatched metadata for test {{$v.Name}}, %s:%s", mv[0], "{{$m.Val}}")
-			resFile.Write([]byte(fmt.Sprintf("Mismatched metadata on server %s expected %s, got %s\n", "{{$s.Name}}", "{{$m.Val}}", mv[0])))
+	select {
+	case i = <-s.incmg:
+		if i.payload != payload {
+			log.Errorf("Mismatched payload for test {{$v.Name}}, %s:%s", i.payload, payload)
+			resFile.testLog("Mismatched payload expected '%s', got '%s'\n", payload, i.payload)
 			rtrn = errors.New("Failed")
 		}
+		{{range $m := $s.Meta}}
+		if mv,ok := i.meta["{{$m.Key}}"]; ok == true {
+			if "{{$m.Val}}" != mv[0] {
+				log.Errorf("Mismatched metadata for test {{$v.Name}}, %s:%s", mv[0], "{{$m.Val}}")
+				resFile.testLog("Mismatched metadata on server '%s' expected '%s', got '%s'\n", "{{$s.Name}}", "{{$m.Val}}", mv[0])
+				rtrn = errors.New("Failed")
+			}
+		}
+		{{end}}
+	default:
+		err := errors.New("No response data available for server {{$s.Name}}")
+		log.Error(err)
 	}
-	{{end}}
 	{{end}}
 
 	return rtrn

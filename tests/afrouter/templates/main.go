@@ -21,6 +21,7 @@ package main
 
 import (
 	"os"
+	"fmt"
 	"time"
 	"os/exec"
 	"strings"
@@ -28,9 +29,48 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 )
 
-var resFile *os.File
+var resFile *tstLog
+type tstLog struct {
+	fp * os.File
+	fn string
+}
 
-func startSut(cmdStr string) (context.CancelFunc, error) {
+func (tr * tstLog) testLog(format string, a ...interface{}) {
+	var err error
+	if tr.fp == nil {
+		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+			log.Errorf("Could not append to the results file")
+			tr.fp = nil
+		}
+	}
+	if tr.fp != nil {
+		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
+	}
+}
+
+func (tr * tstLog) testLogOnce(format string, a ...interface{}) {
+	var err error
+	if tr.fp == nil {
+		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+			log.Errorf("Could not append to the results file")
+			tr.fp = nil
+		}
+	}
+	if tr.fp != nil {
+		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
+	}
+	tr.fp.Close()
+	tr.fp = nil
+}
+
+func (tr * tstLog) close() {
+	if tr.fp != nil {
+		tr.fp.Close()
+	}
+}
+
+
+func startSut(cmdStr string) (*exec.Cmd, context.CancelFunc, error) {
 	var err error = nil
 
 	cmdAry := strings.Fields(cmdStr)
@@ -45,13 +85,14 @@ func startSut(cmdStr string) (context.CancelFunc, error) {
 		log.Errorf("Failed to run the affinity router: %s %v", cmdStr,err)
 	}
 	time.Sleep(1 * time.Second) // Give the command time to get started
-	return cncl, err
+	return cmd, cncl, err
 }
 
-func cleanUp(cncl context.CancelFunc) {
+func cleanUp(cmd *exec.Cmd, cncl context.CancelFunc) {
 	cncl()
+	cmd.Wait() // This seems to hang
 	// Give the child processes time to terminate
-	time.Sleep(1 * time.Second)
+	//time.Sleep(1 * time.Second)
 }
 
 func main() {
@@ -64,12 +105,9 @@ func main() {
 
 	defer log.CleanUp()
 
-	// Open the results file to write the results to
-	if resFile, err = os.OpenFile(os.Args[1], os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
-		log.Errorf("Could not append to the results file")
-	}
+	resFile = &tstLog{fn:os.Args[1]}
+	defer resFile.close()
 
-	defer resFile.Close()
 
 	// Initialize the servers
 	if err := serverInit(); err != nil {
@@ -78,8 +116,8 @@ func main() {
 	}
 
 	// Start the sofware under test
-	cnclFunc, err := startSut("./{{.Command}}");
-	defer cleanUp(cnclFunc)
+	cmd, cnclFunc, err := startSut("./{{.Command}}");
+	defer cleanUp(cmd, cnclFunc)
 	if  err != nil {
 		return
 	}
@@ -94,7 +132,6 @@ func main() {
 
 	// Run all the test cases now
 	log.Infof("Executing tests")
-	resFile.Write([]byte("Executing tests\n"))
 	runTests()
 
 }

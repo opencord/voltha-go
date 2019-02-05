@@ -28,6 +28,45 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 )
 
+type tstLog struct {
+	fp * os.File
+	fn string
+}
+
+func (tr * tstLog) testLog(format string, a ...interface{}) {
+	var err error
+	if tr.fp == nil {
+		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+			log.Errorf("Could not append to the results file")
+			tr.fp = nil
+		}
+	}
+	if tr.fp != nil {
+		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
+	}
+}
+
+func (tr * tstLog) testLogOnce(format string, a ...interface{}) {
+	var err error
+	if tr.fp == nil {
+		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+			log.Errorf("Could not append to the results file")
+			tr.fp = nil
+		}
+	}
+	if tr.fp != nil {
+		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
+	}
+	tr.fp.Close()
+	tr.fp = nil
+}
+
+func (tr * tstLog) close() {
+	if tr.fp != nil {
+		tr.fp.Close()
+	}
+}
+
 func main() {
 	var cmd *exec.Cmd
 	var cmdStr string
@@ -39,12 +78,15 @@ func main() {
 	defer log.CleanUp()
 
 	log.Info("Running tests")
-	{{range .}}
 	if err:= os.Chdir(os.Args[1]); err != nil {
 		log.Error("Could not change directory to %s: %v", os.Args[1], err)
 	}
+	tl := &tstLog{fn:"results.txt"}
+	{{range .}}
 	cmdStr =  "./"+"{{.}}"[:len("{{.}}")-5]
-	log.Infof("Running test %s",cmdStr)
+	tl.testLogOnce("Running test suite '%s'\n", cmdStr[2:])
+
+	log.Infof("Running test suite %s",cmdStr)
 	cmd = exec.Command(cmdStr, "results.txt")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

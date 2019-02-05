@@ -60,7 +60,8 @@
 				"method":"CreateDevice",
 				"param":"{Type:\"simulated_olt\"}",
 				"expect":"{Id:\"abcd1234\",Type:\"simulated_olt\"}",
-				"_meta":""
+				"_meta":"",
+				"_expectMeta":""
 			},
 			"servers": [
 				{
@@ -90,7 +91,8 @@
 				"method":"GetDevice",
 				"param":"{Id:\"abcd1234\"}",
 				"expect":"{Id:\"abcd1234\",Type:\"simulated_olt\"}",
-				"_meta":""
+				"_meta":"",
+				"_expectMeta":""
 			},
 			"servers": [
 				{
@@ -98,7 +100,7 @@
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"0"
+							"value":"1"
 						}
 					]
 				},
@@ -107,7 +109,43 @@
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"0"
+							"value":"1"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name":"Test Subscribe",
+			"send": {
+				"client":"client",
+				"method":"Subscribe",
+				"param":"{OfagentId:\"Agent007\"}",
+				"meta": [
+					{
+						"key":"voltha_backend_name",
+						"value":""
+					}
+				],
+				"expect":"{OfagentId:\"Agent007\",VolthaId:\"core11\"}",
+				"expectMeta": [
+					{
+						"key":"voltha_backend_name",
+						"value":"vcore1"
+					}
+				]
+			},
+			"servers": [
+				{
+					"name":"core11",
+					"meta": [
+						{
+							"key":"voltha_serial_number",
+							"value":"2"
+						},
+						{
+							"key":"voltha_backend_name",
+							"value":""
 						}
 					]
 				}

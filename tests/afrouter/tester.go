@@ -74,6 +74,8 @@ type Rpc struct {
 	Method string `json:"method"`
 	Param string `json:"param"`
 	Expect string `json:"expect"`
+	MetaData []MetaD `json:"meta"`
+	ExpectMeta []MetaD `json:"expectMeta"`
 }
 
 type MetaD struct {
@@ -110,6 +112,8 @@ type SendItem struct {
 	ParamType string
 	Expect string
 	ExpectType string
+	MetaData []MetaD
+	ExpectMeta []MetaD
 }
 
 type TestCase struct {
@@ -429,6 +433,12 @@ func generateTestCases(conf *TestConfig, suiteDir string, ts * TestSuite,
 		test.Send.ParamType = mthdMap[test.Send.Method].Param
 		test.Send.Expect = v.Send.Expect
 		test.Send.ExpectType = mthdMap[test.Send.Method].Rtrn
+		for _,v1 := range v.Send.MetaData {
+			test.Send.MetaData = append(test.Send.MetaData,v1)
+		}
+		for _,v1 := range v.Send.ExpectMeta {
+			test.Send.ExpectMeta = append(test.Send.ExpectMeta,v1)
+		}
 		for _,v1 := range v.Servers {
 			var srvr Server
 			if serverExists(v1.Name, ts) == false {
