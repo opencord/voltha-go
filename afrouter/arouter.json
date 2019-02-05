@@ -62,7 +62,7 @@
 					"name":"read_only",
 		   			"type":"round_robin",
 		   			"association":"round_robin",
-					"backend_cluster":"vcore",
+					"backend_cluster":"ro_vcore",
 					"methods":[ "ListDevicePorts",
 								"ListDevicePmConfigs",
 								"GetImages",
@@ -75,6 +75,8 @@
 								"ListLogicalDeviceFlowGroups",
 								"ListDevices",
 								"GetDevice",
+								"ListLogicalDevices",
+								"GetLogicalDevices",
 								"GetDeviceType",
 								"GetDeviceGroup",
 								"GetLogicalDevice",
@@ -95,8 +97,11 @@
 					},
 					"backend_cluster":"vcore",
                     "methods":["StreamPacketsOut",
+							   "ReceivePacketsIn",
+							   "ReceiveChangeEvents",
                                "Subscribe",
                                "ListLogicalDevices",
+                               "GetLogicalDevice",
                                "ListDeviceFlowGroups",
                                "ListLogicalDeviceFlowGroups",
                                "ListDeviceFlows",
@@ -143,7 +148,9 @@
 			"type":"active_active",
 			"association": {
 				"strategy":"serial_number",
-				"location":"header"
+				"location":"header",
+				"_TODO":"The key below needs to be implemented, currently hard coded",
+				"key":"voltha_serial_number"
 			},
 			"connections": [ {
 		   		"name":"vcore21",
@@ -161,7 +168,9 @@
 			"type":"active_active",
 			"association": {
 				"strategy":"serial_number",
-				"location":"header"
+				"location":"header",
+				"_TODO":"The key below needs to be implemented, currently hard coded",
+				"key":"voltha_serial_number"
 			},
 			"connections": [ {
 		   		"name":"vcore31",
@@ -172,6 +181,36 @@
 				"name":"vcore32",
 				"addr":"",
 				"port":""
+			}]
+		}]
+	  },
+	  {
+        "name":"ro_vcore",
+		"backends":[ {
+			"name":"ro_vcore1",
+			"type":"server",
+			"connections": [ {
+		   		"name":"ro_vcore11",
+		   		"addr":"",
+		   		"port":""
+			}]
+		},
+		{
+			"name":"ro_vcore2",
+			"type":"server",
+			"connections": [ {
+		   		"name":"ro_vcore21",
+		   		"addr":"",
+		   		"port":""
+			}]
+		},
+		{
+			"name":"ro_vcore3",
+			"type":"server",
+			"connections": [ {
+		   		"name":"ro_vcore31",
+		   		"addr":"",
+		   		"port":""
 			}]
 		}]
 	  }

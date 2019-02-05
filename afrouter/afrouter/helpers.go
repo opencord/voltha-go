@@ -17,9 +17,11 @@
 
 package afrouter
 
+//import "github.com/opencord/voltha-go/common/log"
+
 func strIndex(ar []string, match string) int {
-	for idx := range ar {
-		if ar[idx] == match {
+	for idx,v := range ar {
+		if v == match {
 			return idx
 		}
 	}
