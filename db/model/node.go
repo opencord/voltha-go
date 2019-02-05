@@ -123,10 +123,13 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	if changeAnnouncement != nil && branch.Txid == "" {
 		if n.GetProxy() != nil {
 			for _, change := range changeAnnouncement {
-				log.Debugf("invoking callback - changeType: %+v, previous:%+v, latest: %+v",
-					change.Type,
-					change.PreviousData,
-					change.LatestData)
+				log.Debugw("invoking callback",
+					log.Fields{
+						"callbacks": n.GetProxy().getCallbacks(change.Type),
+						"type":change.Type,
+						"previousData": change.PreviousData,
+						"latestData": change.LatestData,
+					})
 				n.GetRoot().AddCallback(
 					n.GetProxy().InvokeCallbacks,
 					change.Type,
@@ -416,7 +419,8 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			childNode := childRev.GetNode()
 
 			// Save proxy in child node to ensure callbacks are called later on
-			if childNode.Proxy == nil {
+			// only assign in cases of non sub-folder proxies, i.e. "/"
+			if childNode.Proxy == nil && n.Proxy != nil && n.Proxy.getFullPath() == "" {
 				childNode.Proxy = n.Proxy
 			}
 
