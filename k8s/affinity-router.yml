@@ -12,6 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: afrouter
+  namespace: voltha
+spec:
+  clusterIP: None
+  ports:
+    - name: grpc
+      port: 55555
+      targetPort: 55555
+  selector:
+    app: afrouter
+---
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:

@@ -58,6 +58,8 @@ spec:
             - "--core_topic=rwcore"
             - "--simulator_topic=simulated_olt"
             - "--onu_number=1"
+            - "--kv_store_host=etcd.$(NAMESPACE).svc.cluster.local"
+            - "--kv_store_port=2379"
           imagePullPolicy: IfNotPresent
 ---
 
@@ -106,4 +108,6 @@ spec:
             - "--kafka_cluster_port=9092"
             - "--core_topic=rwcore"
             - "--simulator_topic=simulated_onu"
+            - "--kv_store_host=etcd.$(NAMESPACE).svc.cluster.local"
+            - "--kv_store_port=2379"
           imagePullPolicy: IfNotPresent
