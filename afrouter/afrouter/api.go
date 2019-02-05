@@ -104,7 +104,8 @@ func (aa *ArouterApi) getBackend(c *backendCluster, bknd string) (*backend, erro
 			return b,nil
 		}
 	}
-	err := errors.New(fmt.Sprintf("Backend '%s' doesn't exist", bknd))
+	err := errors.New(fmt.Sprintf("Backend '%s' doesn't exist in cluster %s",
+						bknd, c.name))
 	return nil, err
 }
 
@@ -172,7 +173,6 @@ func (aa ArouterApi) SetAffinity(ctx context.Context, in *pb.Affinity) (*pb.Resu
 }
 
 func (aa ArouterApi) SetConnection(ctx context.Context, in *pb.Conn) (*pb.Result, error) {
-	log.Debugf("SetConnection called! %v",in);
 	// Navigate down tot he connection and compare IP addresses and ports if they're
 	// not the same then close the existing connection. If they are bothe the same
 	// then return an error describing the situation.
@@ -182,9 +182,12 @@ func (aa ArouterApi) SetConnection(ctx context.Context, in *pb.Conn) (*pb.Result
 	var cn * beConnection
 	var err error
 
+	log.Debugf("SetConnection called! %v",in);
+
 	aap := &aa
 	if s,err = (aap).getServer(in.Server); err != nil {
 		err := errors.New(fmt.Sprintf("Server '%s' doesn't exist", in.Server))
+		log.Error(err)
 		return &pb.Result{Success:false,Error:err.Error()}, err
 	}
 	// The cluster is usually accessed via tha router but since each
@@ -192,18 +195,22 @@ func (aa ArouterApi) SetConnection(ctx context.Context, in *pb.Conn) (*pb.Result
 	// has the cluster we're looking for rather than fully keying
 	// the path
 	if c,err = aap.getCluster(s, in.Cluster); err != nil {
+		log.Error(err)
 		return &pb.Result{Success:false,Error:err.Error()}, err
 	}
 
 	if b,err = aap.getBackend(c, in.Backend); err != nil {
+		log.Error(err)
 		return &pb.Result{Success:false,Error:err.Error()}, err
 	}
 
 	if cn,err = aap.getConnection(b, in.Connection); err != nil {
+		log.Error(err)
 		return &pb.Result{Success:false,Error:err.Error()}, err
 	}
 
 	if err = aap.updateConnection(in, cn, b); err != nil {
+		log.Error(err)
 		return &pb.Result{Success:false,Error:err.Error()}, err
 	}
 

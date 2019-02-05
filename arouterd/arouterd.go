@@ -437,7 +437,8 @@ func intersect(d1 map[string]struct{}, d2 map[string]struct{}) bool {
 }
 
 func setConnection(client pb.ConfigurationClient, cluster string, backend string, connection string, addr string, port uint64) {
-	log.Debugf("Configuring backend %s : connection %s\n\n", backend, connection)
+	log.Debugf("Configuring backend %s : connection %s in cluster %s\n\n",
+					backend, connection, cluster)
 	cnf := &pb.Conn{Server:"grpc_command",Cluster:cluster, Backend:backend,
 					Connection:connection,Addr:addr,
 					Port:port}

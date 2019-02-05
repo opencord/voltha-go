@@ -69,7 +69,10 @@ func (br BindingRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string,st
 
 	return rtrnK,rtrnV,nil
 }
-func (br BindingRouter) FindBackendCluster(string) (*backendCluster) {
+func (br BindingRouter) FindBackendCluster(becName string) (*backendCluster) {
+	if becName ==  br.bkndClstr.name {
+		return br.bkndClstr
+	}
 	return nil
 }
 func (br BindingRouter) ReplyHandler(v interface{}) error {

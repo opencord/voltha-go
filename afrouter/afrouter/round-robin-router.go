@@ -122,8 +122,11 @@ func (rr RoundRobinRouter) Service() (string) {
 	return rr.grpcService
 }
 
-func (rr RoundRobinRouter) FindBackendCluster(string) (*backendCluster) {
-	return rr.bkndClstr
+func (rr RoundRobinRouter) FindBackendCluster(becName string) (*backendCluster) {
+	if becName ==  rr.bkndClstr.name {
+		return rr.bkndClstr
+	}
+	return nil
 }
 
 func (rr RoundRobinRouter) ReplyHandler(sel interface{}) error { // This is a no-op
