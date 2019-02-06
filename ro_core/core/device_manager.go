@@ -118,11 +118,11 @@ func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
 	return device.Root, nil
 }
 
-// GetDevice retrieves the latest device information from the data model
+// ListDevices retrieves the latest devices from the data model
 func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	log.Debug("ListDevices")
 	result := &voltha.Devices{}
-	if devices := dMgr.clusterDataProxy.Get("/devices", 0, false, ""); devices != nil {
+	if devices := dMgr.clusterDataProxy.List("/devices", 0, false, ""); devices != nil {
 		for _, device := range devices.([]interface{}) {
 			if agent := dMgr.getDeviceAgent(device.(*voltha.Device).Id); agent == nil {
 				agent = newDeviceAgent(device.(*voltha.Device), dMgr, dMgr.clusterDataProxy)

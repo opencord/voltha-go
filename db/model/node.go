@@ -125,10 +125,10 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 			for _, change := range changeAnnouncement {
 				log.Debugw("invoking callback",
 					log.Fields{
-						"callbacks": n.GetProxy().getCallbacks(change.Type),
-						"type":change.Type,
+						"callbacks":    n.GetProxy().getCallbacks(change.Type),
+						"type":         change.Type,
 						"previousData": change.PreviousData,
-						"latestData": change.LatestData,
+						"latestData":   change.LatestData,
 					})
 				n.GetRoot().AddCallback(
 					n.GetProxy().InvokeCallbacks,
@@ -248,7 +248,44 @@ func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) 
 }
 
 // Get retrieves the data from a node tree that resides at the specified path
+func (n *node) List(path string, hash string, depth int, deep bool, txid string) interface{} {
+	log.Debugw("node-list-request", log.Fields{"path": path, "hash": hash, "depth":depth, "deep":deep, "txid":txid})
+	if deep {
+		depth = -1
+	}
+
+	for strings.HasPrefix(path, "/") {
+		path = path[1:]
+	}
+
+	var branch *Branch
+	var rev Revision
+
+	if branch = n.GetBranch(txid); txid == "" || branch == nil {
+		branch = n.GetBranch(NONE)
+	}
+
+	if hash != "" {
+		rev = branch.GetRevision(hash)
+	} else {
+		rev = branch.GetLatest()
+	}
+
+	var result interface{}
+	var prList []interface{}
+	if pr := rev.LoadFromPersistence(path, txid); pr != nil {
+		for _, revEntry := range pr {
+			prList = append(prList, revEntry.GetData())
+		}
+		result = prList
+	}
+
+	return result
+}
+
+// Get retrieves the data from a node tree that resides at the specified path
 func (n *node) Get(path string, hash string, depth int, deep bool, txid string) interface{} {
+	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth":depth, "deep":deep, "txid":txid})
 	if deep {
 		depth = -1
 	}
@@ -355,7 +392,7 @@ func (n *node) getData(rev Revision, depth int) interface{} {
 	var modifiedMsg interface{}
 
 	if n.GetProxy() != nil {
-		log.Debug("invoking proxy GET Callbacks : %+v", msg)
+		log.Debugw("invoking-get-callbacks", log.Fields{"data": msg})
 		if modifiedMsg = n.GetProxy().InvokeCallbacks(GET, false, msg); modifiedMsg != nil {
 			msg = modifiedMsg
 		}
@@ -367,6 +404,8 @@ func (n *node) getData(rev Revision, depth int) interface{} {
 
 // Update changes the content of a node at the specified path with the provided data
 func (n *node) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
+	log.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid":txid, "makeBranch": makeBranch})
+
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -396,8 +435,13 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 		path = partition[1]
 	}
 
+
 	field := ChildrenFields(n.Type)[name]
 	var children []Revision
+
+	if field == nil {
+		return n.doUpdate(branch, data, strict)
+	}
 
 	if field.IsContainer {
 		if path == "" {
@@ -515,12 +559,15 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 
 // Add inserts a new node at the specified path with the provided data
 func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
+	log.Debugw("node-add-request", log.Fields{"path": path, "txid":txid, "makeBranch": makeBranch})
+
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
 	if path == "" {
 		// TODO raise error
 		log.Errorf("cannot add for non-container mode")
+		return nil
 	}
 
 	var branch *Branch
@@ -622,6 +669,8 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 // Remove eliminates a node at the specified path
 func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) Revision {
+	log.Debugw("node-remove-request", log.Fields{"path": path, "txid":txid, "makeBranch": makeBranch})
+
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -820,7 +869,8 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 	if field.IsContainer {
 		if path == "" {
 			//log.Error("cannot proxy a container field")
-			return n.makeProxy(path, fullPath, parentNode, exclusive)
+			newNode := n.MakeNode(reflect.New(field.ClassType.Elem()).Interface(), "")
+			return newNode.makeProxy(path, fullPath, parentNode, exclusive)
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]

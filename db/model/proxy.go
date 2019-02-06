@@ -158,6 +158,30 @@ func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled
 	return pathLock, controlled
 }
 
+// List will retrieve information from the data model at the specified path location
+// A list operation will force access to persistence storage
+func (p *Proxy) List(path string, depth int, deep bool, txid string) interface{} {
+	var effectivePath string
+	if path == "/" {
+		effectivePath = p.getFullPath()
+	} else {
+		effectivePath = p.getFullPath() + path
+	}
+
+	pathLock, controlled := p.parseForControlledPath(effectivePath)
+
+	log.Debugf("Path: %s, Effective: %s, PathLock: %s", path, effectivePath, pathLock)
+
+	pac := PAC().ReservePath(effectivePath, p, pathLock)
+	defer PAC().ReleasePath(pathLock)
+	pac.SetProxy(p)
+
+	rv := pac.List(path, depth, deep, txid, controlled)
+
+	return rv
+}
+
+
 // Get will retrieve information from the data model at the specified path location
 func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} {
 	var effectivePath string

@@ -159,6 +159,20 @@ func (pac *proxyAccessControl) SetProxy(proxy *Proxy) {
 	pac.Proxy = proxy
 }
 
+// List retrieves data linked to a data model path
+func (pac *proxyAccessControl) List(path string, depth int, deep bool, txid string, control bool) interface{} {
+	if control {
+		pac.lock()
+		defer pac.unlock()
+		log.Debugf("controlling list, stack = %s", string(debug.Stack()))
+	}
+
+	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
+	// The data traversal through reflection currently corrupts the content
+
+	return pac.getProxy().GetRoot().List(path, "", depth, deep, txid)
+}
+
 // Get retrieves data linked to a data model path
 func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid string, control bool) interface{} {
 	if control {

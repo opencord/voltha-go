@@ -172,37 +172,44 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 		field := ChildrenFields(rev.GetBranch().Node.Type)[name]
 
 		if field.IsContainer {
+			var children []Revision
+			children = make([]Revision, len(rev.GetChildren(name)))
+			copy(children, rev.GetChildren(name))
+			existChildMap := make(map[string]int)
+			for i, child := range rev.GetChildren(name) {
+				existChildMap[child.GetHash()] = i
+			}
+
 			for _, blob := range blobMap {
 				output := blob.Value.([]byte)
 
 				data := reflect.New(field.ClassType.Elem())
 
 				if err := proto.Unmarshal(output, data.Interface().(proto.Message)); err != nil {
-					// TODO report error
+					log.Errorw(
+						"loading-from-persistence--failed-to-unmarshal",
+						log.Fields{"path": path, "txid": txid, "error": err},
+					)
 				} else {
-
-					var children []Revision
-
 					if path == "" {
 						if field.Key != "" {
 							// e.g. /logical_devices/abcde --> path="" name=logical_devices key=abcde
 							if field.Key != "" {
-								children = make([]Revision, len(rev.GetChildren(name)))
-								copy(children, rev.GetChildren(name))
-
 								_, key := GetAttributeValue(data.Interface(), field.Key, 0)
 
 								childRev := rev.GetBranch().Node.MakeNode(data.Interface(), txid).Latest(txid)
 								childRev.SetHash(name + "/" + key.String())
 
-								// Create watch for <component>/<key>
-								pr.SetupWatch(childRev.GetHash())
+								// Do not process a child that is already in memory
+								if _, childExists := existChildMap[childRev.GetHash()]; !childExists {
+									// Create watch for <component>/<key>
+									pr.SetupWatch(childRev.GetHash())
 
-								children = append(children, childRev)
-								rev = rev.UpdateChildren(name, children, rev.GetBranch())
+									children = append(children, childRev)
+									rev = rev.UpdateChildren(name, children, rev.GetBranch())
 
-								rev.GetBranch().Node.makeLatest(rev.GetBranch(), rev, nil)
-
+									rev.GetBranch().Node.makeLatest(rev.GetBranch(), rev, nil)
+								}
 								response = append(response, childRev)
 								continue
 							}
@@ -218,9 +225,6 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 							path = partition[1]
 						}
 						keyValue := field.KeyFromStr(key)
-
-						children = make([]Revision, len(rev.GetChildren(name)))
-						copy(children, rev.GetChildren(name))
 
 						idx, childRev := rev.GetBranch().Node.findRevByKey(children, field.Key, keyValue)
 

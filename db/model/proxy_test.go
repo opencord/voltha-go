@@ -33,7 +33,9 @@ var (
 	TestProxy_Root                  *root
 	TestProxy_Root_LogicalDevice    *Proxy
 	TestProxy_Root_Device           *Proxy
+	TestProxy_Root_Adapter          *Proxy
 	TestProxy_DeviceId              string
+	TestProxy_AdapterId             string
 	TestProxy_LogicalDeviceId       string
 	TestProxy_TargetDeviceId        string
 	TestProxy_TargetLogicalDeviceId string
@@ -43,6 +45,7 @@ var (
 	TestProxy_Flows                 *openflow_13.Flows
 	TestProxy_Device                *voltha.Device
 	TestProxy_LogicalDevice         *voltha.LogicalDevice
+	TestProxy_Adapter               *voltha.Adapter
 )
 
 func init() {
@@ -51,6 +54,7 @@ func init() {
 	TestProxy_Root = NewRoot(&voltha.Voltha{}, nil)
 	TestProxy_Root_LogicalDevice = TestProxy_Root.CreateProxy("/", false)
 	TestProxy_Root_Device = TestProxy_Root.CreateProxy("/", false)
+	TestProxy_Root_Adapter = TestProxy_Root.CreateProxy("/", false)
 
 	TestProxy_LogicalPorts = []*voltha.LogicalPort{
 		{
@@ -92,6 +96,12 @@ func init() {
 		DatapathId: 0,
 		Ports:      TestProxy_LogicalPorts,
 		Flows:      TestProxy_Flows,
+	}
+
+	TestProxy_Adapter = &voltha.Adapter{
+		Id:      TestProxy_AdapterId,
+		Vendor:  "test-adapter-vendor",
+		Version: "test-adapter-version",
 	}
 }
 
@@ -140,6 +150,39 @@ func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
 	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "");
 	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_Device).Interface().(proto.Message).String() {
 		t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
+	}
+}
+
+func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
+	TestProxy_AdapterId = "test-adapter"
+	TestProxy_Adapter.Id = TestProxy_AdapterId
+	preAddExecuted := false
+	postAddExecuted := false
+
+	// Register ADD instructions callbacks
+	TestProxy_Root_Adapter.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions for adapters", &preAddExecuted)
+	TestProxy_Root_Adapter.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions for adapters", &postAddExecuted)
+
+	// Add the adapter
+	if added := TestProxy_Root_Adapter.Add("/adapters", TestProxy_Adapter, ""); added == nil {
+		t.Error("Failed to add adapter")
+	} else {
+		t.Logf("Added adapter : %+v", added)
+	}
+
+	// Verify that the added device can now be retrieved
+	if d := TestProxy_Root_Adapter.Get("/adapters/"+TestProxy_AdapterId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
+		t.Error("Failed to find added adapter")
+	} else {
+		djson, _ := json.Marshal(d)
+		t.Logf("Found adapter: %s", string(djson))
+	}
+
+	if !preAddExecuted {
+		t.Error("PRE_ADD callback was not executed")
+	}
+	if !postAddExecuted {
+		t.Error("POST_ADD callback was not executed")
 	}
 }
 
@@ -267,6 +310,52 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	}
 	if !postUpdateExecuted {
 		t.Error("POST_UPDATE callback was not executed")
+	}
+}
+
+func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
+	preUpdateExecuted := false
+	postUpdateExecuted := false
+
+	adaptersProxy := TestProxy_Root.node.CreateProxy("/adapters", false)
+
+	if retrieved := TestProxy_Root_Adapter.Get("/adapters/"+TestProxy_AdapterId, 1, false, ""); retrieved == nil {
+		t.Error("Failed to get adapter")
+	} else {
+		t.Logf("Found raw adapter (root proxy): %+v", retrieved)
+
+		retrieved.(*voltha.Adapter).Version = "test-adapter-version-2"
+
+		adaptersProxy.RegisterCallback(
+			PRE_UPDATE,
+			commonCallback,
+			"PRE_UPDATE instructions for adapters", &preUpdateExecuted,
+		)
+		adaptersProxy.RegisterCallback(
+			POST_UPDATE,
+			commonCallback,
+			"POST_UPDATE instructions for adapters", &postUpdateExecuted,
+		)
+
+		if afterUpdate := adaptersProxy.Update("/"+TestProxy_AdapterId, retrieved, false, ""); afterUpdate == nil {
+			t.Error("Failed to update adapter")
+		} else {
+			t.Logf("Updated adapter : %+v", afterUpdate)
+		}
+
+		if d := TestProxy_Root_Adapter.Get("/adapters/"+TestProxy_AdapterId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
+			t.Error("Failed to find updated adapter (root proxy)")
+		} else {
+			djson, _ := json.Marshal(d)
+			t.Logf("Found adapter (root proxy): %s raw: %+v", string(djson), d)
+		}
+
+		if !preUpdateExecuted {
+			t.Error("PRE_UPDATE callback for adapter was not executed")
+		}
+		if !postUpdateExecuted {
+			t.Error("POST_UPDATE callback for adapter was not executed")
+		}
 	}
 }
 
