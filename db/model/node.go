@@ -249,7 +249,7 @@ func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) 
 
 // Get retrieves the data from a node tree that resides at the specified path
 func (n *node) List(path string, hash string, depth int, deep bool, txid string) interface{} {
-	log.Debugw("node-list-request", log.Fields{"path": path, "hash": hash, "depth":depth, "deep":deep, "txid":txid})
+	log.Debugw("node-list-request", log.Fields{"path": path, "hash": hash, "depth": depth, "deep": deep, "txid": txid})
 	if deep {
 		depth = -1
 	}
@@ -285,7 +285,7 @@ func (n *node) List(path string, hash string, depth int, deep bool, txid string)
 
 // Get retrieves the data from a node tree that resides at the specified path
 func (n *node) Get(path string, hash string, depth int, deep bool, txid string) interface{} {
-	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth":depth, "deep":deep, "txid":txid})
+	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "deep": deep, "txid": txid})
 	if deep {
 		depth = -1
 	}
@@ -309,14 +309,19 @@ func (n *node) Get(path string, hash string, depth int, deep bool, txid string) 
 
 	var result interface{}
 	if result = n.getPath(rev.GetBranch().GetLatest(), path, depth);
-		reflect.ValueOf(result).IsValid() && reflect.ValueOf(result).IsNil() && n.Root.KvStore != nil {
+		(result == nil || reflect.ValueOf(result).IsValid() && reflect.ValueOf(result).IsNil()) && n.Root.KvStore != nil {
 		// We got nothing from memory, try to pull it from persistence
 		var prList []interface{}
 		if pr := rev.LoadFromPersistence(path, txid); pr != nil {
-			for _, revEntry := range pr {
-				prList = append(prList, revEntry.GetData())
+			// Did we receive a single or multiple revisions?
+			if len(pr) > 1 {
+				for _, revEntry := range pr {
+					prList = append(prList, revEntry.GetData())
+				}
+				result = prList
+			} else {
+				result = pr[0].GetData()
 			}
-			result = prList
 		}
 	}
 
@@ -404,7 +409,7 @@ func (n *node) getData(rev Revision, depth int) interface{} {
 
 // Update changes the content of a node at the specified path with the provided data
 func (n *node) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
-	log.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid":txid, "makeBranch": makeBranch})
+	log.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid": txid, "makeBranch": makeBranch})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -434,7 +439,6 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 	} else {
 		path = partition[1]
 	}
-
 
 	field := ChildrenFields(n.Type)[name]
 	var children []Revision
@@ -559,7 +563,7 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 
 // Add inserts a new node at the specified path with the provided data
 func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
-	log.Debugw("node-add-request", log.Fields{"path": path, "txid":txid, "makeBranch": makeBranch})
+	log.Debugw("node-add-request", log.Fields{"path": path, "txid": txid, "makeBranch": makeBranch})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -669,7 +673,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 // Remove eliminates a node at the specified path
 func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) Revision {
-	log.Debugw("node-remove-request", log.Fields{"path": path, "txid":txid, "makeBranch": makeBranch})
+	log.Debugw("node-remove-request", log.Fields{"path": path, "txid": txid, "makeBranch": makeBranch})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]

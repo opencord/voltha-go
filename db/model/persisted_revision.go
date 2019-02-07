@@ -136,7 +136,9 @@ StopWatchLoop:
 					if err := proto.Unmarshal(dataPair.Value.([]byte), data.Interface().(proto.Message)); err != nil {
 						log.Errorw("update-in-memory--unmarshal-failed", log.Fields{"key": pr.GetHash(), "error": err})
 					} else {
-						pr.UpdateData(data.Interface(), pr.GetBranch())
+						// Traverse the node and update as necessary
+						rev := pr.GetBranch().GetLatest()
+						rev.GetBranch().Node.Update("", data.Interface(), false, "", nil)
 					}
 				}
 
@@ -190,32 +192,20 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 						"loading-from-persistence--failed-to-unmarshal",
 						log.Fields{"path": path, "txid": txid, "error": err},
 					)
-				} else {
+				} else if field.Key != "" {
+					var key reflect.Value
+					var keyValue interface{}
+					var keyStr string
+
 					if path == "" {
-						if field.Key != "" {
-							// e.g. /logical_devices/abcde --> path="" name=logical_devices key=abcde
-							if field.Key != "" {
-								_, key := GetAttributeValue(data.Interface(), field.Key, 0)
+						// e.g. /logical_devices --> path="" name=logical_devices key=""
+						_, key = GetAttributeValue(data.Interface(), field.Key, 0)
+						keyStr = key.String()
 
-								childRev := rev.GetBranch().Node.MakeNode(data.Interface(), txid).Latest(txid)
-								childRev.SetHash(name + "/" + key.String())
-
-								// Do not process a child that is already in memory
-								if _, childExists := existChildMap[childRev.GetHash()]; !childExists {
-									// Create watch for <component>/<key>
-									pr.SetupWatch(childRev.GetHash())
-
-									children = append(children, childRev)
-									rev = rev.UpdateChildren(name, children, rev.GetBranch())
-
-									rev.GetBranch().Node.makeLatest(rev.GetBranch(), rev, nil)
-								}
-								response = append(response, childRev)
-								continue
-							}
-						}
-					} else if field.Key != "" {
-						// e.g. /logical_devices/abcde/flows/vwxyz --> path=abcde/flows/vwxyz
+					} else {
+						// e.g.
+						// /logical_devices/abcde --> path="abcde" name=logical_devices
+						// /logical_devices/abcde/image_downloads --> path="abcde/image_downloads" name=logical_devices
 
 						partition := strings.SplitN(path, "/", 2)
 						key := partition[0]
@@ -224,24 +214,43 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 						} else {
 							path = partition[1]
 						}
-						keyValue := field.KeyFromStr(key)
+						keyValue = field.KeyFromStr(key)
+						keyStr = keyValue.(string)
 
-						idx, childRev := rev.GetBranch().Node.findRevByKey(children, field.Key, keyValue)
+						if idx, childRev := rev.GetBranch().Node.findRevByKey(children, field.Key, keyValue); childRev != nil {
+							// Key is memory, continue recursing path
+							newChildRev := childRev.LoadFromPersistence(path, txid)
 
-						newChildRev := childRev.LoadFromPersistence(path, txid)
+							children[idx] = newChildRev[0]
 
-						children[idx] = newChildRev[0]
+							rev := rev.UpdateChildren(name, rev.GetChildren(name), rev.GetBranch())
+							rev.GetBranch().Node.makeLatest(rev.GetBranch(), rev, nil)
 
-						rev := rev.UpdateChildren(name, rev.GetChildren(name), rev.GetBranch())
-						rev.GetBranch().Node.makeLatest(rev.GetBranch(), rev, nil)
-
-						response = append(response, newChildRev[0])
-						continue
+							response = append(response, newChildRev[0])
+							continue
+						}
 					}
+
+					childRev := rev.GetBranch().Node.MakeNode(data.Interface(), txid).Latest(txid)
+					childRev.SetHash(name + "/" + keyStr)
+
+					// Do not process a child that is already in memory
+					if _, childExists := existChildMap[childRev.GetHash()]; !childExists {
+						// Create watch for <component>/<key>
+						childRev.SetupWatch(childRev.GetHash())
+
+						children = append(children, childRev)
+						rev = rev.UpdateChildren(name, children, rev.GetBranch())
+
+						rev.GetBranch().Node.makeLatest(rev.GetBranch(), rev, nil)
+					}
+					response = append(response, childRev)
+					continue
 				}
 			}
 		}
 	}
+
 	return response
 }
 

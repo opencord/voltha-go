@@ -183,8 +183,7 @@ func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid strin
 
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
 	// The data traversal through reflection currently corrupts the content
-
-	return pac.getProxy().GetRoot().Get(path, "", depth, deep, txid)
+	return pac.getProxy().GetRoot().Get(path, "", 0, deep, txid)
 }
 
 // Update changes the content of the data model at the specified location with the provided data
