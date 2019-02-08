@@ -1,0 +1,66 @@
+/*
+ * Copyright 2018-present Open Networking Foundation
+
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ * http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package main
+
+import (
+	"os"
+	//"fmt"
+	//"flag"
+	//"path"
+	//"bufio"
+	//"errors"
+	//"os/exec"
+	//"strconv"
+	//"io/ioutil"
+	//"encoding/json"
+	"text/template"
+	//"github.com/golang/protobuf/proto"
+	"github.com/opencord/voltha-go/common/log"
+	//pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
+)
+
+type test struct {
+	Core int
+}
+
+func main() {
+
+	var ary []test
+
+	// Setup logging
+	if _, err := log.SetDefaultLogger(log.JSON, 0, nil); err != nil {
+		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+	}
+
+	for i :=0; i<10000; i++ {
+		
+		ary = append(ary,test{Core:(i%3)+1})
+	}
+
+	// Load the template to execute
+	t := template.Must(template.New("").ParseFiles("./test2.tmpl.json"))
+	if f,err := os.Create("test2.json"); err == nil {
+		_=f
+		defer f.Close()
+		if err := t.ExecuteTemplate(f, "test2.tmpl.json", ary); err != nil {
+			log.Errorf("Unable to execute template for test2.tmpl.json: %v", err)
+		}
+	} else {
+		log.Errorf("Couldn't create file test2.json: %v", err)
+	}
+	return
+}

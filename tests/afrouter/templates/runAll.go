@@ -83,7 +83,7 @@ func main() {
 	}
 	tl := &tstLog{fn:"results.txt"}
 	{{range .}}
-	cmdStr =  "./"+"{{.}}"[:len("{{.}}")-5]
+	cmdStr =  "./"+"{{.}}"+".e"
 	tl.testLogOnce("Running test suite '%s'\n", cmdStr[2:])
 
 	log.Infof("Running test suite %s",cmdStr)

@@ -26,8 +26,27 @@ import (
 	"os/exec"
 	"strings"
 	"context"
+	slog "log"
+	"io/ioutil"
+	"encoding/json"
+	"google.golang.org/grpc/grpclog"
 	"github.com/opencord/voltha-go/common/log"
 )
+
+type TestCase struct {
+	Title string `json:"title"`
+	Result bool `json:"result"`
+	Info []string `json:"info"`
+}
+
+type TestSuite struct {
+	Name string `json:"name"`
+	TestCases []TestCase `json:"testCases"`
+}
+
+type TestRun struct {
+	TestSuites []TestSuite
+}
 
 var resFile *tstLog
 type tstLog struct {
@@ -95,6 +114,37 @@ func cleanUp(cmd *exec.Cmd, cncl context.CancelFunc) {
 	//time.Sleep(1 * time.Second)
 }
 
+func readStats(stats * TestRun) () {
+	// Check if the  stats file exists
+	if _,err := os.Stat("stats.json"); err != nil {
+		// Nothing to do, just return
+		return
+	}
+	// The file is there, read it an unmarshal it into the stats struct
+	if statBytes, err := ioutil.ReadFile("stats.json"); err != nil {
+		log.Error(err)
+		return
+	} else if err := json.Unmarshal(statBytes, stats); err != nil {
+		log.Error(err)
+		return
+	}
+}
+
+func writeStats(stats * TestRun) () {
+	// Check if the  stats file exists
+	// The file is there, read it an unmarshal it into the stats struct
+	if statBytes, err := json.MarshalIndent(stats, "","    "); err != nil {
+		log.Error(err)
+		return
+	} else if err := ioutil.WriteFile("stats.json.new", statBytes, 0644); err != nil {
+		log.Error(err)
+		return
+	}
+	os.Rename("stats.json", "stats.json~")
+	os.Rename("stats.json.new", "stats.json")
+}
+var stats TestRun
+
 func main() {
 	var err error
 
@@ -102,8 +152,12 @@ func main() {
 	if _, err = log.SetDefaultLogger(log.JSON, 0, nil); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
-
 	defer log.CleanUp()
+
+	readStats(&stats)
+
+
+	grpclog.SetLogger(slog.New(os.Stderr, "grpc: ", slog.LstdFlags))
 
 	resFile = &tstLog{fn:os.Args[1]}
 	defer resFile.close()
@@ -133,5 +187,6 @@ func main() {
 	// Run all the test cases now
 	log.Infof("Executing tests")
 	runTests()
+	writeStats(&stats)
 
 }

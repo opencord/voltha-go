@@ -17,7 +17,6 @@
 
 package main
 
-// Command line parameters and parsing
 import (
 	"os"
 	"fmt"
@@ -194,9 +193,31 @@ func (conf * TestConfig) loadConfig() error {
 	return nil
 }
 
-func (suite * TestSuite) loadSuite(fileN string)  error {
-	suiteF, err := os.Open(fileN);
-	log.Info("Loading test suite from: ", fileN)
+func (suite * TestSuite) loadSuite(suiteN string)  error {
+	// Check if there's a corresponding go file for the suite.
+	// If it is present then the json test suite file is a
+	// template. Compile the go file and run it to process
+	// the template.
+	if _,err := os.Stat(suiteN+".go"); err == nil {
+		// Compile and run the the go file
+		log.Infof("Suite '%s' is a template, compiling '%s'", suiteN, suiteN+".go")
+		cmd := exec.Command("go", "build", "-o", suiteN+".te", suiteN+".go")
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			log.Errorf("Error running the compile command:%v", err)
+		}
+		cmd = exec.Command("./"+suiteN+".te")
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			log.Errorf("Error running the %s command:%v", suiteN+".te", err)
+		}
+	}
+	suiteF, err := os.Open(suiteN+".json");
+	log.Infof("Loading test suite from: %s", suiteN+".json")
 	if err != nil {
 		log.Error(err)
 		return err
@@ -520,7 +541,7 @@ func generateTestSuites(conf *TestConfig, srcDir string, outDir string) error {
 		if err := os.Chdir(suiteDir); err != nil {
 			log.Errorf("Could not change to directory '%s':%v",suiteDir, err)
 		}
-		cmd := exec.Command("go", "build", "-o", outDir+"/"+v[:len(v)-5])
+		cmd := exec.Command("go", "build", "-o", outDir+"/"+v+".e")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -530,9 +551,6 @@ func generateTestSuites(conf *TestConfig, srcDir string, outDir string) error {
 		if err := os.Chdir("../../suites"); err != nil {
 			log.Errorf("Could not change to directory '%s':%v","../../suites", err)
 		}
-
-		// Now generate the test cases
-
 	}
 	return nil
 

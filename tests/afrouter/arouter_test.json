@@ -143,7 +143,8 @@
 			"type":"active_active",
 			"association": {
 				"strategy":"serial_number",
-				"location":"header"
+				"location":"header",
+				"key":"voltha_serial_number"
 			},
 			"connections": [ {
 		   		"name":"vcore21",
@@ -161,7 +162,8 @@
 			"type":"active_active",
 			"association": {
 				"strategy":"serial_number",
-				"location":"header"
+				"location":"header",
+				"key":"voltha_serial_number"
 			},
 			"connections": [ {
 		   		"name":"vcore31",

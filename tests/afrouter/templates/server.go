@@ -76,7 +76,7 @@ func init() {
 func {{.Name}}ListenAndServe() error {
 	var s {{.Name}}TestServer
 
-	s.control = &serverCtl{replyData:make(chan *reply,1), incmg:make(chan *incoming,1)}
+	s.control = &serverCtl{replyData:make(chan *reply), incmg:make(chan *incoming)}
 	servers["{{.Name}}"] = s.control
 
 	log.Debugf("Starting server %s on port %d", "{{.Name}}", {{.Port}})
@@ -112,15 +112,18 @@ func {{.Name}}ListenAndServe() error {
 {{range .Methods}}
 {{if .Ss}}
 func (ts {{$.Name}}TestServer) {{.Name}}(in *{{.Param}}, srvr {{.Pkg}}.{{.Svc}}_{{.Name}}Server) error {
+	log.Debug("Serving server streaming {{$.Name}}")
 	return nil
 }
 {{else if .Cs}}
 func (ts {{$.Name}}TestServer) {{.Name}}({{.Pkg}}.{{.Svc}}_{{.Name}}Server) error {
+	log.Debug("Serving client streaming {{$.Name}}")
 	return nil
 }
 {{else}}
 func  (ts {{$.Name}}TestServer) {{.Name}}(ctx context.Context, in *{{.Param}}) (*{{.Rtrn}}, error) {
 	var r * incoming = &incoming{}
+	log.Debug("Serving {{$.Name}}")
 	// Read the metadata
 	if md,ok := metadata.FromIncomingContext(ctx); ok == false {
 		log.Error("Getting matadata during call to {{.Name}}")
@@ -134,7 +137,15 @@ func  (ts {{$.Name}}TestServer) {{.Name}}(ctx context.Context, in *{{.Param}}) (
 		r.payload = string(parm)
 	}
 	// Send the server information back to the test framework
-	ts.control.incmg <- r
+	go func(ctx context.Context) {
+		select {
+		case ts.control.incmg <- r:
+			return
+		case <-ctx.Done():
+			return
+
+		}
+	}(glCtx)
 	// Read the value that needs to be returned from the channel
 	select {
 	case d := <-ts.control.replyData:
@@ -144,8 +155,8 @@ func  (ts {{$.Name}}TestServer) {{.Name}}(ctx context.Context, in *{{.Param}}) (
 			default:
 				return nil, errors.New("Mismatched type in call to {{.Name}}")
 		}
-	default:
-		return nil, errors.New("Nothing in the reply data channel in call to {{.Name}}, sending nil")
+	case <-glCtx.Done():
+		return nil, errors.New("Timeout: nothing in the reply data channel in call to {{.Name}}, sending nil")
 	}
 	return &{{.Rtrn}}{},nil
 }

@@ -1,6 +1,6 @@
 {
 	"environment":{
-		"cmdLine":"afrouter -config arouter_test.json",
+		"cmdLine":"afrouter -config arouter_test.json -grpclog",
 		"protoFiles": [
 			{
 				"importPath":"github.com/opencord/voltha-go/protos/",
@@ -53,43 +53,45 @@
 		]
 	},
 	"tests":[
+		{{range $k,$v := .}}
 		{
 			"name":"Test CreateDevice",
 			"send": {
 				"client":"client",
 				"method":"CreateDevice",
 				"param":"{Type:\"simulated_olt\"}",
-				"expect":"{Id:\"abcd1234\",Type:\"simulated_olt\"}",
+				"expect":"{Id:\"abcd1234{{$k}}\",Type:\"simulated_olt\"}",
 				"_meta":""
 			},
 			"servers": [
 				{
-					"name":"core11",
+					"name":"core{{$v.Core}}1",
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"0"
+							"value":"{{$k}}"
 						}
 					]
 				},
 				{
-					"name":"core12",
+					"name":"core{{$v.Core}}2",
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"0"
+							"value":"{{$k}}"
 						}
 					]
 				}
 			]
 		},
+		{{end}}
 		{
 			"name":"Test GetDevice",
 			"send": {
 				"client":"client",
 				"method":"GetDevice",
-				"param":"{Id:\"abcd1234\"}",
-				"expect":"{Id:\"abcd1234\",Type:\"simulated_olt\"}",
+				"param":"{Id:\"abcd12340\"}",
+				"expect":"{Id:\"abcd12340\",Type:\"simulated_olt\"}",
 				"_meta":""
 			},
 			"servers": [
@@ -98,7 +100,7 @@
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"1"
+							"value":"10000"
 						}
 					]
 				},
@@ -107,7 +109,7 @@
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"1"
+							"value":"10000"
 						}
 					]
 				}
@@ -129,7 +131,7 @@
 				"expectMeta": [
 					{
 						"key":"voltha_backend_name",
-						"value":"core11"
+						"value":"vcore1"
 					}
 				]
 			},
@@ -139,11 +141,11 @@
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"2"
+							"value":"10001"
 						},
 						{
 							"key":"voltha_backend_name",
-							"value":"a"
+							"value":""
 						}
 					]
 				}

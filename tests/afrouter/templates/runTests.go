@@ -18,9 +18,12 @@
 package main
 
 import (
+	"fmt"
+	"time"
 	"errors"
+	"context"
 	"encoding/json"
-	"golang.org/x/net/context"
+	//"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 	"github.com/opencord/voltha-go/common/log"
 	{{range .Imports}}
@@ -30,6 +33,8 @@ import (
 	{{.Short}} "{{.Package}}"
 	{{end}}
 )
+
+var glCtx context.Context
 
 func resetChannels() {
 	// Drain all channels of data
@@ -56,15 +61,19 @@ func runTests() {
 	} else {
 		resFile.testLog("\tTest Failed\n")
 	}
-	resetChannels()
+	//resetChannels()
 	{{end}}
 }
 
 {{range $k,$v := .Tests}}
 func test{{$k}}() error {
 	var rtrn error = nil
+	var cancel context.CancelFunc
+
+	glCtx, cancel = context.WithTimeout(context.Background(), 900*time.Millisecond)
+	defer cancel()
 	// Announce the test being run
-	resFile.testLog("******************** Running test case: {{$v.Name}}\n")
+	resFile.testLog("******************** Running test case ({{$k}}): {{$v.Name}}\n")
 	// Acquire the client used to run the test
 	cl := clients["{{$v.Send.Client}}"]
 	// Create the server's reply data structure
@@ -76,13 +85,18 @@ func test{{$k}}() error {
 		log.Error(err)
 		return err
 	}
-	select {
-	case servers["{{$s.Name}}"].replyData <- repl:
-	default:
-		err := errors.New("Could not provide server {{$s.Name}} with reply data")
-		log.Error(err)
-		return err
-	}
+	// Start a go routine to send the the reply data to the
+	// server. The go routine blocks until the server picks
+	// up the data or the timeout is exceeded.
+	go func (ctx context.Context) {
+		select {
+		case servers["{{$s.Name}}"].replyData <- repl:
+		case <-ctx.Done():
+			rtrn := errors.New("Could not provide server {{$s.Name}} with reply data")
+			log.Error(rtrn)
+			resFile.testLog("%s\n", rtrn.Error())
+		}
+	}(glCtx)
 	{{end}}
 
 	// Now call the RPC with the data provided
@@ -118,25 +132,27 @@ func test{{$k}}() error {
 	}
 	{{range $s := .Srvr}}
 	s = servers["{{$s.Name}}"]
+	// Oddly sometimes the data isn't in the channel yet when we come to read it.
 	select {
 	case i = <-s.incmg:
 		if i.payload != payload {
-			log.Errorf("Mismatched payload for test {{$v.Name}}, %s:%s", i.payload, payload)
-			resFile.testLog("Mismatched payload expected '%s', got '%s'\n", payload, i.payload)
-			rtrn = errors.New("Failed")
+			rtrn = errors.New(fmt.Sprintf("Mismatched payload expected '%s', got '%s'", payload, i.payload))
+			log.Error(rtrn.Error())
+			resFile.testLog("%s\n", rtrn.Error())
 		}
 		{{range $m := $s.Meta}}
 		if mv,ok := i.meta["{{$m.Key}}"]; ok == true {
 			if "{{$m.Val}}" != mv[0] {
-				log.Errorf("Mismatched metadata for test {{$v.Name}}, %s:%s", mv[0], "{{$m.Val}}")
-				resFile.testLog("Mismatched metadata on server '%s' expected '%s', got '%s'\n", "{{$s.Name}}", "{{$m.Val}}", mv[0])
-				rtrn = errors.New("Failed")
+				rtrn=errors.New(fmt.Sprintf("Mismatched metadata on server '%s' expected '%s', got '%s'", "{{$s.Name}}", "{{$m.Val}}", mv[0]))
+				log.Error(rtrn.Error())
+				resFile.testLog("%s\n", rtrn.Error())
 			}
 		}
 		{{end}}
-	default:
-		err := errors.New("No response data available for server {{$s.Name}}")
-		log.Error(err)
+	case <-glCtx.Done():
+		rtrn = errors.New("Timeout: no response data available for server {{$s.Name}}")
+		resFile.testLog("%s\n", rtrn.Error())
+		log.Error(rtrn)
 	}
 	{{end}}
 
