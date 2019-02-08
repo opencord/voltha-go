@@ -459,7 +459,7 @@ func (sc *SaramaClient) Send(msg interface{}, topic *Topic, keys ...string) erro
 	// TODO: Use a lock or a different mechanism to ensure the response received corresponds to the message sent.
 	select {
 	case ok := <-sc.producer.Successes():
-		log.Debugw("message-sent", log.Fields{"status": ok})
+		log.Debugw("message-sent", log.Fields{"status": ok.Topic})
 	case notOk := <-sc.producer.Errors():
 		log.Debugw("error-sending", log.Fields{"status": notOk})
 		return notOk
@@ -786,7 +786,7 @@ startloop:
 				// Channel closed
 				break startloop
 			}
-			log.Debugw("message-received", log.Fields{"msg": msg, "receivedTopic": msg.Topic})
+			log.Debugw("message-received", log.Fields{"timestamp": msg.Timestamp, "receivedTopic": msg.Topic})
 			msgBody := msg.Value
 			icm := &ic.InterContainerMessage{}
 			if err := proto.Unmarshal(msgBody, icm); err != nil {

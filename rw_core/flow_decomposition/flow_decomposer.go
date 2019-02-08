@@ -497,7 +497,7 @@ func GetPortNumberFromMetadata(flow *ofp.OfpFlowStats) uint64 {
 		return 0
 	}
 	if md <= 0xffffffff {
-		log.Warnw("onos-upgrade-suggested", log.Fields{"Metadata_ofp": md, "message": "Legacy MetaData detected form OltPipeline"})
+		log.Debugw("onos-upgrade-suggested", log.Fields{"Metadata_ofp": md, "message": "Legacy MetaData detected form OltPipeline"})
 		return md
 	}
 	return md & 0xffffffff
@@ -512,7 +512,7 @@ func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint64 {
 		return 0
 	}
 	if md <= 0xffffffff {
-		log.Warnw("onos-upgrade-suggested", log.Fields{"Metadata_ofp": md, "message": "Legacy MetaData detected form OltPipeline"})
+		log.Debugw("onos-upgrade-suggested", log.Fields{"Metadata_ofp": md, "message": "Legacy MetaData detected form OltPipeline"})
 		return md
 	}
 	return (md >> 32) & 0xffffffff
@@ -1256,20 +1256,17 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 		return deviceRules
 	}
 
-	var ingressDevice *voltha.Device
-	var err error
-	if ingressDevice, err = fd.deviceMgr.GetDevice(route[0].DeviceID); err != nil {
-		log.Errorw("ingress-device-not-found", log.Fields{"deviceId": route[0].DeviceID})
-		return deviceRules
-	}
-
-	isDownstream := ingressDevice.Root
-	isUpstream := !isDownstream
-
 	// Process controller bound flow
 	if outPortNo != 0 && (outPortNo&0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER) {
 		deviceRules = fd.processControllerBoundFlow(agent, route, inPortNo, outPortNo, flow)
 	} else {
+		var ingressDevice *voltha.Device
+		var err error
+		if ingressDevice, err = fd.deviceMgr.GetDevice(route[0].DeviceID); err != nil {
+			log.Errorw("ingress-device-not-found", log.Fields{"deviceId": route[0].DeviceID, "flow": flow})
+			return deviceRules
+		}
+		isUpstream := !ingressDevice.Root
 		if isUpstream {
 			deviceRules = fd.processUpstreamNonControllerBoundFlow(agent, route, inPortNo, outPortNo, flow)
 		} else if HasNextTable(flow) {

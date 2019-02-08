@@ -113,7 +113,7 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalD
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.Get("/logical_devices", 0, false, ""); logicalDevices != nil {
+	if logicalDevices := ldMgr.clusterDataProxy.List("/logical_devices", 0, false, ""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
 			if agent := ldMgr.getLogicalDeviceAgent(logicalDevice.(*voltha.LogicalDevice).Id); agent == nil {
 				agent = newLogicalDeviceAgent(
@@ -124,7 +124,7 @@ func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices,
 					ldMgr.clusterDataProxy,
 				)
 				ldMgr.addLogicalDeviceAgentToMap(agent)
-				go agent.start(nil)
+				go agent.start(nil, true)
 			}
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
@@ -166,10 +166,30 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 
 	agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
-	go agent.start(ctx)
+	go agent.start(ctx, false)
 
 	log.Debug("creating-logical-device-ends")
 	return &id, nil
+}
+
+// load loads a logical device manager in memory
+func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
+	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
+	// To prevent a race condition, let's hold the logical device agent map lock.  This will prevent a loading and
+	// a create logical device callback from occurring at the same time.
+	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+	if ldAgent, _ := ldMgr.logicalDeviceAgents[lDeviceId]; ldAgent == nil {
+		// Logical device not in memory - create a temp logical device Agent and let it load from memory
+		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
+		if err := agent.start(nil, true); err != nil {
+			agent.stop(nil)
+			return err
+		}
+		ldMgr.logicalDeviceAgents[agent.logicalDeviceId] = agent
+	}
+	// TODO: load the child device
+	return nil
 }
 
 func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
@@ -365,10 +385,10 @@ func (ldMgr *LogicalDeviceManager) packetOut(packetOut *openflow_13.PacketOut) {
 	}
 }
 
-func (ldMgr *LogicalDeviceManager) packetIn(logicalDeviceId string, port uint32, packet []byte) error {
+func (ldMgr *LogicalDeviceManager) packetIn(logicalDeviceId string, port uint32, transactionId string, packet []byte) error {
 	log.Debugw("packetIn", log.Fields{"logicalDeviceId": logicalDeviceId, "port": port})
 	if agent := ldMgr.getLogicalDeviceAgent(logicalDeviceId); agent != nil {
-		agent.packetIn(port, packet)
+		agent.packetIn(port, transactionId, packet)
 	} else {
 		log.Error("logical-device-not-exist", log.Fields{"logicalDeviceId": logicalDeviceId})
 	}

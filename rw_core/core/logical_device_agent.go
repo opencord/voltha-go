@@ -66,63 +66,75 @@ func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDevice
 }
 
 // start creates the logical device and add it to the data model
-func (agent *LogicalDeviceAgent) start(ctx context.Context) error {
-	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-	//Build the logical device based on information retrieved from the device adapter
-	var switchCap *ic.SwitchCapability
-	var err error
-	if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceId); err != nil {
-		log.Errorw("error-creating-logical-device", log.Fields{"error": err})
-		return err
-	}
-
-	ld := &voltha.LogicalDevice{Id: agent.logicalDeviceId, RootDeviceId: agent.rootDeviceId}
-
-	// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
-	var datapathID uint64
-	if datapathID, err = CreateDataPathId(agent.logicalDeviceId); err != nil {
-		log.Errorw("error-creating-datapath-id", log.Fields{"error": err})
-		return err
-	}
-	ld.DatapathId = datapathID
-	ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
-	ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
-	ld.Flows = &ofp.Flows{Items: nil}
-	ld.FlowGroups = &ofp.FlowGroups{Items: nil}
-
-	//Add logical ports to the logical device based on the number of NNI ports discovered
-	//First get the default port capability - TODO:  each NNI port may have different capabilities,
-	//hence. may need to extract the port by the NNI port id defined by the adapter during device
-	//creation
-	var nniPorts *voltha.Ports
-	if nniPorts, err = agent.deviceMgr.getPorts(ctx, agent.rootDeviceId, voltha.Port_ETHERNET_NNI); err != nil {
-		log.Errorw("error-creating-logical-port", log.Fields{"error": err})
-	}
-	var portCap *ic.PortCapability
-	for _, port := range nniPorts.Items {
-		log.Infow("!!!!!!!NNI PORTS", log.Fields{"NNI": port})
-		if portCap, err = agent.deviceMgr.getPortCapability(ctx, agent.rootDeviceId, port.PortNo); err != nil {
+func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) error {
+	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId, "loadFromdB": loadFromdB})
+	var ld *voltha.LogicalDevice
+	if !loadFromdB {
+		//Build the logical device based on information retrieved from the device adapter
+		var switchCap *ic.SwitchCapability
+		var err error
+		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceId); err != nil {
 			log.Errorw("error-creating-logical-device", log.Fields{"error": err})
 			return err
 		}
-		portCap.Port.RootPort = true
-		lp := (proto.Clone(portCap.Port)).(*voltha.LogicalPort)
-		lp.DeviceId = agent.rootDeviceId
-		lp.Id = fmt.Sprintf("nni-%d", port.PortNo)
-		lp.OfpPort.PortNo = port.PortNo
-		lp.OfpPort.Name = lp.Id
-		lp.DevicePortNo = port.PortNo
-		ld.Ports = append(ld.Ports, lp)
+
+		ld = &voltha.LogicalDevice{Id: agent.logicalDeviceId, RootDeviceId: agent.rootDeviceId}
+
+		// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
+		var datapathID uint64
+		if datapathID, err = CreateDataPathId(agent.logicalDeviceId); err != nil {
+			log.Errorw("error-creating-datapath-id", log.Fields{"error": err})
+			return err
+		}
+		ld.DatapathId = datapathID
+		ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
+		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
+		ld.Flows = &ofp.Flows{Items: nil}
+		ld.FlowGroups = &ofp.FlowGroups{Items: nil}
+
+		//Add logical ports to the logical device based on the number of NNI ports discovered
+		//First get the default port capability - TODO:  each NNI port may have different capabilities,
+		//hence. may need to extract the port by the NNI port id defined by the adapter during device
+		//creation
+		var nniPorts *voltha.Ports
+		if nniPorts, err = agent.deviceMgr.getPorts(ctx, agent.rootDeviceId, voltha.Port_ETHERNET_NNI); err != nil {
+			log.Errorw("error-creating-logical-port", log.Fields{"error": err})
+		}
+		var portCap *ic.PortCapability
+		for _, port := range nniPorts.Items {
+			log.Infow("!!!!!!!NNI PORTS", log.Fields{"NNI": port})
+			if portCap, err = agent.deviceMgr.getPortCapability(ctx, agent.rootDeviceId, port.PortNo); err != nil {
+				log.Errorw("error-creating-logical-device", log.Fields{"error": err})
+				return err
+			}
+			portCap.Port.RootPort = true
+			lp := (proto.Clone(portCap.Port)).(*voltha.LogicalPort)
+			lp.DeviceId = agent.rootDeviceId
+			lp.Id = fmt.Sprintf("nni-%d", port.PortNo)
+			lp.OfpPort.PortNo = port.PortNo
+			lp.OfpPort.Name = lp.Id
+			lp.DevicePortNo = port.PortNo
+			ld.Ports = append(ld.Ports, lp)
+		}
+		agent.lockLogicalDevice.Lock()
+		//defer agent.lockLogicalDevice.Unlock()
+		// Save the logical device
+		if added := agent.clusterDataProxy.AddWithID("/logical_devices", ld.Id, ld, ""); added == nil {
+			log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+		} else {
+			log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+		}
+		agent.lockLogicalDevice.Unlock()
+	} else {
+		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
+		// will destroy this agent.
+		var err error
+		if ld, err = agent.GetLogicalDevice(); err != nil {
+			log.Warnw("failed-to-load-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+			return err
+		}
 	}
 	agent.lockLogicalDevice.Lock()
-	//defer agent.lockLogicalDevice.Unlock()
-	// Save the logical device
-	if added := agent.clusterDataProxy.AddWithID("/logical_devices", ld.Id, ld, ""); added == nil {
-		log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-	} else {
-		log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-	}
-
 	agent.flowProxy = agent.clusterDataProxy.Root.CreateProxy(
 		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceId),
 		false)
@@ -1033,9 +1045,9 @@ func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 	}
 }
 
-func (agent *LogicalDeviceAgent) packetIn(port uint32, packet []byte) {
-	log.Debugw("packet-in", log.Fields{"port": port, "packet": packet})
+func (agent *LogicalDeviceAgent) packetIn(port uint32, transactionId string, packet []byte) {
+	log.Debugw("packet-in", log.Fields{"port": port, "packet": packet, "transactionId": transactionId})
 	packetIn := fd.MkPacketIn(port, packet)
-	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, packetIn)
+	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, transactionId, packetIn)
 	log.Debugw("sending-packet-in", log.Fields{"packet-in": packetIn})
 }
