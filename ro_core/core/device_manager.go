@@ -83,15 +83,25 @@ func (dMgr *DeviceManager) deleteDeviceAgentToMap(agent *DeviceAgent) {
 }
 
 func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
-	// TODO If the device is not in memory it needs to be loaded first
 	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
 	if agent, ok := dMgr.deviceAgents[deviceId]; ok {
+		dMgr.lockDeviceAgentsMap.Unlock()
 		return agent
+	} else {
+		//	Try to load into memory - loading will also create the device agent
+		dMgr.lockDeviceAgentsMap.Unlock()
+		if err := dMgr.load(deviceId); err == nil {
+			dMgr.lockDeviceAgentsMap.Lock()
+			defer dMgr.lockDeviceAgentsMap.Unlock()
+			if agent, ok = dMgr.deviceAgents[deviceId]; ok {
+				return agent
+			}
+		}
 	}
 	return nil
 }
 
+// listDeviceIdsFromMap returns the list of device IDs that are in memory
 func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
 	dMgr.lockDeviceAgentsMap.Lock()
 	defer dMgr.lockDeviceAgentsMap.Unlock()
@@ -102,12 +112,20 @@ func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
 	return result
 }
 
+// GetDevice will returns a device, either from memory or from the dB, if present
 func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
 	log.Debugw("GetDevice", log.Fields{"deviceid": id})
 	if agent := dMgr.getDeviceAgent(id); agent != nil {
 		return agent.getDevice()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
+}
+
+func (dMgr *DeviceManager) IsDeviceInCache(id string) bool {
+	dMgr.lockDeviceAgentsMap.Lock()
+	defer dMgr.lockDeviceAgentsMap.Unlock()
+	_, exist := dMgr.deviceAgents[id]
+	return exist
 }
 
 func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
@@ -124,15 +142,111 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	result := &voltha.Devices{}
 	if devices := dMgr.clusterDataProxy.List("/devices", 0, false, ""); devices != nil {
 		for _, device := range devices.([]interface{}) {
-			if agent := dMgr.getDeviceAgent(device.(*voltha.Device).Id); agent == nil {
-				agent = newDeviceAgent(device.(*voltha.Device), dMgr, dMgr.clusterDataProxy)
-				dMgr.addDeviceAgentToMap(agent)
-				agent.start(nil)
+			// If device is not in memory then set it up
+			if !dMgr.IsDeviceInCache(device.(*voltha.Device).Id) {
+				agent := newDeviceAgent(device.(*voltha.Device), dMgr, dMgr.clusterDataProxy)
+				if err := agent.start(nil, true); err != nil {
+					log.Warnw("failure-starting-agent", log.Fields{"deviceId": device.(*voltha.Device).Id})
+					agent.stop(nil)
+				} else {
+					dMgr.addDeviceAgentToMap(agent)
+				}
 			}
 			result.Items = append(result.Items, device.(*voltha.Device))
 		}
 	}
 	return result, nil
+}
+
+// loadDevice loads the deviceId in memory, if not present
+func (dMgr *DeviceManager) loadDevice(deviceId string) (*DeviceAgent, error) {
+	log.Debugw("loading-device", log.Fields{"deviceId": deviceId})
+	// Sanity check
+	if deviceId == "" {
+		return nil, status.Error(codes.InvalidArgument, "deviceId empty")
+	}
+	if !dMgr.IsDeviceInCache(deviceId) {
+		agent := newDeviceAgent(&voltha.Device{Id: deviceId}, dMgr, dMgr.clusterDataProxy)
+		if err := agent.start(nil, true); err != nil {
+			agent.stop(nil)
+			return nil, err
+		}
+		dMgr.addDeviceAgentToMap(agent)
+	}
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent, nil
+	}
+	return nil, status.Error(codes.NotFound, deviceId)  // This should nto happen
+}
+
+// loadRootDeviceParentAndChildren loads the children and parents of a root device in memory
+func (dMgr *DeviceManager) loadRootDeviceParentAndChildren(device *voltha.Device) error {
+	log.Debugw("loading-parent-and-children", log.Fields{"deviceId": device.Id})
+	if device.Root {
+		// Scenario A
+		if device.ParentId != "" {
+			//	 Load logical device if needed.
+			if err := dMgr.logicalDeviceMgr.load(device.ParentId); err != nil {
+				log.Warnw("failure-loading-logical-device", log.Fields{"lDeviceId": device.ParentId})
+			}
+		} else {
+			log.Debugw("no-parent-to-load", log.Fields{"deviceId": device.Id})
+		}
+		//	Load all child devices, if needed
+		if childDeviceIds, err := dMgr.getAllChildDeviceIds(device); err == nil {
+			for _, childDeviceId := range childDeviceIds {
+				if _, err := dMgr.loadDevice(childDeviceId); err != nil {
+					log.Warnw("failure-loading-device", log.Fields{"deviceId": childDeviceId})
+					return err
+				}
+			}
+			log.Debugw("loaded-children", log.Fields{"deviceId": device.Id, "numChildren": len(childDeviceIds)})
+		} else {
+			log.Debugw("no-child-to-load", log.Fields{"deviceId": device.Id})
+		}
+	}
+	return nil
+}
+
+// load loads the deviceId in memory, if not present, and also loads its accompanying parents and children.  Loading
+// in memory is for improved performance.  It is not imperative that a device needs to be in memory when a request
+// acting on the device is received by the core. In such a scenario, the Core will load the device in memory first
+// and the proceed with the request.
+func (dMgr *DeviceManager) load(deviceId string) error {
+	log.Debug("load...")
+	// First load the device - this may fail in case the device was deleted intentionally by the other core
+	var dAgent *DeviceAgent
+	var err error
+	if dAgent, err = dMgr.loadDevice(deviceId); err != nil {
+		log.Warnw("failure-loading-device", log.Fields{"deviceId": deviceId})
+		return err
+	}
+	// Get the loaded device details
+	var device *voltha.Device
+	if device, err = dAgent.getDevice(); err != nil {
+		return err
+	}
+
+	// If the device is in Pre-provisioning or deleted state stop here
+	if device.AdminState == voltha.AdminState_PREPROVISIONED || device.AdminState == voltha.AdminState_DELETED {
+		return nil
+	}
+
+	// Now we face two scenarios
+	if device.Root {
+		// Load all children as well as the parent of this device (logical_device)
+		if err := dMgr.loadRootDeviceParentAndChildren(device); err != nil {
+			log.Warnw("failure-loading-device-parent-and-children", log.Fields{"deviceId": deviceId})
+			return err
+		}
+		log.Debugw("successfully-loaded-parent-and-children", log.Fields{"deviceId": deviceId})
+	} else {
+		//	Scenario B - use the parentId of that device (root device) to trigger the loading
+		if device.ParentId != "" {
+			return dMgr.load(device.ParentId)
+		}
+	}
+	return nil
 }
 
 // ListDeviceIds retrieves the latest device IDs information from the data model (memory data only)
@@ -151,17 +265,17 @@ func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 		reconciled := 0
 		for _, id := range ids.Items {
 			//	 Act on the device only if its not present in the agent map
-			if agent := dMgr.getDeviceAgent(id.Id); agent == nil {
+			if !dMgr.IsDeviceInCache(id.Id) {
 				//	Device Id not in memory
 				log.Debugw("reconciling-device", log.Fields{"id": id.Id})
-				// Load device from model
-				if device := dMgr.clusterDataProxy.Get("/devices/"+id.Id, 0, false, ""); device != nil {
-					agent = newDeviceAgent(device.(*voltha.Device), dMgr, dMgr.clusterDataProxy)
-					dMgr.addDeviceAgentToMap(agent)
-					agent.start(nil)
-					reconciled += 1
+				// Load device from dB
+				agent := newDeviceAgent(&voltha.Device{Id: id.Id}, dMgr, dMgr.clusterDataProxy)
+				if err := agent.start(nil, true); err != nil {
+					log.Warnw("failure-loading-device", log.Fields{"deviceId": id.Id})
+					agent.stop(nil)
 				} else {
-					log.Warnw("device-inexistent", log.Fields{"id": id.Id})
+					dMgr.addDeviceAgentToMap(agent)
+					reconciled += 1
 				}
 			} else {
 				reconciled += 1
@@ -209,7 +323,6 @@ func (dMgr *DeviceManager) ListDeviceFlows(ctx context.Context, deviceId string)
 		return agent.ListDeviceFlows(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceId)
-
 }
 
 func (dMgr *DeviceManager) ListDeviceFlowGroups(ctx context.Context, deviceId string) (*voltha.FlowGroups, error) {
@@ -230,7 +343,7 @@ func (dMgr *DeviceManager) GetImageDownloadStatus(ctx context.Context, deviceId 
 
 }
 
-func (dMgr *DeviceManager) GetImageDownload(ctx context.Context, deviceId string, imageName string) ( *voltha.ImageDownload, error) {
+func (dMgr *DeviceManager) GetImageDownload(ctx context.Context, deviceId string, imageName string) (*voltha.ImageDownload, error) {
 	log.Debugw("GetImageDownload", log.Fields{"deviceid": deviceId, "imagename": imageName})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent.GetImageDownload(ctx, imageName)
@@ -239,7 +352,7 @@ func (dMgr *DeviceManager) GetImageDownload(ctx context.Context, deviceId string
 
 }
 
-func (dMgr *DeviceManager) ListImageDownloads(ctx context.Context, deviceId string) ( *voltha.ImageDownloads, error) {
+func (dMgr *DeviceManager) ListImageDownloads(ctx context.Context, deviceId string) (*voltha.ImageDownloads, error) {
 	log.Debugw("ListImageDownloads", log.Fields{"deviceid": deviceId})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent.ListImageDownloads(ctx)
@@ -248,7 +361,7 @@ func (dMgr *DeviceManager) ListImageDownloads(ctx context.Context, deviceId stri
 
 }
 
-func (dMgr *DeviceManager) GetImages(ctx context.Context, deviceId string) ( *voltha.Images, error) {
+func (dMgr *DeviceManager) GetImages(ctx context.Context, deviceId string) (*voltha.Images, error) {
 	log.Debugw("GetImages", log.Fields{"deviceid": deviceId})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent.GetImages(ctx)
@@ -266,3 +379,18 @@ func (dMgr *DeviceManager) getParentDevice(childDevice *voltha.Device) *voltha.D
 	parentDevice, _ := dMgr.GetDevice(childDevice.ParentId)
 	return parentDevice
 }
+
+//getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter
+func (dMgr *DeviceManager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]string, error) {
+	log.Debugw("getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id})
+	childDeviceIds := make([]string, 0)
+	if parentDevice != nil {
+		for _, port := range parentDevice.Ports {
+			for _, peer := range port.Peers {
+				childDeviceIds = append(childDeviceIds, peer.DeviceId)
+			}
+		}
+	}
+	return childDeviceIds, nil
+}
+

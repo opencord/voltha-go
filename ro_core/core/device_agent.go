@@ -51,11 +51,23 @@ func newDeviceAgent(device *voltha.Device, deviceMgr *DeviceManager, cdProxy *mo
 }
 
 // start save the device to the data model and registers for callbacks on that device
-func (agent *DeviceAgent) start(ctx context.Context) {
-	log.Debugw("starting-device-agent", log.Fields{"device": agent.lastData})
+func (agent *DeviceAgent) start(ctx context.Context, loadFromDb bool) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
+	log.Debugw("starting-device-agent", log.Fields{"device": agent.lastData})
+	if loadFromDb {
+		if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 0, false, ""); device != nil {
+			if d, ok := device.(*voltha.Device); ok {
+				agent.lastData = proto.Clone(d).(*voltha.Device)
+			}
+		} else {
+			log.Errorw("failed-to-load-device", log.Fields{"deviceId": agent.deviceId})
+			return status.Errorf(codes.NotFound, "device-%s", agent.deviceId)
+		}
+		log.Debugw("device-loaded-from-dB", log.Fields{"device": agent.lastData})
+	}
 	log.Debug("device-agent-started")
+	return nil
 }
 
 // stop stops the device agent.  Not much to do for now
@@ -71,7 +83,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 1, false, ""); device != nil {
+	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 0, false, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
@@ -83,7 +95,7 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
-	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 1, false, ""); device != nil {
+	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 0, false, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil

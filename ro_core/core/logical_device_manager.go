@@ -91,26 +91,58 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalD
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
+func (ldMgr *LogicalDeviceManager) IsLogicalDeviceInCache(id string) bool {
+	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+	_, exist := ldMgr.logicalDeviceAgents[id]
+	return exist
+}
+
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.Get("/logical_devices", 0, false, ""); logicalDevices != nil {
+	if logicalDevices := ldMgr.clusterDataProxy.List("/logical_devices", 0, false, ""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
-			if agent := ldMgr.getLogicalDeviceAgent(logicalDevice.(*voltha.LogicalDevice).Id); agent == nil {
-				agent = newLogicalDeviceAgent(
+			// If device is not in memory then set it up
+			if !ldMgr.IsLogicalDeviceInCache(logicalDevice.(*voltha.LogicalDevice).Id) {
+				agent := newLogicalDeviceAgent(
 					logicalDevice.(*voltha.LogicalDevice).Id,
 					logicalDevice.(*voltha.LogicalDevice).RootDeviceId,
 					ldMgr,
 					ldMgr.deviceMgr,
 					ldMgr.clusterDataProxy,
 				)
-				ldMgr.addLogicalDeviceAgentToMap(agent)
-				go agent.start(nil)
+				if err := agent.start(nil, true); err != nil {
+					log.Warnw("failure-starting-agent", log.Fields{"logicalDeviceId": logicalDevice.(*voltha.LogicalDevice).Id})
+					agent.stop(nil)
+				} else {
+					ldMgr.addLogicalDeviceAgentToMap(agent)
+				}
 			}
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
 	}
 	return result, nil
+}
+
+// load loads a logical device manager in memory
+func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
+	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
+	// To prevent a race condition, let's hold the logical device agent map lock.  This will prevent a loading and
+	// a create logical device callback from occurring at the same time.
+	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+	if ldAgent, _ := ldMgr.logicalDeviceAgents[lDeviceId]; ldAgent == nil {
+		// Logical device not in memory - create a temp logical device Agent and let it load from memory
+		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
+		if err := agent.start(nil, true); err != nil {
+			agent.stop(nil)
+			return err
+		}
+		ldMgr.logicalDeviceAgents[agent.logicalDeviceId] = agent
+	}
+	// TODO: load the child device
+	return nil
 }
 
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceId(device *voltha.Device) (*string, error) {

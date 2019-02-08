@@ -50,7 +50,7 @@ spec:
         ports:
         - containerPort: 55555
         command: ["/app/afrouter"]
-        args: ["-config", "/app/config/arouter.voltha3.json"]
+        args: ["-config", "/app/config/arouter.voltha.json"]
       - name: envoy
         image: volthacore/envoy
         volumeMounts:

@@ -178,8 +178,6 @@ func (n *node) initialize(data interface{}, txid string) {
 		if fieldValue.IsValid() {
 			if field.IsContainer {
 				if field.Key != "" {
-					var keysSeen []string
-
 					for i := 0; i < fieldValue.Len(); i++ {
 						v := fieldValue.Index(i)
 
@@ -187,13 +185,15 @@ func (n *node) initialize(data interface{}, txid string) {
 							children[fieldName] = append(children[fieldName], rev)
 						}
 
-						_, key := GetAttributeValue(v.Interface(), field.Key, 0)
-						for _, k := range keysSeen {
-							if k == key.String() {
-								log.Errorf("duplicate key - %s", k)
-							}
-						}
-						keysSeen = append(keysSeen, key.String())
+						// TODO: The following logic was ported from v1.0.  Need to verify if it is required
+						//var keysSeen []string
+						//_, key := GetAttributeValue(v.Interface(), field.Key, 0)
+						//for _, k := range keysSeen {
+						//	if k == key.String() {
+						//		//log.Errorf("duplicate key - %s", k)
+						//	}
+						//}
+						//keysSeen = append(keysSeen, key.String())
 					}
 
 				} else {
@@ -611,7 +611,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 				if _, exists := n.findRevByKey(children, field.Key, key.String()); exists != nil {
 					// TODO raise error
-					log.Errorf("duplicate key found: %s", key.String())
+					log.Warnw("duplicate-key-found", log.Fields{"key":key.String()})
 					return exists
 				}
 				childRev := n.MakeNode(data, "").Latest()

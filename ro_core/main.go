@@ -96,7 +96,11 @@ func (ro *roCore) start(ctx context.Context) {
 
 	// Setup KV Client
 	log.Debugw("create-kv-client", log.Fields{"kvstore": ro.config.KVStoreType})
-	ro.setKVClient()
+
+	if err := ro.setKVClient(); err != nil {
+		log.Fatalw("failed-to-connect-kv-client", log.Fields{"error": err})
+		return
+	}
 
 	// Create the core service
 	ro.core = c.NewCore(ro.config.InstanceID, ro.config, ro.kvClient)
