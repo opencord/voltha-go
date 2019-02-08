@@ -100,14 +100,16 @@
 							   "ReceivePacketsIn",
 							   "ReceiveChangeEvents",
                                "Subscribe",
-                               "ListLogicalDevices",
-                               "GetLogicalDevice",
-                               "ListDeviceFlowGroups",
-                               "ListLogicalDeviceFlowGroups",
-                               "ListDeviceFlows",
                                "UpdateLogicalDeviceFlowTable",
                                "UpdateLogicalDeviceFlowGroupTable",
-                               "ListLogicalDeviceFlows"
+                               "GetLogicalDevice",
+                               "GetLogicalDevicePort",
+                               "EnableLogicalDevicePort",
+                               "DisableLogicalDevicePort",
+                               "ListLogicalDevices",
+                               "ListLogicalDeviceFlows",
+                               "ListLogicalDeviceFlowGroups",
+							   "ListLogicalDevicePorts"
 					],
 					"_TODO":"Overrides not implemented yet, config ignored",
 					"overrides": [
