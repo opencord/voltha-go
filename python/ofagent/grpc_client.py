@@ -100,12 +100,13 @@ class GrpcClient(object):
 
         def receive_packet_in_stream():
             streaming_rpc_method = self.local_stub.ReceivePacketsIn
-            iterator = streaming_rpc_method(empty_pb2.Empty())
+            iterator = streaming_rpc_method(empty_pb2.Empty(),
+                                            metadata=((self.CORE_GROUP_ID, self.core_group_id),))
             try:
                 for packet_in in iterator:
                     reactor.callFromThread(self.packet_in_queue.put,
                                            packet_in)
-                    log.debug('enqued-packet-in',
+                    log.debug('enqueued-packet-in',
                               packet_in=packet_in,
                               queue_len=len(self.packet_in_queue.pending))
             except _Rendezvous, e:
@@ -119,11 +120,12 @@ class GrpcClient(object):
 
         def receive_change_events():
             streaming_rpc_method = self.local_stub.ReceiveChangeEvents
-            iterator = streaming_rpc_method(empty_pb2.Empty())
+            iterator = streaming_rpc_method(empty_pb2.Empty(),
+                                            metadata=((self.CORE_GROUP_ID, self.core_group_id),))
             try:
                 for event in iterator:
                     reactor.callFromThread(self.change_event_queue.put, event)
-                    log.debug('enqued-change-event',
+                    log.debug('enqueued-change-event',
                               change_event=event,
                               queue_len=len(self.change_event_queue.pending))
             except _Rendezvous, e:

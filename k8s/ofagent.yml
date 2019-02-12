@@ -42,3 +42,6 @@ spec:
         - "--consul=consul.$(NAMESPACE).svc.cluster.local:8500"
         - "--controller=onos.$(NAMESPACE).svc.cluster.local:6653"
         - "--grpc-endpoint=afrouter.$(NAMESPACE).svc.cluster.local:55555"
+        - "--enable-tls"
+        - "--key-file=/ofagent/pki/voltha.key"
+        - "--cert-file=/ofagent/pki/voltha.crt"
