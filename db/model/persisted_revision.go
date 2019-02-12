@@ -136,9 +136,14 @@ StopWatchLoop:
 					if err := proto.Unmarshal(dataPair.Value.([]byte), data.Interface().(proto.Message)); err != nil {
 						log.Errorw("update-in-memory--unmarshal-failed", log.Fields{"key": pr.GetHash(), "error": err})
 					} else {
-						// Traverse the node and update as necessary
-						rev := pr.GetBranch().GetLatest()
-						rev.GetBranch().Node.Update("", data.Interface(), false, "", nil)
+						// Apply changes to current revision
+						branch := pr.GetBranch()
+						rev := branch.GetLatest()
+						updatedRev := rev.UpdateData(data.Interface(), branch)
+
+						// The changeAnnouncement field should remain 'nil' to prevent
+						// update callbacks from being executed.
+						rev.GetNode().makeLatest(branch, updatedRev, nil)
 					}
 				}
 
