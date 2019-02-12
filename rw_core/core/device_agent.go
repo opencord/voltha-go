@@ -84,6 +84,7 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 		if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 1, false, ""); device != nil {
 			if d, ok := device.(*voltha.Device); ok {
 				agent.lastData = proto.Clone(d).(*voltha.Device)
+				agent.deviceType = agent.lastData.Adapter
 			}
 		} else {
 			log.Errorw("failed-to-load-device", log.Fields{"deviceId": agent.deviceId})

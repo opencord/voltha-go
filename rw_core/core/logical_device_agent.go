@@ -86,8 +86,10 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 			log.Errorw("error-creating-datapath-id", log.Fields{"error": err})
 			return err
 		}
+
 		ld.DatapathId = datapathID
 		ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
+		log.Debugw("Switch-capability", log.Fields{"Desc": ld.Desc, "fromAd": switchCap.Desc})
 		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 		ld.Flows = &ofp.Flows{Items: nil}
 		ld.FlowGroups = &ofp.FlowGroups{Items: nil}
@@ -847,7 +849,7 @@ func (agent *LogicalDeviceAgent) leafDeviceDefaultRules(deviceId string) *fu.Flo
 	}
 	//it is possible that the downstream ports are not created, but the flow_decomposition has already
 	//kicked in. In such scenarios, cut short the processing and return.
-	if len(downstreamPorts) == 0 {
+	if len(downstreamPorts) == 0 || len(upstreamPorts) == 0{
 		return fg
 	}
 	// set up the default flows

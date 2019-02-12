@@ -47,6 +47,7 @@ func unPackResponse(rpc string, deviceId string, success bool, response *a.Any) 
 		var err error
 		if err = ptypes.UnmarshalAny(response, unpackResult); err != nil {
 			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			return err
 		}
 		log.Debugw("response", log.Fields{"rpc": rpc, "deviceId": deviceId, "success": success, "error": err})
 		// TODO:  Need to get the real error code
