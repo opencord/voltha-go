@@ -133,6 +133,9 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	cloned.ConnectStatus = voltha.ConnectStatus_REACHABLE
 	cloned.OperStatus = voltha.OperStatus_ACTIVE
 
+	dh.device = cloned
+	//dh.device.SerialNumber = cloned.SerialNumber
+
 	//	Update the device state
 	if err := dh.coreProxy.DeviceStateUpdate(nil, cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
 		log.Errorw("error-creating-nni-port", log.Fields{"deviceId": device.Id, "error": err})
@@ -149,7 +152,6 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 			"simulated_onu",
 			initialUniPortNo+i)
 	}
-	dh.device = cloned
 }
 
 func (dh *DeviceHandler) GetOfpDeviceInfo(device *voltha.Device) (*ic.SwitchCapability, error) {

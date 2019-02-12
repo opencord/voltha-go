@@ -126,7 +126,9 @@ func (so *SimulatedOLT) Adopt_device(device *voltha.Device) error {
 func (so *SimulatedOLT) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapability, error) {
 	log.Infow("Get_ofp_device_info", log.Fields{"deviceId": device.Id})
 	if handler := so.getDeviceHandler(device.Id); handler != nil {
-		return handler.GetOfpDeviceInfo(device)
+		info, err := handler.GetOfpDeviceInfo(device)
+		log.Infow("Get_ofp_device_info-resp", log.Fields{"switch": info})
+		return info, err
 	}
 	log.Errorw("device-handler-not-set", log.Fields{"deviceId": device.Id})
 	return nil, errors.New("device-handler-not-set")
