@@ -141,9 +141,11 @@ StopWatchLoop:
 						rev := branch.GetLatest()
 						updatedRev := rev.UpdateData(data.Interface(), branch)
 
-						// The changeAnnouncement field should remain 'nil' to prevent
-						// update callbacks from being executed.
-						rev.GetNode().makeLatest(branch, updatedRev, nil)
+						// ensure that we keep the previous hash value
+						updatedRev.SetHash(rev.GetHash())
+
+						// Save revision
+						branch.SetLatest(updatedRev)
 					}
 				}
 

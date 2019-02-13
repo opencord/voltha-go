@@ -705,7 +705,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 
 	if field.IsContainer {
 		if path == "" {
-			log.Errorf("cannot remove without a key")
+			log.Errorw("cannot-remove-without-key", log.Fields{"name": name, "key": path})
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]
@@ -714,9 +714,11 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 			} else {
 				path = partition[1]
 			}
+
 			keyValue := field.KeyFromStr(key)
 			children = make([]Revision, len(rev.GetChildren(name)))
 			copy(children, rev.GetChildren(name))
+
 			if path != "" {
 				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 				childNode := childRev.GetNode()
@@ -730,26 +732,32 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				n.makeLatest(branch, rev, nil)
 				return nil
 			}
-			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
-			if n.GetProxy() != nil {
-				data := childRev.GetData()
-				n.GetProxy().InvokeCallbacks(PRE_REMOVE, false, data)
-				postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data, nil})
-			} else {
-				postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
-			}
-			childRev.Drop(txid, true)
-			children = append(children[:idx], children[idx+1:]...)
-			rev.SetChildren(name, children)
-			branch.GetLatest().Drop(txid, false)
-			n.makeLatest(branch, rev, postAnnouncement)
-			return rev
 
+			if idx, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil {
+				if n.GetProxy() != nil {
+					data := childRev.GetData()
+					n.GetProxy().InvokeCallbacks(PRE_REMOVE, false, data)
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data, nil})
+				} else {
+					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
+				}
+
+				childRev.Drop(txid, true)
+				children = append(children[:idx], children[idx+1:]...)
+				rev.SetChildren(name, children)
+
+				branch.GetLatest().Drop(txid, false)
+				n.makeLatest(branch, rev, postAnnouncement)
+
+				return rev
+			} else {
+				log.Errorw("failed-to-find-revision", log.Fields{"name": name, "key": keyValue.(string)})
+			}
 		}
-		log.Errorf("cannot add to non-keyed container")
+		log.Errorw("cannot-add-to-non-keyed-container", log.Fields{"name": name, "path": path, "fieldKey": field.Key})
 
 	} else {
-		log.Errorf("cannot add to non-container field")
+		log.Errorw("cannot-add-to-non-container-field", log.Fields{"name": name, "path": path})
 	}
 
 	return nil
