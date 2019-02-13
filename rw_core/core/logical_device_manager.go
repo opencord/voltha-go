@@ -86,11 +86,23 @@ func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDevi
 	}
 }
 
+// getLogicalDeviceAgent returns the logical device agent.  If the device is not in memory then the device will
+// be loaded from dB and a logical device agent created to managed it.
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string) *LogicalDeviceAgent {
 	ldMgr.lockLogicalDeviceAgentsMap.Lock()
-	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
 	if agent, ok := ldMgr.logicalDeviceAgents[logicalDeviceId]; ok {
+		ldMgr.lockLogicalDeviceAgentsMap.Unlock()
 		return agent
+	} else {
+		//	Try to load into memory - loading will also create the logical device agent
+		ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+		if err := ldMgr.load(logicalDeviceId); err == nil {
+			ldMgr.lockLogicalDeviceAgentsMap.Lock()
+			defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+			if agent, ok = ldMgr.logicalDeviceAgents[logicalDeviceId]; ok {
+				return agent
+			}
+		}
 	}
 	return nil
 }
@@ -101,7 +113,8 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDeviceAgent(logicalDeviceId stri
 	delete(ldMgr.logicalDeviceAgents, logicalDeviceId)
 }
 
-// GetLogicalDevice provides a cloned most up to date logical device
+// GetLogicalDevice provides a cloned most up to date logical device.  If device is not in memory
+// it will be fetched from the dB
 func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalDevice, error) {
 	log.Debugw("getlogicalDevice", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
@@ -132,6 +145,7 @@ func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices,
 	return result, nil
 }
 
+// List only logical devices that are in memory
 //func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 //	log.Debug("listLogicalDevices")
 //	result := &voltha.LogicalDevices{}
@@ -183,7 +197,7 @@ func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
 		// Logical device not in memory - create a temp logical device Agent and let it load from memory
 		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
 		if err := agent.start(nil, true); err != nil {
-			agent.stop(nil)
+			//agent.stop(nil)
 			return err
 		}
 		ldMgr.logicalDeviceAgents[agent.logicalDeviceId] = agent
