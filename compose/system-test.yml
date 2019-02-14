@@ -135,14 +135,14 @@ services:
 
 
   adapter_openolt:
-    image: "${REGISTRY}${REPOSITORY}voltha-adapter-openolt${TAG}"
+    image: "${REGISTRY}${REPOSITORY}voltha-openolt-adapter${TAG}"
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     command: [
-      "/voltha/python/adapters/openolt/main.py",
+      "/voltha/adapters/openolt/main.py",
       "-v",
       "--name=openolt",
       "--kafka_adapter=${DOCKER_HOST_IP}:9092",
@@ -153,3 +153,22 @@ services:
     - default
     restart: unless-stopped
 
+
+  adapter_openonu:
+    image: "${REGISTRY}${REPOSITORY}voltha-openonu-adapter${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [
+      "/voltha/adapters/brcm_openomci_onu/main.py",
+      "-v",
+      "--name=openonu",
+      "--kafka_adapter=${DOCKER_HOST_IP}:9092",
+      "--kafka_cluster=${DOCKER_HOST_IP}:9092",
+      "--core_topic=rwcore"
+    ]
+    networks:
+    - default
+    restart: unless-stopped

@@ -62,8 +62,7 @@ DOCKER_IMAGE_LIST = \
 	protoc \
 	protos \
 	adapter-ponsim-olt \
-	adapter-ponsim-onu \
-	adapter-openolt \
+	adapter-ponsim-onu
 
 # The following list was scavanged from the compose / stack files as well as
 # from the Dockerfiles. If nothing else it highlights that VOLTHA is not
@@ -89,7 +88,7 @@ FETCH_K8S_IMAGE_LIST = \
 
 FETCH_IMAGE_LIST = $(shell echo $(FETCH_BUILD_IMAGE_LIST) $(FETCH_COMPOSE_IMAGE_LIST) $(FETCH_K8S_IMAGE_LIST) | tr ' ' '\n' | sort -u)
 
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) flake8 base openolt ponsim_olt ponsim_onu protos cli ofagent kafka common start stop tag push pull
+.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) flake8 base ponsim_olt ponsim_onu protos cli ofagent kafka common start stop tag push pull
 
 # This should to be the first and default target in this Makefile
 help:
@@ -110,7 +109,6 @@ help:
 	@echo "base         : Build the base docker container used by all other dockers"
 	@echo "adapter_ponsim_olt       : Build the ponsim olt adapter docker container"
 	@echo "adapter_ponsim_onu       : Build the ponsim olt adapter docker container"
-	@echo "adapter_openolt       : Build the openolt adapter docker container"
 	@echo "ofagent      : Build the openflow agent docker container"
 	@echo "tag          : Tag a set of images"
 	@echo "push         : Push the docker images to an external repository"
@@ -146,16 +144,13 @@ $(DIRS_FLAKE8):
 
 build: protoc protos containers
 
-containers: base adapter_ponsim_olt adapter_ponsim_onu adapter_openolt ofagent cli
+containers: base adapter_ponsim_olt adapter_ponsim_onu ofagent cli
 
 base:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base .
 
 adapter_ponsim_olt:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-ponsim-olt:${TAG} -f docker/Dockerfile.adapter_ponsim_olt .
-
-adapter_openolt:
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-openolt:${TAG} -f docker/Dockerfile.adapter_openolt .
 
 adapter_ponsim_onu:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-ponsim-onu:${TAG} -f docker/Dockerfile.adapter_ponsim_onu .
