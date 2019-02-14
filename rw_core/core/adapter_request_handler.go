@@ -30,16 +30,16 @@ import (
 )
 
 type AdapterRequestHandlerProxy struct {
-	TestMode         bool
-	coreInstanceId   string
-	deviceMgr        *DeviceManager
-	lDeviceMgr       *LogicalDeviceManager
-	adapterMgr *AdapterManager
-	localDataProxy   *model.Proxy
-	clusterDataProxy *model.Proxy
-	defaultRequestTimeout int64
+	TestMode                  bool
+	coreInstanceId            string
+	deviceMgr                 *DeviceManager
+	lDeviceMgr                *LogicalDeviceManager
+	adapterMgr                *AdapterManager
+	localDataProxy            *model.Proxy
+	clusterDataProxy          *model.Proxy
+	defaultRequestTimeout     int64
 	longRunningRequestTimeout int64
-	coreInCompetingMode bool
+	coreInCompetingMode       bool
 }
 
 func NewAdapterRequestHandlerProxy(coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager,
@@ -66,7 +66,7 @@ func (rhp *AdapterRequestHandlerProxy) acquireTransaction(transactionId string, 
 	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
 	txn := NewKVTransaction(transactionId)
 	if txn == nil {
-		return nil,  errors.New("fail-to-create-transaction")
+		return nil, errors.New("fail-to-create-transaction")
 	} else if txn.Acquired(timeout) {
 		return txn, nil
 	} else {
@@ -241,9 +241,9 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 	if updatedDevice, err := rhp.mergeDeviceInfoFromAdapter(device); err != nil {
 		return nil, status.Errorf(codes.Internal, "%s", err.Error())
 	} else {
-		// An adapter request needs an Ack without having to wait for the update to be
-		// completed.  We therefore run the update in its own routine.
-		go rhp.deviceMgr.updateDevice(updatedDevice)
+		if err := rhp.deviceMgr.updateDevice(updatedDevice); err != nil {
+			return nil, err
+		}
 	}
 
 	return new(empty.Empty), nil
@@ -366,7 +366,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 	}
 
 	if rhp.TestMode { // Execute only for test cases
-		return &voltha.Devices{Items:nil}, nil
+		return &voltha.Devices{Items: nil}, nil
 	}
 
 	return rhp.deviceMgr.getAllChildDevices(pID.Id)
@@ -491,7 +491,10 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 		return nil, nil
 	}
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	go rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val), voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+	if err := rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+		voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
+		return nil, err
+	}
 	return new(empty.Empty), nil
 }
 
@@ -548,7 +551,10 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 	}
 
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	go rhp.deviceMgr.updateChildrenStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val), voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+	if err := rhp.deviceMgr.updateChildrenStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+		voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
+		return nil, err
+	}
 	return new(empty.Empty), nil
 }
 
@@ -609,7 +615,10 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	go rhp.deviceMgr.updatePortState(deviceId.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val), voltha.OperStatus_OperStatus(operStatus.Val))
+	if err := rhp.deviceMgr.updatePortState(deviceId.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+		voltha.OperStatus_OperStatus(operStatus.Val)); err != nil {
+		return nil, err
+	}
 	return new(empty.Empty), nil
 }
 
@@ -657,8 +666,9 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	// Run port creation in its own go routine
-	go rhp.deviceMgr.addPort(deviceId.Id, port)
+	if err := rhp.deviceMgr.addPort(deviceId.Id, port); err != nil {
+		return nil, err
+	}
 
 	return new(empty.Empty), nil
 }
@@ -692,7 +702,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 		}
 	}
 	log.Debugw("DevicePMConfigUpdate", log.Fields{"deviceId": pmConfigs.Id, "configs": pmConfigs,
-		"init": init,  "transactionID": transactionID.Val})
+		"init": init, "transactionID": transactionID.Val})
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
@@ -709,8 +719,9 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 		return nil, nil
 	}
 
-	// Run PM config update in its own go routine
-	go rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs)
+	if err := rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs); err != nil {
+		return nil, err
+	}
 
 	return new(empty.Empty), nil
 }
@@ -758,10 +769,11 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	go rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), transactionID.Val, packet.Payload)
+	if err := rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
+		return nil, err
+	}
 	return new(empty.Empty), nil
 }
-
 
 func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
@@ -808,6 +820,8 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	go rhp.deviceMgr.updateImageDownload(deviceId.Id, img)
+	if err := rhp.deviceMgr.updateImageDownload(deviceId.Id, img); err != nil {
+		return nil, err
+	}
 	return new(empty.Empty), nil
 }
