@@ -265,7 +265,7 @@ class PonSimOltHandler(object):
             self.pm_metrics = AdapterPmMetrics(device)
             pm_config = self.pm_metrics.make_proto()
             log.info("initial-pm-config", pm_config=pm_config)
-            self.core_proxy.device_pm_config_update(pm_config, init=True)
+            yield self.core_proxy.device_pm_config_update(pm_config, init=True)
 
             # Setup alarm handler
             self.alarms = AdapterAlarms(self.adapter, device)

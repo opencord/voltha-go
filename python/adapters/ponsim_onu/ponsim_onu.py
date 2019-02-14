@@ -207,7 +207,7 @@ class PonSimOnuHandler(object):
         self.pm_metrics = AdapterPmMetrics(device)
         pm_config = self.pm_metrics.make_proto()
         log.info("initial-pm-config", pm_config=pm_config)
-        self.core_proxy.device_pm_config_update(pm_config, init=True)
+        yield self.core_proxy.device_pm_config_update(pm_config, init=True)
 
         # register physical ports
         self.uni_port = Port(
@@ -230,8 +230,8 @@ class PonSimOnuHandler(object):
                 )
             ]
         )
-        self.core_proxy.port_created(device.id, self.uni_port)
-        self.core_proxy.port_created(device.id, self.pon_port)
+        yield self.core_proxy.port_created(device.id, self.uni_port)
+        yield self.core_proxy.port_created(device.id, self.pon_port)
 
         yield self.core_proxy.device_state_update(device.id,
                                                   connect_status=ConnectStatus.REACHABLE,
