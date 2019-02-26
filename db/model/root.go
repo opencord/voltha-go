@@ -104,6 +104,7 @@ func (r *root) FoldTxBranch(txid string) {
 	} else {
 		r.node.MergeBranch(txid, false)
 		r.ExecuteCallbacks()
+		r.DeleteTxBranch(txid)
 	}
 }
 

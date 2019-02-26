@@ -107,6 +107,8 @@ func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTupl
 
 // getCallback returns a specific callback matching the type and function hash
 func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *CallbackTuple {
+	p.Lock()
+	defer p.Unlock()
 	if tuple, exists := p.Callbacks[callbackType][funcHash]; exists {
 		return tuple
 	}
@@ -222,7 +224,7 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
+	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s, Controlled: %b", path, effectivePath, fullPath, pathLock, controlled)
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
