@@ -79,9 +79,9 @@ required = [
   name = "github.com/stretchr/testify"
   version = "1.3.0"
 
-[[constraint]]
+[[override]]
   name = "go.etcd.io/etcd"
-  version = "3.3.11"
+  branch = "master"
 
 [[constraint]]
   name = "go.uber.org/zap"

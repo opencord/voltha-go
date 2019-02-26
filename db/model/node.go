@@ -114,6 +114,9 @@ func (n *node) MakeRevision(branch *Branch, data interface{}, children map[strin
 
 // makeLatest will mark the revision of a node as being the latest
 func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
+	n.Lock()
+	defer n.Unlock()
+
 	branch.AddRevision(revision)
 
 	if branch.GetLatest() == nil || revision.GetHash() != branch.GetLatest().GetHash() {
@@ -121,17 +124,17 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	}
 
 	if changeAnnouncement != nil && branch.Txid == "" {
-		if n.GetProxy() != nil {
+		if n.Proxy != nil {
 			for _, change := range changeAnnouncement {
-				log.Debugw("invoking callback",
-					log.Fields{
-						"callbacks":    n.GetProxy().getCallbacks(change.Type),
-						"type":         change.Type,
-						"previousData": change.PreviousData,
-						"latestData":   change.LatestData,
-					})
-				n.GetRoot().AddCallback(
-					n.GetProxy().InvokeCallbacks,
+				//log.Debugw("invoking callback",
+				//	log.Fields{
+				//		"callbacks":    n.Proxy.getCallbacks(change.Type),
+				//		"type":         change.Type,
+				//		"previousData": change.PreviousData,
+				//		"latestData":   change.LatestData,
+				//	})
+				n.Root.AddCallback(
+					n.Proxy.InvokeCallbacks,
 					change.Type,
 					true,
 					change.PreviousData,
@@ -139,18 +142,18 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 			}
 		}
 
-		for _, change := range changeAnnouncement {
-			log.Debugf("sending notification - changeType: %+v, previous:%+v, latest: %+v",
-				change.Type,
-				change.PreviousData,
-				change.LatestData)
-			n.GetRoot().AddNotificationCallback(
-				n.makeEventBus().Advertise,
-				change.Type,
-				revision.GetHash(),
-				change.PreviousData,
-				change.LatestData)
-		}
+		//for _, change := range changeAnnouncement {
+		//log.Debugf("sending notification - changeType: %+v, previous:%+v, latest: %+v",
+		//	change.Type,
+		//	change.PreviousData,
+		//	change.LatestData)
+		//n.Root.AddNotificationCallback(
+		//	n.makeEventBus().Advertise,
+		//	change.Type,
+		//	revision.GetHash(),
+		//	change.PreviousData,
+		//	change.LatestData)
+		//}
 	}
 }
 
@@ -284,12 +287,9 @@ func (n *node) List(path string, hash string, depth int, deep bool, txid string)
 }
 
 // Get retrieves the data from a node tree that resides at the specified path
-func (n *node) Get(path string, hash string, depth int, deep bool, txid string) interface{} {
-	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "deep": deep, "txid": txid})
-	if deep {
-		depth = -1
-	}
-
+func (n *node) Get(path string, hash string, depth int, reconcile bool, txid string) interface{} {
+	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile,
+		"txid": txid})
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -308,11 +308,20 @@ func (n *node) Get(path string, hash string, depth int, deep bool, txid string) 
 	}
 
 	var result interface{}
-	if result = n.getPath(rev.GetBranch().GetLatest(), path, depth);
-		(result == nil || reflect.ValueOf(result).IsValid() && reflect.ValueOf(result).IsNil()) && n.Root.KvStore != nil {
-		// We got nothing from memory, try to pull it from persistence
+
+	// If there is not request to reconcile, try to get it from memory
+	if !reconcile {
+		if result = n.getPath(rev.GetBranch().GetLatest(), path, depth);
+			result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
+			return result
+		}
+	}
+
+	// If we got to this point, we are either trying to reconcile with the db or
+	// or we simply failed at getting information from memory
+	if n.Root.KvStore != nil {
 		var prList []interface{}
-		if pr := rev.LoadFromPersistence(path, txid); pr != nil {
+		if pr := rev.LoadFromPersistence(path, txid); pr != nil && len(pr) > 0 {
 			// Did we receive a single or multiple revisions?
 			if len(pr) > 1 {
 				for _, revEntry := range pr {
@@ -551,7 +560,7 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 
 		// FIXME VOL-1293: the following statement corrupts the kv when using a subproxy (commenting for now)
 		// FIXME VOL-1293 cont'd: need to figure out the required conditions otherwise we are not cleaning up entries
-		//branch.GetLatest().Drop(branch.Txid, true)
+		branch.GetLatest().Drop(branch.Txid, false)
 
 		n.makeLatest(branch, rev, changes)
 
@@ -611,7 +620,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 				if _, exists := n.findRevByKey(children, field.Key, key.String()); exists != nil {
 					// TODO raise error
-					log.Warnw("duplicate-key-found", log.Fields{"key":key.String()})
+					log.Warnw("duplicate-key-found", log.Fields{"key": key.String()})
 					return exists
 				}
 				childRev := n.MakeNode(data, "").Latest()
@@ -809,6 +818,7 @@ func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 
 	if !dryRun {
 		if rev != nil {
+			rev.SetHash(dstRev.GetHash())
 			n.makeLatest(dstBranch, rev, changes)
 		}
 		n.DeleteBranch(txid)

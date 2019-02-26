@@ -90,6 +90,8 @@ func Merge3Way(
 	mergeChildFunc func(Revision) Revision,
 	dryRun bool) (rev Revision, changes []ChangeTuple) {
 
+	log.Debugw("3-way-merge-request", log.Fields{"dryRun": dryRun})
+
 	var configChanged bool
 	var revsToDiscard []Revision
 
@@ -246,7 +248,7 @@ func Merge3Way(
 		}
 	}
 
-	if !dryRun && len(newChildren) > 0{
+	if !dryRun && len(newChildren) > 0 {
 		if configChanged {
 			rev = srcRev
 		} else {
@@ -257,11 +259,11 @@ func Merge3Way(
 			discarded.Drop("", true)
 		}
 
-		dstRev.GetBranch().GetLatest().Drop("", configChanged)
+		// FIXME: Do not discard the latest value for now
+		//dstRev.GetBranch().GetLatest().Drop("", configChanged)
 		rev = rev.UpdateAllChildren(newChildren, dstRev.GetBranch())
 
 		if configChanged {
-			// FIXME: what type of previous/latest data do we want to show? Specific node or Root
 			changes = append(changes, ChangeTuple{POST_UPDATE, dstRev.GetBranch().GetLatest().GetData(), rev.GetData()})
 		}
 		return rev, changes
