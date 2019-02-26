@@ -26,6 +26,7 @@ WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
 # Compile protobuf files
 # Repeate here even if done in base file
+RUN go get google.golang.org/genproto/googleapis/api/annotations
 RUN sh /src/protos/build_protos.sh /src/protos
 
 # Build rw_core

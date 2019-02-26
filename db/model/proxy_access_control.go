@@ -18,7 +18,6 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/common/log"
-	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -163,8 +162,9 @@ func (pac *proxyAccessControl) SetProxy(proxy *Proxy) {
 func (pac *proxyAccessControl) List(path string, depth int, deep bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
+		log.Debugw("locked-access--list", log.Fields{"path":pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		log.Debugf("controlling list, stack = %s", string(debug.Stack()))
+		defer log.Debugw("unlocked-access--list", log.Fields{"path":pac.Proxy.getFullPath()})
 	}
 
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
@@ -177,8 +177,9 @@ func (pac *proxyAccessControl) List(path string, depth int, deep bool, txid stri
 func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
+		log.Debugw("locked-access--get", log.Fields{"path":pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		log.Debugf("controlling get, stack = %s", string(debug.Stack()))
+		defer log.Debugw("unlocked-access--get", log.Fields{"path":pac.Proxy.getFullPath()})
 	}
 
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
@@ -190,8 +191,9 @@ func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid strin
 func (pac *proxyAccessControl) Update(path string, data interface{}, strict bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
+		log.Debugw("locked-access--update", log.Fields{"path":pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		log.Debugf("controlling update, stack = %s", string(debug.Stack()))
+		defer log.Debugw("unlocked-access--update", log.Fields{"path":pac.Proxy.getFullPath()})
 	}
 	result := pac.getProxy().GetRoot().Update(path, data, strict, txid, nil)
 
@@ -205,8 +207,9 @@ func (pac *proxyAccessControl) Update(path string, data interface{}, strict bool
 func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
+		log.Debugw("locked-access--add", log.Fields{"path":pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		log.Debugf("controlling add %s, stack = %s", pac.Path, string(debug.Stack()))
+		defer log.Debugw("unlocked-access--add", log.Fields{"path":pac.Proxy.getFullPath()})
 	}
 	result := pac.getProxy().GetRoot().Add(path, data, txid, nil)
 
@@ -220,8 +223,9 @@ func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, c
 func (pac *proxyAccessControl) Remove(path string, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
+		log.Debugw("locked-access--remove", log.Fields{"path":pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		log.Debugf("controlling remove, stack = %s", string(debug.Stack()))
+		defer log.Debugw("unlocked-access--remove", log.Fields{"path":pac.Proxy.getFullPath()})
 	}
 	return pac.getProxy().GetRoot().Remove(path, txid, nil)
 }

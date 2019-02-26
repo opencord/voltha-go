@@ -178,7 +178,7 @@ func (c *KVTransaction) Acquired(duration int64) bool {
 		// Add a timeout here in case we miss an event from the KV
 		case <-time.After(time.Duration(duration) * time.Millisecond):
 			// In case of missing events, let's check the transaction key
-			kvp, err := ctx.kvClient.Get(c.txnKey, ctx.kvOperationTimeout)
+			kvp, err := ctx.kvClient.Get(c.txnKey, ctx.kvOperationTimeout, false)
 			if err == nil && kvp == nil {
 				log.Debug("missed-deleted-event")
 				res = ABANDONED_BY_OTHER
@@ -228,16 +228,16 @@ func (c *KVTransaction) deleteTransactionKey() {
 	log.Debugw("schedule-key-deletion", log.Fields{"key": c.txnKey})
 	time.Sleep(time.Duration(ctx.timeToDeleteCompletedKeys) * time.Second)
 	log.Debugw("background-key-deletion", log.Fields{"key": c.txnKey})
-	ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
+	ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout, false)
 }
 
 func (c *KVTransaction) Close() error {
 	log.Debugw("close", log.Fields{"key": c.txnKey})
-	return ctx.kvClient.Put(c.txnKey, TRANSACTION_COMPLETE, ctx.kvOperationTimeout)
+	return ctx.kvClient.Put(c.txnKey, TRANSACTION_COMPLETE, ctx.kvOperationTimeout, false)
 }
 
 func (c *KVTransaction) Delete() error {
 	log.Debugw("delete", log.Fields{"key": c.txnKey})
-	err := ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
+	err := ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout, false)
 	return err
 }
