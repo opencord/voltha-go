@@ -67,6 +67,24 @@
       "revId": "622059fdb9a6e19aa5a07a155842e58daec12b19",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfd172fd_8dc1f3f3",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-02-27T16:06:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f07853d_401c7faf",
+      "revId": "622059fdb9a6e19aa5a07a155842e58daec12b19",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
