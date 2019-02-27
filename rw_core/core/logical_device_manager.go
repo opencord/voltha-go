@@ -306,7 +306,7 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, lPortI
 }
 
 func (ldMgr *LogicalDeviceManager) addUNILogicalPort(ctx context.Context, childDevice *voltha.Device) error {
-	log.Debugw("AddUNILogicalPort", log.Fields{"deviceId": childDevice.Id})
+	log.Debugw("AddUNILogicalPort", log.Fields{"childDeviceId": childDevice.Id, "parentDeviceId": childDevice.ParentId})
 	// Sanity check
 	if childDevice.Root {
 		return errors.New("Device-root")

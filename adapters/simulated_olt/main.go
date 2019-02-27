@@ -91,7 +91,7 @@ func (a *adapter) start(ctx context.Context) {
 	}
 
 	// Register the core request handler
-	if err = a.setupRequestHandler(a.instanceId, a.iAdapter); err != nil {
+	if err = a.setupRequestHandler(a.instanceId, a.iAdapter, a.coreProxy); err != nil {
 		log.Fatal("error-setting-core-request-handler")
 	}
 
@@ -218,9 +218,9 @@ func (a *adapter) startSimulatedOLT(ctx context.Context, kip *kafka.InterContain
 	return sOLT, nil
 }
 
-func (a *adapter) setupRequestHandler(coreInstanceId string, iadapter adapters.IAdapter) error {
+func (a *adapter) setupRequestHandler(coreInstanceId string, iadapter adapters.IAdapter, coreProxy *com.CoreProxy) error {
 	log.Info("setting-request-handler")
-	requestProxy := com.NewRequestHandlerProxy(coreInstanceId, iadapter)
+	requestProxy := com.NewRequestHandlerProxy(coreInstanceId, iadapter, coreProxy)
 	if err := a.kip.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: a.config.Topic}, requestProxy); err != nil {
 		log.Errorw("request-handler-setup-failed", log.Fields{"error": err})
 		return err

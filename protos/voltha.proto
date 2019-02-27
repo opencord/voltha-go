@@ -137,6 +137,15 @@ message OfAgentSubscriber {
     string voltha_id = 2;
 }
 
+// Identifies a membership group a Core belongs to
+message Membership {
+    //  Group name
+    string group_name = 1;
+
+    // Unique ID of a container within that group
+    string id = 2;
+}
+
 /*
  * Voltha APIs
  *
@@ -147,6 +156,14 @@ service VolthaService {
     rpc UpdateLogLevel(Logging) returns(google.protobuf.Empty) {
         option (google.api.http) = {
             get: "/api/v1/logs"
+        };
+    }
+
+    // Set the membership group of a Voltha Core
+    rpc UpdateMembership(Membership) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/membership"
+            body: "*"
         };
     }
 

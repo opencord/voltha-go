@@ -94,16 +94,6 @@ func (so *SimulatedONU) getDeviceHandler(deviceId string) *DeviceHandler {
 	return nil
 }
 
-func (so *SimulatedONU) createDeviceTopic(device *voltha.Device) error {
-	log.Infow("create-device-topic", log.Fields{"deviceId": device.Id})
-	deviceTopic := kafka.Topic{Name: so.kafkaICProxy.DefaultTopic.Name + "_" + device.Id}
-	if err := so.kafkaICProxy.SubscribeWithDefaultRequestHandler(deviceTopic, kafka.OffsetOldest); err != nil {
-		log.Infow("create-device-topic-failed", log.Fields{"deviceId": device.Id, "error": err})
-		return err
-	}
-	return nil
-}
-
 func (so *SimulatedONU) Adopt_device(device *voltha.Device) error {
 	if device == nil {
 		log.Warn("device-is-nil")
@@ -115,8 +105,6 @@ func (so *SimulatedONU) Adopt_device(device *voltha.Device) error {
 		handler := NewDeviceHandler(so.coreProxy, device, so)
 		so.addDeviceHandlerToMap(handler)
 		go handler.AdoptDevice(device)
-		// Launch the creation of the device topic
-		go so.createDeviceTopic(device)
 	}
 	return nil
 }

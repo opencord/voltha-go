@@ -60,18 +60,34 @@ type APIHandler struct {
 	longRunningRequestTimeout int64
 	defaultRequestTimeout int64
 	da.DefaultAPIHandler
+	core *Core
 }
 
-func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, adapterMgr *AdapterManager, inCompetingMode bool, longRunningRequestTimeout int64, defaultRequestTimeout int64 ) *APIHandler {
+//func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, adapterMgr *AdapterManager, inCompetingMode bool, longRunningRequestTimeout int64, defaultRequestTimeout int64 ) *APIHandler {
+//	handler := &APIHandler{
+//		deviceMgr:        deviceMgr,
+//		logicalDeviceMgr: lDeviceMgr,
+//		adapterMgr:adapterMgr,
+//		coreInCompetingMode:inCompetingMode,
+//		longRunningRequestTimeout:longRunningRequestTimeout,
+//		defaultRequestTimeout:defaultRequestTimeout,
+//		// TODO: Figure out what the 'hint' parameter to queue.New does
+//		packetInQueue: queue.New(10),
+//	}
+//	return handler
+//}
+
+func NewAPIHandler(core *Core) *APIHandler {
 	handler := &APIHandler{
-		deviceMgr:        deviceMgr,
-		logicalDeviceMgr: lDeviceMgr,
-		adapterMgr:adapterMgr,
-		coreInCompetingMode:inCompetingMode,
-		longRunningRequestTimeout:longRunningRequestTimeout,
-		defaultRequestTimeout:defaultRequestTimeout,
+		deviceMgr:        core.deviceMgr,
+		logicalDeviceMgr: core.logicalDeviceMgr,
+		adapterMgr: core.adapterMgr,
+		coreInCompetingMode: core.config.InCompetingMode,
+		longRunningRequestTimeout:core.config.LongRunningRequestTimeout,
+		defaultRequestTimeout:core.config.DefaultRequestTimeout,
 		// TODO: Figure out what the 'hint' parameter to queue.New does
 		packetInQueue: queue.New(10),
+		core: core,
 	}
 	return handler
 }
@@ -182,6 +198,16 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 		log.SetAllLogLevel(int(logging.Level))
 	} else {
 		log.SetPackageLogLevel(logging.PackageName, int(logging.Level))
+	}
+	return out, nil
+}
+
+
+func (handler *APIHandler) UpdateMembership(ctx context.Context, membership *voltha.Membership) (*empty.Empty, error) {
+	log.Debugw("UpdateMembership-request", log.Fields{"membership": membership})
+	out := new(empty.Empty)
+	if err := handler.core.registerCoreTopic(ctx, membership.GroupName); err != nil {
+		return out, err
 	}
 	return out, nil
 }

@@ -315,6 +315,7 @@ class PonSimOltHandler(object):
                 hw_desc='ponsim pon',
                 sw_desc='ponsim pon',
                 serial_num=device.serial_number,
+                mfr_desc="VOLTHA Project",
                 dp_desc='n/a'
             ),
             switch_features=ofp_switch_features(

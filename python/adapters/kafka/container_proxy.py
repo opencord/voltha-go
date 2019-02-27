@@ -38,10 +38,10 @@ class KafkaMessagingError(BaseException):
 @implementer(IComponent)
 class ContainerProxy(object):
 
-    def __init__(self, kafka_proxy, core_topic, my_listening_topic):
+    def __init__(self, kafka_proxy, remote_topic, my_listening_topic):
         self.kafka_proxy = kafka_proxy
         self.listening_topic = my_listening_topic
-        self.core_topic = core_topic
+        self.remote_topic = remote_topic
         self.default_timeout = 3
 
     def start(self):
@@ -92,7 +92,7 @@ class ContainerProxy(object):
                           to_topic=to_topic,
                           reply_topic=reply_topic)
                 if to_topic is None:
-                    to_topic = self.core_topic
+                    to_topic = self.remote_topic
                 if reply_topic is None:
                     reply_topic = self.listening_topic
                 result = yield self.kafka_proxy.send_request(rpc=rpc,
@@ -130,4 +130,4 @@ class ContainerProxy(object):
                     raise e
                 retry += 1
                 if retry == max_retry:
-                    to_topic = self.core_topic
+                    to_topic = self.remote_topic

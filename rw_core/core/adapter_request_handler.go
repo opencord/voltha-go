@@ -81,7 +81,7 @@ func (rhp *AdapterRequestHandlerProxy) competeForTransaction() bool {
 }
 
 func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.CoreInstance, error) {
-	if len(args) != 3 {
+	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -130,7 +130,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.Device, error) {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -198,7 +198,7 @@ func (rhp *AdapterRequestHandlerProxy) mergeDeviceInfoFromAdapter(device *voltha
 }
 
 func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty.Empty, error) {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -292,7 +292,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Ports, error) {
-	if len(args) != 3 {
+	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -330,7 +330,7 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Po
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*voltha.Devices, error) {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -623,7 +623,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 }
 
 func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.Empty, error) {
-	if len(args) != 3 {
+	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -674,7 +674,7 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 }
 
 func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument) (*empty.Empty, error) {
-	if len(args) != 3 {
+	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err

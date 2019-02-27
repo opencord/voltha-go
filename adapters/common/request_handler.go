@@ -32,12 +32,14 @@ type RequestHandlerProxy struct {
 	TestMode       bool
 	coreInstanceId string
 	adapter        adapters.IAdapter
+	coreProxy *CoreProxy
 }
 
-func NewRequestHandlerProxy(coreInstanceId string, iadapter adapters.IAdapter) *RequestHandlerProxy {
+func NewRequestHandlerProxy(coreInstanceId string, iadapter adapters.IAdapter, cProxy *CoreProxy) *RequestHandlerProxy {
 	var proxy RequestHandlerProxy
 	proxy.coreInstanceId = coreInstanceId
 	proxy.adapter = iadapter
+	proxy.coreProxy = cProxy
 	return &proxy
 }
 
@@ -54,13 +56,14 @@ func (rhp *RequestHandlerProxy) Health() (*voltha.HealthStatus, error) {
 }
 
 func (rhp *RequestHandlerProxy) Adopt_device(args []*ic.Argument) (*empty.Empty, error) {
-	if len(args) != 2 {
+	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	device := &voltha.Device{}
 	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device":
@@ -73,10 +76,18 @@ func (rhp *RequestHandlerProxy) Adopt_device(args []*ic.Argument) (*empty.Empty,
 				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
 				return nil, err
 			}
+		case kafka.FromTopic:
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				log.Warnw("cannot-unmarshal-from-topic", log.Fields{"error": err})
+				return nil, err
+			}
 		}
 	}
 
 	log.Debugw("Adopt_device", log.Fields{"deviceId": device.Id})
+
+	//Update the core reference for that device
+	rhp.coreProxy.UpdateCoreReference(device.Id, fromTopic.Val)
 
 	//Invoke the adopt device on the adapter
 	if err := rhp.adapter.Adopt_device(device); err != nil {
@@ -143,7 +154,7 @@ func (rhp *RequestHandlerProxy) Unsuppress_alarm(args []*ic.Argument) (*empty.Em
 }
 
 func (rhp *RequestHandlerProxy) Get_ofp_device_info(args []*ic.Argument) (*ic.SwitchCapability, error) {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -177,7 +188,7 @@ func (rhp *RequestHandlerProxy) Get_ofp_device_info(args []*ic.Argument) (*ic.Sw
 }
 
 func (rhp *RequestHandlerProxy) Get_ofp_port_info(args []*ic.Argument) (*ic.PortCapability, error) {
-	if len(args) != 3 {
+	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -214,7 +225,7 @@ func (rhp *RequestHandlerProxy) Get_ofp_port_info(args []*ic.Argument) (*ic.Port
 }
 
 func (rhp *RequestHandlerProxy) Process_inter_adapter_message(args []*ic.Argument) (*empty.Empty, error) {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err

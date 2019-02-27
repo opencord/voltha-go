@@ -15,10 +15,7 @@
  */
 package kafka
 
-import (
-	"fmt"
-	"strings"
-)
+import "strings"
 
 const (
 	TopicSeparator = "_"
@@ -39,19 +36,7 @@ type KVArg struct {
 	Value interface{}
 }
 
-//CreateSubTopic concatenate a list of arguments together using underscores.
-func CreateSubTopic(args ...string) Topic {
-	topic := ""
-	for index, arg := range args {
-		if index == 0 {
-			topic = arg
-		} else {
-			topic = fmt.Sprintf("%s%s%s", topic, TopicSeparator, arg)
-		}
-	}
-	return Topic{Name: topic}
-}
-
+// TODO:  Remove and provide better may to get the device id
 // GetDeviceIdFromTopic extract the deviceId from the topic name.  The topic name is formatted either as:
 //			<any string> or <any string>_<deviceId>.  The device Id is 24 characters long.
 func GetDeviceIdFromTopic(topic Topic) string {

@@ -77,7 +77,7 @@ func newKafkaClient(clientType string, host string, port int, instanceID string)
 			kafka.NumPartitions(3),
 			kafka.ConsumerGroupName(instanceID),
 			kafka.ConsumerGroupPrefix(instanceID),
-			kafka.AutoCreateTopic(false),
+			kafka.AutoCreateTopic(true),
 			kafka.ProducerFlushFrequency(5),
 			kafka.ProducerRetryBackoff(time.Millisecond*30)), nil
 	}
