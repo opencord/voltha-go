@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81faa149_189c4b34",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-02-27T15:47:04Z",
+      "side": 1,
+      "message": "Does this lock the entire KV store?",
+      "revId": "622059fdb9a6e19aa5a07a155842e58daec12b19",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3775c3d1_308f0f5d",
+        "filename": "db/model/node.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-02-27T15:47:04Z",
+      "side": 1,
+      "message": "Do we need this?",
+      "revId": "622059fdb9a6e19aa5a07a155842e58daec12b19",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a068d9e_debfccbb",
+        "filename": "docker/Dockerfile.arouterd",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-02-27T15:47:04Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this already be present in the vendor dir?",
+      "revId": "622059fdb9a6e19aa5a07a155842e58daec12b19",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f07853d_401c7faf",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-02-27T15:47:04Z",
+      "side": 1,
+      "message": "Why no lock for transactions?",
+      "revId": "622059fdb9a6e19aa5a07a155842e58daec12b19",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
