@@ -399,7 +399,7 @@ class PonSimOltHandler(object):
             for frame in self.frames:
                 self.log.info('received-grpc-frame',
                               frame_len=len(frame.payload))
-                yield self._rcv_frame(frame.payload)
+                self._rcv_frame(frame.payload)
 
         except _Rendezvous, e:
             log.warn('grpc-connection-lost', message=e.message)
