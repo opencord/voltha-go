@@ -130,6 +130,8 @@ func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
 func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Device, ch chan interface{}) {
 	log.Debugw("createDevice", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
 
+	// Ensure this device is set as root
+	device.Root = true
 	// Create and start a device agent for that device
 	agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy)
 	dMgr.addDeviceAgentToMap(agent)

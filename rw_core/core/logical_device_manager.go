@@ -318,6 +318,10 @@ func (ldMgr *LogicalDeviceManager) addUNILogicalPort(ctx context.Context, childD
 
 	log.Debugw("AddUNILogicalPort", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
 
+	if parentId == "" || logDeviceId == nil {
+		return errors.New("Device-in-invalid-state")
+	}
+
 	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
 		if err := agent.addUNILogicalPort(ctx, childDevice); err != nil {
 			return err
