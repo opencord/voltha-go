@@ -201,6 +201,67 @@ func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
+func (dMgr *DeviceManager) GetChildDevice(parentDeviceId string, serialNumber string, onuId int64, parentPortNo int64) (*voltha.Device, error) {
+	log.Debugw("GetChildDevice", log.Fields{"parentDeviceid": parentDeviceId, "serialNumber": serialNumber})
+
+	var parentDevice *voltha.Device
+	var err error
+	if parentDevice, err = dMgr.GetDevice(parentDeviceId); err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	var childDeviceIds []string
+	if childDeviceIds, err = dMgr.getAllChildDeviceIds(parentDevice); err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	if len(childDeviceIds) == 0 {
+		log.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id})
+		return nil, status.Errorf(codes.NotFound, "%s", parentDeviceId)
+	}
+
+	var foundChildDevice *voltha.Device
+	for _, childDeviceId := range childDeviceIds {
+		found := false
+		if searchDevice, err := dMgr.GetDevice(childDeviceId); err == nil {
+
+			foundOnuId := false
+			if searchDevice.ProxyAddress.OnuId == uint32(onuId) {
+				if searchDevice.ParentPortNo == uint32(parentPortNo) {
+					log.Debugw("found-child-by-onuid", log.Fields{"parentDeviceId": parentDevice.Id, "onuId": onuId})
+					foundOnuId = true
+				}
+			}
+
+			foundSerialNumber := false
+			if searchDevice.SerialNumber == serialNumber {
+				log.Debugw("found-child-by-serialnumber", log.Fields{"parentDeviceId": parentDevice.Id, "serialNumber": serialNumber})
+				foundSerialNumber = true
+			}
+
+			// if both onuId and serialNumber are provided both must be true for the device to be found
+			// otherwise whichever one found a match is good enough
+			if onuId > 0 && serialNumber != "" {
+				found = foundOnuId && foundSerialNumber
+			} else {
+				found = foundOnuId || foundSerialNumber
+			}
+
+			if found == true {
+				foundChildDevice = searchDevice
+				break
+			}
+		}
+	}
+
+	if foundChildDevice != nil {
+		log.Debugw("child-device-found", log.Fields{"parentDeviceId": parentDevice.Id, "foundChildDevice": foundChildDevice})
+		return foundChildDevice, nil
+	}
+
+	log.Warnw("child-device-not-found", log.Fields{"parentDeviceId": parentDevice.Id,
+		"serialNumber": serialNumber, "onuId": onuId, "parentPortNo": parentPortNo})
+	return nil, status.Errorf(codes.NotFound, "%s", parentDeviceId)
+}
+
 func (dMgr *DeviceManager) IsDeviceInCache(id string) bool {
 	dMgr.lockDeviceAgentsMap.Lock()
 	defer dMgr.lockDeviceAgentsMap.Unlock()
@@ -256,7 +317,7 @@ func (dMgr *DeviceManager) loadDevice(deviceId string) (*DeviceAgent, error) {
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent, nil
 	}
-	return nil, status.Error(codes.NotFound, deviceId)  // This should nto happen
+	return nil, status.Error(codes.NotFound, deviceId) // This should not happen
 }
 
 // loadRootDeviceParentAndChildren loads the children and parents of a root device in memory
@@ -349,7 +410,7 @@ func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 				//	Device Id not in memory
 				log.Debugw("reconciling-device", log.Fields{"id": id.Id})
 				// Load device from dB
-				agent := newDeviceAgent(dMgr.adapterProxy, &voltha.Device{Id:id.Id}, dMgr, dMgr.clusterDataProxy)
+				agent := newDeviceAgent(dMgr.adapterProxy, &voltha.Device{Id: id.Id}, dMgr, dMgr.clusterDataProxy)
 				if err := agent.start(nil, true); err != nil {
 					log.Warnw("failure-loading-device", log.Fields{"deviceId": id.Id})
 					agent.stop(nil)
@@ -486,7 +547,8 @@ func (dMgr *DeviceManager) updatePortState(deviceId string, portType voltha.Port
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
-func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPortNo int64, deviceType string, channelId int64) error {
+func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPortNo int64, deviceType string,
+	channelId int64, vendorId string, serialNumber string, onuId int64) error {
 	log.Debugw("childDeviceDetected", log.Fields{"parentDeviceId": parentDeviceId})
 
 	// Create the ONU device
@@ -494,6 +556,8 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	childDevice.Type = deviceType
 	childDevice.ParentId = parentDeviceId
 	childDevice.ParentPortNo = uint32(parentPortNo)
+	childDevice.VendorId = vendorId
+	childDevice.SerialNumber = serialNumber
 	childDevice.Root = false
 
 	//Get parent device type
@@ -503,7 +567,12 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 		return status.Errorf(codes.NotFound, "%s", parentDeviceId)
 	}
 
-	childDevice.ProxyAddress = &voltha.Device_ProxyAddress{DeviceId: parentDeviceId, DeviceType: parent.Type, ChannelId: uint32(channelId)}
+	if _, err := dMgr.GetChildDevice(parentDeviceId, serialNumber, onuId, parentPortNo); err == nil {
+		log.Warnw("child-device-exists", log.Fields{"parentId": parentDeviceId, "serialNumber": serialNumber})
+		return status.Errorf(codes.AlreadyExists, "%s", serialNumber)
+	}
+
+	childDevice.ProxyAddress = &voltha.Device_ProxyAddress{DeviceId: parentDeviceId, DeviceType: parent.Type, ChannelId: uint32(channelId), OnuId: uint32(onuId)}
 
 	// Create and start a device agent for that device
 	agent := newDeviceAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.clusterDataProxy)
@@ -688,6 +757,7 @@ func (dMgr *DeviceManager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]
 			}
 		}
 	}
+	log.Debugw("returning-getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id, "childDeviceIds": childDeviceIds})
 	return childDeviceIds, nil
 }
 

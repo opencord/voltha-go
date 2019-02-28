@@ -250,7 +250,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*voltha.Device, error) {
-	if len(args) < 2 {
+	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
@@ -258,10 +258,28 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 
 	pID := &voltha.ID{}
 	transactionID := &ic.StrType{}
+	serialNumber := &ic.StrType{}
+	onuId := &ic.IntType{}
+	parentPortNo := &ic.IntType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
 			if err := ptypes.UnmarshalAny(arg.Value, pID); err != nil {
+				log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case "serial_number":
+			if err := ptypes.UnmarshalAny(arg.Value, serialNumber); err != nil {
+				log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case "onu_id":
+			if err := ptypes.UnmarshalAny(arg.Value, onuId); err != nil {
+				log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case "parent_port_no":
+			if err := ptypes.UnmarshalAny(arg.Value, parentPortNo); err != nil {
 				log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
 				return nil, err
 			}
@@ -272,7 +290,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 			}
 		}
 	}
-	log.Debugw("GetChildDevice", log.Fields{"deviceId": pID.Id, "transactionID": transactionID.Val})
+	log.Debugw("GetChildDevice", log.Fields{"parentDeviceId": pID.Id, "args": args, "transactionID": transactionID.Val})
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
@@ -288,7 +306,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 	if rhp.TestMode { // Execute only for test cases
 		return &voltha.Device{Id: pID.Id}, nil
 	}
-	return rhp.deviceMgr.GetDevice(pID.Id)
+	return rhp.deviceMgr.GetChildDevice(pID.Id, serialNumber.Val, onuId.Val, parentPortNo.Val)
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Ports, error) {
@@ -374,7 +392,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 
 // ChildDeviceDetected is invoked when a child device is detected.  The following
 // parameters are expected:
-// {parent_device_id, parent_port_no, child_device_type, proxy_address, admin_state, **kw)
+// {parent_device_id, parent_port_no, child_device_type, channel_id, vendor_id, serial_number)
 func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 5 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
@@ -387,6 +405,9 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 	dt := &ic.StrType{}
 	chnlId := &ic.IntType{}
 	transactionID := &ic.StrType{}
+	serialNumber := &ic.StrType{}
+	vendorId := &ic.StrType{}
+	onuId := &ic.IntType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "parent_device_id":
@@ -409,6 +430,21 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 				log.Warnw("cannot-unmarshal-channel-id", log.Fields{"error": err})
 				return nil, err
 			}
+		case "vendor_id":
+			if err := ptypes.UnmarshalAny(arg.Value, vendorId); err != nil {
+				log.Warnw("cannot-unmarshal-vendor-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "serial_number":
+			if err := ptypes.UnmarshalAny(arg.Value, serialNumber); err != nil {
+				log.Warnw("cannot-unmarshal-serial-number", log.Fields{"error": err})
+				return nil, err
+			}
+		case "onu_id":
+			if err := ptypes.UnmarshalAny(arg.Value, onuId); err != nil {
+				log.Warnw("cannot-unmarshal-onu-id", log.Fields{"error": err})
+				return nil, err
+			}
 		case kafka.TransactionKey:
 			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
 				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
@@ -417,7 +453,8 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 		}
 	}
 	log.Debugw("ChildDeviceDetected", log.Fields{"parentDeviceId": pID.Id, "parentPortNo": portNo.Val,
-		"deviceType": dt.Val, "channelId": chnlId.Val, "transactionID": transactionID.Val})
+		"deviceType": dt.Val, "channelId": chnlId.Val, "serialNumber": serialNumber.Val,
+		"vendorId": vendorId.Val, "onuId": onuId.Val, "transactionID": transactionID.Val})
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
@@ -434,7 +471,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 		return nil, nil
 	}
 	// Run child detection in it's own go routine as it can be a lengthy process
-	go rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val)
+	go rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val, vendorId.Val, serialNumber.Val, onuId.Val)
 
 	return new(empty.Empty), nil
 }
