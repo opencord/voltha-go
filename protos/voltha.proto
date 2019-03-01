@@ -159,6 +159,13 @@ service VolthaService {
         };
     }
 
+    // Get the membership group of a Voltha Core
+    rpc GetMembership(google.protobuf.Empty) returns(Membership) {
+        option (google.api.http) = {
+            get: "/api/v1/membership"
+        };
+    }
+
     // Set the membership group of a Voltha Core
     rpc UpdateMembership(Membership) returns(google.protobuf.Empty) {
         option (google.api.http) = {

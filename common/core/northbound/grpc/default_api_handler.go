@@ -42,6 +42,11 @@ func (handler *DefaultAPIHandler) UpdateLogLevel(ctx context.Context, logging *v
 	return nil, errors.New("UnImplemented")
 }
 
+func (handler *DefaultAPIHandler) GetMembership(ctx context.Context, empty *empty.Empty) (*voltha.Membership, error) {
+	log.Debug("GetMembership-request")
+	return nil, errors.New("UnImplemented")
+}
+
 func (handler *DefaultAPIHandler) UpdateMembership(ctx context.Context, membership *voltha.Membership) (*empty.Empty, error) {
 	log.Debugw("UpdateMembership-request", log.Fields{"membership": membership})
 	return nil, errors.New("UnImplemented")
