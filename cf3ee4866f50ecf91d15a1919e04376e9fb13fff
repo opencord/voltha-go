@@ -16,6 +16,24 @@
       "revId": "cf3ee4866f50ecf91d15a1919e04376e9fb13fff",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c9d8b8f_eeceff42",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-03-01T18:50:49Z",
+      "side": 1,
+      "message": "Agreed.  I ran across this situation and was not sure how to deal with it in Go.  Ill figure out how variadic params works in golang and add in later update.   I still need to add another method but wanted to get this in before too much piles up.",
+      "parentUuid": "6298688d_14f98364",
+      "revId": "cf3ee4866f50ecf91d15a1919e04376e9fb13fff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
