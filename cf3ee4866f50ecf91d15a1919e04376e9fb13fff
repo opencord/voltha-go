@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6298688d_14f98364",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-03-01T15:32:07Z",
+      "side": 1,
+      "message": "Since some params can be optional, it would be good to have some comments for this method.   For instance, if onuId is \"\" then parentPortNo is irrelevant.   A minor detail would be to have a variadic params (e,g, childOption ... int64) where a calling function can omit it completely or add all the needed params.   This can be done in a different update later on.",
+      "revId": "cf3ee4866f50ecf91d15a1919e04376e9fb13fff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
