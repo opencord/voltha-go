@@ -124,6 +124,7 @@ func (core *Core) startGRPCService(ctx context.Context) {
 
 	//core.grpcNBIAPIHandler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 	core.grpcNBIAPIHandler = NewAPIHandler(core)
+	log.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
 	core.logicalDeviceMgr.setGrpcNbiHandler(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {

@@ -50,6 +50,7 @@ const (
 	default_InCompetingMode     = true
 	default_LongRunningRequestTimeout = int64(2000)
 	default_DefaultRequestTimeout = int64(500)
+	default_CoreBindingKey      = "voltha_backend_name"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -79,6 +80,7 @@ type RWCoreFlags struct {
 	InCompetingMode     bool
 	LongRunningRequestTimeout int64
 	DefaultRequestTimeout int64
+	CoreBindingKey      string
 }
 
 func init() {
@@ -112,6 +114,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		InCompetingMode:     default_InCompetingMode,
 		DefaultRequestTimeout:default_DefaultRequestTimeout,
 		LongRunningRequestTimeout:default_LongRunningRequestTimeout,
+		CoreBindingKey:      default_CoreBindingKey,
 	}
 	return &rwCoreFlag
 }
@@ -180,6 +183,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&cf.Banner, "banner", default_Banner, help)
+
+	help = fmt.Sprintf("The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
+	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", default_CoreBindingKey, help)
 
 	flag.Parse()
 

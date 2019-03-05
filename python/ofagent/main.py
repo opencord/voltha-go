@@ -33,6 +33,8 @@ defs = dict(
     external_host_address=os.environ.get('EXTERNAL_HOST_ADDRESS',
                                          get_my_primary_local_ipv4()),
     grpc_endpoint=os.environ.get('GRPC_ENDPOINT', 'localhost:50055'),
+    grpc_timeout=os.environ.get('GRPC_TIMEOUT', '10'),
+    core_binding_key=os.environ.get('CORE_BINDING_KEY', 'voltha_backend_name'),
     instance_id=os.environ.get('INSTANCE_ID', os.environ.get('HOSTNAME', '1')),
     internal_host_address=os.environ.get('INTERNAL_HOST_ADDRESS',
                                          get_my_primary_local_ipv4()),
@@ -76,11 +78,11 @@ def parse_args():
                         default=defs['external_host_address'],
                         help=_help)
 
-    _help = ('gRPC end-point to connect to. It can either be a direct'
-             'definition in the form of <hostname>:<port>, or it can be an'
-             'indirect definition in the form of @<service-name> where'
-             '<service-name> is the name of the grpc service as registered'
-             'in consul (example: @voltha-grpc). (default: %s'
+    _help = ('gRPC end-point to connect to. It can either be a direct '
+             'definition in the form of <hostname>:<port>, or it can be an '
+             'indirect definition in the form of @<service-name> where '
+             '<service-name> is the name of the grpc service as registered '
+             'in consul (example: @voltha-grpc). (default: %s)'
              % defs['grpc_endpoint'])
     parser.add_argument('-G', '--grpc-endpoint',
                         dest='grpc_endpoint',
@@ -88,7 +90,23 @@ def parse_args():
                         default=defs['grpc_endpoint'],
                         help=_help)
 
-    _help = ('<hostname> or <ip> at which ofagent is reachable from inside'
+    _help = 'gRPC timeout in seconds (default: %s)' % defs['grpc_timeout']
+    parser.add_argument('-T', '--grpc-timeout',
+                        dest='grpc_timeout',
+                        action='store',
+                        default=defs['grpc_timeout'],
+                        help=_help)
+
+    _help = ('The name of the meta-key whose value is the rw-core group '
+             'to which the ofagent\'s gRPC client is bound. '
+             '(default: %s)' % defs['core_binding_key'])
+    parser.add_argument('-B', '--core-binding-key',
+                        dest='core_binding_key',
+                        action='store',
+                        default=defs['core_binding_key'],
+                        help=_help)
+
+    _help = ('<hostname> or <ip> at which ofagent is reachable from inside '
              'the cluster (default: %s)' % defs['internal_host_address'])
     parser.add_argument('-H', '--internal-host-address',
                         dest='internal_host_address',
@@ -203,9 +221,7 @@ class Main(object):
 
         self.args = args = parse_args()
         self.config = load_config(args)
-        # May want to specify the gRPC timeout as an arg (in future)
-        # Right now, set a default value
-        self.grpc_timeout = 10
+        self.grpc_timeout = int(self.args.grpc_timeout)
 
         verbosity_adjust = (args.verbose or 0) - (args.quiet or 0)
         self.log = setup_logging(self.config.get('logging', {}),
@@ -231,7 +247,7 @@ class Main(object):
         args = self.args
         self.connection_manager = yield ConnectionManager(
             args.consul, args.grpc_endpoint, self.grpc_timeout,
-            args.controller, args.instance_id,
+            args.core_binding_key, args.controller, args.instance_id,
             args.enable_tls, args.key_file, args.cert_file).start()
         self.log.info('started-internal-services')
 

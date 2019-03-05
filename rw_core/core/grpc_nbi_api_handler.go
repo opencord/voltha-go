@@ -32,9 +32,6 @@ import (
 	"time"
 )
 
-//TODO:  Move this Tag into the proto file
-const OF_CONTROLLER_TAG= "voltha_backend_name"
-
 const (
 	IMAGE_DOWNLOAD = iota
 	CANCEL_IMAGE_DOWNLOAD     = iota
@@ -124,10 +121,10 @@ func (handler *APIHandler) createKvTransaction(ctx context.Context) (*KVTransact
 
 // isOFControllerRequest is a helper function to determine if a request was initiated
 // from the OpenFlow controller (or its proxy, e.g. OFAgent)
-func isOFControllerRequest(ctx context.Context) bool {
+func (handler *APIHandler) isOFControllerRequest(ctx context.Context) bool {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		// Metadata in context
-		if _, ok = md[OF_CONTROLLER_TAG]; ok {
+		if _, ok = md[handler.core.config.CoreBindingKey]; ok {
 			// OFAgent field in metadata
 			return true
 		}
@@ -271,7 +268,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 	}
 
 	if handler.competeForTransaction() {
-		if !isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
+		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
 			if txn, err := handler.acquireTransaction(ctx, &logicalDeviceID{id:flow.Id}); err != nil {
 				return new(empty.Empty), err
 			} else {
@@ -294,7 +291,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 	}
 
 	if handler.competeForTransaction() {
-		if !isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
+		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
 			if txn, err := handler.acquireTransaction(ctx, &logicalDeviceID{id:flow.Id}); err != nil {
 				return new(empty.Empty), err
 			} else {

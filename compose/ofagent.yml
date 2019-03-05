@@ -1,0 +1,44 @@
+---
+# Copyright 2019 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: '2'
+services:
+  #
+  # OFAgent server instance
+  #
+  ofagent:
+    image: "${REGISTRY}${REPOSITORY}voltha-ofagent${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [
+      "/ofagent/ofagent/main.py",
+      "-v",
+      "--consul=${DOCKER_HOST_IP}:8500",
+      "--controller=${DOCKER_HOST_IP}:6653",
+      "--grpc-endpoint=${DOCKER_HOST_IP}:50057",
+#      "--grpc-timeout=15",
+#      "--core-binding-key=non_default_voltha_backend_name",
+      "--instance-id-is-container-name",
+      "--enable-tls",
+      "--key-file=/ofagent/pki/voltha.key",
+      "--cert-file=/ofagent/pki/voltha.crt",
+      "-v"
+    ]
+    volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock"
+    restart: unless-stopped
