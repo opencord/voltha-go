@@ -7,8 +7,8 @@ Starting point is a basic Ubuntu 16.04 installation with internet access.
 
 
 ## Install prerequisites
-Patch and updated
 
+Patch and updated
 ```sh
 sudo apt update
 sudo apt dist-upgrade
@@ -19,7 +19,7 @@ Add docker-ce repo and install docker and build tools
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt update
-sudo apt install build-essential docker-ce docker-compose
+sudo apt install build-essential docker-ce docker-compose virtualenv git python-setuptools python-dev libpcap-dev libffi-dev libssl-dev tox
 ```
 
 Allow non-root user docker system access
@@ -34,16 +34,32 @@ Logout/Login to assume new group membership needed for running docker as non-roo
 
 ## Checkout source and build images
 
-### VOLTHA 2.0 Go Core
+
+
+### VOLTHA Protos
+
+Library containing all VOLTHA gRPC Protobuf definitions and the build system to produce needed stubs in Python and Golang.  Currently only Python stubs are produced and used by openolt and openonu adapters below.   Soon all VOLTHA 2.x core and components will use the protobufs built from this repo.  Once this stabilizes you will no longer need a local build.  The python vesion of the stubs will be available in pip.  Currently the plan is to push the voltha-protos pip library once a sprint into PyPi.   The Golang vesion of the stubs will be available via go get *TODO*
+
 ```sh
-mkdir ~/source/
+mkdir ~/source
 cd ~/source/
-git clone https://gerrit.opencord.org/voltha-go.git
+git clone https://gerrit.opencord.org/voltha-protos.git
 ```
 
-Build system needs to be told to create protos docker image. 
+Generate the local tar.gz that is the dev version of voltha-protos:
 ```sh
-export VOLTHA_BUILD=docker
+cd ~/source/voltha-protos/
+make build
+ls dist/
+```
+
+
+
+### VOLTHA 2.0 Go Core
+
+```sh
+cd ~/source/
+git clone https://gerrit.opencord.org/voltha-go.git
 ```
 
 Build Go docker images, rwcore being whats most needed for now:
@@ -52,8 +68,9 @@ cd ~/source/voltha-go
 make build
 ```
 
-Build Python CLI and OFAgent docker images.
+Build Python CLI and OFAgent docker images.  Python ofagent, cli, and ponsim build system needs to be told to create protos docker image using environment variable.  This will no longer be needed when python components use pyvoltha and voltha-protos packages
 ```sh
+export VOLTHA_BUILD=docker
 cd ~/source/voltha-go/python
 make build
 ```
@@ -85,11 +102,10 @@ cd ~/source/
 git clone https://gerrit.opencord.org/voltha-openolt-adapter.git
 ```
 
-Build the openolt container.  Inform the Makefile to use a local build of PyVoltha.  This will copy the pyvoltha tar.gz from the pyvoltha/dist build tree and include here.  Once PyVoltha is stable this will not be needed. 
+Build the openolt container.  Inform the Makefile to use a local build of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openolt build tree.  Once PyVoltha and voltha-protos is stable this will not be needed.
 ```sh 
 export LOCAL_PYVOLTHA=true
 cd ~/source/voltha-openolt-adapter/python/
-. env.sh
 make build
 ```
 
@@ -102,11 +118,10 @@ cd ~/source/
 git clone https://gerrit.opencord.org/voltha-openonu-adapter.git
 ```
 
-Build the openonu container.  Inform the Makefile to use a local build of PyVoltha.  This will copy the pyvoltha tar.gz from the pyvoltha/dist build tree and include here.  Once PyVoltha is stable this will not be needed
+Build the openonu container.  Inform the Makefile to use a local build of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openonu build tree.  Once PyVoltha and voltha-protos is stable this will not be needed.
 ```sh 
 export LOCAL_PYVOLTHA=true
 cd ~/source/voltha-openonu-adapter/python
-. env.sh
 make build
 ```
 
