@@ -19,7 +19,7 @@ Add docker-ce repo and install docker and build tools
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt update
-sudo apt install build-essential docker-ce docker-compose
+sudo apt install build-essential docker-ce docker-compose virtualenv git python-setuptools python-dev libpcap-dev libffi-dev libssl-dev
 ```
 
 Allow non-root user docker system access
@@ -89,7 +89,6 @@ Build the openolt container.  Inform the Makefile to use a local build of PyVolt
 ```sh 
 export LOCAL_PYVOLTHA=true
 cd ~/source/voltha-openolt-adapter/python/
-. env.sh
 make build
 ```
 
@@ -106,7 +105,6 @@ Build the openonu container.  Inform the Makefile to use a local build of PyVolt
 ```sh 
 export LOCAL_PYVOLTHA=true
 cd ~/source/voltha-openonu-adapter/python
-. env.sh
 make build
 ```
 
