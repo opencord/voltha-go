@@ -1,0 +1,70 @@
+{
+ "apps": {
+   "org.opencord.aaa" : {
+         "AAA": {
+           "nasIp": "onos.voltha.svc.cluster.local",
+           "nasMac": "BA:6D:26:25:44:AA",
+           "radiusSecret": "SECRET",
+           "radiusIp": "freeradius.voltha.svc.cluster.local",
+           "radiusServerPort": "1812",
+           "radiusConnectionType": "socket",
+           "packetCustomizer": "sample"
+         }
+     },
+   "org.opencord.sadis" : {
+     "sadis" : {
+       "integration" : {
+           "cache" : {
+             "enabled" : true,
+             "maxsize" : 50,
+             "ttl" : "PT1m"
+           }
+       },
+       "entries" : [ {
+           "id" : "PSMO12345678",
+           "cTag" : 2,
+           "sTag" : 2,
+           "nasPortId" : "uni-128"
+           },{
+           "id" : "uni-129",
+           "cTag" : 2,
+           "sTag" : 2,
+           "nasPortId" : "uni-129"
+           },{
+           "id" : "uni-130",
+           "cTag" : 2,
+           "sTag" : 2,
+           "nasPortId" : "uni-130"
+           },{
+           "id" : "uni-131",
+           "cTag" : 2,
+           "sTag" : 2,
+           "nasPortId" : "uni-131"
+           }, {
+           "id" : "olt:50060",
+           "hardwareIdentifier" : "aa:bb:cc:dd:ee:ff",
+           "uplinkPort" : 65536
+           } ]
+     }
+   },
+   "org.opencord.dhcpl2relay" : {
+          "dhcpl2relay" : {
+              "dhcpServerConnectPoints" : [ "of:0000aabbccddeeff/65536" ],
+              "useOltUplinkForServerPktInOut" : true
+          }
+   }
+ },
+ "devices": {
+   "of:0000aabbccddeeff": {
+     "basic": {
+       "driver": "pmc-olt"
+     },
+     "accessDevice": {
+       "uplink": "0",
+       "vlan": "2"
+     }
+   }
+ },
+ "ports" : { 
+ }
+}
