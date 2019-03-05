@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -59,13 +58,13 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
       - name: kafka
-        image: wurstmeister/kafka:1.0.0
+        image: wurstmeister/kafka:2.11-2.0.1
         ports:
         - containerPort: 9092
         env:
-        - name: KAFKA_ADVERTISED_PORT
-          value: "9092"
+        - name: KAFKA_LISTENERS
+          value: PLAINTEXT://:9092
         - name: KAFKA_ZOOKEEPER_CONNECT
           value: zoo1:2181,zoo2:2181,zoo3:2181
-        - name: KAFKA_HEAP_OPTS
-          value: "-Xmx256M -Xms128M"
+        - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+          value: "true"
