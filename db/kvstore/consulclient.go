@@ -497,3 +497,12 @@ func (c *ConsulClient) Close() {
 		log.Errorw("error-closing-client", log.Fields{"error": err})
 	}
 }
+
+
+func (c *ConsulClient)  AcquireLock(lockName string, timeout int) error {
+	return nil
+}
+
+func (c *ConsulClient)  ReleaseLock(lockName string) error {
+	return nil
+}

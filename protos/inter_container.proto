@@ -48,7 +48,8 @@ message Header {
     MessageType type = 2;
     string from_topic = 3;
     string to_topic = 4;
-    int64 timestamp = 5;
+    string key_topic = 5;
+    int64 timestamp = 6;
 }
 
 message Argument {

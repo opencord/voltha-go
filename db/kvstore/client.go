@@ -84,6 +84,8 @@ type Client interface {
 	ReleaseAllReservations() error
 	RenewReservation(key string) error
 	Watch(key string) chan *Event
+	AcquireLock(lockName string, timeout int) error
+	ReleaseLock(lockName string) error
 	CloseWatch(key string, ch chan *Event)
 	Close()
 }

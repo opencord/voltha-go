@@ -33,6 +33,10 @@ type EtcdClient struct {
 	keyReservations map[string]*v3Client.LeaseID
 	watchedChannels map[string][]map[chan *Event]v3Client.Watcher
 	writeLock       sync.Mutex
+	lockToMutexMap map[string]*v3Concurrency.Mutex
+	lockToSessionMap map[string]*v3Concurrency.Session
+	lockToMutexLock sync.Mutex
+
 }
 
 // NewEtcdClient returns a new client for the Etcd KV store
@@ -49,8 +53,10 @@ func NewEtcdClient(addr string, timeout int) (*EtcdClient, error) {
 	}
 	wc := make(map[string][]map[chan *Event]v3Client.Watcher)
 	reservations := make(map[string]*v3Client.LeaseID)
+	lockMutexMap := make(map[string]*v3Concurrency.Mutex)
+	lockSessionMap := make(map[string]*v3Concurrency.Session)
 
-	return &EtcdClient{ectdAPI: c, watchedChannels: wc, keyReservations: reservations}, nil
+	return &EtcdClient{ectdAPI: c, watchedChannels: wc, keyReservations:reservations, lockToMutexMap:lockMutexMap, lockToSessionMap:lockSessionMap}, nil
 }
 
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
@@ -430,4 +436,64 @@ func (c *EtcdClient) Close() {
 	if err := c.ectdAPI.Close(); err != nil {
 		log.Errorw("error-closing-client", log.Fields{"error": err})
 	}
+}
+
+func (c *EtcdClient) addLockName(lockName string, lock *v3Concurrency.Mutex, session *v3Concurrency.Session) {
+	c.lockToMutexLock.Lock()
+	defer c.lockToMutexLock.Unlock()
+	c.lockToMutexMap[lockName] = lock
+	c.lockToSessionMap[lockName] = session
+}
+
+func (c *EtcdClient) deleteLockName(lockName string) {
+	c.lockToMutexLock.Lock()
+	defer c.lockToMutexLock.Unlock()
+	delete(c.lockToMutexMap, lockName)
+	delete(c.lockToSessionMap, lockName)
+}
+
+func (c *EtcdClient) getLock(lockName string) (*v3Concurrency.Mutex, *v3Concurrency.Session) {
+	c.lockToMutexLock.Lock()
+	defer c.lockToMutexLock.Unlock()
+	var lock *v3Concurrency.Mutex
+	var session *v3Concurrency.Session
+	if l, exist := c.lockToMutexMap[lockName]; exist {
+		lock = l
+	}
+	if s, exist := c.lockToSessionMap[lockName]; exist {
+		session = s
+	}
+	return lock, session
+}
+
+
+func (c *EtcdClient)  AcquireLock(lockName string, timeout int) error {
+	duration := GetDuration(timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	session, _ := v3Concurrency.NewSession(c.ectdAPI, v3Concurrency.WithContext(ctx))
+	mu := v3Concurrency.NewMutex(session, "/devicelock_" + lockName)
+	if err := mu.Lock(context.Background()); err != nil {
+		return err
+	}
+	c.addLockName(lockName, mu, session)
+	cancel()
+	return nil
+}
+
+func (c *EtcdClient)  ReleaseLock(lockName string) error {
+	lock, session := c.getLock(lockName)
+	var err error
+	if lock != nil {
+		if e := lock.Unlock(context.Background()); e != nil {
+			err = e
+		}
+	}
+	if session != nil {
+		if e := session.Close(); e != nil {
+			err = e
+		}
+	}
+	c.deleteLockName(lockName)
+
+	return err
 }
