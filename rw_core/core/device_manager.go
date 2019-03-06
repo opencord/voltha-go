@@ -262,6 +262,42 @@ func (dMgr *DeviceManager) GetChildDevice(parentDeviceId string, serialNumber st
 	return nil, status.Errorf(codes.NotFound, "%s", parentDeviceId)
 }
 
+func (dMgr *DeviceManager) GetChildDeviceWithProxyAddress(proxyAddress *voltha.Device_ProxyAddress) (*voltha.Device, error) {
+	log.Debugw("GetChildDeviceWithProxyAddress", log.Fields{"proxyAddress": proxyAddress})
+
+	var parentDevice *voltha.Device
+	var err error
+	if parentDevice, err = dMgr.GetDevice(proxyAddress.DeviceId); err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	var childDeviceIds []string
+	if childDeviceIds, err = dMgr.getAllChildDeviceIds(parentDevice); err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	if len(childDeviceIds) == 0 {
+		log.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id})
+		return nil, status.Errorf(codes.NotFound, "%s", proxyAddress)
+	}
+
+	var foundChildDevice *voltha.Device
+	for _, childDeviceId := range childDeviceIds {
+		if searchDevice, err := dMgr.GetDevice(childDeviceId); err == nil {
+			if searchDevice.ProxyAddress == proxyAddress {
+				foundChildDevice = searchDevice
+				break
+			}
+		}
+	}
+
+	if foundChildDevice != nil {
+		log.Debugw("child-device-found", log.Fields{"proxyAddress": proxyAddress})
+		return foundChildDevice, nil
+	}
+
+	log.Warnw("child-device-not-found", log.Fields{"proxyAddress": proxyAddress})
+	return nil, status.Errorf(codes.NotFound, "%s", proxyAddress)
+}
+
 func (dMgr *DeviceManager) IsDeviceInCache(id string) bool {
 	dMgr.lockDeviceAgentsMap.Lock()
 	defer dMgr.lockDeviceAgentsMap.Unlock()
