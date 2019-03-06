@@ -150,7 +150,10 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 			cloned.Id,
 			1,
 			"simulated_onu",
-			initialUniPortNo+i)
+			initialUniPortNo+i,
+			"simulated_onu",
+			com.GetRandomSerialNumber(),
+			int64(i))
 	}
 }
 

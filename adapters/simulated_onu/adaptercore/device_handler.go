@@ -96,7 +96,7 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	cloned.Root = false
 	cloned.Vendor = "simulators"
 	cloned.Model = "go-simulators"
-	cloned.SerialNumber = com.GetRandomSerialNumber()
+	//cloned.SerialNumber = com.GetRandomSerialNumber()
 	cloned.MacAddress = strings.ToUpper(com.GetRandomMacAddress())
 
 	// Synchronous call to update device - this method is run in its own go routine
