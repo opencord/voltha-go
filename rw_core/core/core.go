@@ -24,7 +24,7 @@ import (
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

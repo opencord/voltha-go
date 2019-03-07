@@ -17,7 +17,7 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"runtime/debug"
 	"sync"
 )

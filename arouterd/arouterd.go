@@ -31,10 +31,10 @@ import (
 	kafka "github.com/opencord/voltha-go/kafka"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	empty "github.com/golang/protobuf/ptypes/empty"
-	vpb "github.com/opencord/voltha-go/protos/voltha"
-	cmn "github.com/opencord/voltha-go/protos/common"
-	pb "github.com/opencord/voltha-go/protos/afrouter"
-	ic "github.com/opencord/voltha-go/protos/inter_container"
+	vpb "github.com/opencord/voltha-protos/go/voltha"
+	cmn "github.com/opencord/voltha-protos/go/common"
+	pb "github.com/opencord/voltha-protos/go/afrouter"
+	ic "github.com/opencord/voltha-protos/go/inter_container"
 )
 
 type configConn struct {
