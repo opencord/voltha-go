@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/opencord/voltha-go/protos/voltha";
+option go_package = "github.com/opencord/voltha-protos/go/voltha";
 
 package voltha;
 
@@ -17,7 +17,7 @@ message DeviceType {
     // Unique name for the device type
     string id = 1;
 
-    // Unique vendor id for the device type applicable to ONU
+    // Unique venor id for the device type applicable to ONU
     // 4 bytes of vendor id from ONU serial number
     string vendor_id = 5;
 
@@ -26,9 +26,12 @@ message DeviceType {
     // Name of the adapter that handles device type
     string adapter = 2;
 
-    // Capabilities
+    // Capabilitities
+
     bool accepts_bulk_flow_update = 3;
     bool accepts_add_remove_flow_updates = 4;
+    bool accepts_direct_logical_flows_update = 7;
+
 }
 
 // A plurality of device types
@@ -38,9 +41,10 @@ message DeviceTypes {
 
 message PmConfig {
     enum PmType {
-    	COUNTER = 0;
-	GUAGE = 1;
-	STATE = 2;
+        COUNTER = 0;
+        GAUGE = 1;
+        STATE = 2;
+        CONTEXT = 3;
     }
     string name = 1;
     PmType type = 2;
@@ -116,15 +120,15 @@ message ImageDownload {
         DEVICE_BUSY = 2;
         INSUFFICIENT_SPACE = 3;
         UNKNOWN_ERROR = 4;
+        CANCELLED = 5;
     }
 
     enum ImageActivateState {
         IMAGE_UNKNOWN = 0;
         IMAGE_INACTIVE = 1;
-        IMAGE_ACTIVATING = 2;
+        IMAGE_ACTIVATE = 2;
         IMAGE_ACTIVE = 3;
-        IMAGE_REVERTING = 4;
-        IMAGE_REVERTED = 5;
+        IMAGE_REVERT = 4;
     }
 
     // Device Identifier
@@ -163,6 +167,9 @@ message ImageDownload {
 
     // Image activation state
     ImageActivateState image_state = 12;
+    
+    // Image file size
+    uint32 file_size = 13;
 }
 
 message ImageDownloads {
@@ -199,6 +206,13 @@ message Port {
         uint32 port_no = 2;
     }
     repeated PeerPort peers = 8;
+
+    fixed64 rx_packets = 9;
+    fixed64 rx_bytes = 10;
+    fixed64 rx_errors = 11;
+    fixed64 tx_packets = 12;
+    fixed64 tx_bytes = 13;
+    fixed64 tx_errors = 14;
 
 }
 
@@ -251,10 +265,10 @@ message Device {
         uint32 onu_session_id = 7; // session identifier for the ONU; optional
     };
 
-    // Device contact MAC address (format: "xx:xx:xx:xx:xx:xx")
-    string mac_address = 13;
-
     oneof address {
+        // Device contact MAC address (format: "xx:xx:xx:xx:xx:xx")
+        string mac_address = 13;
+
         // Device contact IPv4 address (format: "a.b.c.d" or can use hostname too)
         string ipv4_address = 14;
 
@@ -294,4 +308,22 @@ message Device {
 
 message Devices {
     repeated Device items = 1;
+}
+
+message SimulateAlarmRequest {
+    enum OperationType {
+        RAISE = 0;
+        CLEAR = 1;
+    }
+    // Device Identifier
+    string id = 1;
+    string indicator = 2;
+    string intf_id = 3;
+    string port_type_name = 4;
+    string onu_device_id = 5;
+    int32 inverse_bit_error_rate = 6;
+    int32 drift = 7;
+    int32 new_eqd = 8;
+    string onu_serial_number = 9;
+    OperationType operation = 10;
 }

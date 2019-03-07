@@ -185,7 +185,7 @@ protos:
 ifneq ($(VOLTHA_BUILD),docker)
 	make -C protos
 else
-	cp ../protos/*.proto ./protos
+	#cp ../protos/*.proto ./protos
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-protos:${TAG} -f docker/Dockerfile.protos .
 endif
 
