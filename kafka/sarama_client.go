@@ -22,7 +22,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
-	ic "github.com/opencord/voltha-go/protos/inter_container"
+	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"gopkg.in/Shopify/sarama.v1"
 	"strings"
 	"sync"

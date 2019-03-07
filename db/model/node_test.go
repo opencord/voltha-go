@@ -19,9 +19,9 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/opencord/voltha-go/protos/common"
-	"github.com/opencord/voltha-go/protos/openflow_13"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/common"
+	"github.com/opencord/voltha-protos/go/openflow_13"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"reflect"
 	"testing"
 )

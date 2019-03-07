@@ -21,8 +21,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/protos/common"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/common"
+	"github.com/opencord/voltha-protos/go/omci"
+	"github.com/opencord/voltha-protos/go/openflow_13"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -252,3 +254,49 @@ func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha
 	}
 	return nil, errors.New("UnImplemented")
 }
+
+//@TODO useless stub, what should this actually do?
+func (handler *APIHandler) GetAlarmDeviceData(
+	ctx context.Context,
+	in *common.ID,
+) (*omci.AlarmDeviceData, error) {
+	log.Debug("GetAlarmDeviceData-stub")
+	return nil, nil
+}
+
+//@TODO useless stub, what should this actually do?
+func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
+	ctx context.Context, 
+	in *common.ID,
+) (*openflow_13.MeterStatsReply, error) {
+	log.Debug("GetMeterStatsOfLogicalDevice-stub")
+	return nil, nil
+}
+
+//@TODO useless stub, what should this actually do?
+func (handler *APIHandler) GetMibDeviceData(
+	ctx context.Context, 
+	in *common.ID, 
+) (*omci.MibDeviceData, error) {
+	log.Debug("GetMibDeviceData-stub")
+	return nil, nil
+}
+
+//@TODO useless stub, what should this actually do?
+func (handler *APIHandler) SimulateAlarm(
+	ctx context.Context,
+	in *voltha.SimulateAlarmRequest,
+) (*common.OperationResp, error) {
+	log.Debug("SimulateAlarm-stub")
+	return nil, nil
+}
+
+//@TODO useless stub, what should this actually do?
+func (handler *APIHandler) UpdateLogicalDeviceMeterTable(
+	ctx context.Context,
+	in *openflow_13.MeterModUpdate,
+) (*empty.Empty, error) {
+	log.Debug("UpdateLogicalDeviceMeterTable-stub")
+	return nil, nil
+}
+

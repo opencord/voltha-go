@@ -23,7 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/kafka"
-	ic "github.com/opencord/voltha-go/protos/inter_container"
+	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"time"
 )
 

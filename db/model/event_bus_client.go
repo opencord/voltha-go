@@ -18,7 +18,7 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/voltha"
 )
 
 // EventBusClient is an abstraction layer structure to communicate with an event bus mechanism

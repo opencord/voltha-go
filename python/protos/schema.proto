@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/opencord/voltha-go/protos/schema";
+option go_package = "github.com/opencord/voltha-protos/go/schema";
 
 package schema;
 

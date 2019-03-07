@@ -22,7 +22,7 @@ import (
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
-	ic "github.com/opencord/voltha-go/protos/inter_container"
+	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"github.com/opencord/voltha-go/ro_core/config"
 	c "github.com/opencord/voltha-go/ro_core/core"
 	"os"

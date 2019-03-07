@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/voltha"
 )
 
 // EventBus contains the details required to communicate with the event bus mechanism
