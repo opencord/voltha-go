@@ -16,7 +16,7 @@
 package model
 
 import (
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"reflect"
 	"testing"
 )

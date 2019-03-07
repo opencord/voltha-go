@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"github.com/cevaris/ordered_map"
 	"github.com/gogo/protobuf/proto"
-	ofp "github.com/opencord/voltha-go/protos/openflow_13"
+	ofp "github.com/opencord/voltha-protos/go/openflow_13"
 	"strings"
 )
 

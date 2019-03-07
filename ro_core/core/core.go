@@ -21,7 +21,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/opencord/voltha-go/ro_core/config"
 	"google.golang.org/grpc"
 )

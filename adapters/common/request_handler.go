@@ -22,8 +22,8 @@ import (
 	"github.com/opencord/voltha-go/adapters"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/kafka"
-	ic "github.com/opencord/voltha-go/protos/inter_container"
-	"github.com/opencord/voltha-go/protos/voltha"
+	ic "github.com/opencord/voltha-protos/go/inter_container"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

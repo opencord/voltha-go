@@ -72,6 +72,8 @@ def get_my_primary_interface(pon_subnet=None):
                 return iface
     return None
 
+def mac_str_to_tuple(mac):
+    return tuple(int(d, 16) for d in mac.split(':'))
 
 def _get_my_primary_local_ipv4(ifname=None):
     try:

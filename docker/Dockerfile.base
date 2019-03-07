@@ -10,15 +10,10 @@ RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
 RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
 
 # Prepare directory structure
-RUN ["mkdir", "-p", "/src", "src/protos"]
+RUN ["mkdir", "-p", "/src"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
-RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
+RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
 RUN ["mkdir", "-p", "/share"]
-
-# Install golang protobuf
-#RUN go get github.com/golang/protobuf/protoc-gen-go
-#RUN go get google.golang.org/genproto/googleapis/rpc/status
-#RUN go get google.golang.org/grpc/binarylog/grpc_binarylog_v1
 
 # Copy files
 #ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
@@ -28,11 +23,6 @@ RUN ["mkdir", "-p", "/share"]
 ADD vendor $GOPATH/src/github.com/opencord/voltha-go/vendor
 #ADD afrouter $GOPATH/src/github.com/opencord/voltha-go/afrouter
 
-
-# Copy required proto files
-# ... VOLTHA proos
-ADD protos/*.proto /src/protos/
-ADD protos/scripts/* /src/protos/
 ADD afrouter/arouter.json /src
 
 #
@@ -40,14 +30,5 @@ ADD afrouter/arouter.json /src
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
 #RUN ls -ltrR /go/src/github.com/opencord/voltha-go
-
-# Install golang protobuf
-#RUN go get github.com/golang/protobuf/protoc-gen-go
-#RUN go get google.golang.org/genproto/googleapis/rpc/status
-#RUN go get google.golang.org/grpc/binarylog/grpc_binarylog_v1
-RUN go install ./vendor/github.com/golang/protobuf/protoc-gen-go
-
-# Compile protobuf files
-RUN sh /src/protos/build_protos.sh /src/protos
 
 VOLUME /share
