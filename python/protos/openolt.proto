@@ -13,7 +13,7 @@
 // limitations under the License.
 
 syntax = "proto3";
-option go_package = "github.com/opencord/voltha-go/protos/voltha";
+option go_package = "github.com/opencord/voltha-protos/go/voltha";
 
 package voltha;
 
