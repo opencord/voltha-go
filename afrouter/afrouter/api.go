@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc"
 	"golang.org/x/net/context"
 	"github.com/opencord/voltha-go/common/log"
-	pb "github.com/opencord/voltha-go/protos/afrouter"
+	pb "github.com/opencord/voltha-protos/go/afrouter"
 )
 
 

@@ -3,14 +3,14 @@
 		"cmdLine":"afrouter -config arouter_test.json",
 		"protoFiles": [
 			{
-				"importPath":"github.com/opencord/voltha-go/protos/",
+				"importPath":"github.com/opencord/voltha-protos/go/",
 				"service":"VolthaService",
 				"package":"voltha"
 			}
 		],
 		"imports": [
 			 "github.com/golang/protobuf/ptypes/empty",
-			 "github.com/opencord/voltha-go/protos/openflow_13"
+			 "github.com/opencord/voltha-protos/go/openflow_13"
 		],
 		"protoDesc":"voltha.pb",
 		"protoSubst": [

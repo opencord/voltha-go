@@ -11,9 +11,9 @@ RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/go
 RUN go get google.golang.org/genproto/googleapis/api/annotations
 
 # Prepare directory structure
-RUN ["mkdir", "-p", "/src", "src/protos"]
+RUN ["mkdir", "-p", "/src"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
-RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha/protos/go"]
+RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
 
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
@@ -28,14 +28,6 @@ ADD vendor ./vendor
 
 # Install the protoc-gen-go
 RUN go install ./vendor/github.com/golang/protobuf/protoc-gen-go
-
-# Copy required proto files
-# ... VOLTHA proos
-ADD protos/*.proto /src/protos/
-ADD protos/scripts/* /src/protos/
-
-# Compile protobuf files
-RUN sh /src/protos/build_protos.sh /src/protos
 
 # Build simulated_onu
 RUN cd adapters/simulated_onu && go build -o /src/simulated_onu

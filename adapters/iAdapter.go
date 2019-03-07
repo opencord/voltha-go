@@ -16,9 +16,9 @@
 package adapters
 
 import (
-	ic "github.com/opencord/voltha-go/protos/inter_container"
-	"github.com/opencord/voltha-go/protos/openflow_13"
-	"github.com/opencord/voltha-go/protos/voltha"
+	ic "github.com/opencord/voltha-protos/go/inter_container"
+	"github.com/opencord/voltha-protos/go/openflow_13"
+	"github.com/opencord/voltha-protos/go/voltha"
 )
 
 //IAdapter represents the set of APIs a voltha adapter has to support.
