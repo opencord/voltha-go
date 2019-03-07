@@ -38,12 +38,18 @@ Logout/Login to assume new group membership needed for running docker as non-roo
 
 ### VOLTHA Protos
 
-Library containing all VOLTHA gRPC Protobuf definitions and the build system to produce needed stubs in Python and Golang.  Currently only Python stubs are produced and used by openolt and openonu adapters below.   Soon all VOLTHA 2.x core and components will use the protobufs built from this repo.  Once this stabilizes you will no longer need a local build.  The python vesion of the stubs will be available in pip.  Currently the plan is to push the voltha-protos pip library once a sprint into PyPi.   The Golang vesion of the stubs will be available via go get *TODO*
+Library containing all VOLTHA gRPC Protobuf definitions and the build system to produce needed stubs in Python and Golang.
 
 ```sh
 mkdir ~/source
 cd ~/source/
 git clone https://gerrit.opencord.org/voltha-protos.git
+```
+
+Setup local voltha-protos for go if editing protos is needed
+Follow voltha-protos README for setup, then: 
+```
+export LOCAL_PROTOS=true
 ```
 
 Generate the local tar.gz that is the dev version of voltha-protos:
