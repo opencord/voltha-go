@@ -54,10 +54,7 @@ protos/voltha.pb
 **/*.pdf
 
 # Vagrant logfile
-*.log
-
-# Files copied over during make
-python/protos/*.proto
+*.logo
 
 # voltha cli history
 python/cli/.voltha_cli_history
