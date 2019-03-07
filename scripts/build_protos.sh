@@ -1,4 +1,5 @@
----
+#!/bin/sh
+
 # Copyright 2018 the original author or authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,34 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: '2'
-services:
-  openolt:
-    image: "${REGISTRY}${REPOSITORY}voltha-adapter-openolt${TAG}" 
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    entrypoint:
-      - /app/openolt
-      - -device_type
-      - "OLT"
-      - -onus
-      - "4"
-      - -internal_if
-      - "eth0"
-      - -external_if
-      - "eth0"
-      - -vcore_endpoint
-      - "vcore"
-      - -promiscuous
-      - -verbose
-    ports:
-      - "50062:50062"
-    networks:
-    - default
+export PROTO_REPO=$1
 
-networks:
-  default:
-    driver: bridge
+OLD_PATH=`pwd`
+cd $PROTO_REPO
+./build_go_protos.sh protos
+cd $OLD_PATH
+
+if [ ! $PROTO_REPO -ef "vendor/github.com/opencord/voltha-protos" ]; then 
+mkdir -p vendor/github.com/opencord/voltha-protos
+cp -Lfr $PROTO_REPO vendor/github.com/opencord
+fi
+

@@ -6,7 +6,7 @@
 
 syntax = "proto3";
 
-option go_package = "github.com/opencord/voltha-go/protos/voltha";
+option go_package = "github.com/opencord/voltha-protos/go/voltha";
 
 package voltha;
 
@@ -156,13 +156,6 @@ service VolthaService {
     rpc UpdateLogLevel(Logging) returns(google.protobuf.Empty) {
         option (google.api.http) = {
             get: "/api/v1/logs"
-        };
-    }
-
-    // Get the membership group of a Voltha Core
-    rpc GetMembership(google.protobuf.Empty) returns(Membership) {
-        option (google.api.http) = {
-            get: "/api/v1/membership"
         };
     }
 

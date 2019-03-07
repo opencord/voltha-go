@@ -32,11 +32,14 @@ ln -s ~/repos/voltha-go $GOPATH/src/github.com/opencord/voltha-go
 ```
 
 ### Installing Voltha dependencies
+ 
+Pull dependencies for the project
 
 ```
+cd $GOPATH/src/github.com/opencord/voltha-go/
+
 go get -u google.golang.org/grpc   # gRPC
 go get -u github.com/golang-collections/go-datastructures/queue
-go get -u github.com/golang/protobuf/protoc-gen-go   # protoc plugin for Go
 go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 go get -u github.com/gogo/protobuf/proto   # Clone function
 go get -u go.uber.org/zap   # logger
@@ -45,16 +48,19 @@ go get -u github.com/bsm/sarama-cluster
 go get -u github.com/google/uuid
 go get -u github.com/cevaris/ordered_map
 go get -u github.com/gyuho/goraph
-go get -u go.etcd.io/etcd   # etcd client
-go install ./vendor/github.com/golang/protobuf/protoc-gen-go 
+go get -u go.etcd.io/etcd   # etcd client 
+go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
+```
+Get voltha-protos if you have not already.
+```
+go get -u github.com/opencord/voltha-protos
 ```
 
 ### Building the protobufs
 ```
 cd voltha-go
-protos/scripts/build_protos.sh protos
-```
+scripts/build_protos.sh $GOPATH/src/github.com/opencord/voltha-protos```
 
 ### Building and Running Voltha Core locally
 A fatal error occurs if Voltha is built and executed at this stage:

@@ -11,13 +11,10 @@ ADD db $GOPATH/src/github.com/opencord/voltha-go/db
 ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
 ADD afrouter $GOPATH/src/github.com/opencord/voltha-go/afrouter
 ADD arouterd $GOPATH/src/github.com/opencord/voltha-go/arouterd
+ADD vendor $GOPATH/src/github.com/opencord/voltha-go/vendor
 
-
-# Copy required proto files
-# ... VOLTHA proos
 # Repeate here even if done in base file
-ADD protos/*.proto /src/protos/
-ADD protos/scripts/* /src/protos/
+ADD scripts/* /src/protos/
 ADD afrouter/arouter.json /src
 
 #
@@ -27,7 +24,7 @@ WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 # Compile protobuf files
 # Repeate here even if done in base file
 RUN go get google.golang.org/genproto/googleapis/api/annotations
-RUN sh /src/protos/build_protos.sh /src/protos
+RUN sh /src/protos/build_protos.sh vendor/github.com/opencord/voltha-protos
 
 # Build rw_core
 RUN cd arouterd && go build -o /src/arouterd

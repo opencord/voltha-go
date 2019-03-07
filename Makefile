@@ -84,6 +84,8 @@ build: containers
 containers: base rw_core ro_core simulated_olt simulated_onu afrouter arouterd
 
 base:
+	mkdir -p vendor/github.com/opencord/voltha-protos
+	cp -Lfr ${GOPATH}/src/github.com/opencord/voltha-protos vendor/github.com/opencord
 	docker build $(DOCKER_BUILD_ARGS) -t base:latest -f docker/Dockerfile.base .
 
 afrouter:

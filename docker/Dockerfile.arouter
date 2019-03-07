@@ -9,22 +9,19 @@ ADD common $GOPATH/src/github.com/opencord/voltha-go/common
 ADD db $GOPATH/src/github.com/opencord/voltha-go/db
 ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
 ADD afrouter $GOPATH/src/github.com/opencord/voltha-go/afrouter
+add vendor $GOPATH/src/github.com/opencord/voltha-go/vendor
 
-# Copy required proto files
-# ... VOLTHA proos
 # Repeat here even if it's done in the base
-ADD protos/*.proto /src/protos/
-ADD protos/scripts/* /src/protos/
+ADD scripts/* /src/protos/
 ADD afrouter/arouter.json /src
-
 #
 # Copy generated executables here
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
 # Compile protobuf files
 # Repeat here even if it's done in the base
-RUN sh /src/protos/build_protos.sh /src/protos
-
+RUN sh /src/protos/build_protos.sh vendor/github.com/opencord/voltha-protos
+RUN cp vendor/github.com/opencord/voltha-protos/go/voltha.pb /src/protos/
 # Build rw_core
 RUN cd afrouter && go build -o /src/afrouter
 

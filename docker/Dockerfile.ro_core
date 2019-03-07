@@ -27,13 +27,10 @@ ADD vendor ./vendor
 # Install the protoc-gen-go
 RUN go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 
-# Copy required proto files
-# ... VOLTHA proos
-ADD protos/*.proto /src/protos/
-ADD protos/scripts/* /src/protos/
+ADD scripts/* /src/protos/
 
 # Compile protobuf files
-RUN sh /src/protos/build_protos.sh /src/protos
+RUN sh /src/protos/build_protos.sh ./vendor/github.com/opencord/voltha-protos
 
 # Build ro_core
 RUN cd ro_core && go build -o /src/ro_core
