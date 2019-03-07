@@ -16,7 +16,7 @@
 version: '2'
 services:
   openolt:
-    image: "${REGISTRY}${REPOSITORY}voltha-openolt${TAG}" 
+    image: "${REGISTRY}${REPOSITORY}voltha-adapter-openolt${TAG}" 
     logging:
       driver: "json-file"
       options:

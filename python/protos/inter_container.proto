@@ -5,7 +5,7 @@ import "openflow_13.proto";
 import public "logical_device.proto";
 
 
-option go_package = "github.com/opencord/voltha-go/protos/inter_container";
+option go_package = "github.com/opencord/voltha-protos/go/inter_container";
 
 package voltha;
 
@@ -48,8 +48,7 @@ message Header {
     MessageType type = 2;
     string from_topic = 3;
     string to_topic = 4;
-    string key_topic = 5;
-    int64 timestamp = 6;
+    int64 timestamp = 5;
 }
 
 message Argument {

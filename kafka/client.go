@@ -16,7 +16,7 @@
 package kafka
 
 import (
-	ca "github.com/opencord/voltha-go/protos/inter_container"
+	ca "github.com/opencord/voltha-protos/go/inter_container"
 	"time"
 )
 

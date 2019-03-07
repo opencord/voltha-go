@@ -19,8 +19,8 @@ package model
 import (
 	"encoding/hex"
 	"github.com/google/uuid"
-	"github.com/opencord/voltha-go/protos/common"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/common"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"strconv"
 	"testing"
 )

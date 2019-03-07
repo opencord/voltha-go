@@ -18,8 +18,8 @@ package flow_decomposition
 import (
 	"errors"
 	"github.com/opencord/voltha-go/common/log"
-	ofp "github.com/opencord/voltha-go/protos/openflow_13"
-	"github.com/opencord/voltha-go/protos/voltha"
+	ofp "github.com/opencord/voltha-protos/go/openflow_13"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	fu "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/stretchr/testify/assert"

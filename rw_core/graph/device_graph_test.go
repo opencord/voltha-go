@@ -18,8 +18,8 @@ package graph
 import (
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-go/protos/openflow_13"
-	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-protos/go/openflow_13"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
