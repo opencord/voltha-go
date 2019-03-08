@@ -313,14 +313,13 @@ func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revisio
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 
-	newRev := &NonPersistedRevision{}
+	newRev := npr
 	newRev.Config = npr.Config
 	newRev.Hash = npr.Hash
 	newRev.Branch = branch
 	newRev.Children = make(map[string][]Revision)
-	for entryName, childrenEntry := range npr.Children {
-		newRev.Children[entryName] = make([]Revision, len(childrenEntry))
-		copy(newRev.Children[entryName], childrenEntry)
+	for entryName, childrenEntry := range children {
+		newRev.Children[entryName] = append(newRev.Children[entryName], childrenEntry...)
 	}
 	newRev.Finalize(false)
 

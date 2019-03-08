@@ -124,6 +124,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	var help string
 
+	help = fmt.Sprintf("RW instance id")
+	flag.StringVar(&(cf.InstanceID), "instance-id", default_InstanceID, help)
+
 	help = fmt.Sprintf("RW core endpoint address")
 	flag.StringVar(&(cf.RWCoreEndpoint), "vcore-endpoint", default_RWCoreEndpoint, help)
 

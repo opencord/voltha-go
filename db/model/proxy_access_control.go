@@ -24,7 +24,7 @@ import (
 
 type singletonProxyAccessControl struct {
 	sync.RWMutex
-	cache sync.Map
+	cache         sync.Map
 	reservedCount int
 }
 
@@ -39,6 +39,17 @@ func PAC() *singletonProxyAccessControl {
 	return instanceProxyAccessControl
 }
 
+// IsReserved will verify if access control is active for a specific path within the model
+func (singleton *singletonProxyAccessControl) IsReserved(pathLock string) bool {
+	singleton.Lock()
+	defer singleton.Unlock()
+
+	_, exists := singleton.cache.Load(pathLock)
+	log.Debugw("is-reserved", log.Fields{"pathLock": pathLock, "exists": exists})
+
+	return exists
+}
+
 // ReservePath will apply access control for a specific path within the model
 func (singleton *singletonProxyAccessControl) ReservePath(path string, proxy *Proxy, pathLock string) *proxyAccessControl {
 	singleton.Lock()
@@ -47,7 +58,7 @@ func (singleton *singletonProxyAccessControl) ReservePath(path string, proxy *Pr
 	if pac, exists := singleton.cache.Load(pathLock); !exists {
 		log.Debugf("Creating new PAC entry for path:%s pathLock:%s", path, pathLock)
 		newPac := NewProxyAccessControl(proxy, pathLock)
-		singleton.cache.Store(pathLock,newPac)
+		singleton.cache.Store(pathLock, newPac)
 		return newPac
 	} else {
 		log.Debugf("Re-using existing PAC entry for path:%s pathLock:%s", path, pathLock)
@@ -162,9 +173,9 @@ func (pac *proxyAccessControl) SetProxy(proxy *Proxy) {
 func (pac *proxyAccessControl) List(path string, depth int, deep bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--list", log.Fields{"path":pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--list", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--list", log.Fields{"path":pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--list", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 	}
 
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
@@ -177,9 +188,9 @@ func (pac *proxyAccessControl) List(path string, depth int, deep bool, txid stri
 func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--get", log.Fields{"path":pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--get", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--get", log.Fields{"path":pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--get", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 	}
 
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
@@ -191,10 +202,11 @@ func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid strin
 func (pac *proxyAccessControl) Update(path string, data interface{}, strict bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--update", log.Fields{"path":pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--update", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--update", log.Fields{"path":pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--update", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 	}
+
 	result := pac.getProxy().GetRoot().Update(path, data, strict, txid, nil)
 
 	if result != nil {
@@ -207,10 +219,11 @@ func (pac *proxyAccessControl) Update(path string, data interface{}, strict bool
 func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--add", log.Fields{"path":pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--add", log.Fields{"path": path, "fullPath": pac.Path})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--add", log.Fields{"path":pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--add", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 	}
+
 	result := pac.getProxy().GetRoot().Add(path, data, txid, nil)
 
 	if result != nil {
@@ -223,9 +236,10 @@ func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, c
 func (pac *proxyAccessControl) Remove(path string, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--remove", log.Fields{"path":pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--remove", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--remove", log.Fields{"path":pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--remove", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 	}
+
 	return pac.getProxy().GetRoot().Remove(path, txid, nil)
 }

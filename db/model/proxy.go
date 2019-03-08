@@ -55,13 +55,14 @@ func (oc *OperationContext) Update(data interface{}) *OperationContext {
 // Proxy holds the information for a specific location with the data model
 type Proxy struct {
 	sync.RWMutex
-	Root        *root
-	Node        *node
-	ParentNode  *node
-	Path        string
-	FullPath    string
-	Exclusive   bool
-	Callbacks   map[CallbackType]map[string]*CallbackTuple
+	Root       *root
+	Node       *node
+	ParentNode *node
+	Path       string
+	FullPath   string
+	Exclusive  bool
+	Callbacks  map[CallbackType]map[string]*CallbackTuple
+	Operation  ProxyOperation
 }
 
 // NewProxy instantiates a new proxy to a specific location
@@ -71,13 +72,13 @@ func NewProxy(root *root, node *node, parentNode *node, path string, fullPath st
 		fullPath = ""
 	}
 	p := &Proxy{
-		Root:        root,
-		Node:        node,
-		ParentNode:  parentNode,
-		Exclusive:   exclusive,
-		Path:        path,
-		FullPath:    fullPath,
-		Callbacks:   callbacks,
+		Root:       root,
+		Node:       node,
+		ParentNode: parentNode,
+		Exclusive:  exclusive,
+		Path:       path,
+		FullPath:   fullPath,
+		Callbacks:  callbacks,
 	}
 	return p
 }
@@ -136,6 +137,18 @@ func (p *Proxy) DeleteCallback(callbackType CallbackType, funcHash string) {
 	delete(p.Callbacks[callbackType], funcHash)
 }
 
+// CallbackType is an enumerated value to express when a callback should be executed
+type ProxyOperation uint8
+
+// Enumerated list of callback types
+const (
+	PROXY_GET ProxyOperation = iota
+	PROXY_LIST
+	PROXY_ADD
+	PROXY_UPDATE
+	PROXY_REMOVE
+)
+
 // parseForControlledPath verifies if a proxy path matches a pattern
 // for locations that need to be access controlled.
 func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled bool) {
@@ -183,7 +196,6 @@ func (p *Proxy) List(path string, depth int, deep bool, txid string) interface{}
 	return rv
 }
 
-
 // Get will retrieve information from the data model at the specified path location
 func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} {
 	var effectivePath string
@@ -228,7 +240,11 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
+
+	p.Operation = PROXY_UPDATE
 	pac.SetProxy(p)
+
+	log.Debugw("proxy-operation--update", log.Fields{"operation":p.Operation})
 
 	return pac.Update(fullPath, data, strict, txid, controlled)
 }
@@ -257,7 +273,11 @@ func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string)
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
+
+	p.Operation = PROXY_ADD
 	pac.SetProxy(p)
+
+	log.Debugw("proxy-operation--add", log.Fields{"operation":p.Operation})
 
 	return pac.Add(fullPath, data, txid, controlled)
 }
@@ -284,7 +304,11 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
+
+	p.Operation = PROXY_ADD
 	pac.SetProxy(p)
+
+	log.Debugw("proxy-operation--add", log.Fields{"operation":p.Operation})
 
 	return pac.Add(fullPath, data, txid, controlled)
 }
@@ -311,7 +335,11 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
+
+	p.Operation = PROXY_REMOVE
 	pac.SetProxy(p)
+
+	log.Debugw("proxy-operation--remove", log.Fields{"operation":p.Operation})
 
 	return pac.Remove(fullPath, txid, controlled)
 }

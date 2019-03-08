@@ -24,6 +24,7 @@ import (
 	"github.com/opencord/voltha-go/protos/voltha"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func init() {
@@ -65,7 +66,7 @@ type DeviceGraph struct {
 	logicalPorts  []*voltha.LogicalPort
 	RootPorts     map[uint32]uint32
 	Routes        map[OFPortLink][]RouteHop
-	boundaryPorts map[string]uint32
+	boundaryPorts sync.Map
 }
 
 func NewDeviceGraph(getDevice GetDeviceFunc) *DeviceGraph {
@@ -76,6 +77,9 @@ func NewDeviceGraph(getDevice GetDeviceFunc) *DeviceGraph {
 }
 
 func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
+	if dg == nil {
+		return
+	}
 	dg.logicalPorts = lps
 	// Set the root ports
 	dg.RootPorts = make(map[uint32]uint32)
@@ -85,9 +89,14 @@ func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
 		}
 	}
 	// set the boundary ports
-	dg.boundaryPorts = make(map[string]uint32)
+	dg.boundaryPorts.Range(func(key interface{}, value interface{}) bool {
+		dg.boundaryPorts.Delete(key)
+		return true
+	})
+	//dg.boundaryPorts = sync.Map{}
+
 	for _, lp := range lps {
-		dg.boundaryPorts[fmt.Sprintf("%s:%d", lp.DeviceId, lp.DevicePortNo)] = lp.OfpPort.PortNo
+		dg.boundaryPorts.Store(fmt.Sprintf("%s:%d", lp.DeviceId, lp.DevicePortNo), lp.OfpPort.PortNo)
 	}
 	dg.Routes = make(map[OFPortLink][]RouteHop)
 
@@ -103,7 +112,7 @@ func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
 }
 
 func (dg *DeviceGraph) addDevice(device *voltha.Device, g goraph.Graph, devicesAdded *map[string]string, portsAdded *map[string]string,
-	boundaryPorts map[string]uint32) goraph.Graph {
+	boundaryPorts sync.Map) goraph.Graph {
 
 	if device == nil {
 		return g
@@ -150,27 +159,34 @@ func (dg *DeviceGraph) buildRoutes() map[OFPortLink][]RouteHop {
 	paths := make(map[OFPortLink][]RouteHop)
 	var err error
 	var hop RouteHop
-	for source, sourcePort := range dg.boundaryPorts {
-		for target, targetPort := range dg.boundaryPorts {
+
+	dg.boundaryPorts.Range(func(src, srcPort interface{}) bool {
+		source := src.(string)
+		sourcePort := srcPort.(uint32)
+
+		dg.boundaryPorts.Range(func(dst, dstPort interface{}) bool {
+			target := dst.(string)
+			targetPort := dstPort.(uint32)
+
 			if source == target {
-				continue
+				return true
 			}
 			//Ignore NNI - NNI Routes
 			if dg.IsRootPort(sourcePort) && dg.IsRootPort(targetPort) {
-				continue
+				return true
 			}
 
 			//Ignore UNI - UNI Routes
 			if !dg.IsRootPort(sourcePort) && !dg.IsRootPort(targetPort) {
-				continue
+				return true
 			}
 
 			if pathIds, _, err = goraph.Dijkstra(dg.GGraph, goraph.StringID(source), goraph.StringID(target)); err != nil {
 				log.Errorw("no-path", log.Fields{"source": source, "target": target, "error": err})
-				continue
+				return true
 			}
 			if len(pathIds)%3 != 0 {
-				continue
+				return true
 			}
 			var deviceId string
 			var ingressPort uint32
@@ -191,8 +207,10 @@ func (dg *DeviceGraph) buildRoutes() map[OFPortLink][]RouteHop {
 			copy(tmp, path)
 			path = nil
 			paths[OFPortLink{Ingress: sourcePort, Egress: targetPort}] = tmp
-		}
-	}
+			return true
+		})
+		return true
+	})
 	return paths
 }
 

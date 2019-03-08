@@ -560,7 +560,7 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 
 		// FIXME VOL-1293: the following statement corrupts the kv when using a subproxy (commenting for now)
 		// FIXME VOL-1293 cont'd: need to figure out the required conditions otherwise we are not cleaning up entries
-		branch.GetLatest().Drop(branch.Txid, false)
+		//branch.GetLatest().Drop(branch.Txid, false)
 
 		n.makeLatest(branch, rev, changes)
 
