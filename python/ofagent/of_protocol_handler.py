@@ -263,11 +263,14 @@ class OpenFlowProtocolHandler(object):
     @inlineCallbacks
     def handle_port_desc_request(self, req):
         port_list = yield self.rpc.get_port_list(self.device_id)
-        self.cxn.send(ofp.message.port_desc_stats_reply(
-            xid=req.xid,
-            #flags=None,
-            entries=[to_loxi(port.ofp_port) for port in port_list]
-        ))
+        try:
+            self.cxn.send(ofp.message.port_desc_stats_reply(
+                xid=req.xid,
+                #flags=None,
+                entries=[to_loxi(port.ofp_port) for port in port_list]
+            ))
+        except Exception as err:
+            log.exception('failed-port-desc-reply', err=err)
 
     def handle_queue_stats_request(self, req):
         raise NotImplementedError()

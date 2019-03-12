@@ -1319,10 +1319,8 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort (childDevice *voltha.Device, 
 	} else {
 		log.Debugw("adding-uni", log.Fields{"deviceId": childDevice.Id})
 		portCap.Port.RootPort = false
-		//TODO: For now use the channel id assigned by the OLT as logical port number
-		lPortNo := childDevice.ProxyAddress.ChannelId
-		portCap.Port.Id = fmt.Sprintf("uni-%d", lPortNo)
-		portCap.Port.OfpPort.PortNo = lPortNo
+		portCap.Port.Id = port.Label
+		portCap.Port.OfpPort.PortNo = port.PortNo
 		portCap.Port.OfpPort.Name = portCap.Port.Id
 		portCap.Port.DeviceId = childDevice.Id
 		portCap.Port.DevicePortNo = port.PortNo
