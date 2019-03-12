@@ -192,13 +192,18 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	flag.Parse()
 
-	containerName := getContainerInfo()
-	if len(containerName) > 0 {
+	containerName, err := getContainerInfo()
+	if err == nil && len(containerName) > 0 {
 		cf.InstanceID = containerName
 	}
 
 }
 
-func getContainerInfo() string {
-	return os.Getenv("HOSTNAME")
+func getContainerInfo() (string, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+
+	return hostname, nil
 }
