@@ -134,6 +134,21 @@ services:
     restart: unless-stopped
 
 
+  onos:
+    image: "voltha/voltha-onos:latest"
+    ports:
+    - "8101:8101" # ssh
+    - "6653:6653" # OF
+    - "8181:8181" # UI
+    environment:
+      ONOS_APPS: 'drivers,openflow-base'
+    volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock"
+    networks:
+    - default
+    restart: unless-stopped
+
+
   adapter_openolt:
     image: "${REGISTRY}${REPOSITORY}voltha-openolt-adapter${TAG}"
     logging:
