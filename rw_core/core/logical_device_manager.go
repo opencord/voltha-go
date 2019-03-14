@@ -188,7 +188,8 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 
 // load loads a logical device manager in memory
 func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
-	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
+	//log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
+	log.Errorw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
 	// To prevent a race condition, let's hold the logical device agent map lock.  This will prevent a loading and
 	// a create logical device callback from occurring at the same time.
 	ldMgr.lockLogicalDeviceAgentsMap.Lock()
@@ -283,6 +284,23 @@ func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortId *voltha.LogicalPortId)
 	return nil, status.Errorf(codes.NotFound, "%s-$s", lPortId.Id, lPortId.PortId)
 }
 
+// addLogicalPort sets up a logical port on the logical device based on the device port
+// information.
+func (ldMgr *LogicalDeviceManager) addLogicalPort(device *voltha.Device, port *voltha.Port) error {
+	if ldID, err := ldMgr.getLogicalDeviceId(device); err != nil {
+		// This is not an error as the logical device may not have been created at this time.  In such a case,
+		// the ports will be created when the logical device is ready.
+		return nil
+	} else {
+		if agent := ldMgr.getLogicalDeviceAgent(*ldID); agent != nil {
+			if err := agent.addLogicalPort(device, port); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // deleteLogicalPort removes the logical port associated with a child device
 func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, lPortId *voltha.LogicalPortId) error {
 	log.Debugw("deleting-logical-port", log.Fields{"LDeviceId": lPortId.Id})
@@ -305,8 +323,8 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, lPortI
 	return nil
 }
 
-func (ldMgr *LogicalDeviceManager) addUNILogicalPort(ctx context.Context, childDevice *voltha.Device) error {
-	log.Debugw("AddUNILogicalPort", log.Fields{"childDeviceId": childDevice.Id, "parentDeviceId": childDevice.ParentId})
+func (ldMgr *LogicalDeviceManager) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device) error {
+	log.Debugw("setupUNILogicalPorts", log.Fields{"childDeviceId": childDevice.Id, "parentDeviceId": childDevice.ParentId})
 	// Sanity check
 	if childDevice.Root {
 		return errors.New("Device-root")
@@ -316,14 +334,14 @@ func (ldMgr *LogicalDeviceManager) addUNILogicalPort(ctx context.Context, childD
 	parentId := childDevice.ParentId
 	logDeviceId := ldMgr.deviceMgr.GetParentDeviceId(parentId)
 
-	log.Debugw("AddUNILogicalPort", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
+	log.Debugw("setupUNILogicalPorts", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
 
 	if parentId == "" || logDeviceId == nil {
 		return errors.New("Device-in-invalid-state")
 	}
 
 	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
-		if err := agent.addUNILogicalPort(ctx, childDevice); err != nil {
+		if err := agent.setupUNILogicalPorts(ctx, childDevice); err != nil {
 			return err
 		}
 		// Update the device routes - let it run in its own go routine as it can take time

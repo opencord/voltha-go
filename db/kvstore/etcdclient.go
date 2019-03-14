@@ -313,7 +313,7 @@ func (c *EtcdClient) ReleaseReservation(key string) error {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	if leaseID, ok = c.keyReservations[key]; !ok {
-		return errors.New("key-not-reserved")
+		return nil
 	}
 	if leaseID != nil {
 		_, err := c.ectdAPI.Revoke(context.Background(), *leaseID)

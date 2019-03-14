@@ -50,24 +50,12 @@ type TransitionMap struct {
 func NewTransitionMap(dMgr *DeviceManager) *TransitionMap {
 	var transitionMap TransitionMap
 	transitionMap.transitions = make([]Transition, 0)
-	//transitionMap.transitions = append(transitionMap.transitions,
-	//	Transition{
-	//		deviceType:    any,
-	//		previousState: DeviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-	//		currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-	//		handlers:      []TransitionHandler{dMgr.activateDevice}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			handlers:      []TransitionHandler{dMgr.notAllowed}})
-	//transitionMap.transitions = append(transitionMap.transitions,
-	//	Transition{
-	//		deviceType:    any,
-	//		previousState: DeviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-	//		currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-	//		handlers:      []TransitionHandler{dMgr.activateDevice}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
@@ -91,7 +79,7 @@ func NewTransitionMap(dMgr *DeviceManager) *TransitionMap {
 			deviceType:    child,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
-			handlers:      []TransitionHandler{dMgr.addUNILogicalPort}})
+			handlers:      []TransitionHandler{dMgr.setupUNILogicalPorts}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    parent,

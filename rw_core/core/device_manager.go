@@ -490,6 +490,15 @@ func (dMgr *DeviceManager) addPort(deviceId string, port *voltha.Port) error {
 				}
 			}
 		}
+		// Notify the logical device manager to setup a logical port if needed
+		if port.Type == voltha.Port_ETHERNET_NNI || port.Type == voltha.Port_ETHERNET_UNI {
+			if device , err := dMgr.GetDevice(deviceId); err == nil {
+				go dMgr.logicalDeviceMgr.addLogicalPort(device, port)
+			} else {
+				log.Errorw("failed-to-retrieve-device", log.Fields{"deviceId": deviceId})
+				return err
+			}
+		}
 		return nil
 	} else {
 		return status.Errorf(codes.NotFound, "%s", deviceId)
@@ -814,9 +823,9 @@ func (dMgr *DeviceManager) getAllChildDevices(parentDeviceId string) (*voltha.De
 	return nil, status.Errorf(codes.NotFound, "%s", parentDeviceId)
 }
 
-func (dMgr *DeviceManager) addUNILogicalPort(cDevice *voltha.Device) error {
+func (dMgr *DeviceManager) setupUNILogicalPorts(cDevice *voltha.Device) error {
 	log.Info("addUNILogicalPort")
-	if err := dMgr.logicalDeviceMgr.addUNILogicalPort(nil, cDevice); err != nil {
+	if err := dMgr.logicalDeviceMgr.setupUNILogicalPorts(nil, cDevice); err != nil {
 		log.Warnw("addUNILogicalPort-error", log.Fields{"device": cDevice, "err": err})
 		return err
 	}
