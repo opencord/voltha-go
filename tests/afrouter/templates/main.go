@@ -21,73 +21,14 @@ package main
 
 import (
 	"os"
-	"fmt"
 	"time"
 	"os/exec"
 	"strings"
 	"context"
-	slog "log"
-	"io/ioutil"
-	"encoding/json"
-	"google.golang.org/grpc/grpclog"
+	//slog "log"
+	//"google.golang.org/grpc/grpclog"
 	"github.com/opencord/voltha-go/common/log"
 )
-
-type TestCase struct {
-	Title string `json:"title"`
-	Result bool `json:"result"`
-	Info []string `json:"info"`
-}
-
-type TestSuite struct {
-	Name string `json:"name"`
-	TestCases []TestCase `json:"testCases"`
-}
-
-type TestRun struct {
-	TestSuites []TestSuite
-}
-
-var resFile *tstLog
-type tstLog struct {
-	fp * os.File
-	fn string
-}
-
-func (tr * tstLog) testLog(format string, a ...interface{}) {
-	var err error
-	if tr.fp == nil {
-		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
-			log.Errorf("Could not append to the results file")
-			tr.fp = nil
-		}
-	}
-	if tr.fp != nil {
-		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
-	}
-}
-
-func (tr * tstLog) testLogOnce(format string, a ...interface{}) {
-	var err error
-	if tr.fp == nil {
-		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
-			log.Errorf("Could not append to the results file")
-			tr.fp = nil
-		}
-	}
-	if tr.fp != nil {
-		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
-	}
-	tr.fp.Close()
-	tr.fp = nil
-}
-
-func (tr * tstLog) close() {
-	if tr.fp != nil {
-		tr.fp.Close()
-	}
-}
-
 
 func startSut(cmdStr string) (*exec.Cmd, context.CancelFunc, error) {
 	var err error = nil
@@ -109,58 +50,35 @@ func startSut(cmdStr string) (*exec.Cmd, context.CancelFunc, error) {
 
 func cleanUp(cmd *exec.Cmd, cncl context.CancelFunc) {
 	cncl()
-	cmd.Wait() // This seems to hang
-	// Give the child processes time to terminate
-	//time.Sleep(1 * time.Second)
+	cmd.Wait()
 }
-
-func readStats(stats * TestRun) () {
-	// Check if the  stats file exists
-	if _,err := os.Stat("stats.json"); err != nil {
-		// Nothing to do, just return
-		return
-	}
-	// The file is there, read it an unmarshal it into the stats struct
-	if statBytes, err := ioutil.ReadFile("stats.json"); err != nil {
-		log.Error(err)
-		return
-	} else if err := json.Unmarshal(statBytes, stats); err != nil {
-		log.Error(err)
-		return
-	}
-}
-
-func writeStats(stats * TestRun) () {
-	// Check if the  stats file exists
-	// The file is there, read it an unmarshal it into the stats struct
-	if statBytes, err := json.MarshalIndent(stats, "","    "); err != nil {
-		log.Error(err)
-		return
-	} else if err := ioutil.WriteFile("stats.json.new", statBytes, 0644); err != nil {
-		log.Error(err)
-		return
-	}
-	os.Rename("stats.json", "stats.json~")
-	os.Rename("stats.json.new", "stats.json")
-}
-var stats TestRun
 
 func main() {
 	var err error
 
 	// Setup logging
-	if _, err = log.SetDefaultLogger(log.JSON, 0, nil); err != nil {
+	if _, err = log.SetDefaultLogger(log.JSON, 1, nil); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	defer log.CleanUp()
 
-	readStats(&stats)
+	if len(os.Args) < 2 {
+		log.Fatalf("Stat file name parameter missing for %s. Aborting...", os.Args[0])
+	} else {
+		statFn = os.Args[1]
+	}
 
+	if stats,err = readStats(statFn); err != nil {
+		log.Error(err)
+		return
+	}
+	defer writeStats(statFn, stats)
 
-	grpclog.SetLogger(slog.New(os.Stderr, "grpc: ", slog.LstdFlags))
+	// Add a stat entry for this run
 
-	resFile = &tstLog{fn:os.Args[1]}
-	defer resFile.close()
+	stats.appendNew()
+	tsIdx :=  len(stats.TestSuites) - 1
+	stats.TestSuites[tsIdx].Name = os.Args[0]
 
 
 	// Initialize the servers
@@ -186,7 +104,8 @@ func main() {
 
 	// Run all the test cases now
 	log.Infof("Executing tests")
+
+	//log.Infof("Stats struct: %v", stats)
 	runTests()
-	writeStats(&stats)
 
 }

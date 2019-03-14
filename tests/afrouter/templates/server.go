@@ -123,7 +123,7 @@ func (ts {{$.Name}}TestServer) {{.Name}}({{.Pkg}}.{{.Svc}}_{{.Name}}Server) erro
 {{else}}
 func  (ts {{$.Name}}TestServer) {{.Name}}(ctx context.Context, in *{{.Param}}) (*{{.Rtrn}}, error) {
 	var r * incoming = &incoming{}
-	log.Debug("Serving {{$.Name}}")
+	//log.Debug("Serving {{$.Name}}")
 	// Read the metadata
 	if md,ok := metadata.FromIncomingContext(ctx); ok == false {
 		log.Error("Getting matadata during call to {{.Name}}")

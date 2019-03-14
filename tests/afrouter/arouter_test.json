@@ -30,9 +30,10 @@
 					"backend_cluster":"vcore",
 					"_COMMENT":"Methods are naturally southbound affinity binding unless otherwise specified below",
 					"methods":[ "CreateDevice",
-								"GetCoreInstance",
 								"EnableLogicalDevicePort",
 								"DisableLogicalDevicePort",
+								"UpdateLogicalDeviceFlowTable",
+								"UpdateLogicalDeviceFlowGroupTable",
 								"EnableDevice",
 								"DisableDevice",
 								"RebootDevice",
@@ -59,6 +60,15 @@
 					]
 				},
 				{
+					"name":"control",
+		   			"type":"round_robin",
+		   			"association":"round_robin",
+					"backend_cluster":"vcore",
+					"methods":[ 
+								"UpdateLogLevel"
+					]
+				},
+				{
 					"name":"read_only",
 		   			"type":"round_robin",
 		   			"association":"round_robin",
@@ -79,8 +89,17 @@
 								"GetDeviceGroup",
 								"GetLogicalDevice",
 								"GetAlarmFilter",
+								"ListLogicalDevices",
 								"ListLogicalDevicePorts",
-								"GetLogicalDevicePort"
+								"GetLogicalDevicePort",
+								"GetVoltha",
+								"ListCoreInstances",
+								"ListAdapters",
+								"ListDeviceIds",
+								"ListDeviceTypes",
+								"ListDeviceGroups",
+								"ListAlarmFilters",
+								"GetCoreInstance"
 					]
 				},
 				{

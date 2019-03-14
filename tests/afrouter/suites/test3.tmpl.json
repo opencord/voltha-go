@@ -1,6 +1,6 @@
 {
 	"environment":{
-		"cmdLine":"afrouter -logLevel 1 -config arouter_test.json",
+		"cmdLine":"afrouter -config arouter_test.json -logLevel 1",
 		"protoFiles": [
 			{
 				"importPath":"github.com/opencord/voltha-go/protos/",
@@ -13,14 +13,9 @@
 				"package":"afrouter"
 			}
 		],
-		"Junk": [
-			{
-				"importPath":"github.com/opencord/voltha-go/protos/",
-				"service":"Configuration",
-				"package":"afrouter"
-			}
-		],
 		"imports": [
+			"github.com/golang/protobuf/ptypes/empty",
+			"github.com/opencord/voltha-go/protos/openflow_13"
 		],
 		"protoDesc":"voltha.pb",
 		"protoSubst": [
@@ -91,68 +86,102 @@
 		}
 	},
 	"tests":[
+		{{range $k,$v := .RoTests}}
 		{
-			"name":"Test CreateDevice",
+			"name":"{{$v.Name}}",
 			"send": {
 				"client":"client",
-				"method":"CreateDevice",
-				"param":"{Type:\"simulated_olt\"}",
-				"expect":"{Id:\"abcd1234\",Type:\"simulated_olt\"}",
-				"_meta":"",
-				"_expectMeta":""
+				"method":"{{$v.Method}}",
+				"param":"{{$v.Param}}",
+				"expect":"{{$v.Expect}}",
+				"_meta":""
 			},
 			"servers": [
 				{
-					"name":"core11",
+					"name":"core{{$v.Core}}1",
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"0"
+							"value":"{{$v.SerNo}}"
 						}
 					]
 				},
 				{
-					"name":"core12",
+					"name":"core{{$v.Core}}2",
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"0"
+							"value":"{{$v.SerNo}}"
 						}
 					]
 				}
 			]
 		},
+		{{end}}
+		{{range $k,$v := .RwTests}}
 		{
-			"name":"Test GetDevice",
+			"name":"{{$v.Name}}",
 			"send": {
 				"client":"client",
-				"method":"GetDevice",
-				"param":"{Id:\"abcd1234\"}",
-				"expect":"{Id:\"abcd1234\",Type:\"simulated_olt\"}",
-				"_meta":"",
-				"_expectMeta":""
+				"method":"{{$v.Method}}",
+				"param":"{{$v.Param}}",
+				"expect":"{{$v.Expect}}",
+				"_meta":""
 			},
 			"servers": [
 				{
-					"name":"core11",
+					"name":"core{{$v.Core}}1",
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"1"
+							"value":"{{$v.SerNo}}"
 						}
 					]
 				},
 				{
-					"name":"core12",
+					"name":"core{{$v.Core}}2",
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"1"
+							"value":"{{$v.SerNo}}"
 						}
 					]
 				}
 			]
 		},
+		{{end}}
+		{{range $k,$v := .CtlTests}}
+		{
+			"name":"{{$v.Name}}",
+			"send": {
+				"client":"client",
+				"method":"{{$v.Method}}",
+				"param":"{{$v.Param}}",
+				"expect":"{{$v.Expect}}",
+				"_meta":""
+			},
+			"servers": [
+				{
+					"name":"core{{$v.Core}}1",
+					"meta": [
+						{
+							"key":"voltha_serial_number",
+							"value":"{{$v.SerNo}}"
+						}
+					]
+				},
+				{
+					"name":"core{{$v.Core}}2",
+					"meta": [
+						{
+							"key":"voltha_serial_number",
+							"value":"{{$v.SerNo}}"
+						}
+					]
+				}
+			]
+		},
+		{{end}}
 		{
 			"name":"Test Subscribe",
 			"send": {
@@ -179,7 +208,7 @@
 					"meta": [
 						{
 							"key":"voltha_serial_number",
-							"value":"2"
+							"value":"44"
 						},
 						{
 							"key":"voltha_backend_name",
@@ -190,8 +219,8 @@
 			]
 		},
 		{
+			"_COMMENT":"If this test case fails, there could be a goroutine leak",
 			"name":"Get goroutine count",
-			"infoOnly":true,
 			"send": {
 				"client":"stats",
 				"method":"GetGoroutineCount",

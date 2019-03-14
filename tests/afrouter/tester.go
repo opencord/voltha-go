@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"flag"
 	"path"
+	"math"
 	//"bufio"
 	"errors"
+	"regexp"
 	"os/exec"
 	"strconv"
 	"io/ioutil"
@@ -33,6 +35,8 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
+
+const MAX_CT = 500
 
 type TestConfig struct {
 	configFile *string
@@ -45,6 +49,11 @@ type TestConfig struct {
 type Connection struct {
 	Name string `json:"name"`
 	Port string `json:"port"`
+}
+
+type EndpointList struct {
+	Imports []string `json:"imports"`
+	Endpoints []Connection `json:"endPoints"`
 }
 
 type ProtoFile struct {
@@ -62,8 +71,8 @@ type Environment struct {
 	Command string `json:"cmdLine"`
 	ProtoFiles []ProtoFile `json:"protoFiles"`
 	ProtoDesc string `json:"protoDesc"`
-	Clients []Connection `json:"clients"`
-	Servers []Connection `json:"servers"`
+	Clients EndpointList `json:"clients"`
+	Servers EndpointList `json:"servers"`
 	Imports []string `json:"imports"`
 	ProtoSubsts []ProtoSubst `json:"protoSubst"`
 }
@@ -89,6 +98,7 @@ type Server struct {
 
 type Test struct {
 	Name string `json:"name"`
+	InfoOnly bool `json:"infoOnly"`
 	Send Rpc `json:"send"`
 	Servers []Server `json:"servers"`
 }
@@ -102,6 +112,7 @@ type ProtoImport struct {
 	Service string
 	Short string
 	Package string
+	Used bool
 }
 
 type SendItem struct {
@@ -117,14 +128,32 @@ type SendItem struct {
 
 type TestCase struct {
 	Name string
+	InfoOnly bool
 	Send SendItem
 	Srvr []Server
 }
 
+type MethodTypes struct {
+	ParamType string
+	ReturnType string
+	CodeGenerated bool
+}
+
+type Import struct {
+	Package string
+	Used bool
+}
+
 type TestList struct {
 	ProtoImports []ProtoImport
-	Imports []string
+	Imports []Import
 	Tests []TestCase
+	Funcs map[string]MethodTypes
+	RunTestsCallList []string
+	FileNum int
+	//NextFile int
+	HasFuncs bool
+	Offset int
 }
 
 type ClientConfig struct {
@@ -309,16 +338,19 @@ func generateServers(conf *TestConfig, suiteDir string, ts * TestSuite,
 						t *template.Template) error {
 	var servers []ServerConfig
 
-	for k,v := range ts.Env.Servers {
+	for k,v := range ts.Env.Servers.Endpoints {
 		log.Infof("Generating the code for server[%d]: %s", k, v.Name)
-		sc := &ServerConfig{Name:v.Name, Port:v.Port, Ct:k, Imports:ts.Env.Imports}
+		sc := &ServerConfig{Name:v.Name, Port:v.Port, Ct:k, Imports:ts.Env.Servers.Imports,
+							Methods:make(map[string]*mthd)}
 		for k1,v1 := range ts.Env.ProtoFiles {
 			imp := &ProtoImport{Short:"pb"+strconv.Itoa(k1),
 								Package:v1.ImportPath+v1.Package,
-								Service:v1.Service}
+								Service:v1.Service,
+								Used:true}
 			imp = &ProtoImport{Short:v1.Package,
 								Package:v1.ImportPath+v1.Package,
-								Service:v1.Service}
+								Service:v1.Service,
+								Used:true}
 			sc.ProtoImports = append(sc.ProtoImports, *imp)
 			// Compile the template from the file
 			log.Debugf("Proto substs: %v", ts.Env.ProtoSubsts)
@@ -329,7 +361,10 @@ func generateServers(conf *TestConfig, suiteDir string, ts * TestSuite,
 				return err
 			} else {
 				//Generate all the function calls required by the 
-				sc.Methods = mthds
+				for k,v := range mthds {
+					sc.Methods[k] = v
+				}
+				//sc.Methods = mthds
 			}
 		}
 		log.Debugf("Server: %v", *sc)
@@ -361,12 +396,10 @@ func generateServers(conf *TestConfig, suiteDir string, ts * TestSuite,
 func generateClients(conf *TestConfig, suiteDir string, ts * TestSuite,
 						t *template.Template) error {
 	var clients []ClientConfig
-	for k,v := range ts.Env.Clients {
+	for k,v := range ts.Env.Clients.Endpoints {
 		log.Infof("Generating the code for client[%d]: %s", k, v.Name)
-		cc := &ClientConfig{Name:v.Name, Port:v.Port, Ct:k, Imports:ts.Env.Imports}
-		// TODO: This loop makes no sense, the only proto map that would remain
-		// after this loop is the last one loaded. Fix this to load the map
-		// for all services not just the last one.
+		cc := &ClientConfig{Name:v.Name, Port:v.Port, Ct:k, Imports:ts.Env.Clients.Imports,
+							Methods:make(map[string]*mthd)}
 		for _,v1 := range ts.Env.ProtoFiles {
 			imp := &ProtoImport{Short:v1.Package,
 								Package:v1.ImportPath+v1.Package,
@@ -380,12 +413,14 @@ func generateClients(conf *TestConfig, suiteDir string, ts * TestSuite,
 						ts.Env.ProtoDesc, v1.Package, v1.Service)
 				return err
 			} else {
-				//Generate all the function calls required by the 
-				cc.Methods = mthds
+				// Add to the known methods
+				for k,v := range mthds {
+					cc.Methods[k] = v
+				}
 			}
 		}
 		clients = append(clients, *cc)
-		if f,err := os.Create(suiteDir+"/"+v.Name+".go"); err == nil {
+		if f,err := os.Create(suiteDir+"/"+v.Name+"_client.go"); err == nil {
 			_=f
 			defer f.Close()
 			if err := t.ExecuteTemplate(f, "client.go", cc); err != nil {
@@ -393,7 +428,7 @@ func generateClients(conf *TestConfig, suiteDir string, ts * TestSuite,
 				return err
 			}
 		} else {
-			log.Errorf("Couldn't create file %s : %v", suiteDir+"/client.go", err)
+			log.Errorf("Couldn't create file %s : %v", suiteDir+"/"+v.Name+"_client.go", err)
 			return err
 		}
 	}
@@ -409,28 +444,117 @@ func generateClients(conf *TestConfig, suiteDir string, ts * TestSuite,
 }
 
 func serverExists(srvr string, ts * TestSuite) bool {
-	for _,v := range ts.Env.Servers {
+	for _,v := range ts.Env.Servers.Endpoints {
 		if v.Name == srvr {
 			return true
 		}
 	}
 	return false
 }
+
+func getPackageList(tests []TestCase) map[string]struct{} {
+	var rtrn map[string]struct{} = make(map[string]struct{})
+	var p string
+	var e string
+	r := regexp.MustCompile(`^([^.]+)\..*$`)
+	for _,v := range tests {
+		pa := r.FindStringSubmatch(v.Send.ParamType)
+		if len(pa) == 2 {
+			p = pa[1]
+		} else {
+			log.Errorf("Internal error regexp returned %v", pa)
+		}
+		ea := r.FindStringSubmatch(v.Send.ExpectType)
+		if len(ea) == 2 {
+			e = ea[1]
+		} else {
+			log.Errorf("Internal error regexp returned %v", pa)
+		}
+		if _,ok := rtrn[p]; ok == false {
+			rtrn[p] = struct{}{}
+		}
+		if _,ok := rtrn[e]; ok == false {
+			rtrn[e] = struct{}{}
+		}
+	}
+	return rtrn
+}
+
+func fixupProtoImports(protoImports []ProtoImport, used map[string]struct{}) []ProtoImport {
+	var rtrn []ProtoImport
+	//log.Infof("Updating imports %v, using %v", protoImports, used)
+	for _,v := range protoImports {
+		//log.Infof("Looking for package %s", v.Package)
+		if _,ok := used[v.Short]; ok == true {
+			rtrn = append(rtrn, ProtoImport {
+				Service: v.Service,
+				Short: v.Short,
+				Package: v.Package,
+				Used: true,
+			})
+		} else {
+			rtrn = append(rtrn, ProtoImport {
+				Service: v.Service,
+				Short: v.Short,
+				Package: v.Package,
+				Used: false,
+			})
+		}
+	}
+	//log.Infof("After update %v", rtrn)
+	return rtrn
+}
+
+func fixupImports(imports []Import, used map[string]struct{}) []Import {
+	var rtrn []Import
+	var p string
+	re := regexp.MustCompile(`^.*/([^/]+)$`)
+	//log.Infof("Updating imports %v, using %v", protoImports, used)
+	for _,v := range imports {
+		//log.Infof("Looking for match in %s", v.Package)
+		pa := re.FindStringSubmatch(v.Package)
+		if len(pa) == 2 {
+			p = pa[1]
+		} else {
+			log.Errorf("Substring match failed, regexp returned %v", pa)
+		}
+		//log.Infof("Looking for package %s", v.Package)
+		if _,ok := used[p]; ok == true {
+			rtrn = append(rtrn, Import {
+				Package: v.Package,
+				Used: true,
+			})
+		} else {
+			rtrn = append(rtrn, Import {
+				Package: v.Package,
+				Used: false,
+			})
+		}
+	}
+	//log.Infof("After update %v", rtrn)
+	return rtrn
+}
+
+
 func generateTestCases(conf *TestConfig, suiteDir string, ts * TestSuite,
 						t *template.Template) error {
 	var mthdMap map[string]*mthd
+	mthdMap = make(map[string]*mthd)
 	// Generate the test cases
 	log.Info("Generating the test cases: runTests.go")
-	tc := &TestList{Imports:ts.Env.Imports}
+	tc := &TestList{Funcs:make(map[string]MethodTypes),
+					FileNum:0, HasFuncs: false,
+					Offset:0}
+	for _,v := range ts.Env.Imports {
+		tc.Imports = append(tc.Imports,Import{Package:v, Used:true})
+	}
 
 	// Load the proto descriptor file
-	// TODO: This loop makes no sense, the only proto map that would remain
-	// after this loop is the last one loaded. Fix this to load the map
-	// for all services not just the last one.
 	for _,v := range ts.Env.ProtoFiles {
 		imp := &ProtoImport{Short:v.Package,
 							Package:v.ImportPath+v.Package,
-							Service:v.Service}
+							Service:v.Service,
+							Used:true}
 		tc.ProtoImports = append(tc.ProtoImports, *imp)
 		// Compile the template from the file
 		log.Debugf("Proto substs: %v", ts.Env.ProtoSubsts)
@@ -440,14 +564,59 @@ func generateTestCases(conf *TestConfig, suiteDir string, ts * TestSuite,
 					ts.Env.ProtoDesc, v.Package, v.Service)
 			return err
 		} else {
-			mthdMap = mthds
+			// Add to the known methods
+			for k,v := range mthds {
+				mthdMap[k] = v
+			}
 		}
 	}
+	// Since the input file can possibly be a template with loops that
+	// make multiple calls to exactly the same method with potentially
+	// different parameters it is best to try to optimize for that case.
+	// Creating a function for each method used will greatly reduce the
+	// code size and repetition. In the case where a method is used only
+	// once the resulting code will be bigger but this is an acceptable
+	// tradeoff to allow huge suites that call the same method repeatedly
+	// to test for leaks.
+
+	// The go compiler has trouble compiling files that are too large. In order
+	// to mitigate that, It's necessary to create more smaller files than the
+	// single one large one while making sure that the functions for the distinct
+	// methods are only defined once in one of the files.
+
+	// Yet another hiccup with the go compiler, it doesn't like deep function
+	// nesting meaning that each runTests function can't call the next without
+	// eventually blowing the stack check. In order to work around this, the
+	// first runTests function needs to call all the others in sequence to
+	// keep the stack depth constant.
+
+	// Counter limiting the number of tests to output to each file
+	maxCt := MAX_CT
+
+	// Get the list of distinct methods
+	//for _,v := range ts.Tests {
+	//	if _,ok := tc.Funcs[v.Send.Method]; ok == false {
+	//		tc.Funcs[v.Send.Method] = MethodTypes{ParamType:mthdMap[v.Send.Method].Param,
+	//											  ReturnType:mthdMap[v.Send.Method].Rtrn}
+	//	}
+	//}
+	for i:=1; i<int(math.Ceil(float64(len(ts.Tests))/float64(MAX_CT))); i++ {
+		tc.RunTestsCallList = append(tc.RunTestsCallList, "runTests"+strconv.Itoa(i))
+	}
+
 	// Create the test data structure for the template
 	for _,v := range ts.Tests {
 		var test TestCase
 
+		if _,ok := tc.Funcs[v.Send.Method]; ok == false {
+			tc.Funcs[v.Send.Method] = MethodTypes{ParamType:mthdMap[v.Send.Method].Param,
+												  ReturnType:mthdMap[v.Send.Method].Rtrn,
+												  CodeGenerated:false}
+			tc.HasFuncs = true
+		}
+
 		test.Name = v.Name
+		test.InfoOnly = v.InfoOnly
 		test.Send.Client = v.Send.Client
 		test.Send.Method = v.Send.Method
 		test.Send.Param = v.Send.Param
@@ -471,15 +640,63 @@ func generateTestCases(conf *TestConfig, suiteDir string, ts * TestSuite,
 			test.Srvr = append(test.Srvr, srvr)
 		}
 		tc.Tests = append(tc.Tests, test)
+		if maxCt--; maxCt == 0 {
+			// Get the list of proto pacakges required for this file
+			pkgs := getPackageList(tc.Tests)
+			// Adjust the proto import data accordingly
+			tc.ProtoImports = fixupProtoImports(tc.ProtoImports, pkgs)
+			tc.Imports = fixupImports(tc.Imports, pkgs)
+			//log.Infof("The packages needed are: %v", pkgs)
+			if f,err := os.Create(suiteDir+"/runTests"+strconv.Itoa(tc.FileNum)+".go"); err == nil {
+				if err := t.ExecuteTemplate(f, "runTests.go", tc); err != nil {
+						log.Errorf("Unable to execute template for runTests.go: %v", err)
+				}
+				f.Close()
+			} else {
+				log.Errorf("Couldn't create file %s : %v",
+						suiteDir+"/runTests"+strconv.Itoa(tc.FileNum)+".go", err)
+			}
+			tc.FileNum++
+			//tc.NextFile++
+			maxCt = MAX_CT
+			// Mark the functions as generated.
+			tc.Tests = []TestCase{}
+			for k,v := range tc.Funcs {
+				tc.Funcs[k] = MethodTypes{ParamType:v.ParamType,
+										 ReturnType:v.ReturnType,
+										 CodeGenerated:true}
+			}
+			tc.HasFuncs = false
+			tc.Offset += MAX_CT
+			//tmp,_ := strconv.Atoi(tc.Offset)
+			//tc.Offset = strconv.Itoa(tmp+500)
+		}
 	}
-	if f,err := os.Create(suiteDir+"/runTests.go"); err == nil {
+	//tc.NextFile = 0
+	// Get the list of proto pacakges required for this file
+	pkgs := getPackageList(tc.Tests)
+	// Adjust the proto import data accordingly
+	tc.ProtoImports = fixupProtoImports(tc.ProtoImports, pkgs)
+	tc.Imports = fixupImports(tc.Imports, pkgs)
+	//log.Infof("The packages needed are: %v", pkgs)
+	if f,err := os.Create(suiteDir+"/runTests"+strconv.Itoa(tc.FileNum)+".go"); err == nil {
 		if err := t.ExecuteTemplate(f, "runTests.go", tc); err != nil {
 				log.Errorf("Unable to execute template for runTests.go: %v", err)
 		}
 		f.Close()
 	} else {
-		log.Errorf("Couldn't create file %s : %v", suiteDir+"/runTests.go", err)
+		log.Errorf("Couldn't create file %s : %v",
+				suiteDir+"/runTests"+strconv.Itoa(tc.FileNum)+".go", err)
 	}
+
+	//if f,err := os.Create(suiteDir+"/runTests.go"); err == nil {
+	//	if err := t.ExecuteTemplate(f, "runTests.go", tc); err != nil {
+	//			log.Errorf("Unable to execute template for runTests.go: %v", err)
+	//	}
+	//	f.Close()
+	//} else {
+	//	log.Errorf("Couldn't create file %s : %v", suiteDir+"/runTests.go", err)
+	//}
 	return nil
 }
 
@@ -497,13 +714,14 @@ func generateTestSuites(conf *TestConfig, srcDir string, outDir string) error {
 		ts := &TestSuite{}
 		ts.loadSuite(v)
 		log.Debugf("Suite %s: %v", v, ts)
-		log.Info("Processing test suite %s", v)
+		log.Infof("Processing test suite %s", v)
 
 		t := template.Must(template.New("").ParseFiles("../templates/server.go",
 														"../templates/serverInit.go",
 														"../templates/client.go",
 														"../templates/clientInit.go",
 														"../templates/runTests.go",
+														"../templates/stats.go",
 														"../templates/main.go"))
 		// Create a directory for he source code for this test suite
 		if err := os.Mkdir(suiteDir, 0777); err != nil {
@@ -537,6 +755,17 @@ func generateTestSuites(conf *TestConfig, srcDir string, outDir string) error {
 			log.Errorf("Couldn't create file %s : %v", suiteDir+"/main.go", err)
 		}
 
+		log.Infof("Copying over common modules")
+		if f,err := os.Create(suiteDir+"/stats.go"); err == nil {
+			if err := t.ExecuteTemplate(f, "stats.go", ts.Env); err != nil {
+					log.Errorf("Unable to execute template for stats.go: %v", err)
+			}
+			f.Close()
+		} else {
+			log.Errorf("Couldn't create file %s : %v", suiteDir+"/stats.go", err)
+		}
+
+
 		log.Infof("Compiling test suite: %s in directory %s", v, suiteDir)
 		if err := os.Chdir(suiteDir); err != nil {
 			log.Errorf("Could not change to directory '%s':%v",suiteDir, err)
@@ -562,14 +791,23 @@ func generateTestDriver(conf *TestConfig, srcDir string, outDir string) error {
 		log.Errorf("Unable to create directory 'driver':%v\n", err)
 		return err
 	}
-	t := template.Must(template.New("").ParseFiles("../templates/runAll.go"))
+	t := template.Must(template.New("").ParseFiles("../templates/runAll.go",
+					"../templates/stats.go"))
 	if f,err := os.Create(srcDir+"/runAll.go"); err == nil {
 		if err := t.ExecuteTemplate(f, "runAll.go", conf.Suites); err != nil {
-				log.Errorf("Unable to execute template for main.go: %v", err)
+				log.Errorf("Unable to execute template for runAll.go: %v", err)
 		}
 		f.Close()
 	} else {
 		log.Errorf("Couldn't create file %s : %v", srcDir+"/runAll.go", err)
+	}
+	if f,err := os.Create(srcDir+"/stats.go"); err == nil {
+		if err := t.ExecuteTemplate(f, "stats.go", conf.Suites); err != nil {
+				log.Errorf("Unable to execute template for stats.go: %v", err)
+		}
+		f.Close()
+	} else {
+		log.Errorf("Couldn't create file %s : %v", srcDir+"/stats.go", err)
 	}
 
 	// Compile the test driver file

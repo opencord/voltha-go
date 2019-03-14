@@ -20,8 +20,9 @@ package afrouter
 import (
 	"net"
 	"fmt"
-	"strconv"
 	"errors"
+	"runtime"
+	"strconv"
 	"google.golang.org/grpc"
 	"golang.org/x/net/context"
 	"github.com/opencord/voltha-go/common/log"
@@ -215,6 +216,10 @@ func (aa ArouterApi) SetConnection(ctx context.Context, in *pb.Conn) (*pb.Result
 	}
 
 	return &pb.Result{Success:true,Error:""},nil
+}
+
+func (aa ArouterApi) GetGoroutineCount(ctx context.Context, in *pb.Empty) (*pb.Count, error) {
+	return &pb.Count{Count:uint32(runtime.NumGoroutine())}, nil
 }
 
 func (aa *ArouterApi) serve() {

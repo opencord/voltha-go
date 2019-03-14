@@ -2,6 +2,7 @@
 "__COMMENT":"Top level test driver file",
 "suites": [
 	"test1",
-	"test2"
-]
+	"test2",
+	"test3"
+	]
 }
