@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2b20e00_fd150450",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-03-14T18:36:06Z",
+      "side": 1,
+      "message": "Is this still required, now that the protos are not compiled in this process?",
+      "revId": "993ece739fd359efde307a31169c39ae34e1006b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
