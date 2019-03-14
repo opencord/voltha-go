@@ -16,6 +16,24 @@
       "revId": "993ece739fd359efde307a31169c39ae34e1006b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f569bfd_4d3f6142",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-03-14T18:39:45Z",
+      "side": 1,
+      "message": "Good catch, I\u0027ll get rid of that.",
+      "parentUuid": "e2b20e00_fd150450",
+      "revId": "993ece739fd359efde307a31169c39ae34e1006b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
