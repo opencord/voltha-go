@@ -99,7 +99,7 @@ func {{.Name}}Send(mthd string, ctx context.Context, param interface{},
 			// value.
 			if resS,err := json.Marshal(res); err == nil {
 				if string(resS) != expect {
-					resFile.testLog("Unexpected result returned\n")
+					stats.testLog("Unexpected result returned expected '%s' got '%s'\n", expect, string(resS))
 					return errors.New("Unexpected result on method {{.Name}}")
 				}
 			} else {
@@ -109,11 +109,11 @@ func {{.Name}}Send(mthd string, ctx context.Context, param interface{},
 			for k,v := range expectMeta {
 				if rv,ok := hdr[k]; ok == true {
 					if rv[0] != v[0] {
-						resFile.testLog("Mismatch on returned metadata for key '%s' expected '%s' and got '%s'\n", k, v, rv)
+						stats.testLog("Mismatch on returned metadata for key '%s' expected '%s' and got '%s'\n", k, v, rv)
 						err = errors.New("Failure on returned metadata")
 					}
 				} else {
-					resFile.testLog("Returned metadata missing key '%s'; expected value '%s' at that key\n", k, v)
+					stats.testLog("Returned metadata missing key '%s'; expected value '%s' at that key\n", k, v)
 					err = errors.New("Failure on returned metadata")
 				}
 			}

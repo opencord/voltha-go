@@ -27,6 +27,7 @@ WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 # Compile protobuf files
 # Repeat here even if it's done in the base
 RUN sh /src/protos/build_protos.sh /src/protos
+#RUN find / -name "*.pb.go" -print
 
 #ADD /src/protos/voltha.pb test/afrouter/suites
 # Build rw_core
@@ -35,7 +36,7 @@ RUN cd afrouter && go build -o /src/afrouter
 RUN cp /src/protos/voltha.pb tests/afrouter/suites
 RUN cd tests/afrouter && go build -o /src/afrouterTest
 RUN mkdir /src/tests
-RUN cd tests/afrouter/suites && /src/afrouterTest -config main.json
+RUN cd tests/afrouter/suites && /src/afrouterTest -config main.json -logLevel 1
 RUN mkdir /src/temp
 RUN cp -r tests/afrouter/tests /src/temp
 #RUN cd tests/afrouter/tester && go build -o /src/tests
@@ -55,9 +56,10 @@ COPY --from=build-env /src/afrouterTest /app/
 COPY --from=build-env /src/arouter.json /app/
 COPY --from=build-env /src/arouter_test.json /app/
 COPY --from=build-env /src/protos/voltha.pb /app/
-COPY --from=build-env /src/suites /app
+COPY --from=build-env /src/suites/ /app/suites/
 COPY --from=build-env /src/tests /app
 COPY --from=build-env /src/temp/ /app/src/
+COPY --from=build-env /go/src/github.com/opencord/voltha-go/protos/ /app/protos/
 WORKDIR /app
 
 #CMD cd /app && ./arouter -config config/arouter.voltha2.json

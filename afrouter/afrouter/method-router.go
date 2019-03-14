@@ -36,10 +36,12 @@ type MethodRouter struct {
 func newMethodRouter(config *RouterConfig) (Router, error) {
 	mr := MethodRouter{name:config.Name,service:config.ProtoService,mthdRt:make(map[string]map[string]Router)}
 	mr.mthdRt[NoMeta] = make(map[string]Router) // For routes not needing metadata (all expcept binding at this time)
+	log.Debugf("Processing MethodRouter config %v", *config)
 	if len(config.Routes) == 0 {
 		return nil, errors.New(fmt.Sprintf("Router %s must have at least one route", config.Name))
 	}
 	for _,rtv := range config.Routes {
+		//log.Debugf("Processing route: %v",rtv)
 		var idx1 string
 		r,err := newSubRouter(config, &rtv)
 		if err != nil {
@@ -61,24 +63,24 @@ func newMethodRouter(config *RouterConfig) (Router, error) {
 				return r, nil
 			} else {
 				log.Debugf("Setting router '%s' for single method '%s'",r.Name(),rtv.Methods[0])
-				if _,ok := mr.mthdRt[""][rtv.Methods[0]]; ok == false {
+				if _,ok := mr.mthdRt[idx1][rtv.Methods[0]]; ok == false {
 					mr.mthdRt[idx1][rtv.Methods[0]] = r
 				} else {
 					err := errors.New(fmt.Sprintf("Attempt to define method %s for 2 routes: %s & %s", rtv.Methods[0],
 						r.Name(), mr.mthdRt[idx1][rtv.Methods[0]].Name()))
-					log.Debug(err)
+					log.Error(err)
 					return mr, err
 				}
 			}
 		default:
 			for _,m := range rtv.Methods {
-				log.Debugf("Setting router '%s' for method '%s'",r.Name(),m)
+				log.Debugf("Processing Method %s", m)
 				if _,ok := mr.mthdRt[idx1][m]; ok == false {
+					log.Debugf("Setting router '%s' for method '%s'",r.Name(),m)
 					mr.mthdRt[idx1][m] = r
 				} else {
-					err := errors.New(fmt.Sprintf("Attempt to define method %s for 2 routes: %s & %s", rtv.Methods[0],
-						r.Name(), mr.mthdRt[idx1][m].Name()))
-					log.Debug(err)
+					err := errors.New(fmt.Sprintf("Attempt to define method %s for 2 routes: %s & %s", m, r.Name(), mr.mthdRt[idx1][m].Name()))
+					log.Error(err)
 					return mr, err
 				}
 			}

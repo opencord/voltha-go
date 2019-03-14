@@ -28,44 +28,6 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 )
 
-type tstLog struct {
-	fp * os.File
-	fn string
-}
-
-func (tr * tstLog) testLog(format string, a ...interface{}) {
-	var err error
-	if tr.fp == nil {
-		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
-			log.Errorf("Could not append to the results file")
-			tr.fp = nil
-		}
-	}
-	if tr.fp != nil {
-		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
-	}
-}
-
-func (tr * tstLog) testLogOnce(format string, a ...interface{}) {
-	var err error
-	if tr.fp == nil {
-		if tr.fp, err = os.OpenFile(tr.fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
-			log.Errorf("Could not append to the results file")
-			tr.fp = nil
-		}
-	}
-	if tr.fp != nil {
-		tr.fp.Write([]byte(fmt.Sprintf(format, a...)))
-	}
-	tr.fp.Close()
-	tr.fp = nil
-}
-
-func (tr * tstLog) close() {
-	if tr.fp != nil {
-		tr.fp.Close()
-	}
-}
 
 func main() {
 	var cmd *exec.Cmd
@@ -77,17 +39,23 @@ func main() {
 
 	defer log.CleanUp()
 
+	statFn = "stats.json"
+
 	log.Info("Running tests")
 	if err:= os.Chdir(os.Args[1]); err != nil {
 		log.Error("Could not change directory to %s: %v", os.Args[1], err)
 	}
-	tl := &tstLog{fn:"results.txt"}
+
+	if err := initStats(statFn); err != nil {
+		log.Error(err)
+		return
+	}
+
 	{{range .}}
 	cmdStr =  "./"+"{{.}}"+".e"
-	tl.testLogOnce("Running test suite '%s'\n", cmdStr[2:])
 
 	log.Infof("Running test suite %s",cmdStr)
-	cmd = exec.Command(cmdStr, "results.txt")
+	cmd = exec.Command(cmdStr, statFn)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -96,10 +64,36 @@ func main() {
 	}
 	{{end}}
 	// Open the results file and output it.
-	if resFile, err := ioutil.ReadFile("results.txt"); err == nil {
+	if s,err := readStats(statFn); err != nil {
+		log.Error(err)
+		return
+	} else {
+		stats = s
+	}
+
+	//log.Infof("Stats are: %v", stats)
+	if resFile, err := ioutil.ReadFile(statFn); err == nil {
 		fmt.Println(string(resFile))
 	} else {
-		log.Error("Could not load the results file 'results.txt'")
+		log.Error("Could not load the stats file 'stats.json'")
+	}
+	fmt.Println("Test result summary")
+	for _,v := range stats.TestSuites {
+		fmt.Printf("Test suite: %s\n", v.Name[2:len(v.Name)-2])
+		pass := 0
+		fail := 0
+		total := 0
+		for _,v1 := range v.TestCases {
+			total++
+			if v1.Result == true {
+				pass++
+			} else {
+				fail++
+			}
+		}
+		fmt.Printf("\tTotal test cases: %d\n", total)
+		fmt.Printf("\t\tTotal passed test cases: %d\n", pass)
+		fmt.Printf("\t\tTotal failed test cases: %d\n", fail)
 	}
 	log.Info("Tests complete")
 }

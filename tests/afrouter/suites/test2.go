@@ -33,28 +33,37 @@ import (
 	//pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
+type suite struct {
+	CrTests []test
+	GetTests[]test
+}
+
 type test struct {
 	Core int
+	SerNo int
 }
+
+const SUITE_LEN = 55000
+//const SUITE_LEN = 100
 
 func main() {
 
-	var ary []test
+	var ary suite
 
 	// Setup logging
 	if _, err := log.SetDefaultLogger(log.JSON, 0, nil); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
-	for i :=0; i<10000; i++ {
-		
-		ary = append(ary,test{Core:(i%3)+1})
+	for i :=0; i<SUITE_LEN; i++ {
+
+		ary.CrTests = append(ary.CrTests,test{Core:(i%3)+1, SerNo:i})
+		ary.GetTests = append(ary.GetTests,test{Core:(i%3)+1, SerNo:i+SUITE_LEN})
 	}
 
 	// Load the template to execute
 	t := template.Must(template.New("").ParseFiles("./test2.tmpl.json"))
 	if f,err := os.Create("test2.json"); err == nil {
-		_=f
 		defer f.Close()
 		if err := t.ExecuteTemplate(f, "test2.tmpl.json", ary); err != nil {
 			log.Errorf("Unable to execute template for test2.tmpl.json: %v", err)

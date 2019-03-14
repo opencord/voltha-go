@@ -7,13 +7,22 @@ option go_package = "github.com/opencord/voltha-go/protos/afrouter";
 package afrouter;
 
 service Configuration {
-    rpc SetConnection (Conn) returns (Result) {}
+	rpc SetConnection (Conn) returns (Result) {}
 	rpc SetAffinity(Affinity) returns (Result) {}
+	rpc GetGoroutineCount(Empty) returns (Count) {}
+}
+
+message Empty {
+}
+
+message Count {
+	uint32 count = 1;
 }
 
 message Result {
 	bool success = 1;
 	string error = 2;
+	string info = 3;
 }
 
 message Conn {

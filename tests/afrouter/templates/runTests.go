@@ -18,6 +18,7 @@
 package main
 
 import (
+{{if .HasFuncs}}
 	"fmt"
 	"time"
 	"errors"
@@ -26,14 +27,22 @@ import (
 	//"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 	"github.com/opencord/voltha-go/common/log"
+{{end}}
 	{{range .Imports}}
-	_ "{{.}}"
+	{{if .Used}}
+	"{{.Package}}"
+	{{end}}
 	{{end}}
 	{{range .ProtoImports}}
+	{{if .Used}}
 	{{.Short}} "{{.Package}}"
+	{{end}}
 	{{end}}
 )
 
+
+{{if .FileNum}}
+{{else}}
 var glCtx context.Context
 
 func resetChannels() {
@@ -54,70 +63,148 @@ func resetChannels() {
 	}
 }
 
-func runTests() {
-	{{range $k,$v := .Tests}}
-	if err := test{{$k}}(); err == nil {
-		resFile.testLog("\tTest Successful\n")
-	} else {
-		resFile.testLog("\tTest Failed\n")
-	}
-	//resetChannels()
-	{{end}}
+type testData struct {
+	function func(int, string, string, []string,[]string,[]string,
+				  map[string][]string,interface{}, interface{}) error
+	testNum int
+	testName string
+	sendClient string
+	srvrs []string
+	sendMeta []string
+	expectMeta []string // Send Meta
+	srvMeta map[string][]string
+	parm interface{}
+	ret interface{}
 }
 
-{{range $k,$v := .Tests}}
-func test{{$k}}() error {
+func addTestSlot(stats * TestRun) {
+	tsIdx := len(stats.TestSuites) - 1
+	stats.TestSuites[tsIdx].TestCases =
+			append(stats.TestSuites[tsIdx].TestCases, TestCase{Info:[]string{}})
+}
+{{end}}
+
+{{if .FileNum}}
+func runTests{{.FileNum}}() {
+{{else}}
+func runTests() {
+{{end}}
+	tsIdx := len(stats.TestSuites) - 1
+	tests := []testData {
+	{{$ofs := .Offset}}
+	{{range $k,$v := .Tests}}
+	testData {
+		{{$v.Send.Method}}_test,
+		{{$k}} + {{$ofs}},
+		"{{$v.Name}}",
+		"{{$v.Send.Client}}",
+		[]string{ {{range $sk,$sv := $v.Srvr}} "{{$sv.Name}}",{{end}} },
+		[]string{ {{range $mk,$mv := $v.Send.MetaData}}"{{$mv.Key}}","{{$mv.Val}}",{{end}} },
+		[]string{ {{range $mk,$mv := $v.Send.ExpectMeta}}"{{$mv.Key}}","{{$mv.Val}}",{{end}} },
+		map[string][]string {
+		{{range $sk,$sv := $v.Srvr}}
+			"{{$sv.Name}}":[]string {
+			{{range $mk, $mv := $sv.Meta}}
+				 "{{$mv.Key}}","{{$mv.Val}}",
+			{{end}}
+			},
+		{{end}}
+		},
+		&{{$v.Send.ParamType}}{{$v.Send.Param}},
+		&{{$v.Send.ExpectType}}{{$v.Send.Expect}},
+	},
+	{{end}}
+	}
+
+	for _,v := range tests {
+		addTestSlot(stats)
+		stats.TestSuites[tsIdx].TestCases[v.testNum].Title = v.testName
+		if err := v.function(
+			v.testNum,
+			v.testName,
+			v.sendClient,
+			v.srvrs,
+			v.sendMeta,
+			v.expectMeta,
+			v.srvMeta,
+			v.parm,
+			v.ret); err != nil {
+			stats.TestSuites[tsIdx].TestCases[v.testNum].Result = false
+		} else {
+			stats.TestSuites[tsIdx].TestCases[v.testNum].Result = true
+		}
+	}
+	{{if .FileNum}}
+	{{else}}
+	{{range $k,$v := .RunTestsCallList}}
+	{{$v}}()
+	{{end}}
+	{{end}}
+	return
+	//resetChannels()
+}
+
+{{range $k,$v := .Funcs }}
+{{if $v.CodeGenerated}}
+{{else}}
+func {{$k}}_test(testNum int, testName string, sendClient string, srvrs []string,
+				 sendMeta []string, expectMeta []string, srvrMeta map[string][]string,
+				 parm interface{}, ret interface{}) error {
+
 	var rtrn error = nil
 	var cancel context.CancelFunc
+	var repl *reply
 
+	log.Debug("Running Test %d",testNum)
 	glCtx, cancel = context.WithTimeout(context.Background(), 900*time.Millisecond)
 	defer cancel()
-	// Announce the test being run
-	resFile.testLog("******************** Running test case ({{$k}}): {{$v.Name}}\n")
-	// Acquire the client used to run the test
-	cl := clients["{{$v.Send.Client}}"]
+
+	cl := clients[sendClient]
 	// Create the server's reply data structure
-	repl := &reply{repl:&{{$v.Send.ExpectType}}{{$v.Send.Expect}}}
-	// Send the reply data structure to each of the servers
-	{{range $s := .Srvr}}
-	if servers["{{$s.Name}}"] == nil {
-		err := errors.New("Server '{{$s.Name}}' is nil")
-		log.Error(err)
-		return err
+	switch r := ret.(type) {
+	case *{{$v.ReturnType}}:
+		repl = &reply{repl:r}
+	default:
+		log.Errorf("Invalid type in call to {{$k}}_test expecting {{$v.ReturnType}} got %T", ret)
 	}
-	// Start a go routine to send the the reply data to the
-	// server. The go routine blocks until the server picks
-	// up the data or the timeout is exceeded.
-	go func (ctx context.Context) {
-		select {
-		case servers["{{$s.Name}}"].replyData <- repl:
-		case <-ctx.Done():
-			rtrn := errors.New("Could not provide server {{$s.Name}} with reply data")
-			log.Error(rtrn)
-			resFile.testLog("%s\n", rtrn.Error())
+	// Send the reply data structure to each of the servers
+	for _,v := range srvrs {
+		if servers[v] == nil {
+			err := errors.New(fmt.Sprintf("Server %s is nil", v))
+			log.Error(err)
+			return err
 		}
-	}(glCtx)
-	{{end}}
+		// Start a go routine to send the the reply data to the
+		// server. The go routine blocks until the server picks
+		// up the data or the timeout is exceeded.
+		go func (ctx context.Context, srv string) {
+			select {
+			case servers[srv].replyData <- repl:
+			case <-ctx.Done():
+				rtrn := errors.New(fmt.Sprintf("Could not provide server %s with reply data",srv))
+				log.Error(rtrn)
+				stats.testLog("%s\n", rtrn.Error())
+			}
+		}(glCtx,v)
+	}
 
 	// Now call the RPC with the data provided
 	if expct,err := json.Marshal(repl.repl); err != nil {
-		log.Errorf("Marshaling the reply for test {{$v.Name}}: %v",err)
+		log.Errorf("Marshaling the reply for test %s: %v",testName, err)
 	} else {
 		// Create the context for the call
 		ctx := context.Background()
-		{{range $m := $v.Send.MetaData}}
-		ctx = metadata.AppendToOutgoingContext(ctx, "{{$m.Key}}", "{{$m.Val}}")
-		{{end}}
+		for i:=0; i<len(sendMeta); i += 2 {
+			ctx = metadata.AppendToOutgoingContext(ctx, sendMeta[i], sendMeta[i+1])
+		}
 		var md map[string]string = make(map[string]string)
-		{{range $m := $v.Send.ExpectMeta}}
-			md["{{$m.Key}}"] = "{{$m.Val}}"
-		{{end}}
+		for i:=0; i<len(expectMeta); i+=2 {
+			md[expectMeta[i]] = expectMeta[i+1]
+		}
 		expectMd := metadata.New(md)
-		if err := cl.send("{{$v.Send.Method}}", ctx,
-							&{{$v.Send.ParamType}}{{$v.Send.Param}},
-							string(expct), expectMd); err != nil {
-			log.Errorf("Test case {{$v.Name}} failed!: %v", err)
-
+		if err := cl.send("{{$k}}", ctx, parm, string(expct), expectMd); err != nil {
+			log.Errorf("Test case %s failed!: %v", testName, err)
+			rtrn = err
 		}
 	}
 
@@ -125,39 +212,38 @@ func test{{$k}}() error {
 	var s *serverCtl
 	var payload string
 	var i *incoming
-	if pld, err := json.Marshal(&{{$v.Send.ParamType}}{{$v.Send.Param}}); err != nil {
-		log.Errorf("Marshaling paramter for test {{$v.Name}}: %v", err)
+	if pld, err := json.Marshal(parm); err != nil {
+		log.Errorf("Marshaling paramter for test %s: %v", testName, err)
 	} else {
 		payload = string(pld)
 	}
-	{{range $s := .Srvr}}
-	s = servers["{{$s.Name}}"]
-	// Oddly sometimes the data isn't in the channel yet when we come to read it.
-	select {
-	case i = <-s.incmg:
-		if i.payload != payload {
-			rtrn = errors.New(fmt.Sprintf("Mismatched payload expected '%s', got '%s'", payload, i.payload))
-			log.Error(rtrn.Error())
-			resFile.testLog("%s\n", rtrn.Error())
-		}
-		{{range $m := $s.Meta}}
-		if mv,ok := i.meta["{{$m.Key}}"]; ok == true {
-			if "{{$m.Val}}" != mv[0] {
-				rtrn=errors.New(fmt.Sprintf("Mismatched metadata on server '%s' expected '%s', got '%s'", "{{$s.Name}}", "{{$m.Val}}", mv[0]))
+	for _,v := range srvrs {
+		s = servers[v]
+		// Oddly sometimes the data isn't in the channel yet when we come to read it.
+		select {
+		case i = <-s.incmg:
+			if i.payload != payload {
+				rtrn = errors.New(fmt.Sprintf("Mismatched payload expected '%s', got '%s'", payload, i.payload))
 				log.Error(rtrn.Error())
-				resFile.testLog("%s\n", rtrn.Error())
+				stats.testLog("%s\n", rtrn.Error())
 			}
+			for j:=0; j<len(srvrMeta[v]); j+=2 {
+				if mv,ok := i.meta[srvrMeta[v][j]]; ok == true {
+					if srvrMeta[v][j+1] != mv[0] {
+						rtrn=errors.New(fmt.Sprintf("Mismatched metadata on server '%s' expected '%s', got '%s'", srvrMeta[v][j], srvrMeta[v][j+1], mv[0]))
+						log.Error(rtrn.Error())
+						stats.testLog("%s\n", rtrn.Error())
+					}
+				}
+			}
+		case <-glCtx.Done():
+			rtrn = errors.New(fmt.Sprintf("Timeout: no response data available for server %s", testName))
+			stats.testLog("%s\n", rtrn.Error())
+			log.Error(rtrn)
 		}
-		{{end}}
-	case <-glCtx.Done():
-		rtrn = errors.New("Timeout: no response data available for server {{$s.Name}}")
-		resFile.testLog("%s\n", rtrn.Error())
-		log.Error(rtrn)
 	}
-	{{end}}
 
 	return rtrn
 }
 {{end}}
-
-
+{{end}}

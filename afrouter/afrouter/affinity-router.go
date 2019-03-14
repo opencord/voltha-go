@@ -20,12 +20,18 @@ package afrouter
 import (
 	"fmt"
 	"errors"
+	"regexp"
 	"strconv"
 	"io/ioutil"
 	"google.golang.org/grpc"
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
+)
+
+const (
+	PKG_MTHD_PKG int = 1
+	PKG_MTHD_MTHD int = 2
 )
 
 type AffinityRouter struct {
@@ -45,6 +51,7 @@ type AffinityRouter struct {
 func newAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router,error) {
 	var err error = nil
 	var rtrn_err bool = false
+	var pkg_re *regexp.Regexp = regexp.MustCompile(`^(\.[^.]+\.)(.+)$`)
 	// Validate the configuration
 
 	// A name must exist
@@ -150,8 +157,14 @@ func newAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router,error) 
 						// Determine if this is a method we're supposed to be processing.
 						if needMethod(*m.Name, config) == true {
 							log.Debugf("Enabling method '%s'",*m.Name)
+							pkg_methd := pkg_re.FindStringSubmatch(*m.InputType)
+							if pkg_methd == nil {
+								log.Errorf("Regular expression didn't match input type '%s'",*m.InputType)
+								rtrn_err = true
+							}
 							// The input type has the package name prepended to it. Remove it.
-							in := (*m.InputType)[len(rconf.ProtoPackage)+2:]
+							//in := (*m.InputType)[len(rconf.ProtoPackage)+2:]
+							in := pkg_methd[PKG_MTHD_MTHD]
 							dr.methodMap[*m.Name], ok = msgs[key{in, config.RouteField}]
 							if ok == false {
 								log.Errorf("Method '%s' has no field named '%s' in it's parameter message '%s'",
@@ -243,7 +256,7 @@ func (r AffinityRouter) skipField(data *[]byte, idx *int) (error) {
 func (r AffinityRouter) decodeProtoField(payload []byte, fieldId byte) (string, error) {
 	idx :=0
 	b := proto.NewBuffer([]byte{})
-	b.DebugPrint("The Buffer", payload)
+	//b.DebugPrint("The Buffer", payload)
 	for { // Find the route selector field
 		log.Debugf("Decoding afinity value attributeNumber: %d from %v at index %d", fieldId, payload, idx)
 		log.Debugf("Attempting match with payload: %d, methodTable: %d", payload[idx], fieldId)
@@ -305,6 +318,7 @@ func (r AffinityRouter) Route(sel interface{}) *backend {
 			}
 			// Not a south affinity binding method, proceed with north affinity binding.
 			if selector,err := r.decodeProtoField(sl.payload, r.methodMap[sl.mthdSlice[REQ_METHOD]]); err == nil {
+				log.Debugf("Establishing affinity for selector: %s", selector)
 				if rtrn,ok := r.affinity[selector]; ok {
 					return rtrn
 				} else {
