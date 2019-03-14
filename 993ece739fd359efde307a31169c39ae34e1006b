@@ -51,6 +51,24 @@
       "revId": "993ece739fd359efde307a31169c39ae34e1006b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e19c805_b19cbfc7",
+        "filename": "python/protos/voltha.pb",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-03-14T18:49:34Z",
+      "side": 1,
+      "message": "Yes, I think this one isn\u0027t needed for the python and can be removed. I do think that I have to commit this file as part of the vendor directory, since the current design requires storing whatever is needed there, and the afrouter build copies it.",
+      "parentUuid": "4b5a5a82_ff768df4",
+      "revId": "993ece739fd359efde307a31169c39ae34e1006b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
