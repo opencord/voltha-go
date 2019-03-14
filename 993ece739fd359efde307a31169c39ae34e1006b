@@ -34,6 +34,23 @@
       "revId": "993ece739fd359efde307a31169c39ae34e1006b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b5a5a82_ff768df4",
+        "filename": "python/protos/voltha.pb",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000120
+      },
+      "writtenOn": "2019-03-14T18:43:04Z",
+      "side": 1,
+      "message": "This is a build artifact and should not be committed.",
+      "revId": "993ece739fd359efde307a31169c39ae34e1006b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
