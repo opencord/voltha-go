@@ -1,0 +1,223 @@
+---
+# Copyright 2018 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: '2'
+
+networks:
+  default:
+    driver: bridge
+
+services:
+
+  zookeeper:
+    image: "wurstmeister/zookeeper:latest"
+    environment:
+      SERVICE_2181_NAME: "zookeeper"
+    ports:
+    - 2181:2181
+    networks:
+    - default
+
+
+  kafka:
+    image: "wurstmeister/kafka:2.11-2.0.1"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${DOCKER_HOST_IP}:9092
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      SERVICE_9092_NAME: "kafka"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+     - 9092:9092
+    networks:
+    - default
+
+
+  etcd:
+    image: "quay.io/coreos/etcd:v3.2.9"
+    command: [
+      "etcd",
+      "--name=etcd0",
+      "--advertise-client-urls=http://${DOCKER_HOST_IP}:2379,http://${DOCKER_HOST_IP}:4001",
+      "--listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001",
+      "--initial-advertise-peer-urls=http://${DOCKER_HOST_IP}:2380",
+      "--listen-peer-urls=http://0.0.0.0:2380",
+      "--initial-cluster-token=etcd-cluster-1",
+      "--initial-cluster=etcd0=http://${DOCKER_HOST_IP}:2380",
+      "--initial-cluster-state=new"
+    ]
+    ports:
+    - "2379:2379"
+    - 2380
+    - 4001
+    networks:
+    - default
+
+
+  rw_core:
+    image: voltha-rw-core
+    entrypoint:
+        - /app/rw_core
+        - -kv_store_type=etcd
+        - -kv_store_host=${DOCKER_HOST_IP}
+        - -kv_store_port=2379
+        - -grpc_port=50057
+        - -banner=true
+        - -kafka_adapter_host=${DOCKER_HOST_IP}
+        - -kafka_adapter_port=9092
+        - -kafka_cluster_host=${DOCKER_HOST_IP}
+        - -kafka_cluster_port=9092
+        - -rw_core_topic=rwcore
+        - -kv_store_data_prefix=service/voltha
+        - -in_competing_mode=false
+        - -log_level=0
+        - -log_level=0
+    volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock"
+    ports:
+      - 50057:50057
+    networks:
+    - default
+    restart: unless-stopped
+
+
+  cli:
+    image: "${REGISTRY}${REPOSITORY}voltha-cli:latest"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      DOCKER_HOST_IP: "${DOCKER_HOST_IP}"
+    entrypoint:
+    - /voltha/python/cli/setup.sh
+    - -g ${DOCKER_HOST_IP}:50057
+    networks:
+    - default
+    ports:
+    - "5022:22"
+
+
+  ofagent:
+    image: "${REGISTRY}${REPOSITORY}voltha-ofagent:latest"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [
+      "/ofagent/ofagent/main.py",
+      "--consul=${DOCKER_HOST_IP}:8500",
+      "--controller=${DOCKER_HOST_IP}:6653",
+      "--grpc-endpoint=${DOCKER_HOST_IP}:50057",
+      "--instance-id-is-container-name",
+      "-v"
+    ]
+    volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock"
+    networks:
+    - default
+    restart: unless-stopped
+
+  adapter_ponsim_olt:
+    image: "${REGISTRY}${REPOSITORY}voltha-adapter-ponsim-olt${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [
+      "/voltha/python/adapters/ponsim_olt/main.py",
+      "-v",
+      "--name=ponsim_olt",
+      "--kafka_adapter=${DOCKER_HOST_IP}:9092",
+      "--kafka_cluster=${DOCKER_HOST_IP}:9092",
+      "--core_topic=rwcore"
+    ]
+    networks:
+    - default
+
+  adapter_ponsim_onu:
+    image: "${REGISTRY}${REPOSITORY}voltha-adapter-ponsim-onu${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: [
+      "/voltha/python/adapters/ponsim_onu/main.py",
+      "-v",
+      "--name=ponsim_onu",
+      "--kafka_adapter=${DOCKER_HOST_IP}:9092",
+      "--kafka_cluster=${DOCKER_HOST_IP}:9092",
+      "--core_topic=rwcore"
+    ]
+    networks:
+    - default
+
+  ponsim_olt:
+    image: "${REGISTRY}voltha/voltha-ponsim${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    entrypoint:
+      - /app/ponsim
+      - -device_type
+      - "OLT"
+      - -onus
+      - "4"
+      - -internal_if
+      - "eth0"
+      - -external_if
+      - "eth0"
+      - -vcore_endpoint
+      - "vcore"
+      - -promiscuous
+      - -verbose
+    ports:
+      - "50060:50060"
+    networks:
+    - default
+
+  ponsim_onu:
+    image: "${REGISTRY}voltha/voltha-ponsim${TAG}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    entrypoint:
+      - /app/ponsim
+      - -device_type
+      - "ONU"
+      - -parent_addr
+      - "ponsim_olt"
+      - -grpc_port
+      - "50061"
+      - -internal_if
+      - "eth0"
+      - -external_if
+      - "lo"
+      - -promiscuous
+      - -verbose
+    ports:
+    - "50061:50061"
+    networks:
+    - default

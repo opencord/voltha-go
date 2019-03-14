@@ -26,7 +26,7 @@ Allow non-root user docker system access
 ```
 sudo usermod -a -G docker $USER
 ```
-Logout/Login to assume new group membership needed for running docker as non-root user. 
+Logout/Login to assume new group membership needed for running docker as non-root user.
 
 
 
@@ -103,7 +103,7 @@ git clone https://gerrit.opencord.org/voltha-openolt-adapter.git
 ```
 
 Build the openolt container.  Inform the Makefile to use a local build of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openolt build tree.  Once PyVoltha and voltha-protos is stable this will not be needed.
-```sh 
+```sh
 export LOCAL_PYVOLTHA=true
 cd ~/source/voltha-openolt-adapter/python/
 make build
@@ -119,7 +119,7 @@ git clone https://gerrit.opencord.org/voltha-openonu-adapter.git
 ```
 
 Build the openonu container.  Inform the Makefile to use a local build of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openonu build tree.  Once PyVoltha and voltha-protos is stable this will not be needed.
-```sh 
+```sh
 export LOCAL_PYVOLTHA=true
 cd ~/source/voltha-openonu-adapter/python
 make build
@@ -147,7 +147,7 @@ docker ps
 
 Login to cli and verify.  Password is admin
 ```sh
-ssh -p 5022 voltha@localhost 
+ssh -p 5022 voltha@localhost
 ```
 
 Run voltha "devices" command to verify communication to etcd
@@ -158,8 +158,9 @@ Devices:
 table empty
 ```
 
-At this point preprovision and enable olt, add flows using the CLI or ofagent. 
+At this point preprovision and enable olt, add flows using the CLI or ofagent.
 
-
-
-
+### Test with BBSIM or Ponsim
+if you don't have a real OLT device and want to test with a simulator BBSIM or PONSIM can be used.
+```compose/system-test-bbsim.yml``` file includes BBSIM image and ```compose/system-test-ponsim.yml``` includes PONSIM. Please note that since PONSIM uses its own ```ponsim_adapter``` you need to run the preprovision command like this:
+```preprovision_olt -t ponsim_olt -H <IP of Ponsim OLT>:50060``` 
