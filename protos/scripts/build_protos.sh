@@ -44,6 +44,7 @@ export OF_PB="$SRC_DIR/openflow_13.proto"
 export OMCI_PB="$SRC_DIR/omci*.proto"
 export AFROUTER_PB="$SRC_DIR/afrouter.proto"
 export OMCI_PB="$SRC_DIR/omci_mib_db.proto"
+export OPENOLT_PB="$SRC_DIR/openolt.proto"
 
 export PB_VARS="\
     VOLTHA_PB \
@@ -54,7 +55,8 @@ export PB_VARS="\
     OF_PB \
     OMCI_PB \
     AFROUTER_PB \
-	OMCI_PB"
+    OMCI_PB \
+    OPENOLT_PB"
 
 export OTHER_INCLUDES="/usr/local/include/googleapis"
 export PROTO_DESC_FILE="${SRC_DIR}/voltha.pb"
