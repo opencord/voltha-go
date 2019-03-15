@@ -86,12 +86,6 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 	}
 	// Use a device topic for the response as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	//if !ap.deviceTopicRegistered {
-	//	if err := ap.kafkaICProxy.SubscribeWithDefaultRequestHandler(replyToTopic, kafka.OffsetOldest); err != nil {
-	//		log.Errorw("Unable-to-subscribe-new-topic", log.Fields{"topic": replyToTopic, "error": err})
-	//		return err
-	//	}
-	//}
 	ap.deviceTopicRegistered = true
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("AdoptDevice-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
@@ -164,12 +158,6 @@ func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device)
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("DeleteDevice-response", log.Fields{"deviceid": device.Id, "success": success})
-
-	// We no longer need to have this device topic as we won't receive any unsolicited messages on it
-	if err := ap.kafkaICProxy.DeleteTopic(replyToTopic); err != nil {
-		log.Errorw("Unable-to-delete-topic", log.Fields{"topic": replyToTopic, "error": err})
-		return err
-	}
 
 	return unPackResponse(rpc, device.Id, success, result)
 }

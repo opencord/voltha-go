@@ -407,6 +407,10 @@ func (c *EtcdClient) getChannelMaps(key string) ([]map[chan *Event]v3Client.Watc
 
 	channels, exists = c.watchedChannels.Load(key)
 
+	if channels == nil {
+		return nil, exists
+	}
+
 	return channels.([]map[chan *Event]v3Client.Watcher), exists
 }
 
