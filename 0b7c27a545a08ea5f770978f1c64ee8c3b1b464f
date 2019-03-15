@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3c0a89c6_d6178341",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-03-15T20:01:22Z",
+      "side": 1,
+      "message": "see below.",
+      "parentUuid": "8ffc6015_ec985fef",
+      "revId": "0b7c27a545a08ea5f770978f1c64ee8c3b1b464f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de1939ab_eb14e47b",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-15T19:43:53Z",
       "side": 1,
       "message": "Does the port.PortNo typically correspond to the the VLAN associated to that UNI?",
+      "revId": "0b7c27a545a08ea5f770978f1c64ee8c3b1b464f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9118c40f_4ff2cac2",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1323,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-03-15T20:01:22Z",
+      "side": 1,
+      "message": "No and its probably worth pointing there could be many vlans associated to the UNI (i.e gfast dpu).  So we try to avoid using vlan for any sort of key or id, and only let the flow contents decide and pass down any vlan id.   \n\nSpecifically for this field, letting the handler decide the openflow logical port id name (via the label) allows for some flexibility.  openolt actually creates the uni-XX format in the Port Label, but other adapters may set it differently according to their naming scheme.",
+      "parentUuid": "de1939ab_eb14e47b",
       "revId": "0b7c27a545a08ea5f770978f1c64ee8c3b1b464f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
