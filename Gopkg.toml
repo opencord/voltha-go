@@ -103,6 +103,10 @@ required = [
   go-tests = true
   unused-packages = true
 
-  [[prune.project]]
-    name = "github.com/opencord/voltha-protos"
-    unused-packages = false
+[[prune.project]]
+  name = "github.com/opencord/voltha-protos"
+  unused-packages = false
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/boljen/go-bitmap"

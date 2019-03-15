@@ -26,6 +26,14 @@
   revision = "f0300d1749da6fa982027e449ec0c7a145510c3c"
 
 [[projects]]
+  branch = "master"
+  digest = "1:0b0303f763128c8e8092843b9d85fdf03bb5bfa4145f1ebe77c12e835a871dc2"
+  name = "github.com/boljen/go-bitmap"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "23cd2fb0ce7db94d088d840df05fa0d274bbb2ec"
+
+[[projects]]
   digest = "1:526d64d0a3ac6c24875724a9355895be56a21f89a5d3ab5ba88d91244269a7d8"
   name = "github.com/bsm/sarama-cluster"
   packages = ["."]
@@ -737,6 +745,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/boljen/go-bitmap",
     "github.com/bsm/sarama-cluster",
     "github.com/cevaris/ordered_map",
     "github.com/gogo/protobuf/proto",
