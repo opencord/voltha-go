@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ffc6015_ec985fef",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-03-15T19:43:53Z",
+      "side": 1,
+      "message": "In 1.x, do we always use the Label as the Port ID?",
+      "revId": "0b7c27a545a08ea5f770978f1c64ee8c3b1b464f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de1939ab_eb14e47b",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1323,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-03-15T19:43:53Z",
+      "side": 1,
+      "message": "Does the port.PortNo typically correspond to the the VLAN associated to that UNI?",
+      "revId": "0b7c27a545a08ea5f770978f1c64ee8c3b1b464f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
