@@ -1243,6 +1243,8 @@ func (agent *LogicalDeviceAgent) portUpdated(args ...interface{}) interface{} {
 
 func (agent *LogicalDeviceAgent) addNNILogicalPort (device *voltha.Device, port *voltha.Port)  error {
 	log.Infow("addNNILogicalPort", log.Fields{"NNI": port})
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
 	if agent.portExist(device, port) {
 		log.Debugw("port-already-exist", log.Fields{"port": port})
 		return nil
@@ -1262,8 +1264,6 @@ func (agent *LogicalDeviceAgent) addNNILogicalPort (device *voltha.Device, port 
 	lp.OfpPort.Name = lp.Id
 	lp.DevicePortNo = port.PortNo
 
-	agent.lockLogicalDevice.Lock()
-	defer agent.lockLogicalDevice.Unlock()
 	var ld *voltha.LogicalDevice
 	if ld, err = agent.getLogicalDeviceWithoutLock(); err != nil {
 		log.Errorw("error-retrieving-logical-device", log.Fields{"error": err})
@@ -1283,14 +1283,9 @@ func (agent *LogicalDeviceAgent) addNNILogicalPort (device *voltha.Device, port 
 }
 
 func (agent *LogicalDeviceAgent) portExist (device *voltha.Device, port *voltha.Port) bool {
-	if ldevice, _ := agent.GetLogicalDevice(); ldevice != nil {
+	if ldevice, _ := agent.getLogicalDeviceWithoutLock(); ldevice != nil {
 		for _, lPort := range ldevice.Ports {
-			if lPort.DeviceId == device.Id && lPort.DevicePortNo == port.PortNo {
-				if lPort.OfpPort != nil && device.ProxyAddress != nil {
-					return lPort.OfpPort.PortNo == device.ProxyAddress.ChannelId
-				} else if lPort.OfpPort != nil || device.ProxyAddress != nil {
-					return false
-				}
+			if lPort.DeviceId == device.Id && lPort.DevicePortNo == port.PortNo && lPort.Id == port.Label {
 				return true
 			}
 		}
@@ -1300,6 +1295,8 @@ func (agent *LogicalDeviceAgent) portExist (device *voltha.Device, port *voltha.
 
 func (agent *LogicalDeviceAgent) addUNILogicalPort (childDevice *voltha.Device, port *voltha.Port)  error {
 	log.Debugw("addUNILogicalPort", log.Fields{"port": port})
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
 	if agent.portExist(childDevice, port) {
 		log.Debugw("port-already-exist", log.Fields{"port": port})
 		return nil
@@ -1311,8 +1308,8 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort (childDevice *voltha.Device, 
 		log.Errorw("error-retrieving-port-capabilities", log.Fields{"error": err})
 		return err
 	}
-	agent.lockLogicalDevice.Lock()
-	defer agent.lockLogicalDevice.Unlock()
+	//agent.lockLogicalDevice.Lock()
+	//defer agent.lockLogicalDevice.Unlock()
 	// Get stored logical device
 	if ldevice, err := agent.getLogicalDeviceWithoutLock(); err != nil {
 		return status.Error(codes.NotFound, agent.logicalDeviceId)

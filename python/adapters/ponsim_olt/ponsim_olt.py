@@ -272,7 +272,7 @@ class PonSimOltHandler(object):
 
             nni_port = Port(
                 port_no=info.nni_port,
-                label='NNI facing Ethernet port',
+                label='nni-'+ str(info.nni_port),
                 type=Port.ETHERNET_NNI,
                 oper_status=OperStatus.ACTIVE
             )
@@ -280,7 +280,7 @@ class PonSimOltHandler(object):
             yield self.core_proxy.port_created(device.id, nni_port)
             yield self.core_proxy.port_created(device.id, Port(
                 port_no=1,
-                label='PON port',
+                label='pon-1',
                 type=Port.PON_OLT,
                 oper_status=OperStatus.ACTIVE
             ))

@@ -17,6 +17,7 @@ package adaptercore
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogo/protobuf/proto"
 	com "github.com/opencord/voltha-go/adapters/common"
 	"github.com/opencord/voltha-go/common/log"
@@ -104,10 +105,18 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 		log.Errorw("error-updating-device", log.Fields{"deviceId": device.Id, "error": err})
 	}
 
-	//	Now create the NNI Port
+	// Use the channel Id, assigned by the parent device to me, as the port number
+	uni_port := uint32(2)
+	if device.ProxyAddress != nil {
+		if device.ProxyAddress.ChannelId != 0 {
+			uni_port = device.ProxyAddress.ChannelId
+		}
+	}
+
+	//	Now create the UNI Port
 	dh.uniPort = &voltha.Port{
-		PortNo:     2,
-		Label:      "UNI facing Ethernet port",
+		PortNo:     uni_port,
+		Label:      fmt.Sprintf("uni-%d", uni_port),
 		Type:       voltha.Port_ETHERNET_UNI,
 		AdminState: voltha.AdminState_ENABLED,
 		OperStatus: voltha.OperStatus_ACTIVE,
@@ -121,7 +130,7 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	//	Now create the PON Port
 	dh.ponPort = &voltha.Port{
 		PortNo:     1,
-		Label:      "PON port",
+		Label:      fmt.Sprintf("pon-%d", 1),
 		Type:       voltha.Port_PON_ONU,
 		AdminState: voltha.AdminState_ENABLED,
 		OperStatus: voltha.OperStatus_ACTIVE,

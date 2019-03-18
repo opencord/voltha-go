@@ -209,17 +209,23 @@ class PonSimOnuHandler(object):
         log.info("initial-pm-config", pm_config=pm_config)
         yield self.core_proxy.device_pm_config_update(pm_config, init=True)
 
+        # Use the channel Id, assigned by the parent device to me, as the port number
+        uni_port = 2
+        if device.proxy_address is not None:
+            if device.proxy_address.channel_id != 0:
+                uni_port =  device.proxy_address.channel_id
+
         # register physical ports
         self.uni_port = Port(
-            port_no=2,
-            label='UNI facing Ethernet port',
+            port_no=uni_port,
+            label="uni-" + str(uni_port),
             type=Port.ETHERNET_UNI,
             admin_state=AdminState.ENABLED,
             oper_status=OperStatus.ACTIVE
         )
         self.pon_port = Port(
             port_no=1,
-            label='PON port',
+            label='pon-1',
             type=Port.PON_ONU,
             admin_state=AdminState.ENABLED,
             oper_status=OperStatus.ACTIVE,

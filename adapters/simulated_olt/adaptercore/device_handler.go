@@ -17,6 +17,7 @@ package adaptercore
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogo/protobuf/proto"
 	com "github.com/opencord/voltha-go/adapters/common"
 	"github.com/opencord/voltha-go/common/log"
@@ -107,7 +108,7 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	//	Now create the NNI Port
 	dh.nniPort = &voltha.Port{
 		PortNo:     2,
-		Label:      "NNI facing Ethernet port",
+		Label:      fmt.Sprintf("nni-%d", 2),
 		Type:       voltha.Port_ETHERNET_NNI,
 		OperStatus: voltha.OperStatus_ACTIVE,
 	}
@@ -120,7 +121,7 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	//	Now create the PON Port
 	dh.ponPort = &voltha.Port{
 		PortNo:     1,
-		Label:      "PON port",
+		Label:      fmt.Sprintf("pon-%d", 1),
 		Type:       voltha.Port_PON_OLT,
 		OperStatus: voltha.OperStatus_ACTIVE,
 	}
