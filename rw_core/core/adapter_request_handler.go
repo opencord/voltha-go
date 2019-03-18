@@ -40,12 +40,14 @@ type AdapterRequestHandlerProxy struct {
 	defaultRequestTimeout     int64
 	longRunningRequestTimeout int64
 	coreInCompetingMode       bool
+	core                      *Core
 }
 
-func NewAdapterRequestHandlerProxy(coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager,
+func NewAdapterRequestHandlerProxy(core *Core, coreInstanceId string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager,
 	aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy, incompetingMode bool, longRunningRequestTimeout int64,
 	defaultRequestTimeout int64) *AdapterRequestHandlerProxy {
 	var proxy AdapterRequestHandlerProxy
+	proxy.core = core
 	proxy.coreInstanceId = coreInstanceId
 	proxy.deviceMgr = dMgr
 	proxy.lDeviceMgr = ldMgr
@@ -58,7 +60,7 @@ func NewAdapterRequestHandlerProxy(coreInstanceId string, dMgr *DeviceManager, l
 	return &proxy
 }
 
-func (rhp *AdapterRequestHandlerProxy) acquireTransaction(transactionId string, maxTimeout ...int64) (*KVTransaction, error) {
+func (rhp *AdapterRequestHandlerProxy) acquireRequest(transactionId string, maxTimeout ...int64) (*KVTransaction, error) {
 	timeout := rhp.defaultRequestTimeout
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
@@ -71,6 +73,33 @@ func (rhp *AdapterRequestHandlerProxy) acquireTransaction(transactionId string, 
 		return txn, nil
 	} else {
 		return nil, errors.New("failed-to-seize-request")
+	}
+}
+
+// This is a helper function that attempts to acquire the request by using the device ownership model
+func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string, devId string, maxTimeout ...int64) (*KVTransaction, error) {
+	timeout := rhp.defaultRequestTimeout
+	if len(maxTimeout) > 0 {
+		timeout = maxTimeout[0]
+	}
+	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
+	txn := NewKVTransaction(transactionId)
+	if txn == nil {
+		return nil, errors.New("fail-to-create-transaction")
+	}
+
+	if rhp.core.deviceOwnership.OwnedByMe(devId) {
+		if txn.Acquired(timeout) {
+			return txn, nil
+		} else {
+			return nil, errors.New("failed-to-seize-request")
+		}
+	} else {
+		if txn.Monitor(timeout) {
+			return txn, nil
+		} else {
+			return nil, errors.New("device-not-owned")
+		}
 	}
 }
 
@@ -112,7 +141,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.acquireRequest(transactionID.Val); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// Update our adapters in memory
 			go rhp.adapterMgr.updateAdaptersAndDevicetypesInMemory()
@@ -156,7 +185,7 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -224,7 +253,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, device.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -294,7 +323,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -336,7 +365,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.acquireRequest(transactionID.Val); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -416,7 +445,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -500,7 +529,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -557,7 +586,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -616,7 +645,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -682,7 +711,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -733,7 +762,7 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -785,7 +814,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pmConfigs.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
@@ -887,7 +916,7 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireTransaction(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil

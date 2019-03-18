@@ -129,7 +129,8 @@ func (rw *rwCore) start(ctx context.Context) {
 			txnPrefix,
 			rw.kvClient,
 			rw.config.KVStoreTimeout,
-			rw.config.KVTxnKeyDelTime); err != nil {
+			rw.config.KVTxnKeyDelTime,
+			10); err != nil {
 			log.Fatal("creating-transaction-context-failed")
 		}
 	}

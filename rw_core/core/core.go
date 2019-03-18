@@ -50,6 +50,7 @@ type Core struct {
 	kafkaClient       kafka.Client
 	coreMembership *voltha.Membership
 	membershipLock *sync.RWMutex
+	deviceOwnership    *DeviceOwnership
 }
 
 func init() {
@@ -63,6 +64,10 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 	core.config = cf
 	core.kvClient = kvClient
 	core.kafkaClient = kafkaClient
+
+	// Setup device ownership context
+	core.deviceOwnership = NewDeviceOwnership(id, kvClient,
+		"service/voltha/owns_device", 60)
 
 	// Setup the KV store
 	// Do not call NewBackend constructor; it creates its own KV client
@@ -90,8 +95,8 @@ func (core *Core) Start(ctx context.Context) {
 	}
 	log.Info("values", log.Fields{"kmp": core.kmp})
 	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceId)
-	core.deviceMgr = newDeviceManager(core.kmp, core.clusterDataProxy, core.adapterMgr, core.instanceId)
-	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.kmp, core.clusterDataProxy)
+	core.deviceMgr = newDeviceManager(core)
+	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy)
 
 	if err := core.registerAdapterRequestHandlers(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
 		log.Fatal("Failure-registering-adapterRequestHandler")
@@ -179,7 +184,7 @@ func (core *Core) startKafkaMessagingProxy(ctx context.Context) error {
 func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstanceId string, dMgr *DeviceManager,
 	ldMgr *LogicalDeviceManager, aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy,
 ) error {
-	requestProxy := NewAdapterRequestHandlerProxy(coreInstanceId, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
+	requestProxy := NewAdapterRequestHandlerProxy(core, coreInstanceId, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
 		core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 
 	// Register the broadcast topic to handle any core-bound broadcast requests

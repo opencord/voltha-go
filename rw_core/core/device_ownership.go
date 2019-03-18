@@ -81,17 +81,34 @@ func (da *DeviceOwnership) tryToReserveKey(id string) bool {
 }
 
 func (da *DeviceOwnership) startOwnershipMonitoring(id string, chnl chan int) {
+	var op string
+
 startloop:
 	for {
-		if err := da.setOwnership(id, da.tryToReserveKey(id)); err != nil {
-			log.Errorw("unexpected-error", log.Fields{"error": err})
+		da.deviceMapLock.RLock()
+		val, exist := da.deviceMap[id]
+		da.deviceMapLock.RUnlock()
+		if exist && val.owned {
+			// Device owned; renew reservation
+			op = "renew"
+			kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
+			if err := da.kvClient.RenewReservation(kvKey); err != nil {
+				log.Errorw("reservation-renewal-error", log.Fields{"error": err})
+			}
+		} else {
+			// Device not owned; try to seize ownership
+			op = "retry"
+			if err := da.setOwnership(id, da.tryToReserveKey(id)); err != nil {
+				log.Errorw("unexpected-error", log.Fields{"error": err})
+			}
 		}
 		select {
 		case <-da.exitChannel:
 			log.Infow("closing-monitoring", log.Fields{"Id": id})
 			break startloop
 		case <-time.After(time.Duration(da.reservationTimeout) / 3 * time.Second):
-			log.Infow("renew-reservation", log.Fields{"Id": id})
+			msg := fmt.Sprintf("%s-reservation", op)
+			log.Infow(msg, log.Fields{"Id": id})
 		case <-chnl:
 			log.Infow("closing-device-monitoring", log.Fields{"Id": id})
 			break startloop

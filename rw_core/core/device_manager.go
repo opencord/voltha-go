@@ -33,6 +33,7 @@ import (
 
 type DeviceManager struct {
 	deviceAgents        map[string]*DeviceAgent
+	core                *Core
 	adapterProxy        *AdapterProxy
 	adapterMgr          *AdapterManager
 	logicalDeviceMgr    *LogicalDeviceManager
@@ -44,15 +45,16 @@ type DeviceManager struct {
 	lockDeviceAgentsMap sync.RWMutex
 }
 
-func newDeviceManager(kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy, adapterMgr *AdapterManager, coreInstanceId string) *DeviceManager {
+func newDeviceManager(core *Core) *DeviceManager {
 	var deviceMgr DeviceManager
+	deviceMgr.core = core
 	deviceMgr.exitChannel = make(chan int, 1)
 	deviceMgr.deviceAgents = make(map[string]*DeviceAgent)
-	deviceMgr.adapterProxy = NewAdapterProxy(kafkaICProxy)
-	deviceMgr.kafkaICProxy = kafkaICProxy
-	deviceMgr.coreInstanceId = coreInstanceId
-	deviceMgr.clusterDataProxy = cdProxy
-	deviceMgr.adapterMgr = adapterMgr
+	deviceMgr.kafkaICProxy = core.kmp
+	deviceMgr.adapterProxy = NewAdapterProxy(core.kmp)
+	deviceMgr.coreInstanceId = core.instanceId
+	deviceMgr.clusterDataProxy = core.clusterDataProxy
+	deviceMgr.adapterMgr = core.adapterMgr
 	deviceMgr.lockDeviceAgentsMap = sync.RWMutex{}
 	return &deviceMgr
 }
@@ -184,6 +186,7 @@ func (dMgr *DeviceManager) deleteDevice(ctx context.Context, id *voltha.ID, ch c
 		if res == nil { //Success
 			agent.stop(ctx)
 			dMgr.deleteDeviceAgentToMap(agent)
+			dMgr.core.deviceOwnership.AbandonDevice(id.Id)
 		}
 		log.Debugw("deleteDevice-result", log.Fields{"result": res})
 	} else {
@@ -623,6 +626,9 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	agent := newDeviceAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.clusterDataProxy)
 	dMgr.addDeviceAgentToMap(agent)
 	agent.start(nil, false)
+
+	// Set device ownership
+	dMgr.core.deviceOwnership.OwnedByMe(agent.deviceId)
 
 	// Activate the child device
 	if agent := dMgr.getDeviceAgent(agent.deviceId); agent != nil {

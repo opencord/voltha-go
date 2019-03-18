@@ -31,6 +31,7 @@ import (
 
 type LogicalDeviceManager struct {
 	logicalDeviceAgents        map[string]*LogicalDeviceAgent
+	core                       *Core
 	deviceMgr                  *DeviceManager
 	grpcNbiHdlr                *APIHandler
 	adapterProxy               *AdapterProxy
@@ -40,8 +41,9 @@ type LogicalDeviceManager struct {
 	lockLogicalDeviceAgentsMap sync.RWMutex
 }
 
-func newLogicalDeviceManager(deviceMgr *DeviceManager, kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
+func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
 	var logicalDeviceMgr LogicalDeviceManager
+	logicalDeviceMgr.core = core
 	logicalDeviceMgr.exitChannel = make(chan int, 1)
 	logicalDeviceMgr.logicalDeviceAgents = make(map[string]*LogicalDeviceAgent)
 	logicalDeviceMgr.deviceMgr = deviceMgr
@@ -182,6 +184,9 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 	go agent.start(ctx, false)
 
+	// Set device ownership
+	ldMgr.core.deviceOwnership.OwnedByMe(id)
+
 	log.Debug("creating-logical-device-ends")
 	return &id, nil
 }
@@ -219,6 +224,7 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, devi
 		agent.stop(ctx)
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceId)
+		ldMgr.core.deviceOwnership.AbandonDevice(logDeviceId)
 	}
 
 	log.Debug("deleting-logical-device-ends")
