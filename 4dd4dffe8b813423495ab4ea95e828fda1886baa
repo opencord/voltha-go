@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85e12901_169cf1e3",
+        "filename": "Gopkg.lock",
+        "patchSetId": 7
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-03-20T14:18:28Z",
+      "side": 1,
+      "message": "Are some files missing, eg. schema, ietf?",
+      "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "084f983d_29d1a1f9",
+        "filename": "Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-03-20T14:18:28Z",
+      "side": 1,
+      "message": "This implies that a developer needs to do a go get on the voltha-protos in their development environment, correct?",
+      "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac5e488c_cd7f27d4",
+        "filename": "scripts/build_protos.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-03-20T14:18:28Z",
+      "side": 1,
+      "message": "Do you need to create the directory first before a cp of the entire directory under vendor/github.com/opencord?",
+      "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
