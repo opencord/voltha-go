@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4b1cf2dd_b8fd1af1",
+        "filename": "Gopkg.lock",
+        "patchSetId": 7
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-03-21T17:47:12Z",
+      "side": 1,
+      "message": "They are are not there, because dep ensure did not find any files that imported them. Maybe they can be added.",
+      "parentUuid": "85e12901_169cf1e3",
+      "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "084f983d_29d1a1f9",
         "filename": "Makefile",
         "patchSetId": 7
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1847fc33_ef0f3208",
+        "filename": "Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-03-21T17:47:12Z",
+      "side": 1,
+      "message": "That was true in the patchset. I reverted to that patchset that just used the stubs provided, rather than building. The new version can do something similar, but only if you specify that you are doing a local proto build with the LOCAL_PROTO variable.",
+      "parentUuid": "084f983d_29d1a1f9",
+      "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac5e488c_cd7f27d4",
         "filename": "scripts/build_protos.sh",
         "patchSetId": 7
@@ -47,6 +83,24 @@
       "writtenOn": "2019-03-20T14:18:28Z",
       "side": 1,
       "message": "Do you need to create the directory first before a cp of the entire directory under vendor/github.com/opencord?",
+      "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ab82852_306f58a9",
+        "filename": "scripts/build_protos.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-03-21T17:47:12Z",
+      "side": 1,
+      "message": "You did need to in the case that it did not already exist, which was possible if you git clone and try to build protos without make building. But this isn\u0027t in the current top patchset",
+      "parentUuid": "ac5e488c_cd7f27d4",
       "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
