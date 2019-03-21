@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "a1899c19_846fff2a",
+        "filename": "Gopkg.lock",
+        "patchSetId": 7
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-03-21T18:12:05Z",
+      "side": 1,
+      "message": "I tried adding them manually, but dep ensure just removes them. I have instructions for dep ensure though.",
+      "parentUuid": "85e12901_169cf1e3",
+      "revId": "4dd4dffe8b813423495ab4ea95e828fda1886baa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "084f983d_29d1a1f9",
         "filename": "Makefile",
         "patchSetId": 7
