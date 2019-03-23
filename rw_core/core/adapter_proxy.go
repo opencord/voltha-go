@@ -443,7 +443,7 @@ func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flo
 func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges) error {
 	log.Debugw("UpdateFlowsIncremental", log.Fields{"deviceId": device.Id})
 	toTopic := ap.getAdapterTopic(device.Adapter)
-	rpc := "update_flows_bulk"
+	rpc := "update_flows_incrementally"
 	args := make([]*kafka.KVArg, 3)
 	args[0] = &kafka.KVArg{
 		Key:   "device",
