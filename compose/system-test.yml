@@ -144,6 +144,7 @@ services:
       ONOS_APPS: 'drivers,openflow-base'
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
+    - "./network-cfg.json:/root/onos/config/network-cfg.json"
     networks:
     - default
     restart: unless-stopped
