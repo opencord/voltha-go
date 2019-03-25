@@ -234,3 +234,47 @@ func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId str
 	log.Debugw("ChildDeviceDetected-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 	return unPackResponse(rpc, parentDeviceId, success, result)
 }
+
+func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, parentPortNo uint32, onuId uint32, serialNumber string)*voltha.Device {
+	log.Debugw("GetChildDevice", log.Fields{"pPeviceId": parentDeviceId, "OnuId": onuId, "parentPort": parentPortNo,"serialNo": serialNumber})
+	rpc := "GetChildDevice"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(parentDeviceId)
+	replyToTopic := ap.getAdapterTopic()
+
+	args := make([]*kafka.KVArg, 4)
+	id := &voltha.ID{Id: parentDeviceId}
+	args[0] = &kafka.KVArg{
+		Key:   "device_id",
+		Value: id,
+	}
+	sNo := &ic.StrType{Val: serialNumber}
+	args[1] = &kafka.KVArg{
+		Key:   "serial_number",
+		Value: sNo,
+	}
+	oId := &ic.IntType{Val: int64(onuId)}
+	args[2] = &kafka.KVArg{
+		Key:   "onu_id",
+		Value: oId,
+	}
+	ppn := &ic.IntType{Val: int64(parentPortNo)}
+	args[3] = &kafka.KVArg{
+		Key:   "parent_port_no",
+		Value: ppn,
+	}
+
+       childDevice := &voltha.Device{}
+       success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
+       log.Debugw("GetChildDevice-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+       if success {
+          if err :=  ptypes.UnmarshalAny(result,childDevice); err != nil{
+                log.Warnw("cannot-unmarshal-childDevice", log.Fields{"error": err})
+                return nil
+          }
+          log.Debugw("Got child device",log.Fields{"childDevice":*childDevice})
+          return childDevice
+       }
+       return nil
+}

@@ -126,11 +126,15 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	if err := dh.coreProxy.PortCreated(nil, cloned.Id, dh.uniPort); err != nil {
 		log.Errorw("error-creating-nni-port", log.Fields{"deviceId": device.Id, "error": err})
 	}
-
+        // use Pon port number on which this ONU has been detected
+        ponPortNo := uint32(1)
+        if device.ParentPortNo != 0 {
+            ponPortNo = device.ParentPortNo
+        }
 	//	Now create the PON Port
 	dh.ponPort = &voltha.Port{
-		PortNo:     1,
-		Label:      fmt.Sprintf("pon-%d", 1),
+		PortNo:     ponPortNo,
+		Label:      fmt.Sprintf("pon-%d", ponPortNo),
 		Type:       voltha.Port_PON_ONU,
 		AdminState: voltha.AdminState_ENABLED,
 		OperStatus: voltha.OperStatus_ACTIVE,
