@@ -25,6 +25,7 @@ import (
 	"github.com/opencord/voltha-go/kafka"
 	ic "github.com/opencord/voltha-go/protos/inter_container"
 	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-go/rw_core/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -65,11 +66,11 @@ func (rhp *AdapterRequestHandlerProxy) acquireRequest(transactionId string, maxT
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
 	}
-	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
 	txn := NewKVTransaction(transactionId)
 	if txn == nil {
 		return nil, errors.New("fail-to-create-transaction")
 	} else if txn.Acquired(timeout) {
+		log.Debugw("acquired-request", log.Fields{"xtrnsId": transactionId})
 		return txn, nil
 	} else {
 		return nil, errors.New("failed-to-seize-request")
@@ -82,20 +83,23 @@ func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
 	}
-	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
 	txn := NewKVTransaction(transactionId)
 	if txn == nil {
 		return nil, errors.New("fail-to-create-transaction")
 	}
 
-	if rhp.core.deviceOwnership.OwnedByMe(devId) {
+	if rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id:devId}) {
+		log.Debugw("owned-by-me", log.Fields{"Id": devId})
 		if txn.Acquired(timeout) {
+			log.Debugw("processing-request", log.Fields{"Id": devId})
 			return txn, nil
 		} else {
 			return nil, errors.New("failed-to-seize-request")
 		}
 	} else {
+		log.Debugw("not-owned-by-me", log.Fields{"Id": devId})
 		if txn.Monitor(timeout) {
+			log.Debugw("timeout-processing-request", log.Fields{"Id": devId})
 			return txn, nil
 		} else {
 			return nil, errors.New("device-not-owned")
@@ -270,9 +274,10 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 	if updatedDevice, err := rhp.mergeDeviceInfoFromAdapter(device); err != nil {
 		return nil, status.Errorf(codes.Internal, "%s", err.Error())
 	} else {
-		if err := rhp.deviceMgr.updateDevice(updatedDevice); err != nil {
-			return nil, err
-		}
+		go rhp.deviceMgr.updateDevice(updatedDevice)
+		//if err := rhp.deviceMgr.updateDevice(updatedDevice); err != nil {
+		//	return nil, err
+		//}
 	}
 
 	return new(empty.Empty), nil
@@ -365,9 +370,8 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireRequest(transactionID.Val); err != nil {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, proxyAddress.DeviceId); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
 		} else {
 			defer txn.Close()
@@ -599,10 +603,13 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 		return nil, nil
 	}
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	if err := rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
-		voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
-		return nil, err
-	}
+	go rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+		voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+
+	//if err := rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+	//	voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
+	//	return nil, err
+	//}
 	return new(empty.Empty), nil
 }
 
@@ -659,10 +666,13 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 	}
 
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	if err := rhp.deviceMgr.updateChildrenStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
-		voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
-		return nil, err
-	}
+	go rhp.deviceMgr.updateChildrenStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+		voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+
+	//if err := rhp.deviceMgr.updateChildrenStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+	//	voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
+	//	return nil, err
+	//}
 	return new(empty.Empty), nil
 }
 
@@ -723,10 +733,14 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	if err := rhp.deviceMgr.updatePortState(deviceId.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
-		voltha.OperStatus_OperStatus(operStatus.Val)); err != nil {
-		return nil, err
-	}
+
+	go rhp.deviceMgr.updatePortState(deviceId.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+		voltha.OperStatus_OperStatus(operStatus.Val))
+
+	//if err := rhp.deviceMgr.updatePortState(deviceId.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+	//	voltha.OperStatus_OperStatus(operStatus.Val)); err != nil {
+	//	return nil, err
+	//}
 	return new(empty.Empty), nil
 }
 
@@ -774,9 +788,10 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	if err := rhp.deviceMgr.addPort(deviceId.Id, port); err != nil {
-		return nil, err
-	}
+	go rhp.deviceMgr.addPort(deviceId.Id, port)
+	//if err := rhp.deviceMgr.addPort(deviceId.Id, port); err != nil {
+	//	return nil, err
+	//}
 
 	return new(empty.Empty), nil
 }
@@ -827,9 +842,10 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 		return nil, nil
 	}
 
-	if err := rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs); err != nil {
-		return nil, err
-	}
+	go rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs)
+	//if err := rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs); err != nil {
+	//	return nil, err
+	//}
 
 	return new(empty.Empty), nil
 }
@@ -877,9 +893,10 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	if err := rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
-		return nil, err
-	}
+	go rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), transactionID.Val, packet.Payload)
+	//if err := rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
+	//	return nil, err
+	//}
 	return new(empty.Empty), nil
 }
 
@@ -928,8 +945,9 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	if err := rhp.deviceMgr.updateImageDownload(deviceId.Id, img); err != nil {
-		return nil, err
-	}
+	go rhp.deviceMgr.updateImageDownload(deviceId.Id, img)
+	//if err := rhp.deviceMgr.updateImageDownload(deviceId.Id, img); err != nil {
+	//	return nil, err
+	//}
 	return new(empty.Empty), nil
 }

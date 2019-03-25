@@ -40,9 +40,9 @@ const (
 	DefaultKafkaPort                = 9092
 	DefaultGroupName                = "voltha"
 	DefaultSleepOnError             = 1
-	DefaultProducerFlushFrequency   = 5
+	DefaultProducerFlushFrequency   = 1
 	DefaultProducerFlushMessages    = 1
-	DefaultProducerFlushMaxmessages = 5
+	DefaultProducerFlushMaxmessages = 1
 	DefaultProducerReturnSuccess    = true
 	DefaultProducerReturnErrors     = true
 	DefaultProducerRetryMax         = 3

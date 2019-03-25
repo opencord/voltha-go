@@ -25,6 +25,7 @@ import (
 	"github.com/opencord/voltha-go/protos/common"
 	"github.com/opencord/voltha-go/protos/openflow_13"
 	"github.com/opencord/voltha-go/protos/voltha"
+	"github.com/opencord/voltha-go/rw_core/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -40,14 +41,6 @@ const (
 )
 
 
-type deviceID struct {
-	id string
-}
-
-type logicalDeviceID struct {
-	id string
-}
-
 type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
@@ -60,20 +53,6 @@ type APIHandler struct {
 	da.DefaultAPIHandler
 	core *Core
 }
-
-//func NewAPIHandler(deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, adapterMgr *AdapterManager, inCompetingMode bool, longRunningRequestTimeout int64, defaultRequestTimeout int64 ) *APIHandler {
-//	handler := &APIHandler{
-//		deviceMgr:        deviceMgr,
-//		logicalDeviceMgr: lDeviceMgr,
-//		adapterMgr:adapterMgr,
-//		coreInCompetingMode:inCompetingMode,
-//		longRunningRequestTimeout:longRunningRequestTimeout,
-//		defaultRequestTimeout:defaultRequestTimeout,
-//		// TODO: Figure out what the 'hint' parameter to queue.New does
-//		packetInQueue: queue.New(10),
-//	}
-//	return handler
-//}
 
 func NewAPIHandler(core *Core) *APIHandler {
 	handler := &APIHandler{
@@ -155,16 +134,16 @@ func (handler *APIHandler) acquireRequest(ctx context.Context, id interface{}, m
 	} else {
 		if id != nil {
 			// The id can either be a device Id or a logical device id.
-			if dId, ok := id.(*deviceID); ok {
+			if dId, ok := id.(*utils.DeviceID); ok {
 				// Since this core has not processed this request, let's load the device, along with its extended
 				// family (parents and children) in memory.   This will keep this core in-sync with its paired core as
 				// much as possible. The watch feature in the core model will ensure that the contents of those objects in
 				// memory are in sync.
 				time.Sleep(2 * time.Second)
-				go handler.deviceMgr.load(dId.id)
-			} else if ldId, ok := id.(*logicalDeviceID); ok {
+				go handler.deviceMgr.load(dId.Id)
+			} else if ldId, ok := id.(*utils.LogicalDeviceID); ok {
 				// This will load the logical device along with its children and grandchildren
-				go handler.logicalDeviceMgr.load(ldId.id)
+				go handler.logicalDeviceMgr.load(ldId.Id)
 			}
 		}
 		return nil, errors.New("failed-to-seize-request")
@@ -185,11 +164,7 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 
 	owned := false
 	if id != nil {
-		if devId, ok := id.(*deviceID); ok {
-			owned = handler.core.deviceOwnership.OwnedByMe(devId.id)
-		} else if lDevId, ok := id.(*logicalDeviceID); ok {
-			owned = handler.core.deviceOwnership.OwnedByMe(lDevId.id)
-		}
+		owned = handler.core.deviceOwnership.OwnedByMe(id)
 	}
 	if owned {
 		if txn.Acquired(timeout) {
@@ -264,7 +239,7 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &logicalDeviceID{id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -285,7 +260,7 @@ func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *vol
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &logicalDeviceID{id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -307,7 +282,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 
 	if handler.competeForTransaction() {
 		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
-			if txn, err := handler.takeRequestOwnership(ctx, &logicalDeviceID{id:flow.Id}); err != nil {
+			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:flow.Id}); err != nil {
 				return new(empty.Empty), err
 			} else {
 				defer txn.Close()
@@ -330,7 +305,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 
 	if handler.competeForTransaction() {
 		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
-			if txn, err := handler.takeRequestOwnership(ctx, &logicalDeviceID{id:flow.Id}); err != nil {
+			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:flow.Id}); err != nil {
 				return new(empty.Empty), err
 			} else {
 				defer txn.Close()
@@ -432,7 +407,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 				return &voltha.Device{}, err
 			}
 			if d, ok := res.(*voltha.Device); ok {
-				handler.core.deviceOwnership.OwnedByMe(d.Id)
+				handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id:d.Id})
 				return d, nil
 			}
 		}
@@ -453,7 +428,7 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &deviceID{id:id.Id}, handler.longRunningRequestTimeout); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:id.Id}, handler.longRunningRequestTimeout); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -474,7 +449,7 @@ func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*e
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &deviceID{id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -495,7 +470,7 @@ func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*em
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &deviceID{id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -538,7 +513,7 @@ func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &deviceID{id:img.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:img.Id}); err != nil {
 			return &common.OperationResp{}, err
 		} else {
 			defer txn.Close()
@@ -629,7 +604,7 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 	failedresponse := &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &deviceID{id:img.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:img.Id}); err != nil {
 			return failedresponse, err
 		} else {
 			defer txn.Close()

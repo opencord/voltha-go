@@ -184,33 +184,12 @@ func (c *EtcdClient) Delete(key string, timeout int, lock ...bool) error {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 
-	// count keys about to be deleted
-	gresp, err := c.ectdAPI.Get(ctx, key, v3Client.WithPrefix())
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
 	// delete the keys
-	dresp, err := c.ectdAPI.Delete(ctx, key, v3Client.WithPrefix())
-	if err != nil {
-		log.Error(err)
+	if _, err := c.ectdAPI.Delete(ctx, key, v3Client.WithPrefix()); err != nil {
+		log.Errorw("failed-to-delete-key", log.Fields{"key": key, "error": err})
 		return err
 	}
-
-	if dresp == nil || gresp == nil {
-		log.Debug("nothing-to-delete")
-		return nil
-	}
-
-	log.Debugw("delete-keys", log.Fields{"all-keys-deleted": int64(len(gresp.Kvs)) == dresp.Deleted})
-	if int64(len(gresp.Kvs)) == dresp.Deleted {
-		log.Debug("All-keys-deleted")
-	} else {
-		log.Error("not-all-keys-deleted")
-		err := errors.New("not-all-keys-deleted")
-		return err
-	}
+	log.Debugw("key(s)-deleted", log.Fields{"key": key})
 	return nil
 }
 
@@ -243,7 +222,7 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 	defer func() {
 		if !reservationSuccessful {
 			if err = c.ReleaseReservation(key); err != nil {
-				log.Errorf("cannot-release-lease")
+				log.Error("cannot-release-lease")
 			}
 		}
 	}()
@@ -308,6 +287,7 @@ func (c *EtcdClient) ReleaseAllReservations() error {
 // ReleaseReservation releases reservation for a specific key.
 func (c *EtcdClient) ReleaseReservation(key string) error {
 	// Get the leaseid using the key
+	log.Debugw("Release-reservation", log.Fields{"key":key})
 	var ok bool
 	var leaseID *v3Client.LeaseID
 	c.writeLock.Lock()

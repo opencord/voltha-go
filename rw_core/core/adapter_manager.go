@@ -28,15 +28,14 @@ import (
 )
 
 const (
-	SENTINEL_ADAPTER_ID = "adapter_sentinel"
+	SENTINEL_ADAPTER_ID    = "adapter_sentinel"
 	SENTINEL_DEVICETYPE_ID = "device_type_sentinel"
-
 )
 
 type AdapterAgent struct {
-	adapter *voltha.Adapter
+	adapter     *voltha.Adapter
 	deviceTypes map[string]*voltha.DeviceType
-	lock sync.RWMutex
+	lock        sync.RWMutex
 }
 
 func newAdapterAgent(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *AdapterAgent {
@@ -77,14 +76,14 @@ func (aa *AdapterAgent) getAdapter() *voltha.Adapter {
 }
 
 func (aa *AdapterAgent) updateAdapter(adapter *voltha.Adapter) {
-	aa.lock.RLock()
-	defer aa.lock.RUnlock()
+	aa.lock.Lock()
+	defer aa.lock.Unlock()
 	aa.adapter = adapter
 }
 
-func (aa *AdapterAgent) updateDeviceType(deviceType *voltha.DeviceType)  {
-	aa.lock.RLock()
-	defer aa.lock.RUnlock()
+func (aa *AdapterAgent) updateDeviceType(deviceType *voltha.DeviceType) {
+	aa.lock.Lock()
+	defer aa.lock.Unlock()
 	aa.deviceTypes[deviceType.Id] = deviceType
 }
 
@@ -112,7 +111,7 @@ func newAdapterManager(cdProxy *model.Proxy, coreInstanceId string) *AdapterMana
 	return &adapterMgr
 }
 
-func (aMgr *AdapterManager) start(ctx context.Context)  {
+func (aMgr *AdapterManager) start(ctx context.Context) {
 	log.Info("starting-adapter-manager")
 
 	// Load the existing adapterAgents and device types - this will also ensure the correct paths have been
@@ -154,7 +153,7 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() {
 
 	// Load the device types
 	if deviceTypesIf := aMgr.clusterDataProxy.List("/device_types", 0, false, ""); deviceTypesIf != nil {
-		dTypes := &voltha.DeviceTypes{Items:[]*voltha.DeviceType{}}
+		dTypes := &voltha.DeviceTypes{Items: []*voltha.DeviceType{}}
 		for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
 			if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
 				log.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
@@ -165,10 +164,9 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() {
 	} else {
 		log.Debug("no-existing-device-type-found")
 		//	No device types data.   In order to have a proxy setup for that path let's create a fake device type
-		aMgr.addDeviceTypes(&voltha.DeviceTypes{Items:[]*voltha.DeviceType{&voltha.DeviceType{Id:SENTINEL_DEVICETYPE_ID, Adapter:SENTINEL_ADAPTER_ID}}}, true)
+		aMgr.addDeviceTypes(&voltha.DeviceTypes{Items: []*voltha.DeviceType{&voltha.DeviceType{Id: SENTINEL_DEVICETYPE_ID, Adapter: SENTINEL_ADAPTER_ID}}}, true)
 	}
 }
-
 
 //updateAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
 func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory() {
@@ -193,7 +191,6 @@ func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory() {
 	}
 }
 
-
 func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
@@ -215,7 +212,6 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) {
 	}
 }
 
-
 func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bool) {
 	if deviceTypes == nil {
 		return
@@ -231,7 +227,7 @@ func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, save
 			adapterAgent.updateDeviceType(clonedDType)
 		} else {
 			log.Debugw("adapter-not-exist", log.Fields{"deviceTypes": deviceTypes, "adapterId": clonedDType.Adapter})
-			aMgr.adapterAgents[clonedDType.Adapter] = newAdapterAgent(&voltha.Adapter{Id:clonedDType.Adapter}, deviceTypes)
+			aMgr.adapterAgents[clonedDType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: clonedDType.Adapter}, deviceTypes)
 		}
 		aMgr.deviceTypeToAdapterMap[clonedDType.Id] = clonedDType.Adapter
 	}
@@ -252,9 +248,9 @@ func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, save
 }
 
 func (aMgr *AdapterManager) listAdapters(ctx context.Context) (*voltha.Adapters, error) {
-	result := &voltha.Adapters{Items:[]*voltha.Adapter{}}
-	aMgr.lockAdaptersMap.Lock()
-	defer aMgr.lockAdaptersMap.Unlock()
+	result := &voltha.Adapters{Items: []*voltha.Adapter{}}
+	aMgr.lockAdaptersMap.RLock()
+	defer aMgr.lockAdaptersMap.RUnlock()
 	for _, adapterAgent := range aMgr.adapterAgents {
 		if a := adapterAgent.getAdapter(); a != nil {
 			if a.Id != SENTINEL_ADAPTER_ID { // don't report the sentinel
@@ -272,8 +268,8 @@ func (aMgr *AdapterManager) deleteAdapter(adapterId string) {
 }
 
 func (aMgr *AdapterManager) getAdapter(adapterId string) *voltha.Adapter {
-	aMgr.lockAdaptersMap.Lock()
-	defer aMgr.lockAdaptersMap.Unlock()
+	aMgr.lockAdaptersMap.RLock()
+	defer aMgr.lockAdaptersMap.RUnlock()
 	if adapterAgent, ok := aMgr.adapterAgents[adapterId]; ok {
 		return adapterAgent.getAdapter()
 	}
@@ -281,7 +277,7 @@ func (aMgr *AdapterManager) getAdapter(adapterId string) *voltha.Adapter {
 }
 
 //updateAdapter updates an adapter if it exist.  Otherwise, it creates it.
-func (aMgr *AdapterManager) updateAdapter(adapter *voltha.Adapter)  {
+func (aMgr *AdapterManager) updateAdapter(adapter *voltha.Adapter) {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
 	if adapterAgent, ok := aMgr.adapterAgents[adapter.Id]; ok {
@@ -292,7 +288,7 @@ func (aMgr *AdapterManager) updateAdapter(adapter *voltha.Adapter)  {
 }
 
 //updateDeviceType updates an adapter if it exist.  Otherwise, it creates it.
-func (aMgr *AdapterManager) updateDeviceType(deviceType *voltha.DeviceType)  {
+func (aMgr *AdapterManager) updateDeviceType(deviceType *voltha.DeviceType) {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
@@ -301,17 +297,17 @@ func (aMgr *AdapterManager) updateDeviceType(deviceType *voltha.DeviceType)  {
 		adapterAgent.updateDeviceType(deviceType)
 	} else {
 		aMgr.adapterAgents[deviceType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: deviceType.Adapter},
-														&voltha.DeviceTypes{Items:[]*voltha.DeviceType{deviceType}})
+			&voltha.DeviceTypes{Items: []*voltha.DeviceType{deviceType}})
 	}
 	aMgr.deviceTypeToAdapterMap[deviceType.Id] = deviceType.Adapter
 }
 
-func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes  *voltha.DeviceTypes) *voltha.CoreInstance {
+func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *voltha.CoreInstance {
 	log.Debugw("registerAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
 
 	if aMgr.getAdapter(adapter.Id) != nil {
 		//	Already registered
-		return &voltha.CoreInstance{InstanceId:aMgr.coreInstanceId}
+		return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceId}
 	}
 	// Save the adapter and the device types
 	aMgr.addAdapter(adapter, true)
@@ -319,7 +315,7 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 
 	log.Debugw("adapter-registered", log.Fields{"adapter": adapter.Id})
 
-	return &voltha.CoreInstance{InstanceId:aMgr.coreInstanceId}
+	return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceId}
 }
 
 //getAdapterName returns the name of the device adapter that service this device type
@@ -333,7 +329,7 @@ func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
 }
 
 // getDeviceType returns the device type proto definition given the name of the device type
-func (aMgr *AdapterManager) getDeviceType(deviceType string)  *voltha.DeviceType {
+func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 	if adapterId, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {

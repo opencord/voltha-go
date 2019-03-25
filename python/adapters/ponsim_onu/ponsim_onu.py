@@ -199,7 +199,7 @@ class PonSimOnuHandler(object):
         device.root = False
         device.vendor = 'ponsim'
         device.model = 'n/a'
-        device.serial_number = device.id
+        device.serial_number = device.serial_number
         device.mac_address = "AA:BB:CC:DD:E0:00"
         yield self.core_proxy.device_update(device)
 

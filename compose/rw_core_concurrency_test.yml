@@ -31,9 +31,9 @@ services:
         - -rw_core_topic=rwcore
         - -kv_store_data_prefix=service/voltha
         - -in_competing_mode=true
-        - -timeout_long_request=3000
-        - -timeout_request=300
-        - -log_level=0
+        - -timeout_long_request=5000
+        - -timeout_request=6000
+        - -log_level=4
     ports:
       - 50057:50057
     volumes:
@@ -57,9 +57,9 @@ services:
       - -rw_core_topic=rwcore
       - -kv_store_data_prefix=service/voltha
       - -in_competing_mode=true
-      - -timeout_long_request=3000
-      - -timeout_request=300
-      - -log_level=0
+      - -timeout_long_request=5000
+      - -timeout_request=6000
+      - -log_level=4
     ports:
       - 50058:50057
     volumes:

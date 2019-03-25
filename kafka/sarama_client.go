@@ -540,8 +540,8 @@ func (sc *SaramaClient) deleteFromTopicToConsumerChannelMap(id string) {
 }
 
 func (sc *SaramaClient) getConsumerChannel(topic *Topic) *consumerChannels {
-	sc.lockTopicToConsumerChannelMap.Lock()
-	defer sc.lockTopicToConsumerChannelMap.Unlock()
+	sc.lockTopicToConsumerChannelMap.RLock()
+	defer sc.lockTopicToConsumerChannelMap.RUnlock()
 
 	if consumerCh, exist := sc.topicToConsumerChannelMap[topic.Name]; exist {
 		return consumerCh
@@ -726,8 +726,8 @@ func (sc *SaramaClient) createGroupConsumer(topic *Topic, groupId string, initia
 // topic via the unique channel each subscriber received during subscription
 func (sc *SaramaClient) dispatchToConsumers(consumerCh *consumerChannels, protoMessage *ic.InterContainerMessage) {
 	// Need to go over all channels and publish messages to them - do we need to copy msg?
-	sc.lockTopicToConsumerChannelMap.Lock()
-	defer sc.lockTopicToConsumerChannelMap.Unlock()
+	sc.lockTopicToConsumerChannelMap.RLock()
+	defer sc.lockTopicToConsumerChannelMap.RUnlock()
 	for _, ch := range consumerCh.channels {
 		go func(c chan *ic.InterContainerMessage) {
 			c <- protoMessage

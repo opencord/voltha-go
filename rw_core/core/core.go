@@ -65,10 +65,6 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 	core.kvClient = kvClient
 	core.kafkaClient = kafkaClient
 
-	// Setup device ownership context
-	core.deviceOwnership = NewDeviceOwnership(id, kvClient,
-		"service/voltha/owns_device", 60)
-
 	// Setup the KV store
 	// Do not call NewBackend constructor; it creates its own KV client
 	// Commented the backend for now until the issue between the model and the KV store
@@ -105,6 +101,10 @@ func (core *Core) Start(ctx context.Context) {
 	go core.startLogicalDeviceManager(ctx)
 	go core.startGRPCService(ctx)
 	go core.startAdapterManager(ctx)
+
+	// Setup device ownership context
+	core.deviceOwnership = NewDeviceOwnership(core.instanceId, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
+		"service/voltha/owns_device", 10)
 
 	log.Info("adaptercore-started")
 }

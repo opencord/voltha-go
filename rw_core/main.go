@@ -130,7 +130,7 @@ func (rw *rwCore) start(ctx context.Context) {
 			rw.kvClient,
 			rw.config.KVStoreTimeout,
 			rw.config.KVTxnKeyDelTime,
-			10); err != nil {
+			1); err != nil {
 			log.Fatal("creating-transaction-context-failed")
 		}
 	}
@@ -229,7 +229,10 @@ func main() {
 	}
 
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-	log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/flow_decomposition", log.DebugLevel)
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/graph", log.DebugLevel)
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
 
 	defer log.CleanUp()
 

@@ -91,16 +91,16 @@ func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDevi
 // getLogicalDeviceAgent returns the logical device agent.  If the device is not in memory then the device will
 // be loaded from dB and a logical device agent created to managed it.
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string) *LogicalDeviceAgent {
-	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+	ldMgr.lockLogicalDeviceAgentsMap.RLock()
 	if agent, ok := ldMgr.logicalDeviceAgents[logicalDeviceId]; ok {
-		ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+		ldMgr.lockLogicalDeviceAgentsMap.RUnlock()
 		return agent
 	} else {
 		//	Try to load into memory - loading will also create the logical device agent
-		ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+		ldMgr.lockLogicalDeviceAgentsMap.RUnlock()
 		if err := ldMgr.load(logicalDeviceId); err == nil {
-			ldMgr.lockLogicalDeviceAgentsMap.Lock()
-			defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+			ldMgr.lockLogicalDeviceAgentsMap.RLock()
+			defer ldMgr.lockLogicalDeviceAgentsMap.RUnlock()
 			if agent, ok = ldMgr.logicalDeviceAgents[logicalDeviceId]; ok {
 				return agent
 			}
@@ -147,20 +147,6 @@ func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices,
 	return result, nil
 }
 
-// List only logical devices that are in memory
-//func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
-//	log.Debug("listLogicalDevices")
-//	result := &voltha.LogicalDevices{}
-//	ldMgr.lockLogicalDeviceAgentsMap.Lock()
-//	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
-//	for _, agent := range ldMgr.logicalDeviceAgents {
-//		if lDevice, err := agent.GetLogicalDevice(); err == nil {
-//			result.Items = append(result.Items, lDevice)
-//		}
-//	}
-//	return result, nil
-//}
-
 func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, device *voltha.Device) (*string, error) {
 	log.Debugw("creating-logical-device", log.Fields{"deviceId": device.Id})
 	// Sanity check
@@ -184,8 +170,8 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 	go agent.start(ctx, false)
 
-	// Set device ownership
-	ldMgr.core.deviceOwnership.OwnedByMe(id)
+	//// Set device ownership
+	//ldMgr.core.deviceOwnership.OwnedByMe(id)
 
 	log.Debug("creating-logical-device-ends")
 	return &id, nil
@@ -193,8 +179,7 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 
 // load loads a logical device manager in memory
 func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
-	//log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
-	log.Errorw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
+	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
 	// To prevent a race condition, let's hold the logical device agent map lock.  This will prevent a loading and
 	// a create logical device callback from occurring at the same time.
 	ldMgr.lockLogicalDeviceAgentsMap.Lock()

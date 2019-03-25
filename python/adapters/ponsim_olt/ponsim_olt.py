@@ -298,6 +298,7 @@ class PonSimOltHandler(object):
                     parent_port_no=1,
                     child_device_type='ponsim_onu',
                     channel_id=vlan_id,
+                    serial_number=onu.serial_number,
                 )
 
             self.log.info('starting-frame-grpc-stream')

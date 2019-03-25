@@ -66,6 +66,7 @@ type DeviceGraph struct {
 	logicalPorts  []*voltha.LogicalPort
 	RootPorts     map[uint32]uint32
 	Routes        map[OFPortLink][]RouteHop
+	graphBuildLock sync.RWMutex
 	boundaryPorts sync.Map
 }
 
@@ -73,6 +74,7 @@ func NewDeviceGraph(getDevice GetDeviceFunc) *DeviceGraph {
 	var dg DeviceGraph
 	dg.GGraph = goraph.NewGraph()
 	dg.getDevice = getDevice
+	dg.graphBuildLock = sync.RWMutex{}
 	return &dg
 }
 
@@ -80,6 +82,8 @@ func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
 	if dg == nil {
 		return
 	}
+	dg.graphBuildLock.Lock()
+	defer dg.graphBuildLock.Unlock()
 	dg.logicalPorts = lps
 	// Set the root ports
 	dg.RootPorts = make(map[uint32]uint32)
@@ -215,6 +219,8 @@ func (dg *DeviceGraph) buildRoutes() map[OFPortLink][]RouteHop {
 }
 
 func (dg *DeviceGraph) GetDeviceNodeIds() map[string]string {
+	dg.graphBuildLock.RLock()
+	defer dg.graphBuildLock.RUnlock()
 	nodeIds := make(map[string]string)
 	nodesMap := dg.GGraph.GetNodes()
 	for id, node := range nodesMap {

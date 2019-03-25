@@ -126,8 +126,8 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 
 // GetDevice retrieves the latest device information from the data model
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
-	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
+	agent.lockDevice.RLock()
+	defer agent.lockDevice.RUnlock()
 	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 0, false, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
@@ -538,8 +538,8 @@ func (agent *DeviceAgent) updateImageDownload(img *voltha.ImageDownload) error{
 }
 
 func (agent *DeviceAgent) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
+	agent.lockDevice.RLock()
+	defer agent.lockDevice.RUnlock()
 	log.Debugw("getImageDownload", log.Fields{"id": agent.deviceId})
 	// Get the most up to date the device info
 	if device, err := agent.getDeviceWithoutLock(); err != nil {
@@ -555,8 +555,8 @@ func (agent *DeviceAgent) getImageDownload(ctx context.Context, img *voltha.Imag
 }
 
 func (agent *DeviceAgent) listImageDownloads(ctx context.Context, deviceId string) (*voltha.ImageDownloads, error) {
-	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
+	agent.lockDevice.RLock()
+	defer agent.lockDevice.RUnlock()
 	log.Debugw("listImageDownloads", log.Fields{"id": agent.deviceId})
 	// Get the most up to date the device info
 	if device, err := agent.getDeviceWithoutLock(); err != nil {

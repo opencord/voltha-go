@@ -256,7 +256,7 @@ func (kp *InterContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	// specific key, hence ensuring a single partition is used to publish the request.  This ensures that the
 	// subscriber on that topic will receive the request in the order it was sent.  The key used is the deviceId.
 	//key := GetDeviceIdFromTopic(*toTopic)
-	log.Debugw("sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key})
+	log.Debugw("sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
 	kp.kafkaClient.Send(protoRequest, toTopic, key)
 
 	if waitForResponse {
@@ -370,8 +370,8 @@ func (kp *InterContainerProxy) setupTopicResponseChannelMap(topic string, arg <-
 }
 
 func (kp *InterContainerProxy) isTopicSubscribedForResponse(topic string) bool {
-	kp.lockTopicResponseChannelMap.Lock()
-	defer kp.lockTopicResponseChannelMap.Unlock()
+	kp.lockTopicResponseChannelMap.RLock()
+	defer kp.lockTopicResponseChannelMap.RUnlock()
 	_, exist := kp.topicToResponseChannelMap[topic]
 	return exist
 }
@@ -710,10 +710,10 @@ func (kp *InterContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 			kp.kafkaClient.Send(icm, replyTopic, key)
 		}
 	} else if msg.Header.Type == ic.MessageType_RESPONSE {
-		log.Debugw("response-received", log.Fields{"msg": msg})
+		log.Debugw("response-received", log.Fields{"msg-header": msg.Header})
 		go kp.dispatchResponse(msg)
 	} else {
-		log.Warnw("unsupported-message-received", log.Fields{"msg": msg})
+		log.Warnw("unsupported-message-received", log.Fields{"msg-header": msg.Header})
 	}
 }
 
@@ -726,8 +726,8 @@ func (kp *InterContainerProxy) waitForMessages(ch <-chan *ic.InterContainerMessa
 }
 
 func (kp *InterContainerProxy) dispatchResponse(msg *ic.InterContainerMessage) {
-	kp.lockTransactionIdToChannelMap.Lock()
-	defer kp.lockTransactionIdToChannelMap.Unlock()
+	kp.lockTransactionIdToChannelMap.RLock()
+	defer kp.lockTransactionIdToChannelMap.RUnlock()
 	if _, exist := kp.transactionIdToChannelMap[msg.Header.Id]; !exist {
 		log.Debugw("no-waiting-channel", log.Fields{"transaction": msg.Header.Id})
 		return

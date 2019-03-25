@@ -100,16 +100,16 @@ func (dMgr *DeviceManager) deleteDeviceAgentToMap(agent *DeviceAgent) {
 
 // getDeviceAgent returns the agent managing the device.  If the device is not in memory, it will loads it, if it exists
 func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
-	dMgr.lockDeviceAgentsMap.Lock()
+	dMgr.lockDeviceAgentsMap.RLock()
 	if agent, ok := dMgr.deviceAgents[deviceId]; ok {
-		dMgr.lockDeviceAgentsMap.Unlock()
+		dMgr.lockDeviceAgentsMap.RUnlock()
 		return agent
 	} else {
 		//	Try to load into memory - loading will also create the device agent
-		dMgr.lockDeviceAgentsMap.Unlock()
+		dMgr.lockDeviceAgentsMap.RUnlock()
 		if err := dMgr.load(deviceId); err == nil {
-			dMgr.lockDeviceAgentsMap.Lock()
-			defer dMgr.lockDeviceAgentsMap.Unlock()
+			dMgr.lockDeviceAgentsMap.RLock()
+			defer dMgr.lockDeviceAgentsMap.RUnlock()
 			if agent, ok = dMgr.deviceAgents[deviceId]; ok {
 				return agent
 			}
@@ -120,8 +120,8 @@ func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 
 // listDeviceIdsFromMap returns the list of device IDs that are in memory
 func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
-	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
+	dMgr.lockDeviceAgentsMap.RLock()
+	defer dMgr.lockDeviceAgentsMap.RUnlock()
 	result := &voltha.IDs{Items: make([]*voltha.ID, 0)}
 	for key, _ := range dMgr.deviceAgents {
 		result.Items = append(result.Items, &voltha.ID{Id: key})
@@ -302,8 +302,8 @@ func (dMgr *DeviceManager) GetChildDeviceWithProxyAddress(proxyAddress *voltha.D
 }
 
 func (dMgr *DeviceManager) IsDeviceInCache(id string) bool {
-	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
+	dMgr.lockDeviceAgentsMap.RLock()
+	defer dMgr.lockDeviceAgentsMap.RUnlock()
 	_, exist := dMgr.deviceAgents[id]
 	return exist
 }
@@ -627,8 +627,8 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	dMgr.addDeviceAgentToMap(agent)
 	agent.start(nil, false)
 
-	// Set device ownership
-	dMgr.core.deviceOwnership.OwnedByMe(agent.deviceId)
+	//// Set device ownership
+	//dMgr.core.deviceOwnership.OwnedByMe(agent.deviceId)
 
 	// Activate the child device
 	if agent := dMgr.getDeviceAgent(agent.deviceId); agent != nil {
