@@ -86,9 +86,9 @@ func (ap *AdapterProxy) SendInterAdapterMessage(ctx context.Context,
 	}
 
 	// Set up the required rpc arguments
-	topic := kafka.Topic{Name: fromAdapter}
-	replyToTopic := kafka.Topic{Name: toAdapter}
-	rpc := "Process_inter_adapter_message"
+	topic := kafka.Topic{Name: toAdapter}
+	replyToTopic := kafka.Topic{Name: fromAdapter}
+	rpc := "process_inter_adapter_message"
 
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &topic, &replyToTopic, true, proxyDeviceId, args...)
 	log.Debugw("inter-adapter-msg-response", log.Fields{"replyTopic": replyToTopic, "success": success})

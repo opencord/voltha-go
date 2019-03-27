@@ -98,6 +98,8 @@ message InterAdapterMessageType {
         OMCI_RESPONSE = 3;
         METRICS_REQUEST = 4;
         METRICS_RESPONSE = 5;
+        ONU_IND_REQUEST = 6;
+        ONU_IND_RESPONSE = 7;
     }
 }
 
@@ -111,9 +113,16 @@ message InterAdapterHeader {
     int64 timestamp = 7;
 }
 
+message InterAdapterOmciMessage {
+    bytes message = 1; // OMCI_REQUEST or OMCI_RESPONSE
+}
+
 message InterAdapterResponseBody {
     bool status = 1;
+    oneof payload {
     google.protobuf.Any body = 2;
+        InterAdapterOmciMessage omci = 3; // OMCI_REQUEST or OMCI_RESPONSE
+    }
 }
 
 message InterAdapterMessage {
