@@ -40,7 +40,7 @@ type PersistedRevision struct {
 	mutex     sync.RWMutex        `json:"-"`
 	isStored  bool
 	isWatched bool
-	watchName string
+	//watchName string
 }
 
 // NewPersistedRevision creates a new instance of a PersistentRevision structure
@@ -66,8 +66,8 @@ func (pr *PersistedRevision) store(skipOnExist bool) {
 		return
 	}
 
-	if pair, _ := pr.kvStore.Get(pr.GetHash()); pair != nil && skipOnExist {
-		log.Debugw("revision-config-already-exists", log.Fields{"hash": pr.GetHash()})
+	if pair, _ := pr.kvStore.Get(pr.GetName()); pair != nil && skipOnExist {
+		log.Debugw("revision-config-already-exists", log.Fields{"hash": pr.GetHash(), "name": pr.GetName()})
 		return
 	}
 
@@ -82,12 +82,11 @@ func (pr *PersistedRevision) store(skipOnExist bool) {
 			blob = b.Bytes()
 		}
 
-		if err := pr.kvStore.Put(pr.GetHash(), blob); err != nil {
+		if err := pr.kvStore.Put(pr.GetName(), blob); err != nil {
 			log.Warnw("problem-storing-revision-config",
-				log.Fields{"error": err, "hash": pr.GetHash(), "data": pr.GetConfig().Data})
+				log.Fields{"error": err, "hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetConfig().Data})
 		} else {
-			log.Debugw("storing-revision-config",
-				log.Fields{"hash": pr.GetHash(), "data": pr.GetConfig().Data})
+			log.Debugw("storing-revision-config", log.Fields{"hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetConfig().Data})
 			pr.isStored = true
 		}
 	}
@@ -99,7 +98,7 @@ func (pr *PersistedRevision) SetupWatch(key string) {
 
 		log.Debugw("setting-watch", log.Fields{"key": key, "revision-hash": pr.GetHash()})
 
-		pr.watchName = key
+		pr.SetName(key)
 		pr.events = pr.kvStore.CreateWatch(key)
 
 		pr.isWatched = true
@@ -108,57 +107,6 @@ func (pr *PersistedRevision) SetupWatch(key string) {
 		go pr.startWatching()
 	}
 }
-
-//func (pr *PersistedRevision) mergeWithMemory(pacBlock bool) Revision {
-//	if pair, err := pr.kvStore.Get(pr.GetHash()); err != nil {
-//		log.Debugw("merge-with-memory--error-occurred", log.Fields{"hash": pr.GetHash(), "error": err})
-//	} else if pair == nil {
-//		log.Debugw("merge-with-memory--no-data-to-merge", log.Fields{"hash": pr.GetHash()})
-//	} else {
-//		data := reflect.New(reflect.TypeOf(pr.GetData()).Elem()).Interface()
-//
-//		if err := proto.Unmarshal(pair.Value.([]byte), data.(proto.Message)); err != nil {
-//			log.Errorw("merge-with-memory--unmarshal-failed", log.Fields{"key": pr.GetHash(), "error": err})
-//		} else {
-//			if pr.GetNode().GetProxy() != nil && pacBlock {
-//				var pac *proxyAccessControl
-//				var pathLock string
-//
-//				pathLock, _ = pr.GetNode().GetProxy().parseForControlledPath(pr.GetNode().GetProxy().getFullPath())
-//				log.Debugw("update-in-memory--reserve-and-lock", log.Fields{"key": pr.GetHash(), "path": pathLock})
-//
-//				pac = PAC().ReservePath(pr.GetNode().GetProxy().getFullPath(), pr.GetNode().GetProxy(), pathLock)
-//				pac.SetProxy(pr.GetNode().GetProxy())
-//				pac.lock()
-//
-//				defer log.Debugw("update-in-memory--release-and-unlock", log.Fields{"key": pr.GetHash(), "path": pathLock})
-//				defer pac.unlock()
-//				defer PAC().ReleasePath(pathLock)
-//			}
-//			//Prepare the transaction
-//			branch := pr.GetBranch()
-//			//latest := branch.GetLatest()
-//			txidBin, _ := uuid.New().MarshalBinary()
-//			txid := hex.EncodeToString(txidBin)[:12]
-//
-//			makeBranch := func(node *node) *Branch {
-//				return node.MakeBranch(txid)
-//			}
-//
-//			//Apply the update in a transaction branch
-//			updatedRev := pr.GetNode().Update("", data, false, txid, makeBranch)
-//			updatedRev.SetHash(pr.GetHash())
-//
-//			//Merge the transaction branch in memory
-//			if mergedRev, _ := pr.GetNode().MergeBranch(txid, false); mergedRev != nil {
-//				branch.SetLatest(mergedRev)
-//				return mergedRev
-//			}
-//		}
-//	}
-//
-//	return nil
-//}
 
 func (pr *PersistedRevision) updateInMemory(data interface{}) {
 	pr.mutex.Lock()
@@ -223,7 +171,7 @@ func (pr *PersistedRevision) updateInMemory(data interface{}) {
 
 	// Apply the update in a transaction branch
 	updatedRev := latest.GetNode().Update("", data, false, txid, makeBranch)
-	updatedRev.SetHash(latest.GetHash())
+	updatedRev.SetName(latest.GetName())
 
 	// Merge the transaction branch in memory
 	if mergedRev, _ := latest.GetNode().MergeBranch(txid, false); mergedRev != nil {
@@ -239,40 +187,40 @@ StopWatchLoop:
 		select {
 		case event, ok := <-pr.events:
 			if !ok {
-				log.Errorw("event-channel-failure: stopping watch loop", log.Fields{"key": pr.GetHash(), "watch": pr.watchName})
+				log.Errorw("event-channel-failure: stopping watch loop", log.Fields{"key": pr.GetHash(), "watch": pr.GetName()})
 				break StopWatchLoop
 			}
 
-			log.Debugw("received-event", log.Fields{"type": event.EventType, "watch": pr.watchName})
+			log.Debugw("received-event", log.Fields{"type": event.EventType, "watch": pr.GetName()})
 
 			switch event.EventType {
 			case kvstore.DELETE:
-				log.Debugw("delete-from-memory", log.Fields{"key": pr.GetHash(), "watch": pr.watchName})
+				log.Debugw("delete-from-memory", log.Fields{"key": pr.GetHash(), "watch": pr.GetName()})
 				pr.Revision.Drop("", true)
 				break StopWatchLoop
 
 			case kvstore.PUT:
-				log.Debugw("update-in-memory", log.Fields{"key": pr.GetHash(), "watch": pr.watchName})
+				log.Debugw("update-in-memory", log.Fields{"key": pr.GetHash(), "watch": pr.GetName()})
 
-				if dataPair, err := pr.kvStore.Get(pr.watchName); err != nil || dataPair == nil {
-					log.Errorw("update-in-memory--key-retrieval-failed", log.Fields{"key": pr.GetHash(), "watch": pr.watchName, "error": err})
+				if dataPair, err := pr.kvStore.Get(pr.GetName()); err != nil || dataPair == nil {
+					log.Errorw("update-in-memory--key-retrieval-failed", log.Fields{"key": pr.GetHash(), "watch": pr.GetName(), "error": err})
 				} else {
 					data := reflect.New(reflect.TypeOf(pr.GetData()).Elem())
 
 					if err := proto.Unmarshal(dataPair.Value.([]byte), data.Interface().(proto.Message)); err != nil {
-						log.Errorw("update-in-memory--unmarshal-failed", log.Fields{"key": pr.GetHash(), "watch": pr.watchName, "error": err})
+						log.Errorw("update-in-memory--unmarshal-failed", log.Fields{"key": pr.GetHash(), "watch": pr.GetName(), "error": err})
 					} else {
 						pr.updateInMemory(data.Interface())
 					}
 				}
 
 			default:
-				log.Debugw("unhandled-event", log.Fields{"key": pr.GetHash(), "watch": pr.watchName, "type": event.EventType})
+				log.Debugw("unhandled-event", log.Fields{"key": pr.GetHash(), "watch": pr.GetName(), "type": event.EventType})
 			}
 		}
 	}
 
-	log.Debugw("exiting-watch", log.Fields{"key": pr.GetHash(), "watch": pr.watchName})
+	log.Debugw("exiting-watch", log.Fields{"key": pr.GetHash(), "watch": pr.GetName()})
 }
 
 func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Revision {
@@ -356,12 +304,12 @@ func (pr *PersistedRevision) LoadFromPersistence(path string, txid string) []Rev
 					}
 
 					childRev := rev.GetBranch().Node.MakeNode(data.Interface(), txid).Latest(txid)
-					childRev.SetHash(name + "/" + keyStr)
+					childRev.SetName(name + "/" + keyStr)
 
 					// Do not process a child that is already in memory
 					if _, childExists := existChildMap[childRev.GetHash()]; !childExists {
 						// Create watch for <component>/<key>
-						childRev.SetupWatch(childRev.GetHash())
+						childRev.SetupWatch(childRev.GetName())
 
 						children = append(children, childRev)
 						rev = rev.UpdateChildren(name, children, rev.GetBranch())
@@ -426,6 +374,12 @@ func (pr *PersistedRevision) UpdateAllChildren(children map[string][]Revision, b
 // Drop takes care of eliminating a revision hash that is no longer needed
 // and its associated config when required
 func (pr *PersistedRevision) Drop(txid string, includeConfig bool) {
+	pr.Revision.Drop(txid, includeConfig)
+}
+
+// Drop takes care of eliminating a revision hash that is no longer needed
+// and its associated config when required
+func (pr *PersistedRevision) StorageDrop(txid string, includeConfig bool) {
 	log.Debugw("dropping-revision",
 		log.Fields{"txid": txid, "hash": pr.GetHash(), "config-hash": pr.GetConfig().Hash, "stack": string(debug.Stack())})
 
@@ -433,21 +387,15 @@ func (pr *PersistedRevision) Drop(txid string, includeConfig bool) {
 	defer pr.mutex.Unlock()
 	if pr.kvStore != nil && txid == "" {
 		if pr.isStored {
-			if includeConfig {
-				if err := pr.kvStore.Delete(pr.GetConfig().Hash); err != nil {
-					log.Errorw("failed-to-remove-revision-config", log.Fields{"hash": pr.GetConfig().Hash, "error": err.Error()})
-				}
+			if pr.isWatched {
+				pr.kvStore.DeleteWatch(pr.GetName(), pr.events)
+				pr.isWatched = false
 			}
 
-			if err := pr.kvStore.Delete(pr.GetHash()); err != nil {
+			if err := pr.kvStore.Delete(pr.GetName()); err != nil {
 				log.Errorw("failed-to-remove-revision", log.Fields{"hash": pr.GetHash(), "error": err.Error()})
 			} else {
 				pr.isStored = false
-			}
-
-			if pr.isWatched {
-				pr.kvStore.DeleteWatch(pr.GetHash(), pr.events)
-				pr.isWatched = false
 			}
 		}
 

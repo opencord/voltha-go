@@ -20,6 +20,7 @@ type Revision interface {
 	SetConfig(revision *DataRevision)
 	GetConfig() *DataRevision
 	Drop(txid string, includeConfig bool)
+	StorageDrop(txid string, includeConfig bool)
 	SetChildren(name string, children []Revision)
 	GetChildren(name string) []Revision
 	SetAllChildren(children map[string][]Revision)
@@ -28,6 +29,8 @@ type Revision interface {
 	GetHash() string
 	ClearHash()
 	SetupWatch(key string)
+	SetName(name string)
+	GetName() string
 	SetBranch(branch *Branch)
 	GetBranch() *Branch
 	Get(int) interface{}
