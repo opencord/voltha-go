@@ -501,7 +501,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			}
 
 			// Prefix the hash value with the data type (e.g. devices, logical_devices, adapters)
-			newChildRev.SetHash(name + "/" + _keyValueType)
+			newChildRev.SetName(name + "/" + _keyValueType)
 			children[idx] = newChildRev
 
 			updatedRev := rev.UpdateChildren(name, children, branch)
@@ -626,10 +626,10 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 				childRev := n.MakeNode(data, "").Latest()
 
 				// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
-				childRev.SetHash(name + "/" + key.String())
+				childRev.SetName(name + "/" + key.String())
 
 				// Create watch for <component>/<key>
-				childRev.SetupWatch(childRev.GetHash())
+				childRev.SetupWatch(childRev.GetName())
 
 				children = append(children, childRev)
 				rev = rev.UpdateChildren(name, children, branch)
@@ -661,7 +661,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 			newChildRev := childNode.Add(path, data, txid, makeBranch)
 
 			// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
-			childRev.SetHash(name + "/" + keyValue.(string))
+			childRev.SetName(name + "/" + keyValue.(string))
 
 			children[idx] = newChildRev
 
@@ -751,7 +751,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
 				}
 
-				childRev.Drop(txid, true)
+				childRev.StorageDrop(txid, true)
 				children = append(children[:idx], children[idx+1:]...)
 				rev.SetChildren(name, children)
 
@@ -818,7 +818,7 @@ func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 
 	if !dryRun {
 		if rev != nil {
-			rev.SetHash(dstRev.GetHash())
+			rev.SetName(dstRev.GetName())
 			n.makeLatest(dstBranch, rev, changes)
 		}
 		n.DeleteBranch(txid)

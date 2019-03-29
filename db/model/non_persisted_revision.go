@@ -49,6 +49,7 @@ type NonPersistedRevision struct {
 	Hash     string
 	Branch   *Branch
 	WeakRef  string
+	Name     string
 }
 
 func NewNonPersistedRevision(root *root, branch *Branch, data interface{}, children map[string][]Revision) Revision {
@@ -57,6 +58,7 @@ func NewNonPersistedRevision(root *root, branch *Branch, data interface{}, child
 	r.Branch = branch
 	r.Config = NewDataRevision(root, data)
 	r.Children = children
+	r.Hash = r.hashContent()
 	return r
 }
 
@@ -119,6 +121,17 @@ func (npr *NonPersistedRevision) ClearHash() {
 	npr.Hash = ""
 }
 
+func (npr *NonPersistedRevision) GetName() string {
+	//npr.mutex.Lock()
+	//defer npr.mutex.Unlock()
+	return npr.Name
+}
+
+func (npr *NonPersistedRevision) SetName(name string) {
+	//npr.mutex.Lock()
+	//defer npr.mutex.Unlock()
+	npr.Name = name
+}
 func (npr *NonPersistedRevision) SetBranch(branch *Branch) {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
@@ -342,5 +355,9 @@ func (npr *NonPersistedRevision) LoadFromPersistence(path string, txid string) [
 }
 
 func (npr *NonPersistedRevision) SetupWatch(key string) {
+	// stub ... required by interface
+}
+
+func (pr *NonPersistedRevision) StorageDrop(txid string, includeConfig bool) {
 	// stub ... required by interface
 }
