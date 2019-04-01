@@ -1,42 +1,27 @@
 # -------------
 # Build stage
 
-FROM golang:1.10.7-alpine AS build-env
-
-# Install required packages
-RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
-
-# Install protobuf requirements
-RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
-RUN go get google.golang.org/genproto/googleapis/api/annotations
-
-# Prepare directory structure
-RUN ["mkdir", "-p", "/src"]
-RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
-RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
+FROM base AS build-env
 
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
 # Copy files
-ADD adapters/simulated_olt ./adapters/simulated_olt
-ADD adapters/common ./adapters/common
-ADD adapters/*.go ./adapters/
-ADD common ./common
-ADD db ./db
-ADD kafka ./kafka
-ADD vendor ./vendor
+COPY adapters/simulated_olt ./adapters/simulated_olt
+COPY adapters/common ./adapters/common
+COPY adapters/*.go ./adapters/
 
-# Build simulated_olt
-RUN cd adapters/simulated_olt && go build -o /src/simulated_olt
+# Build
+RUN cd adapters/simulated_olt && go build -o /build/simulated_olt
+
 
 # -------------
 # Image creation stage
 
-FROM alpine:3.8
-
+FROM alpine:3.9 
 # Set the working directory
 WORKDIR /app
 
 # Copy required files
-COPY --from=build-env /src/simulated_olt /app/
+COPY --from=build-env /build/simulated_olt /app/
 
+ENTRYPOINT ["/app/simulated_olt"]
