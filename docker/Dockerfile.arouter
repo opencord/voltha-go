@@ -3,43 +3,34 @@
 
 FROM base AS build-env
 
-# Copy files
-ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
-ADD common $GOPATH/src/github.com/opencord/voltha-go/common
-ADD db $GOPATH/src/github.com/opencord/voltha-go/db
-ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
-ADD afrouter $GOPATH/src/github.com/opencord/voltha-go/afrouter
-ADD vendor $GOPATH/src/github.com/opencord/voltha-go/vendor
-
-# Copy required proto files
-# ... VOLTHA proos
-# Repeat here even if it's done in the base
-ADD afrouter/arouter.json /src
-COPY vendor/github.com/opencord/voltha-protos/go/voltha.pb /src
-
-#
-# Copy generated executables here
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
-# Build rw_core
-RUN cd afrouter && go build -o /src/afrouter
+# Copy files
+COPY rw_core ./rw_core
+COPY afrouter ./afrouter
+
+# Gather dependancies
+RUN dep ensure
+
+# Copy config example and runtime protobuf needed for routing
+RUN cp afrouter/arouter.json /build
+RUN cp vendor/github.com/opencord/voltha-protos/go/voltha.pb /build
+
+# Build
+RUN cd afrouter && go build -o /build/afrouter
+
 
 # -------------
 # Image creation stage
 
-FROM alpine:3.6
+FROM alpine:3.8
 
 # Set the working directory
 WORKDIR /app
 
 # Copy required files
-COPY --from=build-env /src/afrouter /app/
-COPY --from=build-env /src/arouter.json /app/
-COPY --from=build-env /src/voltha.pb /app/
-WORKDIR config
-WORKDIR /app
+COPY --from=build-env /build/afrouter /app/
+COPY --from=build-env /build/arouter.json /app/
+COPY --from=build-env /build/voltha.pb /app
 
-#CMD cd /app && ./arouter -config config/arouter.voltha2.json
-
-# Set the config volume
-
+ENTRYPOINT ["/app/afrouter"]

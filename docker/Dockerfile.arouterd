@@ -3,37 +3,33 @@
 
 FROM base AS build-env
 
-
-# Copy files
-ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
-ADD common $GOPATH/src/github.com/opencord/voltha-go/common
-ADD db $GOPATH/src/github.com/opencord/voltha-go/db
-ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
-ADD afrouter $GOPATH/src/github.com/opencord/voltha-go/afrouter
-ADD arouterd $GOPATH/src/github.com/opencord/voltha-go/arouterd
-
-
-# Repeate here even if done in base file
-ADD afrouter/arouter.json /src
-
-#
-# Copy generated executables here
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
-# Compile protobuf files
-# Repeate here even if done in base file
-RUN go get google.golang.org/genproto/googleapis/api/annotations
+# Copy files
+COPY rw_core ./rw_core
+COPY afrouter ./afrouter
+COPY arouterd ./arouterd
 
-# Build rw_core
-RUN cd arouterd && go build -o /src/arouterd
+# Gather dependancies
+RUN dep ensure
+
+# Copy config example
+RUN cp afrouter/arouter.json /build
+
+# Build
+RUN cd arouterd && go build -o /build/arouterd
+
 
 # -------------
 # Image creation stage
 
-FROM alpine:3.6
+FROM alpine:3.8
 
 # Set the working directory
 WORKDIR /app
 
 # Copy required files
-COPY --from=build-env /src/arouterd /app/
+COPY --from=build-env /build/arouterd /app/
+COPY --from=build-env /build/arouter.json /app/
+
+ENTRYPOINT ["/app/arouterd"]

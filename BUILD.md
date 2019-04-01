@@ -15,120 +15,130 @@ For advanced developers this may provide a more comfortable developer environmen
 * brew (or macports if you prefer)
 * protoc
 
-Get the Voltha-go repository:
-```
+
+Get the Voltha-go repository.  Its assumed in these notes that voltha-go is checked out into ~/repos
+Other notes refer to ~/source being used.  Update paths as needed.
+```sh
+mkdir ~/repos
+cd ~/repos
 git clone https://gerrit.opencord.org/voltha-go
 cd voltha-go
 ```
+
+
 
 ### Setting up the Go environment
 
 After installing Go on the MAC, the GOPATH environment variable should be set to ~/go.
 Create a symbolic link in the $GOPATH/src tree to the voltha-go repository:
 
-```
-mkdir $GOPATH/src/github.com/opencord
+```sh
+mkdir -p $GOPATH/src/github.com/opencord
 ln -s ~/repos/voltha-go $GOPATH/src/github.com/opencord/voltha-go
 ```
 
-### Installing Voltha dependencies
+
+
+### Installing VOLTHA dependencies
 
 Install dep for fetching go protos
-
-```
+```sh
 mkdir -p $GOPATH/bin
 curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 ```
- 
-Pull dependencies for the project
 
-```
+Pull and build dependencies for the project.  This may take a while.
+```sh
 cd $GOPATH/src/github.com/opencord/voltha-go/
 dep ensure
-
-go get -u google.golang.org/grpc   # gRPC
-go get -u github.com/golang-collections/go-datastructures/queue
-go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-go get -u github.com/gogo/protobuf/proto   # Clone function
-go get -u go.uber.org/zap   # logger
-go get -u gopkg.in/Shopify/sarama.v1   # kafka client
-go get -u github.com/bsm/sarama-cluster
-go get -u github.com/google/uuid
-go get -u github.com/cevaris/ordered_map
-go get -u github.com/gyuho/goraph
-go get -u go.etcd.io/etcd   # etcd client 
-git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
 ```
 
-### Building the protobufs
-```
-cd voltha-go
-protos/scripts/build_protos.sh protos
+
+
+### Building and Running VOLTHA Core locally
+
+
+VOLTHA can now be built and run directly at the shell prompt:
+```sh
+go build rw_core/main.go
+go run rw_core/main.go
 ```
 
-### Building and Running Voltha Core locally
-A fatal error occurs if Voltha is built and executed at this stage:
+Or build a docker image:
+```sh
+make rw_core
 ```
-> go run rw_core/main.go
+
+
+
+A fatal error can possibly occur if VOLTHA is built and executed at this stage:
+
+```sh
+go run rw_core/main.go
+
 panic: /debug/requests is already registered.
 You may have two independent copies of golang.org/x/net/trace in your binary, trying to maintain separate state.
 This may involve a vendored copy of golang.org/x/net/trace.
 ```
 Fix this by removing directory ~/go/src/go.etcd.io/etcd/vendor/golang.org/x/net/trace.
 
-Voltha can now be run directly at the shell prompt:
-```
-go run rw_core/main.go
-```
-or from a docker image built via:
-```
-make rw_core
-```
 
-### Building and Running Voltha Core in a container
+
+### Building and Running VOLTHA Core in a container
+
 We are using ```dep``` (https://github.com/golang/dep) for package management.  This means all the 
 necessary dependencies are located under the vendor directory.   Whenever, a new package is added to the 
 project, please run "dep ensure" to update the appropriate deb files as well as the vendor library.
 
 To build the voltha core:
-```
+```sh
 make rw_core
 ```
 
 To run the voltha core (example below uses docker compose to run the core locally in a container - replace `````<Host IP>````` 
 with your host IP):
-```
+```sh
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/rw_core.yml up -d
 ```
 
+
+
 ### Building and running Ponsim OLT and ONU Adapters
+
 Please refer to the README.md file under the ```python``` directory
 
 
+
 ### Building Simulated OLT and ONU Adapters
+
 Simulated OLT, ONU and rw_core can be build together:
-```
+```sh
 make build
 ```
 or they via be individually built:
-```
+```sh
 make rw_core
 make simulated_olt
 make simulated_onu
 ```
 
+
+
 ### Running rw_core, Simulated OLT and ONU Adapters
+
 In the example below we are using the docker-compose command to run these containers locally.
-```
+```sh
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/docker-compose-zk-kafka-test.yml up -d
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/docker-compose-etcd.yml up -d
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/rw_core.yml up -d
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/compose/adapters-simulated.yml up -d
 ```
 
+
+
 You should see the following containers up and running
 
-```$xslt
+```sh
 CONTAINER ID        IMAGE                           COMMAND                  CREATED              STATUS              PORTS                                                                      NAMES
 338fd67c2029        voltha-adapter-simulated-onu    "/app/simulated_onu …"   37 seconds ago       Up 36 seconds                                                                                  compose_adapter_simulated_onu_1_a39b1a9d27d5
 15b159bab626        voltha-adapter-simulated-olt    "/app/simulated_olt …"   37 seconds ago       Up 36 seconds                                                                                  compose_adapter_simulated_olt_1_b5407c23b483
@@ -137,7 +147,4 @@ ba4eb9384f5b        quay.io/coreos/etcd:v3.2.9      "etcd --name=etcd0 -…"   A
 55f74277a530        wurstmeister/kafka:2.11-2.0.1   "start-kafka.sh"         2 minutes ago        Up 2 minutes        0.0.0.0:9092->9092/tcp                                                     compose_kafka_1_a8631e438fe2
 fb60076d8b3e        wurstmeister/zookeeper:latest   "/bin/sh -c '/usr/sb…"   2 minutes ago        Up 2 minutes        22/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:2181->2181/tcp                         compose_zookeeper_1_7ff68af103cf
 ```
-
-
-
 

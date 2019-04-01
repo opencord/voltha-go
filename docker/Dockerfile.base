@@ -3,32 +3,25 @@
 
 FROM golang:1.10-alpine
 
-
 # Install required packages
-RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
-
-RUN git clone https://github.com/googleapis/googleapis.git /usr/local/include/googleapis
+RUN apk add --no-cache wget git make build-base
 
 # Prepare directory structure
-RUN ["mkdir", "-p", "/src"]
+RUN ["mkdir", "-p", "/build"]
 RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
 RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
-RUN ["mkdir", "-p", "/share"]
 
-# Copy files
-#ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
-#ADD common $GOPATH/src/github.com/opencord/voltha-go/common
-#ADD db $GOPATH/src/github.com/opencord/voltha-go/db
-#ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
-ADD vendor $GOPATH/src/github.com/opencord/voltha-go/vendor
-#ADD afrouter $GOPATH/src/github.com/opencord/voltha-go/afrouter
+# Install dep tool
+RUN wget -O /tmp/dep-install.sh https://raw.githubusercontent.com/golang/dep/master/install.sh
+RUN sh /tmp/dep-install.sh
 
-ADD afrouter/arouter.json /src
-
-#
-# Copy generated executables here
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
-#RUN ls -ltrR /go/src/github.com/opencord/voltha-go
+# Copy common files
+COPY Gopkg.lock ./Gopkg.lock
+COPY Gopkg.toml ./Gopkg.toml
+COPY common ./common
+COPY db ./db
+COPY kafka ./kafka
+COPY vendor ./vendor
 
-VOLUME /share
