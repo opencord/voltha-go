@@ -3,66 +3,38 @@
 
 FROM base AS build-env
 
-# Copy files
-ADD rw_core $GOPATH/src/github.com/opencord/voltha-go/rw_core
-ADD common $GOPATH/src/github.com/opencord/voltha-go/common
-ADD db $GOPATH/src/github.com/opencord/voltha-go/db
-ADD kafka $GOPATH/src/github.com/opencord/voltha-go/kafka
-ADD afrouter $GOPATH/src/github.com/opencord/voltha-go/afrouter
-ADD tests/afrouter $GOPATH/src/github.com/opencord/voltha-go/tests/afrouter
-
-# Copy required proto files
-# ... VOLTHA proos
-# Repeat here even if it's done in the base
-ADD protos/*.proto /src/protos/
-ADD protos/scripts/* /src/protos/
-ADD afrouter/arouter.json /src/
-ADD tests/afrouter/suites/* /src/suites/
-ADD tests/afrouter/arouter_test.json /src/
-
-#
-# Copy generated executables here
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
-# Compile protobuf files
-# Repeat here even if it's done in the base
-RUN sh /src/protos/build_protos.sh /src/protos
-#RUN find / -name "*.pb.go" -print
+# Copy files
+COPY rw_core ./rw_core
+COPY afrouter ./afrouter
+COPY tests/afrouter ./tests/afrouter
+COPY tests/afrouter /build/tests
 
-#ADD /src/protos/voltha.pb test/afrouter/suites
-# Build rw_core
-RUN cd afrouter && go build -o /src/afrouter
-#RUN ls -l /src/protos
-RUN cp /src/protos/voltha.pb tests/afrouter/suites
-RUN cd tests/afrouter && go build -o /src/afrouterTest
-RUN mkdir /src/tests
-RUN cd tests/afrouter/suites && /src/afrouterTest -config main.json -logLevel 1
-RUN mkdir /src/temp
-RUN cp -r tests/afrouter/tests /src/temp
-#RUN cd tests/afrouter/tester && go build -o /src/tests
+# Copy config and runtime protobuf needed for routing
+RUN cp afrouter/arouter.json /build/tests/suites/
+RUN cp vendor/github.com/opencord/voltha-protos/go/voltha.pb /build/tests/suites/
+
+# Build
+RUN cd afrouter && go build -o /build/afrouter
+RUN cd tests/afrouter && go build -o /build/afrouterTest
+
+# Run tests
+RUN cd /build/tests/suites && /build/afrouterTest -config main.json -logLevel 1
 
 # -------------
 # Image creation stage
 
-FROM alpine:3.6
+FROM alpine:3.9
 
 # Set the working directory
-WORKDIR /app/src
 WORKDIR /app
 
 # Copy required files
-COPY --from=build-env /src/afrouter /app/
-COPY --from=build-env /src/afrouterTest /app/
-COPY --from=build-env /src/arouter.json /app/
-COPY --from=build-env /src/arouter_test.json /app/
-COPY --from=build-env /src/protos/voltha.pb /app/
-COPY --from=build-env /src/suites/ /app/suites/
-COPY --from=build-env /src/tests /app
-COPY --from=build-env /src/temp/ /app/src/
-COPY --from=build-env /go/src/github.com/opencord/voltha-go/protos/ /app/protos/
-WORKDIR /app
+COPY --from=build-env /build/afrouter /app/
+COPY --from=build-env /build/afrouterTest /app/
+COPY --from=build-env /build/arouter.json /app/
+COPY --from=build-env /build/voltha.pb /app
+COPY --from=build-env /build/tests /app/tests/
 
-#CMD cd /app && ./arouter -config config/arouter.voltha2.json
-
-# Set the config volume
-
+ENTRYPOINT ["/app/afrouterTest"]
