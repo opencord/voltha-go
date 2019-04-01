@@ -90,25 +90,25 @@ ifdef LOCAL_PROTOS
 endif
 	docker build $(DOCKER_BUILD_ARGS) -t base:latest -f docker/Dockerfile.base .
 
-afrouter:
+afrouter: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouter:${TAG} -f docker/Dockerfile.arouter .
 
-afrouterTest:
+afrouterTest: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afroutertest:${TAG} -f docker/Dockerfile.arouterTest .
 
-arouterd:
+arouterd: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouterd:${TAG} -f docker/Dockerfile.arouterd .
 
-rw_core:
+rw_core: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-rw-core:${TAG} -f docker/Dockerfile.rw_core .
 
-ro_core:
+ro_core: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-ro-core:${TAG} -f docker/Dockerfile.ro_core .
 
-simulated_olt:
+simulated_olt: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-olt:${TAG} -f docker/Dockerfile.simulated_olt .
 
-simulated_onu:
+simulated_onu: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
 
 # end file
