@@ -58,6 +58,3 @@ protos/voltha.pb
 
 # voltha cli history
 python/cli/.voltha_cli_history
-
-#voltha-protos dependency
-vendor/github.com/opencord/voltha-protos
