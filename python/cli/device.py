@@ -24,10 +24,8 @@ from simplejson import dumps
 
 from table import print_pb_as_table, print_pb_list_as_table
 from utils import print_flows, pb2dict, enum2name
-from python.protos import third_party
 
-_ = third_party
-from python.protos import voltha_pb2, common_pb2
+from voltha_protos import voltha_pb2, common_pb2
 import sys
 import json
 from google.protobuf.json_format import MessageToDict

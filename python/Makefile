@@ -147,7 +147,15 @@ build: protoc protos containers
 containers: base adapter_ponsim_olt adapter_ponsim_onu ofagent cli
 
 base:
+ifdef LOCAL_PYVOLTHA
+	mkdir -p pyvoltha/dist
+	cp ../../pyvoltha/dist/*.tar.gz pyvoltha/dist/
+	mkdir -p voltha-protos/dist
+	cp ../../voltha-protos/dist/*.tar.gz voltha-protos/dist/
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base_local .
+else
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base .
+endif
 
 adapter_ponsim_olt:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-ponsim-olt:${TAG} -f docker/Dockerfile.adapter_ponsim_olt .
@@ -198,6 +206,8 @@ clean:
 	rm -f ./protos/*_pb2_grpc.py
 	rm -f ./protos/*.desc
 	rm -f ./protos/*.proto
+	rm -rf pyvoltha
+	rm -rf voltha-protos
 
 distclean: clean
 	rm -rf ${VENVDIR}
@@ -231,6 +241,15 @@ ${VENVDIR}/.built:
 	        uname -s > ${VENVDIR}/.built; \
 	    fi
 
+ifdef LOCAL_PYVOLTHA
+	mkdir -p pyvoltha/dist
+	cp ../../pyvoltha/dist/*.tar.gz pyvoltha/dist/
+	mkdir -p voltha-protos/dist
+	cp ../../voltha-protos/dist/*.tar.gz voltha-protos/dist/
+	. ${VENVDIR}/bin/activate && \
+	    pip install pyvoltha/dist/*.tar.gz && \
+	    pip install voltha-protos/dist/*.tar.gz
+endif
 
 flake8: $(DIRS_FLAKE8)
 

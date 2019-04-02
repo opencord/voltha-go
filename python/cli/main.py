@@ -33,12 +33,11 @@ from omci import OmciCli
 from alarm_filters import AlarmFiltersCli
 from logical_device import LogicalDeviceCli
 from table import print_pb_list_as_table
-from python.common.openflow.utils import *
-from python.protos import third_party
-from python.protos import voltha_pb2
-from python.protos.openflow_13_pb2 import FlowTableUpdate, FlowGroupTableUpdate
+from pyvoltha.common.openflow.utils import *
+from voltha_protos import voltha_pb2
+from voltha_protos import voltha_pb2_grpc
+from voltha_protos.openflow_13_pb2 import FlowTableUpdate, FlowGroupTableUpdate
 
-_ = third_party
 from python.cli.utils import pb2dict
 
 defs = dict(
@@ -142,7 +141,7 @@ class VolthaCli(Cmd):
 
     def get_stub(self):
         if self.stub is None:
-            self.stub = voltha_pb2.VolthaServiceStub(self.get_channel())
+            self.stub = voltha_pb2_grpc.VolthaServiceStub(self.get_channel())
             # self.stub = \
             #     voltha_pb2.VolthaGlobalServiceStub(self.get_channel()) \
             #         if self.global_request else \
