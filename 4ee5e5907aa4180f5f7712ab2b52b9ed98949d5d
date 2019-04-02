@@ -16,6 +16,24 @@
       "revId": "4ee5e5907aa4180f5f7712ab2b52b9ed98949d5d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28d8905a_88e3a067",
+        "filename": "docker/Dockerfile.base",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-04-02T16:41:52Z",
+      "side": 1,
+      "message": "Not particularly anymore.  Same with installing dep above.  I added as a convienence if any child dockerfiles wanted to dep anything.  I added it before i realized the design intent of having vendor have everything needed on checkout.  I can remove them and the install of dep above.",
+      "parentUuid": "d5e45f17_db6d5d17",
+      "revId": "4ee5e5907aa4180f5f7712ab2b52b9ed98949d5d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
