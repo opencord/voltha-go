@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69827f98_ad580bda",
+        "filename": "vendor/github.com/opencord/voltha-protos/python/__init__.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-02T16:47:09Z",
+      "side": 1,
+      "message": "Do we need any of the python directories?",
+      "revId": "21a58baf2a40b515a14fc127cf129299fe958121",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
