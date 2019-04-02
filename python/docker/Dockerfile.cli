@@ -23,7 +23,7 @@ MAINTAINER Voltha Community <info@opennetworking.org>
 # Bundle app source
 RUN mkdir /voltha && touch /voltha/__init__.py
 ENV PYTHONPATH=/voltha
-COPY common /voltha/python/common/
+#COPY common /voltha/python/common/
 COPY cli /voltha/python/cli
 RUN touch /voltha/python/__init__.py
 RUN touch /voltha/python/cli/__init__.py

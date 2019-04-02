@@ -24,11 +24,11 @@ from cmd2 import Cmd, options
 from google.protobuf.empty_pb2 import Empty
 
 from table import print_pb_list_as_table
-from python.protos import third_party
-from python.protos import voltha_pb2
-from python.protos.events_pb2 import AlarmEventType, AlarmEventSeverity, AlarmEventCategory
+#from python.protos import third_party
+from voltha_protos import voltha_pb2
+from voltha_protos.events_pb2 import AlarmEventType, AlarmEventSeverity, AlarmEventCategory
 
-_ = third_party
+#_ = third_party
 
 
 class AlarmFiltersCli(Cmd):

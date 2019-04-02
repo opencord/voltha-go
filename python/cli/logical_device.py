@@ -24,11 +24,11 @@ from simplejson import dumps
 from table import print_pb_as_table, print_pb_list_as_table
 from utils import pb2dict
 from utils import print_flows, print_groups
-from python.protos import third_party
+#from python.protos import third_party
 from google.protobuf.empty_pb2 import Empty
 
-_ = third_party
-from python.protos import voltha_pb2
+#_ = third_party
+from voltha_protos import voltha_pb2
 
 
 class LogicalDeviceCli(Cmd):
