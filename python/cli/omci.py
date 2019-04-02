@@ -23,13 +23,11 @@ from cmd2 import Cmd, options
 from datetime import datetime
 from google.protobuf.empty_pb2 import Empty
 from table import print_pb_list_as_table
-from python.protos import third_party
-from python.protos import voltha_pb2
-from python.protos.omci_mib_db_pb2 import MibDeviceData, MibClassData, \
+from voltha_protos import voltha_pb2
+from voltha_protos.omci_mib_db_pb2 import MibDeviceData, MibClassData, \
     MibInstanceData
 from os import linesep
 
-_ = third_party
 
 
 class OmciCli(Cmd):
