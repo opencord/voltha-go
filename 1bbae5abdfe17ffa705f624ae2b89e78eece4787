@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e49ac4b_c941c865",
+        "filename": "python/cli/alarm_filters.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-04-02T22:30:39Z",
+      "side": 1,
+      "message": "you can remove the commented out items in all the files.",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 38
+      },
+      "revId": "1bbae5abdfe17ffa705f624ae2b89e78eece4787",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c10c6d0b_a0d62e9b",
+        "filename": "python/docker/Dockerfile.cli",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-04-02T22:30:39Z",
+      "side": 1,
+      "message": "its possible you dont need any of this anymore given pip installed it from the base image.  Try and see.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 62
+      },
+      "revId": "1bbae5abdfe17ffa705f624ae2b89e78eece4787",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
