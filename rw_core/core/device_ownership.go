@@ -238,39 +238,34 @@ func (da *DeviceOwnership) getOwnershipKey(id interface{}) (string, error) {
 	if id == nil {
 		return "", status.Error(codes.InvalidArgument, "nil-id")
 	}
+	da.deviceToKeyMapLock.Lock()
+	defer da.deviceToKeyMapLock.Unlock()
 	var device *voltha.Device
 	var lDevice *voltha.LogicalDevice
 	// The id can either be a device Id or a logical device id.
 	if dId, ok := id.(*utils.DeviceID); ok {
 		// Use cache if present
-		if val, err := da.getDeviceKey(dId.Id); err == nil {
+		if val, exist := da.deviceToKeyMap[dId.Id]; exist {
 			return val, nil
 		}
 		if device, _ = da.deviceMgr.GetDevice(dId.Id); device == nil {
 			return "", status.Error(codes.NotFound, fmt.Sprintf("id-absent-%s", dId))
 		}
 		if device.Root {
-			if err := da.updateDeviceKey(dId.Id, device.Id); err != nil {
-				log.Warnw("Error-updating-cache", log.Fields{"id": dId.Id, "key": device.Id, "error": err})
-			}
-			return device.Id, nil
+			da.deviceToKeyMap[dId.Id] = device.Id
 		} else {
-			if err := da.updateDeviceKey(dId.Id, device.ParentId); err != nil {
-				log.Warnw("Error-updating-cache", log.Fields{"id": dId.Id, "key": device.ParentId, "error": err})
-			}
-			return device.ParentId, nil
+			da.deviceToKeyMap[dId.Id] = device.ParentId
 		}
+		return da.deviceToKeyMap[dId.Id], nil
 	} else if ldId, ok := id.(*utils.LogicalDeviceID); ok {
 		// Use cache if present
-		if val, err := da.getDeviceKey(ldId.Id); err == nil {
+		if val, exist := da.deviceToKeyMap[ldId.Id]; exist {
 			return val, nil
 		}
 		if lDevice, _ = da.logicalDeviceMgr.getLogicalDevice(ldId.Id); lDevice == nil {
 			return "", status.Error(codes.NotFound, fmt.Sprintf("id-absent-%s", ldId))
 		}
-		if err := da.updateDeviceKey(ldId.Id, lDevice.RootDeviceId); err != nil {
-			log.Warnw("Error-updating-cache", log.Fields{"id": ldId.Id, "key": lDevice.RootDeviceId, "error": err})
-		}
+		da.deviceToKeyMap[ldId.Id] = lDevice.RootDeviceId
 		return lDevice.RootDeviceId, nil
 	}
 	return "", status.Error(codes.NotFound, fmt.Sprintf("id-%s", id))

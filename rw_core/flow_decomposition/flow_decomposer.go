@@ -819,17 +819,8 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 	fg := fu.NewFlowsAndGroups()
 	if agent.GetDeviceGraph().IsRootPort(inPortNo) {
 		log.Debug("trap-nni")
-		var fa *fu.FlowArgs
-		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
-			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(egressHop.Egress),
-			},
-			Actions: GetActions(flow),
-		}
-		// Augment the matchfields with the ofpfields from the flow
-		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
-		fg.AddFlow(MkFlowStat(fa))
+		// no decomposition required - it is already an OLT flow from NNI
+		fg.AddFlow(flow)
 	} else {
 		// Trap flow for UNI port
 		log.Debug("trap-uni")
