@@ -257,7 +257,7 @@ func (kp *InterContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	// subscriber on that topic will receive the request in the order it was sent.  The key used is the deviceId.
 	//key := GetDeviceIdFromTopic(*toTopic)
 	log.Debugw("sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
-	kp.kafkaClient.Send(protoRequest, toTopic, key)
+	go kp.kafkaClient.Send(protoRequest, toTopic, key)
 
 	if waitForResponse {
 		// Create a child context based on the parent context, if any
@@ -550,7 +550,7 @@ func encodeResponse(request *ic.InterContainerMessage, success bool, returnedVal
 		FromTopic: request.Header.ToTopic,
 		ToTopic:   request.Header.FromTopic,
 		KeyTopic: request.Header.KeyTopic,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixNano(),
 	}
 
 	// Go over all returned values
@@ -635,7 +635,6 @@ func (kp *InterContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 
 	// First extract the header to know whether this is a request - responses are handled by a different handler
 	if msg.Header.Type == ic.MessageType_REQUEST {
-
 		var out []reflect.Value
 		var err error
 
@@ -707,7 +706,7 @@ func (kp *InterContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 			key := msg.Header.KeyTopic
 			log.Debugw("sending-response-to-kafka", log.Fields{"rpc": requestBody.Rpc, "header": icm.Header, "key": key})
 			// TODO: handle error response.
-			kp.kafkaClient.Send(icm, replyTopic, key)
+			 go kp.kafkaClient.Send(icm, replyTopic, key)
 		}
 	} else if msg.Header.Type == ic.MessageType_RESPONSE {
 		log.Debugw("response-received", log.Fields{"msg-header": msg.Header})
@@ -765,7 +764,7 @@ func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kv
 		FromTopic: replyTopic.Name,
 		ToTopic:   toTopic.Name,
 		KeyTopic: key,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixNano(),
 	}
 	requestBody := &ic.InterContainerRequestBody{
 		Rpc:              rpc,

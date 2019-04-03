@@ -431,14 +431,14 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 }
 
 func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *Event) {
-	log.Infow("start-listening-on-channel", log.Fields{"channel": ch})
+	log.Debug("start-listening-on-channel ...")
 	for resp := range channel {
 		for _, ev := range resp.Events {
 			//log.Debugf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
 			ch <- NewEvent(getEventType(ev), ev.Kv.Key, ev.Kv.Value)
 		}
 	}
-	log.Info("stop-listening-on-channel")
+	log.Debug("stop-listening-on-channel ...")
 }
 
 func getEventType(event *v3Client.Event) int {
