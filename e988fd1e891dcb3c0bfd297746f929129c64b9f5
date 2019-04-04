@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc57b9aa_610f827d",
+        "filename": "common/ponresourcemanager/ponresourcemanager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-04T14:27:24Z",
+      "side": 1,
+      "message": "Do you need this?",
+      "revId": "e988fd1e891dcb3c0bfd297746f929129c64b9f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "daba1fa0_336949bd",
+        "filename": "common/ponresourcemanager/ponresourcemanager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-04T14:27:24Z",
+      "side": 1,
+      "message": "It would be good to be consistent when it comes to commenting functions.   For go the way the comments are done in NewPONResourceManager (above) is correct.  This is minor and can be addressed in a separate commit.",
+      "revId": "e988fd1e891dcb3c0bfd297746f929129c64b9f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96eac4ec_0f7fb956",
+        "filename": "common/ponresourcemanager/ponresourcemanager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-04T14:27:24Z",
+      "side": 1,
+      "message": "I guess these are just for debugging",
+      "revId": "e988fd1e891dcb3c0bfd297746f929129c64b9f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1383379c_16973caf",
+        "filename": "common/ponresourcemanager/ponresourcemanager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-04T14:27:24Z",
+      "side": 1,
+      "message": "For Go, it\u0027s preferable to return an error instead of a bool.  The error would be more descriptive for the calling function.",
+      "revId": "e988fd1e891dcb3c0bfd297746f929129c64b9f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
