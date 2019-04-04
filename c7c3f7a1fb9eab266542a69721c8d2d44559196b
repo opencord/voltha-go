@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ae232cd_c1af14a6",
+        "filename": "adapters/common/core_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-04T14:36:22Z",
+      "side": 1,
+      "message": "Since you are sending only 1 argument then the args should be 1.",
+      "revId": "c7c3f7a1fb9eab266542a69721c8d2d44559196b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
