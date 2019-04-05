@@ -86,7 +86,7 @@ ifeq ("", "$(shell which protoc)")
 	@echo "To install the protocol buffer toolchain, you can run:"
 	@echo "    make install-protoc"
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-	false
+	exit 1
 endif
 	./build_go_protos.sh protos
 
@@ -97,7 +97,7 @@ ifneq ("libprotoc 3.7.0", "$(shell protoc --version)")
 >---@echo "To install this version, you can run:"
 	@echo "    make install-protoc"
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-	false
+	exit 1
 endif
 	test/test-go-proto-consistency.sh
 
@@ -106,7 +106,7 @@ go-clean:
 
 install-protoc:
 	@echo "Downloading and installing protocol buffer support."
-	@echo "Installation will require sodo priviledges"
+	@echo "Installation will require sudo priviledges"
 	@echo "This will take a few minutes."
 	mkdir -p $(PROTOC_BUILD_TMP_DIR)
 	@echo "We ask for sudo credentials now so we can install at the end"; \
@@ -117,5 +117,5 @@ install-protoc:
 	    cd $(PROTOC_DIR); \
 	    ./configure --prefix=$(PROTOC_PREFIX); \
 	    make; \
-	    sudo make install; \ 
+	    sudo make install; \
 	    sudo ldconfig

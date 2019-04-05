@@ -59,6 +59,9 @@ protos/voltha.pb
 # voltha cli history
 python/cli/.voltha_cli_history
 
+python/pyvoltha
+python/voltha-protos
+
 # ignore uneeded items in vendor folders
 vendor/github.com/opencord/voltha-protos/protos
 vendor/github.com/opencord/voltha-protos/python

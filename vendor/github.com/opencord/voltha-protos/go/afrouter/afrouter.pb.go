@@ -8,8 +8,6 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -390,17 +388,6 @@ func (c *configurationClient) SetAffinity(ctx context.Context, in *Affinity, opt
 type ConfigurationServer interface {
 	SetConnection(context.Context, *Conn) (*Result, error)
 	SetAffinity(context.Context, *Affinity) (*Result, error)
-}
-
-// UnimplementedConfigurationServer can be embedded to have forward compatible implementations.
-type UnimplementedConfigurationServer struct {
-}
-
-func (*UnimplementedConfigurationServer) SetConnection(ctx context.Context, req *Conn) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetConnection not implemented")
-}
-func (*UnimplementedConfigurationServer) SetAffinity(ctx context.Context, req *Affinity) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetAffinity not implemented")
 }
 
 func RegisterConfigurationServer(s *grpc.Server, srv ConfigurationServer) {
