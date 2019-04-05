@@ -10,8 +10,6 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -209,14 +207,6 @@ func (c *schemaServiceClient) GetSchema(ctx context.Context, in *empty.Empty, op
 type SchemaServiceServer interface {
 	// Return active grpc schemas
 	GetSchema(context.Context, *empty.Empty) (*Schemas, error)
-}
-
-// UnimplementedSchemaServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedSchemaServiceServer struct {
-}
-
-func (*UnimplementedSchemaServiceServer) GetSchema(ctx context.Context, req *empty.Empty) (*Schemas, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSchema not implemented")
 }
 
 func RegisterSchemaServiceServer(s *grpc.Server, srv SchemaServiceServer) {
