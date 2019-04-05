@@ -78,6 +78,31 @@ ls dist/    #python pip tarball output
 ls go/      #golang stubs
 
 export LOCAL_PROTOS=true
+
+
+```
+
+### PyVoltha PIP Library
+
+Python library of common core functions.  Once this stabilizes then you will no longer need a local build, the needed version will be in pip.  Currently the plan is to push the pyvoltha pip library once a sprint into PyPi.   Currently PyVoltha includes generated python stubs of voltha gRPC protos.
+
+```sh
+cd ~/source/
+git clone https://gerrit.opencord.org/pyvoltha.git
+```
+
+Generate the local tar.gz that is the dev version of pyvoltha:
+
+```sh
+cd ~/source/pyvoltha/
+make dist
+ls dist/    #python pip tarball output
+```
+
+Set an environment variable for below python builds to inform the Makefile to use the local pip tar.gz
+
+```sh
+export LOCAL_PYVOLTHA=true
 ```
 
 
@@ -115,28 +140,6 @@ Build Python CLI and OFAgent docker images.  Python ofagent, cli, and ponsim bui
 export VOLTHA_BUILD=docker
 cd ~/source/voltha-go/python
 make build
-```
-
-
-
-### PyVoltha PIP Library
-
-Python library of common core functions.  Once this stabilizes then you will no longer need a local build, the needed version will be in pip.  Currently the plan is to push the pyvoltha pip library once a sprint into PyPi.   Currently PyVoltha includes generated python stubs of voltha gRPC protos.
-```sh
-cd ~/source/
-git clone https://gerrit.opencord.org/pyvoltha.git
-```
-
-Generate the local tar.gz that is the dev version of pyvoltha:
-```sh
-cd ~/source/pyvoltha/
-make dist
-ls dist/    #python pip tarball output
-```
-
-Set an environment variable for below python builds to inform the Makefile to use the local pip tar.gz
-```sh
-export LOCAL_PYVOLTHA=true
 ```
 
 
