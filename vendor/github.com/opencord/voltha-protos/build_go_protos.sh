@@ -1,7 +1,4 @@
 #!/bin/sh
-
-set -e
-
 # Copyright 2018 the original author or authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +13,8 @@ set -e
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+
 export PARENT_DIR="$1"
 export SRC_DIR="${PARENT_DIR}/voltha_protos"
 
@@ -26,7 +25,7 @@ echo $SRC_DIR
 export MAPS=Mgoogle/protobuf/descriptor.proto=github.com/golang/protobuf/protoc-gen-go/descriptor
 export INCS="\
     -I $PARENT_DIR \
-    -I /usr/local/include/googleapis"
+    -I ${PARENT_DIR}/google/api"
 
 export VOLTHA_PB="\
     $SRC_DIR/adapter.proto \
@@ -48,6 +47,7 @@ export IETF_PB="$SRC_DIR/ietf_interfaces.proto"
 export OF_PB="$SRC_DIR/openflow_13.proto"
 export OMCI_PB="$SRC_DIR/omci*.proto"
 export AFROUTER_PB="$SRC_DIR/afrouter.proto"
+export OPENOLT_PB="$SRC_DIR/openolt.proto"
 
 export PB_VARS="\
     VOLTHA_PB \
@@ -58,9 +58,10 @@ export PB_VARS="\
     OF_PB \
     OMCI_PB \
     AFROUTER_PB \
-	OMCI_PB"
+    OMCI_PB \
+    OPENOLT_PB"
 
-export OTHER_INCLUDES="/usr/local/include/googleapis"
+export OTHER_INCLUDES="${PARENT_DIR}/google/api"
 export PROTO_DESC_FILE="go/voltha.pb"
 
 for pb_var in $PB_VARS
