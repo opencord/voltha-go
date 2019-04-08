@@ -23,4 +23,3 @@ WORKDIR /app
 # Copy required files
 COPY --from=build-env /build/ro_core /app/
 
-ENTRYPOINT ["/app/ro_core"]

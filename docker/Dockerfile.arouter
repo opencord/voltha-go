@@ -30,4 +30,3 @@ COPY --from=build-env /build/afrouter /app/
 COPY --from=build-env /build/arouter.json /app/
 COPY --from=build-env /build/voltha.pb /app
 
-ENTRYPOINT ["/app/afrouter"]
