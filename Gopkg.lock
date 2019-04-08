@@ -27,6 +27,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:c16f511247fb7dd5b3e8428bed24b9f74473f343b3fb7c14763b47f567feb8a5"
+  name = "github.com/bclicn/color"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "108f2023dc84f1f9e64f246fa3997993971b2706"
+
+[[projects]]
+  branch = "master"
   digest = "1:0b0303f763128c8e8092843b9d85fdf03bb5bfa4145f1ebe77c12e835a871dc2"
   name = "github.com/boljen/go-bitmap"
   packages = ["."]
@@ -745,6 +753,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/bclicn/color",
     "github.com/boljen/go-bitmap",
     "github.com/bsm/sarama-cluster",
     "github.com/cevaris/ordered_map",
