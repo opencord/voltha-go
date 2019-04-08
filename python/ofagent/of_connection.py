@@ -18,7 +18,7 @@ from hexdump import hexdump
 from twisted.internet import protocol
 
 import loxi.of14
-from common.utils.message_queue import MessageQueue
+from pyvoltha.common.utils.message_queue import MessageQueue
 
 log = structlog.get_logger()
 

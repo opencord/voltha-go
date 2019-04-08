@@ -21,9 +21,9 @@ import yaml
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 
-from common.structlog_setup import setup_logging
-from common.utils.dockerhelpers import get_my_containers_name
-from common.utils.nethelpers import get_my_primary_local_ipv4
+from pyvoltha.common.structlog_setup import setup_logging
+from pyvoltha.common.utils.dockerhelpers import get_my_containers_name
+from pyvoltha.common.utils.nethelpers import get_my_primary_local_ipv4
 from connection_mgr import ConnectionManager
 
 defs = dict(

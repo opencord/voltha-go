@@ -15,7 +15,6 @@ ARG TAG=latest
 ARG REGISTRY=
 ARG REPOSITORY=
 
-FROM ${REGISTRY}${REPOSITORY}voltha-protos:${TAG} as protos
 FROM ${REGISTRY}${REPOSITORY}voltha-base:${TAG}
 
 MAINTAINER Voltha Community <info@opennetworking.org>
