@@ -21,6 +21,7 @@ import (
 	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
@@ -29,16 +30,21 @@ var ld voltha.LogicalDevice
 var olt voltha.Device
 var onusOnPort4 []voltha.Device
 var onusOnPort5 []voltha.Device
+var logicalDeviceId string
+var oltDeviceId string
+var numCalled int
+var lock sync.RWMutex
 
 const (
-	maxOnuOnPort4 int = 64
-	maxOnuOnPort5 int = 64
+	maxOnuOnPort4 int = 256
+	maxOnuOnPort5 int = 256
 )
 
 func init() {
 
-	logicalDeviceId := "ld"
-	oltDeviceId := "olt"
+	logicalDeviceId = "ld"
+	oltDeviceId = "olt"
+	lock = sync.RWMutex{}
 
 	// Setup ONUs on OLT port 4
 	onusOnPort4 = make([]voltha.Device, 0)
@@ -127,7 +133,7 @@ func init() {
 	for i, onu := range onusOnPort5 {
 		for _, port := range onu.Ports {
 			if port.Type == voltha.Port_ETHERNET_UNI {
-				id = fmt.Sprintf("uni-%d", i+10)
+				id = fmt.Sprintf("uni-%d", i+len(onusOnPort4))
 				lp := voltha.LogicalPort{Id: id, DeviceId: onu.Id, DevicePortNo: port.PortNo, OfpPort: &openflow_13.OfpPort{PortNo: uint32(ofpPortNo)}, RootPort: false}
 				ld.Ports = append(ld.Ports, &lp)
 				ofpPortNo = ofpPortNo + 1
@@ -137,6 +143,9 @@ func init() {
 }
 
 func GetDeviceHelper(id string) (*voltha.Device, error) {
+	lock.Lock()
+	numCalled += 1
+	lock.Unlock()
 	if id == "olt" {
 		return &olt, nil
 	}
@@ -153,19 +162,36 @@ func GetDeviceHelper(id string) (*voltha.Device, error) {
 	return nil, errors.New("Not-found")
 }
 
-func TestGetRoutes(t *testing.T) {
+func TestGetRoutesOneShot(t *testing.T) {
 
 	getDevice := GetDeviceHelper
 
 	// Create a device graph and computes Routes
 	start := time.Now()
-	dg := NewDeviceGraph(getDevice)
+	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+
 	dg.ComputeRoutes(ld.Ports)
-	fmt.Println("Total Time creating graph & compute Routes:", time.Since(start))
+	fmt.Println("Total num called:", numCalled)
+	fmt.Println("Total Time creating graph & compute Routes in one shot:", time.Since(start))
 	assert.NotNil(t, dg.GGraph)
 	assert.EqualValues(t, (maxOnuOnPort4*4 + maxOnuOnPort5*4), len(dg.Routes))
-	//for k, v := range dg.Routes {
-	//	fmt.Println("key", k, " value:", v)
-	//}
+	dg.Print()
+}
 
+func TestGetRoutesAddPort(t *testing.T) {
+
+	getDevice := GetDeviceHelper
+
+	// Create a device graph and computes Routes
+	start := time.Now()
+	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	for _, lp := range ld.Ports {
+		dg.AddPort(lp)
+	}
+
+	fmt.Println("Total num called:", numCalled)
+	fmt.Println("Total Time creating graph & compute Routes per port:", time.Since(start))
+	assert.NotNil(t, dg.GGraph)
+	assert.EqualValues(t, (maxOnuOnPort4*4 + maxOnuOnPort5*4), len(dg.Routes))
+	dg.Print()
 }

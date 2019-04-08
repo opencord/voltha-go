@@ -336,7 +336,7 @@ func (ldMgr *LogicalDeviceManager) setupUNILogicalPorts(ctx context.Context, chi
 			return err
 		}
 		// Update the device routes - let it run in its own go routine as it can take time
-		go agent.updateRoutes()
+		//go agent.updateRoutes()
 	}
 	return nil
 }

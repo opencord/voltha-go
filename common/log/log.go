@@ -359,11 +359,17 @@ func SetAllLogLevel(level int) {
 }
 
 //GetPackageLogLevel returns the current log level of a package.
-func GetPackageLogLevel(packageName string) (int, error) {
-	if cfg, ok := cfgs[packageName]; ok {
+func GetPackageLogLevel(packageName ...string) (int, error) {
+	var name string
+	if len(packageName) == 1 {
+		name = packageName[0]
+	} else {
+		name, _, _, _ = getCallerInfo()
+	}
+	if cfg, ok := cfgs[name]; ok {
 		return levelToInt(cfg.Level.Level()), nil
 	}
-	return 0, errors.New(fmt.Sprintf("unknown-package-%s", packageName))
+	return 0, errors.New(fmt.Sprintf("unknown-package-%s", name))
 }
 
 //SetLogLevel sets the log level for the logger corresponding to the caller's package
