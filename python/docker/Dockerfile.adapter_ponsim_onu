@@ -15,7 +15,6 @@ ARG TAG=latest
 ARG REGISTRY=
 ARG REPOSITORY=
 
-FROM ${REGISTRY}${REPOSITORY}voltha-protos:${TAG} as protos
 FROM ${REGISTRY}${REPOSITORY}voltha-base:${TAG}
 
 MAINTAINER Voltha Community <info@opennetworking.org>
@@ -23,20 +22,9 @@ MAINTAINER Voltha Community <info@opennetworking.org>
 # Bundle app source
 RUN mkdir /voltha && touch /voltha/__init__.py
 ENV PYTHONPATH=/voltha
-COPY common /voltha/python/common/
-COPY adapters/common /voltha/python/adapters/common/
-COPY adapters/kafka /voltha/python/adapters/kafka
-COPY adapters/*.py /voltha/python/adapters/
 COPY adapters/ponsim_onu /voltha/python/adapters/ponsim_onu
 RUN touch /voltha/python/__init__.py
 RUN touch /voltha/python/adapters/__init__.py
 
-# Copy in the generated GRPC proto code
-COPY --from=protos /protos/voltha /voltha/python/protos
-COPY --from=protos /protos/google/api /voltha/python/protos/third_party/google/api
-COPY protos/third_party/__init__.py /voltha/python/protos/third_party
-RUN touch /voltha/python/protos/__init__.py
-RUN touch /voltha/python/protos/third_party/google/__init__.py
-
 # Exposing process and default entry point
-# CMD ["python", "/voltha/python/adapters/ponsim_onu/main.py"]
+CMD ["python", "/voltha/python/adapters/ponsim_onu/main.py"]

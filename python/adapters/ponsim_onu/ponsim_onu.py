@@ -29,22 +29,20 @@ from twisted.internet.defer import DeferredQueue, inlineCallbacks, \
     returnValue, Deferred
 from twisted.internet.task import LoopingCall
 
-from python.common.utils.asleep import asleep
-from python.adapters.iadapter import OnuAdapter
-from python.adapters.kafka.kafka_proxy import get_kafka_proxy
-from python.protos import third_party
-from python.protos.common_pb2 import OperStatus, ConnectStatus, AdminState
-from python.protos.inter_container_pb2 import PortCapability, \
+from pyvoltha.common.utils.asleep import asleep
+from pyvoltha.adapters.iadapter import OnuAdapter
+from pyvoltha.adapters.kafka.kafka_proxy import get_kafka_proxy
+from voltha_protos.common_pb2 import OperStatus, ConnectStatus, AdminState
+from voltha_protos.inter_container_pb2 import PortCapability, \
     InterAdapterMessageType, InterAdapterResponseBody
-from python.protos.device_pb2 import Port, PmConfig, PmConfigs
-from python.protos.events_pb2 import KpiEvent, KpiEventType, MetricValuePairs
-from python.protos.logical_device_pb2 import LogicalPort
-from python.protos.openflow_13_pb2 import OFPPS_LIVE, OFPPF_FIBER, \
+from voltha_protos.device_pb2 import Port, PmConfig, PmConfigs
+from voltha_protos.events_pb2 import KpiEvent, KpiEventType, MetricValuePairs
+from voltha_protos.logical_device_pb2 import LogicalPort
+from voltha_protos.openflow_13_pb2 import OFPPS_LIVE, OFPPF_FIBER, \
     OFPPF_1GB_FD
-from python.protos.openflow_13_pb2 import ofp_port
-from python.protos.ponsim_pb2 import FlowTable, PonSimMetricsRequest, PonSimMetrics
+from voltha_protos.openflow_13_pb2 import ofp_port
+from voltha_protos.ponsim_pb2 import FlowTable, PonSimMetricsRequest, PonSimMetrics
 
-_ = third_party
 log = structlog.get_logger()
 
 

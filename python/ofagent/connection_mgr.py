@@ -20,19 +20,17 @@ import sys
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
 
-from common.utils.asleep import asleep
-from common.utils.consulhelpers import get_endpoint_from_consul
+from pyvoltha.common.utils.asleep import asleep
+from pyvoltha.common.utils.consulhelpers import get_endpoint_from_consul
 from structlog import get_logger
 import grpc
 from grpc import StatusCode
 from grpc._channel import _Rendezvous
-from ofagent.protos import third_party
-from protos import voltha_pb2
-from protos.voltha_pb2 import OfAgentSubscriber
+from voltha_protos.voltha_pb2 import OfAgentSubscriber
 from grpc_client import GrpcClient
 
 from agent import Agent
-from common.utils.dockerhelpers import get_my_containers_name
+from pyvoltha.common.utils.dockerhelpers import get_my_containers_name
 
 
 log = get_logger()

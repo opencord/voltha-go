@@ -16,6 +16,9 @@ FROM ubuntu:xenial
 
 MAINTAINER Voltha Community <info@opennetworking.org>
 
+ARG LOCAL_PYVOLTHA
+ARG LOCAL_PROTOS
+
 # Update to have latest images
 RUN apt-get update && \
     apt-get install -y python python-pip openssl iproute2 libpcap-dev wget
@@ -29,6 +32,20 @@ RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.
     rm -f *.deb && \
     apt-get update && \
     apt-get install -y wget build-essential make gcc binutils python-dev libffi-dev libssl-dev git && \
-    pip install -r /tmp/requirements.txt && \
-    apt-get purge -y wget build-essential make gcc binutils python-dev libffi-dev libssl-dev git && \
+    pip install -r /tmp/requirements.txt
+
+#COPY POTENTIAL LOCAL IMPORTS
+COPY local_imports/ /local_imports/
+
+RUN if [ -n "$LOCAL_PYVOLTHA" ] ; then \ 
+        pip install /local_imports/pyvoltha/dist/*.tar.gz ; \
+fi 
+
+RUN if [ -n "$LOCAL_PROTOS" ] ; then \
+        pip install /local_imports/voltha-protos/dist/*.tar.gz ; \
+fi
+
+RUN     apt-get purge -y wget build-essential make gcc binutils python-dev libffi-dev libssl-dev git && \
     apt-get autoremove -y
+
+

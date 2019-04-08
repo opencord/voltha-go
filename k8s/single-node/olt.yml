@@ -42,7 +42,7 @@ spec:
      spec:
        containers:
          - name: olt
-           image: "voltha-ponsim:latest"
+           image: "voltha/voltha-ponsim:latest"
            env:
              - name: POD_IP
                valueFrom:
