@@ -29,4 +29,3 @@ WORKDIR /app
 COPY --from=build-env /build/arouterd /app/
 COPY --from=build-env /build/arouter.json /app/
 
-ENTRYPOINT ["/app/arouterd"]

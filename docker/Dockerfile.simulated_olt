@@ -24,4 +24,3 @@ WORKDIR /app
 # Copy required files
 COPY --from=build-env /build/simulated_olt /app/
 
-ENTRYPOINT ["/app/simulated_olt"]
