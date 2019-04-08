@@ -55,6 +55,10 @@ DOCKER_BUILD_ARGS = \
 	 --rm --force-rm \
 	$(DOCKER_BUILD_EXTRA_ARGS)
 
+DOCKER_BUILD_EXTRA_ARGS = \
+	--build-arg LOCAL_PYVOLTHA=${LOCAL_PYVOLTHA} \
+	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
+
 VENVDIR := venv-$(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 DOCKER_IMAGE_LIST = \
@@ -142,20 +146,22 @@ $(DIRS_FLAKE8):
 	@echo "    FLAKE8 $(basename $@)"
 	-$(Q)$(MAKE) -C $(basename $@) flake8
 
-build: protoc protos containers
+build: containers
 
 containers: base adapter_ponsim_olt adapter_ponsim_onu ofagent cli
 
 base:
+	mkdir -p local_imports
 ifdef LOCAL_PYVOLTHA
-	mkdir -p pyvoltha/dist
-	cp ../../pyvoltha/dist/*.tar.gz pyvoltha/dist/
-	mkdir -p voltha-protos/dist
-	cp ../../voltha-protos/dist/*.tar.gz voltha-protos/dist/
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base_local .
-else
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base .
+	mkdir -p local_imports/pyvoltha/dist
+	cp ../../pyvoltha/dist/*.tar.gz local_imports/pyvoltha/dist/
 endif
+ifdef LOCAL_PROTOS
+	mkdir -p local_imports/voltha-protos/dist
+	cp ../../voltha-protos/dist/*.tar.gz local_imports/voltha-protos/dist/
+endif
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base .
+
 
 adapter_ponsim_olt:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-ponsim-olt:${TAG} -f docker/Dockerfile.adapter_ponsim_olt .

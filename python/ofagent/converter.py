@@ -23,7 +23,7 @@ from google.protobuf.descriptor import FieldDescriptor
 
 import loxi.of13 as of13
 from protobuf_to_dict import protobuf_to_dict, TYPE_CALLABLE_MAP
-from protos import openflow_13_pb2 as pb2
+from voltha_protos import openflow_13_pb2 as pb2
 
 
 type_callable_map = copy(TYPE_CALLABLE_MAP)
