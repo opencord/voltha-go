@@ -38,11 +38,11 @@ spec:
        labels:
          app: onu
        annotations:
-         cni: "calico,pon0"
+         cni: "calico,pon1"
      spec:
        containers:
          - name: onu
-           image: "voltha-ponsim:latest"
+           image: "voltha/voltha-ponsim:latest"
            env:
              - name: POD_IP
                valueFrom:

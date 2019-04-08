@@ -29,24 +29,21 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 from zope.interface import implementer
 
-from python.common.structlog_setup import setup_logging, update_logging
-from python.common.utils.asleep import asleep
-from python.common.utils.deferred_utils import TimeOutError
-from python.common.utils.dockerhelpers import get_my_containers_name
-from python.common.utils.nethelpers import get_my_primary_local_ipv4, \
+from pyvoltha.common.structlog_setup import setup_logging, update_logging
+from pyvoltha.common.utils.asleep import asleep
+from pyvoltha.common.utils.deferred_utils import TimeOutError
+from pyvoltha.common.utils.dockerhelpers import get_my_containers_name
+from pyvoltha.common.utils.nethelpers import get_my_primary_local_ipv4, \
     get_my_primary_interface
-from python.common.utils.registry import registry, IComponent
-from python.adapters.kafka.adapter_proxy import AdapterProxy
-from python.adapters.kafka.adapter_request_facade import AdapterRequestFacade
-from python.adapters.kafka.core_proxy import CoreProxy
-from python.adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
+from pyvoltha.common.utils.registry import registry, IComponent
+from pyvoltha.adapters.kafka.adapter_proxy import AdapterProxy
+from pyvoltha.adapters.kafka.adapter_request_facade import AdapterRequestFacade
+from pyvoltha.adapters.kafka.core_proxy import CoreProxy
+from pyvoltha.adapters.kafka.kafka_inter_container_library import IKafkaMessagingProxy, \
     get_messaging_proxy
-from python.adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
+from pyvoltha.adapters.kafka.kafka_proxy import KafkaProxy, get_kafka_proxy
 from ponsim_olt import PonSimOltAdapter
-from python.protos import third_party
-from python.protos.adapter_pb2 import AdapterConfig
-
-_ = third_party
+from voltha_protos.adapter_pb2 import AdapterConfig
 
 defs = dict(
     version_file='./VERSION',

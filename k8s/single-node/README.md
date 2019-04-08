@@ -15,8 +15,8 @@ To deploy Voltha 2 apply the following manifests (On a single node the affinity 
 k8s/namespace.yml
 k8s/single-node/zookeeper.yml
 k8s/single-node/kafka.yml
-k8s/operator/etcd/cluster_role.yml
-k8s/operator/etcd/cluster_role_binding.yml
+k8s/operator/etcd/cluster-role.yml
+k8s/operator/etcd/cluster-role-binding.yml
 k8s/operator/etcd/operator.yml
 k8s/single-node/etcd_cluster.yml
 k8s/single-node/rw-core.yml

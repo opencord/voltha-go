@@ -33,27 +33,25 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 
-from python.adapters.common.frameio.frameio import BpfProgramFilter, hexify
-from python.common.utils.asleep import asleep
-from python.common.utils.registry import registry
-from python.adapters.iadapter import OltAdapter
-from python.adapters.kafka.kafka_proxy import get_kafka_proxy
-from python.protos import ponsim_pb2
-from python.protos import third_party
-from python.protos.common_pb2 import OperStatus, ConnectStatus
-from python.protos.inter_container_pb2 import SwitchCapability, PortCapability, \
+from pyvoltha.adapters.common.frameio.frameio import BpfProgramFilter, hexify
+from pyvoltha.common.utils.asleep import asleep
+from pyvoltha.common.utils.registry import registry
+from pyvoltha.adapters.iadapter import OltAdapter
+from pyvoltha.adapters.kafka.kafka_proxy import get_kafka_proxy
+from voltha_protos.ponsim_pb2_grpc import PonSimStub
+from voltha_protos.common_pb2 import OperStatus, ConnectStatus
+from voltha_protos.inter_container_pb2 import SwitchCapability, PortCapability, \
     InterAdapterMessageType, InterAdapterResponseBody
-from python.protos.device_pb2 import Port, PmConfig, PmConfigs
-from python.protos.events_pb2 import KpiEvent, KpiEventType, MetricValuePairs
-from python.protos.logical_device_pb2 import LogicalPort
-from python.protos.openflow_13_pb2 import OFPPS_LIVE, OFPPF_FIBER, \
+from voltha_protos.device_pb2 import Port, PmConfig, PmConfigs
+from voltha_protos.events_pb2 import KpiEvent, KpiEventType, MetricValuePairs
+from voltha_protos.logical_device_pb2 import LogicalPort
+from voltha_protos.openflow_13_pb2 import OFPPS_LIVE, OFPPF_FIBER, \
     OFPPF_1GB_FD, \
     OFPC_GROUP_STATS, OFPC_PORT_STATS, OFPC_TABLE_STATS, OFPC_FLOW_STATS, \
     ofp_switch_features, ofp_desc
-from python.protos.openflow_13_pb2 import ofp_port
-from python.protos.ponsim_pb2 import FlowTable, PonSimFrame, PonSimMetricsRequest
+from voltha_protos.openflow_13_pb2 import ofp_port
+from voltha_protos.ponsim_pb2 import FlowTable, PonSimFrame, PonSimMetricsRequest
 
-_ = third_party
 log = structlog.get_logger()
 
 PACKET_IN_VLAN = 4000
@@ -116,7 +114,7 @@ class AdapterPmMetrics:
 
     def collect_port_metrics(self, channel):
         rtrn_port_metrics = dict()
-        stub = ponsim_pb2.PonSimStub(channel)
+        stub = PonSimStub(channel)
         stats = stub.GetStats(Empty())
         rtrn_port_metrics['pon'] = self.extract_pon_metrics(stats)
         rtrn_port_metrics['nni'] = self.extract_nni_metrics(stats)
@@ -249,7 +247,7 @@ class PonSimOltHandler(object):
                 return
 
             yield self.get_channel()
-            stub = ponsim_pb2.PonSimStub(self.channel)
+            stub = PonSimStub(self.channel)
             info = stub.GetDeviceInfo(Empty())
             log.info('got-info', info=info, device_id=device.id)
             self.ofp_port_no = info.nni_port
@@ -388,8 +386,7 @@ class PonSimOltHandler(object):
         This call establishes a GRPC stream to receive frames.
         """
         yield self.get_channel()
-        stub = ponsim_pb2.PonSimStub(self.channel)
-        # stub = ponsim_pb2.PonSimStub(self.get_channel())
+        stub = PonSimStub(self.channel)
 
         # Attempt to establish a grpc stream with the remote ponsim service
         self.frames = stub.ReceiveFrames(Empty())
@@ -410,7 +407,7 @@ class PonSimOltHandler(object):
     @inlineCallbacks
     def update_flow_table(self, flows):
         yield self.get_channel()
-        stub = ponsim_pb2.PonSimStub(self.channel)
+        stub = PonSimStub(self.channel)
 
         self.log.info('pushing-olt-flow-table')
         stub.UpdateFlowTable(FlowTable(
@@ -439,7 +436,7 @@ class PonSimOltHandler(object):
     def send_proxied_message(self, proxy_address, msg):
         self.log.info('sending-proxied-message')
         if isinstance(msg, FlowTable):
-            stub = ponsim_pb2.PonSimStub(self.get_channel())
+            stub = PonSimStub(self.get_channel())
             self.log.info('pushing-onu-flow-table', port=msg.port)
             res = stub.UpdateFlowTable(msg)
             self.core_proxy.receive_proxied_message(proxy_address, res)
@@ -452,7 +449,7 @@ class PonSimOltHandler(object):
                 f = FlowTable()
                 if request.body:
                     request.body.Unpack(f)
-                    stub = ponsim_pb2.PonSimStub(self.channel)
+                    stub = PonSimStub(self.channel)
                     self.log.info('pushing-onu-flow-table')
                     res = stub.UpdateFlowTable(f)
                     # Send response back
@@ -471,7 +468,7 @@ class PonSimOltHandler(object):
                 m = PonSimMetricsRequest()
                 if request.body:
                     request.body.Unpack(m)
-                    stub = ponsim_pb2.PonSimStub(self.channel)
+                    stub = PonSimStub(self.channel)
                     self.log.info('proxying onu stats request', port=m.port)
                     res = stub.GetStats(m)
                     # Send response back
@@ -508,7 +505,7 @@ class PonSimOltHandler(object):
             out_port = self.nni_port.port_no if egress_port == self.nni_port.port_no else 1
 
             # send over grpc stream
-            stub = ponsim_pb2.PonSimStub(self.channel)
+            stub = PonSimStub(self.channel)
             frame = PonSimFrame(id=self.device_id, payload=str(out_pkt),
                                 out_port=out_port)
             stub.SendFrame(frame)
@@ -581,7 +578,7 @@ class PonSimOltHandler(object):
         # process if the device was in DISABLED state on voltha restart
         if not self.ofp_port_no and not self.nni_port:
             yield self.get_channel()
-            stub = ponsim_pb2.PonSimStub(self.channel)
+            stub = PonSimStub(self.channel)
             info = stub.GetDeviceInfo(Empty())
             log.info('got-info', info=info)
             self.ofp_port_no = info.nni_port
