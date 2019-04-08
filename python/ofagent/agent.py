@@ -22,7 +22,7 @@ from twisted.internet import protocol, reactor, ssl
 from twisted.internet.defer import Deferred, inlineCallbacks
 
 import loxi.of13 as of13
-from common.utils.asleep import asleep
+from pyvoltha.common.utils.asleep import asleep
 from of_connection import OpenFlowConnection
 from of_protocol_handler import OpenFlowProtocolHandler
 
