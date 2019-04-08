@@ -55,12 +55,14 @@ DOCKER_BUILD_ARGS = \
 	 --rm --force-rm \
 	$(DOCKER_BUILD_EXTRA_ARGS)
 
+DOCKER_BUILD_EXTRA_ARGS = \
+	--build-arg LOCAL_PYVOLTHA=${LOCAL_PYVOLTHA} \
+	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
+
 VENVDIR := venv-$(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 DOCKER_IMAGE_LIST = \
 	base \
-	protoc \
-	protos \
 	adapter-ponsim-olt \
 	adapter-ponsim-onu
 
@@ -101,8 +103,6 @@ help:
 	@echo "distclean    : Remove venv directory"
 	@echo "fetch        : Pre-fetch artifacts for subsequent local builds"
 	@echo "help         : Print this help"
-	@echo "protoc       : Build a container with protoc installed"
-	@echo "protos       : Compile all grpc/protobuf files"
 	@echo "rebuild-venv : Rebuild local Python virtualenv from scratch"
 	@echo "venv         : Build local Python virtualenv if did not exist yet"
 	@echo "containers   : Build all the docker containers"
@@ -142,20 +142,22 @@ $(DIRS_FLAKE8):
 	@echo "    FLAKE8 $(basename $@)"
 	-$(Q)$(MAKE) -C $(basename $@) flake8
 
-build: protoc protos containers
+build: containers
 
 containers: base adapter_ponsim_olt adapter_ponsim_onu ofagent cli
 
 base:
+	mkdir -p local_imports
 ifdef LOCAL_PYVOLTHA
-	mkdir -p pyvoltha/dist
-	cp ../../pyvoltha/dist/*.tar.gz pyvoltha/dist/
-	mkdir -p voltha-protos/dist
-	cp ../../voltha-protos/dist/*.tar.gz voltha-protos/dist/
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base_local .
-else
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base .
+	mkdir -p local_imports/pyvoltha/dist
+	cp ../../pyvoltha/dist/*.tar.gz local_imports/pyvoltha/dist/
 endif
+ifdef LOCAL_PROTOS
+	mkdir -p local_imports/voltha-protos/dist
+	cp ../../voltha-protos/dist/*.tar.gz local_imports/voltha-protos/dist/
+endif
+	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-base:${TAG} -f docker/Dockerfile.base .
+
 
 adapter_ponsim_olt:
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-ponsim-olt:${TAG} -f docker/Dockerfile.adapter_ponsim_olt .
@@ -184,30 +186,9 @@ pull: $(patsubst  %,%.pull,$(DOCKER_IMAGE_LIST))
 %.pull:
 	docker pull ${REGISTRY}${REPOSITORY}voltha-$(subst .pull,,$@):${TAG}
 
-protoc:
-ifeq ($(VOLTHA_BUILD),docker)
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-protoc:${TAG} -f docker/Dockerfile.protoc .
-endif
-
-protos:
-ifneq ($(VOLTHA_BUILD),docker)
-	make -C protos
-else
-	#cp ../protos/*.proto ./protos
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-protos:${TAG} -f docker/Dockerfile.protos .
-endif
-
-install-protoc:
-	make -C voltha/protos install-protoc
-
 clean:
 	find . -name '*.pyc' | xargs rm -f
-	rm -f ./protos/*_pb2.py
-	rm -f ./protos/*_pb2_grpc.py
-	rm -f ./protos/*.desc
-	rm -f ./protos/*.proto
-	rm -rf pyvoltha
-	rm -rf voltha-protos
+	rm -rf local_imports
 
 distclean: clean
 	rm -rf ${VENVDIR}
@@ -243,11 +224,14 @@ ${VENVDIR}/.built:
 
 ifdef LOCAL_PYVOLTHA
 	mkdir -p pyvoltha/dist
-	cp ../../pyvoltha/dist/*.tar.gz pyvoltha/dist/
-	mkdir -p voltha-protos/dist
-	cp ../../voltha-protos/dist/*.tar.gz voltha-protos/dist/
+	cp ../../pyvoltha/dist/*.tar.gz local_imports/pyvoltha/dist/
 	. ${VENVDIR}/bin/activate && \
-	    pip install pyvoltha/dist/*.tar.gz && \
+	    pip install local_imports/pyvoltha/dist/*.tar.gz
+endif
+ifdef LOCAL_PROTOS
+	mkdir -p voltha-protos/dist
+	cp ../../voltha-protos/dist/*.tar.gz local_imports/voltha-protos/dist/
+	. ${VENVDIR}/bin/activate && \
 	    pip install voltha-protos/dist/*.tar.gz
 endif
 
