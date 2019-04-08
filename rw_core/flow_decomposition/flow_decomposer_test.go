@@ -29,7 +29,7 @@ import (
 
 func init() {
 	log.AddPackage(log.JSON, log.WarnLevel, nil)
-	log.UpdateAllLoggers(log.Fields{"instanceId": "flow-descomposition"})
+	log.UpdateAllLoggers(log.Fields{"instanceId": "flow-decomposition"})
 	log.SetAllLogLevel(log.WarnLevel)
 }
 
@@ -361,7 +361,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	tfd.defaultRules.AddFlowsAndGroup("onu4", fg)
 
 	//Set up the device graph - flow decomposer uses it only to verify whether a port is a root port.
-	tfd.deviceGraph = graph.NewDeviceGraph(tfd.getDeviceHelper)
+	tfd.deviceGraph = graph.NewDeviceGraph("ldid", tfd.getDeviceHelper)
 	tfd.deviceGraph.RootPorts = make(map[uint32]uint32)
 	tfd.deviceGraph.RootPorts[10] = 10
 
