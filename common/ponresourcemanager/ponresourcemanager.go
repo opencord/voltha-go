@@ -27,7 +27,7 @@ import (
     "github.com/opencord/voltha-go/common/log"
     "github.com/opencord/voltha-go/db/kvstore"
     "github.com/opencord/voltha-go/db/model"
-    tp "github.com/opencord/voltha-go/adapters/common/techprofile"
+    tp "github.com/opencord/voltha-go/common/techprofile"
 )
 
 const (
@@ -251,7 +251,7 @@ func (PONRMgr *PONResourceManager) UpdateRanges(StartIDx string, StartID uint32,
        param: shared pool id
        param: global resource manager
     */
-    fmt.Debugf("update ranges for %s, %d", StartIDx, StartID)
+    log.Debugf("update ranges for %s, %d", StartIDx, StartID)
 
     if StartID != 0 {
         PONRMgr.PonResourceRanges[StartIDx] = StartID
