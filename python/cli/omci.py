@@ -26,6 +26,8 @@ from table import print_pb_list_as_table
 from voltha_protos import voltha_pb2
 from voltha_protos.omci_mib_db_pb2 import MibDeviceData, MibClassData, \
     MibInstanceData
+from voltha_protos.omci_alarm_db_pb2 import AlarmDeviceData, AlarmClassData, \
+    AlarmInstanceData
 from os import linesep
 
 
@@ -209,8 +211,8 @@ class OmciCli(Cmd):
         return ' '.join([v[0].upper() + v[1:] for v in attr.split('_')])
 
     def _instance_to_dict(self, instance):
-        if not isinstance(instance, MibInstanceData):
-            raise TypeError('{} is not of type MibInstanceData'.format(type(instance)))
+        if not isinstance(instance, (MibInstanceData, AlarmInstanceData)):
+            raise TypeError('{} is not of type MIB/Alarm Instance Data'.format(type(instance)))
 
         data = {
             OmciCli.INSTANCE_ID_KEY: instance.instance_id,
@@ -224,8 +226,8 @@ class OmciCli(Cmd):
         return data
 
     def _class_to_dict(self, val):
-        if not isinstance(val, MibClassData):
-            raise TypeError('{} is not of type MibClassData'.format(type(val)))
+        if not isinstance(val, (MibClassData, AlarmClassData)):
+            raise TypeError('{} is not of type MIB/Alarm Class Data'.format(type(val)))
 
         data = {
             OmciCli.CLASS_ID_KEY: val.class_id,
