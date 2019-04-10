@@ -29,10 +29,10 @@ import (
 )
 
 type AdapterProxy struct {
-	TestMode     bool
+	TestMode              bool
 	deviceTopicRegistered bool
-	coreTopic *kafka.Topic
-	kafkaICProxy *kafka.InterContainerProxy
+	coreTopic             *kafka.Topic
+	kafkaICProxy          *kafka.InterContainerProxy
 }
 
 func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy) *AdapterProxy {
@@ -62,17 +62,16 @@ func (ap *AdapterProxy) updateCoreTopic(coreTopic *kafka.Topic) {
 	ap.coreTopic = coreTopic
 }
 
-func (ap *AdapterProxy) getCoreTopic() kafka.Topic{
+func (ap *AdapterProxy) getCoreTopic() kafka.Topic {
 	if ap.coreTopic != nil {
 		return *ap.coreTopic
 	}
-	return kafka.Topic{Name:ap.kafkaICProxy.DefaultTopic.Name}
+	return kafka.Topic{Name: ap.kafkaICProxy.DefaultTopic.Name}
 }
 
-func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic{
+func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic {
 	return kafka.Topic{Name: adapterName}
 }
-
 
 func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("AdoptDevice", log.Fields{"device": device})
@@ -483,4 +482,26 @@ func (ap *AdapterProxy) SuppressAlarm(filter voltha.AlarmFilter) error {
 func (ap *AdapterProxy) UnSuppressAlarm(filter voltha.AlarmFilter) error {
 	log.Debug("UnSuppressAlarm")
 	return nil
+}
+
+func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device, simulatereq *voltha.SimulateAlarmRequest) error {
+	log.Debugw("SimulateAlarm", log.Fields{"id": simulatereq.Id})
+	rpc := "simulate_alarm"
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "request",
+		Value: simulatereq,
+	}
+
+	// Use a device topic for the response as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	ap.deviceTopicRegistered = true
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("SimulateAlarm-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
 }

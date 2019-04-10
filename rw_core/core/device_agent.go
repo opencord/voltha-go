@@ -21,10 +21,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
+	fu "github.com/opencord/voltha-go/rw_core/utils"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
-	fu "github.com/opencord/voltha-go/rw_core/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"reflect"
@@ -36,7 +36,7 @@ type DeviceAgent struct {
 	deviceType       string
 	lastData         *voltha.Device
 	adapterProxy     *AdapterProxy
-	adapterMgr *AdapterManager
+	adapterMgr       *AdapterManager
 	deviceMgr        *DeviceManager
 	clusterDataProxy *model.Proxy
 	deviceProxy      *model.Proxy
@@ -410,7 +410,7 @@ func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.I
 		}
 	}
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
-	}
+}
 
 func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	agent.lockDevice.Lock()
@@ -448,8 +448,8 @@ func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDo
 		// The status of the AdminState will be changed following the update_download_status response from the adapter
 		// The image name will also be removed from the device list
 	}
-	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil}
-
+	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
+}
 
 func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	agent.lockDevice.Lock()
@@ -484,8 +484,7 @@ func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDown
 		}
 	}
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
-	}
-
+}
 
 func (agent *DeviceAgent) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	agent.lockDevice.Lock()
@@ -504,7 +503,7 @@ func (agent *DeviceAgent) getImageDownloadStatus(ctx context.Context, img *volth
 	}
 }
 
-func (agent *DeviceAgent) updateImageDownload(img *voltha.ImageDownload) error{
+func (agent *DeviceAgent) updateImageDownload(img *voltha.ImageDownload) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	log.Debugw("updateImageDownload", log.Fields{"id": agent.deviceId})
@@ -526,7 +525,7 @@ func (agent *DeviceAgent) updateImageDownload(img *voltha.ImageDownload) error{
 		// Set the Admin state to enabled if required
 		if (img.DownloadState != voltha.ImageDownload_DOWNLOAD_REQUESTED &&
 			img.DownloadState != voltha.ImageDownload_DOWNLOAD_STARTED) ||
-			(img.ImageState != voltha.ImageDownload_IMAGE_ACTIVATING){
+			(img.ImageState != voltha.ImageDownload_IMAGE_ACTIVATING) {
 			cloned.AdminState = voltha.AdminState_ENABLED
 		}
 
@@ -562,7 +561,7 @@ func (agent *DeviceAgent) listImageDownloads(ctx context.Context, deviceId strin
 	if device, err := agent.getDeviceWithoutLock(); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", agent.deviceId)
 	} else {
-		return &voltha.ImageDownloads{Items:device.ImageDownloads}, nil
+		return &voltha.ImageDownloads{Items: device.ImageDownloads}, nil
 	}
 }
 
@@ -1015,4 +1014,21 @@ func (agent *DeviceAgent) updateDeviceAttribute(name string, value interface{}) 
 		log.Warnw("attribute-update-failed", log.Fields{"attribute": name, "value": value})
 	}
 	return
+}
+
+func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha.SimulateAlarmRequest) error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("simulateAlarm", log.Fields{"id": agent.deviceId})
+	// Get the most up to date the device info
+	if device, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// First send the request to an Adapter and wait for a response
+		if err := agent.adapterProxy.SimulateAlarm(ctx, device, simulatereq); err != nil {
+			log.Debugw("simulateAlarm-error", log.Fields{"id": agent.lastData.Id, "error": err})
+			return err
+		}
+	}
+	return nil
 }
