@@ -840,8 +840,25 @@ func (handler *APIHandler) SimulateAlarm(
 	ctx context.Context,
 	in *voltha.SimulateAlarmRequest,
 ) (*common.OperationResp, error) {
-	log.Debug("SimulateAlarm-stub")
-	return nil, nil
+	log.Debugw("SimulateAlarm-request", log.Fields{"id": in.Id})
+	successResp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
+	if isTestMode(ctx) {
+		return successResp, nil
+	}
+
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:in.Id}, handler.longRunningRequestTimeout); err != nil {
+			failedresponse := &common.OperationResp{Code:voltha.OperationResp_OPERATION_FAILURE}
+			return failedresponse, err
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.simulateAlarm(ctx, in, ch)
+	return successResp, nil
 }
 
 //@TODO useless stub, what should this actually do?

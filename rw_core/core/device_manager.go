@@ -495,7 +495,7 @@ func (dMgr *DeviceManager) addPort(deviceId string, port *voltha.Port) error {
 		}
 		// Notify the logical device manager to setup a logical port if needed
 		if port.Type == voltha.Port_ETHERNET_NNI || port.Type == voltha.Port_ETHERNET_UNI {
-			if device , err := dMgr.GetDevice(deviceId); err == nil {
+			if device, err := dMgr.GetDevice(deviceId); err == nil {
 				go dMgr.logicalDeviceMgr.addLogicalPort(device, port)
 			} else {
 				log.Errorw("failed-to-retrieve-device", log.Fields{"deviceId": deviceId})
@@ -990,4 +990,17 @@ func (dMgr *DeviceManager) GetParentDeviceId(deviceId string) *string {
 		return &device.ParentId
 	}
 	return nil
+}
+
+func (dMgr *DeviceManager) simulateAlarm(ctx context.Context, simulatereq *voltha.SimulateAlarmRequest, ch chan interface{}) {
+	log.Debugw("simulateAlarm", log.Fields{"id": simulatereq.Id, "Indicator": simulatereq.Indicator, "IntfId": simulatereq.IntfId,
+		"PortTypeName": simulatereq.PortTypeName, "OnuDeviceId": simulatereq.OnuDeviceId, "InverseBitErrorRate": simulatereq.InverseBitErrorRate,
+		"Drift": simulatereq.Drift, "NewEqd": simulatereq.NewEqd, "OnuSerialNumber": simulatereq.OnuSerialNumber, "Operation": simulatereq.Operation})
+	var res interface{}
+	if agent := dMgr.getDeviceAgent(simulatereq.Id); agent != nil {
+		res = agent.simulateAlarm(ctx, simulatereq)
+		log.Debugw("SimulateAlarm-result", log.Fields{"result": res})
+	}
+	//TODO CLI always get successful response
+	sendResponse(ctx, ch, res)
 }
