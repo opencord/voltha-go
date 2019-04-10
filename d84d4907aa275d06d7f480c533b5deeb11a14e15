@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "254e9689_f2bf13d0",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-04-10T18:26:12Z",
+      "side": 1,
+      "message": "Its probably not so useless anymore...",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 20
+      },
+      "revId": "d84d4907aa275d06d7f480c533b5deeb11a14e15",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
