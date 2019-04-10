@@ -22,6 +22,23 @@
       "revId": "d84d4907aa275d06d7f480c533b5deeb11a14e15",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2482498_d4b16296",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 839,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-10T18:49:53Z",
+      "side": 1,
+      "message": "This API is not present in the voltha.proto service.  If needed, it should be added there first.",
+      "revId": "d84d4907aa275d06d7f480c533b5deeb11a14e15",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
