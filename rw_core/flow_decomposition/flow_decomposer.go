@@ -840,6 +840,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress),
 					VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | inputPort),
+					Metadata_ofp(uint64(inputPort)),
 				},
 				Actions: []*ofp.OfpAction{
 					PushVlan(0x8100),
@@ -895,6 +896,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
+				Metadata_ofp(uint64(inPortNo)),
 			},
 			Actions: GetActions(flow),
 		}
@@ -923,6 +925,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(ingressHop.Ingress),
+					Metadata_ofp(uint64(inPortNo)),
 				},
 				Actions: []*ofp.OfpAction{
 					Output(ingressHop.Egress),
@@ -939,6 +942,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress), //egress_hop.ingress_port.port_no
+					Metadata_ofp(uint64(inPortNo)),
 				},
 				Actions: []*ofp.OfpAction{
 					Output(egressHop.Egress),
@@ -958,6 +962,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress),
+					Metadata_ofp(uint64(inPortNo)),
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
@@ -1000,7 +1005,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 				//	TODO: Delete flow
 				return deviceRules
 			case 2:
-				log.Debugw("route-found", log.Fields{"ingressHop": ingressHop, "egressHop": egressHop})
+				log.Debugw("route-found", log.Fields{"ingressHop": ingressHop, "egressHop": egressHop, "recalculatedRoute": recalculatedRoute})
 				break
 			default:
 				log.Errorw("invalid-route-length", log.Fields{"routeLen": len(route)})
@@ -1014,20 +1019,22 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 			//	TODO: Delete flow
 			return deviceRules
 		}
+
+		log.Debugw("building-recalculated-flow", log.Fields{"ingressHop": ingressHop, "egressHop": egressHop})
+
 		var fa *fu.FlowArgs
 		fa = &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				InPort(ingressHop.Ingress),
-				Metadata_ofp(innerTag),
+				InPort(ingressHop.Egress),
 			},
 			Actions: GetActions(flow),
 		}
 		// Augment the matchfields with the ofpfields from the flow
-		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT, METADATA)...)
+		fa.MatchFields = append(fa.MatchFields, GetOfbFields(flow, IN_PORT)...)
 
 		// Augment the Actions
-		fa.Actions = append(fa.Actions, Output(ingressHop.Egress))
+		fa.Actions = append(fa.Actions, Output(ingressHop.Ingress))
 
 		fg := fu.NewFlowsAndGroups()
 		fg.AddFlow(MkFlowStat(fa))
