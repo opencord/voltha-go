@@ -840,6 +840,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress),
 					VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | inputPort),
+					TunnelId(uint64(inputPort)),
 				},
 				Actions: []*ofp.OfpAction{
 					PushVlan(0x8100),
@@ -859,6 +860,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 					VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000),
 					VlanPcp(0),
 					Metadata_ofp(uint64(inputPort)),
+					TunnelId(uint64(inputPort)),
 				},
 				Actions: []*ofp.OfpAction{
 					PopVlan(),
@@ -895,6 +897,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
+				TunnelId(uint64(inPortNo)),
 			},
 			Actions: GetActions(flow),
 		}
@@ -939,6 +942,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress), //egress_hop.ingress_port.port_no
+					TunnelId(uint64(inPortNo)),
 				},
 				Actions: []*ofp.OfpAction{
 					Output(egressHop.Egress),
@@ -958,6 +962,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress),
+					TunnelId(uint64(inPortNo)),
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
@@ -1020,6 +1025,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
 				Metadata_ofp(innerTag),
+				TunnelId(uint64(portNumber)),
 			},
 			Actions: GetActions(flow),
 		}
@@ -1039,6 +1045,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
+				TunnelId(uint64(inPortNo)),
 			},
 			Actions: GetActions(flow),
 		}
@@ -1080,6 +1087,7 @@ func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, ro
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
+				TunnelId(uint64(inPortNo)),
 			},
 			Actions: []*ofp.OfpAction{
 				Output(ingressHop.Egress),
