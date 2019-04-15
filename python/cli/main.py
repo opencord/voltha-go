@@ -225,7 +225,11 @@ class VolthaCli(Cmd):
             'hardware_version',
             'images',
             'firmware_version',
-            'vendor_id'
+            'vendor_id',
+            'flows',
+            'pm_configs',
+            'proxy_address',
+            'ports'
         }
         print_pb_list_as_table('Devices:', devices, omit_fields, self.poutput)
 
