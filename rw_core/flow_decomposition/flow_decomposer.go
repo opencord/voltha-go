@@ -463,6 +463,18 @@ func GetGotoTableId(flow *ofp.OfpFlowStats) uint32 {
 	return 0
 }
 
+func GetTunnelId(flow *ofp.OfpFlowStats) uint64 {
+	if flow == nil {
+		return 0
+	}
+	for _, field := range GetOfbFields(flow) {
+		if field.Type == TUNNEL_ID {
+			return field.GetTunnelId()
+		}
+	}
+	return 0
+}
+
 //GetMetaData - legacy get method (only want lower 32 bits)
 func GetMetaData(flow *ofp.OfpFlowStats) uint32 {
 	if flow == nil {
@@ -516,6 +528,18 @@ func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint64 {
 		return md
 	}
 	return (md >> 32) & 0xffffffff
+}
+
+// Extract the child device port from a flow that contains the parent device peer port.  Typically the UNI port of an
+// ONU child device.  Per TST agreement this will be the lower 32 bits of tunnel id reserving upper 32 bits for later
+// use
+func GetChildPortFromTunnelId(flow *ofp.OfpFlowStats) uint32 {
+	tid := GetTunnelId(flow)
+	if tid == 0 {
+		return 0
+	}
+	// Per TST agreement we are keeping any child port id (uni port id) in the lower 32 bits
+	return uint32(tid & 0xffffffff)
 }
 
 func HasNextTable(flow *ofp.OfpFlowStats) bool {
@@ -848,6 +872,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress),
 					VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | inputPort),
+					TunnelId(uint64(inputPort)),
 				},
 				Actions: []*ofp.OfpAction{
 					PushVlan(0x8100),
@@ -867,6 +892,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 					VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000),
 					VlanPcp(0),
 					Metadata_ofp(uint64(inputPort)),
+					TunnelId(uint64(inputPort)),
 				},
 				Actions: []*ofp.OfpAction{
 					PopVlan(),
@@ -904,6 +930,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
+				TunnelId(uint64(inPortNo)),
 			},
 			Actions: GetActions(flow),
 		}
@@ -948,6 +975,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress), //egress_hop.ingress_port.port_no
+					TunnelId(uint64(inPortNo)),
 				},
 				Actions: []*ofp.OfpAction{
 					Output(egressHop.Egress),
@@ -967,6 +995,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					InPort(egressHop.Ingress),
+					TunnelId(uint64(inPortNo)),
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
@@ -1029,6 +1058,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
 				Metadata_ofp(innerTag),
+				TunnelId(uint64(portNumber)),
 			},
 			Actions: GetActions(flow),
 		}
@@ -1048,6 +1078,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
+				TunnelId(uint64(inPortNo)),
 			},
 			Actions: GetActions(flow),
 		}
@@ -1090,6 +1121,7 @@ func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, ro
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				InPort(ingressHop.Ingress),
+				TunnelId(uint64(inPortNo)),
 			},
 			Actions: []*ofp.OfpAction{
 				Output(ingressHop.Egress),
