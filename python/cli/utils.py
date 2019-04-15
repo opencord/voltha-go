@@ -90,6 +90,7 @@ field_printers = {
     'TCP_SRC': lambda f: (108, 'tcp_src', str(f['tcp_src'])),
     'TCP_DST': lambda f: (109, 'tcp_dst', str(f['tcp_dst'])),
     'METADATA': lambda f: (110, 'metadata', str(f['table_metadata'])),
+    'TUNNEL_ID': lambda f: (111, 'tunnel_id', str(f['tunnel_id'])),
 }
 
 
