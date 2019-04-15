@@ -473,6 +473,7 @@ func TestEapolReRouteRuleDecomposition(t *testing.T) {
 		MatchFields: []*ofp.OfpOxmOfbField{
 			InPort(1),
 			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 1),
+			TunnelId(uint64(1)),
 			EthType(0x888e),
 		},
 		Actions: []*ofp.OfpAction{
@@ -492,6 +493,7 @@ func TestEapolReRouteRuleDecomposition(t *testing.T) {
 			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000),
 			VlanPcp(0),
 			Metadata_ofp(1),
+			TunnelId(uint64(1)),
 		},
 		Actions: []*ofp.OfpAction{
 			PopVlan(),
@@ -553,6 +555,7 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 		MatchFields: []*ofp.OfpOxmOfbField{
 			InPort(1),
 			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 1),
+			TunnelId(uint64(1)),
 			EthType(0x0800),
 			Ipv4Dst(0xffffffff),
 			IpProto(17),
@@ -576,6 +579,7 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000),
 			VlanPcp(0),
 			Metadata_ofp(1),
+			TunnelId(uint64(1)),
 		},
 		Actions: []*ofp.OfpAction{
 			PopVlan(),
@@ -634,6 +638,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 		KV: fu.OfpFlowModArgs{"priority": 500},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			InPort(2),
+			TunnelId(uint64(1)),
 			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
 			VlanPcp(0),
 		},
@@ -650,6 +655,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 		KV: fu.OfpFlowModArgs{"priority": 500},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			InPort(1),
+			TunnelId(uint64(1)),
 			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
 			VlanPcp(0),
 		},
@@ -710,6 +716,7 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 		MatchFields: []*ofp.OfpOxmOfbField{
 			InPort(2),
 			Metadata_ofp(1000),
+			TunnelId(uint64(1)),
 			VlanPcp(0),
 		},
 		Actions: []*ofp.OfpAction{
