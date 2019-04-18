@@ -86,7 +86,7 @@ containers: base rw_core ro_core simulated_olt simulated_onu afrouter arouterd
 base:
 ifdef LOCAL_PROTOS
 	mkdir -p vendor/github.com/opencord/voltha-protos/go
-	cp -r ${GOPATH}/src/github.com/opencord/voltha-protos/go/ vendor/github.com/opencord/voltha-protos
+	cp -r ${GOPATH}/src/github.com/opencord/voltha-protos/go/* vendor/github.com/opencord/voltha-protos/go
 endif
 	docker build $(DOCKER_BUILD_ARGS) -t base:latest -f docker/Dockerfile.base .
 
