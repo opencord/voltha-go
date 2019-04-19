@@ -18,6 +18,7 @@ package model
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-protos/go/common"
@@ -27,6 +28,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 )
 
 var (
@@ -121,12 +123,13 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 	TestProxy_Root_Device.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
 	TestProxy_Root_Device.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
 
-	// Add the device
 	if added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, ""); added == nil {
 		t.Error("Failed to add device")
 	} else {
 		t.Logf("Added device : %+v", added)
 	}
+
+	waitOrDie(&postAddExecuted)
 
 	// Verify that the added device can now be retrieved
 	if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_DeviceId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
@@ -147,9 +150,29 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
 	TestProxy_Device.Id = TestProxy_DeviceId
 
-	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "");
+	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "")
 	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_Device).Interface().(proto.Message).String() {
 		t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
+	}
+}
+
+func waitOrDie(on *bool) error {
+	timeout := time.After(5 * time.Second)
+	tick := time.Tick(500 * time.Millisecond)
+	// Keep trying until we're timed out or got a result or got an error
+	for {
+		select {
+		// Got a timeout! fail with a timeout error
+		case <-timeout:
+			return errors.New("timed out")
+		// Got a tick, we should check on doSomething()
+		case <-tick:
+			if *on {
+				return nil
+			}
+			// doSomething() didn't work yet, but it didn't fail, so let's try again
+			// this will exit up to the for loop
+		}
 	}
 }
 
@@ -169,6 +192,8 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 	} else {
 		t.Logf("Added adapter : %+v", added)
 	}
+
+	waitOrDie(&postAddExecuted)
 
 	// Verify that the added device can now be retrieved
 	if d := TestProxy_Root_Adapter.Get("/adapters/"+TestProxy_AdapterId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
@@ -243,6 +268,8 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 			t.Logf("Updated device : %+v", afterUpdate)
 		}
 
+		waitOrDie(&postUpdateExecuted)
+
 		if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_TargetDeviceId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated device (root proxy)")
 		} else {
@@ -290,6 +317,8 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	} else {
 		t.Logf("Updated flows : %+v", updated)
 	}
+
+	waitOrDie(&postUpdateExecuted)
 
 	if d := devFlowsProxy.Get("/", 0, false, ""); d == nil {
 		t.Error("Failed to find updated flows (flows proxy)")
@@ -343,6 +372,8 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 			t.Logf("Updated adapter : %+v", afterUpdate)
 		}
 
+		waitOrDie(&postUpdateExecuted)
+
 		if d := TestProxy_Root_Adapter.Get("/adapters/"+TestProxy_AdapterId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated adapter (root proxy)")
 		} else {
@@ -379,6 +410,9 @@ func TestProxy_1_4_1_Remove_Device(t *testing.T) {
 	} else {
 		t.Logf("Removed device : %+v", removed)
 	}
+
+	waitOrDie(&postRemoveExecuted)
+
 	if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_DeviceId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
@@ -413,6 +447,8 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 		t.Logf("Added logical device : %+v", added)
 	}
 
+	waitOrDie(&postAddExecuted)
+
 	if ld := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, ""); !reflect.ValueOf(ld).IsValid() {
 		t.Error("Failed to find added logical device")
 	} else {
@@ -431,7 +467,7 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
 	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
 
-	added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, "");
+	added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, "")
 	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_LogicalDevice).Interface().(proto.Message).String() {
 		t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
 	}
@@ -495,6 +531,9 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 		} else {
 			t.Logf("Updated logical device : %+v", afterUpdate)
 		}
+
+		waitOrDie(&postUpdateExecuted)
+
 		if d := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_TargetLogicalDeviceId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated logical device (root proxy)")
 		} else {
@@ -576,6 +615,8 @@ func TestProxy_2_4_1_Remove_Device(t *testing.T) {
 	} else {
 		t.Logf("Removed device : %+v", removed)
 	}
+
+	waitOrDie(&postRemoveExecuted)
 	if d := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
