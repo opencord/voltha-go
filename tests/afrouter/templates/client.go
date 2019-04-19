@@ -81,17 +81,15 @@ func {{.Name}}Send(mthd string, ctx context.Context, param interface{},
 	{{range .Methods}}
 	case "{{.Name}}":
 		var hdr metadata.MD
-		switch t := param.(type) {
+		switch param.(type) {
 		case *{{.Param}}:
 	{{if .Ss}}
-			_=t
 			_=hdr
 	{{else if .Cs}}
-			_=t
 			_=hdr
 	{{else}}
 			client := {{.Pkg}}.New{{.Svc}}Client({{$.Name}}Client.conn)
-			res, err := client.{{.Name}}(ctx, t, grpc.Header(&hdr))
+			res, err := client.{{.Name}}(ctx, param.(*{{.Param}}), grpc.Header(&hdr))
 			if err != nil {
 				return errors.New("Error sending method {{.Name}}")
 			}

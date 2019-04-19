@@ -79,6 +79,10 @@ required = [
   name = "github.com/stretchr/testify"
   version = "1.3.0"
 
+[[constraint]]
+  name = "github.com/opencord/voltha-protos"
+  branch = "master"
+
 [[override]]
   name = "go.etcd.io/etcd"
   branch = "master"

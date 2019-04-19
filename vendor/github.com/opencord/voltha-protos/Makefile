@@ -15,11 +15,22 @@
 # Makefile for voltha-protos
 default: test
 
+# set default shell options
+SHELL = bash -e -o pipefail
+
+# Function to extract the last path component from go_package line in .proto files
+define go_package_path
+$(shell grep go_package $(1) | sed -n 's/.*\/\(.*\)";/\1/p')
+endef
+
 # Variables
-PROTO_FILES := $(wildcard protos/voltha_protos/*.proto)
+PROTO_FILES := $(sort $(wildcard protos/voltha_protos/*.proto))
+
 PROTO_PYTHON_DEST_DIR := python/voltha_protos
 PROTO_PYTHON_PB2 := $(foreach f, $(PROTO_FILES), $(patsubst protos/voltha_protos/%.proto,$(PROTO_PYTHON_DEST_DIR)/%_pb2.py,$(f)))
 PROTO_PYTHON_PB2_GRPC := $(foreach f, $(PROTO_FILES), $(patsubst protos/voltha_protos/%.proto,$(PROTO_PYTHON_DEST_DIR)/%_pb2_grpc.py,$(f)))
+PROTO_GO_DEST_DIR := go
+PROTO_GO_PB:= $(foreach f, $(PROTO_FILES), $(patsubst protos/voltha_protos/%.proto,$(PROTO_GO_DEST_DIR)/$(call go_package_path,$(f))/%.pb.go,$(f)))
 
 PROTOC_PREFIX := /usr/local
 PROTOC_VERSION := "3.7.0"
@@ -29,12 +40,13 @@ PROTOC_TARBALL := protobuf-python-$(PROTOC_VERSION).tar.gz
 PROTOC_DOWNLOAD_URI := $(PROTOC_DOWNLOAD_PREFIX)/v$(PROTOC_VERSION)/$(PROTOC_TARBALL)
 PROTOC_BUILD_TMP_DIR := "/tmp/protobuf-build-$(shell uname -s | tr '[:upper:]' '[:lower:]')"
 
+# Force pb file to be regenrated every time.  Otherwise the make process assumes whats there is still ok
+.PHONY: go/voltha.pb
+
 print:
-	echo "Proto files: $(PROTO_FILES)"
-	echo "Python PB2 files: $(PROTO_PYTHON_PB2)"
-	
-# set default shell
-SHELL = bash -e -o pipefail
+	@echo "Proto files: $(PROTO_FILES)"
+	@echo "Python PB2 files: $(PROTO_PYTHON_PB2)"
+	@echo "Go PB files: $(PROTO_GO_PB)"
 
 # Generic targets
 protos: python-protos go-protos
@@ -56,30 +68,40 @@ venv_protos:
 $(PROTO_PYTHON_DEST_DIR)/%_pb2.py: protos/voltha_protos/%.proto Makefile venv_protos
 	source ./venv_protos/bin/activate ; set -u ;\
 	python -m grpc_tools.protoc \
-		-I protos \
-		--python_out=python \
-		--grpc_python_out=python \
-		--descriptor_set_out=$(PROTO_PYTHON_DEST_DIR)/$(basename $(notdir $<)).desc \
-		--include_imports \
-		--include_source_info \
-		$<
+    -I protos \
+    --python_out=python \
+    --grpc_python_out=python \
+    --descriptor_set_out=$(PROTO_PYTHON_DEST_DIR)/$(basename $(notdir $<)).desc \
+    --include_imports \
+    --include_source_info \
+    $<
 
-python-build: setup.py
+python-build: setup.py python-protos
 	python ./setup.py sdist
 
 python-test: tox.ini setup.py python-protos
 	tox
 
 python-clean:
-	rm -rf venv_protos .coverage coverage.xml nose2-results.xml dist $(PROTO_PYTHON_PB2) $(PROTO_PYTHON_PB2_GRPC) $(PROTO_PYTHON_DEST_DIR)/*.desc
 	find python/ -name '*.pyc' | xargs rm -f
-	rm -rf python/voltha_protos.egg-info
-	rm -rf .tox
-	rm -rf python/__pycache__/
-	rm -rf python/test/__pycache__/
+	rm -rf \
+    .coverage \
+    .tox \
+    coverage.xml \
+    dist \
+    nose2-results.xml \
+    python/__pycache__ \
+    python/test/__pycache__ \
+    python/voltha_protos.egg-info \
+    venv_protos \
+    $(PROTO_PYTHON_DEST_DIR)/*.desc \
+    $(PROTO_PYTHON_PB2) \
+    $(PROTO_PYTHON_PB2_GRPC)
 
 # Go targets
-go-protos:
+go-protos: protoc_check_version $(PROTO_GO_PB) go/voltha.pb
+
+protoc_check_version:
 ifeq ("", "$(shell which protoc)")
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	@echo "It looks like you don't have a version of protocol buffer tools."
@@ -88,13 +110,30 @@ ifeq ("", "$(shell which protoc)")
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	exit 1
 endif
-	./build_go_protos.sh protos
+
+go_temp:
+	mkdir -p go_temp
+
+$(PROTO_GO_PB): $(PROTO_FILES) go_temp
+	@echo "Creating $@"
+	cd protos && protoc \
+    --go_out=MAPS=Mgoogle/protobuf/descriptor.proto=github.com/golang/protobuf/protoc-gen-go/descriptor,plugins=grpc,paths=source_relative:../go_temp \
+    -I . voltha_protos/$$(echo $@ | sed -n 's/.*\/\(.*\).pb.go/\1.proto/p' )
+	mkdir -p $(dir $@)
+	mv go_temp/voltha_protos/$(notdir $@) $@
+
+go/voltha.pb: ${PROTO_FILES}
+	@echo "Creating $@"
+	protoc -I protos -I protos/google/api \
+    --include_imports --include_source_info \
+    --descriptor_set_out=$@ \
+    ${PROTO_FILES}
 
 go-test:
 ifneq ("libprotoc 3.7.0", "$(shell protoc --version)")
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	@echo "It looks like you don't have protocol buffer tools ${PROTOC_VERSION} installed."
->---@echo "To install this version, you can run:"
+	@echo "To install this version, you can run:"
 	@echo "    make install-protoc"
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	exit 1
@@ -102,7 +141,7 @@ endif
 	test/test-go-proto-consistency.sh
 
 go-clean:
-	echo "FIXME: Add golang cleanup"
+	rm -rf go_temp
 
 install-protoc:
 	@echo "Downloading and installing protocol buffer support."
@@ -111,11 +150,11 @@ install-protoc:
 	mkdir -p $(PROTOC_BUILD_TMP_DIR)
 	@echo "We ask for sudo credentials now so we can install at the end"; \
 	sudo echo "Thanks"; \
-	    cd $(PROTOC_BUILD_TMP_DIR); \
-	    wget $(PROTOC_DOWNLOAD_URI); \
-	    tar xzvf $(PROTOC_TARBALL); \
-	    cd $(PROTOC_DIR); \
-	    ./configure --prefix=$(PROTOC_PREFIX); \
-	    make; \
-	    sudo make install; \
-	    sudo ldconfig
+    cd $(PROTOC_BUILD_TMP_DIR); \
+    wget $(PROTOC_DOWNLOAD_URI); \
+    tar xzvf $(PROTOC_TARBALL); \
+    cd $(PROTOC_DIR); \
+    ./configure --prefix=$(PROTOC_PREFIX); \
+    make; \
+    sudo make install; \
+    sudo ldconfig

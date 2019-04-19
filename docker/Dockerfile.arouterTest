@@ -11,6 +11,9 @@ COPY afrouter ./afrouter
 COPY tests/afrouter ./tests/afrouter
 COPY tests/afrouter /build/tests
 
+# Copy proto files
+COPY vendor/ $GOPATH/src
+
 # Copy config and runtime protobuf needed for routing
 RUN cp afrouter/arouter.json /build/tests/suites/
 RUN cp vendor/github.com/opencord/voltha-protos/go/voltha.pb /build/tests/suites/
@@ -33,7 +36,7 @@ WORKDIR /app
 # Copy required files
 COPY --from=build-env /build/afrouter /app/
 COPY --from=build-env /build/afrouterTest /app/
-COPY --from=build-env /build/arouter.json /app/
-COPY --from=build-env /build/voltha.pb /app
+COPY --from=build-env /build/tests/suites/arouter.json /app/
+COPY --from=build-env /build/tests/suites/voltha.pb /app
 COPY --from=build-env /build/tests /app/tests/
 
