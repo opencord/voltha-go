@@ -3,19 +3,20 @@
 		"cmdLine":"afrouter -config arouter_test.json -logLevel 1",
 		"protoFiles": [
 			{
-				"importPath":"github.com/opencord/voltha-go/protos/",
+				"importPath":"github.com/opencord/voltha-protos/go/",
 				"service":"VolthaService",
 				"package":"voltha"
 			},
 			{
-				"importPath":"github.com/opencord/voltha-go/protos/",
+				"importPath":"github.com/opencord/voltha-protos/go/",
 				"service":"Configuration",
 				"package":"afrouter"
 			}
 		],
 		"imports": [
 			"github.com/golang/protobuf/ptypes/empty",
-			"github.com/opencord/voltha-go/protos/openflow_13"
+			"github.com/opencord/voltha-protos/go/openflow_13",
+            "github.com/opencord/voltha-protos/go/common"
 		],
 		"protoDesc":"voltha.pb",
 		"protoSubst": [
@@ -27,7 +28,8 @@
 		"clients": {
 			"imports": [
 				 "github.com/golang/protobuf/ptypes/empty",
-				 "github.com/opencord/voltha-go/protos/openflow_13"
+				 "github.com/opencord/voltha-protos/go/openflow_13",
+                 "github.com/opencord/voltha-protos/go/common"
 			],
 			"endpoints": [
 				{
@@ -43,7 +45,9 @@
 		"servers": {
 			"imports": [
 				 "github.com/golang/protobuf/ptypes/empty",
-				 "github.com/opencord/voltha-go/protos/openflow_13"
+				 "github.com/opencord/voltha-protos/go/openflow_13",
+                 "github.com/opencord/voltha-protos/go/omci",
+                 "github.com/opencord/voltha-protos/go/common"
 			],
 			"endpoints": [
 			{

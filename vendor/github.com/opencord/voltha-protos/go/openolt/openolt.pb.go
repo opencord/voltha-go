@@ -9,6 +9,8 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -4109,6 +4111,68 @@ type OpenoltServer interface {
 	CreateTconts(context.Context, *Tconts) (*Empty, error)
 	RemoveTconts(context.Context, *Tconts) (*Empty, error)
 	EnableIndication(*Empty, Openolt_EnableIndicationServer) error
+}
+
+// UnimplementedOpenoltServer can be embedded to have forward compatible implementations.
+type UnimplementedOpenoltServer struct {
+}
+
+func (*UnimplementedOpenoltServer) DisableOlt(ctx context.Context, req *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableOlt not implemented")
+}
+func (*UnimplementedOpenoltServer) ReenableOlt(ctx context.Context, req *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReenableOlt not implemented")
+}
+func (*UnimplementedOpenoltServer) ActivateOnu(ctx context.Context, req *Onu) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActivateOnu not implemented")
+}
+func (*UnimplementedOpenoltServer) DeactivateOnu(ctx context.Context, req *Onu) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeactivateOnu not implemented")
+}
+func (*UnimplementedOpenoltServer) DeleteOnu(ctx context.Context, req *Onu) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteOnu not implemented")
+}
+func (*UnimplementedOpenoltServer) OmciMsgOut(ctx context.Context, req *OmciMsg) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OmciMsgOut not implemented")
+}
+func (*UnimplementedOpenoltServer) OnuPacketOut(ctx context.Context, req *OnuPacket) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnuPacketOut not implemented")
+}
+func (*UnimplementedOpenoltServer) UplinkPacketOut(ctx context.Context, req *UplinkPacket) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UplinkPacketOut not implemented")
+}
+func (*UnimplementedOpenoltServer) FlowAdd(ctx context.Context, req *Flow) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FlowAdd not implemented")
+}
+func (*UnimplementedOpenoltServer) FlowRemove(ctx context.Context, req *Flow) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FlowRemove not implemented")
+}
+func (*UnimplementedOpenoltServer) HeartbeatCheck(ctx context.Context, req *Empty) (*Heartbeat, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HeartbeatCheck not implemented")
+}
+func (*UnimplementedOpenoltServer) EnablePonIf(ctx context.Context, req *Interface) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnablePonIf not implemented")
+}
+func (*UnimplementedOpenoltServer) DisablePonIf(ctx context.Context, req *Interface) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisablePonIf not implemented")
+}
+func (*UnimplementedOpenoltServer) GetDeviceInfo(ctx context.Context, req *Empty) (*DeviceInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceInfo not implemented")
+}
+func (*UnimplementedOpenoltServer) Reboot(ctx context.Context, req *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Reboot not implemented")
+}
+func (*UnimplementedOpenoltServer) CollectStatistics(ctx context.Context, req *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CollectStatistics not implemented")
+}
+func (*UnimplementedOpenoltServer) CreateTconts(ctx context.Context, req *Tconts) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTconts not implemented")
+}
+func (*UnimplementedOpenoltServer) RemoveTconts(ctx context.Context, req *Tconts) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveTconts not implemented")
+}
+func (*UnimplementedOpenoltServer) EnableIndication(req *Empty, srv Openolt_EnableIndicationServer) error {
+	return status.Errorf(codes.Unimplemented, "method EnableIndication not implemented")
 }
 
 func RegisterOpenoltServer(s *grpc.Server, srv OpenoltServer) {
