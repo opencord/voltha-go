@@ -272,7 +272,7 @@ func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortId *voltha.LogicalPortId)
 			return port, nil
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "%s-$s", lPortId.Id, lPortId.PortId)
+	return nil, status.Errorf(codes.NotFound, "%s-%s", lPortId.Id, lPortId.PortId)
 }
 
 // addLogicalPort sets up a logical port on the logical device based on the device port
