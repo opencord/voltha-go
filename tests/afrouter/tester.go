@@ -224,13 +224,14 @@ func (suite *TestSuite) loadSuite(suiteN string) error {
 	// If it is present then the json test suite file is a
 	// template. Compile the go file and run it to process
 	// the template.
-	if _, err := os.Stat(suiteN + ".go"); err == nil {
+	if _, err := os.Stat(suiteN + "/" + suiteN + ".go"); err == nil {
 		// Compile and run the the go file
 		log.Infof("Suite '%s' is a template, compiling '%s'", suiteN, suiteN+".go")
 		cmd := exec.Command("go", "build", "-o", suiteN+".te", suiteN+".go")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+		cmd.Dir = suiteN
 		if err := cmd.Run(); err != nil {
 			log.Errorf("Error running the compile command:%v", err)
 		}
@@ -238,12 +239,13 @@ func (suite *TestSuite) loadSuite(suiteN string) error {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+		cmd.Dir = suiteN
 		if err := cmd.Run(); err != nil {
 			log.Errorf("Error running the %s command:%v", suiteN+".te", err)
 		}
 	}
-	suiteF, err := os.Open(suiteN + ".json")
-	log.Infof("Loading test suite from: %s", suiteN+".json")
+	suiteF, err := os.Open(suiteN + "/" + suiteN + ".json")
+	log.Infof("Loading test suite from: %s", suiteN+"/"+suiteN+".json")
 	if err != nil {
 		log.Error(err)
 		return err
