@@ -1327,7 +1327,6 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(childDevice *voltha.Device, p
 		portCap.Port.RootPort = false
 		portCap.Port.Id = port.Label
 		portCap.Port.OfpPort.PortNo = port.PortNo
-		portCap.Port.OfpPort.Name = childDevice.SerialNumber
 		portCap.Port.DeviceId = childDevice.Id
 		portCap.Port.DevicePortNo = port.PortNo
 		cloned := (proto.Clone(ldevice)).(*voltha.LogicalDevice)
