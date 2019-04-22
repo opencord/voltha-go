@@ -785,6 +785,8 @@ func (agent *DeviceAgent) addPort(port *voltha.Port) error {
 		if cp.OperStatus == voltha.OperStatus_ACTIVE {
 			cp.AdminState = voltha.AdminState_ENABLED
 		}
+		// populated by addPeerPort API
+		cp.Peers = nil
 		cloned.Ports = append(cloned.Ports, cp)
 		// Store the device
 		afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, "")
@@ -795,10 +797,11 @@ func (agent *DeviceAgent) addPort(port *voltha.Port) error {
 	}
 }
 
-func (agent *DeviceAgent) addPeerPort(port *voltha.Port_PeerPort) error {
+func (agent *DeviceAgent) addPeerPort(port uint32, meAsPeer *voltha.Port_PeerPort) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	log.Debug("addPeerPort")
+	foundPeer := false
 	// Work only on latest data
 	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
 		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
@@ -806,11 +809,22 @@ func (agent *DeviceAgent) addPeerPort(port *voltha.Port_PeerPort) error {
 		// clone the device
 		cloned := proto.Clone(storeDevice).(*voltha.Device)
 		// Get the peer port on the device based on the port no
-		for _, peerPort := range cloned.Ports {
-			if peerPort.PortNo == port.PortNo { // found port
-				cp := proto.Clone(port).(*voltha.Port_PeerPort)
+                for _,peerPort := range cloned.Ports{
+                    if peerPort.PortNo ==  port { // found peer port
+                        log.Debugw("found-port in peer device", log.Fields{"portNo": port, "deviceId": agent.deviceId})
+                        for _,peer := range peerPort.Peers {
+                            if peer.PortNo == meAsPeer.PortNo {
+                                foundPeer = true // found peer entry
+                                break
+                            }
+                        }
+                        if foundPeer == false {
+                            cp := proto.Clone(meAsPeer).(*voltha.Port_PeerPort)
 				peerPort.Peers = append(peerPort.Peers, cp)
-				log.Debugw("found-peer", log.Fields{"portNo": port.PortNo, "deviceId": agent.deviceId})
+                            log.Debugw("Added New peer", log.Fields{"portNo": meAsPeer.PortNo, "deviceId": meAsPeer.DeviceId})
+                        }else{
+                            log.Debugw("Peer already exists", log.Fields{"portNo": meAsPeer.PortNo, "deviceId": meAsPeer.DeviceId})
+                        }
 				break
 			}
 		}
@@ -822,6 +836,41 @@ func (agent *DeviceAgent) addPeerPort(port *voltha.Port_PeerPort) error {
 		return nil
 	}
 }
+
+
+func (agent *DeviceAgent) deletePeerPort(port uint32, meAsPeer *voltha.Port_PeerPort) error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debug("deletePeerPort")
+	// Work only on latest data
+	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// clone the device
+		cloned := proto.Clone(storeDevice).(*voltha.Device)
+		// Get the peer port on the device based on the port no
+                for _,peerPort := range cloned.Ports{
+                    if peerPort.PortNo ==  port { // found peer port
+                        log.Debugw("found-port in peer device", log.Fields{"portNo": port, "deviceId": agent.deviceId})
+                        for index,peer := range peerPort.Peers {
+                            if peer.PortNo == meAsPeer.PortNo {
+                                log.Debugw("Found peer port no,deleting",log.Fields{"peer.PortNo":peer.PortNo})
+				peerPort.Peers = append(peerPort.Peers[:index], peerPort.Peers[index+1:]...)
+                                // Delete in local device
+                                break
+                            }
+                        }
+                    }
+                }
+		// Store the device
+		afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, "")
+		if afterUpdate == nil {
+			return status.Errorf(codes.Internal, "%s", agent.deviceId)
+		}
+		return nil
+	}
+}
+
 
 //flowTableUpdated is the callback after flows have been updated in the model to push them
 //to the adapters

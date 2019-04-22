@@ -951,3 +951,85 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 	//}
 	return new(empty.Empty), nil
 }
+
+func (rhp *AdapterRequestHandlerProxy) AddPeerPortReference(args []*ic.Argument) (*empty.Empty, error) {
+	if len(args) < 2 {
+		log.Warn("AddPeerPortReference-invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceId := &voltha.ID{}
+        port := &voltha.Port{}
+        transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port":
+			if err := ptypes.UnmarshalAny(arg.Value, port); err != nil {
+				log.Warnw("cannot-unmarshal-port-no", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("AddPeerPortReference", log.Fields{"deviceId": deviceId.Id, "port": port, "transactionID": transactionID.Val})
+
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+	if err := rhp.deviceMgr.AddPeerPortReference(deviceId.Id, port); err != nil {
+                log.Errorw("Error in adding port reference",log.Fields{"deviceId": deviceId.Id, "port": port})
+		return nil, err
+	}
+	return new(empty.Empty), nil
+}
+
+func (rhp *AdapterRequestHandlerProxy) DeletePeerPortReference(args []*ic.Argument) (*empty.Empty, error) {
+	if len(args) < 2 {
+		log.Warn("DeletePeerPortReference-invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceId := &voltha.ID{}
+        port := &voltha.Port{}
+        transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port":
+			if err := ptypes.UnmarshalAny(arg.Value, port); err != nil {
+				log.Warnw("cannot-unmarshal-port-no", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("DeletePeerPortReference", log.Fields{"deviceId": deviceId.Id, "port": port, "transactionID": transactionID.Val})
+
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+	if err := rhp.deviceMgr.DeletePeerPortReference(deviceId.Id, port); err != nil {
+                log.Errorw("Error in deleting port reference",log.Fields{"deviceId": deviceId.Id, "port": port})
+		return nil, err
+	}
+	return new(empty.Empty), nil
+}
+
+

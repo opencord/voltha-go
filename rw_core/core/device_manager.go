@@ -487,14 +487,20 @@ func (dMgr *DeviceManager) addPort(deviceId string, port *voltha.Port) error {
 		meAsPeer := &voltha.Port_PeerPort{DeviceId: deviceId, PortNo: port.PortNo}
 		for _, peerPort := range port.Peers {
 			if agent := dMgr.getDeviceAgent(peerPort.DeviceId); agent != nil {
-				if err := agent.addPeerPort(meAsPeer); err != nil {
+				if err := agent.addPeerPort(peerPort.PortNo, meAsPeer); err != nil {
 					log.Errorw("failed-to-add-peer", log.Fields{"peer-device-id": peerPort.DeviceId})
 					return err
 				}
 			}
 		}
+                device, err := dMgr.GetDevice(deviceId)
+                if err != nil {
+                    log.Errorw("device-not-found", log.Fields{"deviceId": deviceId})
+                    return err
+                }
+
 		// Notify the logical device manager to setup a logical port if needed
-		if port.Type == voltha.Port_ETHERNET_NNI || port.Type == voltha.Port_ETHERNET_UNI {
+		if port.Type == voltha.Port_ETHERNET_NNI || (port.Type == voltha.Port_ETHERNET_UNI && device.Root == false) {
 			if device , err := dMgr.GetDevice(deviceId); err == nil {
 				go dMgr.logicalDeviceMgr.addLogicalPort(device, port)
 			} else {
@@ -507,6 +513,44 @@ func (dMgr *DeviceManager) addPort(deviceId string, port *voltha.Port) error {
 		return status.Errorf(codes.NotFound, "%s", deviceId)
 	}
 }
+
+func (dMgr *DeviceManager) AddPeerPortReference(deviceId string, port *voltha.Port) error {
+        log.Infow("AddPeerPortReference",log.Fields{"deviceId":deviceId,"port":*port})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		//	Setup peer ports
+		meAsPeer := &voltha.Port_PeerPort{DeviceId: deviceId, PortNo: port.PortNo}
+		for _, peerPort := range port.Peers {
+			if agent := dMgr.getDeviceAgent(peerPort.DeviceId); agent != nil {
+				if err := agent.addPeerPort(peerPort.PortNo, meAsPeer); err != nil {
+					log.Errorw("failed-to-add-peer", log.Fields{"peer-device-id": peerPort.DeviceId})
+					return err
+				}
+			}
+		}
+		return nil
+	} else {
+		return status.Errorf(codes.NotFound, "%s", deviceId)
+	}
+}
+func (dMgr *DeviceManager) DeletePeerPortReference(deviceId string, port *voltha.Port) error {
+        log.Infow("DeletePeerPortReference",log.Fields{"deviceId":deviceId,"port":*port})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		meAsPeer := &voltha.Port_PeerPort{DeviceId: deviceId, PortNo: port.PortNo}
+		for _, peerPort := range port.Peers {
+			if agent := dMgr.getDeviceAgent(peerPort.DeviceId); agent != nil {
+				if err := agent.deletePeerPort(peerPort.PortNo, meAsPeer); err != nil {
+					log.Errorw("failed-to-del-peer", log.Fields{"peer-device-id": peerPort.DeviceId})
+					return err
+				}
+			}
+		}
+		return nil
+	} else {
+		return status.Errorf(codes.NotFound, "%s", deviceId)
+	}
+}
+
+
 
 func (dMgr *DeviceManager) updateFlows(deviceId string, flows []*ofp.OfpFlowStats) error {
 	log.Debugw("updateFlows", log.Fields{"deviceid": deviceId})
