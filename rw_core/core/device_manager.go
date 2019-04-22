@@ -205,7 +205,8 @@ func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
 }
 
 func (dMgr *DeviceManager) GetChildDevice(parentDeviceId string, serialNumber string, onuId int64, parentPortNo int64) (*voltha.Device, error) {
-	log.Debugw("GetChildDevice", log.Fields{"parentDeviceid": parentDeviceId, "serialNumber": serialNumber})
+	log.Debugw("GetChildDevice", log.Fields{"parentDeviceid": parentDeviceId, "serialNumber": serialNumber,
+		"parentPortNo": parentPortNo, "onuId": onuId})
 
 	var parentDevice *voltha.Device
 	var err error
