@@ -176,7 +176,7 @@ func (dMgr *DeviceManager) loadDevice(deviceId string) (*DeviceAgent, error) {
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent, nil
 	}
-	return nil, status.Error(codes.NotFound, deviceId)  // This should nto happen
+	return nil, status.Error(codes.NotFound, deviceId) // This should nto happen
 }
 
 // loadRootDeviceParentAndChildren loads the children and parents of a root device in memory
@@ -393,4 +393,3 @@ func (dMgr *DeviceManager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]
 	}
 	return childDeviceIds, nil
 }
-

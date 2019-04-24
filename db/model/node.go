@@ -309,8 +309,7 @@ func (n *node) Get(path string, hash string, depth int, reconcile bool, txid str
 
 	// If there is not request to reconcile, try to get it from memory
 	if !reconcile {
-		if result = n.getPath(rev.GetBranch().GetLatest(), path, depth);
-			result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
+		if result = n.getPath(rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
 			return result
 		}
 	}
@@ -578,6 +577,10 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 		return rev
 	}
 
+	if n.GetProxy() != nil {
+		log.Debug("invoking proxy POST_UPDATE Callbacks")
+		n.GetProxy().InvokeCallbacks(POST_UPDATE, false, branch.GetLatest(), data)
+	}
 	return branch.GetLatest()
 }
 

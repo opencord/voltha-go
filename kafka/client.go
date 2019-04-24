@@ -32,7 +32,7 @@ const (
 
 const (
 	GroupIdKey = "groupId"
-	Offset = "offset"
+	Offset     = "offset"
 )
 
 const (

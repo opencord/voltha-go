@@ -266,7 +266,7 @@ func (handler *APIHandler) GetAlarmDeviceData(
 
 //@TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
-	ctx context.Context, 
+	ctx context.Context,
 	in *common.ID,
 ) (*openflow_13.MeterStatsReply, error) {
 	log.Debug("GetMeterStatsOfLogicalDevice-stub")
@@ -275,8 +275,8 @@ func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
 
 //@TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetMibDeviceData(
-	ctx context.Context, 
-	in *common.ID, 
+	ctx context.Context,
+	in *common.ID,
 ) (*omci.MibDeviceData, error) {
 	log.Debug("GetMibDeviceData-stub")
 	return nil, nil
@@ -299,4 +299,3 @@ func (handler *APIHandler) UpdateLogicalDeviceMeterTable(
 	log.Debug("UpdateLogicalDeviceMeterTable-stub")
 	return nil, nil
 }
-

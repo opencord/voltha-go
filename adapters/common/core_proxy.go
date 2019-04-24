@@ -34,7 +34,6 @@ type CoreProxy struct {
 	coreTopic           string
 	deviceIdCoreMap     map[string]string
 	lockDeviceIdCoreMap sync.RWMutex
-
 }
 
 func NewCoreProxy(kafkaProxy *kafka.InterContainerProxy, adapterTopic string, coreTopic string) *CoreProxy {
@@ -185,7 +184,7 @@ func (ap *CoreProxy) DeviceStateUpdate(ctx context.Context, deviceId string,
 }
 
 func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId string, parentPortNo int,
-	childDeviceType string, channelId int, vendorId string, serialNumber string, onuId int64 ) error {
+	childDeviceType string, channelId int, vendorId string, serialNumber string, onuId int64) error {
 	log.Debugw("ChildDeviceDetected", log.Fields{"pPeviceId": parentDeviceId, "channelId": channelId})
 	rpc := "ChildDeviceDetected"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device

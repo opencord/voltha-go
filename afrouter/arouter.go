@@ -16,23 +16,22 @@
 // gRPC affinity router with active/active backends
 
 package main
+
 /* package main // import "github.com/opencord/voltha-go/arouter" */
 /* package main // import "github.com/opencord/voltha-go" */
 
-
 import (
-	"os"
 	"fmt"
-	slog "log"
-	"google.golang.org/grpc/grpclog"
-	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/afrouter/afrouter"
+	"github.com/opencord/voltha-go/common/log"
+	"google.golang.org/grpc/grpclog"
+	slog "log"
+	"os"
 )
 
 func main() {
 
-
-	conf,err := afrouter.ParseCmd()
+	conf, err := afrouter.ParseCmd()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
@@ -51,7 +50,7 @@ func main() {
 		log.Error(err)
 		return
 	}
-	log.With(log.Fields{"config":*conf}).Debug("Configuration loaded")
+	log.With(log.Fields{"config": *conf}).Debug("Configuration loaded")
 
 	// Enable grpc logging
 	if *conf.GrpcLog {
@@ -62,14 +61,13 @@ func main() {
 	// Install the signal and error handlers.
 	afrouter.InitExitHandler()
 
-
 	// Create the affinity router proxy...
-	if ap,err := afrouter.NewArouterProxy(conf); err != nil {
-	    log.Errorf("Failed to create the arouter proxy, exiting:%v",err)
-	    return
-	    // and start it.
-	    // This function never returns unless an error
-	    // occurs or a signal is caught.
+	if ap, err := afrouter.NewArouterProxy(conf); err != nil {
+		log.Errorf("Failed to create the arouter proxy, exiting:%v", err)
+		return
+		// and start it.
+		// This function never returns unless an error
+		// occurs or a signal is caught.
 	} else if err := ap.ListenAndServe(); err != nil {
 		log.Errorf("Exiting on error %v", err)
 	}

@@ -22,16 +22,15 @@
 package afrouter
 
 import (
-	"os"
-	"syscall"
-	"os/signal"
 	"github.com/opencord/voltha-go/common/log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 var errChan = make(chan error)
 var doneChan = make(chan error)
 var holdChan = make(chan int)
-
 
 func InitExitHandler() error {
 
@@ -70,16 +69,16 @@ func cleanExit(err error) {
 	if arProxy != nil {
 		for _, srvr := range arProxy.servers {
 			if srvr.running {
-				log.With(log.Fields{"server":srvr.name}).Debug("Closing server")
-				srvr.proxyServer.GracefulStop();
-				srvr.proxyListener.Close();
+				log.With(log.Fields{"server": srvr.name}).Debug("Closing server")
+				srvr.proxyServer.GracefulStop()
+				srvr.proxyListener.Close()
 			}
 		}
 	}
-	for _,cl := range bClusters {
+	for _, cl := range bClusters {
 		for _, bknd := range cl.backends {
 			log.Debugf("Closing backend %s", bknd.name)
-			for _,conn := range bknd.connections {
+			for _, conn := range bknd.connections {
 				log.Debugf("Closing connection %s", conn.name)
 				conn.close()
 			}
@@ -88,4 +87,3 @@ func cleanExit(err error) {
 	doneChan <- err
 	//os.Exit(0)
 }
-

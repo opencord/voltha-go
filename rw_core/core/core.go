@@ -24,8 +24,8 @@ import (
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
-	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,7 +38,7 @@ type Core struct {
 	logicalDeviceMgr  *LogicalDeviceManager
 	grpcServer        *grpcserver.GrpcServer
 	grpcNBIAPIHandler *APIHandler
-	adapterMgr *AdapterManager
+	adapterMgr        *AdapterManager
 	config            *config.RWCoreFlags
 	kmp               *kafka.InterContainerProxy
 	clusterDataRoot   model.Root
@@ -48,9 +48,9 @@ type Core struct {
 	exitChannel       chan int
 	kvClient          kvstore.Client
 	kafkaClient       kafka.Client
-	coreMembership *voltha.Membership
-	membershipLock *sync.RWMutex
-	deviceOwnership    *DeviceOwnership
+	coreMembership    *voltha.Membership
+	membershipLock    *sync.RWMutex
+	deviceOwnership   *DeviceOwnership
 }
 
 func init() {
@@ -197,7 +197,6 @@ func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstan
 	return nil
 }
 
-
 func (core *Core) isMembershipRegistrationComplete() bool {
 	core.membershipLock.RLock()
 	defer core.membershipLock.RUnlock()
@@ -218,7 +217,6 @@ func (core *Core) updateCoreMembership(ctx context.Context, membership *voltha.M
 	}
 
 	core.coreMembership = membership
-
 
 	// Use the group name to register a specific kafka topic for this container
 	go func(groupName string) {
@@ -241,7 +239,6 @@ func (core *Core) getCoreMembership(ctx context.Context) *voltha.Membership {
 	defer core.membershipLock.RUnlock()
 	return core.coreMembership
 }
-
 
 func (core *Core) startDeviceManager(ctx context.Context) {
 	// TODO: Interaction between the logicaldevicemanager and devicemanager should mostly occur via

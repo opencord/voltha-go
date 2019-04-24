@@ -36,8 +36,8 @@ func IsProtoMessage(object interface{}) bool {
 
 // FindOwnerType will traverse a data structure and find the parent type of the specified object
 func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflect.Type {
- 	prefix := ""
-	for d:=0; d< depth; d++ {
+	prefix := ""
+	for d := 0; d < depth; d++ {
 		prefix += ">>"
 	}
 	k := obj.Kind()
