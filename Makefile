@@ -111,4 +111,10 @@ simulated_olt: base
 simulated_onu: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
 
+verify:
+	tests/verify-go.sh
+
+test:
+	go test ./...
+
 # end file
