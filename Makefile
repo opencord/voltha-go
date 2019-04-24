@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+SHELL=/bin/bash -o pipefail
+
 ifeq ($(TAG),)
 TAG := latest
 endif
@@ -61,10 +63,18 @@ help:
 	@echo "Usage: make [<target>]"
 	@echo "where available targets are:"
 	@echo
-	@echo "build        : Build the docker images.\n\
-               If this is the first time you are building, choose \"make build\" option."
-	@echo "rw_core      : Build the rw_core docker container"
-	@echo "ro_core      : Build the ro_core docker container"
+	@echo "build         : Build the docker images."
+	@echo "                  - If this is the first time you are building, choose 'make build' option."
+	@echo "rw_core       : Build the rw_core docker container"
+	@echo "ro_core       : Build the ro_core docker container"
+	@echo "afrouter      : Build the afrouter docker container"
+	@echo "afrouterTest  : Build the afrouterTest docker container"
+	@echo "afrouterd     : Build the afrouterd docker container"
+	@echo "simulated_olt : Build the simulated_olt docker container"
+	@echo "simulated_onu : Build the simulated_onu docker container"
+	@echo "lint          : Verify code is properly gofmt-ed"
+	@echo "sanity        : Verify that 'go vet' doesn't report any issues"
+	@echo "test          : Generate reports for all go tests"
 	@echo
 
 
@@ -110,5 +120,31 @@ simulated_olt: base
 
 simulated_onu: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
+
+lint:
+	hash gofmt > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	  go get -u github.com/golang/go/src/cmd/gofmt; \
+	fi
+
+	if [[ "$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*') | tee /dev/tty)" ]]; then \
+	  echo "Lint failed on one or more files; run 'go fmt' to fix."; \
+	  exit 1; \
+	fi
+
+sanity:
+	go vet ./...
+
+test:
+	hash go-junit-report > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	  go get -u github.com/jstemmer/go-junit-report; \
+	fi
+	hash gocover-cobertura > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	  go get -u github.com/t-yuki/gocover-cobertura; \
+	fi
+
+	mkdir -p ./tests/results
+	go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee /dev/tty | go-junit-report > ./tests/results/go-test-results.xml; \
+	RETURN=$$?; \
+	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml && exit $$RETURN
 
 # end file
