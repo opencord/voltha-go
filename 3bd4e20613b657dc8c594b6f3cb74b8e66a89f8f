@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "490a4eb9_4de70e83",
+        "filename": "tests/verify-go.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-04-24T22:18:06Z",
+      "side": 1,
+      "message": "Assuming that voltha-go is in $GOPATH/src/github.com/opencord/voltha-go do we want to vet just github.com/opencord/voltha-go/... ? Go development is a bit different because a workspace is expected.",
+      "revId": "3bd4e20613b657dc8c594b6f3cb74b8e66a89f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0a44c8d_7d590589",
+        "filename": "tests/verify-go.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-04-24T22:18:06Z",
+      "side": 1,
+      "message": "Assuming that voltha-go is in $GOPATH/src/github.com/opencord/voltha-go do we want to test just github.com/opencord/voltha-go/... ? Go development is a bit different because a workspace is expected.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 24
+      },
+      "revId": "3bd4e20613b657dc8c594b6f3cb74b8e66a89f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
