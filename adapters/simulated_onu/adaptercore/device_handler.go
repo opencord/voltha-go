@@ -139,7 +139,7 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 		AdminState: voltha.AdminState_ENABLED,
 		OperStatus: voltha.OperStatus_ACTIVE,
 		Peers: []*voltha.Port_PeerPort{{DeviceId: cloned.ParentId, // Peer device  is OLT
-			PortNo: uni_port}},            // Peer port is UNI port
+			PortNo: uni_port}}, // Peer port is UNI port
 	}
 
 	// Synchronous call to update device - this method is run in its own go routine

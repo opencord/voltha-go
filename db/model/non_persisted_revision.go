@@ -440,4 +440,3 @@ func (npr *NonPersistedRevision) SetupWatch(key string) {
 func (pr *NonPersistedRevision) StorageDrop(txid string, includeConfig bool) {
 	// stub ... required by interface
 }
-

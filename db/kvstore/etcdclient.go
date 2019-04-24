@@ -251,7 +251,7 @@ func (c *EtcdClient) ReleaseAllReservations() error {
 // ReleaseReservation releases reservation for a specific key.
 func (c *EtcdClient) ReleaseReservation(key string) error {
 	// Get the leaseid using the key
-	log.Debugw("Release-reservation", log.Fields{"key":key})
+	log.Debugw("Release-reservation", log.Fields{"key": key})
 	var ok bool
 	var leaseID *v3Client.LeaseID
 	c.writeLock.Lock()
@@ -455,13 +455,13 @@ func (c *EtcdClient) getLock(lockName string) (*v3Concurrency.Mutex, *v3Concurre
 func (c *EtcdClient) AcquireLock(lockName string, timeout int) error {
 	duration := GetDuration(timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
 	session, _ := v3Concurrency.NewSession(c.ectdAPI, v3Concurrency.WithContext(ctx))
 	mu := v3Concurrency.NewMutex(session, "/devicelock_"+lockName)
 	if err := mu.Lock(context.Background()); err != nil {
 		return err
 	}
 	c.addLockName(lockName, mu, session)
-	cancel()
 	return nil
 }
 

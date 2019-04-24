@@ -122,7 +122,7 @@ const (
 const MAX_GEM_PAYLOAD = "max_gem_payload_size"
 
 type InstanceControl struct {
-	Onu               string `json:ONU"`
+	Onu               string `json:"ONU"`
 	Uni               string `json:"uni"`
 	MaxGemPayloadSize string `json:"max_gem_payload_size"`
 }
