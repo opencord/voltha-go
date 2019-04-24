@@ -147,6 +147,7 @@ const (
 	PROXY_ADD
 	PROXY_UPDATE
 	PROXY_REMOVE
+	PROXY_CREATE
 )
 
 // parseForControlledPath verifies if a proxy path matches a pattern
@@ -243,6 +244,9 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 
 	p.Operation = PROXY_UPDATE
 	pac.SetProxy(p)
+	defer func(op ProxyOperation) {
+		pac.getProxy().Operation = op
+	}(PROXY_GET)
 
 	log.Debugw("proxy-operation--update", log.Fields{"operation":p.Operation})
 
@@ -275,6 +279,10 @@ func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string)
 	defer PAC().ReleasePath(pathLock)
 
 	p.Operation = PROXY_ADD
+	defer func() {
+		p.Operation = PROXY_GET
+	}()
+
 	pac.SetProxy(p)
 
 	log.Debugw("proxy-operation--add", log.Fields{"operation":p.Operation})
@@ -307,6 +315,9 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 
 	p.Operation = PROXY_ADD
 	pac.SetProxy(p)
+	defer func() {
+		p.Operation = PROXY_GET
+	}()
 
 	log.Debugw("proxy-operation--add", log.Fields{"operation":p.Operation})
 
@@ -338,10 +349,48 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 
 	p.Operation = PROXY_REMOVE
 	pac.SetProxy(p)
+	defer func() {
+		p.Operation = PROXY_GET
+	}()
 
 	log.Debugw("proxy-operation--remove", log.Fields{"operation":p.Operation})
 
 	return pac.Remove(fullPath, txid, controlled)
+}
+
+// CreateProxy to interact with specific path directly
+func (p *Proxy) CreateProxy(path string, exclusive bool) *Proxy {
+	if !strings.HasPrefix(path, "/") {
+		log.Errorf("invalid path: %s", path)
+		return nil
+	}
+
+	var fullPath string
+	var effectivePath string
+	if path == "/" {
+		fullPath = p.getPath()
+		effectivePath = p.getFullPath()
+	} else {
+		fullPath = p.getPath() + path
+		effectivePath = p.getFullPath() + path
+	}
+
+	pathLock, controlled := p.parseForControlledPath(effectivePath)
+
+	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
+
+	pac := PAC().ReservePath(path, p, pathLock)
+	defer PAC().ReleasePath(pathLock)
+
+	p.Operation = PROXY_CREATE
+	pac.SetProxy(p)
+	defer func() {
+		p.Operation = PROXY_GET
+	}()
+
+	log.Debugw("proxy-operation--create-proxy", log.Fields{"operation":p.Operation})
+
+	return pac.CreateProxy(fullPath, exclusive, controlled)
 }
 
 // OpenTransaction creates a new transaction branch to isolate operations made to the data model

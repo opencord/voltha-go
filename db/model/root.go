@@ -119,11 +119,11 @@ func (r *root) ExecuteCallbacks() {
 		r.Callbacks = r.Callbacks[1:]
 		go callback.Execute(nil)
 	}
-	for len(r.NotificationCallbacks) > 0 {
-		callback := r.NotificationCallbacks[0]
-		r.NotificationCallbacks = r.NotificationCallbacks[1:]
-		go callback.Execute(nil)
-	}
+	//for len(r.NotificationCallbacks) > 0 {
+	//	callback := r.NotificationCallbacks[0]
+	//	r.NotificationCallbacks = r.NotificationCallbacks[1:]
+	//	go callback.Execute(nil)
+	//}
 }
 
 func (r *root) hasCallbacks() bool {

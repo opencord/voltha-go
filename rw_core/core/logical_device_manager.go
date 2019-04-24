@@ -278,7 +278,7 @@ func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortId *voltha.LogicalPortId)
 // addLogicalPort sets up a logical port on the logical device based on the device port
 // information.
 func (ldMgr *LogicalDeviceManager) addLogicalPort(device *voltha.Device, port *voltha.Port) error {
-	if ldID, err := ldMgr.getLogicalDeviceId(device); err != nil {
+	if ldID, err := ldMgr.getLogicalDeviceId(device); err != nil || *ldID == "" {
 		// This is not an error as the logical device may not have been created at this time.  In such a case,
 		// the ports will be created when the logical device is ready.
 		return nil

@@ -109,6 +109,7 @@ func NewProxyAccessControl(proxy *Proxy, path string) *proxyAccessControl {
 
 // lock will prevent access to a model path
 func (pac *proxyAccessControl) lock() {
+	log.Debugw("locking", log.Fields{"path": pac.Path})
 	pac.PathLock <- struct{}{}
 	pac.setStart(time.Now())
 }
@@ -116,6 +117,7 @@ func (pac *proxyAccessControl) lock() {
 // unlock will release control of a model path
 func (pac *proxyAccessControl) unlock() {
 	<-pac.PathLock
+	log.Debugw("unlocking", log.Fields{"path": pac.Path})
 	pac.setStop(time.Now())
 	GetProfiling().AddToInMemoryLockTime(pac.getStop().Sub(pac.getStart()).Seconds())
 }
@@ -242,4 +244,21 @@ func (pac *proxyAccessControl) Remove(path string, txid string, control bool) in
 	}
 
 	return pac.getProxy().GetRoot().Remove(path, txid, nil)
+}
+
+// CreateProxy allows interaction for a specific path
+func (pac *proxyAccessControl) CreateProxy(path string, exclusive bool, control bool) *Proxy {
+	if control {
+		pac.lock()
+		log.Debugw("locked-access--create-proxy", log.Fields{"path": path, "fullPath": pac.Path})
+		defer pac.unlock()
+		defer log.Debugw("unlocked-access--create-proxy", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+	}
+
+	result := pac.getProxy().GetRoot().CreateProxy(path, exclusive)
+
+	if result != nil {
+		return result
+	}
+	return nil
 }

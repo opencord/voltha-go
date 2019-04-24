@@ -186,7 +186,11 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 	// Not owned by me or maybe anybody else.  Try to reserve it
 	reservedByMe := da.tryToReserveKey(ownershipKey)
 	myChnl := make(chan int)
+
+	da.deviceMapLock.Lock()
 	da.deviceMap[ownershipKey] = &ownership{id: ownershipKey, owned: reservedByMe, chnl: myChnl}
+	da.deviceMapLock.Unlock()
+
 	log.Debugw("set-new-ownership", log.Fields{"Id": ownershipKey, "owned": reservedByMe})
 	go da.MonitorOwnership(ownershipKey, myChnl)
 	return reservedByMe

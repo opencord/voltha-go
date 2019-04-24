@@ -17,10 +17,12 @@ package model
 
 type Revision interface {
 	Finalize(bool)
+	IsDiscarded() bool
 	SetConfig(revision *DataRevision)
 	GetConfig() *DataRevision
 	Drop(txid string, includeConfig bool)
 	StorageDrop(txid string, includeConfig bool)
+	ChildDrop(childType string, childHash string)
 	SetChildren(name string, children []Revision)
 	GetChildren(name string) []Revision
 	SetAllChildren(children map[string][]Revision)

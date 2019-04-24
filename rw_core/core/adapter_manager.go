@@ -119,8 +119,8 @@ func (aMgr *AdapterManager) start(ctx context.Context) {
 	aMgr.loadAdaptersAndDevicetypesInMemory()
 
 	//// Create the proxies
-	aMgr.adapterProxy = aMgr.clusterDataProxy.Root.CreateProxy("/adapters", false)
-	aMgr.deviceTypeProxy = aMgr.clusterDataProxy.Root.CreateProxy("/device_types", false)
+	aMgr.adapterProxy = aMgr.clusterDataProxy.CreateProxy("/adapters", false)
+	aMgr.deviceTypeProxy = aMgr.clusterDataProxy.CreateProxy("/device_types", false)
 
 	// Register the callbacks
 	aMgr.adapterProxy.RegisterCallback(model.POST_UPDATE, aMgr.adapterUpdated)

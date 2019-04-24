@@ -117,22 +117,34 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	n.Lock()
 	defer n.Unlock()
 
+	// Keep a reference to the current revision
+	var previous string
+	if branch.GetLatest() != nil {
+		previous = branch.GetLatest().GetHash()
+	}
+
 	branch.AddRevision(revision)
 
+	// If anything is new, then set the revision as the latest
 	if branch.GetLatest() == nil || revision.GetHash() != branch.GetLatest().GetHash() {
 		branch.SetLatest(revision)
+	}
+
+	// Delete the previous revision if anything has changed
+	if previous != "" && previous != branch.GetLatest().GetHash() {
+		branch.DeleteRevision(previous)
 	}
 
 	if changeAnnouncement != nil && branch.Txid == "" {
 		if n.Proxy != nil {
 			for _, change := range changeAnnouncement {
-				//log.Debugw("invoking callback",
-				//	log.Fields{
-				//		"callbacks":    n.Proxy.getCallbacks(change.Type),
-				//		"type":         change.Type,
-				//		"previousData": change.PreviousData,
-				//		"latestData":   change.LatestData,
-				//	})
+				log.Debugw("adding-callback",
+					log.Fields{
+						"callbacks":    n.Proxy.getCallbacks(change.Type),
+						"type":         change.Type,
+						"previousData": change.PreviousData,
+						"latestData":   change.LatestData,
+					})
 				n.Root.AddCallback(
 					n.Proxy.InvokeCallbacks,
 					change.Type,
@@ -141,19 +153,6 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 					change.LatestData)
 			}
 		}
-
-		//for _, change := range changeAnnouncement {
-		//log.Debugf("sending notification - changeType: %+v, previous:%+v, latest: %+v",
-		//	change.Type,
-		//	change.PreviousData,
-		//	change.LatestData)
-		//n.Root.AddNotificationCallback(
-		//	n.makeEventBus().Advertise,
-		//	change.Type,
-		//	revision.GetHash(),
-		//	change.PreviousData,
-		//	change.LatestData)
-		//}
 	}
 }
 
@@ -288,8 +287,7 @@ func (n *node) List(path string, hash string, depth int, deep bool, txid string)
 
 // Get retrieves the data from a node tree that resides at the specified path
 func (n *node) Get(path string, hash string, depth int, reconcile bool, txid string) interface{} {
-	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile,
-		"txid": txid})
+	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -473,6 +471,11 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			copy(children, rev.GetChildren(name))
 
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
+
+			if childRev == nil {
+				return branch.GetLatest()
+			}
+
 			childNode := childRev.GetNode()
 
 			// Save proxy in child node to ensure callbacks are called later on
@@ -502,12 +505,20 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 
 			// Prefix the hash value with the data type (e.g. devices, logical_devices, adapters)
 			newChildRev.SetName(name + "/" + _keyValueType)
-			children[idx] = newChildRev
+
+			if idx >= 0 {
+				children[idx] = newChildRev
+			} else {
+				children = append(children, newChildRev)
+			}
+
+			branch.LatestLock.Lock()
+			defer branch.LatestLock.Unlock()
 
 			updatedRev := rev.UpdateChildren(name, children, branch)
 
-			branch.GetLatest().Drop(txid, false)
 			n.makeLatest(branch, updatedRev, nil)
+			updatedRev.ChildDrop(name, childRev.GetHash())
 
 			return newChildRev
 
@@ -518,9 +529,14 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 		childRev := rev.GetChildren(name)[0]
 		childNode := childRev.GetNode()
 		newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
+
+		branch.LatestLock.Lock()
+		defer branch.LatestLock.Unlock()
+
 		updatedRev := rev.UpdateChildren(name, []Revision{newChildRev}, branch)
-		rev.Drop(txid, false)
 		n.makeLatest(branch, updatedRev, nil)
+
+		updatedRev.ChildDrop(name, childRev.GetHash())
 
 		return newChildRev
 	}
@@ -557,11 +573,6 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 
 		rev := branch.GetLatest().UpdateData(data, branch)
 		changes := []ChangeTuple{{POST_UPDATE, branch.GetLatest().GetData(), rev.GetData()}}
-
-		// FIXME VOL-1293: the following statement corrupts the kv when using a subproxy (commenting for now)
-		// FIXME VOL-1293 cont'd: need to figure out the required conditions otherwise we are not cleaning up entries
-		//branch.GetLatest().Drop(branch.Txid, false)
-
 		n.makeLatest(branch, rev, changes)
 
 		return rev
@@ -628,15 +639,16 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 				// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
 				childRev.SetName(name + "/" + key.String())
 
-				// Create watch for <component>/<key>
-				childRev.SetupWatch(childRev.GetName())
+				branch.LatestLock.Lock()
+				defer branch.LatestLock.Unlock()
 
 				children = append(children, childRev)
-				rev = rev.UpdateChildren(name, children, branch)
-				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
 
-				rev.Drop(txid, false)
-				n.makeLatest(branch, rev, changes)
+				updatedRev := rev.UpdateChildren(name, children, branch)
+				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
+				childRev.SetupWatch(childRev.GetName())
+
+				n.makeLatest(branch, updatedRev, changes)
 
 				return childRev
 			}
@@ -657,17 +669,29 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 
+			if childRev == nil {
+				return branch.GetLatest()
+			}
+
 			childNode := childRev.GetNode()
 			newChildRev := childNode.Add(path, data, txid, makeBranch)
 
 			// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
 			childRev.SetName(name + "/" + keyValue.(string))
 
-			children[idx] = newChildRev
+			if idx >= 0 {
+				children[idx] = newChildRev
+			} else {
+				children = append(children, newChildRev)
+			}
 
-			rev = rev.UpdateChildren(name, children, branch)
-			rev.Drop(txid, false)
-			n.makeLatest(branch, rev.GetBranch().GetLatest(), nil)
+			branch.LatestLock.Lock()
+			defer branch.LatestLock.Unlock()
+
+			updatedRev := rev.UpdateChildren(name, children, branch)
+			n.makeLatest(branch, updatedRev, nil)
+
+			updatedRev.ChildDrop(name, childRev.GetHash())
 
 			return newChildRev
 		} else {
@@ -729,20 +753,30 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 			copy(children, rev.GetChildren(name))
 
 			if path != "" {
-				idx, childRev := n.findRevByKey(children, field.Key, keyValue)
-				childNode := childRev.GetNode()
-				if childNode.Proxy == nil {
-					childNode.Proxy = n.Proxy
+				if idx, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil {
+					childNode := childRev.GetNode()
+					if childNode.Proxy == nil {
+						childNode.Proxy = n.Proxy
+					}
+					newChildRev := childNode.Remove(path, txid, makeBranch)
+
+					if idx >= 0 {
+						children[idx] = newChildRev
+					} else {
+						children = append(children, newChildRev)
+					}
+
+					branch.LatestLock.Lock()
+					defer branch.LatestLock.Unlock()
+
+					rev.SetChildren(name, children)
+					branch.GetLatest().Drop(txid, false)
+					n.makeLatest(branch, rev, nil)
 				}
-				newChildRev := childNode.Remove(path, txid, makeBranch)
-				children[idx] = newChildRev
-				rev.SetChildren(name, children)
-				branch.GetLatest().Drop(txid, false)
-				n.makeLatest(branch, rev, nil)
-				return nil
+				return branch.GetLatest()
 			}
 
-			if idx, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil {
+			if idx, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil && idx >= 0 {
 				if n.GetProxy() != nil {
 					data := childRev.GetData()
 					n.GetProxy().InvokeCallbacks(PRE_REMOVE, false, data)
@@ -752,6 +786,10 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				}
 
 				childRev.StorageDrop(txid, true)
+
+				branch.LatestLock.Lock()
+				defer branch.LatestLock.Unlock()
+
 				children = append(children[:idx], children[idx+1:]...)
 				rev.SetChildren(name, children)
 

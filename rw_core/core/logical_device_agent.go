@@ -121,13 +121,13 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 	}
 	agent.lockLogicalDevice.Lock()
 
-	agent.flowProxy = agent.clusterDataProxy.Root.CreateProxy(
+	agent.flowProxy = agent.clusterDataProxy.CreateProxy(
 		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceId),
 		false)
-	agent.groupProxy = agent.clusterDataProxy.Root.CreateProxy(
+	agent.groupProxy = agent.clusterDataProxy.CreateProxy(
 		fmt.Sprintf("/logical_devices/%s/flow_groups", agent.logicalDeviceId),
 		false)
-	agent.ldProxy = agent.clusterDataProxy.Root.CreateProxy(
+	agent.ldProxy = agent.clusterDataProxy.CreateProxy(
 		fmt.Sprintf("/logical_devices/%s", agent.logicalDeviceId),
 		false)
 
@@ -1084,7 +1084,7 @@ func (agent *LogicalDeviceAgent) portAdded(args ...interface{}) interface{} {
 
 	// Set the proxy and callback for that port
 	agent.portProxiesLock.Lock()
-	agent.portProxies[port.Id] = agent.clusterDataProxy.Root.CreateProxy(
+	agent.portProxies[port.Id] = agent.clusterDataProxy.CreateProxy(
 		fmt.Sprintf("/logical_devices/%s/ports/%s", agent.logicalDeviceId, port.Id),
 		false)
 	agent.portProxies[port.Id].RegisterCallback(model.POST_UPDATE, agent.portUpdated)

@@ -98,13 +98,13 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 		}
 	}
 
-	agent.deviceProxy = agent.clusterDataProxy.Root.CreateProxy("/devices/"+agent.deviceId, false)
+	agent.deviceProxy = agent.clusterDataProxy.CreateProxy("/devices/"+agent.deviceId, false)
 	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
 
-	agent.flowProxy = agent.clusterDataProxy.Root.CreateProxy(
+	agent.flowProxy = agent.clusterDataProxy.CreateProxy(
 		fmt.Sprintf("/devices/%s/flows", agent.deviceId),
 		false)
-	agent.groupProxy = agent.clusterDataProxy.Root.CreateProxy(
+	agent.groupProxy = agent.clusterDataProxy.CreateProxy(
 		fmt.Sprintf("/devices/%s/flow_groups", agent.deviceId),
 		false)
 
@@ -140,7 +140,7 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
-	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 0, true, ""); device != nil {
+	if device := agent.clusterDataProxy.Get("/devices/"+agent.deviceId, 0, false, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil

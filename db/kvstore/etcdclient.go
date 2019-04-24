@@ -66,15 +66,6 @@ func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KV
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 
-	// DO NOT lock by default; otherwise lock per instructed value
-	if len(lock) > 0 && lock[0] {
-		session, _ := v3Concurrency.NewSession(c.ectdAPI, v3Concurrency.WithContext(ctx))
-		mu := v3Concurrency.NewMutex(session, "/lock"+key)
-		mu.Lock(context.Background())
-		defer mu.Unlock(context.Background())
-		defer session.Close()
-	}
-
 	resp, err := c.ectdAPI.Get(ctx, key, v3Client.WithPrefix())
 	cancel()
 	if err != nil {
@@ -94,15 +85,6 @@ func (c *EtcdClient) Get(key string, timeout int, lock ...bool) (*KVPair, error)
 	duration := GetDuration(timeout)
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
-
-	// Lock by default; otherwise lock per instructed value
-	if len(lock) > 0 && lock[0] {
-		session, _ := v3Concurrency.NewSession(c.ectdAPI, v3Concurrency.WithContext(ctx))
-		mu := v3Concurrency.NewMutex(session, "/lock"+key)
-		mu.Lock(context.Background())
-		defer mu.Unlock(context.Background())
-		defer session.Close()
-	}
 
 	resp, err := c.ectdAPI.Get(ctx, key)
 	cancel()
@@ -133,15 +115,6 @@ func (c *EtcdClient) Put(key string, value interface{}, timeout int, lock ...boo
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 
-	// Lock by default; otherwise lock per instructed value
-	if len(lock) == 0 || lock[0] {
-		session, _ := v3Concurrency.NewSession(c.ectdAPI, v3Concurrency.WithContext(ctx))
-		mu := v3Concurrency.NewMutex(session, "/lock"+key)
-		mu.Lock(context.Background())
-		defer mu.Unlock(context.Background())
-		defer session.Close()
-	}
-
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	_, err := c.ectdAPI.Put(ctx, key, val)
@@ -169,15 +142,6 @@ func (c *EtcdClient) Delete(key string, timeout int, lock ...bool) error {
 	duration := GetDuration(timeout)
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
-
-	// Lock by default; otherwise lock per instructed value
-	if len(lock) == 0 || lock[0] {
-		session, _ := v3Concurrency.NewSession(c.ectdAPI, v3Concurrency.WithContext(ctx))
-		mu := v3Concurrency.NewMutex(session, "/lock"+key)
-		mu.Lock(context.Background())
-		defer mu.Unlock(context.Background())
-		defer session.Close()
-	}
 
 	defer cancel()
 

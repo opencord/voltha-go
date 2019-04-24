@@ -27,11 +27,12 @@ import (
 // Branch structure is used to classify a collection of transaction based revisions
 type Branch struct {
 	sync.RWMutex
-	Node      *node
-	Txid      string
-	Origin    Revision
-	Revisions map[string]Revision
-	Latest    Revision
+	Node       *node
+	Txid       string
+	Origin     Revision
+	Revisions  map[string]Revision
+	LatestLock sync.RWMutex
+	Latest     Revision
 }
 
 // NewBranch creates a new instance of the Branch structure
@@ -46,17 +47,69 @@ func NewBranch(node *node, txid string, origin Revision, autoPrune bool) *Branch
 	return b
 }
 
+// Utility function to extract all children names for a given revision (mostly for debugging purposes)
+func (b *Branch) retrieveChildrenNames(revision Revision) []string {
+	var childrenNames []string
+
+	for _, child := range revision.GetChildren("devices") {
+		childrenNames = append(childrenNames, child.GetName())
+	}
+
+	return childrenNames
+}
+
+// Utility function to compare children names and report the missing ones (mostly for debugging purposes)
+func (b *Branch) findMissingChildrenNames(previousNames, latestNames []string) []string {
+	var missingNames []string
+
+	for _, previousName := range previousNames {
+		found := false
+
+		if len(latestNames) == 0 {
+			break
+		}
+
+		for _, latestName := range latestNames {
+			if previousName == latestName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			missingNames = append(missingNames, previousName)
+		}
+	}
+
+	return missingNames
+}
+
 // SetLatest assigns the latest revision for this branch
 func (b *Branch) SetLatest(latest Revision) {
 	b.Lock()
 	defer b.Unlock()
 
 	if b.Latest != nil {
-		log.Debugf("Switching latest from <%s> to <%s>", b.Latest.GetHash(), latest.GetHash())
-	} else {
-		log.Debugf("Switching latest from <NIL> to <%s>", latest.GetHash())
-	}
+		log.Debugw("updating-latest-revision", log.Fields{"current": b.Latest.GetHash(), "new": latest.GetHash()})
 
+		// Go through list of children names in current revision and new revision
+		// and then compare the resulting outputs to ensure that we have not lost any entries.
+		var previousNames, latestNames, missingNames []string
+
+		if previousNames = b.retrieveChildrenNames(b.Latest); len(previousNames) > 0 {
+			log.Debugw("children-of-previous-revision", log.Fields{"hash": b.Latest.GetHash(), "names": previousNames})
+		}
+
+		if latestNames = b.retrieveChildrenNames(b.Latest); len(latestNames) > 0 {
+			log.Debugw("children-of-latest-revision", log.Fields{"hash": latest.GetHash(), "names": latestNames})
+		}
+
+		if missingNames = b.findMissingChildrenNames(previousNames, latestNames); len(missingNames) > 0 {
+			log.Debugw("children-missing-in-latest-revision", log.Fields{"hash": latest.GetHash(), "names": missingNames})
+		}
+
+	} else {
+		log.Debugw("setting-latest-revision", log.Fields{"new": latest.GetHash()})
+	}
 
 	b.Latest = latest
 }
@@ -102,4 +155,14 @@ func (b *Branch) SetRevision(hash string, revision Revision) {
 	defer b.Unlock()
 
 	b.Revisions[hash] = revision
+}
+
+// DeleteRevision removes a revision with the specified hash
+func (b *Branch) DeleteRevision(hash string) {
+	b.Lock()
+	defer b.Unlock()
+
+	if _, ok := b.Revisions[hash]; ok {
+		delete(b.Revisions, hash)
+	}
 }
