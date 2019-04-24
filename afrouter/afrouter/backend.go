@@ -20,102 +20,99 @@ package afrouter
 // Backend manager handles redundant connections per backend
 
 import (
-	"io"
-	"fmt"
-	"net"
-	"sync"
-	"time"
-	"sort"
 	"errors"
-	"strconv"
-	"strings"
+	"fmt"
+	"github.com/opencord/voltha-go/common/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/connectivity"
-	"github.com/opencord/voltha-go/common/log"
+	"google.golang.org/grpc/metadata"
+	"io"
+	"net"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
-
-
 
 const (
 	BE_ACTIVE_ACTIVE = 1 // Backend type active/active
-	BE_SERVER = 2        // Backend type single server
-	BE_SEQ_RR = 0        // Backend sequence round robin
-	AS_NONE = 0          // Association strategy: none
-	AS_SERIAL_NO = 1     // Association strategy: serial number
-	AL_NONE = 0          // Association location: none
-	AL_HEADER = 1        // Association location: header
-	AL_PROTOBUF = 2      // Association location: protobuf
+	BE_SERVER        = 2 // Backend type single server
+	BE_SEQ_RR        = 0 // Backend sequence round robin
+	AS_NONE          = 0 // Association strategy: none
+	AS_SERIAL_NO     = 1 // Association strategy: serial number
+	AL_NONE          = 0 // Association location: none
+	AL_HEADER        = 1 // Association location: header
+	AL_PROTOBUF      = 2 // Association location: protobuf
 )
 
-
-var beTypeNames = []string{"","active_active","server"}
-var asTypeNames = []string{"","serial_number"}
-var alTypeNames = []string{"","header","protobuf"}
+var beTypeNames = []string{"", "active_active", "server"}
+var asTypeNames = []string{"", "serial_number"}
+var alTypeNames = []string{"", "header", "protobuf"}
 
 var bClusters map[string]*backendCluster = make(map[string]*backendCluster)
 
 type backendCluster struct {
 	name string
 	//backends map[string]*backend
-	backends []*backend
-	beRvMap map[*backend]int
+	backends       []*backend
+	beRvMap        map[*backend]int
 	serialNoSource chan uint64
 }
 
 type backend struct {
-	lck sync.Mutex
-	name string
-	beType int
-	activeAssoc assoc
-	connFailCallback func(string, *backend)bool
-	connections map[string]*beConnection
-	srtdConns []*beConnection
-	opnConns int
+	lck              sync.Mutex
+	name             string
+	beType           int
+	activeAssoc      assoc
+	connFailCallback func(string, *backend) bool
+	connections      map[string]*beConnection
+	srtdConns        []*beConnection
+	opnConns         int
 }
 
 type assoc struct {
 	strategy int
 	location int
-	field string // Used only if location is protobuf
-	key string
+	field    string // Used only if location is protobuf
+	key      string
 }
 
 type beConnection struct {
-	lck sync.Mutex
-	cncl context.CancelFunc
-	name string
-	addr string
-	port string
+	lck   sync.Mutex
+	cncl  context.CancelFunc
+	name  string
+	addr  string
+	port  string
 	gConn *gConnection
-	bknd *backend
+	bknd  *backend
 }
 
 // This structure should never be referred to
 // by any routine outside of *beConnection
 // routines.
 type gConnection struct {
-	lck sync.Mutex
+	lck   sync.Mutex
 	state connectivity.State
-	conn *grpc.ClientConn
-	cncl context.CancelFunc
+	conn  *grpc.ClientConn
+	cncl  context.CancelFunc
 }
 
 type beClStrm struct {
-	strm grpc.ClientStream
-	ctxt context.Context
-	cncl context.CancelFunc
+	strm     grpc.ClientStream
+	ctxt     context.Context
+	cncl     context.CancelFunc
 	ok2Close chan struct{}
-	c2sRtrn chan error
-	s2cRtrn error
+	c2sRtrn  chan error
+	s2cRtrn  error
 }
 
 type beClStrms struct {
-	lck sync.Mutex
-	actvStrm *beClStrm
-	strms map[string]*beClStrm
+	lck       sync.Mutex
+	actvStrm  *beClStrm
+	strms     map[string]*beClStrm
 	srtdStrms []*beClStrm
 }
 
@@ -137,7 +134,7 @@ func newBackendCluster(conf *BackendClusterConfig) (*backendCluster, error) {
 		rtrn_err = true
 	}
 	//bc :=  &backendCluster{name:conf.Name,backends:make(map[string]*backend)}
-	bc :=  &backendCluster{name:conf.Name, beRvMap:make(map[*backend]int)}
+	bc := &backendCluster{name: conf.Name, beRvMap: make(map[*backend]int)}
 	bClusters[bc.name] = bc
 	bc.startSerialNumberSource() // Serial numberere for active/active backends
 	idx := 0
@@ -146,7 +143,7 @@ func newBackendCluster(conf *BackendClusterConfig) (*backendCluster, error) {
 			log.Errorf("A backend must have a name in cluster %s\n", conf.Name)
 			rtrn_err = true
 		}
-		if be,err = newBackend(&bec, conf.Name); err != nil {
+		if be, err = newBackend(&bec, conf.Name); err != nil {
 			log.Errorf("Error creating backend %s", bec.Name)
 			rtrn_err = true
 		}
@@ -160,8 +157,8 @@ func newBackendCluster(conf *BackendClusterConfig) (*backendCluster, error) {
 	return bc, nil
 }
 
-func (bc * backendCluster) getBackend(name string) *backend {
-	for _,v := range bc.backends {
+func (bc *backendCluster) getBackend(name string) *backend {
+	for _, v := range bc.backends {
 		if v.name == name {
 			return v
 		}
@@ -181,48 +178,48 @@ func (bc *backendCluster) startSerialNumberSource() {
 	}()
 }
 
-func (bc *backendCluster) nextBackend(be *backend, seq int) (*backend,error) {
+func (bc *backendCluster) nextBackend(be *backend, seq int) (*backend, error) {
 	switch seq {
-		case BE_SEQ_RR: // Round robin
-			in := be
-			// If no backend is found having a connection
-			// then return nil.
-			if be == nil {
-				log.Debug("Previous backend is nil")
-				 be = bc.backends[0]
-				 in = be
-				 if be.opnConns != 0 {
-					return be,nil
-				 }
+	case BE_SEQ_RR: // Round robin
+		in := be
+		// If no backend is found having a connection
+		// then return nil.
+		if be == nil {
+			log.Debug("Previous backend is nil")
+			be = bc.backends[0]
+			in = be
+			if be.opnConns != 0 {
+				return be, nil
 			}
-			for {
-				log.Debugf("Requesting a new backend starting from %s", be.name)
-				cur := bc.beRvMap[be]
-				cur++
-				if cur >= len(bc.backends) {
-					cur = 0
-				}
-				log.Debugf("Next backend is %d:%s", cur, bc.backends[cur].name)
-				if bc.backends[cur].opnConns > 0 {
-					return bc.backends[cur], nil
-				}
-				if bc.backends[cur] == in {
-					err := fmt.Errorf("No backend with open connections found")
-					log.Debug(err);
-					return nil,err
-				}
-				be = bc.backends[cur]
-				log.Debugf("Backend '%s' has no open connections, trying next", bc.backends[cur].name)
+		}
+		for {
+			log.Debugf("Requesting a new backend starting from %s", be.name)
+			cur := bc.beRvMap[be]
+			cur++
+			if cur >= len(bc.backends) {
+				cur = 0
 			}
-		default: // Invalid, defalt to routnd robin
-			log.Errorf("Invalid backend sequence %d. Defaulting to round robin", seq)
-			return bc.nextBackend(be, BE_SEQ_RR)
+			log.Debugf("Next backend is %d:%s", cur, bc.backends[cur].name)
+			if bc.backends[cur].opnConns > 0 {
+				return bc.backends[cur], nil
+			}
+			if bc.backends[cur] == in {
+				err := fmt.Errorf("No backend with open connections found")
+				log.Debug(err)
+				return nil, err
+			}
+			be = bc.backends[cur]
+			log.Debugf("Backend '%s' has no open connections, trying next", bc.backends[cur].name)
+		}
+	default: // Invalid, defalt to routnd robin
+		log.Errorf("Invalid backend sequence %d. Defaulting to round robin", seq)
+		return bc.nextBackend(be, BE_SEQ_RR)
 	}
 }
 
 func (bec *backendCluster) handler(srv interface{}, serverStream grpc.ServerStream, r Router, mthdSlice []string,
-				mk string, mv string) error {
-//func (bec *backendCluster) handler(nbR * nbRequest) error {
+	mk string, mv string) error {
+	//func (bec *backendCluster) handler(nbR * nbRequest) error {
 
 	// The final backend cluster needs to be determined here. With non-affinity routed backends it could
 	// just be determined here and for affinity routed backends the first message must be received
@@ -231,25 +228,25 @@ func (bec *backendCluster) handler(srv interface{}, serverStream grpc.ServerStre
 
 	// Get the backend to use.
 	// Allocate the nbFrame here since it holds the "context" of this communication
-	nf := &nbFrame{router:r, mthdSlice:mthdSlice, serNo:bec.serialNoSource, metaKey:mk, metaVal:mv}
+	nf := &nbFrame{router: r, mthdSlice: mthdSlice, serNo: bec.serialNoSource, metaKey: mk, metaVal: mv}
 	log.Debugf("Nb frame allocate with method %s", nf.mthdSlice[REQ_METHOD])
 
-	if be,err := bec.assignBackend(serverStream, nf); err != nil {
+	if be, err := bec.assignBackend(serverStream, nf); err != nil {
 		// At this point, no backend streams have been initiated
 		// so just return the error.
 		return err
 	} else {
 		log.Debugf("Backend '%s' selected", be.name)
 		// Allocate a sbFrame here because it might be needed for return value intercept
-		sf := &sbFrame{router:r, be:be, method:nf.mthdSlice[REQ_METHOD], metaKey:mk, metaVal:mv}
-		log.Debugf("Sb frame allocated with router %s",r.Name())
+		sf := &sbFrame{router: r, be: be, method: nf.mthdSlice[REQ_METHOD], metaKey: mk, metaVal: mv}
+		log.Debugf("Sb frame allocated with router %s", r.Name())
 		return be.handler(srv, serverStream, nf, sf)
 	}
 }
 
-func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.ServerStream, f * nbFrame) (*beClStrms, error) {
+func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.ServerStream, f *nbFrame) (*beClStrms, error) {
 
-	rtrn := &beClStrms{strms:make(map[string]*beClStrm),actvStrm:nil}
+	rtrn := &beClStrms{strms: make(map[string]*beClStrm), actvStrm: nil}
 
 	log.Debugf("Opening southbound streams for method '%s'", f.mthdSlice[REQ_METHOD])
 	// Get the metadata from the incoming message on the server
@@ -268,7 +265,7 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 	var atLeastOne bool = false
 	var errStr strings.Builder
 	log.Debugf("There are %d connections to open", len(be.connections))
-	for _,cn := range be.srtdConns {
+	for _, cn := range be.srtdConns {
 		// TODO: THIS IS A HACK to suspend redundancy for binding routers for all calls
 		// and its very specific to a use case. There should really be a per method
 		// mechanism to select non-redundant calls for all router types. This needs
@@ -281,7 +278,7 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 			continue
 		}
 		// Copy in the metadata
-		if cn.getState() == connectivity.Ready  && cn.getConn() != nil {
+		if cn.getState() == connectivity.Ready && cn.getConn() != nil {
 			log.Debugf("Opening southbound stream for connection '%s'", cn.name)
 			// Create an outgoing context that includes the incoming metadata
 			// and that will cancel if the server's context is canceled
@@ -289,18 +286,18 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 			clientCtx = metadata.NewOutgoingContext(clientCtx, md.Copy())
 			//TODO: Same check here, only add the serial number if necessary
 			clientCtx = metadata.AppendToOutgoingContext(clientCtx, "voltha_serial_number",
-															strconv.FormatUint(serialNo,10))
+				strconv.FormatUint(serialNo, 10))
 			// Create the client stream
 			if clientStream, err := grpc.NewClientStream(clientCtx, clientStreamDescForProxying,
-														cn.getConn(), f.mthdSlice[REQ_ALL]); err !=nil {
-				log.Debugf("Failed to create a client stream '%s', %v",cn.name,err)
+				cn.getConn(), f.mthdSlice[REQ_ALL]); err != nil {
+				log.Debugf("Failed to create a client stream '%s', %v", cn.name, err)
 				fmt.Fprintf(&errStr, "{{Failed to create a client stream '%s', %v}} ", cn.name, err)
 				rtrn.strms[cn.name] = nil
 			} else {
-				rtrn.strms[cn.name] = &beClStrm{strm:clientStream, ctxt:clientCtx,
-										cncl:clientCancel, s2cRtrn:nil,
-										ok2Close:make(chan struct{}),
-										c2sRtrn:make(chan error, 1)}
+				rtrn.strms[cn.name] = &beClStrm{strm: clientStream, ctxt: clientCtx,
+					cncl: clientCancel, s2cRtrn: nil,
+					ok2Close: make(chan struct{}),
+					c2sRtrn:  make(chan error, 1)}
 				atLeastOne = true
 			}
 		} else if cn.getConn() == nil {
@@ -315,24 +312,24 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 	}
 	if atLeastOne == true {
 		rtrn.sortStreams()
-		return rtrn,nil
+		return rtrn, nil
 	}
-	fmt.Fprintf(&errStr, "{{No streams available for backend '%s' unable to send}} ",be.name)
+	fmt.Fprintf(&errStr, "{{No streams available for backend '%s' unable to send}} ", be.name)
 	log.Error(errStr.String())
 	return nil, errors.New(errStr.String())
 }
 
-func (be *backend) handler(srv interface{}, serverStream grpc.ServerStream, nf * nbFrame, sf * sbFrame) error {
+func (be *backend) handler(srv interface{}, serverStream grpc.ServerStream, nf *nbFrame, sf *sbFrame) error {
 
-	// Set up and launch each individual southbound stream 
+	// Set up and launch each individual southbound stream
 	var beStrms *beClStrms
 	var rtrn error = nil
 	var s2cOk bool = false
 	var c2sOk bool = false
 
-	beStrms, err := be.openSouthboundStreams(srv,serverStream,nf)
+	beStrms, err := be.openSouthboundStreams(srv, serverStream, nf)
 	if err != nil {
-		log.Errorf("openStreams failed: %v",err)
+		log.Errorf("openStreams failed: %v", err)
 		return err
 	}
 	// If we get here, there has to be AT LEAST ONE open stream
@@ -362,7 +359,7 @@ func (be *backend) handler(srv interface{}, serverStream grpc.ServerStream, nf *
 					return rtrn
 				}
 			} else {
-				log.Debugf("s2cErr reporting %v",s2cErr)
+				log.Debugf("s2cErr reporting %v", s2cErr)
 				// however, we may have gotten a receive error (stream disconnected, a read error etc) in which case we need
 				// to cancel the clientStream to the backend, let all of its goroutines be freed up by the CancelFunc and
 				// exit with an error to the stack
@@ -382,7 +379,7 @@ func (be *backend) handler(srv interface{}, serverStream grpc.ServerStream, nf *
 			// the southbound streams are closed. Should this happen one of the
 			// backends may not get the request.
 			if c2sErr != io.EOF {
-				rtrn =  c2sErr
+				rtrn = c2sErr
 			}
 			log.Debug("c2sErr reporting EOF")
 			if s2cOk == true {
@@ -394,7 +391,7 @@ func (be *backend) handler(srv interface{}, serverStream grpc.ServerStream, nf *
 }
 
 func (strms *beClStrms) clientCancel() {
-	for _,strm := range strms.strms {
+	for _, strm := range strms.strms {
 		if strm != nil {
 			strm.cncl()
 		}
@@ -402,7 +399,7 @@ func (strms *beClStrms) clientCancel() {
 }
 
 func (strms *beClStrms) closeSend() {
-	for _,strm := range strms.strms {
+	for _, strm := range strms.strms {
 		if strm != nil {
 			<-strm.ok2Close
 			log.Debug("Closing southbound stream")
@@ -436,13 +433,13 @@ func (bec *backendCluster) assignBackend(src grpc.ServerStream, f *nbFrame) (*ba
 	return f.be, nil
 }
 
-func (strms * beClStrms) getActive() *beClStrm {
+func (strms *beClStrms) getActive() *beClStrm {
 	strms.lck.Lock()
 	defer strms.lck.Unlock()
 	return strms.actvStrm
 }
 
-func (strms *beClStrms) setThenGetActive(strm *beClStrm) (*beClStrm) {
+func (strms *beClStrms) setThenGetActive(strm *beClStrm) *beClStrm {
 	strms.lck.Lock()
 	defer strms.lck.Unlock()
 	if strms.actvStrm == nil {
@@ -505,17 +502,17 @@ func (src *beClStrms) forwardClientToServer(dst grpc.ServerStream, f *sbFrame) c
 	ret := make(chan error, 1)
 	agg := make(chan *beClStrm)
 	atLeastOne := false
-	for _,strm := range src.strms {
+	for _, strm := range src.strms {
 		if strm != nil {
 			go fc2s(strm)
 			go func(s *beClStrm) { // Wait on result and aggregate
 				r := <-s.c2sRtrn // got the return code
 				if r == nil {
-					return  // We're the redundat stream, just die
+					return // We're the redundat stream, just die
 				}
 				s.c2sRtrn <- r // put it back to pass it along
-				agg <- s // send the stream to the aggregator
-			} (strm)
+				agg <- s       // send the stream to the aggregator
+			}(strm)
 			atLeastOne = true
 		}
 	}
@@ -536,7 +533,7 @@ func (strms *beClStrms) sendAll(f *nbFrame) error {
 	var rtrn error
 
 	atLeastOne := false
-	for _,strm := range strms.srtdStrms {
+	for _, strm := range strms.srtdStrms {
 		if strm != nil {
 			if err := strm.strm.SendMsg(f); err != nil {
 				log.Debugf("Error on SendMsg: %s", err.Error())
@@ -550,7 +547,7 @@ func (strms *beClStrms) sendAll(f *nbFrame) error {
 	// If one of the streams succeeded, declare success
 	// if none did pick an error and return it.
 	if atLeastOne == true {
-		for _,strm := range strms.srtdStrms {
+		for _, strm := range strms.srtdStrms {
 			if strm != nil {
 				rtrn = strm.s2cRtrn
 				if rtrn == nil {
@@ -563,14 +560,14 @@ func (strms *beClStrms) sendAll(f *nbFrame) error {
 		rtrn = errors.New("There are no open streams, this should never happen")
 		log.Error(rtrn)
 	}
-	return rtrn;
+	return rtrn
 }
 
 func (dst *beClStrms) forwardServerToClient(src grpc.ServerStream, f *nbFrame) chan error {
 	ret := make(chan error, 1)
 	go func() {
 		// The frame buffer already has the results of a first
-		// RecvMsg in it so the first thing to do is to 
+		// RecvMsg in it so the first thing to do is to
 		// send it to the list of client streams and only
 		// then read some more.
 		for i := 0; ; i++ {
@@ -590,24 +587,24 @@ func (dst *beClStrms) forwardServerToClient(src grpc.ServerStream, f *nbFrame) c
 	return ret
 }
 
-func (st * beClStrms) sortStreams() {
+func (st *beClStrms) sortStreams() {
 	var tmpKeys []string
-	for k,_ := range st.strms {
+	for k, _ := range st.strms {
 		tmpKeys = append(tmpKeys, k)
 	}
 	sort.Strings(tmpKeys)
-	for _,v := range tmpKeys {
+	for _, v := range tmpKeys {
 		st.srtdStrms = append(st.srtdStrms, st.strms[v])
 	}
 }
 
-func (be * backend) sortConns() {
+func (be *backend) sortConns() {
 	var tmpKeys []string
-	for k,_ := range be.connections {
+	for k, _ := range be.connections {
 		tmpKeys = append(tmpKeys, k)
 	}
 	sort.Strings(tmpKeys)
-	for _,v := range tmpKeys {
+	for _, v := range tmpKeys {
 		be.srtdConns = append(be.srtdConns, be.connections[v])
 	}
 }
@@ -617,8 +614,8 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 
 	log.Debugf("Configuring the backend with %v", *conf)
 	// Validate the conifg and configure the backend
-	be:=&backend{name:conf.Name,connections:make(map[string]*beConnection),opnConns:0}
-	idx := strIndex([]string(beTypeNames),conf.Type)
+	be := &backend{name: conf.Name, connections: make(map[string]*beConnection), opnConns: 0}
+	idx := strIndex([]string(beTypeNames), conf.Type)
 	if idx == 0 {
 		log.Error("Invalid type specified for backend %s in cluster %s", conf.Name, clusterName)
 		rtrn_err = true
@@ -628,7 +625,7 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 	idx = strIndex(asTypeNames, conf.Association.Strategy)
 	if idx == 0 && be.beType == BE_ACTIVE_ACTIVE {
 		log.Errorf("An association strategy must be provided if the backend "+
-					"type is active/active for backend %s in cluster %s", conf.Name, clusterName)
+			"type is active/active for backend %s in cluster %s", conf.Name, clusterName)
 		rtrn_err = true
 	}
 	be.activeAssoc.strategy = idx
@@ -636,23 +633,23 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 	idx = strIndex(alTypeNames, conf.Association.Location)
 	if idx == 0 && be.beType == BE_ACTIVE_ACTIVE {
 		log.Errorf("An association location must be provided if the backend "+
-					"type is active/active for backend %s in cluster %s", conf.Name, clusterName)
+			"type is active/active for backend %s in cluster %s", conf.Name, clusterName)
 		rtrn_err = true
 	}
 	be.activeAssoc.location = idx
 
 	if conf.Association.Field == "" && be.activeAssoc.location == AL_PROTOBUF {
 		log.Errorf("An association field must be provided if the backend "+
-					"type is active/active and the location is set to protobuf "+
-					"for backend %s in cluster %s", conf.Name, clusterName)
+			"type is active/active and the location is set to protobuf "+
+			"for backend %s in cluster %s", conf.Name, clusterName)
 		rtrn_err = true
 	}
 	be.activeAssoc.field = conf.Association.Field
 
 	if conf.Association.Key == "" && be.activeAssoc.location == AL_HEADER {
 		log.Errorf("An association key must be provided if the backend "+
-					"type is active/active and the location is set to header "+
-					"for backend %s in cluster %s", conf.Name, clusterName)
+			"type is active/active and the location is set to header "+
+			"for backend %s in cluster %s", conf.Name, clusterName)
 		rtrn_err = true
 	}
 	be.activeAssoc.key = conf.Association.Key
@@ -664,34 +661,34 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 	// at a later time.
 	// TODO: validate that there is one connection for all but active/active backends
 	if len(conf.Connections) > 1 && be.activeAssoc.strategy != BE_ACTIVE_ACTIVE {
-		log.Errorf("Only one connection must be specified if the association "+
-				   "strategy is not set to 'active_active'")
+		log.Errorf("Only one connection must be specified if the association " +
+			"strategy is not set to 'active_active'")
 		rtrn_err = true
 	}
 	if len(conf.Connections) == 0 {
 		log.Errorf("At least one connection must be specified")
 		rtrn_err = true
 	}
-	for _,cnConf := range conf.Connections {
+	for _, cnConf := range conf.Connections {
 		if cnConf.Name == "" {
 			log.Errorf("A connection must have a name for backend %s in cluster %s",
-						conf.Name, clusterName)
+				conf.Name, clusterName)
 		} else {
-			gc:=&gConnection{conn:nil,cncl:nil,state:connectivity.Idle}
-			be.connections[cnConf.Name] = &beConnection{name:cnConf.Name,addr:cnConf.Addr,port:cnConf.Port,bknd:be,gConn:gc}
+			gc := &gConnection{conn: nil, cncl: nil, state: connectivity.Idle}
+			be.connections[cnConf.Name] = &beConnection{name: cnConf.Name, addr: cnConf.Addr, port: cnConf.Port, bknd: be, gConn: gc}
 			if cnConf.Addr != "" { // This connection will be specified later.
 				if ip := net.ParseIP(cnConf.Addr); ip == nil {
 					log.Errorf("The IP address for connection %s in backend %s in cluster %s is invalid",
-								cnConf.Name, conf.Name, clusterName)
+						cnConf.Name, conf.Name, clusterName)
 					rtrn_err = true
 				}
 				// Validate the port number. This just validtes that it's a non 0 integer
-				if n,err := strconv.Atoi(cnConf.Port); err != nil || n <= 0 || n > 65535 {
+				if n, err := strconv.Atoi(cnConf.Port); err != nil || n <= 0 || n > 65535 {
 					log.Errorf("Port %s for connection %s in backend %s in cluster %s is invalid",
 						cnConf.Port, cnConf.Name, conf.Name, clusterName)
 					rtrn_err = true
 				} else {
-					if n <=0 && n > 65535 {
+					if n <= 0 && n > 65535 {
 						log.Errorf("Port %s for connection %s in backend %s in cluster %s is invalid",
 							cnConf.Port, cnConf.Name, conf.Name, clusterName)
 						rtrn_err = true
@@ -738,20 +735,20 @@ func (be *backend) decConn() {
 // on a first attempt to connect. Individual connections should be
 // handled after that.
 func (be *backend) connectAll() {
-	for _,cn := range be.connections {
+	for _, cn := range be.connections {
 		cn.connect()
 	}
 }
 
 func (cn *beConnection) connect() {
 	if cn.addr != "" && cn.getConn() == nil {
-		log.Infof("Connecting to connection %s with addr: %s and port %s", cn.name,cn.addr,cn.port)
+		log.Infof("Connecting to connection %s with addr: %s and port %s", cn.name, cn.addr, cn.port)
 		// Dial doesn't block, it just returns and continues connecting in the background.
 		// Check back later to confirm and increase the connection count.
 		ctx, cnclFnc := context.WithCancel(context.Background()) // Context for canceling the connection
 		cn.setCncl(cnclFnc)
 		if conn, err := grpc.Dial(cn.addr+":"+cn.port, grpc.WithCodec(Codec()), grpc.WithInsecure()); err != nil {
-			log.Errorf("Dialng connection %v:%v",cn,err)
+			log.Errorf("Dialng connection %v:%v", cn, err)
 			cn.waitAndTryAgain(ctx)
 		} else {
 			cn.setConn(conn)
@@ -767,19 +764,19 @@ func (cn *beConnection) connect() {
 
 func (cn *beConnection) waitAndTryAgain(ctx context.Context) {
 	go func(ctx context.Context) {
-			ctxTm,cnclTm := context.WithTimeout(context.Background(), 10 * time.Second)
-			select {
-				case  <-ctxTm.Done():
-					cnclTm()
-					log.Debugf("Trying to connect '%s'",cn.name)
-					// Connect creates a new context so cancel this one.
-					cn.cancel()
-					cn.connect()
-					return
-				case  <-ctx.Done():
-					cnclTm()
-					return
-			}
+		ctxTm, cnclTm := context.WithTimeout(context.Background(), 10*time.Second)
+		select {
+		case <-ctxTm.Done():
+			cnclTm()
+			log.Debugf("Trying to connect '%s'", cn.name)
+			// Connect creates a new context so cancel this one.
+			cn.cancel()
+			cn.connect()
+			return
+		case <-ctx.Done():
+			cnclTm()
+			return
+		}
 	}(ctx)
 }
 
@@ -787,7 +784,7 @@ func (cn *beConnection) cancel() {
 	cn.lck.Lock()
 	defer cn.lck.Unlock()
 	log.Debugf("Canceling connection %s", cn.name)
-	if cn.gConn != nil{
+	if cn.gConn != nil {
 		if cn.gConn.cncl != nil {
 			cn.cncl()
 		} else {
@@ -844,7 +841,7 @@ func (cn *beConnection) close() {
 		// Now replace the gConn object with a new one as this one just
 		// fades away as references to it are released after the close
 		// finishes in the background.
-		cn.gConn = &gConnection{conn:nil,cncl:nil,state:connectivity.TransientFailure}
+		cn.gConn = &gConnection{conn: nil, cncl: nil, state: connectivity.TransientFailure}
 	} else {
 		log.Errorf("Internal error, attempt to close a nil connection object for '%s'", cn.name)
 	}
@@ -861,7 +858,7 @@ func (cn *beConnection) setState(st connectivity.State) {
 	}
 }
 
-func (cn *beConnection) getState() (connectivity.State) {
+func (cn *beConnection) getState() connectivity.State {
 	cn.lck.Lock()
 	defer cn.lck.Unlock()
 	if cn.gConn != nil {
@@ -877,7 +874,6 @@ func (cn *beConnection) getState() (connectivity.State) {
 	return connectivity.TransientFailure
 }
 
-
 func (cn *beConnection) monitor(ctx context.Context) {
 	bp := cn.bknd
 	log.Debugf("Setting up monitoring for backend %s", bp.name)
@@ -885,58 +881,58 @@ func (cn *beConnection) monitor(ctx context.Context) {
 		var delay time.Duration = 100 //ms
 		for {
 			//log.Debugf("****** Monitoring connection '%s' on backend '%s', %v", cn.name, bp.name, cn.conn)
-			if  cn.getState() == connectivity.Ready	{
+			if cn.getState() == connectivity.Ready {
 				log.Debugf("connection '%s' on backend '%s' becomes ready", cn.name, bp.name)
 				cn.setState(connectivity.Ready)
 				bp.incConn()
 				if cn.getConn() != nil && cn.getConn().WaitForStateChange(ctx, connectivity.Ready) == false {
 					// The context was canceled. This is done by the close function
 					// so just exit the routine
-					log.Debugf("Contxt canceled for connection '%s' on backend '%s'",cn.name, bp.name)
+					log.Debugf("Contxt canceled for connection '%s' on backend '%s'", cn.name, bp.name)
 					return
 				}
 				if cs := cn.getConn(); cs != nil {
 					switch cs := cn.getState(); cs {
-						case connectivity.TransientFailure:
-							cn.setState(cs)
-							bp.decConn()
-							log.Infof("Transient failure for  connection '%s' on backend '%s'",cn.name, bp.name)
-							delay = 100
-						case connectivity.Shutdown:
-							//The connection was closed. The assumption here is that the closer
-							// will manage the connection count and setting the conn to nil.
-							// Exit the routine
-							log.Infof("Shutdown for connection '%s' on backend '%s'",cn.name, bp.name)
-							return
-						case connectivity.Idle:
-							// This can only happen if the server sends a GoAway. This can
-							// only happen if the server has modified MaxConnectionIdle from
-							// its default of infinity. The only solution here is to close the
-							// connection and keepTrying()?
-							//TODO: Read the grpc source code to see if there's a different approach
-							log.Errorf("Server sent 'GoAway' on connection '%s' on backend '%s'",cn.name, bp.name)
-							cn.close()
-							cn.connect()
-							return
+					case connectivity.TransientFailure:
+						cn.setState(cs)
+						bp.decConn()
+						log.Infof("Transient failure for  connection '%s' on backend '%s'", cn.name, bp.name)
+						delay = 100
+					case connectivity.Shutdown:
+						//The connection was closed. The assumption here is that the closer
+						// will manage the connection count and setting the conn to nil.
+						// Exit the routine
+						log.Infof("Shutdown for connection '%s' on backend '%s'", cn.name, bp.name)
+						return
+					case connectivity.Idle:
+						// This can only happen if the server sends a GoAway. This can
+						// only happen if the server has modified MaxConnectionIdle from
+						// its default of infinity. The only solution here is to close the
+						// connection and keepTrying()?
+						//TODO: Read the grpc source code to see if there's a different approach
+						log.Errorf("Server sent 'GoAway' on connection '%s' on backend '%s'", cn.name, bp.name)
+						cn.close()
+						cn.connect()
+						return
 					}
 				} else { // A nil means something went horribly wrong, error and exit.
-					log.Errorf("Somthing horrible happned, the connection is nil and shouldn't be for connection %s",cn.name)
+					log.Errorf("Somthing horrible happned, the connection is nil and shouldn't be for connection %s", cn.name)
 					return
 				}
 			} else {
 				log.Debugf("Waiting for connection '%s' on backend '%s' to become ready", cn.name, bp.name)
-				ctxTm, cnclTm := context.WithTimeout(context.Background(), delay * time.Millisecond)
+				ctxTm, cnclTm := context.WithTimeout(context.Background(), delay*time.Millisecond)
 				if delay < 30000 {
-					delay += delay 
+					delay += delay
 				}
 				select {
-					case  <-ctxTm.Done():
-						cnclTm() // Doubt this is required but it's harmless.
-						// Do nothing but let the loop continue
-					case  <-ctx.Done():
-						// Context was closed, close and exit routine
-						//cn.close() NO! let the close be managed externally!
-						return
+				case <-ctxTm.Done():
+					cnclTm() // Doubt this is required but it's harmless.
+					// Do nothing but let the loop continue
+				case <-ctx.Done():
+					// Context was closed, close and exit routine
+					//cn.close() NO! let the close be managed externally!
+					return
 				}
 			}
 		}
@@ -945,7 +941,6 @@ func (cn *beConnection) monitor(ctx context.Context) {
 
 // Set a callback for connection failure notification
 // This is currently not used.
-func (bp * backend) setConnFailCallback(cb func(string, *backend)bool) {
+func (bp *backend) setConnFailCallback(cb func(string, *backend) bool) {
 	bp.connFailCallback = cb
 }
-

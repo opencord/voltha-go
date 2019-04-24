@@ -88,7 +88,7 @@ func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string
 		return nil, errors.New("fail-to-create-transaction")
 	}
 
-	if rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id:devId}) {
+	if rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: devId}) {
 		log.Debugw("owned-by-me", log.Fields{"Id": devId})
 		if txn.Acquired(timeout) {
 			log.Debugw("processing-request", log.Fields{"Id": devId})

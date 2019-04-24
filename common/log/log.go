@@ -179,7 +179,6 @@ func levelToInt(l zc.Level) int {
 	return ErrorLevel
 }
 
-
 func getDefaultConfig(outputType string, level int, defaultFields Fields) zp.Config {
 	return zp.Config{
 		Level:            intToAtomicLevel(level),

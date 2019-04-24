@@ -498,11 +498,10 @@ func (c *ConsulClient) Close() {
 	}
 }
 
-
-func (c *ConsulClient)  AcquireLock(lockName string, timeout int) error {
+func (c *ConsulClient) AcquireLock(lockName string, timeout int) error {
 	return nil
 }
 
-func (c *ConsulClient)  ReleaseLock(lockName string) error {
+func (c *ConsulClient) ReleaseLock(lockName string) error {
 	return nil
 }

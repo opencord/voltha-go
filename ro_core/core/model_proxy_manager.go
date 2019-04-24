@@ -38,7 +38,7 @@ const (
 )
 
 // String equivalent for data path agents
-var commonTypes = []string {
+var commonTypes = []string{
 	"Adapters",
 	"AlarmFilters",
 	"CoreInstances",

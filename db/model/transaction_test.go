@@ -36,6 +36,7 @@ func init() {
 	TestTransaction_Root = NewRoot(&voltha.Voltha{}, nil)
 	TestTransaction_RootProxy = TestTransaction_Root.node.CreateProxy("/", false)
 }
+
 //func TestTransaction_1_GetDevices(t *testing.T) {
 //	getTx := TestTransaction_RootProxy.OpenTransaction()
 //

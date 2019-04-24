@@ -33,9 +33,9 @@ type PersistedRevision struct {
 	Revision
 	Compress bool
 
-	events    chan *kvstore.Event `json:"-"`
-	kvStore   *Backend            `json:"-"`
-	mutex     sync.RWMutex        `json:"-"`
+	events    chan *kvstore.Event
+	kvStore   *Backend
+	mutex     sync.RWMutex
 	isStored  bool
 	isWatched bool
 }

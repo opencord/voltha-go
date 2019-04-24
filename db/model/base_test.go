@@ -33,28 +33,32 @@ type ModelTestConfig struct {
 	DbTimeout int
 }
 
-func commonCallback(args ...interface{}) interface{} {
-	log.Infof("Running common callback - arg count: %s", len(args))
+var callbackMutex sync.Mutex
+
+func commonChanCallback(args ...interface{}) interface{} {
+	log.Infof("Running common callback - arg count: %d", len(args))
 
 	//for i := 0; i < len(args); i++ {
 	//	log.Infof("ARG %d : %+v", i, args[i])
 	//}
 
-	mutex := sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	callbackMutex.Lock()
+	defer callbackMutex.Unlock()
 
-	execStatus := args[1].(*bool)
+	execDoneChan := args[1].(*chan struct{})
 
 	// Inform the caller that the callback was executed
-	*execStatus = true
-	log.Infof("Changed value of exec status to true - stack:%s", string(debug.Stack()))
+	if *execDoneChan != nil {
+		log.Infof("Sending completion indication - stack:%s", string(debug.Stack()))
+		close(*execDoneChan)
+		*execDoneChan = nil
+	}
 
 	return nil
 }
 
 func commonCallback2(args ...interface{}) interface{} {
-	log.Infof("Running common2 callback - arg count: %s %+v", len(args), args)
+	log.Infof("Running common2 callback - arg count: %d %+v", len(args), args)
 
 	return nil
 }

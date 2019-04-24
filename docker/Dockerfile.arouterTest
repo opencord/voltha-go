@@ -19,8 +19,8 @@ RUN cp afrouter/arouter.json /build/tests/suites/
 RUN cp vendor/github.com/opencord/voltha-protos/go/voltha.pb /build/tests/suites/
 
 # Build
-RUN cd afrouter && go build -o /build/afrouter
-RUN cd tests/afrouter && go build -o /build/afrouterTest
+RUN cd afrouter && go build --tags integration -o /build/afrouter
+RUN cd tests/afrouter && go build --tags integration -o /build/afrouterTest
 
 # Run tests
 RUN cd /build/tests/suites && /build/afrouterTest -config main.json -logLevel 1
