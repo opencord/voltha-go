@@ -61,6 +61,9 @@ python/cli/.voltha_cli_history
 
 python/local_imports/**/*
 
+# test output
+tests/results
+
 # ignore uneeded items in vendor folders
 vendor/github.com/opencord/voltha-protos/protos
 vendor/github.com/opencord/voltha-protos/python
