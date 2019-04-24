@@ -1,3 +1,5 @@
+// +build integration
+
 /*
  * Copyright 2018-present Open Networking Foundation
 
@@ -21,9 +23,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	kk "github.com/opencord/voltha-go/kafka"
+	rhp "github.com/opencord/voltha-go/rw_core/core"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"github.com/opencord/voltha-protos/go/voltha"
-	rhp "github.com/opencord/voltha-go/rw_core/core"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -33,6 +35,10 @@ import (
 /*
 Prerequite:  Start the kafka/zookeeper containers.
 */
+
+const (
+	TEST_RPC_KEY = ""
+)
 
 var coreKafkaProxy *kk.InterContainerProxy
 var adapterKafkaProxy *kk.InterContainerProxy
@@ -170,7 +176,7 @@ func TestIncorrectAPI(t *testing.T) {
 	rpc := "IncorrectAPI"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
@@ -193,7 +199,7 @@ func TestIncorrectAPIParams(t *testing.T) {
 	rpc := "GetDevice"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
@@ -220,7 +226,7 @@ func TestGetDevice(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(ctx, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(ctx, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
@@ -245,7 +251,7 @@ func TestGetDeviceTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(ctx, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(ctx, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
@@ -268,7 +274,7 @@ func TestGetChildDevice(t *testing.T) {
 	topic := kk.Topic{Name: "Core"}
 	expectedResponse := &voltha.Device{Id: trnsId}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
@@ -291,7 +297,7 @@ func TestGetChildDevices(t *testing.T) {
 	topic := kk.Topic{Name: "Core"}
 	expectedResponse := &voltha.Device{Id: trnsId}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
@@ -318,7 +324,7 @@ func TestGetPorts(t *testing.T) {
 	rpc := "GetPorts"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
@@ -341,7 +347,7 @@ func TestGetPortsMissingArgs(t *testing.T) {
 	rpc := "GetPorts"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
@@ -385,7 +391,7 @@ func TestChildDeviceDetected(t *testing.T) {
 	rpc := "ChildDeviceDetected"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
@@ -424,7 +430,7 @@ func TestChildDeviceDetectedNoWait(t *testing.T) {
 	rpc := "ChildDeviceDetected"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, false, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, false, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
@@ -453,7 +459,7 @@ func TestChildDeviceDetectedMissingArgs(t *testing.T) {
 	rpc := "ChildDeviceDetected"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
@@ -487,7 +493,7 @@ func TestDeviceStateChange(t *testing.T) {
 	rpc := "DeviceStateUpdate"
 	topic := kk.Topic{Name: "Core"}
 	start := time.Now()
-	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, args...)
+	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
 	log.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)

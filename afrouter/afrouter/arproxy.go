@@ -25,41 +25,39 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 )
 
-
 type nbi int
 
 const (
-	GRPC_NBI nbi = 1
+	GRPC_NBI           nbi = 1
 	GRPC_STREAMING_NBI nbi = 2
-	GRPC_CONTROL_NBI nbi = 3
+	GRPC_CONTROL_NBI   nbi = 3
 )
 
 // String names for display in error messages.
 var arpxyNames = [...]string{"grpc_nbi", "grpc_streaming_nbi", "grpc_control_nbi"}
-var arProxy *ArouterProxy= nil
+var arProxy *ArouterProxy = nil
 
 type ArouterProxy struct {
 	servers map[string]*server // Defined in handler.go
-	api *ArouterApi
+	api     *ArouterApi
 }
-
 
 // Create the routing proxy
 func NewArouterProxy(conf *Configuration) (*ArouterProxy, error) {
-	arProxy = &ArouterProxy{servers:make(map[string]*server)}
+	arProxy = &ArouterProxy{servers: make(map[string]*server)}
 	// Create all the servers listed in the configuration
-	for _,s := range conf.Servers {
-	    if ns, err := newServer(&s); err != nil {
-		    log.Error("Configuration failed")
-		    return nil, err
-	    } else {
+	for _, s := range conf.Servers {
+		if ns, err := newServer(&s); err != nil {
+			log.Error("Configuration failed")
+			return nil, err
+		} else {
 			arProxy.servers[ns.Name()] = ns
 		}
 	}
 
 	// TODO: The API is not mandatory, check if it's even in the config before
 	// trying to create it. If it isn't then don't bother but log a warning.
-	if api,err := newApi(&conf.Api, arProxy); err != nil {
+	if api, err := newApi(&conf.Api, arProxy); err != nil {
 		return nil, err
 	} else {
 		arProxy.api = api

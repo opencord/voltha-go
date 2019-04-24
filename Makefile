@@ -74,6 +74,7 @@ help:
 	@echo "simulated_onu : Build the simulated_onu docker container"
 	@echo "lint-style    : Verify code is properly gofmt-ed"
 	@echo "lint-sanity   : Verify that 'go vet' doesn't report any issues"
+	@echo "lint-dep      : Verify the integrity of the `dep` files"
 	@echo "lint          : Shorthand for lint-style & lint-sanity"
 	@echo "test          : Generate reports for all go tests"
 	@echo
@@ -135,7 +136,10 @@ lint-style:
 lint-sanity:
 	go vet ./...
 
-lint: lint-style lint-sanity
+lint-dep:
+	dep check
+
+lint: lint-style lint-sanity lint-dep
 
 test:
 	hash go-junit-report > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
