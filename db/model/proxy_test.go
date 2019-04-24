@@ -27,6 +27,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 )
 
 var (
@@ -110,22 +111,29 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 	TestProxy_DeviceId = "0001" + hex.EncodeToString(devIDBin)[:12]
 	TestProxy_Device.Id = TestProxy_DeviceId
 
-	preAddExecuted := false
-	postAddExecuted := false
+	preAddExecuted := make(chan struct{})
+	postAddExecuted := make(chan struct{})
+	preAddExecutedPtr, postAddExecutedPtr := preAddExecuted, postAddExecuted
 
 	devicesProxy := TestProxy_Root.node.CreateProxy("/devices", false)
 	devicesProxy.RegisterCallback(PRE_ADD, commonCallback2, "PRE_ADD Device container changes")
 	devicesProxy.RegisterCallback(POST_ADD, commonCallback2, "POST_ADD Device container changes")
 
 	// Register ADD instructions callbacks
-	TestProxy_Root_Device.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
-	TestProxy_Root_Device.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
+	TestProxy_Root_Device.RegisterCallback(PRE_ADD, commonChanCallback, "PRE_ADD instructions", &preAddExecutedPtr)
+	TestProxy_Root_Device.RegisterCallback(POST_ADD, commonChanCallback, "POST_ADD instructions", &postAddExecutedPtr)
 
-	// Add the device
 	if added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, ""); added == nil {
 		t.Error("Failed to add device")
 	} else {
 		t.Logf("Added device : %+v", added)
+	}
+
+	if !verifyGotResponse(preAddExecuted) {
+		t.Error("PRE_ADD callback was not executed")
+	}
+	if !verifyGotResponse(postAddExecuted) {
+		t.Error("POST_ADD callback was not executed")
 	}
 
 	// Verify that the added device can now be retrieved
@@ -135,33 +143,41 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found device: %s", string(djson))
 	}
-
-	if !preAddExecuted {
-		t.Error("PRE_ADD callback was not executed")
-	}
-	if !postAddExecuted {
-		t.Error("POST_ADD callback was not executed")
-	}
 }
 
 func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
 	TestProxy_Device.Id = TestProxy_DeviceId
 
-	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "");
+	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "")
 	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_Device).Interface().(proto.Message).String() {
 		t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
+	}
+}
+
+func verifyGotResponse(callbackIndicator <-chan struct{}) bool {
+	timeout := time.After(1 * time.Second)
+	// Wait until the channel closes, or we time out
+	select {
+	case <-callbackIndicator:
+		// Received response successfully
+		return true
+
+	case <-timeout:
+		// Got a timeout! fail with a timeout error
+		return false
 	}
 }
 
 func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 	TestProxy_AdapterId = "test-adapter"
 	TestProxy_Adapter.Id = TestProxy_AdapterId
-	preAddExecuted := false
-	postAddExecuted := false
+	preAddExecuted := make(chan struct{})
+	postAddExecuted := make(chan struct{})
+	preAddExecutedPtr, postAddExecutedPtr := preAddExecuted, postAddExecuted
 
 	// Register ADD instructions callbacks
-	TestProxy_Root_Adapter.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions for adapters", &preAddExecuted)
-	TestProxy_Root_Adapter.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions for adapters", &postAddExecuted)
+	TestProxy_Root_Adapter.RegisterCallback(PRE_ADD, commonChanCallback, "PRE_ADD instructions for adapters", &preAddExecutedPtr)
+	TestProxy_Root_Adapter.RegisterCallback(POST_ADD, commonChanCallback, "POST_ADD instructions for adapters", &postAddExecutedPtr)
 
 	// Add the adapter
 	if added := TestProxy_Root_Adapter.Add("/adapters", TestProxy_Adapter, ""); added == nil {
@@ -169,6 +185,8 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 	} else {
 		t.Logf("Added adapter : %+v", added)
 	}
+
+	verifyGotResponse(postAddExecuted)
 
 	// Verify that the added device can now be retrieved
 	if d := TestProxy_Root_Adapter.Get("/adapters/"+TestProxy_AdapterId, 0, false, ""); !reflect.ValueOf(d).IsValid() {
@@ -178,10 +196,10 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 		t.Logf("Found adapter: %s", string(djson))
 	}
 
-	if !preAddExecuted {
+	if !verifyGotResponse(preAddExecuted) {
 		t.Error("PRE_ADD callback was not executed")
 	}
-	if !postAddExecuted {
+	if !verifyGotResponse(postAddExecuted) {
 		t.Error("POST_ADD callback was not executed")
 	}
 }
@@ -209,8 +227,10 @@ func TestProxy_1_2_2_Get_SingleDevice(t *testing.T) {
 
 func TestProxy_1_3_1_Update_Device(t *testing.T) {
 	var fwVersion int
-	preUpdateExecuted := false
-	postUpdateExecuted := false
+
+	preUpdateExecuted := make(chan struct{})
+	postUpdateExecuted := make(chan struct{})
+	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
 	if retrieved := TestProxy_Root_Device.Get("/devices/"+TestProxy_TargetDeviceId, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get device")
@@ -228,13 +248,13 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 
 		TestProxy_Root_Device.RegisterCallback(
 			PRE_UPDATE,
-			commonCallback,
-			"PRE_UPDATE instructions (root proxy)", &preUpdateExecuted,
+			commonChanCallback,
+			"PRE_UPDATE instructions (root proxy)", &preUpdateExecutedPtr,
 		)
 		TestProxy_Root_Device.RegisterCallback(
 			POST_UPDATE,
-			commonCallback,
-			"POST_UPDATE instructions (root proxy)", &postUpdateExecuted,
+			commonChanCallback,
+			"POST_UPDATE instructions (root proxy)", &postUpdateExecutedPtr,
 		)
 
 		if afterUpdate := TestProxy_Root_Device.Update("/devices/"+TestProxy_TargetDeviceId, retrieved, false, ""); afterUpdate == nil {
@@ -243,18 +263,18 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 			t.Logf("Updated device : %+v", afterUpdate)
 		}
 
+		if !verifyGotResponse(preUpdateExecuted) {
+			t.Error("PRE_UPDATE callback was not executed")
+		}
+		if !verifyGotResponse(postUpdateExecuted) {
+			t.Error("POST_UPDATE callback was not executed")
+		}
+
 		if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_TargetDeviceId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated device (root proxy)")
 		} else {
 			djson, _ := json.Marshal(d)
 			t.Logf("Found device (root proxy): %s raw: %+v", string(djson), d)
-		}
-
-		if !preUpdateExecuted {
-			t.Error("PRE_UPDATE callback was not executed")
-		}
-		if !postUpdateExecuted {
-			t.Error("POST_UPDATE callback was not executed")
 		}
 	}
 }
@@ -265,18 +285,19 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	flows := devFlowsProxy.Get("/", 0, false, "")
 	flows.(*openflow_13.Flows).Items[0].TableId = 2244
 
-	preUpdateExecuted := false
-	postUpdateExecuted := false
+	preUpdateExecuted := make(chan struct{})
+	postUpdateExecuted := make(chan struct{})
+	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
 	devFlowsProxy.RegisterCallback(
 		PRE_UPDATE,
-		commonCallback,
-		"PRE_UPDATE instructions (flows proxy)", &preUpdateExecuted,
+		commonChanCallback,
+		"PRE_UPDATE instructions (flows proxy)", &preUpdateExecutedPtr,
 	)
 	devFlowsProxy.RegisterCallback(
 		POST_UPDATE,
-		commonCallback,
-		"POST_UPDATE instructions (flows proxy)", &postUpdateExecuted,
+		commonChanCallback,
+		"POST_UPDATE instructions (flows proxy)", &postUpdateExecutedPtr,
 	)
 
 	kvFlows := devFlowsProxy.Get("/", 0, false, "")
@@ -289,6 +310,13 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 		t.Error("Failed to update flow")
 	} else {
 		t.Logf("Updated flows : %+v", updated)
+	}
+
+	if !verifyGotResponse(preUpdateExecuted) {
+		t.Error("PRE_UPDATE callback was not executed")
+	}
+	if !verifyGotResponse(postUpdateExecuted) {
+		t.Error("POST_UPDATE callback was not executed")
 	}
 
 	if d := devFlowsProxy.Get("/", 0, false, ""); d == nil {
@@ -304,18 +332,12 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found flows (root proxy): %s", string(djson))
 	}
-
-	if !preUpdateExecuted {
-		t.Error("PRE_UPDATE callback was not executed")
-	}
-	if !postUpdateExecuted {
-		t.Error("POST_UPDATE callback was not executed")
-	}
 }
 
 func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
-	preUpdateExecuted := false
-	postUpdateExecuted := false
+	preUpdateExecuted := make(chan struct{})
+	postUpdateExecuted := make(chan struct{})
+	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
 	adaptersProxy := TestProxy_Root.node.CreateProxy("/adapters", false)
 
@@ -328,13 +350,13 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 
 		adaptersProxy.RegisterCallback(
 			PRE_UPDATE,
-			commonCallback,
-			"PRE_UPDATE instructions for adapters", &preUpdateExecuted,
+			commonChanCallback,
+			"PRE_UPDATE instructions for adapters", &preUpdateExecutedPtr,
 		)
 		adaptersProxy.RegisterCallback(
 			POST_UPDATE,
-			commonCallback,
-			"POST_UPDATE instructions for adapters", &postUpdateExecuted,
+			commonChanCallback,
+			"POST_UPDATE instructions for adapters", &postUpdateExecutedPtr,
 		)
 
 		if afterUpdate := adaptersProxy.Update("/"+TestProxy_AdapterId, retrieved, false, ""); afterUpdate == nil {
@@ -343,35 +365,36 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 			t.Logf("Updated adapter : %+v", afterUpdate)
 		}
 
+		if !verifyGotResponse(preUpdateExecuted) {
+			t.Error("PRE_UPDATE callback for adapter was not executed")
+		}
+		if !verifyGotResponse(postUpdateExecuted) {
+			t.Error("POST_UPDATE callback for adapter was not executed")
+		}
+
 		if d := TestProxy_Root_Adapter.Get("/adapters/"+TestProxy_AdapterId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated adapter (root proxy)")
 		} else {
 			djson, _ := json.Marshal(d)
 			t.Logf("Found adapter (root proxy): %s raw: %+v", string(djson), d)
 		}
-
-		if !preUpdateExecuted {
-			t.Error("PRE_UPDATE callback for adapter was not executed")
-		}
-		if !postUpdateExecuted {
-			t.Error("POST_UPDATE callback for adapter was not executed")
-		}
 	}
 }
 
 func TestProxy_1_4_1_Remove_Device(t *testing.T) {
-	preRemoveExecuted := false
-	postRemoveExecuted := false
+	preRemoveExecuted := make(chan struct{})
+	postRemoveExecuted := make(chan struct{})
+	preRemoveExecutedPtr, postRemoveExecutedPtr := preRemoveExecuted, postRemoveExecuted
 
 	TestProxy_Root_Device.RegisterCallback(
 		PRE_REMOVE,
-		commonCallback,
-		"PRE_REMOVE instructions (root proxy)", &preRemoveExecuted,
+		commonChanCallback,
+		"PRE_REMOVE instructions (root proxy)", &preRemoveExecutedPtr,
 	)
 	TestProxy_Root_Device.RegisterCallback(
 		POST_REMOVE,
-		commonCallback,
-		"POST_REMOVE instructions (root proxy)", &postRemoveExecuted,
+		commonChanCallback,
+		"POST_REMOVE instructions (root proxy)", &postRemoveExecutedPtr,
 	)
 
 	if removed := TestProxy_Root_Device.Remove("/devices/"+TestProxy_DeviceId, ""); removed == nil {
@@ -379,18 +402,19 @@ func TestProxy_1_4_1_Remove_Device(t *testing.T) {
 	} else {
 		t.Logf("Removed device : %+v", removed)
 	}
+
+	if !verifyGotResponse(preRemoveExecuted) {
+		t.Error("PRE_REMOVE callback was not executed")
+	}
+	if !verifyGotResponse(postRemoveExecuted) {
+		t.Error("POST_REMOVE callback was not executed")
+	}
+
 	if d := TestProxy_Root_Device.Get("/devices/"+TestProxy_DeviceId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
 	} else {
 		t.Logf("Device was removed: %s", TestProxy_DeviceId)
-	}
-
-	if !preRemoveExecuted {
-		t.Error("PRE_REMOVE callback was not executed")
-	}
-	if !postRemoveExecuted {
-		t.Error("POST_REMOVE callback was not executed")
 	}
 }
 
@@ -400,18 +424,21 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 	TestProxy_LogicalDeviceId = "0001" + hex.EncodeToString(ldIDBin)[:12]
 	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
 
-	preAddExecuted := false
-	postAddExecuted := false
+	preAddExecuted := make(chan struct{})
+	postAddExecuted := make(chan struct{})
+	preAddExecutedPtr, postAddExecutedPtr := preAddExecuted, postAddExecuted
 
 	// Register
-	TestProxy_Root_LogicalDevice.RegisterCallback(PRE_ADD, commonCallback, "PRE_ADD instructions", &preAddExecuted)
-	TestProxy_Root_LogicalDevice.RegisterCallback(POST_ADD, commonCallback, "POST_ADD instructions", &postAddExecuted)
+	TestProxy_Root_LogicalDevice.RegisterCallback(PRE_ADD, commonChanCallback, "PRE_ADD instructions", &preAddExecutedPtr)
+	TestProxy_Root_LogicalDevice.RegisterCallback(POST_ADD, commonChanCallback, "POST_ADD instructions", &postAddExecutedPtr)
 
 	if added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, ""); added == nil {
 		t.Error("Failed to add logical device")
 	} else {
 		t.Logf("Added logical device : %+v", added)
 	}
+
+	verifyGotResponse(postAddExecuted)
 
 	if ld := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, ""); !reflect.ValueOf(ld).IsValid() {
 		t.Error("Failed to find added logical device")
@@ -420,10 +447,10 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 		t.Logf("Found logical device: %s", string(ldJSON))
 	}
 
-	if !preAddExecuted {
+	if !verifyGotResponse(preAddExecuted) {
 		t.Error("PRE_ADD callback was not executed")
 	}
-	if !postAddExecuted {
+	if !verifyGotResponse(postAddExecuted) {
 		t.Error("POST_ADD callback was not executed")
 	}
 }
@@ -431,7 +458,7 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
 	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
 
-	added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, "");
+	added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, "")
 	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_LogicalDevice).Interface().(proto.Message).String() {
 		t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
 	}
@@ -461,8 +488,9 @@ func TestProxy_2_2_2_Get_SingleLogicalDevice(t *testing.T) {
 
 func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 	var fwVersion int
-	preUpdateExecuted := false
-	postUpdateExecuted := false
+	preUpdateExecuted := make(chan struct{})
+	postUpdateExecuted := make(chan struct{})
+	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
 	if retrieved := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_TargetLogicalDeviceId, 1, false, ""); retrieved == nil {
 		t.Error("Failed to get logical device")
@@ -478,13 +506,13 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 
 		TestProxy_Root_LogicalDevice.RegisterCallback(
 			PRE_UPDATE,
-			commonCallback,
-			"PRE_UPDATE instructions (root proxy)", &preUpdateExecuted,
+			commonChanCallback,
+			"PRE_UPDATE instructions (root proxy)", &preUpdateExecutedPtr,
 		)
 		TestProxy_Root_LogicalDevice.RegisterCallback(
 			POST_UPDATE,
-			commonCallback,
-			"POST_UPDATE instructions (root proxy)", &postUpdateExecuted,
+			commonChanCallback,
+			"POST_UPDATE instructions (root proxy)", &postUpdateExecutedPtr,
 		)
 
 		retrieved.(*voltha.LogicalDevice).RootDeviceId = strconv.Itoa(fwVersion)
@@ -495,19 +523,20 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 		} else {
 			t.Logf("Updated logical device : %+v", afterUpdate)
 		}
+
+		if !verifyGotResponse(preUpdateExecuted) {
+			t.Error("PRE_UPDATE callback was not executed")
+		}
+		if !verifyGotResponse(postUpdateExecuted) {
+			t.Error("POST_UPDATE callback was not executed")
+		}
+
 		if d := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_TargetLogicalDeviceId, 1, false, ""); !reflect.ValueOf(d).IsValid() {
 			t.Error("Failed to find updated logical device (root proxy)")
 		} else {
 			djson, _ := json.Marshal(d)
 
 			t.Logf("Found logical device (root proxy): %s raw: %+v", string(djson), d)
-		}
-
-		if !preUpdateExecuted {
-			t.Error("PRE_UPDATE callback was not executed")
-		}
-		if !postUpdateExecuted {
-			t.Error("POST_UPDATE callback was not executed")
 		}
 	}
 }
@@ -557,18 +586,19 @@ func TestProxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
 }
 
 func TestProxy_2_4_1_Remove_Device(t *testing.T) {
-	preRemoveExecuted := false
-	postRemoveExecuted := false
+	preRemoveExecuted := make(chan struct{})
+	postRemoveExecuted := make(chan struct{})
+	preRemoveExecutedPtr, postRemoveExecutedPtr := preRemoveExecuted, postRemoveExecuted
 
 	TestProxy_Root_LogicalDevice.RegisterCallback(
 		PRE_REMOVE,
-		commonCallback,
-		"PRE_REMOVE instructions (root proxy)", &preRemoveExecuted,
+		commonChanCallback,
+		"PRE_REMOVE instructions (root proxy)", &preRemoveExecutedPtr,
 	)
 	TestProxy_Root_LogicalDevice.RegisterCallback(
 		POST_REMOVE,
-		commonCallback,
-		"POST_REMOVE instructions (root proxy)", &postRemoveExecuted,
+		commonChanCallback,
+		"POST_REMOVE instructions (root proxy)", &postRemoveExecutedPtr,
 	)
 
 	if removed := TestProxy_Root_LogicalDevice.Remove("/logical_devices/"+TestProxy_LogicalDeviceId, ""); removed == nil {
@@ -576,18 +606,19 @@ func TestProxy_2_4_1_Remove_Device(t *testing.T) {
 	} else {
 		t.Logf("Removed device : %+v", removed)
 	}
+
+	if !verifyGotResponse(preRemoveExecuted) {
+		t.Error("PRE_REMOVE callback was not executed")
+	}
+	if !verifyGotResponse(postRemoveExecuted) {
+		t.Error("POST_REMOVE callback was not executed")
+	}
+
 	if d := TestProxy_Root_LogicalDevice.Get("/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, ""); reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
 	} else {
 		t.Logf("Device was removed: %s", TestProxy_LogicalDeviceId)
-	}
-
-	if !preRemoveExecuted {
-		t.Error("PRE_REMOVE callback was not executed")
-	}
-	if !postRemoveExecuted {
-		t.Error("POST_REMOVE callback was not executed")
 	}
 }
 
