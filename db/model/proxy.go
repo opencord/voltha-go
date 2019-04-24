@@ -248,7 +248,7 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 		pac.getProxy().Operation = op
 	}(PROXY_GET)
 
-	log.Debugw("proxy-operation--update", log.Fields{"operation":p.Operation})
+	log.Debugw("proxy-operation--update", log.Fields{"operation": p.Operation})
 
 	return pac.Update(fullPath, data, strict, txid, controlled)
 }
@@ -285,7 +285,7 @@ func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string)
 
 	pac.SetProxy(p)
 
-	log.Debugw("proxy-operation--add", log.Fields{"operation":p.Operation})
+	log.Debugw("proxy-operation--add", log.Fields{"operation": p.Operation})
 
 	return pac.Add(fullPath, data, txid, controlled)
 }
@@ -319,7 +319,7 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 		p.Operation = PROXY_GET
 	}()
 
-	log.Debugw("proxy-operation--add", log.Fields{"operation":p.Operation})
+	log.Debugw("proxy-operation--add", log.Fields{"operation": p.Operation})
 
 	return pac.Add(fullPath, data, txid, controlled)
 }
@@ -353,7 +353,7 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 		p.Operation = PROXY_GET
 	}()
 
-	log.Debugw("proxy-operation--remove", log.Fields{"operation":p.Operation})
+	log.Debugw("proxy-operation--remove", log.Fields{"operation": p.Operation})
 
 	return pac.Remove(fullPath, txid, controlled)
 }
@@ -388,7 +388,7 @@ func (p *Proxy) CreateProxy(path string, exclusive bool) *Proxy {
 		p.Operation = PROXY_GET
 	}()
 
-	log.Debugw("proxy-operation--create-proxy", log.Fields{"operation":p.Operation})
+	log.Debugw("proxy-operation--create-proxy", log.Fields{"operation": p.Operation})
 
 	return pac.CreateProxy(fullPath, exclusive, controlled)
 }

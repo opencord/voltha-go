@@ -17,30 +17,30 @@
 package main
 
 import (
-	"time"
-	"regexp"
 	"errors"
+	"regexp"
 	"strconv"
+	"time"
 
-	"k8s.io/client-go/rest"
-	"google.golang.org/grpc"
-	"golang.org/x/net/context"
-	"k8s.io/client-go/kubernetes"
 	"github.com/golang/protobuf/ptypes"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/common/log"
 	kafka "github.com/opencord/voltha-go/kafka"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	empty "github.com/golang/protobuf/ptypes/empty"
-	vpb "github.com/opencord/voltha-protos/go/voltha"
-	cmn "github.com/opencord/voltha-protos/go/common"
 	pb "github.com/opencord/voltha-protos/go/afrouter"
+	cmn "github.com/opencord/voltha-protos/go/common"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
+	vpb "github.com/opencord/voltha-protos/go/voltha"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type configConn struct {
-	Server string `json:"Server"`
-	Cluster string `json:"Cluster"`
-	Backend string `json:"Backend"`
+	Server      string `json:"Server"`
+	Cluster     string `json:"Cluster"`
+	Backend     string `json:"Backend"`
 	connections map[string]connection
 }
 
@@ -51,18 +51,18 @@ type connection struct {
 }
 
 type volthaPod struct {
-	name string
-	ipAddr string
-	node string
-	devIds map[string]struct{}
-	cluster string
-	backend string
+	name       string
+	ipAddr     string
+	node       string
+	devIds     map[string]struct{}
+	cluster    string
+	backend    string
 	connection string
 }
 
 type podTrack struct {
-		pod *volthaPod
-		dn bool
+	pod *volthaPod
+	dn  bool
 }
 
 var nPods int = 6
@@ -92,7 +92,6 @@ func newKafkaClient(clientType string, host string, port int, instanceID string)
 	return nil, errors.New("unsupported-client-type")
 }
 
-
 func k8sClientSet() *kubernetes.Clientset {
 	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
@@ -108,24 +107,23 @@ func k8sClientSet() *kubernetes.Clientset {
 	return clientset
 }
 
-
 func connect(addr string) (*grpc.ClientConn, error) {
-	for ctr :=0 ; ctr < 100; ctr++ {
+	for ctr := 0; ctr < 100; ctr++ {
 		log.Debugf("Trying to connect to %s", addr)
 		conn, err := grpc.Dial(addr, grpc.WithInsecure())
 		if err != nil {
 			log.Debugf("Attempt to connect failed, retrying %v:", err)
 		} else {
 			log.Debugf("Connection succeeded")
-			return conn,err
+			return conn, err
 		}
 		time.Sleep(10 * time.Second)
 	}
 	log.Debugf("Too many connection attempts, giving up!")
-	return nil,errors.New("Timeout attempting to conect")
+	return nil, errors.New("Timeout attempting to conect")
 }
 
-func getVolthaPods(cs *kubernetes.Clientset, coreFilter * regexp.Regexp) []*volthaPod {
+func getVolthaPods(cs *kubernetes.Clientset, coreFilter *regexp.Regexp) []*volthaPod {
 	var rtrn []*volthaPod
 
 	pods, err := cs.CoreV1().Pods("").List(metav1.ListOptions{})
@@ -134,34 +132,34 @@ func getVolthaPods(cs *kubernetes.Clientset, coreFilter * regexp.Regexp) []*volt
 	}
 	//log.Debugf("There are a total of %d pods in the cluster\n", len(pods.Items))
 
-	for _,v := range pods.Items {
+	for _, v := range pods.Items {
 		if v.Namespace == "voltha" && coreFilter.MatchString(v.Name) {
 			log.Debugf("Namespace: %s, PodName: %s, PodIP: %s, Host: %s\n", v.Namespace, v.Name,
-																	v.Status.PodIP, v.Spec.NodeName)
+				v.Status.PodIP, v.Spec.NodeName)
 			// Only add the pod if it has an IP address. If it doesn't then it likely crashed and
 			// and is still in the process of getting re-started.
 			if v.Status.PodIP != "" {
-				rtrn = append(rtrn, &volthaPod{name:v.Name,ipAddr:v.Status.PodIP,node:v.Spec.NodeName,
-							devIds:make(map[string]struct{}), backend:"", connection:""})
+				rtrn = append(rtrn, &volthaPod{name: v.Name, ipAddr: v.Status.PodIP, node: v.Spec.NodeName,
+					devIds: make(map[string]struct{}), backend: "", connection: ""})
 			}
 		}
 	}
 	return rtrn
 }
 
-func reconcilePodDeviceIds(pod * volthaPod, ids map[string]struct{}) bool {
+func reconcilePodDeviceIds(pod *volthaPod, ids map[string]struct{}) bool {
 	var idList cmn.IDs
-	for k,_ := range ids  {
-		 idList.Items = append(idList.Items, &cmn.ID{Id:k})
+	for k, _ := range ids {
+		idList.Items = append(idList.Items, &cmn.ID{Id: k})
 	}
-	conn,err := connect(pod.ipAddr+":50057")
+	conn, err := connect(pod.ipAddr + ":50057")
 	defer conn.Close()
 	if err != nil {
 		log.Debugf("Could not query devices from %s, could not connect", pod.name)
 		return false
 	}
 	client := vpb.NewVolthaServiceClient(conn)
-	_,err = client.ReconcileDevices(context.Background(), &idList)
+	_, err = client.ReconcileDevices(context.Background(), &idList)
 	if err != nil {
 		log.Error(err)
 		return false
@@ -170,31 +168,31 @@ func reconcilePodDeviceIds(pod * volthaPod, ids map[string]struct{}) bool {
 	return true
 }
 
-func queryPodDeviceIds(pod * volthaPod) map[string]struct{} {
+func queryPodDeviceIds(pod *volthaPod) map[string]struct{} {
 	var rtrn map[string]struct{} = make(map[string]struct{})
 	// Open a connection to the pod
 	// port 50057
-	conn, err := connect(pod.ipAddr+":50057")
+	conn, err := connect(pod.ipAddr + ":50057")
 	if err != nil {
 		log.Debugf("Could not query devices from %s, could not connect", pod.name)
 		return rtrn
 	}
 	defer conn.Close()
 	client := vpb.NewVolthaServiceClient(conn)
-	devs,err := client.ListDeviceIds(context.Background(), &empty.Empty{})
+	devs, err := client.ListDeviceIds(context.Background(), &empty.Empty{})
 	if err != nil {
 		log.Error(err)
 		return rtrn
 	}
-	for _,dv := range devs.Items {
-		rtrn[dv.Id]=struct{}{}
+	for _, dv := range devs.Items {
+		rtrn[dv.Id] = struct{}{}
 	}
 
 	return rtrn
 }
 
 func queryDeviceIds(pods []*volthaPod) {
-	for pk,_ := range pods {
+	for pk, _ := range pods {
 		// Keep the old Id list if a new list is not returned
 		if idList := queryPodDeviceIds(pods[pk]); len(idList) != 0 {
 			pods[pk].devIds = idList
@@ -203,7 +201,7 @@ func queryDeviceIds(pods []*volthaPod) {
 }
 
 func allEmpty(pods []*volthaPod) bool {
-	for k,_ := range pods {
+	for k, _ := range pods {
 		if len(pods[k].devIds) != 0 {
 			return false
 		}
@@ -212,10 +210,10 @@ func allEmpty(pods []*volthaPod) bool {
 }
 
 func rmPod(pods []*volthaPod, idx int) []*volthaPod {
-	return append(pods[:idx],pods[idx+1:]...)
+	return append(pods[:idx], pods[idx+1:]...)
 }
 
-func groupIntersectingPods1(pods []*volthaPod, podCt int) ([][]*volthaPod,[]*volthaPod) {
+func groupIntersectingPods1(pods []*volthaPod, podCt int) ([][]*volthaPod, []*volthaPod) {
 	var rtrn [][]*volthaPod
 	var out []*volthaPod
 
@@ -232,11 +230,11 @@ func groupIntersectingPods1(pods []*volthaPod, podCt int) ([][]*volthaPod,[]*vol
 		// Start a pod group with this pod
 		var grp []*volthaPod
 		grp = append(grp, pods[0])
-		pods = rmPod(pods,0)
+		pods = rmPod(pods, 0)
 		//log.Debugf("Creating new group %s", pd[k].pod.name)
 		// Find the peer pod based on device overlap
 		// It's ok if one isn't found, an empty one will be used instead
-		for k,_ := range pods {
+		for k, _ := range pods {
 			if len(pods[k].devIds) == 0 { // Skip pods with no devices
 				//log.Debugf("%s empty pod", pd[k1].pod.name)
 				continue
@@ -246,7 +244,7 @@ func groupIntersectingPods1(pods []*volthaPod, podCt int) ([][]*volthaPod,[]*vol
 				if grp[0].node == pods[k].node {
 					// This should never happen
 					log.Errorf("pods %s and %s intersect and are on the same server!! Not pairing",
-								grp[0].name, pods[k].name)
+						grp[0].name, pods[k].name)
 					continue
 				}
 				grp = append(grp, pods[k])
@@ -258,18 +256,18 @@ func groupIntersectingPods1(pods []*volthaPod, podCt int) ([][]*volthaPod,[]*vol
 		rtrn = append(rtrn, grp)
 		//log.Debugf("Added group %s", grp[0].name)
 		// Check if the number of groups = half the pods, if so all groups are started.
-		if len(rtrn) == podCt >> 1 {
+		if len(rtrn) == podCt>>1 {
 			// Append any remaining pods to out
-			out = append(out,pods[0:]...)
+			out = append(out, pods[0:]...)
 			break
 		}
 	}
-	return rtrn,out
+	return rtrn, out
 }
 
 func unallocPodCount(pd []*podTrack) int {
 	var rtrn int = 0
-	for _,v := range pd {
+	for _, v := range pd {
 		if v.dn == false {
 			rtrn++
 		}
@@ -277,9 +275,8 @@ func unallocPodCount(pd []*podTrack) int {
 	return rtrn
 }
 
-
 func sameNode(pod *volthaPod, grps [][]*volthaPod) bool {
-	for _,v := range grps {
+	for _, v := range grps {
 		if v[0].node == pod.node {
 			return true
 		}
@@ -293,7 +290,7 @@ func sameNode(pod *volthaPod, grps [][]*volthaPod) bool {
 func startRemainingGroups1(grps [][]*volthaPod, pods []*volthaPod, podCt int) ([][]*volthaPod, []*volthaPod) {
 	var grp []*volthaPod
 
-	for k,_ := range pods {
+	for k, _ := range pods {
 		if sameNode(pods[k], grps) {
 			continue
 		}
@@ -301,7 +298,7 @@ func startRemainingGroups1(grps [][]*volthaPod, pods []*volthaPod, podCt int) ([
 		grp = append(grp, pods[k])
 		pods = rmPod(pods, k)
 		grps = append(grps, grp)
-		if len(grps) == podCt >> 1 {
+		if len(grps) == podCt>>1 {
 			break
 		}
 	}
@@ -310,7 +307,7 @@ func startRemainingGroups1(grps [][]*volthaPod, pods []*volthaPod, podCt int) ([
 
 func hasSingleSecondNode(grp []*volthaPod) bool {
 	var srvrs map[string]struct{} = make(map[string]struct{})
-	for k,_ := range grp {
+	for k, _ := range grp {
 		if k == 0 {
 			continue // Ignore the first item
 		}
@@ -323,7 +320,7 @@ func hasSingleSecondNode(grp []*volthaPod) bool {
 }
 
 func addNode(grps [][]*volthaPod, idx *volthaPod, item *volthaPod) [][]*volthaPod {
-	for k,_ := range grps {
+	for k, _ := range grps {
 		if grps[k][0].name == idx.name {
 			grps[k] = append(grps[k], item)
 			return grps
@@ -334,10 +331,10 @@ func addNode(grps [][]*volthaPod, idx *volthaPod, item *volthaPod) [][]*volthaPo
 }
 
 func removeNode(grps [][]*volthaPod, item *volthaPod) [][]*volthaPod {
-	for k,_ := range grps {
-		for k1,_ := range grps[k] {
+	for k, _ := range grps {
+		for k1, _ := range grps[k] {
 			if grps[k][k1].name == item.name {
-				grps[k] = append(grps[k][:k1],grps[k][k1+1:]...)
+				grps[k] = append(grps[k][:k1], grps[k][k1+1:]...)
 				break
 			}
 		}
@@ -349,15 +346,15 @@ func groupRemainingPods1(grps [][]*volthaPod, pods []*volthaPod) [][]*volthaPod 
 	var lgrps [][]*volthaPod
 	// All groups must be started when this function is called.
 	// Copy incomplete groups
-	for k,_ := range grps {
+	for k, _ := range grps {
 		if len(grps[k]) != 2 {
 			lgrps = append(lgrps, grps[k])
 		}
 	}
 
 	// Add all pairing candidates to each started group.
-	for k,_ := range pods {
-		for k2,_ := range lgrps {
+	for k, _ := range pods {
+		for k2, _ := range lgrps {
 			if lgrps[k2][0].node != pods[k].node {
 				lgrps[k2] = append(lgrps[k2], pods[k])
 			}
@@ -371,12 +368,12 @@ func groupRemainingPods1(grps [][]*volthaPod, pods []*volthaPod) [][]*volthaPod 
 		for { // Address groups with only a single server choice
 			var ssn bool = false
 
-			for k,_ := range lgrps {
+			for k, _ := range lgrps {
 				// Now if any of the groups only have a single
 				// node as the choice for the second member
 				// address that one first.
 				if hasSingleSecondNode(lgrps[k]) == true {
-					ssn =  true
+					ssn = true
 					// Add this pairing to the groups
 					grps = addNode(grps, lgrps[k][0], lgrps[k][1])
 					// Since this node is now used, remove it from all
@@ -384,7 +381,7 @@ func groupRemainingPods1(grps [][]*volthaPod, pods []*volthaPod) [][]*volthaPod 
 					lgrps = removeNode(lgrps, lgrps[k][1])
 					// Now remove this group completely since
 					// it's been addressed
-					lgrps  = append(lgrps[:k],lgrps[k+1:]...)
+					lgrps = append(lgrps[:k], lgrps[k+1:]...)
 					break
 				}
 			}
@@ -398,7 +395,7 @@ func groupRemainingPods1(grps [][]*volthaPod, pods []*volthaPod) [][]*volthaPod 
 		}
 		grps = addNode(grps, lgrps[0][0], lgrps[0][1])
 		lgrps = removeNode(lgrps, lgrps[0][1])
-		lgrps  = append(lgrps[:0],lgrps[1:]...)
+		lgrps = append(lgrps[:0], lgrps[1:]...)
 	}
 	return grps
 }
@@ -407,15 +404,15 @@ func groupPods1(pods []*volthaPod) [][]*volthaPod {
 	var rtrn [][]*volthaPod
 	var podCt int = len(pods)
 
-	rtrn,pods = groupIntersectingPods1(pods, podCt)
-	// There are several outcomes here 
+	rtrn, pods = groupIntersectingPods1(pods, podCt)
+	// There are several outcomes here
 	// 1) All pods have been paired and we're done
 	// 2) Some un-allocated pods remain
 	// 2.a) All groups have been started
 	// 2.b) Not all groups have been started
 	if len(pods) == 0 {
 		return rtrn
-	} else if len(rtrn) == podCt >> 1 { // All groupings started
+	} else if len(rtrn) == podCt>>1 { // All groupings started
 		// Allocate the remaining (presumably empty) pods to the started groups
 		return groupRemainingPods1(rtrn, pods)
 	} else { // Some groupings started
@@ -428,8 +425,8 @@ func groupPods1(pods []*volthaPod) [][]*volthaPod {
 }
 
 func intersect(d1 map[string]struct{}, d2 map[string]struct{}) bool {
-	for k,_ := range d1 {
-		if _,ok := d2[k]; ok == true {
+	for k, _ := range d1 {
+		if _, ok := d2[k]; ok == true {
 			return true
 		}
 	}
@@ -438,10 +435,10 @@ func intersect(d1 map[string]struct{}, d2 map[string]struct{}) bool {
 
 func setConnection(client pb.ConfigurationClient, cluster string, backend string, connection string, addr string, port uint64) {
 	log.Debugf("Configuring backend %s : connection %s in cluster %s\n\n",
-					backend, connection, cluster)
-	cnf := &pb.Conn{Server:"grpc_command",Cluster:cluster, Backend:backend,
-					Connection:connection,Addr:addr,
-					Port:port}
+		backend, connection, cluster)
+	cnf := &pb.Conn{Server: "grpc_command", Cluster: cluster, Backend: backend,
+		Connection: connection, Addr: addr,
+		Port: port}
 	if res, err := client.SetConnection(context.Background(), cnf); err != nil {
 		log.Debugf("failed SetConnection RPC call: %s", err)
 	} else {
@@ -451,8 +448,8 @@ func setConnection(client pb.ConfigurationClient, cluster string, backend string
 
 func setAffinity(client pb.ConfigurationClient, ids map[string]struct{}, backend string) {
 	log.Debugf("Configuring backend %s : affinities \n", backend)
-	aff := &pb.Affinity{Router:"vcore",Route:"dev_manager",Cluster:"vcore",Backend:backend}
-	for k,_ := range ids {
+	aff := &pb.Affinity{Router: "vcore", Route: "dev_manager", Cluster: "vcore", Backend: backend}
+	for k, _ := range ids {
 		log.Debugf("Setting affinity for id %s", k)
 		aff.Id = k
 		if res, err := client.SetAffinity(context.Background(), aff); err != nil {
@@ -464,8 +461,8 @@ func setAffinity(client pb.ConfigurationClient, ids map[string]struct{}, backend
 }
 
 func getBackendForCore(coreId string, coreGroups [][]*volthaPod) string {
-	for _,v := range coreGroups {
-		for _,v2 := range v {
+	for _, v := range coreGroups {
+		for _, v2 := range v {
 			if v2.name == coreId {
 				return v2.backend
 			}
@@ -476,8 +473,8 @@ func getBackendForCore(coreId string, coreGroups [][]*volthaPod) string {
 }
 
 func monitorDiscovery(client pb.ConfigurationClient,
-						ch <-chan *ic.InterContainerMessage,
-						coreGroups [][]*volthaPod) {
+	ch <-chan *ic.InterContainerMessage,
+	coreGroups [][]*volthaPod) {
 	var id map[string]struct{} = make(map[string]struct{})
 
 	select {
@@ -489,7 +486,7 @@ func monitorDiscovery(client pb.ConfigurationClient,
 		} else {
 			// Set the affinity of the discovered device.
 			if be := getBackendForCore(device.Id, coreGroups); be != "" {
-				id[device.Id]=struct{}{}
+				id[device.Id] = struct{}{}
 				setAffinity(client, id, be)
 			} else {
 				log.Error("Cant use an empty string as a backend name")
@@ -500,11 +497,11 @@ func monitorDiscovery(client pb.ConfigurationClient,
 }
 
 func startDiscoveryMonitor(client pb.ConfigurationClient,
-							coreGroups [][]*volthaPod) error {
+	coreGroups [][]*volthaPod) error {
 	var ch <-chan *ic.InterContainerMessage
 	// Connect to kafka for discovery events
 	topic := &kafka.Topic{Name: "AffinityRouter"}
-	kc,err := newKafkaClient("sarama", "kafka", 9092, "arouterd")
+	kc, err := newKafkaClient("sarama", "kafka", 9092, "arouterd")
 	kc.Start()
 
 	if ch, err = kc.Subscribe(topic); err != nil {
@@ -527,12 +524,12 @@ func getAddrDiffs(coreGroups [][]*volthaPod, rwPods []*volthaPod) ([][]*volthaPo
 	log.Debug("Get addr diffs")
 
 	// Start with an empty array
-	for k,_ := range rtrn {
+	for k, _ := range rtrn {
 		rtrn[k] = make([]*volthaPod, 2)
 	}
 
 	// Build a list with only the new items
-	for _,v := range rwPods {
+	for _, v := range rwPods {
 		if hasIpAddr(coreGroups, v.ipAddr) == false {
 			nList = append(nList, v)
 		}
@@ -540,9 +537,9 @@ func getAddrDiffs(coreGroups [][]*volthaPod, rwPods []*volthaPod) ([][]*volthaPo
 	}
 
 	// Now build the coreGroups with only the changed items
-	for k1,v1 := range coreGroups {
-		for k2,v2 := range v1 {
-			if _,ok := ipAddrs[v2.ipAddr]; ok == false {
+	for k1, v1 := range coreGroups {
+		for k2, v2 := range v1 {
+			if _, ok := ipAddrs[v2.ipAddr]; ok == false {
 				rtrn[k1][k2] = v2
 			}
 		}
@@ -555,24 +552,24 @@ func getAddrDiffs(coreGroups [][]*volthaPod, rwPods []*volthaPod) ([][]*volthaPo
 // pods being replaced. The criteria is that
 // the new pod be on the same server as the
 // old pod was.
-func reconcileAddrDiffs(coreGroupDiffs [][]*volthaPod, rwPodDiffs []*volthaPod) ([][]*volthaPod) {
+func reconcileAddrDiffs(coreGroupDiffs [][]*volthaPod, rwPodDiffs []*volthaPod) [][]*volthaPod {
 	var srvrs map[string][]*volthaPod = make(map[string][]*volthaPod)
 
 	log.Debug("Reconciling diffs")
 	log.Debug("Building server list")
-	for _,v := range rwPodDiffs {
+	for _, v := range rwPodDiffs {
 		log.Debugf("Adding %v to the server list", *v)
 		srvrs[v.node] = append(srvrs[v.node], v)
 	}
 
-	for k1,v1 := range coreGroupDiffs {
-		log.Debugf("k1:%v, v1:%v", k1,v1)
-		for k2,v2 :=  range v1 {
-			log.Debugf("k2:%v, v2:%v", k2,v2)
+	for k1, v1 := range coreGroupDiffs {
+		log.Debugf("k1:%v, v1:%v", k1, v1)
+		for k2, v2 := range v1 {
+			log.Debugf("k2:%v, v2:%v", k2, v2)
 			if v2 == nil { // Nothing to do here
 				continue
 			}
-			if _,ok := srvrs[v2.node]; ok == true {
+			if _, ok := srvrs[v2.node]; ok == true {
 				coreGroupDiffs[k1][k2] = srvrs[v2.node][0]
 				if len(srvrs[v2.node]) > 1 { // remove one entry from the list
 					srvrs[v2.node] = append(srvrs[v2.node][:0], srvrs[v2.node][1:]...)
@@ -601,8 +598,8 @@ func applyAddrDiffs(client pb.ConfigurationClient, coreList interface{}, nPods [
 		// entries and then reconcile the device ids on the core
 		// that's in the new entry with the device ids of it's
 		// active-active peer.
-		for k1,v1 := range cores {
-			for k2,v2 := range v1 {
+		for k1, v1 := range cores {
+			for k2, v2 := range v1 {
 				if newEntries[k1][k2] != nil {
 					// TODO: Missing is the case where bothe the primary
 					// and the secondary core crash and come back.
@@ -610,12 +607,12 @@ func applyAddrDiffs(client pb.ConfigurationClient, coreList interface{}, nPods [
 					ids := queryPodDeviceIds(cores[k1][k2^1])
 					if len(ids) != 0 {
 						if reconcilePodDeviceIds(newEntries[k1][k2], ids) == false {
-							log.Errorf("Attempt to reconcile ids on pod %v failed",newEntries[k1][k2])
+							log.Errorf("Attempt to reconcile ids on pod %v failed", newEntries[k1][k2])
 						}
 					}
 					// Send the affininty router new connection information
 					setConnection(client, "vcore", v2.backend, v2.connection, newEntries[k1][k2].ipAddr, 50057)
-						// Copy the new entry information over
+					// Copy the new entry information over
 					cores[k1][k2].ipAddr = newEntries[k1][k2].ipAddr
 					cores[k1][k2].name = newEntries[k1][k2].name
 					cores[k1][k2].devIds = ids
@@ -628,7 +625,7 @@ func applyAddrDiffs(client pb.ConfigurationClient, coreList interface{}, nPods [
 		// TODO: Break this using functions to simplify
 		// reading of the code.
 		// Find the core(s) that have changed addresses
-		for k1,v1 := range cores {
+		for k1, v1 := range cores {
 			found = false
 			for _, v2 := range nPods {
 				if v1.ipAddr == v2.ipAddr {
@@ -641,9 +638,9 @@ func applyAddrDiffs(client pb.ConfigurationClient, coreList interface{}, nPods [
 			}
 		}
 		// Now plug in the new addresses and set the connection
-		for _,v1 := range nPods {
+		for _, v1 := range nPods {
 			found = false
-			for _,v2 := range cores {
+			for _, v2 := range cores {
 				if v1.ipAddr == v2.ipAddr {
 					found = true
 					break
@@ -656,10 +653,10 @@ func applyAddrDiffs(client pb.ConfigurationClient, coreList interface{}, nPods [
 			mia[0].name = v1.name
 			setConnection(client, "ro_vcore", mia[0].backend, mia[0].connection, v1.ipAddr, 50057)
 			// Now get rid of the mia entry just processed
-			mia = append(mia[:0],mia[1:]...)
+			mia = append(mia[:0], mia[1:]...)
 		}
 	default:
-		log.Error("Internal: Unexpected type in call to applyAddrDiffs");
+		log.Error("Internal: Unexpected type in call to applyAddrDiffs")
 	}
 }
 
@@ -667,23 +664,23 @@ func updateDeviceIds(coreGroups [][]*volthaPod, rwPods []*volthaPod) {
 	var byName map[string]*volthaPod = make(map[string]*volthaPod)
 
 	// Convinience
-	for _,v := range rwPods {
+	for _, v := range rwPods {
 		byName[v.name] = v
 	}
 
-	for k1,v1 := range coreGroups {
-		for k2,_ := range v1 {
+	for k1, v1 := range coreGroups {
+		for k2, _ := range v1 {
 			coreGroups[k1][k2].devIds = byName[v1[k2].name].devIds
 		}
 	}
 }
 
 func startCoreMonitor(client pb.ConfigurationClient,
-					clientset *kubernetes.Clientset,
-					rwCoreFltr *regexp.Regexp,
-					roCoreFltr *regexp.Regexp,
-					coreGroups [][]*volthaPod,
-					oRoPods []*volthaPod) error {
+	clientset *kubernetes.Clientset,
+	rwCoreFltr *regexp.Regexp,
+	roCoreFltr *regexp.Regexp,
+	coreGroups [][]*volthaPod,
+	oRoPods []*volthaPod) error {
 	// Now that initial allocation has been completed, monitor the pods
 	// for IP changes
 	// The main loop needs to do the following:
@@ -714,7 +711,7 @@ func startCoreMonitor(client pb.ConfigurationClient,
 		}
 		// We have all pods, check if any IP addresses
 		// have changed.
-		for _,v := range rwPods {
+		for _, v := range rwPods {
 			if hasIpAddr(coreGroups, v.ipAddr) == false {
 				log.Debug("Address has changed...")
 				applyAddrDiffs(client, coreGroups, rwPods)
@@ -727,7 +724,7 @@ func startCoreMonitor(client pb.ConfigurationClient,
 		if len(roPods) != 3 {
 			continue
 		}
-		for _,v := range roPods {
+		for _, v := range roPods {
 			if hasIpAddr(oRoPods, v.ipAddr) == false {
 				applyAddrDiffs(client, oRoPods, roPods)
 				break
@@ -740,14 +737,14 @@ func startCoreMonitor(client pb.ConfigurationClient,
 func hasIpAddr(coreList interface{}, ipAddr string) bool {
 	switch cores := coreList.(type) {
 	case []*volthaPod:
-		for _,v := range cores {
+		for _, v := range cores {
 			if v.ipAddr == ipAddr {
 				return true
 			}
 		}
 	case [][]*volthaPod:
-		for _,v1 := range cores {
-			for _,v2 := range v1 {
+		for _, v1 := range cores {
+			for _, v2 := range v1 {
 				if v2.ipAddr == ipAddr {
 					return true
 				}
@@ -759,14 +756,12 @@ func hasIpAddr(coreList interface{}, ipAddr string) bool {
 	return false
 }
 
-
 func main() {
 	// This is currently hard coded to a cluster with 3 servers
 	//var connections map[string]configConn = make(map[string]configConn)
 	//var rwCorePodsPrev map[string]rwPod = make(map[string]rwPod)
 	var err error
 	var conn *grpc.ClientConn
-
 
 	// Set up the regular expression to identify the voltha cores
 	rwCoreFltr := regexp.MustCompile(`rw-core[0-9]-`)
@@ -795,50 +790,50 @@ func main() {
 	queryDeviceIds(rwPods)
 
 	// For debugging... comment out l8r
-	for _,v := range rwPods {
+	for _, v := range rwPods {
 		log.Debugf("Pod list %v", *v)
 	}
 
 	coreGroups := groupPods1(rwPods)
 
 	// Assign the groupings to the the backends and connections
-	for k,_ := range coreGroups {
-		for k1,_ := range coreGroups[k] {
+	for k, _ := range coreGroups {
+		for k1, _ := range coreGroups[k] {
 			coreGroups[k][k1].cluster = "vcore"
-			coreGroups[k][k1].backend = "vcore"+strconv.Itoa(k+1)
-			coreGroups[k][k1].connection = "vcore"+strconv.Itoa(k+1)+strconv.Itoa(k1+1)
+			coreGroups[k][k1].backend = "vcore" + strconv.Itoa(k+1)
+			coreGroups[k][k1].connection = "vcore" + strconv.Itoa(k+1) + strconv.Itoa(k1+1)
 		}
 	}
 	log.Info("Core gouping completed")
 
 	// TODO: Debugging code, comment out for production
-	for k,v := range coreGroups {
-		for k2,v2 := range v {
+	for k, v := range coreGroups {
+		for k2, v2 := range v {
 			log.Debugf("Core group %d,%d: %v", k, k2, v2)
 		}
 	}
 	log.Info("Setting affinities")
 	// Now set the affinities for exising devices in the cores
-	for _,v := range coreGroups {
+	for _, v := range coreGroups {
 		setAffinity(client, v[0].devIds, v[0].backend)
 		setAffinity(client, v[1].devIds, v[1].backend)
 	}
 	log.Info("Setting connections")
 	// Configure the backeds based on the calculated core groups
-	for _,v := range coreGroups {
+	for _, v := range coreGroups {
 		setConnection(client, "vcore", v[0].backend, v[0].connection, v[0].ipAddr, 50057)
 		setConnection(client, "vcore", v[1].backend, v[1].connection, v[1].ipAddr, 50057)
 	}
 
 	// Process the read only pods
 	roPods := getVolthaPods(clientset, roCoreFltr)
-	for k,v := range roPods {
+	for k, v := range roPods {
 		log.Debugf("Processing ro_pod %v", v)
-		vN := "ro_vcore"+strconv.Itoa(k+1)
+		vN := "ro_vcore" + strconv.Itoa(k+1)
 		log.Debugf("Setting connection %s, %s, %s", vN, vN+"1", v.ipAddr)
 		roPods[k].cluster = "ro_core"
 		roPods[k].backend = vN
-		roPods[k].connection = vN+"1"
+		roPods[k].connection = vN + "1"
 		setConnection(client, "ro_vcore", v.backend, v.connection, v.ipAddr, 50057)
 	}
 
@@ -847,7 +842,6 @@ func main() {
 
 	log.Info("Starting core monitoring")
 	startCoreMonitor(client, clientset, rwCoreFltr,
-						roCoreFltr, coreGroups, roPods) // Never returns
+		roCoreFltr, coreGroups, roPods) // Never returns
 	return
 }
-

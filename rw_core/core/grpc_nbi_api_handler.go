@@ -841,8 +841,8 @@ func (handler *APIHandler) SimulateAlarm(
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:in.Id}, handler.longRunningRequestTimeout); err != nil {
-			failedresponse := &common.OperationResp{Code:voltha.OperationResp_OPERATION_FAILURE}
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: in.Id}, handler.longRunningRequestTimeout); err != nil {
+			failedresponse := &common.OperationResp{Code: voltha.OperationResp_OPERATION_FAILURE}
 			return failedresponse, err
 		} else {
 			defer txn.Close()
