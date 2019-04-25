@@ -50,6 +50,24 @@
       "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c4e3cf5_b7f7f142",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-04-25T17:07:18Z",
+      "side": 1,
+      "message": "The comment said \"When the device is reenabled from a previous disabled state, all the device ports should be reenabled\". I think of changing it to \"On device ENABLE, mark all the ports of the device as ACTIVE (if exists)\". Is that Ok.",
+      "parentUuid": "5633166a_cdd163be",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
