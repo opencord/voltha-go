@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "700ae736_1be5f09b",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-25T14:49:50Z",
+      "side": 1,
+      "message": "Comment must start with function name",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb1afd57_fe2b7656",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-25T14:49:50Z",
+      "side": 1,
+      "message": "This logic should go inside a new function in the device_agent.go file.  This is the general pattern of device_manager.go",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5633166a_cdd163be",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-25T14:49:50Z",
+      "side": 1,
+      "message": "This state transition if from ACTIVATING to ACTIVE state of a parent device.   The comment of this commit indicates that the device should have been in the disabled state.",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
