@@ -18,38 +18,38 @@
 package afrouter
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
+	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"github.com/opencord/voltha-go/common/log"
 )
 
 const NoMeta = "nometa"
 
 type MethodRouter struct {
-	name string
+	name    string
 	service string
-	mthdRt map[string]map[string]Router // map of [metadata][method]
+	mthdRt  map[string]map[string]Router // map of [metadata][method]
 }
 
 func newMethodRouter(config *RouterConfig) (Router, error) {
-	mr := MethodRouter{name:config.Name,service:config.ProtoService,mthdRt:make(map[string]map[string]Router)}
+	mr := MethodRouter{name: config.Name, service: config.ProtoService, mthdRt: make(map[string]map[string]Router)}
 	mr.mthdRt[NoMeta] = make(map[string]Router) // For routes not needing metadata (all expcept binding at this time)
 	log.Debugf("Processing MethodRouter config %v", *config)
 	if len(config.Routes) == 0 {
 		return nil, errors.New(fmt.Sprintf("Router %s must have at least one route", config.Name))
 	}
-	for _,rtv := range config.Routes {
+	for _, rtv := range config.Routes {
 		//log.Debugf("Processing route: %v",rtv)
 		var idx1 string
-		r,err := newSubRouter(config, &rtv)
+		r, err := newSubRouter(config, &rtv)
 		if err != nil {
 			return nil, err
 		}
 		if rtv.Type == "binding" {
 			idx1 = rtv.Binding.Field
-			if _,ok := mr.mthdRt[idx1]; ok == false { // /First attempt on this key
+			if _, ok := mr.mthdRt[idx1]; ok == false { // /First attempt on this key
 				mr.mthdRt[idx1] = make(map[string]Router)
 			}
 		} else {
@@ -62,8 +62,8 @@ func newMethodRouter(config *RouterConfig) (Router, error) {
 			if rtv.Methods[0] == "*" {
 				return r, nil
 			} else {
-				log.Debugf("Setting router '%s' for single method '%s'",r.Name(),rtv.Methods[0])
-				if _,ok := mr.mthdRt[idx1][rtv.Methods[0]]; ok == false {
+				log.Debugf("Setting router '%s' for single method '%s'", r.Name(), rtv.Methods[0])
+				if _, ok := mr.mthdRt[idx1][rtv.Methods[0]]; ok == false {
 					mr.mthdRt[idx1][rtv.Methods[0]] = r
 				} else {
 					err := errors.New(fmt.Sprintf("Attempt to define method %s for 2 routes: %s & %s", rtv.Methods[0],
@@ -73,10 +73,10 @@ func newMethodRouter(config *RouterConfig) (Router, error) {
 				}
 			}
 		default:
-			for _,m := range rtv.Methods {
+			for _, m := range rtv.Methods {
 				log.Debugf("Processing Method %s", m)
-				if _,ok := mr.mthdRt[idx1][m]; ok == false {
-					log.Debugf("Setting router '%s' for method '%s'",r.Name(),m)
+				if _, ok := mr.mthdRt[idx1][m]; ok == false {
+					log.Debugf("Setting router '%s' for method '%s'", r.Name(), m)
 					mr.mthdRt[idx1][m] = r
 				} else {
 					err := errors.New(fmt.Sprintf("Attempt to define method %s for 2 routes: %s & %s", m, r.Name(), mr.mthdRt[idx1][m].Name()))
@@ -98,69 +98,69 @@ func (mr MethodRouter) Service() string {
 	return mr.service
 }
 
-func (mr MethodRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string,string,error) {
+func (mr MethodRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, string, error) {
 	var rtrnK string = NoMeta
 	var rtrnV string = ""
 
 	// Get the metadata from the server stream
-    md, ok := metadata.FromIncomingContext(serverStream.Context())
+	md, ok := metadata.FromIncomingContext(serverStream.Context())
 	if !ok {
-	    return rtrnK, rtrnV, errors.New("Could not get a server stream metadata")
-    }
+		return rtrnK, rtrnV, errors.New("Could not get a server stream metadata")
+	}
 
 	// Determine if one of the method routing keys exists in the metadata
-	for k,_ := range mr.mthdRt {
-		if  _,ok := md[k]; ok == true {
+	for k, _ := range mr.mthdRt {
+		if _, ok := md[k]; ok == true {
 			rtrnV = md[k][0]
 			rtrnK = k
 			break
 		}
 	}
-	return rtrnK,rtrnV,nil
+	return rtrnK, rtrnV, nil
 
 }
 
 func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 	switch sl := sel.(type) {
-		case *sbFrame:
-			if r,ok := mr.mthdRt[NoMeta][sl.method]; ok == true {
-				return r.ReplyHandler(sel)
-			}
-			// TODO: this case should also be an error
-		default: //TODO: This should really be a big error
-			// A reply handler should only be called on the sbFrame
-			return nil
+	case *sbFrame:
+		if r, ok := mr.mthdRt[NoMeta][sl.method]; ok == true {
+			return r.ReplyHandler(sel)
+		}
+		// TODO: this case should also be an error
+	default: //TODO: This should really be a big error
+		// A reply handler should only be called on the sbFrame
+		return nil
 	}
 	return nil
 }
 
 func (mr MethodRouter) Route(sel interface{}) *backend {
 	switch sl := sel.(type) {
-		case *nbFrame:
-			if r,ok := mr.mthdRt[sl.metaKey][sl.mthdSlice[REQ_METHOD]]; ok == true {
-				return r.Route(sel)
-			}
-			log.Errorf("Attept to route on non-existent method '%s'", sl.mthdSlice[REQ_METHOD])
-			return nil
-		default:
-			return nil
+	case *nbFrame:
+		if r, ok := mr.mthdRt[sl.metaKey][sl.mthdSlice[REQ_METHOD]]; ok == true {
+			return r.Route(sel)
+		}
+		log.Errorf("Attept to route on non-existent method '%s'", sl.mthdSlice[REQ_METHOD])
+		return nil
+	default:
+		return nil
 	}
 	return nil
 }
 
-func (mr MethodRouter) BackendCluster(mthd string, metaKey string) (*backendCluster,error) {
-	if r,ok := mr.mthdRt[metaKey][mthd]; ok == true {
+func (mr MethodRouter) BackendCluster(mthd string, metaKey string) (*backendCluster, error) {
+	if r, ok := mr.mthdRt[metaKey][mthd]; ok == true {
 		return r.BackendCluster(mthd, metaKey)
 	}
-	err := errors.New(fmt.Sprintf("No backend cluster exists for method '%s' using meta key '%s'", mthd,metaKey))
+	err := errors.New(fmt.Sprintf("No backend cluster exists for method '%s' using meta key '%s'", mthd, metaKey))
 	log.Error(err)
 	return nil, err
 }
 
 func (mr MethodRouter) FindBackendCluster(beName string) *backendCluster {
-	for _,meta := range mr.mthdRt {
-		for _,r := range meta {
-			if rtrn := r.FindBackendCluster(beName); rtrn != nil   {
+	for _, meta := range mr.mthdRt {
+		for _, r := range meta {
+			if rtrn := r.FindBackendCluster(beName); rtrn != nil {
 				return rtrn
 			}
 		}

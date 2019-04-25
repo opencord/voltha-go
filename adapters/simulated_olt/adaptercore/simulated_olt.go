@@ -212,22 +212,22 @@ func (so *SimulatedOLT) Unsuppress_alarm(filter *voltha.AlarmFilter) error {
 	return errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Download_image(device *voltha.Device, request *voltha.ImageDownload)  (*voltha.ImageDownload, error) {
+func (so *SimulatedOLT) Download_image(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	return nil, errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Get_image_download_status(device *voltha.Device, request *voltha.ImageDownload)  (*voltha.ImageDownload, error) {
+func (so *SimulatedOLT) Get_image_download_status(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	return nil, errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Cancel_image_download(device *voltha.Device, request *voltha.ImageDownload)  (*voltha.ImageDownload, error) {
+func (so *SimulatedOLT) Cancel_image_download(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	return nil, errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Activate_image_update(device *voltha.Device, request *voltha.ImageDownload)  (*voltha.ImageDownload, error) {
+func (so *SimulatedOLT) Activate_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	return nil, errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Revert_image_update(device *voltha.Device, request *voltha.ImageDownload)  (*voltha.ImageDownload, error) {
+func (so *SimulatedOLT) Revert_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	return nil, errors.New("UnImplemented")
 }

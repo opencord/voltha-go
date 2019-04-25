@@ -29,10 +29,10 @@ import (
 )
 
 type AdapterProxy struct {
-	TestMode     bool
+	TestMode              bool
 	deviceTopicRegistered bool
-	coreTopic *kafka.Topic
-	kafkaICProxy *kafka.InterContainerProxy
+	coreTopic             *kafka.Topic
+	kafkaICProxy          *kafka.InterContainerProxy
 }
 
 func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy) *AdapterProxy {
@@ -62,17 +62,16 @@ func (ap *AdapterProxy) updateCoreTopic(coreTopic *kafka.Topic) {
 	ap.coreTopic = coreTopic
 }
 
-func (ap *AdapterProxy) getCoreTopic() kafka.Topic{
+func (ap *AdapterProxy) getCoreTopic() kafka.Topic {
 	if ap.coreTopic != nil {
 		return *ap.coreTopic
 	}
-	return kafka.Topic{Name:ap.kafkaICProxy.DefaultTopic.Name}
+	return kafka.Topic{Name: ap.kafkaICProxy.DefaultTopic.Name}
 }
 
-func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic{
+func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic {
 	return kafka.Topic{Name: adapterName}
 }
-
 
 func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("AdoptDevice", log.Fields{"device": device})

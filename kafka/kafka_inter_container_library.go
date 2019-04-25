@@ -549,7 +549,7 @@ func encodeResponse(request *ic.InterContainerMessage, success bool, returnedVal
 		Type:      ic.MessageType_RESPONSE,
 		FromTopic: request.Header.ToTopic,
 		ToTopic:   request.Header.FromTopic,
-		KeyTopic: request.Header.KeyTopic,
+		KeyTopic:  request.Header.KeyTopic,
 		Timestamp: time.Now().UnixNano(),
 	}
 
@@ -706,7 +706,7 @@ func (kp *InterContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 			key := msg.Header.KeyTopic
 			log.Debugw("sending-response-to-kafka", log.Fields{"rpc": requestBody.Rpc, "header": icm.Header, "key": key})
 			// TODO: handle error response.
-			 go kp.kafkaClient.Send(icm, replyTopic, key)
+			go kp.kafkaClient.Send(icm, replyTopic, key)
 		}
 	} else if msg.Header.Type == ic.MessageType_RESPONSE {
 		log.Debugw("response-received", log.Fields{"msg-header": msg.Header})
@@ -763,7 +763,7 @@ func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kv
 		Type:      ic.MessageType_REQUEST,
 		FromTopic: replyTopic.Name,
 		ToTopic:   toTopic.Name,
-		KeyTopic: key,
+		KeyTopic:  key,
 		Timestamp: time.Now().UnixNano(),
 	}
 	requestBody := &ic.InterContainerRequestBody{

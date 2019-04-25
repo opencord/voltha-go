@@ -18,8 +18,8 @@ package api
 import (
 	"context"
 	"fmt"
-	com "github.com/opencord/voltha-go/adapters/common"
 	"github.com/golang/protobuf/ptypes/empty"
+	com "github.com/opencord/voltha-go/adapters/common"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-protos/go/common"
 	"github.com/opencord/voltha-protos/go/openflow_13"
@@ -198,7 +198,6 @@ func stopSimulatedOLTAndONUAdapters() {
 	}
 }
 
-
 func TestListDeviceIds(t *testing.T) {
 	fmt.Println("Testing list Devices Ids ...")
 	//0. Start kafka and Ectd
@@ -335,7 +334,7 @@ func TestDeviceManagement(t *testing.T) {
 	for i := 0; i < numberOfOLTDevices; i++ {
 		ctx := context.Background()
 		randomMacAddress := strings.ToUpper(com.GetRandomMacAddress())
-		device := &voltha.Device{Type: "simulated_olt", MacAddress:randomMacAddress}
+		device := &voltha.Device{Type: "simulated_olt", MacAddress: randomMacAddress}
 		response, err := stub.CreateDevice(ctx, device)
 		log.Infow("response", log.Fields{"res": response, "error": err})
 		assert.Nil(t, err)
@@ -345,7 +344,7 @@ func TestDeviceManagement(t *testing.T) {
 	//4. Enable all the devices
 	for id, _ := range devices {
 		ctx := context.Background()
-		response, err := stub.EnableDevice(ctx, &common.ID{Id:id})
+		response, err := stub.EnableDevice(ctx, &common.ID{Id: id})
 		log.Infow("response", log.Fields{"res": response, "error": err})
 		assert.Nil(t, err)
 	}
@@ -366,7 +365,7 @@ func TestDeviceManagement(t *testing.T) {
 	log.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices)*2, len(response.Items))
-	for _, d := range (response.Items) {
+	for _, d := range response.Items {
 		devices[d.Id] = d
 		assert.Equal(t, d.AdminState, voltha.AdminState_ENABLED)
 	}
@@ -377,7 +376,7 @@ func TestDeviceManagement(t *testing.T) {
 	log.Infow("response", log.Fields{"res": response, "error": lerr})
 	assert.Nil(t, lerr)
 	assert.Equal(t, numberOfOLTDevices, len(lresponse.Items))
-	for _, ld := range (lresponse.Items) {
+	for _, ld := range lresponse.Items {
 		logicalDevices[ld.Id] = ld
 		// Ensure each logical device have two ports
 		assert.Equal(t, 2, len(ld.Ports))
@@ -387,7 +386,7 @@ func TestDeviceManagement(t *testing.T) {
 	for id, d := range devices {
 		ctx := context.Background()
 		if d.Type == "simulated_onu" {
-			response, err := stub.DisableDevice(ctx, &common.ID{Id:id})
+			response, err := stub.DisableDevice(ctx, &common.ID{Id: id})
 			log.Infow("response", log.Fields{"res": response, "error": err})
 			assert.Nil(t, err)
 		}
@@ -401,7 +400,7 @@ func TestDeviceManagement(t *testing.T) {
 	log.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices), len(response.Items))
-	for _, d := range (response.Items) {
+	for _, d := range response.Items {
 		if d.Type == "simulated_onu" {
 			assert.Equal(t, d.AdminState, voltha.AdminState_DISABLED)
 			devices[d.Id] = d
@@ -415,7 +414,7 @@ func TestDeviceManagement(t *testing.T) {
 	log.Infow("response", log.Fields{"res": response, "error": lerr})
 	assert.Nil(t, lerr)
 	assert.Equal(t, numberOfOLTDevices, len(lresponse.Items))
-	for _, ld := range (lresponse.Items) {
+	for _, ld := range lresponse.Items {
 		logicalDevices[ld.Id] = ld
 		// Ensure each logical device have one port - only olt port
 		assert.Equal(t, 1, len(ld.Ports))
@@ -425,7 +424,7 @@ func TestDeviceManagement(t *testing.T) {
 	for id, d := range devices {
 		ctx := context.Background()
 		if d.Type == "simulated_onu" {
-			response, err := stub.EnableDevice(ctx, &common.ID{Id:id})
+			response, err := stub.EnableDevice(ctx, &common.ID{Id: id})
 			log.Infow("response", log.Fields{"res": response, "error": err})
 			assert.Nil(t, err)
 		}
@@ -439,7 +438,7 @@ func TestDeviceManagement(t *testing.T) {
 	log.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices), len(response.Items))
-	for _, d := range (response.Items) {
+	for _, d := range response.Items {
 		assert.Equal(t, d.AdminState, voltha.AdminState_ENABLED)
 		devices[d.Id] = d
 	}
@@ -473,7 +472,6 @@ func TestDeviceManagement(t *testing.T) {
 	//stopKafka()
 	//stopEtcd()
 }
-
 
 func TestGetDevice(t *testing.T) {
 	var id common.ID

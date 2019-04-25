@@ -43,7 +43,7 @@ type proxyLoadChanges struct {
 }
 type proxyLoadTest struct {
 	sync.RWMutex
-	addedDevices       [] string
+	addedDevices       []string
 	updatedFirmwares   []proxyLoadChanges
 	updatedFlows       []proxyLoadChanges
 	preAddExecuted     bool

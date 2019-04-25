@@ -181,7 +181,6 @@ func (r *root) syncParent(childRev Revision, txid string) {
 	r.Proxy.ParentNode.Latest(txid).Finalize(false)
 }
 
-
 // Update modifies the content of an object at a given path with the provided data
 func (r *root) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision

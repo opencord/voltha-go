@@ -18,18 +18,18 @@
 package afrouter
 
 import (
-	"fmt"
 	"errors"
-	"google.golang.org/grpc"
+	"fmt"
 	"github.com/opencord/voltha-go/common/log"
+	"google.golang.org/grpc"
 )
 
 type RoundRobinRouter struct {
-	name string
-	routerType int // TODO: Likely not needed.
+	name        string
+	routerType  int // TODO: Likely not needed.
 	grpcService string
-	bkndClstr *backendCluster
-	curBknd **backend
+	bkndClstr   *backendCluster
+	curBknd     **backend
 }
 
 func newRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
@@ -57,9 +57,9 @@ func newRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, erro
 	var bptr *backend
 	bptr = nil
 	rr := RoundRobinRouter{
-		name:config.Name,
-		grpcService:rconf.ProtoService,
-		curBknd:&bptr,
+		name:        config.Name,
+		grpcService: rconf.ProtoService,
+		curBknd:     &bptr,
 	}
 
 	// This has already been validated bfore this function
@@ -71,7 +71,7 @@ func newRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, erro
 		}
 	}
 
-	// Create the backend cluster or link to an existing one 
+	// Create the backend cluster or link to an existing one
 	ok := true
 	if rr.bkndClstr, ok = bClusters[config.backendCluster.Name]; ok == false {
 		if rr.bkndClstr, err = newBackendCluster(config.backendCluster); err != nil {
@@ -81,49 +81,49 @@ func newRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, erro
 	}
 
 	if rtrn_err {
-		return rr,errors.New(fmt.Sprintf("Failed to create a new router '%s'",rr.name))
+		return rr, errors.New(fmt.Sprintf("Failed to create a new router '%s'", rr.name))
 	}
 
-	return rr,nil
+	return rr, nil
 }
 
-func (rr RoundRobinRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string,string,error) {
-	return "","",nil
+func (rr RoundRobinRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, string, error) {
+	return "", "", nil
 }
 
-func (rr RoundRobinRouter) BackendCluster(s string, mk string) (*backendCluster,error) {
+func (rr RoundRobinRouter) BackendCluster(s string, mk string) (*backendCluster, error) {
 	return rr.bkndClstr, nil
 }
 
-func (rr RoundRobinRouter) Name() (string) {
+func (rr RoundRobinRouter) Name() string {
 	return rr.name
 }
 
-func(rr RoundRobinRouter) Route(sel interface{}) (*backend) {
+func (rr RoundRobinRouter) Route(sel interface{}) *backend {
 	var err error
 	switch sl := sel.(type) {
-		case *nbFrame:
-			// Since this is a round robin router just get the next backend
-			if *rr.curBknd, err = rr.bkndClstr.nextBackend(*rr.curBknd,BE_SEQ_RR); err == nil {
-				return *rr.curBknd
-			} else {
-				sl.err = err
-				return nil
-			}
-		default:
-			log.Errorf("Internal: invalid data type in Route call %v", sel);
+	case *nbFrame:
+		// Since this is a round robin router just get the next backend
+		if *rr.curBknd, err = rr.bkndClstr.nextBackend(*rr.curBknd, BE_SEQ_RR); err == nil {
+			return *rr.curBknd
+		} else {
+			sl.err = err
 			return nil
+		}
+	default:
+		log.Errorf("Internal: invalid data type in Route call %v", sel)
+		return nil
 	}
-	log.Errorf("Round robin error %v", err);
+	log.Errorf("Round robin error %v", err)
 	return nil
 }
 
-func (rr RoundRobinRouter) Service() (string) {
+func (rr RoundRobinRouter) Service() string {
 	return rr.grpcService
 }
 
-func (rr RoundRobinRouter) FindBackendCluster(becName string) (*backendCluster) {
-	if becName ==  rr.bkndClstr.name {
+func (rr RoundRobinRouter) FindBackendCluster(becName string) *backendCluster {
+	if becName == rr.bkndClstr.name {
 		return rr.bkndClstr
 	}
 	return nil

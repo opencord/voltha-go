@@ -62,7 +62,7 @@ func setup() {
 	devices = make(map[string]*voltha.Device)
 }
 
-func connectToCore(port int) (voltha.VolthaServiceClient, error)  {
+func connectToCore(port int) (voltha.VolthaServiceClient, error) {
 	grpcHostIP := os.Getenv("DOCKER_HOST_IP")
 	grpcHost := fmt.Sprintf("%s:%d", grpcHostIP, port)
 	conn, err := grpc.Dial(grpcHost, grpc.WithInsecure())
@@ -192,8 +192,7 @@ func stopSimulatedOLTAndONUAdapters() {
 	}
 }
 
-
-func sendCreateDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, device *voltha.Device, ch chan interface{} ) {
+func sendCreateDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, device *voltha.Device, ch chan interface{}) {
 	fmt.Println("Sending  create device ...")
 	if response, err := stub.CreateDevice(ctx, device); err != nil {
 		ch <- err
@@ -202,9 +201,9 @@ func sendCreateDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClien
 	}
 }
 
-func sendEnableDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, deviceId string, ch chan interface{} ) {
+func sendEnableDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, deviceId string, ch chan interface{}) {
 	fmt.Println("Sending enable device ...")
-	if response, err := stub.EnableDevice(ctx, &common.ID{Id:deviceId}); err != nil {
+	if response, err := stub.EnableDevice(ctx, &common.ID{Id: deviceId}); err != nil {
 		ch <- err
 	} else {
 		ch <- response
@@ -253,7 +252,7 @@ func createDevice(stubs []voltha.VolthaServiceClient) (*voltha.Device, error) {
 	ui := uuid.New()
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(volthaSerialNumberKey, ui.String()))
 	randomMacAddress := strings.ToUpper(com.GetRandomMacAddress())
-	device := &voltha.Device{Type: "simulated_olt", MacAddress:randomMacAddress}
+	device := &voltha.Device{Type: "simulated_olt", MacAddress: randomMacAddress}
 	ch := make(chan interface{})
 	defer close(ch)
 	requestNum := 0
@@ -296,7 +295,7 @@ func enableAllDevices(stubs []voltha.VolthaServiceClient) error {
 			requestNum := 0
 			for _, stub := range stubs {
 				go sendEnableDeviceRequest(ctx, stub, deviceId, ch)
-				requestNum +=1
+				requestNum += 1
 			}
 			receivedResponse := 0
 			var err error
@@ -308,7 +307,7 @@ func enableAllDevices(stubs []voltha.VolthaServiceClient) error {
 				if !ok {
 				} else if er, ok := res.(error); ok {
 					err = er
-				} else if _ , ok := res.(*empty.Empty); ok {
+				} else if _, ok := res.(*empty.Empty); ok {
 					validResponseReceived = true
 				}
 				if receivedResponse == requestNum {
@@ -323,7 +322,6 @@ func enableAllDevices(stubs []voltha.VolthaServiceClient) error {
 	}
 	return nil
 }
-
 
 func TestConcurrentRequests(t *testing.T) {
 	fmt.Println("Testing Concurrent requests ...")
@@ -363,7 +361,6 @@ func TestConcurrentRequests(t *testing.T) {
 	//stopKafka()
 	//stopEtcd()
 }
-
 
 func shutdown() {
 	for _, conn := range conns {

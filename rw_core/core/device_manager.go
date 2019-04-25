@@ -496,7 +496,7 @@ func (dMgr *DeviceManager) addPort(deviceId string, port *voltha.Port) error {
 		}
 		// Notify the logical device manager to setup a logical port if needed
 		if port.Type == voltha.Port_ETHERNET_NNI || port.Type == voltha.Port_ETHERNET_UNI {
-			if device , err := dMgr.GetDevice(deviceId); err == nil {
+			if device, err := dMgr.GetDevice(deviceId); err == nil {
 				go dMgr.logicalDeviceMgr.addLogicalPort(device, port)
 			} else {
 				log.Errorw("failed-to-retrieve-device", log.Fields{"deviceId": deviceId})

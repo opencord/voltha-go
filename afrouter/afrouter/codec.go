@@ -19,10 +19,10 @@ package afrouter
 
 import (
 	"fmt"
-	"sync"
-	"google.golang.org/grpc"
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
+	"google.golang.org/grpc"
+	"sync"
 )
 
 func Codec() grpc.Codec {
@@ -39,53 +39,53 @@ type transparentRoutingCodec struct {
 
 type sbFrame struct {
 	payload []byte
-	router Router
-	method string
-	be *backend
-	lck sync.Mutex
+	router  Router
+	method  string
+	be      *backend
+	lck     sync.Mutex
 	metaKey string
 	metaVal string
 }
 
 type nbFrame struct {
-	payload []byte
-	router Router
-	be *backend
-	err error
+	payload   []byte
+	router    Router
+	be        *backend
+	err       error
 	mthdSlice []string
-	serNo chan uint64
-	metaKey string
-	metaVal string
+	serNo     chan uint64
+	metaKey   string
+	metaVal   string
 }
 
 func (cdc *transparentRoutingCodec) Marshal(v interface{}) ([]byte, error) {
 	switch t := v.(type) {
-		case *sbFrame:
-			return t.payload, nil
-		case *nbFrame:
-			return t.payload, nil
-		default:
-			return cdc.parentCodec.Marshal(v)
+	case *sbFrame:
+		return t.payload, nil
+	case *nbFrame:
+		return t.payload, nil
+	default:
+		return cdc.parentCodec.Marshal(v)
 	}
 
 }
 
 func (cdc *transparentRoutingCodec) Unmarshal(data []byte, v interface{}) error {
 	switch t := v.(type) {
-		case *sbFrame:
-			t.payload = data
-			// This is where the affinity is established on a northbound response
-			t.router.ReplyHandler(v)
-			return nil
-		case *nbFrame:
-			t.payload = data
-			// This is were the afinity value is pulled from the payload
-			// and the backend selected.
-			t.be = t.router.Route(v)
-			log.Debugf("Routing returned %v for method %s", t.be, t.mthdSlice[REQ_METHOD])
-			return nil
-		default:
-			return cdc.parentCodec.Unmarshal(data,v)
+	case *sbFrame:
+		t.payload = data
+		// This is where the affinity is established on a northbound response
+		t.router.ReplyHandler(v)
+		return nil
+	case *nbFrame:
+		t.payload = data
+		// This is were the afinity value is pulled from the payload
+		// and the backend selected.
+		t.be = t.router.Route(v)
+		log.Debugf("Routing returned %v for method %s", t.be, t.mthdSlice[REQ_METHOD])
+		return nil
+	default:
+		return cdc.parentCodec.Unmarshal(data, v)
 	}
 }
 

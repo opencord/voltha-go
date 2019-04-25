@@ -251,7 +251,7 @@ func (c *EtcdClient) ReleaseAllReservations() error {
 // ReleaseReservation releases reservation for a specific key.
 func (c *EtcdClient) ReleaseReservation(key string) error {
 	// Get the leaseid using the key
-	log.Debugw("Release-reservation", log.Fields{"key":key})
+	log.Debugw("Release-reservation", log.Fields{"key": key})
 	var ok bool
 	var leaseID *v3Client.LeaseID
 	c.writeLock.Lock()

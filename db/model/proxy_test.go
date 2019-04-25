@@ -147,7 +147,7 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
 	TestProxy_Device.Id = TestProxy_DeviceId
 
-	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "");
+	added := TestProxy_Root_Device.Add("/devices", TestProxy_Device, "")
 	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_Device).Interface().(proto.Message).String() {
 		t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
 	}
@@ -431,7 +431,7 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
 	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
 
-	added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, "");
+	added := TestProxy_Root_LogicalDevice.Add("/logical_devices", TestProxy_LogicalDevice, "")
 	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_LogicalDevice).Interface().(proto.Message).String() {
 		t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
 	}

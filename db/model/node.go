@@ -309,8 +309,7 @@ func (n *node) Get(path string, hash string, depth int, reconcile bool, txid str
 
 	// If there is not request to reconcile, try to get it from memory
 	if !reconcile {
-		if result = n.getPath(rev.GetBranch().GetLatest(), path, depth);
-			result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
+		if result = n.getPath(rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
 			return result
 		}
 	}

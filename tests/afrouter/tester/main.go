@@ -26,9 +26,9 @@ import (
 func main() {
 	// Setup logging
 	/*
-	if _, err := log.SetDefaultLogger(log.JSON, 0, nil); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
-	}
+		if _, err := log.SetDefaultLogger(log.JSON, 0, nil); err != nil {
+			log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+		}
 	*/
 
 	defer log.CleanUp()
