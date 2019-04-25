@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/gogo/protobuf/proto"
 	"reflect"
 	"runtime"
 	"sync"
@@ -507,6 +508,22 @@ func (dMgr *DeviceManager) addPort(deviceId string, port *voltha.Port) error {
 	} else {
 		return status.Errorf(codes.NotFound, "%s", deviceId)
 	}
+}
+
+
+// When the deviced is reenabled from a previous disabled state, all the device ports should be reenabled.
+func (dMgr *DeviceManager) reenablePorts(device *voltha.Device) error {
+        if agent := dMgr.getDeviceAgent(device.Id); agent != nil {
+                cloned := proto.Clone(device).(*voltha.Device)
+                for _, port := range cloned.Ports {
+                        err := agent.updatePortState(port.Type, port.PortNo, voltha.OperStatus_ACTIVE)
+                        if err != nil {
+                                log.Errorw("failed-to-update-port-state", log.Fields{"port": port, "err": err})
+                                return err
+                        }
+                }
+        }
+        return nil
 }
 
 func (dMgr *DeviceManager) updateFlows(deviceId string, flows []*ofp.OfpFlowStats) error {
