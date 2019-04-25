@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51aecb79_c631d5d5",
+        "filename": "db/model/node.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-04-25T19:28:58Z",
+      "side": 1,
+      "message": "Why do we need this exactly?  There is logic within makeLatest that add a callback when a change tuple is present.  These callbacks get called only once the update operation is complete in the root.go:Update function",
+      "range": {
+        "startLine": 569,
+        "startChar": 0,
+        "endLine": 572,
+        "endChar": 2
+      },
+      "revId": "1b273c37e3c7a78bc2a5803bb72bfebb7901d6fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
