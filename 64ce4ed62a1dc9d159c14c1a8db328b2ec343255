@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "4ada7556_86d39989",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-25T19:41:11Z",
+      "side": 1,
+      "message": "Please rename to \"enableALLPorts\"",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb1afd57_fe2b7656",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -30,6 +47,24 @@
       "writtenOn": "2019-04-25T14:49:50Z",
       "side": 1,
       "message": "This logic should go inside a new function in the device_agent.go file.  This is the general pattern of device_manager.go",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53c0ee4e_dbcbdc4a",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-25T19:41:11Z",
+      "side": 1,
+      "message": "Also, you may want to implement a separate method to enable all the ports (would be O(n)) as calling \"updatePortStatus\" for all ports will be O(nxn).",
+      "parentUuid": "bb1afd57_fe2b7656",
       "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -65,6 +100,24 @@
       "side": 1,
       "message": "The comment said \"When the device is reenabled from a previous disabled state, all the device ports should be reenabled\". I think of changing it to \"On device ENABLE, mark all the ports of the device as ACTIVE (if exists)\". Is that Ok.",
       "parentUuid": "5633166a_cdd163be",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e801d23_a7450539",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-25T19:41:11Z",
+      "side": 1,
+      "message": "It\u0027s rather\" when the operational state of the parent device is active and its admin state is active then mark all its ports as ACTIVE\".   Is this always true?  Is it something that needs to be inferred or actually have a separate request to enable the ports (if the previous statement is not always true).   \n\nAlso, it\u0027s better to use a function name \"dMgr.enableAllPorts()\" as it can be reused on multiple scenarios.",
+      "parentUuid": "1c4e3cf5_b7f7f142",
       "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
