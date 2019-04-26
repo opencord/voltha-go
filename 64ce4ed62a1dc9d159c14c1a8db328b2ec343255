@@ -121,6 +121,24 @@
       "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2adcf1f4_2b48d4f5",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-04-26T05:36:13Z",
+      "side": 1,
+      "message": "As per the existing design in device_agent.go, the \u0027disableDevice\u0027 function disables all the ports of the device. So, I would assume that on enableDevice we should (re)enable all ports of the device (if exists) and that is what I have tried to do. \nThe correct behavior, in my opinion would have been to allow adapters to update the status of the ports using the PortStateUpdate API (in adapter_request_handler.go) on disable and reenable of the device.\nAny thoughts? I can re-work the code accordingly.",
+      "parentUuid": "7e801d23_a7450539",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
