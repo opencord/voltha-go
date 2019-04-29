@@ -139,6 +139,24 @@
       "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5f396d6_deb2b89e",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-29T13:09:32Z",
+      "side": 1,
+      "message": "The existing design for \"disable\"/\"re-enable\" acts more as a placeholder for now and was meant to be changed as new adapters are adopted.   As you mentioned, the correct behavior is for adapters to update the port states on an enable/disable/re-enable.   Having the Core disable all ports has the advantage of reducing the volume of port updates over kafka.   However, since the number of ports per device is fairly small then that shoud be alright.\n\nPlease go ahead and do the update accordingly.",
+      "parentUuid": "2adcf1f4_2b48d4f5",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
