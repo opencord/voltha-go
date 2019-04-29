@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab1a5925_ff353fbf",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-04-29T15:33:53Z",
+      "side": 0,
+      "message": "with this gone it seems the flows being stored in etcd are almost a side effect.   The decomposition path is more a direct call, correct?   If true this may make decorating the decomposed flow with other objects a bit easier.",
+      "range": {
+        "startLine": 134,
+        "startChar": 53,
+        "endLine": 134,
+        "endChar": 75
+      },
+      "revId": "ce5969c631c88dccbbd7d80323833eb1bbb62c97",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
