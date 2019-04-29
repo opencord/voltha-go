@@ -35,7 +35,7 @@
 package core
 
 import (
-	log "github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"time"
 )

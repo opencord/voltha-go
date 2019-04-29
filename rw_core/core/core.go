@@ -24,8 +24,8 @@ import (
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
-	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,7 +38,7 @@ type Core struct {
 	logicalDeviceMgr  *LogicalDeviceManager
 	grpcServer        *grpcserver.GrpcServer
 	grpcNBIAPIHandler *APIHandler
-	adapterMgr *AdapterManager
+	adapterMgr        *AdapterManager
 	config            *config.RWCoreFlags
 	kmp               *kafka.InterContainerProxy
 	clusterDataRoot   model.Root
@@ -48,9 +48,9 @@ type Core struct {
 	exitChannel       chan int
 	kvClient          kvstore.Client
 	kafkaClient       kafka.Client
-	coreMembership *voltha.Membership
-	membershipLock *sync.RWMutex
-	deviceOwnership    *DeviceOwnership
+	coreMembership    *voltha.Membership
+	membershipLock    *sync.RWMutex
+	deviceOwnership   *DeviceOwnership
 }
 
 func init() {
@@ -92,7 +92,7 @@ func (core *Core) Start(ctx context.Context) {
 	log.Info("values", log.Fields{"kmp": core.kmp})
 	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceId)
 	core.deviceMgr = newDeviceManager(core)
-	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy)
+	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy, core.config.DefaultCoreTimeout)
 
 	if err := core.registerAdapterRequestHandlers(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
 		log.Fatal("Failure-registering-adapterRequestHandler")
@@ -170,17 +170,6 @@ func (core *Core) startKafkaMessagingProxy(ctx context.Context) error {
 	return nil
 }
 
-//func (core *Core) registerAdapterRequestHandler(ctx context.Context, coreInstanceId string, dMgr *DeviceManager,
-//	ldMgr *LogicalDeviceManager, aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy,
-//	) error {
-//	requestProxy := NewAdapterRequestHandlerProxy(coreInstanceId, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
-//		core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
-//	core.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: core.config.CoreTopic}, requestProxy)
-//
-//	log.Info("request-handlers")
-//	return nil
-//}
-
 func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstanceId string, dMgr *DeviceManager,
 	ldMgr *LogicalDeviceManager, aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy,
 ) error {
@@ -196,7 +185,6 @@ func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstan
 	log.Info("request-handler-registered")
 	return nil
 }
-
 
 func (core *Core) isMembershipRegistrationComplete() bool {
 	core.membershipLock.RLock()
@@ -219,7 +207,6 @@ func (core *Core) updateCoreMembership(ctx context.Context, membership *voltha.M
 
 	core.coreMembership = membership
 
-
 	// Use the group name to register a specific kafka topic for this container
 	go func(groupName string) {
 		// Register the core-pair topic to handle core-bound requests destined to the core pair
@@ -241,7 +228,6 @@ func (core *Core) getCoreMembership(ctx context.Context) *voltha.Membership {
 	defer core.membershipLock.RUnlock()
 	return core.coreMembership
 }
-
 
 func (core *Core) startDeviceManager(ctx context.Context) {
 	// TODO: Interaction between the logicaldevicemanager and devicemanager should mostly occur via

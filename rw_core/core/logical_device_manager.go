@@ -39,9 +39,10 @@ type LogicalDeviceManager struct {
 	clusterDataProxy           *model.Proxy
 	exitChannel                chan int
 	lockLogicalDeviceAgentsMap sync.RWMutex
+	defaultTimeout             int64
 }
 
-func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy) *LogicalDeviceManager {
+func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy, timeout int64) *LogicalDeviceManager {
 	var logicalDeviceMgr LogicalDeviceManager
 	logicalDeviceMgr.core = core
 	logicalDeviceMgr.exitChannel = make(chan int, 1)
@@ -50,6 +51,7 @@ func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy 
 	logicalDeviceMgr.kafkaICProxy = kafkaICProxy
 	logicalDeviceMgr.clusterDataProxy = cdProxy
 	logicalDeviceMgr.lockLogicalDeviceAgentsMap = sync.RWMutex{}
+	logicalDeviceMgr.defaultTimeout = timeout
 	return &logicalDeviceMgr
 }
 
@@ -137,6 +139,7 @@ func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices,
 					ldMgr,
 					ldMgr.deviceMgr,
 					ldMgr.clusterDataProxy,
+					ldMgr.defaultTimeout,
 				)
 				ldMgr.addLogicalDeviceAgentToMap(agent)
 				go agent.start(nil, true)
@@ -151,7 +154,7 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	log.Debugw("creating-logical-device", log.Fields{"deviceId": device.Id})
 	// Sanity check
 	if !device.Root {
-		return nil, errors.New("Device-not-root")
+		return nil, errors.New("device-not-root")
 	}
 
 	// Create a logical device agent - the logical device Id is based on the mac address of the device
@@ -166,12 +169,9 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	}
 	log.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
-	agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
+	agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 	go agent.start(ctx, false)
-
-	//// Set device ownership
-	//ldMgr.core.deviceOwnership.OwnedByMe(id)
 
 	log.Debug("creating-logical-device-ends")
 	return &id, nil
@@ -186,7 +186,7 @@ func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
 	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
 	if ldAgent, _ := ldMgr.logicalDeviceAgents[lDeviceId]; ldAgent == nil {
 		// Logical device not in memory - create a temp logical device Agent and let it load from memory
-		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
+		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
 		if err := agent.start(nil, true); err != nil {
 			//agent.stop(nil)
 			return err
@@ -201,7 +201,7 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, devi
 	log.Debugw("deleting-logical-device", log.Fields{"deviceId": device.Id})
 	// Sanity check
 	if !device.Root {
-		return errors.New("Device-not-root")
+		return errors.New("device-not-root")
 	}
 	logDeviceId := device.ParentId
 	if agent := ldMgr.getLogicalDeviceAgent(logDeviceId); agent != nil {
@@ -275,6 +275,23 @@ func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortId *voltha.LogicalPortId)
 	return nil, status.Errorf(codes.NotFound, "%s-$s", lPortId.Id, lPortId.PortId)
 }
 
+// updateLogicalPort sets up a logical port on the logical device based on the device port
+// information, if needed
+func (ldMgr *LogicalDeviceManager) updateLogicalPort(device *voltha.Device, port *voltha.Port) error {
+	if ldID, err := ldMgr.getLogicalDeviceId(device); err != nil || *ldID == "" {
+		// This is not an error as the logical device may not have been created at this time.  In such a case,
+		// the ports will be created when the logical device is ready.
+		return nil
+	} else {
+		if agent := ldMgr.getLogicalDeviceAgent(*ldID); agent != nil {
+			if err := agent.updateLogicalPort(device, port); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // addLogicalPort sets up a logical port on the logical device based on the device port
 // information.
 func (ldMgr *LogicalDeviceManager) addLogicalPort(device *voltha.Device, port *voltha.Port) error {
@@ -304,7 +321,7 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, lPortI
 	}
 	// Sanity check
 	if logicalPort.RootPort {
-		return errors.New("Device-root")
+		return errors.New("device-root")
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(lPortId.Id); agent != nil {
 		agent.deleteLogicalPort(logicalPort)
@@ -328,15 +345,13 @@ func (ldMgr *LogicalDeviceManager) setupUNILogicalPorts(ctx context.Context, chi
 	log.Debugw("setupUNILogicalPorts", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
 
 	if parentId == "" || logDeviceId == nil {
-		return errors.New("Device-in-invalid-state")
+		return errors.New("device-in-invalid-state")
 	}
 
 	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
 		if err := agent.setupUNILogicalPorts(ctx, childDevice); err != nil {
 			return err
 		}
-		// Update the device routes - let it run in its own go routine as it can take time
-		//go agent.updateRoutes()
 	}
 	return nil
 }

@@ -172,7 +172,9 @@ func NewDeviceRules() *DeviceRules {
 func (dr *DeviceRules) Copy() *DeviceRules {
 	copyDR := NewDeviceRules()
 	for key, val := range dr.Rules {
-		copyDR.Rules[key] = val.Copy()
+		if val != nil {
+			copyDR.Rules[key] = val.Copy()
+		}
 	}
 	return copyDR
 }
@@ -181,6 +183,16 @@ func (dr *DeviceRules) ClearFlows(deviceId string) {
 	if _, exist := dr.Rules[deviceId]; exist {
 		dr.Rules[deviceId].Flows = ordered_map.NewOrderedMap()
 	}
+}
+
+func (dr *DeviceRules) FilterRules(deviceIds map[string]string) *DeviceRules {
+	filteredDR := NewDeviceRules()
+	for key, val := range dr.Rules {
+		if _, exist := deviceIds[key]; exist {
+			filteredDR.Rules[key] = val.Copy()
+		}
+	}
+	return filteredDR
 }
 
 func (dr *DeviceRules) AddFlow(deviceId string, flow *ofp.OfpFlowStats) {
