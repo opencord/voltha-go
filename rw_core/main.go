@@ -23,9 +23,9 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/kafka"
-	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
+	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"os"
 	"os/signal"
 	"strconv"
@@ -216,7 +216,7 @@ func main() {
 	cf := config.NewRWCoreFlags()
 	cf.ParseCommandArguments()
 
-	//// Setup logging
+	// Setup logging
 
 	//Setup default logger - applies for packages that do not have specific logger set
 	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
@@ -228,9 +228,11 @@ func main() {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
+	//log.SetAllLogLevel(log.ErrorLevel)
+
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/flow_decomposition", log.DebugLevel)
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/graph", log.DebugLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/flow_decomposition", log.DebugLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/graph", log.DebugLevel)
 	//log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
 	//log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
 

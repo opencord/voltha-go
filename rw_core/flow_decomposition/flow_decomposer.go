@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
-	ofp "github.com/opencord/voltha-protos/go/openflow_13"
-	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/opencord/voltha-go/rw_core/coreIf"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	fu "github.com/opencord/voltha-go/rw_core/utils"
+	ofp "github.com/opencord/voltha-protos/go/openflow_13"
+	"github.com/opencord/voltha-protos/go/voltha"
 	"math/big"
 )
 
@@ -751,9 +751,10 @@ func NewFlowDecomposer(deviceMgr coreIf.DeviceManager) *FlowDecomposer {
 }
 
 //DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
-func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) *fu.DeviceRules {
+func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups, includeDefaultFlows bool) *fu.DeviceRules {
 	rules := agent.GetAllDefaultRules()
 	deviceRules := rules.Copy()
+	devicesToUpdate := make(map[string]string)
 
 	groupMap := make(map[uint32]*ofp.OfpGroupEntry)
 	for _, groupEntry := range groups.Items {
@@ -766,9 +767,15 @@ func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows 
 		for deviceId, flowAndGroups := range decomposedRules.Rules {
 			deviceRules.CreateEntryIfNotExist(deviceId)
 			deviceRules.Rules[deviceId].AddFrom(flowAndGroups)
+			devicesToUpdate[deviceId] = deviceId
 		}
 	}
-	return deviceRules
+	if includeDefaultFlows {
+		return deviceRules
+	}
+	updatedDeviceRules := deviceRules.FilterRules(devicesToUpdate)
+
+	return updatedDeviceRules
 }
 
 // Handles special case of any controller-bound flow for a parent device
@@ -804,6 +811,7 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 			}
 		}
 	}
+
 	return newDeviceRules
 }
 
@@ -869,6 +877,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 		}
 	}
 	deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
+
 	return deviceRules
 }
 
@@ -1052,6 +1061,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 		fg.AddFlow(MkFlowStat(fa))
 		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 	}
+
 	return deviceRules
 }
 
@@ -1230,10 +1240,9 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 
 	inPortNo := GetInPort(flow)
 	outPortNo := GetOutPort(flow)
-
 	deviceRules := fu.NewDeviceRules()
-
 	route := agent.GetRoute(inPortNo, outPortNo)
+
 	switch len(route) {
 	case 0:
 		log.Errorw("no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "comment": "deleting-flow"})
