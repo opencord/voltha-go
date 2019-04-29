@@ -164,7 +164,7 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() {
 	} else {
 		log.Debug("no-existing-device-type-found")
 		//	No device types data.   In order to have a proxy setup for that path let's create a fake device type
-		aMgr.addDeviceTypes(&voltha.DeviceTypes{Items: []*voltha.DeviceType{&voltha.DeviceType{Id: SENTINEL_DEVICETYPE_ID, Adapter: SENTINEL_ADAPTER_ID}}}, true)
+		aMgr.addDeviceTypes(&voltha.DeviceTypes{Items: []*voltha.DeviceType{{Id: SENTINEL_DEVICETYPE_ID, Adapter: SENTINEL_ADAPTER_ID}}}, true)
 	}
 }
 

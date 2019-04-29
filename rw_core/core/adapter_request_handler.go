@@ -88,7 +88,7 @@ func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string
 		return nil, errors.New("fail-to-create-transaction")
 	}
 
-	if rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id:devId}) {
+	if rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: devId}) {
 		log.Debugw("owned-by-me", log.Fields{"Id": devId})
 		if txn.Acquired(timeout) {
 			log.Debugw("processing-request", log.Fields{"Id": devId})
@@ -789,9 +789,6 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 		return nil, nil
 	}
 	go rhp.deviceMgr.addPort(deviceId.Id, port)
-	//if err := rhp.deviceMgr.addPort(deviceId.Id, port); err != nil {
-	//	return nil, err
-	//}
 
 	return new(empty.Empty), nil
 }

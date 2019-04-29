@@ -24,8 +24,8 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-protos/go/common"
-	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/omci"
+	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -35,38 +35,37 @@ import (
 )
 
 const (
-	IMAGE_DOWNLOAD = iota
-	CANCEL_IMAGE_DOWNLOAD     = iota
-	ACTIVATE_IMAGE = iota
-	REVERT_IMAGE = iota
+	IMAGE_DOWNLOAD        = iota
+	CANCEL_IMAGE_DOWNLOAD = iota
+	ACTIVATE_IMAGE        = iota
+	REVERT_IMAGE          = iota
 )
 
-
 type APIHandler struct {
-	deviceMgr        *DeviceManager
-	logicalDeviceMgr *LogicalDeviceManager
-	adapterMgr *AdapterManager
-	packetInQueue    *queue.Queue
-	changeEventQueue *queue.Queue
-	coreInCompetingMode bool
+	deviceMgr                 *DeviceManager
+	logicalDeviceMgr          *LogicalDeviceManager
+	adapterMgr                *AdapterManager
+	packetInQueue             *queue.Queue
+	changeEventQueue          *queue.Queue
+	coreInCompetingMode       bool
 	longRunningRequestTimeout int64
-	defaultRequestTimeout int64
+	defaultRequestTimeout     int64
 	da.DefaultAPIHandler
 	core *Core
 }
 
 func NewAPIHandler(core *Core) *APIHandler {
 	handler := &APIHandler{
-		deviceMgr:        core.deviceMgr,
-		logicalDeviceMgr: core.logicalDeviceMgr,
-		adapterMgr: core.adapterMgr,
-		coreInCompetingMode: core.config.InCompetingMode,
-		longRunningRequestTimeout:core.config.LongRunningRequestTimeout,
-		defaultRequestTimeout:core.config.DefaultRequestTimeout,
+		deviceMgr:                 core.deviceMgr,
+		logicalDeviceMgr:          core.logicalDeviceMgr,
+		adapterMgr:                core.adapterMgr,
+		coreInCompetingMode:       core.config.InCompetingMode,
+		longRunningRequestTimeout: core.config.LongRunningRequestTimeout,
+		defaultRequestTimeout:     core.config.DefaultRequestTimeout,
 		// TODO: Figure out what the 'hint' parameter to queue.New does
-		packetInQueue: queue.New(10),
+		packetInQueue:    queue.New(10),
 		changeEventQueue: queue.New(10),
-		core: core,
+		core:             core,
 	}
 	return handler
 }
@@ -92,7 +91,7 @@ func (handler *APIHandler) createKvTransaction(ctx context.Context) (*KVTransact
 	} else if serNum, ok = md["voltha_serial_number"]; !ok {
 		err = errors.New("serial-number-not-found")
 	}
-	if !ok {
+	if !ok || serNum == nil {
 		log.Error(err)
 		return nil, err
 	}
@@ -129,7 +128,7 @@ func (handler *APIHandler) acquireRequest(ctx context.Context, id interface{}, m
 	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
 	txn, err := handler.createKvTransaction(ctx)
 	if txn == nil {
-		return nil,  err
+		return nil, err
 	} else if txn.Acquired(timeout) {
 		return txn, nil
 	} else {
@@ -160,7 +159,7 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
 	txn, err := handler.createKvTransaction(ctx)
 	if txn == nil {
-		return nil,  err
+		return nil, err
 	}
 
 	owned := false
@@ -213,7 +212,6 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	return out, nil
 }
 
-
 func (handler *APIHandler) UpdateMembership(ctx context.Context, membership *voltha.Membership) (*empty.Empty, error) {
 	log.Debugw("UpdateMembership-request", log.Fields{"membership": membership})
 	out := new(empty.Empty)
@@ -231,7 +229,6 @@ func (handler *APIHandler) GetMembership(ctx context.Context, empty *empty.Empty
 	return &voltha.Membership{}, nil
 }
 
-
 func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
 	log.Debugw("EnableLogicalDevicePort-request", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
 	if isTestMode(ctx) {
@@ -240,7 +237,7 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -261,7 +258,7 @@ func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *vol
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -283,7 +280,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 
 	if handler.competeForTransaction() {
 		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
-			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:flow.Id}); err != nil {
+			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
 				return new(empty.Empty), err
 			} else {
 				defer txn.Close()
@@ -306,7 +303,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 
 	if handler.competeForTransaction() {
 		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
-			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id:flow.Id}); err != nil {
+			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
 				return new(empty.Empty), err
 			} else {
 				defer txn.Close()
@@ -370,7 +367,6 @@ func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.
 	return handler.logicalDeviceMgr.listLogicalDevices()
 }
 
-
 // ListAdapters returns the contents of all adapters known to the system
 func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
 	log.Debug("ListDevices")
@@ -408,7 +404,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 				return &voltha.Device{}, err
 			}
 			if d, ok := res.(*voltha.Device); ok {
-				handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id:d.Id})
+				handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: d.Id})
 				return d, nil
 			}
 		}
@@ -429,7 +425,7 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:id.Id}, handler.longRunningRequestTimeout); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}, handler.longRunningRequestTimeout); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -450,7 +446,7 @@ func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*e
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -471,7 +467,7 @@ func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*em
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:id.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}); err != nil {
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
@@ -514,14 +510,14 @@ func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:img.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: img.Id}); err != nil {
 			return &common.OperationResp{}, err
 		} else {
 			defer txn.Close()
 		}
 	}
 
-	failedresponse := &common.OperationResp{Code:voltha.OperationResp_OPERATION_FAILURE}
+	failedresponse := &common.OperationResp{Code: voltha.OperationResp_OPERATION_FAILURE}
 
 	ch := make(chan interface{})
 	defer close(ch)
@@ -605,7 +601,7 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 	failedresponse := &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id:img.Id}); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: img.Id}); err != nil {
 			return failedresponse, err
 		} else {
 			defer txn.Close()
@@ -651,22 +647,21 @@ func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.Ima
 func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
 	log.Debugw("ListImageDownloads-request", log.Fields{"deviceId": id.Id})
 	if isTestMode(ctx) {
-		resp := &voltha.ImageDownloads{Items:[]*voltha.ImageDownload{}}
+		resp := &voltha.ImageDownloads{Items: []*voltha.ImageDownload{}}
 		return resp, nil
 	}
 
 	if downloads, err := handler.deviceMgr.listImageDownloads(ctx, id.Id); err != nil {
 		failedResp := &voltha.ImageDownloads{
-			Items:[]*voltha.ImageDownload{
-				&voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN},
-		},
+			Items: []*voltha.ImageDownload{
+				{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN},
+			},
 		}
 		return failedResp, err
 	} else {
 		return downloads, nil
 	}
 }
-
 
 func (handler *APIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
 	log.Debugw("UpdateDevicePmConfigs-request", log.Fields{"configs": *configs})
@@ -819,7 +814,7 @@ func (handler *APIHandler) GetAlarmDeviceData(
 
 //@TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
-	ctx context.Context, 
+	ctx context.Context,
 	in *common.ID,
 ) (*openflow_13.MeterStatsReply, error) {
 	log.Debug("GetMeterStatsOfLogicalDevice-stub")
@@ -828,8 +823,8 @@ func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
 
 //@TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetMibDeviceData(
-	ctx context.Context, 
-	in *common.ID, 
+	ctx context.Context,
+	in *common.ID,
 ) (*omci.MibDeviceData, error) {
 	log.Debug("GetMibDeviceData-stub")
 	return nil, nil

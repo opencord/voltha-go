@@ -23,8 +23,8 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/kafka"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
+	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
-        "github.com/opencord/voltha-protos/go/openflow_13"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -33,7 +33,7 @@ type RequestHandlerProxy struct {
 	TestMode       bool
 	coreInstanceId string
 	adapter        adapters.IAdapter
-	coreProxy *CoreProxy
+	coreProxy      *CoreProxy
 }
 
 func NewRequestHandlerProxy(coreInstanceId string, iadapter adapters.IAdapter, cProxy *CoreProxy) *RequestHandlerProxy {
@@ -135,7 +135,7 @@ func (rhp *RequestHandlerProxy) Update_flows_bulk(args []*ic.Argument) (*empty.E
 }
 
 func (rhp *RequestHandlerProxy) Update_flows_incrementally(args []*ic.Argument) (*empty.Empty, error) {
-        log.Debug("Update_flows_incrementally")
+	log.Debug("Update_flows_incrementally")
 	if len(args) < 3 {
 		log.Warn("Update_flows_incrementally-invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -143,8 +143,8 @@ func (rhp *RequestHandlerProxy) Update_flows_incrementally(args []*ic.Argument) 
 	}
 	device := &voltha.Device{}
 	transactionID := &ic.StrType{}
-        flows := &openflow_13.FlowChanges{}
-        groups := &openflow_13.FlowGroupChanges{}
+	flows := &openflow_13.FlowChanges{}
+	groups := &openflow_13.FlowGroupChanges{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device":
@@ -169,11 +169,11 @@ func (rhp *RequestHandlerProxy) Update_flows_incrementally(args []*ic.Argument) 
 			}
 		}
 	}
-        log.Debugw("Update_flows_incrementally",log.Fields{"flows":flows,"groups":groups})
-        //Invoke the adopt device on the adapter
-        if err := rhp.adapter.Update_flows_incrementally(device,flows,groups); err != nil {
-                return nil, status.Errorf(codes.NotFound, "%s", err.Error())
-        }
+	log.Debugw("Update_flows_incrementally", log.Fields{"flows": flows, "groups": groups})
+	//Invoke the adopt device on the adapter
+	if err := rhp.adapter.Update_flows_incrementally(device, flows, groups); err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
 	return new(empty.Empty), nil
 }
 

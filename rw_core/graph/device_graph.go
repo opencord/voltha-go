@@ -148,6 +148,7 @@ func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
 
 // AddPort adds a port to the graph.  If the graph is empty it will just invoke ComputeRoutes function
 func (dg *DeviceGraph) AddPort(lp *voltha.LogicalPort) {
+	log.Debugw("Addport", log.Fields{"logicalPort": lp})
 	//  If the graph does not exist invoke ComputeRoutes.
 	if len(dg.boundaryPorts) == 0 {
 		dg.ComputeRoutes([]*voltha.LogicalPort{lp})
@@ -161,9 +162,11 @@ func (dg *DeviceGraph) AddPort(lp *voltha.LogicalPort) {
 
 	//	If the port is already part of the boundary ports, do nothing
 	if dg.portExist(portId) {
-		fmt.Println("port exists")
 		return
 	}
+	// Add the port to the set of boundary ports
+	dg.boundaryPorts[portId] = lp.OfpPort.PortNo
+
 	// Add the device where this port is located to the device graph. If the device is already added then
 	// only the missing port will be added
 	device, _ := dg.getDevice(lp.DeviceId)
@@ -184,6 +187,7 @@ func (dg *DeviceGraph) AddPort(lp *voltha.LogicalPort) {
 }
 
 func (dg *DeviceGraph) Print() error {
+	log.Debugw("Print", log.Fields{"graph": dg.logicalDeviceId, "boundaryPorts": dg.boundaryPorts})
 	if level, err := log.GetPackageLogLevel(); err == nil && level == log.DebugLevel {
 		output := ""
 		routeNumber := 1
@@ -253,11 +257,11 @@ func (dg *DeviceGraph) addDevice(device *voltha.Device, g goraph.Graph, devicesA
 			if _, exist := (*devicesAdded)[peer.DeviceId]; !exist {
 				d, _ := dg.getDevice(peer.DeviceId)
 				g = dg.addDevice(d, g, devicesAdded, portsAdded, boundaryPorts)
-			} else {
-				peerPortId = concatDeviceIdPortId(peer.DeviceId, peer.PortNo)
-				g.AddEdge(goraph.StringID(portId), goraph.StringID(peerPortId), 1)
-				g.AddEdge(goraph.StringID(peerPortId), goraph.StringID(portId), 1)
 			}
+			peerPortId = concatDeviceIdPortId(peer.DeviceId, peer.PortNo)
+			g.AddEdge(goraph.StringID(portId), goraph.StringID(peerPortId), 1)
+			g.AddEdge(goraph.StringID(peerPortId), goraph.StringID(portId), 1)
+
 		}
 	}
 	return g

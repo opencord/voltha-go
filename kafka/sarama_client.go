@@ -52,7 +52,7 @@ type SaramaClient struct {
 	producer                      sarama.AsyncProducer
 	consumer                      sarama.Consumer
 	groupConsumers                map[string]*scc.Consumer
-	lockOfGroupConsumers            sync.RWMutex
+	lockOfGroupConsumers          sync.RWMutex
 	consumerGroupPrefix           string
 	consumerType                  int
 	consumerGroupName             string
@@ -454,7 +454,6 @@ func (sc *SaramaClient) Send(msg interface{}, topic *Topic, keys ...string) erro
 
 	// Send message to kafka
 	sc.producer.Input() <- kafkaMsg
-
 	// Wait for result
 	// TODO: Use a lock or a different mechanism to ensure the response received corresponds to the message sent.
 	select {
@@ -920,7 +919,6 @@ func removeChannel(channels []chan *ic.InterContainerMessage, ch <-chan *ic.Inte
 	return channels
 }
 
-
 func (sc *SaramaClient) addToGroupConsumers(topic string, consumer *scc.Consumer) {
 	sc.lockOfGroupConsumers.Lock()
 	defer sc.lockOfGroupConsumers.Unlock()
@@ -935,7 +933,7 @@ func (sc *SaramaClient) deleteFromGroupConsumers(topic string) error {
 	if _, exist := sc.groupConsumers[topic]; exist {
 		consumer := sc.groupConsumers[topic]
 		delete(sc.groupConsumers, topic)
-		if err := consumer.Close(); err!= nil {
+		if err := consumer.Close(); err != nil {
 			log.Errorw("failure-closing-consumer", log.Fields{"error": err})
 			return err
 		}
