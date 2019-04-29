@@ -633,7 +633,7 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 
 	// Activate the child device
 	if agent := dMgr.getDeviceAgent(agent.deviceId); agent != nil {
-		go agent.enableDevice(nil)
+		agent.enableDevice(nil)
 	}
 
 	// Publish on the messaging bus that we have discovered new devices

@@ -546,7 +546,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 		return nil, nil
 	}
 	// Run child detection in it's own go routine as it can be a lengthy process
-	go rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val, vendorId.Val, serialNumber.Val, onuId.Val)
+	rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val, vendorId.Val, serialNumber.Val, onuId.Val)
 
 	return new(empty.Empty), nil
 }
