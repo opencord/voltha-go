@@ -22,6 +22,30 @@
       "revId": "ce5969c631c88dccbbd7d80323833eb1bbb62c97",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee53279a_a59a1744",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-29T15:39:42Z",
+      "side": 0,
+      "message": "Correct, this forces the flow updates (including decomposition and pushing to the adapters) to be more direct instead of relying on a model callback which may be slower.    This way we also remove some steps that were done in both logical device agent and device agent.",
+      "parentUuid": "ab1a5925_ff353fbf",
+      "range": {
+        "startLine": 134,
+        "startChar": 53,
+        "endLine": 134,
+        "endChar": 75
+      },
+      "revId": "ce5969c631c88dccbbd7d80323833eb1bbb62c97",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
