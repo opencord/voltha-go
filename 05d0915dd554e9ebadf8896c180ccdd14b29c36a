@@ -16,6 +16,24 @@
       "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "883a280c_d48e1b68",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-04-30T20:38:05Z",
+      "side": 1,
+      "message": "Nowhere yet.  I preemptively added it given that openolt golang will need it.  I have the same function in the pyvoltha flow decomposer utils.",
+      "parentUuid": "6876ef4f_888b5ec4",
+      "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
