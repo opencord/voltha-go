@@ -70,6 +70,24 @@
       "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2ed8a91_2cbea58f",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-30T21:06:10Z",
+      "side": 1,
+      "message": "Thanks, makes sense. If the adapters are going to invoke this function then for Go adapters it would be better to move this function under a utils in voltha-go/common directory assuming the adapters are under voltha-go, otherwise, we would need a common repo similar to pyvoltha.  There are a number of common functions that could be moved as well.  So this is not required right away.",
+      "parentUuid": "074296a3_4fa0ff87",
+      "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
