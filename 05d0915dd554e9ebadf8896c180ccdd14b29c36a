@@ -52,6 +52,24 @@
       "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "074296a3_4fa0ff87",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-04-30T20:51:07Z",
+      "side": 1,
+      "message": "not exactly.  it may be replaced with something like:\nTunnelId(GetSomeIdInOriginalFlow \u003c\u003c 32 \u0026 inputPort)   \nmaybe with some nicer function to populate it, but you get the idea.\n\nthe adapters would call GetChildPortFromTunnelId to properly parse out the inputPort.  And presumably another function to get whatever id out of the field we may come up with.",
+      "parentUuid": "70f69306_cad6f48f",
+      "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
