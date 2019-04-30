@@ -22,6 +22,30 @@
       "revId": "199a342509b7e94652df7983bd8e660928d850c9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a24527ad_c0ba31b6",
+        "filename": "db/model/node.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-04-30T18:25:17Z",
+      "side": 1,
+      "message": "Ok. Are you suggesting that lines 580 - 583 just be deleted?",
+      "parentUuid": "59bff016_0ac20720",
+      "range": {
+        "startLine": 580,
+        "startChar": 0,
+        "endLine": 583,
+        "endChar": 2
+      },
+      "revId": "199a342509b7e94652df7983bd8e660928d850c9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
