@@ -34,6 +34,24 @@
       "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70f69306_cad6f48f",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-04-30T20:43:50Z",
+      "side": 1,
+      "message": "ok.  So the call to \"TunnelId(uint64(inputPort))\"  will potentially be replaced by \"TunnelId(GetChildPortFromTunnelId(flow)\" where TunnelId() will be changed to take a uint32 instead of uint64?",
+      "parentUuid": "883a280c_d48e1b68",
+      "revId": "05d0915dd554e9ebadf8896c180ccdd14b29c36a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
