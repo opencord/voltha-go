@@ -227,6 +227,7 @@ func (rhp *AdapterRequestHandlerProxy) mergeDeviceInfoFromAdapter(device *voltha
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
+	cloned.Reason = device.Reason
 	return cloned, nil
 }
 
