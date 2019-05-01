@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-SHELL=/bin/bash -o pipefail
+SHELL=/bin/bash -e -o pipefail
 
 ifeq ($(TAG),)
 TAG := latest
@@ -128,9 +128,11 @@ lint-style:
 	  go get -u github.com/golang/go/src/cmd/gofmt; \
 	fi
 
-	if [[ "$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*') | tee /dev/tty)" ]]; then \
-	  echo "Lint failed on one or more files ^; run 'go fmt' to fix."; \
-	  exit 1; \
+	gofmt_out="$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*'))" ;\
+	if [ ! -z "$$gofmt_out" ]; then \
+	  echo "$$gofmt_out" ;\
+	  echo "Lint failed on one or more files ^; run 'go fmt' to fix." ;\
+	  exit 1 ;\
 	fi
 
 lint-sanity:
@@ -150,8 +152,11 @@ test:
 	fi
 
 	mkdir -p ./tests/results
-	go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee /dev/tty | go-junit-report > ./tests/results/go-test-results.xml; \
-	RETURN=$$?; \
-	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml && exit $$RETURN
+
+	go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	RETURN=$$? ;\
+	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
+	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
+	exit $$RETURN
 
 # end file
