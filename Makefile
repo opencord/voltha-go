@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-SHELL=/bin/bash -o pipefail
+SHELL=/bin/bash -e -o pipefail
 
 ifeq ($(TAG),)
 TAG := latest
@@ -124,13 +124,14 @@ simulated_onu: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
 
 lint-style:
-	hash gofmt > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-	  go get -u github.com/golang/go/src/cmd/gofmt; \
-	fi
-
-	if [[ "$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*') | tee /dev/tty)" ]]; then \
-	  echo "Lint failed on one or more files ^; run 'go fmt' to fix."; \
-	  exit 1; \
+ifeq (,$(shell which gofmt))
+	  go get -u github.com/golang/go/src/cmd/gofmt;
+endif
+	gofmt_out="$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*'))" ;\
+	if [ ! -z "$$gofmt_out" ]; then \
+	  echo "$$gofmt_out" ;\
+	  echo "Lint failed on one or more files ^; run 'go fmt' to fix." ;\
+	  exit 1 ;\
 	fi
 
 lint-sanity:
@@ -142,16 +143,19 @@ lint-dep:
 lint: lint-style lint-sanity lint-dep
 
 test:
-	hash go-junit-report > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-	  go get -u github.com/jstemmer/go-junit-report; \
-	fi
-	hash gocover-cobertura > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-	  go get -u github.com/t-yuki/gocover-cobertura; \
-	fi
+ifeq (,$(shell which go-junit-report))
+	go get -u github.com/jstemmer/go-junit-report;
+endif
+ifeq (,$(shell which gocover-cobertura))
+	  go get -u github.com/t-yuki/gocover-cobertura;
+endif
 
 	mkdir -p ./tests/results
-	go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee /dev/tty | go-junit-report > ./tests/results/go-test-results.xml; \
-	RETURN=$$?; \
-	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml && exit $$RETURN
+
+	go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	RETURN=$$? ;\
+	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
+	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
+	exit $$RETURN
 
 # end file
