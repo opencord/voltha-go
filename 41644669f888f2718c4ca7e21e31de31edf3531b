@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faeb92da_2cb6c311",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-05-01T15:28:12Z",
+      "side": 1,
+      "message": "GOPATH",
+      "range": {
+        "startLine": 155,
+        "startChar": 21,
+        "endLine": 155,
+        "endChar": 28
+      },
+      "revId": "41644669f888f2718c4ca7e21e31de31edf3531b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
