@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "4e8bad48_bafe95f5",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-02T13:50:16Z",
+      "side": 1,
+      "message": "similar to an enableAllPorts as described, a disableAllPorts to go with it.   \n\nThe \"work\" of both enableAllPorts and disableAllPorts being in device_agent.go, but the core_proxy/adapter_request_handler would expose new functions and pass it through here and ultimately to device_agent.go\n\nThis is to deal with the onu unplugged case where the whole device is not admin disabled, but the ports are operationally down and that needs to be reflected in the core and ultimately on the logical device\u0027s ports.",
+      "parentUuid": "4ada7556_86d39989",
+      "revId": "64ce4ed62a1dc9d159c14c1a8db328b2ec343255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb1afd57_fe2b7656",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
