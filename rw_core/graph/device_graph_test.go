@@ -21,95 +21,73 @@ import (
 	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/stretchr/testify/assert"
+	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 )
 
-var ld voltha.LogicalDevice
-var olt voltha.Device
-var onusOnPort4 []voltha.Device
-var onusOnPort5 []voltha.Device
-var logicalDeviceId string
-var oltDeviceId string
-var numCalled int
-var lock sync.RWMutex
-
-const (
-	maxOnuOnPort4 int = 256
-	maxOnuOnPort5 int = 256
+var (
+	ld              voltha.LogicalDevice
+	olt             voltha.Device
+	onus            map[int][]voltha.Device
+	logicalDeviceId string
+	oltDeviceId     string
+	numCalled       int
+	lock            sync.RWMutex
 )
 
 func init() {
-
 	logicalDeviceId = "ld"
 	oltDeviceId = "olt"
 	lock = sync.RWMutex{}
+}
 
-	// Setup ONUs on OLT port 4
-	onusOnPort4 = make([]voltha.Device, 0)
-	var onu voltha.Device
-	var id string
-	oltPeerPort := uint32(4)
-	for i := 0; i < maxOnuOnPort4; i++ {
-		id := fmt.Sprintf("onu%d", i)
-		onu = voltha.Device{Id: id, ParentId: oltDeviceId}
-		ponPort := voltha.Port{PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
-		ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
-		peerPort := voltha.Port_PeerPort{DeviceId: oltDeviceId, PortNo: oltPeerPort}
-		ponPort.Peers = append(ponPort.Peers, &peerPort)
-		uniPort := voltha.Port{PortNo: 2, DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
-		onu.Ports = make([]*voltha.Port, 0)
-		onu.Ports = append(onu.Ports, &ponPort)
-		onu.Ports = append(onu.Ports, &uniPort)
-		onusOnPort4 = append(onusOnPort4, onu)
-	}
-
-	// Setup ONUs on OLT port 5
-	onusOnPort5 = make([]voltha.Device, 0)
-	oltPeerPort = uint32(5)
-	for i := 0; i < maxOnuOnPort5; i++ {
-		id := fmt.Sprintf("onu%d", i+maxOnuOnPort4)
-		onu = voltha.Device{Id: id, ParentId: oltDeviceId}
-		ponPort := voltha.Port{PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
-		ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
-		peerPort := voltha.Port_PeerPort{DeviceId: oltDeviceId, PortNo: oltPeerPort}
-		ponPort.Peers = append(ponPort.Peers, &peerPort)
-		uniPort := voltha.Port{PortNo: 2, DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
-		onu.Ports = make([]*voltha.Port, 0)
-		onu.Ports = append(onu.Ports, &ponPort)
-		onu.Ports = append(onu.Ports, &uniPort)
-		onusOnPort5 = append(onusOnPort5, onu)
-	}
-
-	// Setup OLT
-	//	Setup the OLT device
+func setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu int) {
+	// Create the OLT and add the NNI ports
 	olt = voltha.Device{Id: oltDeviceId, ParentId: logicalDeviceId}
-	p1 := voltha.Port{PortNo: 2, DeviceId: oltDeviceId, Type: voltha.Port_ETHERNET_NNI}
-	p2 := voltha.Port{PortNo: 3, DeviceId: oltDeviceId, Type: voltha.Port_ETHERNET_NNI}
-	p3 := voltha.Port{PortNo: 4, DeviceId: oltDeviceId, Type: voltha.Port_PON_OLT}
-	p4 := voltha.Port{PortNo: 5, DeviceId: oltDeviceId, Type: voltha.Port_PON_OLT}
-	p3.Peers = make([]*voltha.Port_PeerPort, 0)
-	for _, onu := range onusOnPort4 {
-		peerPort := voltha.Port_PeerPort{DeviceId: onu.Id, PortNo: p3.PortNo}
-		p3.Peers = append(p3.Peers, &peerPort)
-	}
-	p4.Peers = make([]*voltha.Port_PeerPort, 0)
-	for _, onu := range onusOnPort5 {
-		peerPort := voltha.Port_PeerPort{DeviceId: onu.Id, PortNo: p4.PortNo}
-		p4.Peers = append(p4.Peers, &peerPort)
-	}
 	olt.Ports = make([]*voltha.Port, 0)
-	olt.Ports = append(olt.Ports, &p1)
-	olt.Ports = append(olt.Ports, &p2)
-	olt.Ports = append(olt.Ports, &p3)
-	olt.Ports = append(olt.Ports, &p4)
+	for nniPort := 1; nniPort < numNNIPort+1; nniPort++ {
+		p := voltha.Port{PortNo: uint32(nniPort), DeviceId: oltDeviceId, Type: voltha.Port_ETHERNET_NNI}
+		olt.Ports = append(olt.Ports, &p)
+	}
 
-	// Setup the logical device
+	// Create the ONUs and associate them with the OLT
+	onus = make(map[int][]voltha.Device)
+	for pPortNo := numNNIPort + 1; pPortNo < numPonPortOnOlt+numNNIPort+1; pPortNo++ {
+		onusOnPon := make([]voltha.Device, 0)
+		var onu voltha.Device
+		oltPeerPort := uint32(pPortNo)
+		oltPonPort := voltha.Port{PortNo: uint32(pPortNo), DeviceId: oltDeviceId, Type: voltha.Port_PON_OLT}
+		oltPonPort.Peers = make([]*voltha.Port_PeerPort, 0)
+		for i := 0; i < numOnuPerOltPonPort; i++ {
+			id := fmt.Sprintf("%d-onu-%d", pPortNo, i)
+			onu = voltha.Device{Id: id, ParentId: oltDeviceId, ParentPortNo: uint32(pPortNo)}
+			ponPort := voltha.Port{PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
+			ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
+			peerPort := voltha.Port_PeerPort{DeviceId: oltDeviceId, PortNo: oltPeerPort}
+			ponPort.Peers = append(ponPort.Peers, &peerPort)
+			onu.Ports = make([]*voltha.Port, 0)
+			onu.Ports = append(onu.Ports, &ponPort)
+			for j := 2; j < numUniPerOnu+2; j++ {
+				uniPort := voltha.Port{PortNo: uint32(j), DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
+				onu.Ports = append(onu.Ports, &uniPort)
+			}
+			onusOnPon = append(onusOnPon, onu)
+			oltPeerPort := voltha.Port_PeerPort{DeviceId: onu.Id, PortNo: 1}
+			oltPonPort.Peers = append(oltPonPort.Peers, &oltPeerPort)
+		}
+		onus[pPortNo] = onusOnPon
+		olt.Ports = append(olt.Ports, &oltPonPort)
+	}
+
+	// Create the logical device
 	ld = voltha.LogicalDevice{Id: logicalDeviceId}
 	ld.Ports = make([]*voltha.LogicalPort, 0)
 	ofpPortNo := 1
-	//Add olt ports
+	var id string
+	//Add olt NNI ports
 	for i, port := range olt.Ports {
 		if port.Type == voltha.Port_ETHERNET_NNI {
 			id = fmt.Sprintf("nni-%d", i)
@@ -118,25 +96,16 @@ func init() {
 			ofpPortNo = ofpPortNo + 1
 		}
 	}
-	//Add onu ports on port 4
-	for i, onu := range onusOnPort4 {
-		for _, port := range onu.Ports {
-			if port.Type == voltha.Port_ETHERNET_UNI {
-				id = fmt.Sprintf("uni-%d", i)
-				lp := voltha.LogicalPort{Id: id, DeviceId: onu.Id, DevicePortNo: port.PortNo, OfpPort: &openflow_13.OfpPort{PortNo: uint32(ofpPortNo)}, RootPort: false}
-				ld.Ports = append(ld.Ports, &lp)
-				ofpPortNo = ofpPortNo + 1
-			}
-		}
-	}
-	//Add onu ports on port 5
-	for i, onu := range onusOnPort5 {
-		for _, port := range onu.Ports {
-			if port.Type == voltha.Port_ETHERNET_UNI {
-				id = fmt.Sprintf("uni-%d", i+len(onusOnPort4))
-				lp := voltha.LogicalPort{Id: id, DeviceId: onu.Id, DevicePortNo: port.PortNo, OfpPort: &openflow_13.OfpPort{PortNo: uint32(ofpPortNo)}, RootPort: false}
-				ld.Ports = append(ld.Ports, &lp)
-				ofpPortNo = ofpPortNo + 1
+	//Add onu UNI ports
+	for _, onusOnPort := range onus {
+		for _, onu := range onusOnPort {
+			for j, port := range onu.Ports {
+				if port.Type == voltha.Port_ETHERNET_UNI {
+					id = fmt.Sprintf("%s:uni-%d", onu.Id, j)
+					lp := voltha.LogicalPort{Id: id, DeviceId: onu.Id, DevicePortNo: port.PortNo, OfpPort: &openflow_13.OfpPort{PortNo: uint32(ofpPortNo)}, RootPort: false}
+					ld.Ports = append(ld.Ports, &lp)
+					ofpPortNo = ofpPortNo + 1
+				}
 			}
 		}
 	}
@@ -149,49 +118,169 @@ func GetDeviceHelper(id string) (*voltha.Device, error) {
 	if id == "olt" {
 		return &olt, nil
 	}
-	for _, onu := range onusOnPort4 {
-		if onu.Id == id {
-			return &onu, nil
-		}
-	}
-	for _, onu := range onusOnPort5 {
-		if onu.Id == id {
-			return &onu, nil
+	// Extract the olt pon port from the id ("<ponport>-onu-<onu number>")
+	res := strings.Split(id, "-")
+	if len(res) == 3 {
+		if ponPort, err := strconv.Atoi(res[0]); err == nil {
+			for _, onu := range onus[ponPort] {
+				if onu.Id == id {
+					return &onu, nil
+				}
+			}
+
 		}
 	}
 	return nil, errors.New("Not-found")
 }
 
 func TestGetRoutesOneShot(t *testing.T) {
+	numNNIPort := 1
+	numPonPortOnOlt := 1
+	numOnuPerOltPonPort := 64
+	numUniPerOnu := 1
 
+	setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
 	getDevice := GetDeviceHelper
 
+	fmt.Println(fmt.Sprintf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d", len(ld.Ports), numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
 	// Create a device graph and computes Routes
 	start := time.Now()
 	dg := NewDeviceGraph(logicalDeviceId, getDevice)
-
 	dg.ComputeRoutes(ld.Ports)
-	fmt.Println("Total num called:", numCalled)
-	fmt.Println("Total Time creating graph & compute Routes in one shot:", time.Since(start))
 	assert.NotNil(t, dg.GGraph)
-	assert.EqualValues(t, (maxOnuOnPort4*4 + maxOnuOnPort5*4), len(dg.Routes))
-	dg.Print()
+	fmt.Println(fmt.Sprintf("Total Time:%dms  Total Routes:%d", time.Since(start)/time.Millisecond, len(dg.Routes)))
+	assert.EqualValues(t, (2 * numNNIPort * numPonPortOnOlt * numOnuPerOltPonPort * numUniPerOnu), len(dg.Routes))
 }
 
-func TestGetRoutesAddPort(t *testing.T) {
+func TestGetRoutesPerPort(t *testing.T) {
+	numNNIPort := 1
+	numPonPortOnOlt := 1
+	numOnuPerOltPonPort := 64
+	numUniPerOnu := 1
 
+	setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
 	getDevice := GetDeviceHelper
+
+	fmt.Println(fmt.Sprintf("Test: Compute routes per port. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d", len(ld.Ports), numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
 
 	// Create a device graph and computes Routes
 	start := time.Now()
+	var pt time.Time
 	dg := NewDeviceGraph(logicalDeviceId, getDevice)
-	for _, lp := range ld.Ports {
+	for k, lp := range ld.Ports {
+		if k == len(ld.Ports)-1 {
+			pt = time.Now()
+		}
 		dg.AddPort(lp)
 	}
-
-	fmt.Println("Total num called:", numCalled)
-	fmt.Println("Total Time creating graph & compute Routes per port:", time.Since(start))
 	assert.NotNil(t, dg.GGraph)
-	assert.EqualValues(t, (maxOnuOnPort4*4 + maxOnuOnPort5*4), len(dg.Routes))
-	dg.Print()
+	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
+	assert.EqualValues(t, (2 * numNNIPort * numPonPortOnOlt * numOnuPerOltPonPort * numUniPerOnu), len(dg.Routes))
+}
+
+func TestGetRoutesPerPortMultipleUNIs(t *testing.T) {
+	numNNIPort := 1
+	numPonPortOnOlt := 1
+	numOnuPerOltPonPort := 64
+	numUniPerOnu := 5
+
+	setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
+	getDevice := GetDeviceHelper
+
+	fmt.Println(fmt.Sprintf("Test: Compute routes per port - multiple UNIs. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d", len(ld.Ports), numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
+
+	// Create a device graph and computes Routes
+	start := time.Now()
+	var pt time.Time
+	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	for k, lp := range ld.Ports {
+		if k == len(ld.Ports)-1 {
+			pt = time.Now()
+		}
+		dg.AddPort(lp)
+	}
+	assert.NotNil(t, dg.GGraph)
+	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
+	assert.EqualValues(t, (2 * numNNIPort * numPonPortOnOlt * numOnuPerOltPonPort * numUniPerOnu), len(dg.Routes))
+}
+
+func TestGetRoutesPerPortNoUNI(t *testing.T) {
+	numNNIPort := 1
+	numPonPortOnOlt := 1
+	numOnuPerOltPonPort := 1
+	numUniPerOnu := 0
+
+	setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
+	getDevice := GetDeviceHelper
+	assert.EqualValues(t, 1, len(ld.Ports))
+
+	fmt.Println(fmt.Sprintf("Test: Compute routes per port - no UNI. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d", len(ld.Ports), numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
+
+	// Create a device graph and computes Routes
+	start := time.Now()
+	var pt time.Time
+	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	for k, lp := range ld.Ports {
+		if k == len(ld.Ports)-1 {
+			pt = time.Now()
+		}
+		dg.AddPort(lp)
+	}
+	assert.NotNil(t, dg.GGraph)
+	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
+	assert.EqualValues(t, 0, len(dg.Routes))
+}
+
+func TestGetRoutesPerPortNoONU(t *testing.T) {
+	numNNIPort := 1
+	numPonPortOnOlt := 1
+	numOnuPerOltPonPort := 0
+	numUniPerOnu := 0
+
+	setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
+	getDevice := GetDeviceHelper
+	assert.EqualValues(t, 1, len(ld.Ports))
+
+	fmt.Println(fmt.Sprintf("Test: Compute routes per port - no ONU. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d", len(ld.Ports), numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
+
+	// Create a device graph and computes Routes
+	start := time.Now()
+	var pt time.Time
+	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	for k, lp := range ld.Ports {
+		if k == len(ld.Ports)-1 {
+			pt = time.Now()
+		}
+		dg.AddPort(lp)
+	}
+	assert.NotNil(t, dg.GGraph)
+	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
+	assert.EqualValues(t, 0, len(dg.Routes))
+}
+
+func TestGetRoutesPerPortNoNNI(t *testing.T) {
+	numNNIPort := 0
+	numPonPortOnOlt := 1
+	numOnuPerOltPonPort := 1
+	numUniPerOnu := 1
+
+	setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
+	getDevice := GetDeviceHelper
+	assert.EqualValues(t, 1, len(ld.Ports))
+
+	fmt.Println(fmt.Sprintf("Test: Compute routes per port - no NNI. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d", len(ld.Ports), numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
+
+	// Create a device graph and computes Routes
+	start := time.Now()
+	var pt time.Time
+	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	for k, lp := range ld.Ports {
+		if k == len(ld.Ports)-1 {
+			pt = time.Now()
+		}
+		dg.AddPort(lp)
+	}
+	assert.NotNil(t, dg.GGraph)
+	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
+	assert.EqualValues(t, 0, len(dg.Routes))
 }
