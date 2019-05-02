@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2082c753_df5ffda5",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-02T17:42:23Z",
+      "side": 1,
+      "message": "Do we need to let the user know something is happening here, i.e. \"Running tests...\"?",
+      "revId": "ca4c51ea8c4d66470a5ab8a9e4900b7245bdd88f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
