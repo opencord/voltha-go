@@ -1,8 +1,0 @@
-    command: [
-      "/ofagent/ofagent/main.py",
-      "--consul=${DOCKER_HOST_IP}:8500",
-      "--controller=${DOCKER_HOST_IP}:6653",
-      "--grpc-endpoint=${DOCKER_HOST_IP}:50057",
-      "--instance-id-is-container-name",
-      "-v"
-    ]
