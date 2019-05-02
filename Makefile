@@ -125,20 +125,24 @@ simulated_onu: base
 
 lint-style:
 ifeq (,$(shell which gofmt))
-	  go get -u github.com/golang/go/src/cmd/gofmt;
+	  @go get -u github.com/golang/go/src/cmd/gofmt;
 endif
-	gofmt_out="$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*'))" ;\
+	@gofmt_out="$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*'))" ;\
 	if [ ! -z "$$gofmt_out" ]; then \
-	  echo "$$gofmt_out" ;\
-	  echo "Lint failed on one or more files ^; run 'go fmt' to fix." ;\
+		echo "$$gofmt_out" ;\
+	  echo "Style lint failed on one or more files ^, run 'go fmt' to fix." ;\
 	  exit 1 ;\
+	else \
+	  echo "Style check OK" ;\
 	fi
 
 lint-sanity:
-	go vet ./...
+	@go vet ./...
+	@echo "Sanity check OK"
 
 lint-dep:
-	dep check
+	@dep check
+	@echo "Dep check OK"
 
 lint: lint-style lint-sanity lint-dep
 
@@ -146,18 +150,18 @@ GO_JUNIT_REPORT:=$(shell which go-junit-report)
 GOCOVER_COBERTURA:=$(shell which gocover-cobertura)
 test:
 ifeq (,$(GO_JUNIT_REPORT))
-	go get -u github.com/jstemmer/go-junit-report
-	GO_JUNIT_REPORT=$(GOPATH)/bin/go-junit-report
+	@go get -u github.com/jstemmer/go-junit-report
+	@GO_JUNIT_REPORT=$(GOPATH)/bin/go-junit-report
 endif
 
 ifeq (,$(GOCOVER_COBERTURA))
-	go get -u github.com/t-yuki/gocover-cobertura
-	GOCOVER_COBERTURA=$(GOPATH)/bin/gocover-cobertura
+	@go get -u github.com/t-yuki/gocover-cobertura
+	@GOCOVER_COBERTURA=$(GOPATH)/bin/gocover-cobertura
 endif
 
-	mkdir -p ./tests/results
+	@mkdir -p ./tests/results
 
-	go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	@go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
 	RETURN=$$? ;\
 	$(GO_JUNIT_REPORT) < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
 	$(GOCOVER_COBERTURA) < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
