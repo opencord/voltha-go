@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d3209d1_cb84504e",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-02T16:46:55Z",
+      "side": 1,
+      "message": "Not sure if we want to hide the \"installs\". The issue is with this patch there are periods where you are not sure what is happening. i.e. `Style check OK` is output to console then there is a long pause as sanity is installed and loaded and you aren\u0027t sure what is happening. Seeing the commands output lets the caller know what is happening.",
+      "revId": "73a7096c3144caefd640e9c0fd0fae01160c7208",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
