@@ -16,6 +16,24 @@
       "revId": "ca4c51ea8c4d66470a5ab8a9e4900b7245bdd88f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "199216e5_d8003e70",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-02T17:52:16Z",
+      "side": 1,
+      "message": "go test immediately starts printing to stdout, so I didn\u0027t think it was necessary.",
+      "parentUuid": "2082c753_df5ffda5",
+      "revId": "ca4c51ea8c4d66470a5ab8a9e4900b7245bdd88f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
