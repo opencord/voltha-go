@@ -17,6 +17,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
@@ -140,7 +141,7 @@ func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
 	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceId)
 }
 
-// enableDevice activates a preprovisioned or disable device
+// enableDevice activates a preprovisioned or a disable device
 func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
@@ -161,13 +162,24 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 
 		if device.AdminState == voltha.AdminState_ENABLED {
 			log.Debugw("device-already-enabled", log.Fields{"id": agent.deviceId})
-			//TODO:  Needs customized error message
 			return nil
 		}
-		//TODO: if parent device is disabled then do not enable device
-		// Verify whether we need to adopt the device the first time
-		// TODO: A state machine for these state transitions would be better (we just have to handle
-		// a limited set of states now or it may be an overkill)
+		// If this is a child device then verify the parent state before proceeding
+		if !agent.isRootdevice {
+			if parent := agent.deviceMgr.getParentDevice(device); parent != nil {
+				if parent.AdminState == voltha.AdminState_DISABLED ||
+					parent.AdminState == voltha.AdminState_DELETED ||
+					parent.AdminState == voltha.AdminState_UNKNOWN {
+					err = status.Error(codes.FailedPrecondition, fmt.Sprintf("incorrect-parent-state: %s %d", parent.Id, parent.AdminState))
+					log.Warnw("incorrect-parent-state", log.Fields{"id": agent.deviceId, "error": err})
+					return err
+				}
+			} else {
+				err = status.Error(codes.Unavailable, fmt.Sprintf("parent-not-existent: %s ", device.Id))
+				log.Warnw("parent-not-existent", log.Fields{"id": agent.deviceId, "error": err})
+				return err
+			}
+		}
 		if device.AdminState == voltha.AdminState_PREPROVISIONED {
 			// First send the request to an Adapter and wait for a response
 			if err := agent.adapterProxy.AdoptDevice(ctx, device); err != nil {
@@ -312,15 +324,14 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 //disableDevice disable a device
 func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	agent.lockDevice.Lock()
-	//defer agent.lockDevice.Unlock()
 	log.Debugw("disableDevice", log.Fields{"id": agent.deviceId})
 	// Get the most up to date the device info
 	if device, err := agent.getDeviceWithoutLock(); err != nil {
+		agent.lockDevice.Unlock()
 		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
 	} else {
 		if device.AdminState == voltha.AdminState_DISABLED {
 			log.Debugw("device-already-disabled", log.Fields{"id": agent.deviceId})
-			//TODO:  Needs customized error message
 			agent.lockDevice.Unlock()
 			return nil
 		}
@@ -333,11 +344,6 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 		// Received an Ack (no error found above).  Now update the device in the model to the expected state
 		cloned := proto.Clone(device).(*voltha.Device)
 		cloned.AdminState = voltha.AdminState_DISABLED
-		// Set the state of all ports on that device to disable
-		for _, port := range cloned.Ports {
-			port.AdminState = voltha.AdminState_DISABLED
-			port.OperStatus = voltha.OperStatus_UNKNOWN
-		}
 		if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
 			agent.lockDevice.Unlock()
 			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
@@ -770,6 +776,46 @@ func (agent *DeviceAgent) updateDeviceStatus(operStatus voltha.OperStatus_OperSt
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
 		agent.lockDevice.Unlock()
+		return nil
+	}
+}
+
+func (agent *DeviceAgent) enablePorts() error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// clone the device
+		cloned := proto.Clone(storeDevice).(*voltha.Device)
+		for _, port := range cloned.Ports {
+			port.AdminState = voltha.AdminState_ENABLED
+			port.OperStatus = voltha.OperStatus_ACTIVE
+		}
+		// Store the device
+		if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
+			return status.Errorf(codes.Internal, "%s", agent.deviceId)
+		}
+		return nil
+	}
+}
+
+func (agent *DeviceAgent) disablePorts() error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// clone the device
+		cloned := proto.Clone(storeDevice).(*voltha.Device)
+		for _, port := range cloned.Ports {
+			port.AdminState = voltha.AdminState_DISABLED
+			port.OperStatus = voltha.OperStatus_UNKNOWN
+		}
+		// Store the device
+		if afterUpdate := agent.clusterDataProxy.Update("/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
+			return status.Errorf(codes.Internal, "%s", agent.deviceId)
+		}
 		return nil
 	}
 }
