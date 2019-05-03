@@ -33,6 +33,75 @@
       "revId": "7f40d8175ef17ac8f6b3482bdcc525c1729eab07",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef8477d7_5fae8ec8",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-03T11:19:58Z",
+      "side": 1,
+      "message": "log message is opposite of whats happening",
+      "range": {
+        "startLine": 621,
+        "startChar": 15,
+        "endLine": 621,
+        "endChar": 39
+      },
+      "revId": "7f40d8175ef17ac8f6b3482bdcc525c1729eab07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c07be8d_2f735c97",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-03T11:19:58Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 627,
+        "startChar": 15,
+        "endLine": 627,
+        "endChar": 38
+      },
+      "revId": "7f40d8175ef17ac8f6b3482bdcc525c1729eab07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9234695_4a5df9c6",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-03T11:19:58Z",
+      "side": 1,
+      "message": "probably should be failed-update-logicalPorts",
+      "range": {
+        "startLine": 639,
+        "startChar": 15,
+        "endLine": 639,
+        "endChar": 42
+      },
+      "revId": "7f40d8175ef17ac8f6b3482bdcc525c1729eab07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
