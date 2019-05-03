@@ -608,6 +608,43 @@ func (dMgr *DeviceManager) updatePortState(deviceId string, portType voltha.Port
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
+//updatePortsState updates all ports on the device
+func (dMgr *DeviceManager) updatePortsState(deviceId string, state voltha.OperStatus_OperStatus) error {
+	log.Debugw("updatePortsState", log.Fields{"deviceid": deviceId})
+
+	var adminState voltha.AdminState_AdminState
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		switch state {
+		case voltha.OperStatus_ACTIVE:
+			adminState = voltha.AdminState_ENABLED
+			if err := agent.enablePorts(); err != nil {
+				log.Warnw("enable-all-ports-failed", log.Fields{"deviceId": deviceId, "error": err})
+				return err
+			}
+		case voltha.OperStatus_UNKNOWN:
+			adminState = voltha.AdminState_DISABLED
+			if err := agent.disablePorts(); err != nil {
+				log.Warnw("disable-all-ports-failed", log.Fields{"deviceId": deviceId, "error": err})
+				return err
+			}
+		default:
+			return status.Error(codes.Unimplemented, "state-change-not-implemented")
+		}
+		// Notify the logical device about the state change
+		if device, err := dMgr.GetDevice(deviceId); err != nil {
+			log.Warnw("non-existent-device", log.Fields{"deviceId": deviceId, "error": err})
+			return err
+		} else {
+			if err := dMgr.logicalDeviceMgr.updatePortsState(device, adminState); err != nil {
+				log.Warnw("failed-updating-ports-state", log.Fields{"deviceId": deviceId, "error": err})
+				return err
+			}
+			return nil
+		}
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceId)
+}
+
 func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPortNo int64, deviceType string,
 	channelId int64, vendorId string, serialNumber string, onuId int64) error {
 	log.Debugw("childDeviceDetected", log.Fields{"parentDeviceId": parentDeviceId})

@@ -152,6 +152,32 @@ func (ap *CoreProxy) PortCreated(ctx context.Context, deviceId string, port *vol
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
+func (ap *CoreProxy) PortsStateUpdate(ctx context.Context, deviceId string, operStatus voltha.OperStatus_OperStatus) error {
+	log.Debugw("PortsStateUpdate", log.Fields{"deviceId": deviceId})
+	rpc := "PortsStateUpdate"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(deviceId)
+	args := make([]*kafka.KVArg, 2)
+	id := &voltha.ID{Id: deviceId}
+	oStatus := &ic.IntType{Val: int64(operStatus)}
+
+	args[0] = &kafka.KVArg{
+		Key:   "device_id",
+		Value: id,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "oper_status",
+		Value: oStatus,
+	}
+
+	// Use a device specific topic as we are the only adaptercore handling requests for this device
+	replyToTopic := ap.getAdapterTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
+	log.Debugw("PortsStateUpdate-response", log.Fields{"deviceId": deviceId, "success": success})
+	return unPackResponse(rpc, deviceId, success, result)
+}
+
 func (ap *CoreProxy) DeviceStateUpdate(ctx context.Context, deviceId string,
 	connStatus voltha.ConnectStatus_ConnectStatus, operStatus voltha.OperStatus_OperStatus) error {
 	log.Debugw("DeviceStateUpdate", log.Fields{"deviceId": deviceId})
