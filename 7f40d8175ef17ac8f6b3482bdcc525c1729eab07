@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc1abdbb_76db7b92",
+        "filename": "adapters/simulated_olt/adaptercore/device_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-05-03T10:20:20Z",
+      "side": 1,
+      "message": "Log is wrong. Seems to be copy paste mistake.",
+      "revId": "7f40d8175ef17ac8f6b3482bdcc525c1729eab07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5cadeb2_870fe93a",
+        "filename": "adapters/simulated_olt/adaptercore/device_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-05-03T10:20:20Z",
+      "side": 1,
+      "message": "Log is wrong. Seems to be copy paste mistake.",
+      "revId": "7f40d8175ef17ac8f6b3482bdcc525c1729eab07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
