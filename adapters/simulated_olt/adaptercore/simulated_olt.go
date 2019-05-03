@@ -165,11 +165,29 @@ func (so *SimulatedOLT) Abandon_device(device *voltha.Device) error {
 }
 
 func (so *SimulatedOLT) Disable_device(device *voltha.Device) error {
-	return errors.New("UnImplemented")
+	if device == nil {
+		log.Warn("device-is-nil")
+		return errors.New("nil-device")
+	}
+	log.Infow("disable-device", log.Fields{"deviceId": device.Id})
+	var handler *DeviceHandler
+	if handler = so.getDeviceHandler(device.Id); handler != nil {
+		go handler.DisableDevice(device)
+	}
+	return nil
 }
 
 func (so *SimulatedOLT) Reenable_device(device *voltha.Device) error {
-	return errors.New("UnImplemented")
+	if device == nil {
+		log.Warn("device-is-nil")
+		return errors.New("nil-device")
+	}
+	log.Infow("reenable-device", log.Fields{"deviceId": device.Id})
+	var handler *DeviceHandler
+	if handler = so.getDeviceHandler(device.Id); handler != nil {
+		go handler.ReEnableDevice(device)
+	}
+	return nil
 }
 
 func (so *SimulatedOLT) Reboot_device(device *voltha.Device) error {

@@ -200,3 +200,44 @@ func (dh *DeviceHandler) Process_inter_adapter_message(msg *ic.InterAdapterMessa
 	log.Debugw("Process_inter_adapter_message", log.Fields{"msgId": msg.Header.Id})
 	return nil
 }
+
+func (dh *DeviceHandler) DisableDevice(device *voltha.Device) {
+	cloned := proto.Clone(device).(*voltha.Device)
+	// Update the all ports state on that device to disable
+	if err := dh.coreProxy.PortsStateUpdate(nil, cloned.Id, voltha.OperStatus_UNKNOWN); err != nil {
+		log.Errorw("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+
+	//Update the device state
+	cloned.ConnectStatus = voltha.ConnectStatus_UNREACHABLE
+	cloned.OperStatus = voltha.OperStatus_UNKNOWN
+	dh.device = cloned
+
+	if err := dh.coreProxy.DeviceStateUpdate(nil, cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
+		log.Errorw("error-creating-nni-port", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+	log.Debugw("DisableDevice-end", log.Fields{"deviceId": device.Id})
+}
+
+func (dh *DeviceHandler) ReEnableDevice(device *voltha.Device) {
+
+	cloned := proto.Clone(device).(*voltha.Device)
+	// Update the all ports state on that device to enable
+	if err := dh.coreProxy.PortsStateUpdate(nil, cloned.Id, voltha.OperStatus_ACTIVE); err != nil {
+		log.Errorw("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+
+	//Update the device state
+	cloned.ConnectStatus = voltha.ConnectStatus_REACHABLE
+	cloned.OperStatus = voltha.OperStatus_ACTIVE
+	dh.device = cloned
+
+	if err := dh.coreProxy.DeviceStateUpdate(nil, cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
+		log.Errorw("error-creating-nni-port", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+	log.Debugw("ReEnableDevice-end", log.Fields{"deviceId": device.Id})
+}

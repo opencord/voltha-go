@@ -230,6 +230,16 @@ func (ldMgr *LogicalDeviceManager) getLogicalDeviceId(device *voltha.Device) (*s
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
+func (ldMgr *LogicalDeviceManager) getLogicalDeviceIdFromDeviceId(deviceId string) (*string, error) {
+	// Get the device
+	var device *voltha.Device
+	var err error
+	if device, err = ldMgr.deviceMgr.GetDevice(deviceId); err != nil {
+		return nil, err
+	}
+	return ldMgr.getLogicalDeviceId(device)
+}
+
 func (ldMgr *LogicalDeviceManager) getLogicalPortId(device *voltha.Device) (*voltha.LogicalPortId, error) {
 	// Get the logical device where this device is attached
 	var lDeviceId *string
@@ -350,6 +360,24 @@ func (ldMgr *LogicalDeviceManager) setupUNILogicalPorts(ctx context.Context, chi
 
 	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
 		if err := agent.setupUNILogicalPorts(ctx, childDevice); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ldMgr *LogicalDeviceManager) updatePortsState(device *voltha.Device, state voltha.AdminState_AdminState) error {
+	log.Debugw("updatePortsState", log.Fields{"deviceId": device.Id, "state": state})
+
+	var ldId *string
+	var err error
+	//Get the logical device Id for this device
+	if ldId, err = ldMgr.getLogicalDeviceId(device); err != nil {
+		log.Warnw("no-logical-device-found", log.Fields{"deviceId": device.Id, "error": err})
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(*ldId); agent != nil {
+		if err := agent.updatePortsState(device, state); err != nil {
 			return err
 		}
 	}

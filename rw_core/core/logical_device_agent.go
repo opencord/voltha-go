@@ -313,6 +313,40 @@ func (agent *LogicalDeviceAgent) setupNNILogicalPorts(ctx context.Context, devic
 	return err
 }
 
+// updatePortsState updates the ports state related to the device
+func (agent *LogicalDeviceAgent) updatePortsState(device *voltha.Device, state voltha.AdminState_AdminState) error {
+	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	// Get the latest logical device info
+	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Warnw("logical-device-unknown", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
+		return err
+	} else {
+		cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
+		for _, lport := range cloned.Ports {
+			if lport.DeviceId == device.Id {
+				switch state {
+				case voltha.AdminState_ENABLED:
+					lport.OfpPort.Config = lport.OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+					lport.OfpPort.State = lport.OfpPort.State & ^uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+				case voltha.AdminState_DISABLED:
+					lport.OfpPort.Config = lport.OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+					lport.OfpPort.State = lport.OfpPort.State | uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+				default:
+					log.Warnw("unsupported-state-change", log.Fields{"deviceId": device.Id, "state": state})
+				}
+			}
+		}
+		// Updating the logical device will trigger the poprt change events to be populated to the controller
+		if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
+			log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
+			return err
+		}
+	}
+	return nil
+}
+
 // setupUNILogicalPorts creates a UNI port on the logical device that represents a child UNI interface
 func (agent *LogicalDeviceAgent) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device) error {
 	log.Infow("setupUNILogicalPort-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
