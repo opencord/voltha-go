@@ -891,6 +891,14 @@ func (agent *DeviceAgent) addPort(port *voltha.Port) error {
 			//	First port
 			log.Debugw("addLogicalPortToMap-first-port-to-add", log.Fields{"deviceId": agent.deviceId})
 			cloned.Ports = make([]*voltha.Port, 0)
+		} else {
+			for _, p := range cloned.Ports {
+				if p.Type == port.Type && p.PortNo == port.PortNo {
+					log.Debugw("port already exists", log.Fields{"port": *port})
+					return nil
+				}
+			}
+
 		}
 		cp := proto.Clone(port).(*voltha.Port)
 		// Set the admin state of the port to ENABLE if the operational state is ACTIVE

@@ -473,7 +473,7 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	if changed {
 		// Launch a routine to decompose the flows
 		if err := agent.decomposeAndSendFlows(&ofp.Flows{Items: updatedFlows}, lDevice.FlowGroups, agent.includeDefaultFlows); err != nil {
-			log.Errorf("decomposing-and-sending-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("decomposing-and-sending-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 			return err
 		}
 
@@ -1035,7 +1035,7 @@ func (agent *LogicalDeviceAgent) updateRoutes(device *voltha.Device, port *volth
 	}
 	// Get all the logical ports on that logical device
 	if lDevice, err := agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorf("unknown-logical-device", log.Fields{"error": err, "logicalDeviceId": agent.logicalDeviceId})
+		log.Errorw("unknown-logical-device", log.Fields{"error": err, "logicalDeviceId": agent.logicalDeviceId})
 		return err
 	} else {
 		//TODO:  Find a better way to refresh only missing routes
