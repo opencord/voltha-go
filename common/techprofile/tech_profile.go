@@ -122,7 +122,7 @@ const (
 const MAX_GEM_PAYLOAD = "max_gem_payload_size"
 
 type InstanceControl struct {
-	Onu               string `json:"ONU"`
+	Onu               string `json:ONU"`
 	Uni               string `json:"uni"`
 	MaxGemPayloadSize string `json:"max_gem_payload_size"`
 }
@@ -179,11 +179,22 @@ type GemPortAttribute struct {
 
 type iScheduler struct {
 	AllocID   uint32    `json:"alloc_id"`
-	Scheduler Scheduler `json:"scheduler"`
+	Direction    string `json:"direction"`
+	AdditionalBw string `json:"additional_bw"`
+	Priority     uint32 `json:"priority"`
+	Weight       uint32 `json:"weight"`
+	QSchedPolicy string `json:"q_sched_policy"`
 }
 type iGemPortAttribute struct {
-	GemportID    uint32           `json:"gem_port_id"`
-	GemAttribute GemPortAttribute `json:"gem_attribute"`
+	GemportID    uint32           `json:"gemport_id"`
+	MaxQueueSize     string        `json:"max_q_size"`
+	PbitMap          string        `json:"pbit_map"`
+	AesEncryption    string        `json:"aes_encryption"`
+	SchedulingPolicy string        `json:"scheduling_policy"`
+	PriorityQueue    int           `json:"priority_q"`
+	Weight           int           `json:"weight"`
+	DiscardPolicy    string        `json:"discard_policy"`
+	DiscardConfig    DiscardConfig `json:"discard_config"`
 }
 
 type TechProfileMgr struct {
@@ -207,7 +218,7 @@ type TechProfile struct {
 	ProfileType                    string              `json:"profile_type"`
 	Version                        int                 `json:"version"`
 	NumGemPorts                    uint32              `json:"num_gem_ports"`
-	NumTconts                      uint32              `json:"num_tconts"`
+	NumTconts                      uint32              `json:"num_of_tconts"`
 	InstanceCtrl                   InstanceControl     `json:"instance_control"`
 	UsScheduler                    iScheduler          `json:"us_scheduler"`
 	DsScheduler                    iScheduler          `json:"ds_scheduler"`
@@ -371,7 +382,6 @@ func (t *TechProfileMgr) allocateTPInstance(uniPortName string, tp *DefaultTechP
 		log.Errorw("Error getting alloc id from rsrcrMgr", log.Fields{"intfId": intfId, "numTconts": numOfTconts})
 		return nil
 	}
-	fmt.Println("Num GEM ports in TP:", tp.NumGemPorts)
 	if gemPorts, err = t.resourceMgr.GetResourceID(intfId, t.resourceMgr.GetResourceTypeGemPortID(), tp.NumGemPorts); err != nil {
 		log.Errorw("Error getting gemport ids from rsrcrMgr", log.Fields{"intfId": intfId, "numGemports": tp.NumGemPorts})
 		return nil
@@ -380,10 +390,24 @@ func (t *TechProfileMgr) allocateTPInstance(uniPortName string, tp *DefaultTechP
 	for index := 0; index < int(tp.NumGemPorts); index++ {
 		usGemPortAttributeList = append(usGemPortAttributeList,
 			iGemPortAttribute{GemportID: gemPorts[index],
-				GemAttribute: tp.UpstreamGemPortAttributeList[index]})
+				MaxQueueSize: tp.UpstreamGemPortAttributeList[index].MaxQueueSize,
+				PbitMap: tp.UpstreamGemPortAttributeList[index].PbitMap,
+				AesEncryption: tp.UpstreamGemPortAttributeList[index].AesEncryption,
+				SchedulingPolicy: tp.UpstreamGemPortAttributeList[index].SchedulingPolicy,
+				PriorityQueue: tp.UpstreamGemPortAttributeList[index].PriorityQueue,
+				Weight: tp.UpstreamGemPortAttributeList[index].Weight,
+				DiscardPolicy: tp.UpstreamGemPortAttributeList[index].DiscardPolicy,
+				DiscardConfig: tp.UpstreamGemPortAttributeList[index].DiscardConfig})
 		dsGemPortAttributeList = append(dsGemPortAttributeList,
 			iGemPortAttribute{GemportID: gemPorts[index],
-				GemAttribute: tp.DownstreamGemPortAttributeList[index]})
+				MaxQueueSize: tp.DownstreamGemPortAttributeList[index].MaxQueueSize,
+				PbitMap: tp.DownstreamGemPortAttributeList[index].PbitMap,
+				AesEncryption: tp.DownstreamGemPortAttributeList[index].AesEncryption,
+				SchedulingPolicy: tp.DownstreamGemPortAttributeList[index].SchedulingPolicy,
+				PriorityQueue: tp.DownstreamGemPortAttributeList[index].PriorityQueue,
+				Weight: tp.DownstreamGemPortAttributeList[index].Weight,
+				DiscardPolicy: tp.DownstreamGemPortAttributeList[index].DiscardPolicy,
+				DiscardConfig: tp.DownstreamGemPortAttributeList[index].DiscardConfig})
 	}
 	return &TechProfile{
 		SubscriberIdentifier: uniPortName,
@@ -395,10 +419,18 @@ func (t *TechProfileMgr) allocateTPInstance(uniPortName string, tp *DefaultTechP
 		InstanceCtrl:         tp.InstanceCtrl,
 		UsScheduler: iScheduler{
 			AllocID:   tcontIDs[0],
-			Scheduler: tp.UsScheduler},
+			Direction: tp.UsScheduler.Direction,
+                        AdditionalBw: tp.UsScheduler.AdditionalBw,
+			Priority: tp.UsScheduler.Priority,
+			Weight: tp.UsScheduler.Weight,
+			QSchedPolicy: tp.UsScheduler.QSchedPolicy },
 		DsScheduler: iScheduler{
 			AllocID:   tcontIDs[0],
-			Scheduler: tp.DsScheduler},
+			Direction: tp.DsScheduler.Direction,
+                        AdditionalBw: tp.DsScheduler.AdditionalBw,
+			Priority: tp.DsScheduler.Priority,
+			Weight: tp.DsScheduler.Weight,
+			QSchedPolicy: tp.DsScheduler.QSchedPolicy },
 		UpstreamGemPortAttributeList:   usGemPortAttributeList,
 		DownstreamGemPortAttributeList: dsGemPortAttributeList}
 }
@@ -498,17 +530,17 @@ func (t *TechProfileMgr) GetprotoBufParamValue(paramType string, paramKey string
 }
 
 func (t *TechProfileMgr) GetUsScheduler(tpInstance *TechProfile) *openolt_pb.Scheduler {
-	dir := openolt_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.UsScheduler.Scheduler.Direction))
+	dir := openolt_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.UsScheduler.Direction))
 	if dir == -1 {
 		log.Fatal("Error in getting Proto for direction for upstream scheduler")
 		return nil
 	}
-	bw := openolt_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.UsScheduler.Scheduler.AdditionalBw))
+	bw := openolt_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.UsScheduler.AdditionalBw))
 	if bw == -1 {
 		log.Fatal("Error in getting Proto for bandwidth for upstream scheduler")
 		return nil
 	}
-	policy := openolt_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.UsScheduler.Scheduler.QSchedPolicy))
+	policy := openolt_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.UsScheduler.QSchedPolicy))
 	if policy == -1 {
 		log.Fatal("Error in getting Proto for scheduling policy for upstream scheduler")
 		return nil
@@ -516,24 +548,24 @@ func (t *TechProfileMgr) GetUsScheduler(tpInstance *TechProfile) *openolt_pb.Sch
 	return &openolt_pb.Scheduler{
 		Direction:    dir,
 		AdditionalBw: bw,
-		Priority:     tpInstance.UsScheduler.Scheduler.Priority,
-		Weight:       tpInstance.UsScheduler.Scheduler.Weight,
+		Priority:     tpInstance.UsScheduler.Priority,
+		Weight:       tpInstance.UsScheduler.Weight,
 		SchedPolicy:  policy}
 }
 
 func (t *TechProfileMgr) GetDsScheduler(tpInstance *TechProfile) *openolt_pb.Scheduler {
 
-	dir := openolt_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.DsScheduler.Scheduler.Direction))
+	dir := openolt_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.DsScheduler.Direction))
 	if dir == -1 {
 		log.Fatal("Error in getting Proto for direction for downstream scheduler")
 		return nil
 	}
-	bw := openolt_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.DsScheduler.Scheduler.AdditionalBw))
+	bw := openolt_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.DsScheduler.AdditionalBw))
 	if bw == -1 {
 		log.Fatal("Error in getting Proto for bandwidth for downstream scheduler")
 		return nil
 	}
-	policy := openolt_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.DsScheduler.Scheduler.QSchedPolicy))
+	policy := openolt_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.DsScheduler.QSchedPolicy))
 	if policy == -1 {
 		log.Fatal("Error in getting Proto for scheduling policy for downstream scheduler")
 		return nil
@@ -542,8 +574,8 @@ func (t *TechProfileMgr) GetDsScheduler(tpInstance *TechProfile) *openolt_pb.Sch
 	return &openolt_pb.Scheduler{
 		Direction:    dir,
 		AdditionalBw: bw,
-		Priority:     tpInstance.DsScheduler.Scheduler.Priority,
-		Weight:       tpInstance.DsScheduler.Scheduler.Weight,
+		Priority:     tpInstance.DsScheduler.Priority,
+		Weight:       tpInstance.DsScheduler.Weight,
 		SchedPolicy:  policy}
 }
 
