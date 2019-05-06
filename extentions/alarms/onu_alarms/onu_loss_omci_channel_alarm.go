@@ -1,0 +1,77 @@
+package onu_alarms
+
+import (
+	"fmt"
+	"github.com/opencord/voltha-go/common/log"
+	ab "github.com/opencord/voltha-go/extentions/alarms"
+	"github.com/opencord/voltha-go/kafka"
+	"github.com/opencord/voltha-protos/go/voltha"
+	"time"
+)
+
+type OnuOmciLossAlarm struct {
+	AlarmData    ab.AlarmData
+	AlarmContext map[string]string
+}
+
+func GetNewOnuLossOmciAlarm() OnuOmciLossAlarm {
+	var los OnuOmciLossAlarm
+	return los
+}
+
+func (loc OnuOmciLossAlarm) GetAlarmData(status bool, deviceId string) ab.AlarmData {
+	var alarmData ab.AlarmData
+	alarmData.Ts = float32(time.Now().UnixNano())
+	alarmData.Description = FormatDescription("ONU_LOSS_OF_OMCI_CHANNEL_ALARM", true)
+	alarmData.Id = FormatId("ONU_LOSS_OF_OMCI_CHANNEL_ALARM")
+	alarmData.Category = voltha.AlarmEventCategory_ONU
+	alarmData.Severity = voltha.AlarmEventSeverity_MAJOR
+	alarmData.Type = voltha.AlarmEventType_COMMUNICATION
+	alarmData.LogicalDeviceId = deviceId
+	if status {
+		alarmData.State = voltha.AlarmEventState_RAISED
+	} else {
+		alarmData.State = voltha.AlarmEventState_CLEARED
+	}
+	alarmData.Name = "ONU_LOSS_OF_OMCI_CHANNEL_ALARM"
+
+	return alarmData
+}
+
+func (loc OnuOmciLossAlarm) GetContextData(onuId uint32, intfId string) map[string]string {
+	alarmContext := make(map[string]string)
+	alarmContext["onu-id"] = string(intfId)
+	alarmContext["onu-intf-id"] = string(intfId)
+	return alarmContext
+}
+
+func (loc OnuOmciLossAlarm) FormatDescription(alarmName string, status bool) string {
+	if status {
+		return fmt.Sprintf("Alarm - %s - RAISED", alarmName)
+	}
+	return fmt.Sprintf("Alarm - %s - CLEARED", alarmName)
+}
+
+func (loc OnuOmciLossAlarm) FormatId(alarmName string) string {
+	return fmt.Sprintf("Voltha.openolt.%s.%s", alarmName, string(time.Now().Nanosecond()))
+}
+
+func (loc OnuOmciLossAlarm) RaiseAlarm(kc kafka.Client, topic kafka.Topic) error {
+	ae := ab.CreateAlarmEvent(&loc.AlarmData, loc.AlarmContext)
+	if err := ab.SendAlarm(kc, topic, ae); err != nil {
+		log.Errorw("Failed to send alarm to kafka", log.Fields{"alarm_event": ae, "topic": topic.Name, "error": err})
+		return err
+	}
+	log.Infow("Successfully sent alarm to kafka", log.Fields{"alarm_event": ae, "topic": topic.Name})
+	return nil
+}
+
+func (loc OnuOmciLossAlarm) ClearAlarm(kc kafka.Client, topic kafka.Topic) error {
+	ae := ab.CreateAlarmEvent(&loc.AlarmData, loc.AlarmContext)
+	if err := ab.SendAlarm(kc, topic, ae); err != nil {
+		log.Errorw("Failed to send alarm to kafka", log.Fields{"alarm_event": ae, "topic": topic.Name, "error": err})
+		return err
+	}
+	log.Infow("Successfully sent alarm to kafka", log.Fields{"alarm_event": ae, "topic": topic.Name})
+	return nil
+}
