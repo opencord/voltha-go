@@ -15,6 +15,10 @@
  */
 package model
 
+import (
+	"github.com/opencord/voltha-go/db/kvstore"
+)
+
 type Revision interface {
 	Finalize(bool)
 	IsDiscarded() bool
@@ -38,7 +42,7 @@ type Revision interface {
 	Get(int) interface{}
 	GetData() interface{}
 	GetNode() *node
-	LoadFromPersistence(path string, txid string) []Revision
+	LoadFromPersistence(path string, txid string, blobs map[string]*kvstore.KVPair) []Revision
 	UpdateData(data interface{}, branch *Branch) Revision
 	UpdateChildren(name string, children []Revision, branch *Branch) Revision
 	UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision

@@ -21,30 +21,28 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/db/kvstore"
 	"reflect"
-	"runtime/debug"
 	"sort"
 	"sync"
 )
 
 // TODO: Cache logic will have to be revisited to cleanup unused entries in memory (disabled for now)
 //
-//type revCacheSingleton struct {
-//	sync.RWMutex
-//	//Cache map[string]interface{}
-//	Cache sync.Map
-//}
-//
-//var revCacheInstance *revCacheSingleton
-//var revCacheOnce sync.Once
-//
-//func GetRevCache() *revCacheSingleton {
-//	revCacheOnce.Do(func() {
-//		//revCacheInstance = &revCacheSingleton{Cache: make(map[string]interface{})}
-//		revCacheInstance = &revCacheSingleton{Cache: sync.Map{}}
-//	})
-//	return revCacheInstance
-//}
+type revCacheSingleton struct {
+	sync.RWMutex
+	Cache sync.Map
+}
+
+var revCacheInstance *revCacheSingleton
+var revCacheOnce sync.Once
+
+func GetRevCache() *revCacheSingleton {
+	revCacheOnce.Do(func() {
+		revCacheInstance = &revCacheSingleton{Cache: sync.Map{}}
+	})
+	return revCacheInstance
+}
 
 type NonPersistedRevision struct {
 	mutex        sync.RWMutex
@@ -409,7 +407,7 @@ func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revisio
 
 // Drop is used to indicate when a revision is no longer required
 func (npr *NonPersistedRevision) Drop(txid string, includeConfig bool) {
-	log.Debugw("dropping-revision", log.Fields{"hash": npr.GetHash(), "stack": string(debug.Stack())})
+	log.Debugw("dropping-revision", log.Fields{"hash": npr.GetHash(), "name": npr.GetName()})
 	npr.discarded = true
 }
 
@@ -428,7 +426,7 @@ func (npr *NonPersistedRevision) ChildDrop(childType string, childHash string) {
 	}
 }
 
-func (npr *NonPersistedRevision) LoadFromPersistence(path string, txid string) []Revision {
+func (npr *NonPersistedRevision) LoadFromPersistence(path string, txid string, blobs map[string]*kvstore.KVPair) []Revision {
 	// stub... required by interface
 	return nil
 }
