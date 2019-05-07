@@ -16,6 +16,24 @@
       "revId": "94f657fbb992a78ebccbfb98a825014fbaab5e88",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23b38baf_9b398f18",
+        "filename": "db/model/persisted_revision.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-05-07T18:22:02Z",
+      "side": 1,
+      "message": "Ok.. I will add a jira for tracking.",
+      "parentUuid": "ecab567b_67ad3930",
+      "revId": "94f657fbb992a78ebccbfb98a825014fbaab5e88",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
