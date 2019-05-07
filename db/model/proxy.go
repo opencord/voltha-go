@@ -186,11 +186,20 @@ func (p *Proxy) List(path string, depth int, deep bool, txid string) interface{}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, PathLock: %s", path, effectivePath, pathLock)
+	log.Debugw("proxy-list", log.Fields{
+		"path":       path,
+		"effective":  effectivePath,
+		"pathLock":   pathLock,
+		"controlled": controlled,
+	})
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
+	p.Operation = PROXY_LIST
 	pac.SetProxy(p)
+	defer func(op ProxyOperation) {
+		pac.getProxy().Operation = op
+	}(PROXY_GET)
 
 	rv := pac.List(path, depth, deep, txid, controlled)
 
@@ -208,10 +217,16 @@ func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} 
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, PathLock: %s", path, effectivePath, pathLock)
+	log.Debugw("proxy-get", log.Fields{
+		"path":       path,
+		"effective":  effectivePath,
+		"pathLock":   pathLock,
+		"controlled": controlled,
+	})
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
+	p.Operation = PROXY_GET
 	pac.SetProxy(p)
 
 	rv := pac.Get(path, depth, deep, txid, controlled)
@@ -237,7 +252,13 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s, Controlled: %b", path, effectivePath, fullPath, pathLock, controlled)
+	log.Debugw("proxy-update", log.Fields{
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"pathLock":   pathLock,
+		"controlled": controlled,
+	})
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
@@ -247,7 +268,6 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 	defer func(op ProxyOperation) {
 		pac.getProxy().Operation = op
 	}(PROXY_GET)
-
 	log.Debugw("proxy-operation--update", log.Fields{"operation": p.Operation})
 
 	return pac.Update(fullPath, data, strict, txid, controlled)
@@ -273,15 +293,21 @@ func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string)
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
+	log.Debugw("proxy-add-with-id", log.Fields{
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"pathLock":   pathLock,
+		"controlled": controlled,
+	})
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
 
 	p.Operation = PROXY_ADD
-	defer func() {
-		p.Operation = PROXY_GET
-	}()
+	defer func(op ProxyOperation) {
+		pac.getProxy().Operation = op
+	}(PROXY_GET)
 
 	pac.SetProxy(p)
 
@@ -308,16 +334,22 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
+	log.Debugw("proxy-add", log.Fields{
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"pathLock":   pathLock,
+		"controlled": controlled,
+	})
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
 
 	p.Operation = PROXY_ADD
 	pac.SetProxy(p)
-	defer func() {
-		p.Operation = PROXY_GET
-	}()
+	defer func(op ProxyOperation) {
+		pac.getProxy().Operation = op
+	}(PROXY_GET)
 
 	log.Debugw("proxy-operation--add", log.Fields{"operation": p.Operation})
 
@@ -342,16 +374,22 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
+	log.Debugw("proxy-remove", log.Fields{
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"pathLock":   pathLock,
+		"controlled": controlled,
+	})
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
 
 	p.Operation = PROXY_REMOVE
 	pac.SetProxy(p)
-	defer func() {
-		p.Operation = PROXY_GET
-	}()
+	defer func(op ProxyOperation) {
+		pac.getProxy().Operation = op
+	}(PROXY_GET)
 
 	log.Debugw("proxy-operation--remove", log.Fields{"operation": p.Operation})
 
@@ -377,16 +415,22 @@ func (p *Proxy) CreateProxy(path string, exclusive bool) *Proxy {
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	log.Debugf("Path: %s, Effective: %s, Full: %s, PathLock: %s", path, effectivePath, fullPath, pathLock)
+	log.Debugw("proxy-create", log.Fields{
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"pathLock":   pathLock,
+		"controlled": controlled,
+	})
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
 
 	p.Operation = PROXY_CREATE
 	pac.SetProxy(p)
-	defer func() {
-		p.Operation = PROXY_GET
-	}()
+	defer func(op ProxyOperation) {
+		pac.getProxy().Operation = op
+	}(PROXY_GET)
 
 	log.Debugw("proxy-operation--create-proxy", log.Fields{"operation": p.Operation})
 

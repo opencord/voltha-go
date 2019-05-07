@@ -24,7 +24,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"reflect"
-	"runtime/debug"
 	"strings"
 	"sync"
 )
@@ -127,6 +126,9 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 
 	// If anything is new, then set the revision as the latest
 	if branch.GetLatest() == nil || revision.GetHash() != branch.GetLatest().GetHash() {
+		if revision.GetName() != "" {
+			GetRevCache().Cache.Store(revision.GetName(), revision)
+		}
 		branch.SetLatest(revision)
 	}
 
@@ -275,7 +277,7 @@ func (n *node) List(path string, hash string, depth int, deep bool, txid string)
 
 	var result interface{}
 	var prList []interface{}
-	if pr := rev.LoadFromPersistence(path, txid); pr != nil {
+	if pr := rev.LoadFromPersistence(path, txid, nil); pr != nil {
 		for _, revEntry := range pr {
 			prList = append(prList, revEntry.GetData())
 		}
@@ -288,6 +290,7 @@ func (n *node) List(path string, hash string, depth int, deep bool, txid string)
 // Get retrieves the data from a node tree that resides at the specified path
 func (n *node) Get(path string, hash string, depth int, reconcile bool, txid string) interface{} {
 	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
+
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -307,9 +310,15 @@ func (n *node) Get(path string, hash string, depth int, reconcile bool, txid str
 
 	var result interface{}
 
-	// If there is not request to reconcile, try to get it from memory
+	// If there is no request to reconcile, try to get it from memory
 	if !reconcile {
-		if result = n.getPath(rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
+		// Try to find an entry matching the path value from one of these sources
+		// 1.  Start with the cache which stores revisions by watch names
+		// 2.  Then look in the revision tree, especially if it's a sub-path such as /devices/1234/flows
+		// 3.  As a last effort, move on to the KV store
+		if entry, exists := GetRevCache().Cache.Load(path); exists && entry.(Revision) != nil {
+			return proto.Clone(entry.(Revision).GetData().(proto.Message))
+		} else if result = n.getPath(rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
 			return result
 		}
 	}
@@ -317,14 +326,14 @@ func (n *node) Get(path string, hash string, depth int, reconcile bool, txid str
 	// If we got to this point, we are either trying to reconcile with the db or
 	// or we simply failed at getting information from memory
 	if n.Root.KvStore != nil {
-		var prList []interface{}
-		if pr := rev.LoadFromPersistence(path, txid); pr != nil && len(pr) > 0 {
+		if pr := rev.LoadFromPersistence(path, txid, nil); pr != nil && len(pr) > 0 {
 			// Did we receive a single or multiple revisions?
 			if len(pr) > 1 {
+				var revs []interface{}
 				for _, revEntry := range pr {
-					prList = append(prList, revEntry.GetData())
+					revs = append(revs, revEntry.GetData())
 				}
-				result = prList
+				result = revs
 			} else {
 				result = pr[0].GetData()
 			}
@@ -334,7 +343,7 @@ func (n *node) Get(path string, hash string, depth int, reconcile bool, txid str
 	return result
 }
 
-// getPath traverses the specified path and retrieves the data associated to it
+//getPath traverses the specified path and retrieves the data associated to it
 func (n *node) getPath(rev Revision, path string, depth int) interface{} {
 	if path == "" {
 		return n.getData(rev, depth)
@@ -472,6 +481,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 
 			if childRev == nil {
+				log.Debugw("child-revision-is-nil", log.Fields{"key": keyValue})
 				return branch.GetLatest()
 			}
 
@@ -490,6 +500,7 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 					log.Debug("clear-hash - %s %+v", newChildRev.GetHash(), newChildRev)
 					newChildRev.ClearHash()
 				}
+				log.Debugw("child-revisions-have-matching-hash", log.Fields{"hash": childRev.GetHash(), "key": keyValue})
 				return branch.GetLatest()
 			}
 
@@ -505,14 +516,14 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 			// Prefix the hash value with the data type (e.g. devices, logical_devices, adapters)
 			newChildRev.SetName(name + "/" + _keyValueType)
 
+			branch.LatestLock.Lock()
+			defer branch.LatestLock.Unlock()
+
 			if idx >= 0 {
 				children[idx] = newChildRev
 			} else {
 				children = append(children, newChildRev)
 			}
-
-			branch.LatestLock.Lock()
-			defer branch.LatestLock.Unlock()
 
 			updatedRev := rev.UpdateChildren(name, children, branch)
 
@@ -544,13 +555,11 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 }
 
 func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision {
-	log.Debugf("Comparing types - expected: %+v, actual: %+v &&&&&& %s", reflect.ValueOf(n.Type).Type(),
-		reflect.TypeOf(data),
-		string(debug.Stack()))
+	log.Debugw("comparing-types", log.Fields{"expected": reflect.ValueOf(n.Type).Type(), "actual": reflect.TypeOf(data)})
 
 	if reflect.TypeOf(data) != reflect.ValueOf(n.Type).Type() {
 		// TODO raise error
-		log.Errorf("data does not match type: %+v", n.Type)
+		log.Errorw("types-do-not-match: %+v", log.Fields{"actual": reflect.TypeOf(data), "expected": n.Type})
 		return nil
 	}
 
@@ -644,6 +653,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 				updatedRev := rev.UpdateChildren(name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
+				childRev.GetNode().SetProxy(n.GetProxy())
 				childRev.SetupWatch(childRev.GetName())
 
 				n.makeLatest(branch, updatedRev, changes)
@@ -675,16 +685,16 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 			newChildRev := childNode.Add(path, data, txid, makeBranch)
 
 			// Prefix the hash with the data type (e.g. devices, logical_devices, adapters)
-			childRev.SetName(name + "/" + keyValue.(string))
+			newChildRev.SetName(name + "/" + keyValue.(string))
+
+			branch.LatestLock.Lock()
+			defer branch.LatestLock.Unlock()
 
 			if idx >= 0 {
 				children[idx] = newChildRev
 			} else {
 				children = append(children, newChildRev)
 			}
-
-			branch.LatestLock.Lock()
-			defer branch.LatestLock.Unlock()
 
 			updatedRev := rev.UpdateChildren(name, children, branch)
 			n.makeLatest(branch, updatedRev, nil)
@@ -758,14 +768,14 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 					}
 					newChildRev := childNode.Remove(path, txid, makeBranch)
 
+					branch.LatestLock.Lock()
+					defer branch.LatestLock.Unlock()
+
 					if idx >= 0 {
 						children[idx] = newChildRev
 					} else {
 						children = append(children, newChildRev)
 					}
-
-					branch.LatestLock.Lock()
-					defer branch.LatestLock.Unlock()
 
 					rev.SetChildren(name, children)
 					branch.GetLatest().Drop(txid, false)
@@ -784,6 +794,7 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 				}
 
 				childRev.StorageDrop(txid, true)
+				GetRevCache().Cache.Delete(childRev.GetName())
 
 				branch.LatestLock.Lock()
 				defer branch.LatestLock.Unlock()

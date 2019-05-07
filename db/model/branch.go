@@ -93,18 +93,21 @@ func (b *Branch) SetLatest(latest Revision) {
 
 		// Go through list of children names in current revision and new revision
 		// and then compare the resulting outputs to ensure that we have not lost any entries.
-		var previousNames, latestNames, missingNames []string
 
-		if previousNames = b.retrieveChildrenNames(b.Latest); len(previousNames) > 0 {
-			log.Debugw("children-of-previous-revision", log.Fields{"hash": b.Latest.GetHash(), "names": previousNames})
-		}
+		if level, _ := log.GetPackageLogLevel(); level == log.DebugLevel {
+			var previousNames, latestNames, missingNames []string
 
-		if latestNames = b.retrieveChildrenNames(b.Latest); len(latestNames) > 0 {
-			log.Debugw("children-of-latest-revision", log.Fields{"hash": latest.GetHash(), "names": latestNames})
-		}
+			if previousNames = b.retrieveChildrenNames(b.Latest); len(previousNames) > 0 {
+				log.Debugw("children-of-previous-revision", log.Fields{"hash": b.Latest.GetHash(), "names": previousNames})
+			}
 
-		if missingNames = b.findMissingChildrenNames(previousNames, latestNames); len(missingNames) > 0 {
-			log.Debugw("children-missing-in-latest-revision", log.Fields{"hash": latest.GetHash(), "names": missingNames})
+			if latestNames = b.retrieveChildrenNames(b.Latest); len(latestNames) > 0 {
+				log.Debugw("children-of-latest-revision", log.Fields{"hash": latest.GetHash(), "names": latestNames})
+			}
+
+			if missingNames = b.findMissingChildrenNames(previousNames, latestNames); len(missingNames) > 0 {
+				log.Debugw("children-missing-in-latest-revision", log.Fields{"hash": latest.GetHash(), "names": missingNames})
+			}
 		}
 
 	} else {
