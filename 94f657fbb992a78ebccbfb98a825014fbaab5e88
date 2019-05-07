@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecab567b_67ad3930",
+        "filename": "db/model/persisted_revision.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-07T16:40:26Z",
+      "side": 1,
+      "message": "Would be good to create a jira to keep track of this issue.",
+      "revId": "94f657fbb992a78ebccbfb98a825014fbaab5e88",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
