@@ -1,9 +1,8 @@
 {
   "devices" : {
-    "of:0000aabbccddeeff" : {
+    "of:000000000a4001cf" : {
       "accessDevice" : {
-        "uplink" : "65536",
-        "vlan" : "12"
+        "uplink" : "65536"
       },
       "basic" : {
         "driver" : "voltha"
@@ -42,11 +41,25 @@
           "ipAddress" : "10.64.1.207",
           "nasId" : "ATLEDGEVOLT1"
         }, {
-          "id" : "BRCM33333333",
-          "cTag" : 21,
-          "sTag" : 12,
+          "id" : "BRCM33333333-1",
+          "cTag" : 22,
+          "sTag" : 13,
+          "nasPortId" : "PON 1/1/3/1:3.1.1",
+          "circuitId" : "PON 1/1/3/1:3.1.1-CID",
+          "remoteId" : "ATLEDGEVOLT1-RID"
+         }, {
+          "id" : "BRCM33333333-2",
+          "cTag" : 23,
+          "sTag" : 13,
           "nasPortId" : "PON 1/1/3/1:4.1.1",
           "circuitId" : "PON 1/1/3/1:4.1.1-CID",
+          "remoteId" : "ATLEDGEVOLT1-RID"
+         }, {
+          "id" : "BRCM33333333-3",
+          "cTag" : 24,
+          "sTag" : 13,
+          "nasPortId" : "PON 1/1/3/1:5.1.1",
+          "circuitId" : "PON 1/1/3/1:5.1.1-CID",
           "remoteId" : "ATLEDGEVOLT1-RID"
         }]
       }
