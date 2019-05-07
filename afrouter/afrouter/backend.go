@@ -69,7 +69,6 @@ type backend struct {
 	activeAssoc      assoc
 	connFailCallback func(string, *backend) bool
 	connections      map[string]*beConnection
-	srtdConns        []*beConnection
 	opnConns         int
 }
 
@@ -265,18 +264,7 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 	var atLeastOne bool = false
 	var errStr strings.Builder
 	log.Debugf("There are %d connections to open", len(be.connections))
-	for _, cn := range be.srtdConns {
-		// TODO: THIS IS A HACK to suspend redundancy for binding routers for all calls
-		// and its very specific to a use case. There should really be a per method
-		// mechanism to select non-redundant calls for all router types. This needs
-		// to be fixed ASAP. The overrides should be used for this, the implementation
-		// is simple, and it can be done here.
-		if atLeastOne == true && f.metaKey != NoMeta {
-			// Don't open any more southbound streams
-			log.Debugf("Not opening any more SB streams, metaKey = %s", f.metaKey)
-			rtrn.strms[cn.name] = nil
-			continue
-		}
+	for _, cn := range be.connections {
 		// Copy in the metadata
 		if cn.getState() == connectivity.Ready && cn.getConn() != nil {
 			log.Debugf("Opening southbound stream for connection '%s'", cn.name)
@@ -598,17 +586,6 @@ func (st *beClStrms) sortStreams() {
 	}
 }
 
-func (be *backend) sortConns() {
-	var tmpKeys []string
-	for k, _ := range be.connections {
-		tmpKeys = append(tmpKeys, k)
-	}
-	sort.Strings(tmpKeys)
-	for _, v := range tmpKeys {
-		be.srtdConns = append(be.srtdConns, be.connections[v])
-	}
-}
-
 func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 	var rtrn_err bool = false
 
@@ -701,9 +678,6 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 	if rtrn_err {
 		return nil, errors.New("Connection configuration failed")
 	}
-	// Create the sorted connection list for deterministic
-	// active-active call orders.
-	be.sortConns()
 	// All is well start the backend cluster connections
 	be.connectAll()
 

@@ -21,7 +21,7 @@
 			}
 		],
 		"imports": [
- 				 "github.com/opencord/voltha-protos/go/common"
+			"github.com/opencord/voltha-protos/go/common"
 		],
 		"protoDesc":"voltha.pb",
 		"protoSubst": [
@@ -32,9 +32,9 @@
 		],
 		"clients": {
 			"imports": [
-				 "github.com/golang/protobuf/ptypes/empty",
-				 "github.com/opencord/voltha-protos/go/openflow_13",
- 				 "github.com/opencord/voltha-protos/go/common"
+				"github.com/golang/protobuf/ptypes/empty",
+				"github.com/opencord/voltha-protos/go/openflow_13",
+				"github.com/opencord/voltha-protos/go/common"
 			],
 			"endpoints": [
 				{
@@ -49,10 +49,10 @@
 		},
 		"servers": {
 			"imports": [
-				 "github.com/golang/protobuf/ptypes/empty",
-				 "github.com/opencord/voltha-protos/go/openflow_13",
- 				 "github.com/opencord/voltha-protos/go/common",
- 				 "github.com/opencord/voltha-protos/go/omci"
+				"github.com/golang/protobuf/ptypes/empty",
+				"github.com/opencord/voltha-protos/go/openflow_13",
+				"github.com/opencord/voltha-protos/go/common",
+				"github.com/opencord/voltha-protos/go/omci"
 			],
 			"endpoints": [
 			{
@@ -180,6 +180,19 @@
 			"servers": [
 				{
 					"name":"core11",
+					"meta": [
+						{
+							"key":"voltha_serial_number",
+							"value":"2"
+						},
+						{
+							"key":"voltha_backend_name",
+							"value":""
+						}
+					]
+				},
+				{
+					"name":"core12",
 					"meta": [
 						{
 							"key":"voltha_serial_number",

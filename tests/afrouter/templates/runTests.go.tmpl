@@ -237,7 +237,7 @@ func {{$k}}_test(testNum int, testName string, sendClient string, srvrs []string
 				}
 			}
 		case <-glCtx.Done():
-			rtrn = errors.New(fmt.Sprintf("Timeout: no response data available for server %s", testName))
+			rtrn = errors.New(fmt.Sprintf("Timeout: no response data available for server %s (%s)", v, testName))
 			stats.testLog("%s\n", rtrn.Error())
 			log.Error(rtrn)
 		}
