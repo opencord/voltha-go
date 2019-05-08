@@ -16,6 +16,24 @@
       "revId": "8395cdd848d1c2b2320bc3624e9a1ddcd5c310a4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63b16d49_8142ebc2",
+        "filename": "afrouter/afrouter/backend.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-08T16:17:38Z",
+      "side": 1,
+      "message": "Selecting from the sorted connections was (to my understanding) part of the hack, in order to have the same connection selected every time (golang maps have randomized range order)",
+      "parentUuid": "cc184969_c54c9a61",
+      "revId": "8395cdd848d1c2b2320bc3624e9a1ddcd5c310a4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
