@@ -25,4 +25,13 @@ import "github.com/opencord/voltha-protos/go/voltha"
 type DeviceManager interface {
 	GetDevice(string) (*voltha.Device, error)
 	IsRootDevice(string) (bool, error)
+	NotifyInvalidTransition(*voltha.Device) error
+	SetAdminStateToEnable(*voltha.Device) error
+	CreateLogicalDevice(*voltha.Device) error
+	SetupUNILogicalPorts(*voltha.Device) error
+	DisableAllChildDevices(cDevice *voltha.Device) error
+	DeleteLogicalDevice(cDevice *voltha.Device) error
+	DeleteLogicalPorts(cDevice *voltha.Device) error
+	DeleteAllChildDevices(cDevice *voltha.Device) error
+	RunPostDeviceDelete(cDevice *voltha.Device) error
 }

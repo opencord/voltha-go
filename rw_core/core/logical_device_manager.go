@@ -319,7 +319,7 @@ func (ldMgr *LogicalDeviceManager) addLogicalPort(device *voltha.Device, port *v
 	return nil
 }
 
-// deleteLogicalPort removes the logical port associated with a child device
+// deleteLogicalPort removes the logical port associated with a device
 func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, lPortId *voltha.LogicalPortId) error {
 	log.Debugw("deleting-logical-port", log.Fields{"LDeviceId": lPortId.Id})
 	// Get logical port
@@ -334,9 +334,30 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, lPortI
 		return errors.New("device-root")
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(lPortId.Id); agent != nil {
-		agent.deleteLogicalPort(logicalPort)
+		if err := agent.deleteLogicalPort(logicalPort); err != nil {
+			log.Warnw("deleting-logicalport-failed", log.Fields{"LDeviceId": lPortId.Id, "error": err})
+		}
 	}
 
+	log.Debug("deleting-logical-port-ends")
+	return nil
+}
+
+// deleteLogicalPort removes the logical port associated with a child device
+func (ldMgr *LogicalDeviceManager) deleteLogicalPorts(deviceId string) error {
+	log.Debugw("deleting-logical-ports", log.Fields{"deviceId": deviceId})
+	// Get logical port
+	if ldId, err := ldMgr.getLogicalDeviceIdFromDeviceId(deviceId); err != nil {
+		log.Warnw("logical-device-not-found", log.Fields{"deviceId": deviceId})
+		return err
+	} else {
+		if agent := ldMgr.getLogicalDeviceAgent(*ldId); agent != nil {
+			if err = agent.deleteLogicalPorts(deviceId); err != nil {
+				log.Warnw("deleteLogicalPorts-failed", log.Fields{"ldeviceId": *ldId})
+				return err
+			}
+		}
+	}
 	log.Debug("deleting-logical-port-ends")
 	return nil
 }
@@ -360,6 +381,24 @@ func (ldMgr *LogicalDeviceManager) setupUNILogicalPorts(ctx context.Context, chi
 
 	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
 		if err := agent.setupUNILogicalPorts(ctx, childDevice); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ldMgr *LogicalDeviceManager) deleteAllLogicalPorts(device *voltha.Device) error {
+	log.Debugw("deleteAllLogicalPorts", log.Fields{"deviceId": device.Id})
+
+	var ldId *string
+	var err error
+	//Get the logical device Id for this device
+	if ldId, err = ldMgr.getLogicalDeviceId(device); err != nil {
+		log.Warnw("no-logical-device-found", log.Fields{"deviceId": device.Id, "error": err})
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(*ldId); agent != nil {
+		if err := agent.deleteAllLogicalPorts(device); err != nil {
 			return err
 		}
 	}

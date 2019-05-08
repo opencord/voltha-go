@@ -198,8 +198,17 @@ func (so *SimulatedOLT) Self_test_device(device *voltha.Device) error {
 	return errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Gelete_device(device *voltha.Device) error {
-	return errors.New("UnImplemented")
+func (so *SimulatedOLT) Delete_device(device *voltha.Device) error {
+	if device == nil {
+		log.Warn("device-is-nil")
+		return errors.New("nil-device")
+	}
+	log.Infow("delete-device", log.Fields{"deviceId": device.Id})
+	var handler *DeviceHandler
+	if handler = so.getDeviceHandler(device.Id); handler != nil {
+		go handler.DeleteDevice(device)
+	}
+	return nil
 }
 
 func (so *SimulatedOLT) Get_device_details(device *voltha.Device) error {
