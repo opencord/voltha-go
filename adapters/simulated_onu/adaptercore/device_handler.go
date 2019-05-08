@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 //DeviceHandler follows the same patterns as ponsim_olt.  The only difference is that it does not
@@ -104,6 +105,27 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	if err := dh.coreProxy.DeviceUpdate(nil, cloned); err != nil {
 		log.Errorw("error-updating-device", log.Fields{"deviceId": device.Id, "error": err})
 	}
+
+	//	Update the device state to DISCOVERED
+	cloned.ConnectStatus = voltha.ConnectStatus_REACHABLE
+	cloned.OperStatus = voltha.OperStatus_DISCOVERED
+	if err := dh.coreProxy.DeviceStateUpdate(nil, cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
+		log.Errorw("error-creating-nni-port", log.Fields{"deviceId": device.Id, "error": err})
+	}
+
+	// Sleep to mimic the omci management channel creation with the OLT
+	time.Sleep(10 * time.Millisecond)
+
+	//	Update the device state to ACTIVATING
+	cloned.ConnectStatus = voltha.ConnectStatus_REACHABLE
+	cloned.OperStatus = voltha.OperStatus_ACTIVATING
+	if err := dh.coreProxy.DeviceStateUpdate(nil, cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
+		log.Errorw("error-creating-nni-port", log.Fields{"deviceId": device.Id, "error": err})
+	}
+
+	// Sleep to mimic the omci discovery ( usually takes a few seconds but for ease of simulated environment we are
+	// setting it to 100ms only.
+	time.Sleep(100 * time.Millisecond)
 
 	// Use the channel Id, assigned by the parent device to me, as the port number
 	uni_port := uint32(2)
@@ -222,4 +244,15 @@ func (dh *DeviceHandler) ReEnableDevice(device *voltha.Device) {
 		return
 	}
 	log.Debugw("ReEnableDevice-end", log.Fields{"deviceId": device.Id})
+}
+
+func (dh *DeviceHandler) DeleteDevice(device *voltha.Device) {
+	cloned := proto.Clone(device).(*voltha.Device)
+	// Update the all ports state on that device to disable
+	if err := dh.coreProxy.DeleteAllPorts(nil, cloned.Id); err != nil {
+		log.Errorw("delete-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+
+	log.Debugw("DeleteDevice-end", log.Fields{"deviceId": device.Id})
 }

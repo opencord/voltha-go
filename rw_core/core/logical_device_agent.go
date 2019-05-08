@@ -329,10 +329,10 @@ func (agent *LogicalDeviceAgent) updatePortsState(device *voltha.Device, state v
 				switch state {
 				case voltha.AdminState_ENABLED:
 					lport.OfpPort.Config = lport.OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-					lport.OfpPort.State = lport.OfpPort.State & ^uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+					lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
 				case voltha.AdminState_DISABLED:
 					lport.OfpPort.Config = lport.OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-					lport.OfpPort.State = lport.OfpPort.State | uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+					lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
 				default:
 					log.Warnw("unsupported-state-change", log.Fields{"deviceId": device.Id, "state": state})
 				}
@@ -363,6 +363,37 @@ func (agent *LogicalDeviceAgent) setupUNILogicalPorts(ctx context.Context, child
 		}
 	}
 	return err
+}
+
+// deleteAllLogicalPorts deletes all logical ports associated with this device
+func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(device *voltha.Device) error {
+	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	// Get the latest logical device info
+	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Warnw("logical-device-unknown", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
+		return err
+	} else {
+		cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
+		updateLogicalPorts := []*voltha.LogicalPort{}
+		for _, lport := range cloned.Ports {
+			if lport.DeviceId != device.Id {
+				updateLogicalPorts = append(updateLogicalPorts, lport)
+			}
+		}
+		if len(updateLogicalPorts) < len(cloned.Ports) {
+			cloned.Ports = updateLogicalPorts
+			// Updating the logical device will trigger the poprt change events to be populated to the controller
+			if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
+				log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
+				return err
+			}
+		} else {
+			log.Debugw("no-change-required", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		}
+	}
+	return nil
 }
 
 //updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
@@ -770,8 +801,42 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(lPort *voltha.LogicalPort) er
 		logicaldevice.Ports[len(logicaldevice.Ports)-1] = nil
 		logicaldevice.Ports = logicaldevice.Ports[:len(logicaldevice.Ports)-1]
 		log.Debugw("logical-port-deleted", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return agent.updateLogicalDeviceWithoutLock(logicaldevice)
+		if err := agent.updateLogicalDeviceWithoutLock(logicaldevice); err != nil {
+			log.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			return err
+		}
+		// Reset the logical device graph
+		go agent.redoDeviceGraph()
 	}
+	return nil
+}
+
+// deleteLogicalPorts removes the logical ports associated with that deviceId
+func (agent *LogicalDeviceAgent) deleteLogicalPorts(deviceId string) error {
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+
+	// Get the most up to date logical device
+	var logicaldevice *voltha.LogicalDevice
+	if logicaldevice, _ = agent.getLogicalDeviceWithoutLock(); logicaldevice == nil {
+		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return nil
+	}
+	updatedLPorts := []*voltha.LogicalPort{}
+	for _, logicalPort := range logicaldevice.Ports {
+		if logicalPort.DeviceId != deviceId {
+			updatedLPorts = append(updatedLPorts, logicalPort)
+		}
+	}
+	logicaldevice.Ports = updatedLPorts
+	log.Debugw("updated-logical-ports", log.Fields{"ports": updatedLPorts})
+	if err := agent.updateLogicalDeviceWithoutLock(logicaldevice); err != nil {
+		log.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return err
+	}
+	// Reset the logical device graph
+	go agent.redoDeviceGraph()
+
 	return nil
 }
 
@@ -1082,6 +1147,21 @@ func (agent *LogicalDeviceAgent) updateDeviceGraph(lp *voltha.LogicalPort) {
 	// one when a flow request is received.
 	agent.includeDefaultFlows = true
 	agent.deviceGraph.Print()
+}
+
+//redoDeviceGraph regenerates the device graph upon port changes on a device graph
+//TODO: it may yield better performance to have separate deleteLogicalPort functions that would remove
+// all the routes/nodes related to the deleted logical port.
+func (agent *LogicalDeviceAgent) redoDeviceGraph() {
+	log.Debugf("redoDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	// Get the latest logical device
+	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Errorw("logical-device-not-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+	} else {
+		agent.deviceGraph.ComputeRoutes(ld.Ports)
+	}
 }
 
 // portAdded is a callback invoked when a port is added to the logical device.

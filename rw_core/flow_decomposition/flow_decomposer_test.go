@@ -101,6 +101,42 @@ func (tdm *testDeviceManager) IsRootDevice(deviceId string) (bool, error) {
 	return false, errors.New("ABSENT.")
 }
 
+func (tdm *testDeviceManager) NotifyInvalidTransition(pcDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) SetAdminStateToEnable(cDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) CreateLogicalDevice(cDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) SetupUNILogicalPorts(cDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) DisableAllChildDevices(cDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) DeleteLogicalDevice(cDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) DeleteLogicalPorts(cDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) DeleteAllChildDevices(cDevice *voltha.Device) error {
+	return nil
+}
+
+func (tdm *testDeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
+	return nil
+}
+
 type testFlowDecomposer struct {
 	dMgr         *testDeviceManager
 	logicalPorts map[uint32]*voltha.LogicalPort
