@@ -653,7 +653,6 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 				updatedRev := rev.UpdateChildren(name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
-				childRev.GetNode().SetProxy(n.GetProxy())
 				childRev.SetupWatch(childRev.GetName())
 
 				n.makeLatest(branch, updatedRev, changes)
