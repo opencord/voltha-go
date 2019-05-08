@@ -218,6 +218,13 @@ func (dh *DeviceHandler) DisableDevice(device *voltha.Device) {
 		log.Errorw("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
 		return
 	}
+
+	// Tell the Core that all child devices have been disabled (by default it's an action already taken by the Core
+	if err := dh.coreProxy.ChildDevicesLost(nil, cloned.Id); err != nil {
+		log.Errorw("lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+
 	log.Debugw("DisableDevice-end", log.Fields{"deviceId": device.Id})
 }
 
@@ -239,5 +246,23 @@ func (dh *DeviceHandler) ReEnableDevice(device *voltha.Device) {
 		log.Errorw("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
 		return
 	}
+
+	// Tell the Core that all child devices have been enabled
+	if err := dh.coreProxy.ChildDevicesDetected(nil, cloned.Id); err != nil {
+		log.Errorw("detection-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+
 	log.Debugw("ReEnableDevice-end", log.Fields{"deviceId": device.Id})
+}
+
+func (dh *DeviceHandler) DeleteDevice(device *voltha.Device) {
+	cloned := proto.Clone(device).(*voltha.Device)
+	// Update the all ports state on that device to disable
+	if err := dh.coreProxy.DeleteAllPorts(nil, cloned.Id); err != nil {
+		log.Errorw("delete-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+
+	log.Debugw("DeleteDevice-end", log.Fields{"deviceId": device.Id})
 }
