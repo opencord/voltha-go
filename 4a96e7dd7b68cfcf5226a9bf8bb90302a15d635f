@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d4f17e5_24a1e290",
+        "filename": "adapters/simulated_olt/adaptercore/device_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-05-08T20:04:53Z",
+      "side": 1,
+      "message": "is this the right log message?",
+      "revId": "4a96e7dd7b68cfcf5226a9bf8bb90302a15d635f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3704853_dc7da2ca",
+        "filename": "adapters/simulated_onu/adaptercore/device_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-05-08T20:04:53Z",
+      "side": 1,
+      "message": "is this the right log message?",
+      "revId": "4a96e7dd7b68cfcf5226a9bf8bb90302a15d635f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
