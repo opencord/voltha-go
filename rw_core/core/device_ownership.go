@@ -200,20 +200,40 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 func (da *DeviceOwnership) AbandonDevice(id string) error {
 	da.deviceMapLock.Lock()
 	defer da.deviceMapLock.Unlock()
-	if o, exist := da.deviceMap[id]; exist {
+	if o, exist := da.deviceMap[id]; exist { // id is ownership key
+		// Need to clean up all deviceToKeyMap entries using this device as key
+		da.deviceToKeyMapLock.Lock()
+		defer da.deviceToKeyMapLock.Unlock()
+		for k, v := range da.deviceToKeyMap {
+			if id == v {
+				delete(da.deviceToKeyMap, k)
+			}
+		}
+		// Remove the device reference from the devicMap
+		delete(da.deviceMap, id)
+
 		// Stop the Go routine monitoring the device
 		close(o.chnl)
 		delete(da.deviceMap, id)
 		log.Debugw("abandoning-device", log.Fields{"Id": id})
 		return nil
+	} else { // id is not ownership key
+		if err := da.deleteDeviceKey(id); err != nil {
+			log.Errorw("failed-deleting-key", log.Fields{"id": id})
+		}
 	}
-	return status.Error(codes.NotFound, fmt.Sprintf("id-inexistent-%s", id))
+	return nil
 }
 
 //abandonAllDevices must be invoked whenever a device is deleted from the Core
 func (da *DeviceOwnership) abandonAllDevices() {
 	da.deviceMapLock.Lock()
 	defer da.deviceMapLock.Unlock()
+	da.deviceToKeyMapLock.Lock()
+	defer da.deviceToKeyMapLock.Unlock()
+	for k, _ := range da.deviceToKeyMap {
+		delete(da.deviceToKeyMap, k)
+	}
 	for _, val := range da.deviceMap {
 		close(val.chnl)
 	}
@@ -235,6 +255,17 @@ func (da *DeviceOwnership) updateDeviceKey(id string, key string) error {
 		return status.Error(codes.AlreadyExists, fmt.Sprintf("already-present-%s", id))
 	}
 	da.deviceToKeyMap[id] = key
+	return nil
+}
+
+func (da *DeviceOwnership) deleteDeviceKey(id string) error {
+	da.deviceToKeyMapLock.Lock()
+	defer da.deviceToKeyMapLock.Unlock()
+	if _, exist := da.deviceToKeyMap[id]; exist {
+		delete(da.deviceToKeyMap, id)
+		return nil
+	}
+	log.Warnw("device-not-owned", log.Fields{"deviceId": id})
 	return nil
 }
 

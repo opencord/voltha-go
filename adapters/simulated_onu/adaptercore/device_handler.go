@@ -223,3 +223,14 @@ func (dh *DeviceHandler) ReEnableDevice(device *voltha.Device) {
 	}
 	log.Debugw("ReEnableDevice-end", log.Fields{"deviceId": device.Id})
 }
+
+func (dh *DeviceHandler) DeleteDevice(device *voltha.Device) {
+	cloned := proto.Clone(device).(*voltha.Device)
+	// Update the all ports state on that device to disable
+	if err := dh.coreProxy.DeleteAllPorts(nil, cloned.Id); err != nil {
+		log.Errorw("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+		return
+	}
+
+	log.Debugw("DeleteDevice-end", log.Fields{"deviceId": device.Id})
+}
