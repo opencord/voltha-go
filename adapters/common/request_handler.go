@@ -284,6 +284,45 @@ func (rhp *RequestHandlerProxy) Update_pm_config(args []*ic.Argument) (*empty.Em
 }
 
 func (rhp *RequestHandlerProxy) Receive_packet_out(args []*ic.Argument) (*empty.Empty, error) {
+	log.Debugw("Receive_packet_out", log.Fields{"args": args})
+	if len(args) < 3 {
+		log.Warn("Receive_packet_out-invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceId := &ic.StrType{}
+	egressPort := &ic.IntType{}
+	packet := &openflow_13.OfpPacketOut{}
+	transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "deviceId":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-deviceId", log.Fields{"error": err})
+				return nil, err
+			}
+		case "outPort":
+			if err := ptypes.UnmarshalAny(arg.Value, egressPort); err != nil {
+				log.Warnw("cannot-unmarshal-egressPort", log.Fields{"error": err})
+				return nil, err
+			}
+		case "packet":
+			if err := ptypes.UnmarshalAny(arg.Value, packet); err != nil {
+				log.Warnw("cannot-unmarshal-packet", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("Receive_packet_out", log.Fields{"deviceId": deviceId.Val, "outPort": egressPort, "packet": packet})
+	//Invoke the adopt device on the adapter
+	if err := rhp.adapter.Receive_packet_out(deviceId.Val, int(egressPort.Val), packet); err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
 	return new(empty.Empty), nil
 }
 

@@ -1058,8 +1058,6 @@ func (agent *LogicalDeviceAgent) generateDefaultRules() *fu.DeviceRules {
 	for deviceId := range deviceNodeIds {
 		if deviceId == ld.RootDeviceId {
 			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
-		} else {
-			rules.AddFlowsAndGroup(deviceId, agent.leafDeviceDefaultRules(deviceId))
 		}
 	}
 	return rules
@@ -1110,8 +1108,6 @@ func (agent *LogicalDeviceAgent) updateRoutes(device *voltha.Device, port *volth
 	for deviceId := range deviceNodeIds {
 		if deviceId == agent.rootDeviceId {
 			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
-		} else {
-			rules.AddFlowsAndGroup(deviceId, agent.leafDeviceDefaultRules(deviceId))
 		}
 	}
 	agent.DefaultFlowRules = rules
@@ -1137,8 +1133,6 @@ func (agent *LogicalDeviceAgent) updateDeviceGraph(lp *voltha.LogicalPort) {
 	for deviceId := range deviceNodeIds {
 		if deviceId == agent.rootDeviceId {
 			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
-		} else {
-			rules.AddFlowsAndGroup(deviceId, agent.leafDeviceDefaultRules(deviceId))
 		}
 	}
 	agent.DefaultFlowRules = rules

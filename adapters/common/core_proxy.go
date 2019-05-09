@@ -417,3 +417,32 @@ func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, 
 		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
 }
+
+func (ap *CoreProxy) SendPacketIn(ctx context.Context, deviceId string, port uint32, pktPayload []byte) error {
+	log.Debugw("SendPacketIn", log.Fields{"deviceId": deviceId, "port": port, "pktPayload": pktPayload})
+	rpc := "PacketIn"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(deviceId)
+	replyToTopic := ap.getAdapterTopic()
+
+	args := make([]*kafka.KVArg, 3)
+	id := &voltha.ID{Id: deviceId}
+	args[0] = &kafka.KVArg{
+		Key:   "device_id",
+		Value: id,
+	}
+	portNo := &ic.IntType{Val: int64(port)}
+	args[1] = &kafka.KVArg{
+		Key:   "port",
+		Value: portNo,
+	}
+	pkt := &ic.Packet{Payload: pktPayload}
+	args[2] = &kafka.KVArg{
+		Key:   "packet",
+		Value: pkt,
+	}
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
+	log.Debugw("ChildDeviceDetected-response", log.Fields{"pDeviceId": deviceId, "success": success})
+	return unPackResponse(rpc, deviceId, success, result)
+}

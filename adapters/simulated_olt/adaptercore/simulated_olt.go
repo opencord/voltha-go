@@ -227,7 +227,7 @@ func (so *SimulatedOLT) Update_pm_config(device *voltha.Device, pm_configs *volt
 	return errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Receive_packet_out(device *voltha.Device, egress_port_no int, msg openflow_13.PacketOut) error {
+func (so *SimulatedOLT) Receive_packet_out(deviceId string, egress_port_no int, msg *openflow_13.OfpPacketOut) error {
 	return errors.New("UnImplemented")
 }
 

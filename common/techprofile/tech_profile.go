@@ -382,6 +382,7 @@ func (t *TechProfileMgr) allocateTPInstance(uniPortName string, tp *DefaultTechP
 		log.Errorw("Error getting alloc id from rsrcrMgr", log.Fields{"intfId": intfId, "numTconts": numOfTconts})
 		return nil
 	}
+	log.Debugw("Num GEM ports in TP:", log.Fields{"NumGemPorts": tp.NumGemPorts})
 	if gemPorts, err = t.resourceMgr.GetResourceID(intfId, t.resourceMgr.GetResourceTypeGemPortID(), tp.NumGemPorts); err != nil {
 		log.Errorw("Error getting gemport ids from rsrcrMgr", log.Fields{"intfId": intfId, "numGemports": tp.NumGemPorts})
 		return nil
@@ -593,7 +594,6 @@ func (t *TechProfileMgr) GetTconts(tpInstance *TechProfile, usSched *openolt_pb.
 		}
 	}
 	tconts := []*openolt_pb.Tcont{}
-	// TODO: Fix me , UPSTREAM direction is not proper
 	// upstream scheduler
 	tcont_us := &openolt_pb.Tcont{
 		Direction: usSched.Direction,
