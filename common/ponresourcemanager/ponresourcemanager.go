@@ -133,6 +133,7 @@ type PONResourceManager struct {
 	SharedResourceMgrs map[string]*PONResourceManager
 	SharedIdxByType    map[string]string
 	IntfIDs            []uint32 // list of pon interface IDs
+	Globalorlocal      string
 }
 
 func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
@@ -254,10 +255,14 @@ func (PONRMgr *PONResourceManager) UpdateRanges(StartIDx string, StartID uint32,
 	log.Debugf("update ranges for %s, %d", StartIDx, StartID)
 
 	if StartID != 0 {
-		PONRMgr.PonResourceRanges[StartIDx] = StartID
+		if (PONRMgr.PonResourceRanges[StartIDx] == nil) || (PONRMgr.PonResourceRanges[StartIDx].(uint32) < StartID) {
+			PONRMgr.PonResourceRanges[StartIDx] = StartID
+		}
 	}
 	if EndID != 0 {
-		PONRMgr.PonResourceRanges[EndIDx] = EndID
+		if (PONRMgr.PonResourceRanges[EndIDx] == nil) || (PONRMgr.PonResourceRanges[EndIDx].(uint32) > EndID) {
+			PONRMgr.PonResourceRanges[EndIDx] = EndID
+		}
 	}
 	//if SharedPoolID != 0 {
 	PONRMgr.PonResourceRanges[SharedIDx] = SharedPoolID
@@ -567,6 +572,7 @@ func (PONRMgr *PONResourceManager) GetResourceID(IntfID uint32, ResourceType str
 	if SharedResourceMgr != nil && PONRMgr != SharedResourceMgr {
 		return SharedResourceMgr.GetResourceID(IntfID, ResourceType, NumIDs)
 	}
+	log.Debugf("Fetching resource from %s rsrc mgr for resource %s", PONRMgr.Globalorlocal, ResourceType)
 
 	Path := PONRMgr.GetPath(IntfID, ResourceType)
 	if Path == "" {

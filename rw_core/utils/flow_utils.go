@@ -171,9 +171,11 @@ func NewDeviceRules() *DeviceRules {
 
 func (dr *DeviceRules) Copy() *DeviceRules {
 	copyDR := NewDeviceRules()
-	for key, val := range dr.Rules {
-		if val != nil {
-			copyDR.Rules[key] = val.Copy()
+	if dr != nil {
+		for key, val := range dr.Rules {
+			if val != nil {
+				copyDR.Rules[key] = val.Copy()
+			}
 		}
 	}
 	return copyDR
