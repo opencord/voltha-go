@@ -34,9 +34,11 @@ FROM alpine:3.9
 WORKDIR /app
 
 # Copy required files
-COPY --from=build-env /build/afrouter /app/
-COPY --from=build-env /build/afrouterTest /app/
+COPY --from=build-env /build/afrouter /app/tests/
+COPY --from=build-env /build/afrouterTest /app/tests/
 COPY --from=build-env /build/tests/suites/arouter.json /app/
-COPY --from=build-env /build/tests/suites/voltha.pb /app
+COPY --from=build-env /build/tests/suites/voltha.pb /app/tests/
 COPY --from=build-env /build/tests /app/tests/
+COPY --from=build-env /src/tests /app/tests/
 
+CMD tests/runAll tests
