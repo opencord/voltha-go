@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0751271b_323cf0db",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-09T20:06:08Z",
+      "side": 1,
+      "message": "Since the default rules for a parent device are empty and with removal of the defaultRules altogether then I suggest cleaning up a little bit more around default rules (e.g defaultflowrules flag not required).  For now, this code is ok.  I will create a separate Jira and do the cleaning.",
+      "revId": "d26c8655a0db6d06ac48893592d1f627157b7a48",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
