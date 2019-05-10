@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92ee1190_8045b912",
+        "filename": "adapters/common/alarm_proxy.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-10T15:00:07Z",
+      "side": 1,
+      "message": "The kafka client is not used.  Is it just because it is a framework and sending of alarms to kafka will be added later?",
+      "revId": "c5a09968249d21eec4aec580fb4b7ae0d149ede3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
