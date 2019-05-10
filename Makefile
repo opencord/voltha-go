@@ -16,6 +16,9 @@
 
 SHELL=/bin/bash -e -o pipefail
 
+# Variables
+VERSION			?= $(shell cat ./VERSION)
+
 ifeq ($(TAG),)
 TAG := latest
 endif
