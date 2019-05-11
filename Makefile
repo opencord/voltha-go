@@ -14,52 +14,32 @@
 # limitations under the License.
 #
 
-SHELL=/bin/bash -e -o pipefail
+# set default shell
+SHELL = bash -e -o pipefail
 
 # Variables
-VERSION			?= $(shell cat ./VERSION)
+VERSION                  ?= $(shell cat ./VERSION)
 
-ifeq ($(TAG),)
-TAG := latest
-endif
+## Docker related
+DOCKER_REGISTRY          ?=
+DOCKER_REPOSITORY        ?=
+DOCKER_BUILD_ARGS        ?=
+DOCKER_TAG               ?= ${VERSION}
+RWCORE_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}
+ROCORE_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-core:${DOCKER_TAG}
+AFROUTER_IMAGENAME       := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}afrouter:${DOCKER_TAG}
+AFROUTERTEST_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}afroutertest:${DOCKER_TAG}
+AFROUTERD_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}afrouterd:${DOCKER_TAG}
+SIMULATEDOLT_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-olt:${DOCKER_TAG}
+SIMULATEDONU_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-onu:${DOCKER_TAG}
 
-ifeq ($(TARGET_TAG),)
-TARGET_TAG := latest
-endif
+## Docker labels. Only set ref and commit date if committed
+DOCKER_LABEL_VCS_URL     ?= $(shell git remote get-url $(shell git remote))
+DOCKER_LABEL_VCS_REF     ?= $(shell git diff-index --quiet HEAD -- && git rev-parse HEAD || echo "unknown")
+DOCKER_LABEL_COMMIT_DATE ?= $(shell git diff-index --quiet HEAD -- && git show -s --format=%cd --date=iso-strict HEAD || echo "unknown" )
+DOCKER_LABEL_BUILD_DATE  ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
 
-# If no DOCKER_HOST_IP is specified grab a v4 IP address associated with
-# the default gateway
-ifeq ($(DOCKER_HOST_IP),)
-DOCKER_HOST_IP := $(shell ifconfig $$(netstat -rn | grep -E '^(default|0.0.0.0)' | head -1 | awk '{print $$NF}') | grep inet | awk '{print $$2}' | sed -e 's/addr://g')
-endif
-
-
-ifneq ($(http_proxy)$(https_proxy),)
-# Include proxies from the environment
-DOCKER_PROXY_ARGS = \
-       --build-arg http_proxy=$(http_proxy) \
-       --build-arg https_proxy=$(https_proxy) \
-       --build-arg ftp_proxy=$(ftp_proxy) \
-       --build-arg no_proxy=$(no_proxy) \
-       --build-arg HTTP_PROXY=$(HTTP_PROXY) \
-       --build-arg HTTPS_PROXY=$(HTTPS_PROXY) \
-       --build-arg FTP_PROXY=$(FTP_PROXY) \
-       --build-arg NO_PROXY=$(NO_PROXY)
-endif
-
-DOCKER_BUILD_ARGS = \
-	--build-arg TAG=$(TAG) \
-	--build-arg REGISTRY=$(REGISTRY) \
-	--build-arg REPOSITORY=$(REPOSITORY) \
-	$(DOCKER_PROXY_ARGS) $(DOCKER_CACHE_ARG) \
-	 --rm --force-rm \
-	$(DOCKER_BUILD_EXTRA_ARGS)
-
-DOCKER_IMAGE_LIST = \
-	rw_core
-
-
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core ro_core protos kafka db tests python simulators k8s afrouter arouterd base
+.PHONY: rw_core ro_core simulated_olt simulated_onu afrouter arouterd local-protos
 
 # This should to be the first and default target in this Makefile
 help:
@@ -68,63 +48,115 @@ help:
 	@echo
 	@echo "build         : Build the docker images."
 	@echo "                  - If this is the first time you are building, choose 'make build' option."
-	@echo "rw_core       : Build the rw_core docker container"
-	@echo "ro_core       : Build the ro_core docker container"
-	@echo "afrouter      : Build the afrouter docker container"
-	@echo "afrouterTest  : Build the afrouterTest docker container"
-	@echo "afrouterd     : Build the afrouterd docker container"
-	@echo "simulated_olt : Build the simulated_olt docker container"
-	@echo "simulated_onu : Build the simulated_onu docker container"
+	@echo "rw_core       : Build the rw_core docker image"
+	@echo "ro_core       : Build the ro_core docker image"
+	@echo "afrouter      : Build the afrouter docker image"
+	@echo "afrouterTest  : Build the afrouterTest docker image"
+	@echo "afrouterd     : Build the afrouterd docker image"
+	@echo "simulated_olt : Build the simulated_olt docker image"
+	@echo "simulated_onu : Build the simulated_onu docker image"
+	@echo "docker-push   : Push the docker images to an external repository"
 	@echo "lint-style    : Verify code is properly gofmt-ed"
 	@echo "lint-sanity   : Verify that 'go vet' doesn't report any issues"
-	@echo "lint-dep      : Verify the integrity of the `dep` files"
+	@echo "lint-dep      : Verify the integrity of the 'dep' files"
 	@echo "lint          : Shorthand for lint-style & lint-sanity"
 	@echo "test          : Generate reports for all go tests"
 	@echo
 
 
-# Parallel Build
-$(DIRS):
-	@echo "    MK $@"
-	$(Q)$(MAKE) -C $@
+## Docker targets
 
-# Parallel Clean
-DIRS_CLEAN = $(addsuffix .clean,$(DIRS))
-$(DIRS_CLEAN):
-	@echo "    CLEAN $(basename $@)"
-	$(Q)$(MAKE) -C $(basename $@) clean
+build: docker-build
 
-build: containers
+docker-build: rw_core ro_core simulated_olt simulated_onu afrouter afrouterd
 
-containers: base rw_core ro_core simulated_olt simulated_onu afrouter arouterd
-
-base:
+local-protos:
 ifdef LOCAL_PROTOS
 	mkdir -p vendor/github.com/opencord/voltha-protos/go
 	cp -r ${GOPATH}/src/github.com/opencord/voltha-protos/go/* vendor/github.com/opencord/voltha-protos/go
 endif
-	docker build $(DOCKER_BUILD_ARGS) -t base:latest -f docker/Dockerfile.base .
 
-afrouter: base
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouter:${TAG} -f docker/Dockerfile.arouter .
+afrouter: local-protos
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${AFROUTER_IMAGENAME} \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f docker/Dockerfile.arouter .
 
-afrouterTest: base
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afroutertest:${TAG} -f docker/Dockerfile.arouterTest .
+afrouterTest: local-protos
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${AFROUTERTEST_IMAGENAME} \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f docker/Dockerfile.arouterTest .
 
-arouterd: base
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}afrouterd:${TAG} -f docker/Dockerfile.arouterd .
+afrouterd: local-protos
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${AFROUTERD_IMAGENAME} \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f docker/Dockerfile.arouterd .
 
-rw_core: base
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-rw-core:${TAG} -f docker/Dockerfile.rw_core .
+rw_core: local-protos
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${RWCORE_IMAGENAME} \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f docker/Dockerfile.rw_core .
 
-ro_core: base
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-ro-core:${TAG} -f docker/Dockerfile.ro_core .
+ro_core: local-protos
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${ROCORE_IMAGENAME} \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f docker/Dockerfile.ro_core .
 
-simulated_olt: base
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-olt:${TAG} -f docker/Dockerfile.simulated_olt .
+simulated_olt: local-protos
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${SIMULATEDOLT_IMAGENAME} \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f docker/Dockerfile.simulated_olt .
 
-simulated_onu: base
-	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
+simulated_onu: local-protos
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${SIMULATEDONU_IMAGENAME} \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f docker/Dockerfile.simulated_onu .
+
+docker-push:
+	docker push ${AFROUTER_IMAGENAME}
+	docker push ${AFROUTERTEST_IMAGENAME}
+	docker push ${AFROUTERD_IMAGENAME}
+	docker push ${RWCORE_IMAGENAME}
+	docker push ${ROCORE_IMAGENAME}
+	docker push ${SIMULATEDOLT_IMAGENAME}
+	docker push ${SIMULATEDONU_IMAGENAME}
+
+
+## lint and unit tests
 
 lint-style:
 ifeq (,$(shell which gofmt))
