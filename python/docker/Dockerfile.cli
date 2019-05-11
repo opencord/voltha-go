@@ -11,13 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG TAG=latest
-ARG REGISTRY=
-ARG REPOSITORY=
+FROM ubuntu:16.04
 
-FROM ${REGISTRY}${REPOSITORY}voltha-base:${TAG}
+# Update to have latest images
+RUN apt-get update && \
+    apt-get install -y python openssl iproute2 libpcap-dev wget build-essential git binutils python-dev libffi-dev libssl-dev
 
-MAINTAINER Voltha Community <info@opennetworking.org>
+# Install current version of pip rather than outdated pip from apt
+RUN wget -O /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py
+RUN python /tmp/get-pip.py
+
+# Install adapter requirements.
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
+
+ARG LOCAL_PYVOLTHA
+ARG LOCAL_PROTOS
+COPY local_imports/ /local_imports/
+RUN if [ -n "$LOCAL_PYVOLTHA" ] ; then \
+    pip install /local_imports/pyvoltha/dist/*.tar.gz ; \
+fi
+
+RUN if [ -n "$LOCAL_PROTOS" ] ; then \
+    pip install /local_imports/voltha-protos/dist/*.tar.gz ; \
+fi
 
 # Bundle app source
 RUN mkdir /voltha && touch /voltha/__init__.py
@@ -25,7 +42,6 @@ ENV PYTHONPATH=/voltha
 COPY cli /voltha/python/cli
 RUN touch /voltha/python/__init__.py
 RUN touch /voltha/python/cli/__init__.py
-
 
 # Setup the voltha user
 RUN useradd -b /home -d /home/voltha voltha -s /bin/bash
@@ -50,3 +66,18 @@ EXPOSE 22
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["/voltha/python/cli/setup.sh"]
+
+# Label image
+ARG org_label_schema_version=unknown
+ARG org_label_schema_vcs_url=unknown
+ARG org_label_schema_vcs_ref=unknown
+ARG org_label_schema_build_date=unknown
+ARG org_opencord_vcs_commit_date=unknown
+
+LABEL org.label-schema.schema-version=1.0 \
+      org.label-schema.name=voltha-cli \
+      org.label-schema.version=$org_label_schema_version \
+      org.label-schema.vcs-url=$org_label_schema_vcs_url \
+      org.label-schema.vcs-ref=$org_label_schema_vcs_ref \
+      org.label-schema.build-date=$org_label_schema_build_date \
+      org.opencord.vcs-commit-date=$org_opencord_vcs_commit_date
