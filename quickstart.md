@@ -47,7 +47,7 @@ Logout/Login to assume new group membership needed for running docker as non-roo
 
 ### VOLTHA Protos
 
-Library containing all VOLTHA gRPC Protobuf definitions and the build system to produce needed stubs in Python and Golang.  This package is available via python's pip or golang's "dep" or "go get".   If you need to **edit protos and test those changes locally** you will need to refer to the voltha-protos README.
+Library containing all VOLTHA gRPC Protobuf definitions and the build system to produce needed stubs in Python and Golang.  Stable versions of this package is available via python's pip or golang's "dep" or "go get".   If you need to **edit protos and test those changes locally** you will need to refer to the voltha-protos README and export needed environment variables to include the local build.
 
 https://github.com/opencord/voltha-protos/blob/master/README.md
 
@@ -76,15 +76,18 @@ After following notes above verify local artifactes are generated.  After buildi
 cd ~/source/voltha-protos/
 ls dist/    #python pip tarball output
 ls go/      #golang stubs
-
-export LOCAL_PROTOS=true
-
-
 ```
+
+Set an environment variable for below Golang and Python builds to inform the Makefile to copy files into the local vendor folder or to use the local pip tar.gz.  Useful for development testing.
+```sh
+export LOCAL_PROTOS=true
+```
+
+
 
 ### PyVoltha PIP Library
 
-Python library of common core functions.  Once this stabilizes then you will no longer need a local build, the needed version will be in pip.  Currently the plan is to push the pyvoltha pip library once a sprint into PyPi.   Currently PyVoltha includes generated python stubs of voltha gRPC protos.
+Python library of common core functions.  Stable versions of this package is available via python's pip.  If you need to **edit this library and test those changes locally** you will need to export needed environment variables to include the local build..
 
 ```sh
 cd ~/source/
@@ -92,15 +95,13 @@ git clone https://gerrit.opencord.org/pyvoltha.git
 ```
 
 Generate the local tar.gz that is the dev version of pyvoltha:
-
 ```sh
 cd ~/source/pyvoltha/
 make dist
 ls dist/    #python pip tarball output
 ```
 
-Set an environment variable for below python builds to inform the Makefile to use the local pip tar.gz
-
+Set an environment variable for below Python builds to inform the Makefile to use the local pip tar.gz.  Useful for development testing.
 ```sh
 export LOCAL_PYVOLTHA=true
 ```
@@ -129,58 +130,98 @@ go build rw_core/main.go    # verify vendor and other dependancies. output binar
 
 The steps below generate the needed docker images and the Docker build system sets up the Go environment within a container image.  Build Go docker images, rw_core being whats most needed for now.
 This should work without setting up a golang environment:
-
 ```sh
+export DOCKER_TAG=latest
 cd ~/source/voltha-go
 make build
 ```
 
-Build Python CLI and OFAgent docker images.  Python ofagent, cli, and ponsim build system needs to be told to create protos docker image using environment variable.  This will no longer be needed when python components use pyvoltha and voltha-protos packages.
+Set an environment variable for other Golang builds to inform the Makefile to copy files into the local vendor folder.  Useful for development testing.
 ```sh
-export VOLTHA_BUILD=docker
+export LOCAL_VOLTHAGO=true
+```
+
+Build Python CLI and OFAgent docker images.
+```sh
+export DOCKER_TAG=latest
 cd ~/source/voltha-go/python
 make build
 ```
 
 
 
-### VOLTHA 2.0 OpenOLT (python)
+### VOLTHA 2.0 OpenOLT (Golang and Python)
 
+Checkout and link openolt source into GOPATH for openolt development.  This is similar to voltha-go above.
 ```sh
 cd ~/source/
 git clone https://gerrit.opencord.org/voltha-openolt-adapter.git
+
+mkdir -p $GOPATH/src/github.com/opencord
+ln -s ~/source/voltha-openolt-adapter $GOPATH/src/github.com/opencord/voltha-openolt-adapter
+
+cd $GOPATH/src/github.com/opencord/voltha-openolt-adapter
+go build main.go    # verify vendor and other dependancies. output binary not actually used in container builds
 ```
 
-Build the openolt container.  Inform the Makefile to use a local build of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openolt build tree.  Once PyVoltha and voltha-protos is stable this will not be needed.
+Build the openolt container.  Above LOCAL environment variables can be used to include local library builds of PyVoltha, voltha-go, and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openolt build tree.
+
+Golang Openolt
 ```sh
+export DOCKER_TAG=latest
+cd ~/source/voltha-openolt-adapter/
+make build
+```
+
+Python Openolt
+```sh
+export DOCKER_TAG=latest
 cd ~/source/voltha-openolt-adapter/python/
 make build
 ```
 
 
 
-### VOLTHA 2.0 OpenONU (python)
+### VOLTHA 2.0 OpenONU (Python)
 
 ```sh
 cd ~/source/
 git clone https://gerrit.opencord.org/voltha-openonu-adapter.git
 ```
 
-Build the openonu container.  Inform the Makefile to use a local build of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openonu build tree.  Once PyVoltha and voltha-protos is stable this will not be needed.
+Build the openonu container.  Above LOCAL environment variables can be used to include local builds of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openonu build tree.
 ```sh
+export DOCKER_TAG=latest
 cd ~/source/voltha-openonu-adapter/python
 make build
 ```
 
 
 
+### ONOS with VOLTHA Compatible Apps
+
+By default the standard onos docker image does not contain nor start any apps needed by voltha.  If you use the standard image then you need to use the onos restful api to load needed apps.  For development convienence there is an onos docker image build that adds in the current compatible voltha apps.
+```sh
+cd ~/source/
+git clone https://gerrit.opencord.org/voltha-onos.git
+```
+
+Build the onos image with added onos apps (olt, aaa, sadis, dhcpl2relay).
+```sh
+export DOCKER_TAG=latest
+cd ~/source/voltha-onos
+make build
+```
+
 
 
 ## Test
 
-Run the combined compose file that starts the core, its dependent systems and the openonu and openolt adapters.  Export an environment variable of your non-localhost ip address needed for inter-container communication.
+Run the combined compose file that starts the core, its dependent systems and the openonu and openolt adapters.  Export an environment variable of your non-localhost ip address needed for inter-container communication.  For convienence you can also export DOCKER_TAG to signify the docker images tag you would like to use.  Though for typical development you may have to edit compose/system-test.yml to override the specific docker image DOCKER_TAG needed.
 ```sh
 export DOCKER_HOST_IP=##YOUR_LOCAL_IP##
+export DOCKER_TAG=latest
+
 cd ~/source/voltha-go
 docker-compose -f compose/system-test.yml up -d
 ```
