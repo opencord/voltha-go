@@ -11,40 +11,51 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM ubuntu:16.04
 
-# Update to have latest images
-RUN apt-get update && \
-    apt-get install -y python openssl iproute2 libpcap-dev wget build-essential git binutils python-dev libffi-dev libssl-dev
+# -------------
+# Build stage
 
-# Install current version of pip rather than outdated pip from apt
-RUN wget -O /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py
-RUN python /tmp/get-pip.py
+FROM golang:1.12-alpine3.9 AS build-env
 
-# Install adapter requirements.
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt
+# Install required packages
+RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
 
-ARG LOCAL_PYVOLTHA
-ARG LOCAL_PROTOS
-COPY local_imports/ /local_imports/
-RUN if [ -n "$LOCAL_PYVOLTHA" ] ; then \
-    pip install /local_imports/pyvoltha/dist/*.tar.gz ; \
-fi
+# Prepare directory structure
+RUN ["mkdir", "-p", "/build"]
+RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
+RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord"]
+RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
 
-RUN if [ -n "$LOCAL_PROTOS" ] ; then \
-    pip install /local_imports/voltha-protos/dist/*.tar.gz ; \
-fi
+WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
-# Bundle app source
-RUN mkdir /voltha && touch /voltha/__init__.py
-ENV PYTHONPATH=/voltha
-COPY adapters/ponsim_onu /voltha/python/adapters/ponsim_onu
-RUN touch /voltha/python/__init__.py
-RUN touch /voltha/python/adapters/__init__.py
+# Copy common files.
+COPY common ./common
+COPY db ./db
+COPY kafka ./kafka
+COPY vendor ./vendor
 
-# Exposing process and default entry point
-CMD ["python", "/voltha/python/adapters/ponsim_onu/main.py"]
+# Copy files
+COPY rw_core ./rw_core
+COPY afrouter ./afrouter
+COPY arouterd ./arouterd
+
+# Copy config
+RUN cp afrouter/arouter.json /build
+
+# Build
+RUN cd arouterd && go build -o /build/arouterd
+
+# -------------
+# Image creation stage
+
+FROM alpine:3.9.4
+
+# Set the working directory
+WORKDIR /app
+
+# Copy required files
+COPY --from=build-env /build/arouterd /app/
+COPY --from=build-env /build/arouter.json /app/
 
 # Label image
 ARG org_label_schema_version=unknown
@@ -54,7 +65,7 @@ ARG org_label_schema_build_date=unknown
 ARG org_opencord_vcs_commit_date=unknown
 
 LABEL org.label-schema.schema-version=1.0 \
-      org.label-schema.name=voltha-adapter-ponsim-onu \
+      org.label-schema.name=afrouterd \
       org.label-schema.version=$org_label_schema_version \
       org.label-schema.vcs-url=$org_label_schema_vcs_url \
       org.label-schema.vcs-ref=$org_label_schema_vcs_ref \
