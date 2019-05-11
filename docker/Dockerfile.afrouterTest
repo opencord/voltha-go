@@ -36,9 +36,23 @@ COPY vendor ./vendor
 
 # Copy files
 COPY rw_core ./rw_core
+COPY afrouter ./afrouter
+COPY tests/afrouter ./tests/afrouter
+COPY tests/afrouter /build/tests
+
+# Copy proto files
+COPY vendor/ $GOPATH/src
+
+# Copy config and runtime protobuf needed for routing
+RUN cp afrouter/arouter.json /build/tests/suites/
+RUN cp vendor/github.com/opencord/voltha-protos/go/voltha.pb /build/tests/suites/
 
 # Build
-RUN cd rw_core && go build -o /build/rw_core
+RUN cd afrouter && go build --tags integration -o /build/afrouter
+RUN cd tests/afrouter && go build --tags integration -o /build/afrouterTest
+
+# Run tests
+RUN cd /build/tests/suites && /build/afrouterTest -config main.json -logLevel 1
 
 # -------------
 # Image creation stage
@@ -49,7 +63,14 @@ FROM alpine:3.9.4
 WORKDIR /app
 
 # Copy required files
-COPY --from=build-env /build/rw_core /app/
+COPY --from=build-env /build/afrouter /app/tests/
+COPY --from=build-env /build/afrouterTest /app/tests/
+COPY --from=build-env /build/tests/suites/arouter.json /app/
+COPY --from=build-env /build/tests/suites/voltha.pb /app/tests/
+COPY --from=build-env /build/tests /app/tests/
+COPY --from=build-env /src/tests /app/tests/
+
+CMD tests/runAll tests
 
 # Label image
 ARG org_label_schema_name=unknown

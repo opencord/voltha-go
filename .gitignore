@@ -13,9 +13,6 @@ exportToHTML
 .vagrant
 *.box
 
-# venv
-.venv
-
 # Ansible
 ansible/*.retry
 
@@ -23,12 +20,7 @@ ansible/*.retry
 *.swp
 
 # Virtualenv
-venv
-venv-darwin
-venv-linux
-adapters/venv
-adapters/venv-linux
-adapters/venv-darwin
+python/venv-*
 
 # Protobuf output files
 python/**/*_pb2.py
