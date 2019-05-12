@@ -30,9 +30,9 @@ const (
 	defaultPbits                  = "0b11111111"
 
 	defaultKVStoreType    = "etcd"
-	defaultKVStoreTimeout = 5            //in seconds
-	defaultKVStoreHost    = "172.21.0.8" // TODO: Need to get IP from adapter
-	defaultKVStorePort    = 2379         // Consul = 8500; Etcd = 2379
+	defaultKVStoreTimeout = 5 //in seconds
+	defaultKVStoreHost    = "127.0.0.1"
+	defaultKVStorePort    = 2379 // Consul = 8500; Etcd = 2379
 
 	// Tech profile path prefix in kv store
 	defaultKVPathPrefix = "service/voltha/technology_profiles"
@@ -98,13 +98,13 @@ type TechProfileFlags struct {
 	DefaultNumTconts     uint32
 }
 
-func NewTechProfileFlags() *TechProfileFlags {
+func NewTechProfileFlags(KVStoreType string, KVStoreHost string, KVStorePort int) *TechProfileFlags {
 	// initialize with default values
 	var techProfileFlags = TechProfileFlags{
 		KVBackend:            nil,
-		KVStoreHost:          defaultKVStoreHost,
-		KVStorePort:          defaultKVStorePort,
-		KVStoreType:          defaultKVStoreType,
+		KVStoreHost:          KVStoreHost,
+		KVStorePort:          KVStorePort,
+		KVStoreType:          KVStoreType,
 		KVStoreTimeout:       defaultKVStoreTimeout,
 		DefaultTPName:        defaultTechProfileName,
 		TPKVPathPrefix:       defaultKVPathPrefix,

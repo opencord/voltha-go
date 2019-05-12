@@ -255,7 +255,7 @@ func (t *TechProfileMgr) SetKVClient() *model.Backend {
 
 func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
 
-	log.Infow("kv-store-type", log.Fields{"store": storeType})
+	log.Infow("kv-store", log.Fields{"storeType": storeType, "address": address})
 	switch storeType {
 	case "consul":
 		return kvstore.NewConsulClient(address, timeout)
@@ -265,10 +265,10 @@ func newKVClient(storeType string, address string, timeout int) (kvstore.Client,
 	return nil, errors.New("unsupported-kv-store")
 }
 
-func NewTechProfile(resourceMgr iPonResourceMgr) (*TechProfileMgr, error) {
+func NewTechProfile(resourceMgr iPonResourceMgr, KVStoreType string, KVStoreHost string, KVStorePort int) (*TechProfileMgr, error) {
 	var techprofileObj TechProfileMgr
 	log.Debug("Initializing techprofile Manager")
-	techprofileObj.config = NewTechProfileFlags()
+	techprofileObj.config = NewTechProfileFlags(KVStoreType, KVStoreHost, KVStorePort)
 	techprofileObj.config.KVBackend = techprofileObj.SetKVClient()
 	if techprofileObj.config.KVBackend == nil {
 		log.Error("Failed to initialize KV backend\n")
