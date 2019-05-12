@@ -182,7 +182,7 @@ func NewPONResourceManager(Technology string, DeviceType string, DeviceID string
 		return nil, errors.New("Failed to init KV client")
 	}
 	// Initialize techprofile for this technology
-	if PONMgr.TechProfileMgr, _ = tp.NewTechProfile(&PONMgr); PONMgr.TechProfileMgr == nil {
+	if PONMgr.TechProfileMgr, _ = tp.NewTechProfile(&PONMgr, Backend, Host, Port); PONMgr.TechProfileMgr == nil {
 		log.Error("Techprofile initialization failed")
 		return nil, errors.New("Failed to init tech profile")
 	}
