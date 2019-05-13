@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "39c45d5d_df3812f1",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-05-13T16:02:01Z",
+      "side": 1,
+      "message": "I\u0027m thinking it would be simpler to hardcode the image name in these places:\n\n- *_IMAGENAME variables (already are specific to the image)\n- individual make targets for each image\n- Within the Dockerfile, to remove the `--build-arg org_label_schema_name\u003d` argument passed on build\n\nAnother option would be to use the names as a part of some makefile variable cleverness to automatically build the docker build invocations, but that could come later.",
+      "parentUuid": "df449519_493b6ca1",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 56
+      },
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7f4a3d99_3bd27134",
         "filename": "Makefile",
         "patchSetId": 3
