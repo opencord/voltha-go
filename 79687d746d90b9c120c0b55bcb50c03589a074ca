@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "df449519_493b6ca1",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-13T15:38:52Z",
+      "side": 1,
+      "message": "not really, but it seemed a nice place visually to see what\u0027s being built.   It also saves some duplication in the docker build lines below.",
+      "parentUuid": "838b2c78_285c69d8",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 56
+      },
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7f4a3d99_3bd27134",
         "filename": "Makefile",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-13T15:27:47Z",
       "side": 1,
       "message": "This doesn\u0027t seem to be used elsewhere in the Makefile",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 5
+      },
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8e2845e_f47b5f63",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-13T15:38:52Z",
+      "side": 1,
+      "message": "Its not.  its covered in setup notes.  Ill get rid of it.",
+      "parentUuid": "7f4a3d99_3bd27134",
       "range": {
         "startLine": 76,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "caf878c9_0b84622c",
+        "filename": "docker/Dockerfile.arouterd",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-13T15:38:52Z",
+      "side": 1,
+      "message": "this is really to keep with what we have been building with all along.  I agree it needs to change, id rather wait till after the release.",
+      "parentUuid": "b3a51d10_f14a7ac5",
+      "range": {
+        "startLine": 18,
+        "startChar": 5,
+        "endLine": 18,
+        "endChar": 26
+      },
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec7f8e0e_0a51d5fe",
         "filename": "docker/Dockerfile.arouterd",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2019-05-13T15:27:47Z",
       "side": 1,
       "message": "It\u0027s happy with this, but 3.9.4 would be more specific: https://hub.docker.com/_/alpine",
+      "range": {
+        "startLine": 51,
+        "startChar": 5,
+        "endLine": 51,
+        "endChar": 15
+      },
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9230d410_bd50f219",
+        "filename": "docker/Dockerfile.arouterd",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-13T15:38:52Z",
+      "side": 1,
+      "message": "ill update.",
+      "parentUuid": "ec7f8e0e_0a51d5fe",
       "range": {
         "startLine": 51,
         "startChar": 5,
@@ -122,6 +218,30 @@
       "writtenOn": "2019-05-13T15:27:47Z",
       "side": 1,
       "message": "Versioning script doesn\u0027t like this - switching to `ubuntu:16.04` will work and would be equivalent: https://hub.docker.com/_/ubuntu",
+      "range": {
+        "startLine": 14,
+        "startChar": 5,
+        "endLine": 14,
+        "endChar": 18
+      },
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9463b27f_1e931376",
+        "filename": "python/docker/Dockerfile.adapter_ponsim_onu",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-13T15:38:52Z",
+      "side": 1,
+      "message": "Yep i see that.  Updating now.",
+      "parentUuid": "ca2bdb5c_103e061b",
       "range": {
         "startLine": 14,
         "startChar": 5,
