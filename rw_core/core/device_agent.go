@@ -290,10 +290,13 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 
 		}
 		// Send update to adapters
+
+		// Create two channels to receive responses from the dB and from the adapters.
+		// Do not close these channels as this function may exit on timeout before the dB or adapters get a chance
+		// to send their responses.  These channels will be garbage collected once all the responses are
+		// received
 		chAdapters := make(chan interface{})
-		defer close(chAdapters)
 		chdB := make(chan interface{})
-		defer close(chdB)
 		dType := agent.adapterMgr.getDeviceType(device.Type)
 		if !dType.AcceptsAddRemoveFlowUpdates {
 
