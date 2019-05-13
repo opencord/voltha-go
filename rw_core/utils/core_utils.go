@@ -59,12 +59,12 @@ func WaitForNilOrErrorResponses(timeout int64, chnls ...chan interface{}) []erro
 		if !ok { // closed channel
 			//Set the channel at that index to nil to disable this case, hence preventing it from interfering with other cases.
 			cases[index].Chan = reflect.ValueOf(nil)
-			errors[index] = status.Errorf(codes.Internal, "channel closed")
+			errors[index] = status.Error(codes.Internal, "channel closed")
 			errorsReceived = true
 		} else if index == len(chnls) { // Timeout has occurred
 			for k := range errors {
 				if !resultsReceived[k] {
-					errors[k] = status.Errorf(codes.Aborted, "timeout")
+					errors[k] = status.Error(codes.Aborted, "timeout")
 				}
 			}
 			errorsReceived = true

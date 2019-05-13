@@ -476,13 +476,13 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 			log.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 		} else {
 			//	Add flow
-			flow := fd.FlowStatsEntryFromFlowModMessage(mod)
+			flow := fu.FlowStatsEntryFromFlowModMessage(mod)
 			flows = append(flows, flow)
 			updatedFlows = append(updatedFlows, flow)
 			changed = true
 		}
 	} else {
-		flow := fd.FlowStatsEntryFromFlowModMessage(mod)
+		flow := fu.FlowStatsEntryFromFlowModMessage(mod)
 		idx := fu.FindFlows(flows, flow)
 		if idx >= 0 {
 			oldFlow := flows[idx]
@@ -638,7 +638,7 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 	}
 	flows := lDevice.Flows.Items
 	changed := false
-	flow := fd.FlowStatsEntryFromFlowModMessage(mod)
+	flow := fu.FlowStatsEntryFromFlowModMessage(mod)
 	idx := fu.FindFlows(flows, flow)
 	if idx >= 0 {
 		flows = append(flows[:idx], flows[idx+1:]...)
@@ -683,7 +683,7 @@ func (agent *LogicalDeviceAgent) groupAdd(groupMod *ofp.OfpGroupMod) error {
 	}
 	groups := lDevice.FlowGroups.Items
 	if fu.FindGroup(groups, groupMod.GroupId) == -1 {
-		groups = append(groups, fd.GroupEntryFromGroupMod(groupMod))
+		groups = append(groups, fu.GroupEntryFromGroupMod(groupMod))
 		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(&ofp.FlowGroups{Items: groups}); err != nil {
 			log.Errorw("Cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 			return err
@@ -764,7 +764,7 @@ func (agent *LogicalDeviceAgent) groupModify(groupMod *ofp.OfpGroupMod) error {
 		return errors.New(fmt.Sprintf("group-absent:%d", groupId))
 	} else {
 		//replace existing group entry with new group definition
-		groupEntry := fd.GroupEntryFromGroupMod(groupMod)
+		groupEntry := fu.GroupEntryFromGroupMod(groupMod)
 		groups[idx] = groupEntry
 		groupsChanged = true
 	}
@@ -1005,42 +1005,42 @@ func (agent *LogicalDeviceAgent) leafDeviceDefaultRules(deviceId string) *fu.Flo
 	fa = &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			fd.InPort(downstreamPorts[0].PortNo),
-			fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.InPort(downstreamPorts[0].PortNo),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
 		},
 		Actions: []*ofp.OfpAction{
-			fd.SetField(fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
-			fd.Output(upstreamPorts[0].PortNo),
+			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
+			fu.Output(upstreamPorts[0].PortNo),
 		},
 	}
-	fg.AddFlow(fd.MkFlowStat(fa))
+	fg.AddFlow(fu.MkFlowStat(fa))
 
 	fa = &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			fd.InPort(downstreamPorts[0].PortNo),
-			fd.VlanVid(0),
+			fu.InPort(downstreamPorts[0].PortNo),
+			fu.VlanVid(0),
 		},
 		Actions: []*ofp.OfpAction{
-			fd.PushVlan(0x8100),
-			fd.SetField(fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
-			fd.Output(upstreamPorts[0].PortNo),
+			fu.PushVlan(0x8100),
+			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
+			fu.Output(upstreamPorts[0].PortNo),
 		},
 	}
-	fg.AddFlow(fd.MkFlowStat(fa))
+	fg.AddFlow(fu.MkFlowStat(fa))
 
 	fa = &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			fd.InPort(upstreamPorts[0].PortNo),
-			fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan),
+			fu.InPort(upstreamPorts[0].PortNo),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan),
 		},
 		Actions: []*ofp.OfpAction{
-			fd.SetField(fd.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
-			fd.Output(downstreamPorts[0].PortNo),
+			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
+			fu.Output(downstreamPorts[0].PortNo),
 		},
 	}
-	fg.AddFlow(fd.MkFlowStat(fa))
+	fg.AddFlow(fu.MkFlowStat(fa))
 
 	return fg
 }
@@ -1435,7 +1435,7 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(childDevice *voltha.Device, p
 
 func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 	log.Debugw("packet-out", log.Fields{"packet": packet.GetInPort()})
-	outPort := fd.GetPacketOutPort(packet)
+	outPort := fu.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
 	if err := agent.deviceMgr.packetOut(agent.rootDeviceId, outPort, packet); err != nil {
@@ -1445,7 +1445,7 @@ func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 
 func (agent *LogicalDeviceAgent) packetIn(port uint32, transactionId string, packet []byte) {
 	log.Debugw("packet-in", log.Fields{"port": port, "packet": packet, "transactionId": transactionId})
-	packetIn := fd.MkPacketIn(port, packet)
+	packetIn := fu.MkPacketIn(port, packet)
 	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, transactionId, packetIn)
 	log.Debugw("sending-packet-in", log.Fields{"packet-in": packetIn})
 }
