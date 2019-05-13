@@ -191,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "2356e426_022e2f62",
+        "filename": "docker/Dockerfile.arouterd",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-13T17:16:21Z",
+      "side": 1,
+      "message": "based on voltha discuss conversation ill bump this to 1.12",
+      "parentUuid": "caf878c9_0b84622c",
+      "range": {
+        "startLine": 18,
+        "startChar": 5,
+        "endLine": 18,
+        "endChar": 26
+      },
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec7f8e0e_0a51d5fe",
         "filename": "docker/Dockerfile.arouterd",
         "patchSetId": 3
