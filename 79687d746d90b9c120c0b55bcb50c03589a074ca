@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0bd9c98_eea03905",
+        "filename": "python/docker/Dockerfile.adapter_ponsim_olt",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-13T13:07:10Z",
+      "side": 1,
+      "message": "Any reason in removing the docker base and then copied its content in several docker files?",
+      "revId": "79687d746d90b9c120c0b55bcb50c03589a074ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
