@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+KEY_NAME := voltha
 
 SHELL=/bin/bash -e -o pipefail
 
@@ -59,7 +60,7 @@ DOCKER_IMAGE_LIST = \
 	rw_core
 
 
-.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core ro_core protos kafka db tests python simulators k8s afrouter arouterd base
+.PHONY: $(DIRS) $(DIRS_CLEAN) $(DIRS_FLAKE8) rw_core ro_core protos kafka db tests python simulators k8s afrouter arouterd base check_ssl ssl
 
 # This should to be the first and default target in this Makefile
 help:
@@ -125,6 +126,17 @@ simulated_olt: base
 
 simulated_onu: base
 	docker build $(DOCKER_BUILD_ARGS) -t ${REGISTRY}${REPOSITORY}voltha-adapter-simulated-onu:${TAG} -f docker/Dockerfile.simulated_onu .
+        
+check_ssl:
+	@which openssl > /dev/null; if [ $$? -ne 0 ]; then \
+		echo "Please install openssl."; \
+	fi
+
+ssl: check_ssl
+	openssl req -new -newkey rsa:2048 -nodes -keyout ${KEY_NAME}.key -out ${KEY_NAME}.csr
+	openssl x509 -req -days 365 -in ${KEY_NAME}.csr -signkey ${KEY_NAME}.key -out ${KEY_NAME}.crt
+	echo "Created ${KEY_NAME}.crt (self-signed)"
+
 
 lint-style:
 ifeq (,$(shell which gofmt))
