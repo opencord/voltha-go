@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "90ebc281_ee176f76",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T14:13:47Z",
+      "side": 1,
+      "message": "Good point.\n\nThis method deals with cleaning up the memory after a device has been deleted by the other Core in the Pair.   Since the device itself gets cleaned in the Model we are really stoping the device agents and removing the device from the ownership structures.    So, it\u0027s highly unlikely it fails (and if it does, something more serious is happening in the Core). \n\nThat said, I will let all actions run to completion and return an error only at the end.",
+      "parentUuid": "fc46b71a_671adeaf",
+      "range": {
+        "startLine": 212,
+        "startChar": 27,
+        "endLine": 212,
+        "endChar": 45
+      },
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9c18aee_dc236af1",
         "filename": "rw_core/core/device_ownership.go",
         "patchSetId": 3
@@ -36,6 +60,24 @@
       "writtenOn": "2019-05-16T02:39:10Z",
       "side": 1,
       "message": "if two threads enter this if at the same time, does one attempt to set the key followed by the other? don\u0027t know the code, so not sure if that is a realistic scenario or not.",
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e55ac75e_502f4164",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T14:13:47Z",
+      "side": 1,
+      "message": "If two threads come in at the same time then they will either have the same id (hence the same ownershipkey) or different ids (may end up with different ownershipkey).   In the first scenario, at worse, they will be setting the same key-value which is a non-issue.  In the second scenario they will be setting their own ids which is ok as well.",
+      "parentUuid": "c9c18aee_dc236af1",
       "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "04ed8863_f0741ce9",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T14:13:47Z",
+      "side": 1,
+      "message": "This is not an error, e.g. a device may already have beed abandoned resulting in its reference removed from other related devices (e.g. parent-child) that are in the process of being deleted.\n\nFor consistency I will return an error and let the calling function check for null string before making the call.",
+      "parentUuid": "b3d4aca5_e73463e2",
+      "range": {
+        "startLine": 213,
+        "startChar": 4,
+        "endLine": 213,
+        "endChar": 6
+      },
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a021b99_8e9a317e",
         "filename": "rw_core/core/device_ownership.go",
         "patchSetId": 3
@@ -76,6 +142,24 @@
       "writtenOn": "2019-05-16T02:39:10Z",
       "side": 1,
       "message": "same comment as above on a nil/empty check",
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a91b2e6b_522babe0",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T14:13:47Z",
+      "side": 1,
+      "message": "This already returns an error.",
+      "parentUuid": "7a021b99_8e9a317e",
       "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
