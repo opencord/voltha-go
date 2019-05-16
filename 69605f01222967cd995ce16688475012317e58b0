@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04203293_092ea147",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T14:36:42Z",
+      "side": 1,
+      "message": "The logical device agent check for duplicates.   If there are flows that are not duplicates but result with duplicate flows for the devices then please add unit test cases to cover this scenario as obviously it is missing.  Thanks.",
+      "revId": "69605f01222967cd995ce16688475012317e58b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58afc1e8_bfb74593",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T14:36:42Z",
+      "side": 1,
+      "message": "Can you be more clear here please?   Are we still using the default flows?  If yes then the Jira that was opened to cleanup default flows from the Core needs to be updated.",
+      "revId": "69605f01222967cd995ce16688475012317e58b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
