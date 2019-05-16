@@ -206,18 +206,37 @@ func (dMgr *DeviceManager) deleteDevice(ctx context.Context, id *voltha.ID, ch c
 	sendResponse(ctx, ch, res)
 }
 
+// stopManagingDevice stops the management of the device as well as any of its reference device and logical device.
+// This function is called only in the Core that does not own this device.  In the Core that owns this device then a
+// deletion deletion also includes removal of any reference of this device.
+func (dMgr *DeviceManager) stopManagingDevice(id string) {
+	log.Infow("stopManagingDevice", log.Fields{"deviceId": id})
+	if dMgr.IsDeviceInCache(id) { // Proceed only if an agent is present for this device
+		if root, _ := dMgr.IsRootDevice(id); root == true {
+			// stop managing the logical device
+			ldeviceId := dMgr.logicalDeviceMgr.stopManagingLogicalDeviceWithDeviceId(id)
+			if ldeviceId != "" { // Can happen if logical device agent was already stopped
+				dMgr.core.deviceOwnership.AbandonDevice(ldeviceId)
+			}
+			// stop managing the child devices
+			childDeviceIds := dMgr.getAllDeviceIdsWithDeviceParentId(id)
+			for _, cId := range childDeviceIds {
+				dMgr.stopManagingDevice(cId)
+			}
+		}
+		if agent := dMgr.getDeviceAgent(id); agent != nil {
+			agent.stop(nil)
+			dMgr.deleteDeviceAgentToMap(agent)
+			// Abandon the device ownership
+			dMgr.core.deviceOwnership.AbandonDevice(id)
+		}
+	}
+}
+
 func (dMgr *DeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
 	log.Infow("RunPostDeviceDelete", log.Fields{"deviceId": cDevice.Id})
-	if agent := dMgr.getDeviceAgent(cDevice.Id); agent != nil {
-		agent.stop(nil)
-		dMgr.deleteDeviceAgentToMap(agent)
-		if err := dMgr.core.deviceOwnership.AbandonDevice(cDevice.Id); err != nil {
-			log.Errorw("failed-abandoning-device-ownership", log.Fields{"deviceId": cDevice.Id, "error": err})
-			return err
-		}
-		return nil
-	}
-	return status.Errorf(codes.NotFound, "%s", cDevice.Id)
+	dMgr.stopManagingDevice(cDevice.Id)
+	return nil
 }
 
 // GetDevice will returns a device, either from memory or from the dB, if present
@@ -351,6 +370,7 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 		for _, device := range devices.([]interface{}) {
 			// If device is not in memory then set it up
 			if !dMgr.IsDeviceInCache(device.(*voltha.Device).Id) {
+				log.Debugw("loading-device-from-Model", log.Fields{"id": device.(*voltha.Device).Id})
 				agent := newDeviceAgent(dMgr.adapterProxy, device.(*voltha.Device), dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 				if err := agent.start(nil, true); err != nil {
 					log.Warnw("failure-starting-agent", log.Fields{"deviceId": device.(*voltha.Device).Id})
@@ -362,7 +382,18 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 			result.Items = append(result.Items, device.(*voltha.Device))
 		}
 	}
+	log.Debugw("ListDevices-end", log.Fields{"len": len(result.Items)})
 	return result, nil
+}
+
+//getDeviceFromModelretrieves the device data from the model.
+func (dMgr *DeviceManager) getDeviceFromModel(deviceId string) (*voltha.Device, error) {
+	if device := dMgr.clusterDataProxy.Get("/devices/"+deviceId, 0, false, ""); device != nil {
+		if d, ok := device.(*voltha.Device); ok {
+			return d, nil
+		}
+	}
+	return nil, status.Error(codes.NotFound, deviceId)
 }
 
 // loadDevice loads the deviceId in memory, if not present
@@ -373,12 +404,17 @@ func (dMgr *DeviceManager) loadDevice(deviceId string) (*DeviceAgent, error) {
 		return nil, status.Error(codes.InvalidArgument, "deviceId empty")
 	}
 	if !dMgr.IsDeviceInCache(deviceId) {
-		agent := newDeviceAgent(dMgr.adapterProxy, &voltha.Device{Id: deviceId}, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
-		if err := agent.start(nil, true); err != nil {
-			agent.stop(nil)
-			return nil, err
+		// Proceed with the loading only if the device exist in the Model (could have been deleted)
+		if device, err := dMgr.getDeviceFromModel(deviceId); err == nil {
+			agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
+			if err := agent.start(nil, true); err != nil {
+				agent.stop(nil)
+				return nil, err
+			}
+			dMgr.addDeviceAgentToMap(agent)
+		} else {
+			return nil, status.Error(codes.NotFound, deviceId)
 		}
-		dMgr.addDeviceAgentToMap(agent)
 	}
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent, nil
@@ -425,7 +461,6 @@ func (dMgr *DeviceManager) load(deviceId string) error {
 	var dAgent *DeviceAgent
 	var err error
 	if dAgent, err = dMgr.loadDevice(deviceId); err != nil {
-		log.Warnw("failure-loading-device", log.Fields{"deviceId": deviceId})
 		return err
 	}
 	// Get the loaded device details
@@ -475,17 +510,19 @@ func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 			if !dMgr.IsDeviceInCache(id.Id) {
 				//	Device Id not in memory
 				log.Debugw("reconciling-device", log.Fields{"id": id.Id})
-				// Load device from dB
-				agent := newDeviceAgent(dMgr.adapterProxy, &voltha.Device{Id: id.Id}, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
-				if err := agent.start(nil, true); err != nil {
-					log.Warnw("failure-loading-device", log.Fields{"deviceId": id.Id})
-					agent.stop(nil)
+				// Proceed with the loading only if the device exist in the Model (could have been deleted)
+				if device, err := dMgr.getDeviceFromModel(id.Id); err == nil {
+					agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
+					if err := agent.start(nil, true); err != nil {
+						log.Warnw("failure-loading-device", log.Fields{"deviceId": id.Id})
+						agent.stop(nil)
+					} else {
+						dMgr.addDeviceAgentToMap(agent)
+						reconciled += 1
+					}
 				} else {
-					dMgr.addDeviceAgentToMap(agent)
 					reconciled += 1
 				}
-			} else {
-				reconciled += 1
 			}
 		}
 		if toReconcile != reconciled {
@@ -736,7 +773,7 @@ func (dMgr *DeviceManager) processTransition(previous *voltha.Device, current *v
 	for _, handler := range handlers {
 		log.Debugw("running-handler", log.Fields{"handler": funcName(handler)})
 		if err := handler(current); err != nil {
-			log.Warnw("handler-falied", log.Fields{"handler": funcName(handler), "error": err})
+			log.Warnw("handler-failed", log.Fields{"handler": funcName(handler), "error": err})
 			return err
 		}
 	}
@@ -937,6 +974,22 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(parentDevice *voltha.Device) er
 		return err
 	}
 	return nil
+}
+
+//getAllDeviceIdsWithDeviceParentId returns the list of device Ids which has id as parent Id.  This function uses the
+// data from the agent instead of using the data from the parent device as that data would disappear from a parent
+// device during a delete device operation.
+func (dMgr *DeviceManager) getAllDeviceIdsWithDeviceParentId(id string) []string {
+	log.Debugw("getAllAgentsWithDeviceParentId", log.Fields{"parentDeviceId": id})
+	deviceIds := make([]string, 0)
+	dMgr.lockDeviceAgentsMap.RLock()
+	defer dMgr.lockDeviceAgentsMap.RUnlock()
+	for deviceId, agent := range dMgr.deviceAgents {
+		if agent.parentId == id {
+			deviceIds = append(deviceIds, deviceId)
+		}
+	}
+	return deviceIds
 }
 
 //getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter

@@ -150,13 +150,16 @@ func (handler *APIHandler) acquireRequest(ctx context.Context, id interface{}, m
 	}
 }
 
-// This function handles the modification or deletion of existing devices
+// takeRequestOwnership creates a transaction in the dB for this request and handles the logic of transaction
+// acquisition.  If the device is owned by this Core (in a core-pair) then acquire the transaction with a
+// timeout value (in the event of a timeout the other Core in the core-pair will proceed with the transaction).  If the
+// device is not owned then this Core will just monitor the transaction for potential timeouts.
 func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interface{}, maxTimeout ...int64) (*KVTransaction, error) {
+	t := time.Now()
 	timeout := handler.defaultRequestTimeout
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
 	}
-	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
 	txn, err := handler.createKvTransaction(ctx)
 	if txn == nil {
 		return nil, err
@@ -168,15 +171,18 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 	}
 	if owned {
 		if txn.Acquired(timeout) {
+			log.Debugw("acquired-transaction", log.Fields{"transaction-timeout": timeout})
 			return txn, nil
 		} else {
 			return nil, errors.New("failed-to-seize-request")
 		}
 	} else {
 		if txn.Monitor(timeout) {
+			log.Debugw("acquired-transaction-after-timeout", log.Fields{"timeout": timeout, "waited-time": time.Since(t)})
 			return txn, nil
 		} else {
-			return nil, errors.New("device-not-owned")
+			log.Debugw("transaction-completed-by-other", log.Fields{"timeout": timeout, "waited-time": time.Since(t)})
+			return nil, errors.New(string(COMPLETED_BY_OTHER))
 		}
 	}
 }
@@ -488,7 +494,11 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.takeRequestOwnership(ctx, nil); err != nil {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}); err != nil {
+			// Remove the device in memory
+			if err.Error() == (errors.New(string(COMPLETED_BY_OTHER)).Error()) {
+				handler.deviceMgr.stopManagingDevice(id.Id)
+			}
 			return new(empty.Empty), err
 		} else {
 			defer txn.Close()
