@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e5a89239_2bbce5e7",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T17:42:42Z",
+      "side": 1,
+      "message": "Correct.  Because the underlying methods are really about removing elements from a map if it exist.  If it does not exist then that\u0027s a valid scenario as well.",
+      "parentUuid": "02ac8cc4_85e44557",
+      "revId": "6d62c0027b30d3b9321bf787963890bfc1fd14e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f99080d2_0ab1cfd1",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-16T17:00:44Z",
       "side": 1,
       "message": "should we just remove the error return if no error can ever be returned?",
+      "revId": "6d62c0027b30d3b9321bf787963890bfc1fd14e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d317b7a1_698351a3",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T17:42:42Z",
+      "side": 1,
+      "message": "This is the format required for callbacks, so we need an error in the return param.",
+      "parentUuid": "f99080d2_0ab1cfd1",
       "revId": "6d62c0027b30d3b9321bf787963890bfc1fd14e7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
