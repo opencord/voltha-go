@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc46b71a_671adeaf",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-16T02:39:10Z",
+      "side": 1,
+      "message": "It seems possible (not sure how likely) that in failure cases things are left in an inconsistent state, i.e. the logical device is deleted and only some of the child devices. And the device agent may be stopped even if not all child devices pass stop management.\n\nAgain, not sure how likely, but what is the resolution in this case (i.e. get back to a known good state)",
+      "range": {
+        "startLine": 212,
+        "startChar": 27,
+        "endLine": 212,
+        "endChar": 45
+      },
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9c18aee_dc236af1",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-16T02:39:10Z",
+      "side": 1,
+      "message": "if two threads enter this if at the same time, does one attempt to set the key followed by the other? don\u0027t know the code, so not sure if that is a realistic scenario or not.",
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3d4aca5_e73463e2",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-16T02:39:10Z",
+      "side": 1,
+      "message": "if nil is passed is that an error that really should be checked at the caller not the receiver? It seems to me that if something is passing the empty string as an ID there is a bug there.",
+      "range": {
+        "startLine": 213,
+        "startChar": 4,
+        "endLine": 213,
+        "endChar": 6
+      },
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a021b99_8e9a317e",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-16T02:39:10Z",
+      "side": 1,
+      "message": "same comment as above on a nil/empty check",
+      "revId": "e1445733e52221103bfcdcf3207f9bd3da458dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
