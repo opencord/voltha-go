@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef953214_9ce1ff70",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-16T02:01:51Z",
+      "side": 1,
+      "message": "looks like minor format issues in the file, might not pass `make lint`",
+      "revId": "27ef678687767a85692c10d4948550afd0751c6b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
