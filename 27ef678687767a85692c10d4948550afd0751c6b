@@ -16,6 +16,24 @@
       "revId": "27ef678687767a85692c10d4948550afd0751c6b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab1c41b0_f39a8762",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-16T02:11:31Z",
+      "side": 1,
+      "message": "That\u0027s strange ...I did a make lint before and it was all good.   I was having an issue with git review, so I did a git reset HEAD^ on my commit, created a branch an submit.  It seems that during that process the file somehow changes ... go figure ... Will update.",
+      "parentUuid": "ef953214_9ce1ff70",
+      "revId": "27ef678687767a85692c10d4948550afd0751c6b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
