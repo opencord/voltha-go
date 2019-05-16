@@ -46,6 +46,30 @@
       "revId": "6b7fcaf7fb683831280b373c7958cac0f39e1ed5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48fc6300_f85e7ffb",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-16T21:18:15Z",
+      "side": 1,
+      "message": "Then i am confused. the config references a named \"router\" block which references a named \"backend\". so shouldn\u0027t these then be picked up from the config? What i don\u0027t understand is when the arouterd is walking the pods in the namespace how it decides a pod is a rw or ro pod? i would have thought that this was done via labels or something. Also, i don\u0027t understand how it decides what are the \"pairs\"",
+      "parentUuid": "b91d8744_23d3b205",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 74
+      },
+      "revId": "6b7fcaf7fb683831280b373c7958cac0f39e1ed5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
