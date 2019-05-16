@@ -254,12 +254,16 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 
 		var updatedFlows []*ofp.OfpFlowStats
 		var flowsToDelete []*ofp.OfpFlowStats
+		var flowsToAdd []*ofp.OfpFlowStats
 		var groupsToDelete []*ofp.OfpGroupEntry
 		var updatedGroups []*ofp.OfpGroupEntry
 
 		// Process flows
 		for _, flow := range newFlows {
 			updatedFlows = append(updatedFlows, flow)
+			if idx := fu.FindFlows(existingFlows.Items, flow); idx == -1 {
+				flowsToAdd = append(flowsToAdd, flow)
+			}
 		}
 
 		for _, flow := range existingFlows.Items {
@@ -267,6 +271,9 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 				updatedFlows = append(updatedFlows, flow)
 			} else {
 				flowsToDelete = append(flowsToDelete, flow)
+				if idx := fu.FindFlows(updatedFlows, flow); idx >= 0 {
+					updatedFlows = append(updatedFlows[:idx], updatedFlows[idx+1:]...)
+				}
 			}
 		}
 
@@ -308,7 +315,7 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 
 		} else {
 			flowChanges := &ofp.FlowChanges{
-				ToAdd:    &voltha.Flows{Items: newFlows},
+				ToAdd:    &voltha.Flows{Items: flowsToAdd},
 				ToRemove: &voltha.Flows{Items: flowsToDelete},
 			}
 			groupChanges := &ofp.FlowGroupChanges{
