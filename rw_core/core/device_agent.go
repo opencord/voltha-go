@@ -33,6 +33,7 @@ import (
 
 type DeviceAgent struct {
 	deviceId         string
+	parentId         string
 	deviceType       string
 	isRootdevice     bool
 	lastData         *voltha.Device
@@ -65,6 +66,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	}
 	agent.isRootdevice = device.Root
 	agent.deviceId = cloned.Id
+	agent.parentId = device.ParentId
 	agent.deviceType = cloned.Type
 	agent.lastData = cloned
 	agent.deviceMgr = deviceMgr

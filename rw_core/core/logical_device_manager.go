@@ -90,6 +90,13 @@ func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDevi
 	}
 }
 
+func (ldMgr *LogicalDeviceManager) isLogicalDeviceInCache(logicalDeviceId string) bool {
+	ldMgr.lockLogicalDeviceAgentsMap.RLock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.RUnlock()
+	_, inCache := ldMgr.logicalDeviceAgents[logicalDeviceId]
+	return inCache
+}
+
 // getLogicalDeviceAgent returns the logical device agent.  If the device is not in memory then the device will
 // be loaded from dB and a logical device agent created to managed it.
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string) *LogicalDeviceAgent {
@@ -177,6 +184,36 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	return &id, nil
 }
 
+// stopManagingLogicalDeviceWithDeviceId stops the management of the logical device.  This implies removal of any
+// reference of this logical device in cache.  The device Id is passed as param because the logical device may already
+// have been removed from the model.  This function returns the logical device Id if found
+func (ldMgr *LogicalDeviceManager) stopManagingLogicalDeviceWithDeviceId(id string) string {
+	log.Infow("stop-managing-logical-device", log.Fields{"deviceId": id})
+	// Go over the list of logical device agents to find the one which has rootDeviceId as id
+	ldMgr.lockLogicalDeviceAgentsMap.RLock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.RUnlock()
+	for ldId, ldAgent := range ldMgr.logicalDeviceAgents {
+		if ldAgent.rootDeviceId == id {
+			log.Infow("stopping-logical-device-agent", log.Fields{"lDeviceId": ldId})
+			ldAgent.stop(nil)
+			delete(ldMgr.logicalDeviceAgents, ldId)
+			return ldId
+		}
+	}
+	return ""
+}
+
+//getLogicalDeviceFromModel retrieves the logical device data from the model.
+func (ldMgr *LogicalDeviceManager) getLogicalDeviceFromModel(lDeviceId string) (*voltha.LogicalDevice, error) {
+
+	if logicalDevice := ldMgr.clusterDataProxy.Get("/logical_devices/"+lDeviceId, 0, false, ""); logicalDevice != nil {
+		if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+			return lDevice, nil
+		}
+	}
+	return nil, status.Error(codes.NotFound, lDeviceId)
+}
+
 // load loads a logical device manager in memory
 func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
 	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
@@ -185,13 +222,16 @@ func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
 	ldMgr.lockLogicalDeviceAgentsMap.Lock()
 	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
 	if ldAgent, _ := ldMgr.logicalDeviceAgents[lDeviceId]; ldAgent == nil {
-		// Logical device not in memory - create a temp logical device Agent and let it load from memory
-		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
-		if err := agent.start(nil, true); err != nil {
-			//agent.stop(nil)
-			return err
+		// Proceed with the loading only if the logical device exist in the Model (could have been deleted)
+		if _, err := ldMgr.getLogicalDeviceFromModel(lDeviceId); err == nil {
+			// Create a temp logical device Agent and let it load from memory
+			agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
+			if err := agent.start(nil, true); err != nil {
+				agent.stop(nil)
+				return err
+			}
+			ldMgr.logicalDeviceAgents[agent.logicalDeviceId] = agent
 		}
-		ldMgr.logicalDeviceAgents[agent.logicalDeviceId] = agent
 	}
 	// TODO: load the child device
 	return nil
@@ -348,7 +388,6 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalPorts(deviceId string) error {
 	log.Debugw("deleting-logical-ports", log.Fields{"deviceId": deviceId})
 	// Get logical port
 	if ldId, err := ldMgr.getLogicalDeviceIdFromDeviceId(deviceId); err != nil {
-		log.Warnw("logical-device-not-found", log.Fields{"deviceId": deviceId})
 		return err
 	} else {
 		if agent := ldMgr.getLogicalDeviceAgent(*ldId); agent != nil {

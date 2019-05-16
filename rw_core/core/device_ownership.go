@@ -174,21 +174,33 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 	// Retrieve the ownership key based on the id
 	var ownershipKey string
 	var err error
-	if ownershipKey, err = da.getOwnershipKey(id); err != nil {
+	var idStr string
+	var cache bool
+	if ownershipKey, idStr, cache, err = da.getOwnershipKey(id); err != nil {
 		log.Warnw("no-ownershipkey", log.Fields{"error": err})
 		return false
+	}
+
+	// Update the deviceToKey map, if not from cache
+	if !cache {
+		da.deviceToKeyMapLock.Lock()
+		da.deviceToKeyMap[idStr] = ownershipKey
+		da.deviceToKeyMapLock.Unlock()
 	}
 
 	deviceOwned, ownedByMe := da.getOwnership(ownershipKey)
 	if deviceOwned {
 		return ownedByMe
 	}
-	// Not owned by me or maybe anybody else.  Try to reserve it
+	// Not owned by me or maybe nobody else.  Try to reserve it
 	reservedByMe := da.tryToReserveKey(ownershipKey)
 	myChnl := make(chan int)
 
 	da.deviceMapLock.Lock()
-	da.deviceMap[ownershipKey] = &ownership{id: ownershipKey, owned: reservedByMe, chnl: myChnl}
+	da.deviceMap[ownershipKey] = &ownership{
+		id:    ownershipKey,
+		owned: reservedByMe,
+		chnl:  myChnl}
 	da.deviceMapLock.Unlock()
 
 	log.Debugw("set-new-ownership", log.Fields{"Id": ownershipKey, "owned": reservedByMe})
@@ -198,6 +210,9 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 
 //AbandonDevice must be invoked whenever a device is deleted from the Core
 func (da *DeviceOwnership) AbandonDevice(id string) error {
+	if id == "" {
+		return nil
+	}
 	da.deviceMapLock.Lock()
 	defer da.deviceMapLock.Unlock()
 	if o, exist := da.deviceMap[id]; exist { // id is ownership key
@@ -209,7 +224,7 @@ func (da *DeviceOwnership) AbandonDevice(id string) error {
 				delete(da.deviceToKeyMap, k)
 			}
 		}
-		// Remove the device reference from the devicMap
+		// Remove the device reference from the deviceMap
 		delete(da.deviceMap, id)
 
 		// Stop the Go routine monitoring the device
@@ -263,45 +278,44 @@ func (da *DeviceOwnership) deleteDeviceKey(id string) error {
 	defer da.deviceToKeyMapLock.Unlock()
 	if _, exist := da.deviceToKeyMap[id]; exist {
 		delete(da.deviceToKeyMap, id)
-		return nil
 	}
-	log.Warnw("device-not-owned", log.Fields{"deviceId": id})
 	return nil
 }
 
-func (da *DeviceOwnership) getOwnershipKey(id interface{}) (string, error) {
+// getOwnershipKey returns the ownership key that the id param uses.   Ownership key is the parent
+// device Id of a child device or the rootdevice of a logical device.   This function also returns the
+// id in string format of the id param via the ref output as well as if the data was retrieved from cache
+func (da *DeviceOwnership) getOwnershipKey(id interface{}) (ownershipKey string, ref string, cached bool, err error) {
 	if id == nil {
-		return "", status.Error(codes.InvalidArgument, "nil-id")
+		return "", "", false, status.Error(codes.InvalidArgument, "nil-id")
 	}
-	da.deviceToKeyMapLock.Lock()
-	defer da.deviceToKeyMapLock.Unlock()
+	da.deviceToKeyMapLock.RLock()
+	defer da.deviceToKeyMapLock.RUnlock()
 	var device *voltha.Device
 	var lDevice *voltha.LogicalDevice
 	// The id can either be a device Id or a logical device id.
 	if dId, ok := id.(*utils.DeviceID); ok {
 		// Use cache if present
 		if val, exist := da.deviceToKeyMap[dId.Id]; exist {
-			return val, nil
+			return val, dId.Id, true, nil
 		}
 		if device, _ = da.deviceMgr.GetDevice(dId.Id); device == nil {
-			return "", status.Error(codes.NotFound, fmt.Sprintf("id-absent-%s", dId))
+			return "", dId.Id, false, status.Errorf(codes.NotFound, "id-absent-%s", dId)
 		}
 		if device.Root {
-			da.deviceToKeyMap[dId.Id] = device.Id
+			return device.Id, dId.Id, false, nil
 		} else {
-			da.deviceToKeyMap[dId.Id] = device.ParentId
+			return device.ParentId, dId.Id, false, nil
 		}
-		return da.deviceToKeyMap[dId.Id], nil
 	} else if ldId, ok := id.(*utils.LogicalDeviceID); ok {
 		// Use cache if present
 		if val, exist := da.deviceToKeyMap[ldId.Id]; exist {
-			return val, nil
+			return val, ldId.Id, true, nil
 		}
 		if lDevice, _ = da.logicalDeviceMgr.getLogicalDevice(ldId.Id); lDevice == nil {
-			return "", status.Error(codes.NotFound, fmt.Sprintf("id-absent-%s", ldId))
+			return "", ldId.Id, false, status.Errorf(codes.NotFound, "id-absent-%s", dId)
 		}
-		da.deviceToKeyMap[ldId.Id] = lDevice.RootDeviceId
-		return lDevice.RootDeviceId, nil
+		return lDevice.RootDeviceId, ldId.Id, false, nil
 	}
-	return "", status.Error(codes.NotFound, fmt.Sprintf("id-%s", id))
+	return "", "", false, status.Error(codes.NotFound, fmt.Sprintf("id-%v", id))
 }
