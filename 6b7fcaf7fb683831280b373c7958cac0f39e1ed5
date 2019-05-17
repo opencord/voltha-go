@@ -118,6 +118,30 @@
       "revId": "6b7fcaf7fb683831280b373c7958cac0f39e1ed5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b6eb554_257c43d9",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-17T14:15:39Z",
+      "side": 1,
+      "message": "That seems to be the case.\n\nIf we want to change/improve this, I\u0027d suggest doing so in a separate PR.  This one avoids breaking existing scenarios.",
+      "parentUuid": "8b433ddf_19ef07ca",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 74
+      },
+      "revId": "6b7fcaf7fb683831280b373c7958cac0f39e1ed5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
