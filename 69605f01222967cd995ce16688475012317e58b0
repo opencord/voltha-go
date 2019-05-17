@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "a970d83d_f27a0ed7",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-17T13:19:25Z",
+      "side": 1,
+      "message": "Please do add it to this commit.   We are at a stage where we need the code to be as stable as possible, therefore we need to add unit tests  whenever possible.   Thanks.",
+      "parentUuid": "806f6565_ac89af2c",
+      "revId": "69605f01222967cd995ce16688475012317e58b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58afc1e8_bfb74593",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Khen ,I think  this comment is misleading\n\nI have modified this comment in another patch set and submitted the same \n\nHere we have nothing to do with default rules, we need to decompose flow to be deleted and send to adapter\n\nSubmitted patch set",
       "parentUuid": "58afc1e8_bfb74593",
+      "revId": "69605f01222967cd995ce16688475012317e58b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d15a57a1_75b2e260",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-17T13:19:25Z",
+      "side": 1,
+      "message": "ok, thanks.",
+      "parentUuid": "b01c95c5_7423c03c",
       "revId": "69605f01222967cd995ce16688475012317e58b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
