@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90acf62d_8e53172b",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-17T14:29:57Z",
+      "side": 1,
+      "message": "Do you want to check for empty string or a string of blank characters?  It\u0027s an unlikely scenario though.",
+      "revId": "4300b31690ad4524c0534bdb85413256f6b7ff79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0664ea1f_9e04b4d1",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-17T14:29:57Z",
+      "side": 1,
+      "message": "It\u0027s cleaner to move this at the start of the function hence avoiding ranging over ids if there is a connection failure.  Just a thought,",
+      "revId": "4300b31690ad4524c0534bdb85413256f6b7ff79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
