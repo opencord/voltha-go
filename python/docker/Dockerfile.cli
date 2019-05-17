@@ -62,9 +62,6 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 
 EXPOSE 22
 
-# Exposing process and default entry point
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-
 CMD ["/voltha/python/cli/setup.sh"]
 
 # Label image
