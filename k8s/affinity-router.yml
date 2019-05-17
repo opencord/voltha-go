@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
       - name: arouter
-        image: volthacore/afrouter:testing
+        image: volthacore/voltha-afrouter:testing
         imagePullPolicy: Always
         volumeMounts:
         - name: config-volume
@@ -60,7 +60,7 @@ spec:
         - containerPort: 8192
         - containerPort: 50555
       - name: arouterd
-        image: volthacore/afrouterd:testing
+        image: volthacore/voltha-afrouterd:testing
         command: ["/app/arouterd"]
         imagePullPolicy: Always
       restartPolicy: Always

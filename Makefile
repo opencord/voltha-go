@@ -27,11 +27,15 @@ DOCKER_BUILD_ARGS        ?=
 DOCKER_TAG               ?= ${VERSION}
 RWCORE_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}
 ROCORE_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-core:${DOCKER_TAG}
-AFROUTER_IMAGENAME       := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}afrouter:${DOCKER_TAG}
-AFROUTERTEST_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}afroutertest:${DOCKER_TAG}
-AFROUTERD_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}afrouterd:${DOCKER_TAG}
+AFROUTER_IMAGENAME       := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouter:${DOCKER_TAG}
+AFROUTERTEST_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afroutertest:${DOCKER_TAG}
+AFROUTERD_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouterd:${DOCKER_TAG}
 SIMULATEDOLT_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-olt:${DOCKER_TAG}
 SIMULATEDONU_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-onu:${DOCKER_TAG}
+OFAGENT_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent:${DOCKER_TAG}
+CLI_IMAGENAME            := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli:${DOCKER_TAG}
+PONSIMOLT_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-olt:${DOCKER_TAG}
+PONSIMONU_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-onu:${DOCKER_TAG}
 
 ## Docker labels. Only set ref and commit date if committed
 DOCKER_LABEL_VCS_URL     ?= $(shell git remote get-url $(shell git remote))
@@ -51,34 +55,64 @@ help:
 	@echo "Usage: make [<target>]"
 	@echo "where available targets are:"
 	@echo
-	@echo "build         : Build the docker images."
-	@echo "                  - If this is the first time you are building, choose 'make build' option."
-	@echo "rw_core       : Build the rw_core docker image"
-	@echo "ro_core       : Build the ro_core docker image"
-	@echo "afrouter      : Build the afrouter docker image"
-	@echo "afrouterTest  : Build the afrouterTest docker image"
-	@echo "afrouterd     : Build the afrouterd docker image"
-	@echo "simulated_olt : Build the simulated_olt docker image"
-	@echo "simulated_onu : Build the simulated_onu docker image"
-	@echo "docker-push   : Push the docker images to an external repository"
-	@echo "lint-style    : Verify code is properly gofmt-ed"
-	@echo "lint-sanity   : Verify that 'go vet' doesn't report any issues"
-	@echo "lint-dep      : Verify the integrity of the 'dep' files"
-	@echo "lint          : Shorthand for lint-style & lint-sanity"
-	@echo "test          : Generate reports for all go tests"
+	@echo "build                : Build the docker images."
+	@echo "                         - If this is the first time you are building, choose 'make build' option."
+	@echo "rw_core              : Build the rw_core docker image"
+	@echo "ro_core              : Build the ro_core docker image"
+	@echo "afrouter             : Build the afrouter docker image"
+	@echo "afrouterTest         : Build the afrouterTest docker image"
+	@echo "afrouterd            : Build the afrouterd docker image"
+	@echo "simulated_olt        : Build the simulated_olt docker image"
+	@echo "simulated_onu        : Build the simulated_onu docker image"
+	@echo "ofagent              : Build the openflow agent docker image"
+	@echo "cli                  : Build the voltha CLI docker image"
+	@echo "adapter_ponsim_olt   : Build the ponsim olt adapter docker image"
+	@echo "adapter_ponsim_onu   : Build the ponsim onu adapter docker image"
+	@echo "venv                 : Build local Python virtualenv"
+	@echo "clean                : Remove files created by the build and tests"
+	@echo "distclean            : Remove venv directory"
+	@echo "docker-push          : Push the docker images to an external repository"
+	@echo "lint-style           : Verify code is properly gofmt-ed"
+	@echo "lint-sanity          : Verify that 'go vet' doesn't report any issues"
+	@echo "lint-dep             : Verify the integrity of the 'dep' files"
+	@echo "lint                 : Shorthand for lint-style & lint-sanity"
+	@echo "test                 : Generate reports for all go tests"
 	@echo
-
 
 ## Docker targets
 
 build: docker-build
 
-docker-build: rw_core ro_core simulated_olt simulated_onu afrouter afrouterd
+docker-build: rw_core ro_core simulated_olt simulated_onu afrouter afrouterd ofagent cli adapter_ponsim_olt adapter_ponsim_onu
 
 local-protos:
 ifdef LOCAL_PROTOS
 	mkdir -p vendor/github.com/opencord/voltha-protos/go
 	cp -r ${GOPATH}/src/github.com/opencord/voltha-protos/go/* vendor/github.com/opencord/voltha-protos/go
+endif
+
+## Python venv dev environment
+
+VENVDIR := python/venv-volthago
+
+venv: distclean local-protos local-pyvoltha
+	virtualenv ${VENVDIR};\
+        source ./${VENVDIR}/bin/activate ; set -u ;\
+	rm -f ${VENVDIR}/local/bin ${VENVDIR}/local/lib ${VENVDIR}/local/include ;\
+        pip install -r python/requirements.txt
+
+local-protos:
+	mkdir -p python/local_imports
+ifdef LOCAL_PROTOS
+	mkdir -p python/local_imports/voltha-protos/dist
+	cp ../voltha-protos/dist/*.tar.gz python/local_imports/voltha-protos/dist/
+endif
+
+local-pyvoltha:
+	mkdir -p python/local_imports
+ifdef LOCAL_PYVOLTHA
+	mkdir -p python/local_imports/pyvoltha/dist
+	cp ../pyvoltha/dist/*.tar.gz python/local_imports/pyvoltha/dist/
 endif
 
 afrouter: local-protos
@@ -151,14 +185,65 @@ simulated_onu: local-protos
     --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
     -f docker/Dockerfile.simulated_onu .
 
+ofagent: local-protos local-pyvoltha
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${OFAGENT_IMAGENAME} \
+    --build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
+    --build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f python/docker/Dockerfile.ofagent python
+
+cli: local-protos local-pyvoltha
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${CLI_IMAGENAME} \
+    --build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
+    --build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f python/docker/Dockerfile.cli python
+
+adapter_ponsim_olt: local-protos local-pyvoltha
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${PONSIMOLT_IMAGENAME} \
+    --build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
+    --build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f python/docker/Dockerfile.adapter_ponsim_olt python
+
+adapter_ponsim_onu: local-protos local-pyvoltha
+	docker build $(DOCKER_BUILD_ARGS) \
+    -t ${PONSIMONU_IMAGENAME} \
+    --build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
+    --build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
+    --build-arg org_label_schema_version="${VERSION}" \
+    --build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+    --build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+    --build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+    --build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+    -f python/docker/Dockerfile.adapter_ponsim_onu python
+
 docker-push:
 	docker push ${AFROUTER_IMAGENAME}
-	docker push ${AFROUTERTEST_IMAGENAME}
 	docker push ${AFROUTERD_IMAGENAME}
 	docker push ${RWCORE_IMAGENAME}
 	docker push ${ROCORE_IMAGENAME}
 	docker push ${SIMULATEDOLT_IMAGENAME}
 	docker push ${SIMULATEDONU_IMAGENAME}
+	docker push ${OFAGENT_IMAGENAME}
+	docker push ${CLI_IMAGENAME}
+	docker push ${PONSIMOLT_IMAGENAME}
+	docker push ${PONSIMONU_IMAGENAME}
 
 
 ## lint and unit tests
@@ -210,3 +295,10 @@ endif
 	exit $$RETURN
 
 # end file
+
+clean:
+	rm -rf python/local_imports
+	find python -name '*.pyc' | xargs rm -f
+
+distclean: clean
+	rm -rf ${VENVDIR}
