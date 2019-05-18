@@ -19,16 +19,24 @@ Add docker-ce apt repo and install docker and build tools
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt update
-sudo apt install build-essential golang-1.10 docker-ce docker-compose virtualenv git python-setuptools python-dev libpcap-dev libffi-dev libssl-dev tox
+sudo apt install build-essential docker-ce docker-compose virtualenv git python-setuptools python-dev libpcap-dev libffi-dev libssl-dev tox
 ```
 
-Setup a local Golang environment, adding the golang-1.10 binaries to your path and also your local GOPATH's bin folder.
+Snap install golang 1.12.  Inform apparmor (if being used) of the change.  The apparmor_parser step may need to be run again after reboot.  This appears to be a snapd bug.
+```sh
+sudo snap install --classic go
+snap list
+sudo apparmor_parser -r /var/lib/snapd/apparmor/profiles/snap*
+```
+
+Setup a local Golang environment, verifying the golang-1.12 binaries are in your path.  Also add your local GOPATH's bin folder to PATH.
 Add to your ~/.profile to persist.
 
 ```sh
+go version
 mkdir $HOME/go
 export GOPATH=$HOME/go
-export PATH=$PATH:/usr/lib/go-1.10/bin:$GOPATH/bin
+export PATH=$PATH:$GOPATH/bin
 ```
 
 Allow non-root user docker system access
@@ -129,7 +137,7 @@ go build rw_core/main.go    # verify vendor and other dependancies. output binar
 ```
 
 The steps below generate the needed docker images and the Docker build system sets up the Go environment within a container image.  Build Go docker images, rw_core being whats most needed for now.
-This should work without setting up a golang environment:
+This should work without setting up a golang environment.  This also builds needed ofagent and cli docker images:
 ```sh
 export DOCKER_TAG=latest
 cd ~/source/voltha-go
@@ -139,13 +147,6 @@ make build
 Set an environment variable for other Golang builds to inform the Makefile to copy files into the local vendor folder.  Useful for development testing.
 ```sh
 export LOCAL_VOLTHAGO=true
-```
-
-Build Python CLI and OFAgent docker images.
-```sh
-export DOCKER_TAG=latest
-cd ~/source/voltha-go/python
-make build
 ```
 
 
@@ -166,17 +167,10 @@ go build main.go    # verify vendor and other dependancies. output binary not ac
 
 Build the openolt container.  Above LOCAL environment variables can be used to include local library builds of PyVoltha, voltha-go, and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openolt build tree.
 
-Golang Openolt
+Golang and Python Openolt
 ```sh
 export DOCKER_TAG=latest
 cd ~/source/voltha-openolt-adapter/
-make build
-```
-
-Python Openolt
-```sh
-export DOCKER_TAG=latest
-cd ~/source/voltha-openolt-adapter/python/
 make build
 ```
 
@@ -192,7 +186,7 @@ git clone https://gerrit.opencord.org/voltha-openonu-adapter.git
 Build the openonu container.  Above LOCAL environment variables can be used to include local builds of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openonu build tree.
 ```sh
 export DOCKER_TAG=latest
-cd ~/source/voltha-openonu-adapter/python
+cd ~/source/voltha-openonu-adapter/
 make build
 ```
 
