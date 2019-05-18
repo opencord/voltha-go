@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7124ffe0_5691b329",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-18T16:07:54Z",
+      "side": 1,
+      "message": "This tag is a repeat of the one above.  These should actually be consolidated given both python and golang both have their own way of dealing with LOCAL_PROTOS    \n\nAlso it looks like a copy paste error given inside the venv tag the ifdef LOCAL_* should pip install the local package.\n\nI can cherry pick and fix if its not clear.  the LOCAL_* stuff is a way for local environment dev builds to include locally built packages.",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 104,
+        "endChar": 13
+      },
+      "revId": "990cafcf89b8397425aa9dc4392f50a668915303",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
