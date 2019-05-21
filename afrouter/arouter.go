@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// gRPC affinity router with active/active backends
 
 package main
-
-/* package main // import "github.com/opencord/voltha-go/arouter" */
-/* package main // import "github.com/opencord/voltha-go" */
 
 import (
 	"fmt"

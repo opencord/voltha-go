@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// gRPC affinity router with active/active backends
 
 package afrouter
 
@@ -69,9 +68,9 @@ type RouterConfig struct {
 
 type RouteConfig struct {
 	Name             string           `json:"name"`
-	Type             string           `json:"type"`
+	Type             routeType        `json:"type"`
 	ProtoFile        string           `json:"proto_descriptor"`
-	Association      string           `json:"association"`
+	Association      associationType  `json:"association"`
 	RouteField       string           `json:"routing_field"`
 	Methods          []string         `json:"methods"` // The GRPC methods to route using the route field
 	NbBindingMethods []string         `json:"nb_binding_methods"`
@@ -82,10 +81,10 @@ type RouteConfig struct {
 }
 
 type BindingConfig struct {
-	Type        string `json:"type"`
-	Field       string `json:"field"`
-	Method      string `json:"method"`
-	Association string `json:"association"`
+	Type        string          `json:"type"`
+	Field       string          `json:"field"`
+	Method      string          `json:"method"`
+	Association associationType `json:"association"`
 }
 
 type OverrideConfig struct {
@@ -103,16 +102,16 @@ type BackendClusterConfig struct {
 
 type BackendConfig struct {
 	Name        string             `json:"name"`
-	Type        string             `json:"type"`
+	Type        backendType        `json:"type"`
 	Association AssociationConfig  `json:"association"`
 	Connections []ConnectionConfig `json:"connections"`
 }
 
 type AssociationConfig struct {
-	Strategy string `json:"strategy"`
-	Location string `json:"location"`
-	Field    string `json:"field"`
-	Key      string `json:"key"`
+	Strategy associationStrategy `json:"strategy"`
+	Location associationLocation `json:"location"`
+	Field    string              `json:"field"`
+	Key      string              `json:"key"`
 }
 
 type ConnectionConfig struct {
@@ -195,14 +194,14 @@ func (conf *Configuration) LoadConfig() error {
 
 	// Resolve router references for the servers
 	log.Debug("Resolving references in the config file")
-	for k, _ := range conf.Servers {
+	for k := range conf.Servers {
 		//s.routers =make(map[string]*RouterConfig)
 		conf.Servers[k].routers = make(map[string]*RouterConfig)
 		for _, rPkg := range conf.Servers[k].Routers {
-			var found bool = false
+			var found = false
 			// Locate the router "r" in the top lever Routers array
 			log.Debugf("Resolving router reference to router '%s' from server '%s'", rPkg.Router, conf.Servers[k].Name)
-			for rk, _ := range conf.Routers {
+			for rk := range conf.Routers {
 				if conf.Routers[rk].Name == rPkg.Router && !found {
 					log.Debugf("Reference to router '%s' found for package '%s'", rPkg.Router, rPkg.Package)
 					conf.Servers[k].routers[rPkg.Package] = &conf.Routers[rk]
@@ -229,7 +228,7 @@ func (conf *Configuration) LoadConfig() error {
 	// Resolve backend references for the routers
 	for rk, rv := range conf.Routers {
 		for rtk, rtv := range rv.Routes {
-			var found bool = false
+			var found = false
 			log.Debugf("Resolving backend reference to %s from router %s", rtv.BackendCluster, rv.Name)
 			for bek, bev := range conf.BackendClusters {
 				log.Debugf("Checking cluster %s", conf.BackendClusters[bek].Name)

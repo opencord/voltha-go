@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// gRPC affinity router with active/active backends
 
 package afrouter
 
@@ -37,25 +36,27 @@ type transparentRoutingCodec struct {
 	parentCodec grpc.Codec
 }
 
+// sbFrame is a frame being "returned" to whomever established the connection
 type sbFrame struct {
 	payload []byte
 	router  Router
 	method  string
-	be      *backend
-	lck     sync.Mutex
+	backend *backend
+	mutex   sync.Mutex
 	metaKey string
 	metaVal string
 }
 
+// nbFrame is a frame coming in from whomever established the connection
 type nbFrame struct {
-	payload   []byte
-	router    Router
-	be        *backend
-	err       error
-	mthdSlice []string
-	serNo     chan uint64
-	metaKey   string
-	metaVal   string
+	payload    []byte
+	router     Router
+	backend    *backend
+	err        error
+	methodInfo methodDetails
+	serialNo   uint64
+	metaKey    string
+	metaVal    string
 }
 
 func (cdc *transparentRoutingCodec) Marshal(v interface{}) ([]byte, error) {
@@ -67,7 +68,6 @@ func (cdc *transparentRoutingCodec) Marshal(v interface{}) ([]byte, error) {
 	default:
 		return cdc.parentCodec.Marshal(v)
 	}
-
 }
 
 func (cdc *transparentRoutingCodec) Unmarshal(data []byte, v interface{}) error {
@@ -81,8 +81,8 @@ func (cdc *transparentRoutingCodec) Unmarshal(data []byte, v interface{}) error 
 		t.payload = data
 		// This is were the afinity value is pulled from the payload
 		// and the backend selected.
-		t.be = t.router.Route(v)
-		log.Debugf("Routing returned %v for method %s", t.be, t.mthdSlice[REQ_METHOD])
+		t.backend = t.router.Route(v)
+		log.Debugf("Routing returned %v for method %s", t.backend, t.methodInfo.method)
 		return nil
 	default:
 		return cdc.parentCodec.Unmarshal(data, v)
