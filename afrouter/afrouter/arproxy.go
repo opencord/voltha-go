@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// gRPC affinity router with active/active backends
 
 package afrouter
 
@@ -25,16 +24,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 )
 
-type nbi int
-
-const (
-	GRPC_NBI           nbi = 1
-	GRPC_STREAMING_NBI nbi = 2
-	GRPC_CONTROL_NBI   nbi = 3
-)
-
 // String names for display in error messages.
-var arpxyNames = [...]string{"grpc_nbi", "grpc_streaming_nbi", "grpc_control_nbi"}
 var arProxy *ArouterProxy = nil
 
 type ArouterProxy struct {

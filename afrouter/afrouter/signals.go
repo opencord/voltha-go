@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// gRPC affinity router with active/active backends
 
 // This file implements an exit handler that tries to shut down all the
 // running servers before finally exiting. There are 2 triggers to this
@@ -30,7 +29,6 @@ import (
 
 var errChan = make(chan error)
 var doneChan = make(chan error)
-var holdChan = make(chan int)
 
 func InitExitHandler() error {
 
@@ -75,7 +73,7 @@ func cleanExit(err error) {
 			}
 		}
 	}
-	for _, cl := range bClusters {
+	for _, cl := range clusters {
 		for _, bknd := range cl.backends {
 			log.Debugf("Closing backend %s", bknd.name)
 			for _, conn := range bknd.connections {

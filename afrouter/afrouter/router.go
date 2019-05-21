@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// gRPC affinity router with active/active backends
 
 package afrouter
 
@@ -23,26 +22,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	RT_RPC_AFFINITY_MESSAGE = iota + 1
-	RT_RPC_AFFINITY_HEADER  = iota + 1
-	RT_BINDING              = iota + 1
-	RT_ROUND_ROBIN          = iota + 1
-)
-
-// String names for display in error messages.
-var rTypeNames = []string{"", "rpc_affinity_message", "rpc_affinity_header", "binding", "round_robin"}
-var rAssnNames = []string{"", "round_robin"}
-
-var allRouters map[string]Router = make(map[string]Router)
+var allRouters = make(map[string]Router)
 
 // The router interface
 type Router interface {
 	Name() string
 	Route(interface{}) *backend
 	Service() string
-	BackendCluster(string, string) (*backendCluster, error)
-	FindBackendCluster(string) *backendCluster
+	BackendCluster(string, string) (*cluster, error)
+	FindBackendCluster(string) *cluster
 	ReplyHandler(interface{}) error
 	GetMetaKeyVal(serverStream grpc.ServerStream) (string, string, error)
 }
@@ -56,21 +44,20 @@ func newRouter(config *RouterConfig) (Router, error) {
 }
 
 func newSubRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
-	idx := strIndex(rTypeNames, config.Type)
-	switch idx {
-	case RT_RPC_AFFINITY_MESSAGE:
+	switch config.Type {
+	case RouteTypeRpcAffinityMessage:
 		r, err := newAffinityRouter(rconf, config)
 		if err == nil {
 			allRouters[rconf.Name+config.Name] = r
 		}
 		return r, err
-	case RT_BINDING:
+	case RouteTypeBinding:
 		r, err := newBindingRouter(rconf, config)
 		if err == nil {
 			allRouters[rconf.Name+config.Name] = r
 		}
 		return r, err
-	case RT_ROUND_ROBIN:
+	case RouteTypeRoundRobin:
 		r, err := newRoundRobinRouter(rconf, config)
 		if err == nil {
 			allRouters[rconf.Name+config.Name] = r
