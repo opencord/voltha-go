@@ -243,7 +243,7 @@
 				"method":"GetGoroutineCount",
 				"param":"{}",
 				"meta": [ ],
-				"expect":"{Count:45}",
+				"expect":"{Count:43}",
 				"expectMeta": [ ]
 			},
 			"servers": [ ]

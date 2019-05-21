@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// gRPC affinity router with active/active backends
 
 package afrouter
 
@@ -25,16 +24,15 @@ import (
 )
 
 type RoundRobinRouter struct {
-	name        string
-	routerType  int // TODO: Likely not needed.
-	grpcService string
-	bkndClstr   *backendCluster
-	curBknd     **backend
+	name           string
+	grpcService    string
+	cluster        *cluster
+	currentBackend **backend
 }
 
 func newRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 	var err error = nil
-	var rtrn_err bool = false
+	var rtrn_err = false
 	// Validate the configuration
 
 	log.Debug("Creating a new round robin router")
@@ -57,24 +55,15 @@ func newRoundRobinRouter(rconf *RouterConfig, config *RouteConfig) (Router, erro
 	var bptr *backend
 	bptr = nil
 	rr := RoundRobinRouter{
-		name:        config.Name,
-		grpcService: rconf.ProtoService,
-		curBknd:     &bptr,
-	}
-
-	// This has already been validated bfore this function
-	// is called so just use it.
-	for idx := range rTypeNames {
-		if config.Type == rTypeNames[idx] {
-			rr.routerType = idx
-			break
-		}
+		name:           config.Name,
+		grpcService:    rconf.ProtoService,
+		currentBackend: &bptr,
 	}
 
 	// Create the backend cluster or link to an existing one
 	ok := true
-	if rr.bkndClstr, ok = bClusters[config.backendCluster.Name]; ok == false {
-		if rr.bkndClstr, err = newBackendCluster(config.backendCluster); err != nil {
+	if rr.cluster, ok = clusters[config.backendCluster.Name]; !ok {
+		if rr.cluster, err = newBackendCluster(config.backendCluster); err != nil {
 			log.Errorf("Could not create a backend for router %s", config.Name)
 			rtrn_err = true
 		}
@@ -91,8 +80,8 @@ func (rr RoundRobinRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string
 	return "", "", nil
 }
 
-func (rr RoundRobinRouter) BackendCluster(s string, mk string) (*backendCluster, error) {
-	return rr.bkndClstr, nil
+func (rr RoundRobinRouter) BackendCluster(s string, mk string) (*cluster, error) {
+	return rr.cluster, nil
 }
 
 func (rr RoundRobinRouter) Name() string {
@@ -104,8 +93,8 @@ func (rr RoundRobinRouter) Route(sel interface{}) *backend {
 	switch sl := sel.(type) {
 	case *nbFrame:
 		// Since this is a round robin router just get the next backend
-		if *rr.curBknd, err = rr.bkndClstr.nextBackend(*rr.curBknd, BE_SEQ_RR); err == nil {
-			return *rr.curBknd
+		if *rr.currentBackend, err = rr.cluster.nextBackend(*rr.currentBackend, BackendSequenceRoundRobin); err == nil {
+			return *rr.currentBackend
 		} else {
 			sl.err = err
 			return nil
@@ -120,9 +109,9 @@ func (rr RoundRobinRouter) Service() string {
 	return rr.grpcService
 }
 
-func (rr RoundRobinRouter) FindBackendCluster(becName string) *backendCluster {
-	if becName == rr.bkndClstr.name {
-		return rr.bkndClstr
+func (rr RoundRobinRouter) FindBackendCluster(becName string) *cluster {
+	if becName == rr.cluster.name {
+		return rr.cluster
 	}
 	return nil
 }
