@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34a75c94_6755e31e",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-21T15:57:05Z",
+      "side": 1,
+      "message": "typo?",
+      "revId": "b5a1eaa2e337c39ac56a946267a56be720d4fa64",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
