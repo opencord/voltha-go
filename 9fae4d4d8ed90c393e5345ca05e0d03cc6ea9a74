@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6dde659a_221aad36",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-21T18:54:37Z",
+      "side": 1,
+      "message": "Since this is a read-only operation, you may want only a RLock.",
+      "revId": "9fae4d4d8ed90c393e5345ca05e0d03cc6ea9a74",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
