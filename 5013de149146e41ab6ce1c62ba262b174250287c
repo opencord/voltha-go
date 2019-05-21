@@ -16,6 +16,24 @@
       "revId": "5013de149146e41ab6ce1c62ba262b174250287c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12c16a8b_3536c987",
+        "filename": "db/model/node.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-05-21T17:34:07Z",
+      "side": 1,
+      "message": "I moved the locks to the CRUD calls... So the ones that were removed are no longer required.  Those methods are also not accessed externally, only the CRUD ones",
+      "parentUuid": "558217d2_71b4705a",
+      "revId": "5013de149146e41ab6ce1c62ba262b174250287c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
