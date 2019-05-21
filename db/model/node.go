@@ -26,11 +26,16 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 )
 
 // When a branch has no transaction id, everything gets stored in NONE
 const (
-	NONE string = "none"
+	NONE                string = "none"
+
+	// period to determine when data requires a refresh (in seconds)
+	// TODO: make this configurable?
+	DATA_REFRESH_PERIOD int64  = 5000
 )
 
 // Node interface is an abstraction of the node data structure
@@ -56,7 +61,7 @@ type Node interface {
 }
 
 type node struct {
-	sync.RWMutex
+	mutex     sync.RWMutex
 	Root      *root
 	Type      interface{}
 	Branches  map[string]*Branch
@@ -113,9 +118,6 @@ func (n *node) MakeRevision(branch *Branch, data interface{}, children map[strin
 
 // makeLatest will mark the revision of a node as being the latest
 func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple) {
-	n.Lock()
-	defer n.Unlock()
-
 	// Keep a reference to the current revision
 	var previous string
 	if branch.GetLatest() != nil {
@@ -127,6 +129,9 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	// If anything is new, then set the revision as the latest
 	if branch.GetLatest() == nil || revision.GetHash() != branch.GetLatest().GetHash() {
 		if revision.GetName() != "" {
+			log.Debugw("saving-latest-data", log.Fields{"hash": revision.GetHash(), "data": revision.GetData()})
+			// Tag a timestamp to that revision
+			revision.SetLastUpdate()
 			GetRevCache().Cache.Store(revision.GetName(), revision)
 		}
 		branch.SetLatest(revision)
@@ -174,7 +179,6 @@ func (n *node) Latest(txid ...string) Revision {
 
 // initialize prepares the content of a node along with its possible ramifications
 func (n *node) initialize(data interface{}, txid string) {
-	n.Lock()
 	children := make(map[string][]Revision)
 	for fieldName, field := range ChildrenFields(n.Type) {
 		_, fieldValue := GetAttributeValue(data, fieldName, 0)
@@ -217,7 +221,6 @@ func (n *node) initialize(data interface{}, txid string) {
 			log.Errorf("field is invalid - %+v", fieldValue)
 		}
 	}
-	n.Unlock()
 
 	branch := NewBranch(n, "", nil, n.AutoPrune)
 	rev := n.MakeRevision(branch, data, children)
@@ -232,9 +235,6 @@ func (n *node) initialize(data interface{}, txid string) {
 
 // findRevByKey retrieves a specific revision from a node tree
 func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) (int, Revision) {
-	n.Lock()
-	defer n.Unlock()
-
 	for i, rev := range revs {
 		dataValue := reflect.ValueOf(rev.GetData())
 		dataStruct := GetAttributeStructure(rev.GetData(), keyName, 0)
@@ -253,6 +253,9 @@ func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) 
 
 // Get retrieves the data from a node tree that resides at the specified path
 func (n *node) List(path string, hash string, depth int, deep bool, txid string) interface{} {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
 	log.Debugw("node-list-request", log.Fields{"path": path, "hash": hash, "depth": depth, "deep": deep, "txid": txid})
 	if deep {
 		depth = -1
@@ -289,6 +292,9 @@ func (n *node) List(path string, hash string, depth int, deep bool, txid string)
 
 // Get retrieves the data from a node tree that resides at the specified path
 func (n *node) Get(path string, hash string, depth int, reconcile bool, txid string) interface{} {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
 	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
 
 	for strings.HasPrefix(path, "/") {
@@ -314,16 +320,32 @@ func (n *node) Get(path string, hash string, depth int, reconcile bool, txid str
 	if !reconcile {
 		// Try to find an entry matching the path value from one of these sources
 		// 1.  Start with the cache which stores revisions by watch names
-		// 2.  Then look in the revision tree, especially if it's a sub-path such as /devices/1234/flows
-		// 3.  As a last effort, move on to the KV store
+		// 2.  Move on to the KV store if that path cannot be found or if the entry has expired
 		if entry, exists := GetRevCache().Cache.Load(path); exists && entry.(Revision) != nil {
-			return proto.Clone(entry.(Revision).GetData().(proto.Message))
-		} else if result = n.getPath(rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
-			return result
+			entryAge := time.Now().Sub(entry.(Revision).GetLastUpdate()).Nanoseconds() / int64(time.Millisecond)
+			if entryAge < DATA_REFRESH_PERIOD {
+				log.Debugw("using-cache-entry", log.Fields{"path": path, "hash": hash, "age": entryAge})
+				return proto.Clone(entry.(Revision).GetData().(proto.Message))
+			} else {
+				log.Debugw("cache-entry-expired", log.Fields{"path": path, "hash": hash, "age": entryAge})
+			}
+		} else {
+			log.Debugw("not-using-cache-entry", log.Fields{
+				"path": path,
+				"hash": hash, "depth": depth,
+				"reconcile": reconcile,
+				"txid":      txid,
+			})
 		}
+	} else {
+		log.Debugw("reconcile-requested", log.Fields{
+			"path":      path,
+			"hash":      hash,
+			"reconcile": reconcile,
+		})
 	}
 
-	// If we got to this point, we are either trying to reconcile with the db or
+	// If we got to this point, we are either trying to reconcile with the db
 	// or we simply failed at getting information from memory
 	if n.Root.KvStore != nil {
 		if pr := rev.LoadFromPersistence(path, txid, nil); pr != nil && len(pr) > 0 {
@@ -424,6 +446,9 @@ func (n *node) getData(rev Revision, depth int) interface{} {
 
 // Update changes the content of a node at the specified path with the provided data
 func (n *node) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
 	log.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid": txid, "makeBranch": makeBranch})
 
 	for strings.HasPrefix(path, "/") {
@@ -590,6 +615,9 @@ func (n *node) doUpdate(branch *Branch, data interface{}, strict bool) Revision 
 
 // Add inserts a new node at the specified path with the provided data
 func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
 	log.Debugw("node-add-request", log.Fields{"path": path, "txid": txid, "makeBranch": makeBranch})
 
 	for strings.HasPrefix(path, "/") {
@@ -653,6 +681,7 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 				updatedRev := rev.UpdateChildren(name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
+				childRev.GetNode().SetProxy(n.GetProxy())
 				childRev.SetupWatch(childRev.GetName())
 
 				n.makeLatest(branch, updatedRev, changes)
@@ -713,6 +742,9 @@ func (n *node) Add(path string, data interface{}, txid string, makeBranch MakeBr
 
 // Remove eliminates a node at the specified path
 func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) Revision {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
 	log.Debugw("node-remove-request", log.Fields{"path": path, "txid": txid, "makeBranch": makeBranch})
 
 	for strings.HasPrefix(path, "/") {
@@ -833,8 +865,6 @@ func (n *node) MakeBranch(txid string) *Branch {
 
 // DeleteBranch removes a branch with the specified id
 func (n *node) DeleteBranch(txid string) {
-	n.Lock()
-	defer n.Unlock()
 	delete(n.Branches, txid)
 }
 
@@ -969,8 +999,6 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 }
 
 func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusive bool) *Proxy {
-	n.Lock()
-	defer n.Unlock()
 	r := &root{
 		node:                  n,
 		Callbacks:             n.Root.GetCallbacks(),
@@ -993,8 +1021,6 @@ func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusi
 }
 
 func (n *node) makeEventBus() *EventBus {
-	n.Lock()
-	defer n.Unlock()
 	if n.EventBus == nil {
 		n.EventBus = NewEventBus()
 	}
@@ -1002,21 +1028,14 @@ func (n *node) makeEventBus() *EventBus {
 }
 
 func (n *node) SetProxy(proxy *Proxy) {
-	n.Lock()
-	defer n.Unlock()
 	n.Proxy = proxy
 }
 
 func (n *node) GetProxy() *Proxy {
-	n.Lock()
-	defer n.Unlock()
 	return n.Proxy
 }
 
 func (n *node) GetBranch(key string) *Branch {
-	n.Lock()
-	defer n.Unlock()
-
 	if n.Branches != nil {
 		if branch, exists := n.Branches[key]; exists {
 			return branch
@@ -1026,13 +1045,9 @@ func (n *node) GetBranch(key string) *Branch {
 }
 
 func (n *node) SetBranch(key string, branch *Branch) {
-	n.Lock()
-	defer n.Unlock()
 	n.Branches[key] = branch
 }
 
 func (n *node) GetRoot() *root {
-	n.Lock()
-	defer n.Unlock()
 	return n.Root
 }
