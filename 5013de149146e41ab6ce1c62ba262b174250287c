@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "558217d2_71b4705a",
+        "filename": "db/model/node.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-21T17:22:38Z",
+      "side": 1,
+      "message": "Are removed locks made thread-safe via some external logic?  There seem to be several places where these have been removed.",
+      "revId": "5013de149146e41ab6ce1c62ba262b174250287c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
