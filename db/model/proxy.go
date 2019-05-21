@@ -150,6 +150,19 @@ const (
 	PROXY_CREATE
 )
 
+var proxyOperationTypes = []string{
+	"PROXY_GET",
+	"PROXY_LIST",
+	"PROXY_ADD",
+	"PROXY_UPDATE",
+	"PROXY_REMOVE",
+	"PROXY_CREATE",
+}
+
+func (t ProxyOperation) String() string {
+	return proxyOperationTypes[t]
+}
+
 // parseForControlledPath verifies if a proxy path matches a pattern
 // for locations that need to be access controlled.
 func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled bool) {

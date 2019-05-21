@@ -25,6 +25,7 @@ import (
 	"reflect"
 	"sort"
 	"sync"
+	"time"
 )
 
 // TODO: Cache logic will have to be revisited to cleanup unused entries in memory (disabled for now)
@@ -55,6 +56,7 @@ type NonPersistedRevision struct {
 	WeakRef      string
 	Name         string
 	discarded    bool
+	lastUpdate   time.Time
 }
 
 func NewNonPersistedRevision(root *root, branch *Branch, data interface{}, children map[string][]Revision) Revision {
@@ -290,6 +292,7 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 	newRev.Root = npr.Root
 	newRev.Name = npr.Name
 	newRev.Branch = branch
+	newRev.lastUpdate = npr.lastUpdate
 
 	newRev.Children = make(map[string][]Revision)
 	for entryName, childrenEntry := range branch.GetLatest().GetAllChildren() {
@@ -313,6 +316,7 @@ func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision
 	updatedRev.Hash = npr.Hash
 	updatedRev.Branch = branch
 	updatedRev.Name = npr.Name
+	updatedRev.lastUpdate = npr.lastUpdate
 
 	updatedRev.Children = make(map[string][]Revision)
 	for entryName, childrenEntry := range branch.GetLatest().GetAllChildren() {
@@ -395,6 +399,7 @@ func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revisio
 	newRev.Hash = npr.Hash
 	newRev.Branch = branch
 	newRev.Name = npr.Name
+	newRev.lastUpdate = npr.lastUpdate
 
 	newRev.Children = make(map[string][]Revision)
 	for entryName, childrenEntry := range children {
@@ -424,6 +429,24 @@ func (npr *NonPersistedRevision) ChildDrop(childType string, childHash string) {
 			}
 		}
 	}
+}
+
+func (npr *NonPersistedRevision) SetLastUpdate(ts ...time.Time) {
+	npr.mutex.Lock()
+	defer npr.mutex.Unlock()
+
+	if ts != nil && len(ts) > 0 {
+		npr.lastUpdate = ts[0]
+	} else {
+		npr.lastUpdate = time.Now()
+	}
+}
+
+func (npr *NonPersistedRevision) GetLastUpdate() time.Time {
+	npr.mutex.RLock()
+	defer npr.mutex.RUnlock()
+
+	return npr.lastUpdate
 }
 
 func (npr *NonPersistedRevision) LoadFromPersistence(path string, txid string, blobs map[string]*kvstore.KVPair) []Revision {
