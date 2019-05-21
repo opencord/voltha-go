@@ -24,7 +24,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"net"
-	"regexp"
 	"strconv"
 )
 
@@ -35,38 +34,18 @@ var (
 	}
 )
 
-const (
-	REQ_ALL     = 0
-	REQ_PACKAGE = 1
-	REQ_SERVICE = 2
-	REQ_METHOD  = 3
-)
-
 type server struct {
 	running       bool
 	name          string
-	stype         nbi
 	proxyListener net.Listener
 	routers       map[string]map[string]Router
 	proxyServer   *grpc.Server
 }
 
-type nbRequest struct {
-	srv          interface{}
-	serverStream grpc.ServerStream
-	r            Router
-	mthdSlice    []string
-	metaKey      string // There should be at most one key specified. More than one is an error.
-	metaVal      string // This is the value extracted from the meta key if it exists or "" otherwise
-}
-
-var mthdSlicerExp string = `^/([a-zA-Z][a-zA-Z0-9]+)\.([a-zA-Z][a-zA-Z0-9]+)/([a-zA-Z][a-zA-Z0-9]+)`
-var mthdSlicer *regexp.Regexp // The compiled regex to extract the package/service/method
-
 func newServer(config *ServerConfig) (*server, error) {
 	var err error = nil
-	var rtrn_err bool = false
-	var srvr *server
+	var rtrn_err = false
+	var s *server
 	// Change over to the new configuration format
 	// Validate the configuration
 	// There should be a name
@@ -98,20 +77,20 @@ func newServer(config *ServerConfig) (*server, error) {
 		rtrn_err = true
 	}
 
-	if rtrn_err == true {
+	if rtrn_err {
 		return nil, errors.New("Server configuration failed")
 	} else {
 		// The configuration is valid, create a server and configure it.
-		srvr = &server{name: config.Name, routers: make(map[string]map[string]Router)}
+		s = &server{name: config.Name, routers: make(map[string]map[string]Router)}
 		// The listener
-		if srvr.proxyListener, err =
+		if s.proxyListener, err =
 			net.Listen("tcp", config.Addr+":"+
 				strconv.Itoa(int(config.Port))); err != nil {
 			log.Error(err)
 			return nil, err
 		}
 		// Create the routers
-		log.Debugf("Configuring the routers for server %s", srvr.name)
+		log.Debugf("Configuring the routers for server %s", s.name)
 		for p, r := range config.routers {
 			log.Debugf("Processing router %s for package %s", r.Name, p)
 			if dr, err := newRouter(r); err != nil {
@@ -119,25 +98,23 @@ func newServer(config *ServerConfig) (*server, error) {
 				return nil, err
 			} else {
 				log.Debugf("Adding router %s to the server %s for package %s and service %s",
-					dr.Name(), srvr.name, p, dr.Service())
-				if _, ok := srvr.routers[p]; ok {
-					srvr.routers[p][dr.Service()] = dr
+					dr.Name(), s.name, p, dr.Service())
+				if _, ok := s.routers[p]; ok {
+					s.routers[p][dr.Service()] = dr
 				} else {
-					srvr.routers[p] = make(map[string]Router)
-					srvr.routers[p][dr.Service()] = dr
+					s.routers[p] = make(map[string]Router)
+					s.routers[p][dr.Service()] = dr
 				}
 			}
 		}
 		// Configure the grpc handler
-		srvr.proxyServer = grpc.NewServer(
+		s.proxyServer = grpc.NewServer(
 			grpc.CustomCodec(Codec()),
-			grpc.UnknownServiceHandler(srvr.TransparentHandler()),
+			grpc.UnknownServiceHandler(s.TransparentHandler()),
 		)
 
 	}
-	// Compile the regular expression to extract the method
-	mthdSlicer = regexp.MustCompile(mthdSlicerExp)
-	return srvr, nil
+	return s, nil
 }
 
 func (s *server) Name() string {
@@ -148,12 +125,12 @@ func (s *server) TransparentHandler() grpc.StreamHandler {
 	return s.handler
 }
 
-func (s *server) getRouter(pkg *string, service *string) (Router, bool) {
-	if fn, ok := s.routers[*pkg][*service]; ok { // Both specified
+func (s *server) getRouter(pkg string, service string) (Router, bool) {
+	if fn, ok := s.routers[pkg][service]; ok { // Both specified
 		return fn, ok
-	} else if fn, ok = s.routers["*"][*service]; ok { // Package wild card
+	} else if fn, ok = s.routers["*"][service]; ok { // Package wild card
 		return fn, ok
-	} else if fn, ok = s.routers[*pkg]["*"]; ok { // Service wild card
+	} else if fn, ok = s.routers[pkg]["*"]; ok { // Service wild card
 		return fn, ok
 	} else if fn, ok = s.routers["*"]["*"]; ok { // Both Wildcarded
 		return fn, ok
@@ -169,23 +146,14 @@ func (s *server) handler(srv interface{}, serverStream grpc.ServerStream) error 
 		return grpc.Errorf(codes.Internal, "lowLevelServerStream doesn't exist in context")
 	}
 	log.Debugf("Processing grpc request %s on server %s", fullMethodName, s.name)
-	// The full method name is structured as follows:
-	// <package name>.<service>/<method>
-	mthdSlice := mthdSlicer.FindStringSubmatch(fullMethodName)
-	if mthdSlice == nil {
-		log.Errorf("Faled to slice full method %s, result: %v", fullMethodName, mthdSlice)
-	} else {
-		log.Debugf("Sliced full method %s: %v", fullMethodName, mthdSlice)
-	}
-	r, ok := s.getRouter(&mthdSlice[REQ_PACKAGE], &mthdSlice[REQ_SERVICE])
-	//fn, ok := s.routers[mthdSlice[REQ_PACKAGE]][mthdSlice[REQ_SERVICE]]
+	methodInfo := newMethodDetails(fullMethodName)
+	r, ok := s.getRouter(methodInfo.pkg, methodInfo.service)
+	//fn, ok := s.routers[methodInfo.pkg][methodInfo.service]
 	if !ok {
 		// TODO: Should this be punted to a default transparent router??
 		// Probably not, if one is defined yes otherwise just crap out.
 
-		err := errors.New(
-			fmt.Sprintf("Unable to dispatch! Service '%s' for package '%s' not found.",
-				mthdSlice[REQ_SERVICE], mthdSlice[REQ_PACKAGE]))
+		err := fmt.Errorf("Unable to dispatch! Service '%s' for package '%s' not found.", methodInfo.service, methodInfo.pkg)
 		log.Error(err)
 		return err
 	}
@@ -197,13 +165,13 @@ func (s *server) handler(srv interface{}, serverStream grpc.ServerStream) error 
 		return err
 	}
 
-	//nbR := &nbRequest(srv:srv,serverStream:serverStream,r:r,mthdSlice:mthdSlice,metaKey:mk,metaVal:mv)
+	//nbR := &nbRequest(srv:srv,serverStream:serverStream,r:r,methodInfo:methodInfo,metaKey:mk,metaVal:mv)
 
 	// Extract the cluster from the selected router and use it to manage the transfer
-	if bkndClstr, err := r.BackendCluster(mthdSlice[REQ_METHOD], mk); err != nil {
+	if cluster, err := r.BackendCluster(methodInfo.method, mk); err != nil {
 		return err
 	} else {
-		//return bkndClstr.handler(nbR)
-		return bkndClstr.handler(srv, serverStream, r, mthdSlice, mk, mv)
+		//return beCluster.handler(nbR)
+		return cluster.handler(srv, serverStream, r, methodInfo, mk, mv)
 	}
 }

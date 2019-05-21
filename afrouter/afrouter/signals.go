@@ -30,7 +30,6 @@ import (
 
 var errChan = make(chan error)
 var doneChan = make(chan error)
-var holdChan = make(chan int)
 
 func InitExitHandler() error {
 
@@ -75,7 +74,7 @@ func cleanExit(err error) {
 			}
 		}
 	}
-	for _, cl := range bClusters {
+	for _, cl := range clusters {
 		for _, bknd := range cl.backends {
 			log.Debugf("Closing backend %s", bknd.name)
 			for _, conn := range bknd.connections {

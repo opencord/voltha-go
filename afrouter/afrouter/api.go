@@ -46,7 +46,7 @@ func newApi(config *ApiConfig, ar *ArouterProxy) (*ArouterApi, error) {
 		log.Errorf("Invalid address '%s' provided for API server", config.Addr)
 		rtrn_err = true
 	}
-	if rtrn_err == true {
+	if rtrn_err {
 		return nil, errors.New("Errors in API configuration")
 	} else {
 		var err error = nil
@@ -66,7 +66,7 @@ func newApi(config *ApiConfig, ar *ArouterProxy) (*ArouterApi, error) {
 }
 
 func (aa *ArouterApi) getServer(srvr string) (*server, error) {
-	if s, ok := aa.ar.servers[srvr]; ok == false {
+	if s, ok := aa.ar.servers[srvr]; !ok {
 		err := errors.New(fmt.Sprintf("Server '%s' doesn't exist", srvr))
 		return nil, err
 	} else {
@@ -86,7 +86,7 @@ func (aa *ArouterApi) getRouter(s *server, clstr string) (Router, error) {
 	return nil, err
 }
 
-func (aa *ArouterApi) getCluster(s *server, clstr string) (*backendCluster, error) {
+func (aa *ArouterApi) getCluster(s *server, clstr string) (*cluster, error) {
 	for _, pkg := range s.routers {
 		for _, r := range pkg {
 			if c := r.FindBackendCluster(clstr); c != nil {
@@ -98,7 +98,7 @@ func (aa *ArouterApi) getCluster(s *server, clstr string) (*backendCluster, erro
 	return nil, err
 }
 
-func (aa *ArouterApi) getBackend(c *backendCluster, bknd string) (*backend, error) {
+func (aa *ArouterApi) getBackend(c *cluster, bknd string) (*backend, error) {
 	for _, b := range c.backends {
 		if b.name == bknd {
 			return b, nil
@@ -109,8 +109,8 @@ func (aa *ArouterApi) getBackend(c *backendCluster, bknd string) (*backend, erro
 	return nil, err
 }
 
-func (aa *ArouterApi) getConnection(b *backend, con string) (*beConnection, error) {
-	if c, ok := b.connections[con]; ok == false {
+func (aa *ArouterApi) getConnection(b *backend, con string) (*connection, error) {
+	if c, ok := b.connections[con]; !ok {
 		err := errors.New(fmt.Sprintf("Connection '%s' doesn't exist", con))
 		return nil, err
 	} else {
@@ -118,14 +118,14 @@ func (aa *ArouterApi) getConnection(b *backend, con string) (*beConnection, erro
 	}
 }
 
-func (aa *ArouterApi) updateConnection(in *pb.Conn, cn *beConnection, b *backend) error {
+func (aa *ArouterApi) updateConnection(in *pb.Conn, cn *connection, b *backend) error {
 	sPort := strconv.FormatUint(in.Port, 10)
 	// Check that the ip address and or port are different
 	if in.Addr == cn.addr && sPort == cn.port {
 		err := errors.New(fmt.Sprintf("Refusing to change connection '%s' to identical values", in.Connection))
 		return err
 	}
-	//log.Debugf("BEFORE: Be1: %v Be2 %v", cn.bknd, b)
+	//log.Debugf("BEFORE: Be1: %v Be2 %v", cn.backend, b)
 	cn.close()
 	cn.addr = in.Addr
 	cn.port = sPort
@@ -146,7 +146,7 @@ func (aa ArouterApi) SetAffinity(ctx context.Context, in *pb.Affinity) (*pb.Resu
 	_ = aap
 
 	log.Debugf("Getting router %s and route %s", in.Router, in.Route)
-	if r, ok := allRouters[in.Router+in.Route]; ok == true {
+	if r, ok := allRouters[in.Router+in.Route]; ok {
 		switch rr := r.(type) {
 		case AffinityRouter:
 			log.Debug("Affinity router found")
@@ -177,9 +177,9 @@ func (aa ArouterApi) SetConnection(ctx context.Context, in *pb.Conn) (*pb.Result
 	// not the same then close the existing connection. If they are bothe the same
 	// then return an error describing the situation.
 	var s *server
-	var c *backendCluster
+	var c *cluster
 	var b *backend
-	var cn *beConnection
+	var cn *connection
 	var err error
 
 	log.Debugf("SetConnection called! %v", in)

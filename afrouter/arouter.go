@@ -17,9 +17,6 @@
 
 package main
 
-/* package main // import "github.com/opencord/voltha-go/arouter" */
-/* package main // import "github.com/opencord/voltha-go" */
-
 import (
 	"fmt"
 	"github.com/opencord/voltha-go/afrouter/afrouter"

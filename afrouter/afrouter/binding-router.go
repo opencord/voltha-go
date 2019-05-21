@@ -27,22 +27,21 @@ import (
 
 type BindingRouter struct {
 	name        string
-	routerType  int // TODO: This is probably not needed
-	association int
+	association associationType
 	//routingField string
 	grpcService string
 	//protoDescriptor *pb.FileDescriptorSet
 	//methodMap map[string]byte
-	bkndClstr     *backendCluster
-	bindings      map[string]*backend
-	bindingType   string
-	bindingField  string
-	bindingMethod string
-	curBknd       **backend
+	beCluster      *cluster
+	bindings       map[string]*backend
+	bindingType    string
+	bindingField   string
+	bindingMethod  string
+	currentBackend **backend
 }
 
-func (br BindingRouter) BackendCluster(s string, metaKey string) (*backendCluster, error) {
-	return br.bkndClstr, nil
+func (br BindingRouter) BackendCluster(s string, metaKey string) (*cluster, error) {
+	return br.beCluster, nil
 	//return nil,errors.New("Not implemented yet")
 }
 func (br BindingRouter) Name() string {
@@ -52,8 +51,8 @@ func (br BindingRouter) Service() string {
 	return br.grpcService
 }
 func (br BindingRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, string, error) {
-	var rtrnK string = ""
-	var rtrnV string = ""
+	var rtrnK = ""
+	var rtrnV = ""
 
 	// Get the metadata from the server stream
 	md, ok := metadata.FromIncomingContext(serverStream.Context())
@@ -69,9 +68,9 @@ func (br BindingRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, s
 
 	return rtrnK, rtrnV, nil
 }
-func (br BindingRouter) FindBackendCluster(becName string) *backendCluster {
-	if becName == br.bkndClstr.name {
-		return br.bkndClstr
+func (br BindingRouter) FindBackendCluster(becName string) *cluster {
+	if becName == br.beCluster.name {
+		return br.beCluster
 	}
 	return nil
 }
@@ -92,19 +91,19 @@ func (br BindingRouter) Route(sel interface{}) *backend {
 				sl.err = err
 				return nil
 			}
-			if sl.mthdSlice[REQ_METHOD] != br.bindingMethod {
+			if sl.methodInfo.method != br.bindingMethod {
 				err = errors.New(fmt.Sprintf("Binding must occur with method %s but attempted with method %s",
-					br.bindingMethod, sl.mthdSlice[REQ_METHOD]))
+					br.bindingMethod, sl.methodInfo.method))
 				log.Error(err)
 				sl.err = err
 				return nil
 			}
 			log.Debugf("MUST CREATE A NEW BINDING MAP ENTRY!!")
-			if len(br.bindings) < len(br.bkndClstr.backends) {
-				if *br.curBknd, err = br.bkndClstr.nextBackend(*br.curBknd, BE_SEQ_RR); err == nil {
+			if len(br.bindings) < len(br.beCluster.backends) {
+				if *br.currentBackend, err = br.beCluster.nextBackend(*br.currentBackend, BackendSequenceRoundRobin); err == nil {
 					// Use the name of the backend as the metaVal for this new binding
-					br.bindings[(*br.curBknd).name] = *br.curBknd
-					return *br.curBknd
+					br.bindings[(*br.currentBackend).name] = *br.currentBackend
+					return *br.currentBackend
 				} else {
 					log.Error(err)
 					sl.err = err
@@ -124,7 +123,7 @@ func (br BindingRouter) Route(sel interface{}) *backend {
 }
 
 func newBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
-	var rtrn_err bool = false
+	var rtrn_err = false
 	var err error = nil
 	log.Debugf("Creating binding router %s", config.Name)
 	// A name must exist
@@ -165,18 +164,14 @@ func newBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) 
 		grpcService: rconf.ProtoService,
 		bindings:    make(map[string]*backend),
 		//methodMap:make(map[string]byte),
-		curBknd: &bptr,
+		currentBackend: &bptr,
 		//serialNo:0,
 	}
 
 	// A binding association must exist
-	br.association = strIndex(rAssnNames, config.Binding.Association)
-	if br.association == 0 {
-		if config.Binding.Association == "" {
-			log.Error("An binding association must be specified")
-		} else {
-			log.Errorf("The binding association '%s' is not valid", config.Binding.Association)
-		}
+	br.association = config.Binding.Association
+	if br.association == AssociationUndefined {
+		log.Error("An binding association must be specified")
 		rtrn_err = true
 	}
 	// A binding type must exist
@@ -202,19 +197,10 @@ func newBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) 
 		br.bindingField = config.Binding.Field
 	}
 
-	// This has already been validated bfore this function
-	// is called so just use it.
-	for idx := range rTypeNames {
-		if config.Type == rTypeNames[idx] {
-			br.routerType = idx
-			break
-		}
-	}
-
 	// Create the backend cluster or link to an existing one
 	ok := true
-	if br.bkndClstr, ok = bClusters[config.backendCluster.Name]; ok == false {
-		if br.bkndClstr, err = newBackendCluster(config.backendCluster); err != nil {
+	if br.beCluster, ok = clusters[config.backendCluster.Name]; ok == false {
+		if br.beCluster, err = newBackendCluster(config.backendCluster); err != nil {
 			log.Errorf("Could not create a backend for router %s", config.Name)
 			rtrn_err = true
 		}
