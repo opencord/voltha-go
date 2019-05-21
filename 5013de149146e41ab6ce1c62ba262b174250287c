@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd8f777c_372796b7",
+        "filename": "db/model/node.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-21T17:54:08Z",
+      "side": 1,
+      "message": "It might make sense to lowercase functions if they aren\u0027t accessed externally.",
+      "revId": "5013de149146e41ab6ce1c62ba262b174250287c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "558217d2_71b4705a",
         "filename": "db/model/node.go",
         "patchSetId": 1
