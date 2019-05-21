@@ -17,6 +17,7 @@ package model
 
 import (
 	"github.com/opencord/voltha-go/db/kvstore"
+	"time"
 )
 
 type Revision interface {
@@ -43,6 +44,8 @@ type Revision interface {
 	GetData() interface{}
 	GetNode() *node
 	LoadFromPersistence(path string, txid string, blobs map[string]*kvstore.KVPair) []Revision
+	SetLastUpdate(ts ...time.Time)
+	GetLastUpdate() time.Time
 	UpdateData(data interface{}, branch *Branch) Revision
 	UpdateChildren(name string, children []Revision, branch *Branch) Revision
 	UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision
