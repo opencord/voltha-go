@@ -33,6 +33,24 @@
       "revId": "6258ea9d63ce30ffac5d05bb236be2be27342302",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "676c268b_949e216a",
+        "filename": "afrouter/afrouter/enums.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-22T14:51:43Z",
+      "side": 1,
+      "message": "If a file is broken down into multiple, should the copyright year stay the same?",
+      "parentUuid": "0348b3c0_db805576",
+      "revId": "6258ea9d63ce30ffac5d05bb236be2be27342302",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
