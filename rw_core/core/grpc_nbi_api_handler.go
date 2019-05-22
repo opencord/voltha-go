@@ -107,9 +107,11 @@ func (handler *APIHandler) isOFControllerRequest(ctx context.Context) bool {
 		// Metadata in context
 		if _, ok = md[handler.core.config.CoreBindingKey]; ok {
 			// OFAgent field in metadata
+			log.Debug("OFController-request")
 			return true
 		}
 	}
+	log.Debug("not-OFController-request")
 	return false
 }
 
@@ -284,13 +286,17 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 		return out, nil
 	}
 
+	// TODO: Update this logic when the OF Controller (OFAgent in this case) is able to send a transaction Id in its
+	// request (the api-router binds the OfAgent to two Cores in a pair and let the traffic flows transparently)
 	if handler.competeForTransaction() {
-		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
+		if !handler.isOFControllerRequest(ctx) {
 			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
 				return new(empty.Empty), err
 			} else {
 				defer txn.Close()
 			}
+		} else if !handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{Id: flow.Id}) {
+			return new(empty.Empty), nil
 		}
 	}
 
@@ -307,6 +313,8 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 		return out, nil
 	}
 
+	// TODO: Update this logic when the OF Controller (OFAgent in this case) is able to send a transaction Id in its
+	// request (the api-router binds the OfAgent to two Cores in a pair and let the traffic flows transparently)
 	if handler.competeForTransaction() {
 		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
 			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
@@ -314,6 +322,8 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 			} else {
 				defer txn.Close()
 			}
+		} else if !handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{Id: flow.Id}) {
+			return new(empty.Empty), nil
 		}
 	}
 
@@ -720,9 +730,15 @@ func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha
 
 func (handler *APIHandler) forwardPacketOut(packet *openflow_13.PacketOut) {
 	log.Debugw("forwardPacketOut-request", log.Fields{"packet": packet})
-	agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id)
-	agent.packetOut(packet.PacketOut)
+	//TODO: Update this logic once the OF Controller (OFAgent in this case) can include a transaction Id in its
+	// request.  For performance reason we can let both Cores in a Core-Pair forward the Packet to the adapters and
+	// let once of the shim layer (kafka proxy or adapter request handler filters out the duplicate packet)
+	if handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{Id: packet.Id}) {
+		agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id)
+		agent.packetOut(packet.PacketOut)
+	}
 }
+
 func (handler *APIHandler) StreamPacketsOut(
 	packets voltha.VolthaService_StreamPacketsOutServer,
 ) error {
