@@ -114,8 +114,9 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		}
 		agent.lockLogicalDevice.Unlock()
 
-		// TODO:  Set the NNI ports in a separate call once the port update issue is fixed.
-		go agent.setupNNILogicalPorts(ctx, agent.rootDeviceId)
+		// TODO:  Set the logical ports in a separate call once the port update issue is fixed.
+		go agent.setupLogicalPorts(ctx)
+
 	} else {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
@@ -124,10 +125,18 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 			log.Warnw("failed-to-load-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 			return err
 		}
+
 		// Update the root device Id
 		agent.rootDeviceId = ld.RootDeviceId
+
+		// Setup the local list of logical ports
+		agent.addLogicalPortsToMap(ld.Ports)
+
+		// Setup the device graph
+		agent.generateDeviceGraph()
 	}
 	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
 
 	agent.flowProxy = agent.clusterDataProxy.CreateProxy(
 		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceId),
@@ -140,11 +149,14 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		false)
 
 	// TODO:  Use a port proxy once the POST_ADD is fixed
-	agent.ldProxy.RegisterCallback(model.POST_UPDATE, agent.portUpdated)
+	if agent.ldProxy != nil {
+		agent.ldProxy.RegisterCallback(model.POST_UPDATE, agent.portUpdated)
+	} else {
+		log.Errorw("logical-device-proxy-null", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return status.Error(codes.Internal, "logical-device-proxy-null")
+	}
 
 	agent.includeDefaultFlows = true
-
-	agent.lockLogicalDevice.Unlock()
 
 	return nil
 }
@@ -289,6 +301,42 @@ func (agent *LogicalDeviceAgent) addLogicalPort(device *voltha.Device, port *vol
 	return nil
 }
 
+// setupLogicalPorts is invoked once the logical device has been created and is ready to get ports
+// added to it.  While the logical device was being created we could have received requests to add
+// NNI and UNI ports which were discarded.  Now is the time to add them if needed
+func (agent *LogicalDeviceAgent) setupLogicalPorts(ctx context.Context) error {
+	log.Infow("setupLogicalPorts", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	// First add any NNI ports which could have been missing
+	if err := agent.setupNNILogicalPorts(nil, agent.rootDeviceId); err != nil {
+		log.Errorw("error-setting-up-NNI-ports", log.Fields{"error": err, "deviceId": agent.rootDeviceId})
+		return err
+	}
+
+	// Now, set up the UNI ports if needed.
+	if children, err := agent.deviceMgr.getAllChildDevices(agent.rootDeviceId); err != nil {
+		log.Errorw("error-getting-child-devices", log.Fields{"error": err, "deviceId": agent.rootDeviceId})
+		return err
+	} else {
+		chnlsList := make([]chan interface{}, 0)
+		for _, child := range children.Items {
+			ch := make(chan interface{})
+			chnlsList = append(chnlsList, ch)
+			go func(device *voltha.Device, ch chan interface{}) {
+				if err = agent.setupUNILogicalPorts(nil, device); err != nil {
+					log.Error("setting-up-UNI-ports-failed", log.Fields{"deviceID": device.Id})
+					ch <- status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", device.Id)
+				}
+				ch <- nil
+			}(child, ch)
+		}
+		// Wait for completion
+		if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
+			return status.Errorf(codes.Aborted, "errors-%s", res)
+		}
+	}
+	return nil
+}
+
 // setupNNILogicalPorts creates an NNI port on the logical device that represents an NNI interface on a root device
 func (agent *LogicalDeviceAgent) setupNNILogicalPorts(ctx context.Context, deviceId string) error {
 	log.Infow("setupNNILogicalPorts-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
@@ -349,7 +397,7 @@ func (agent *LogicalDeviceAgent) updatePortsState(device *voltha.Device, state v
 
 // setupUNILogicalPorts creates a UNI port on the logical device that represents a child UNI interface
 func (agent *LogicalDeviceAgent) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device) error {
-	log.Infow("setupUNILogicalPort-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	log.Infow("setupUNILogicalPort", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 	// Build the logical device based on information retrieved from the device adapter
 	var err error
 
@@ -806,7 +854,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(lPort *voltha.LogicalPort) er
 			return err
 		}
 		// Reset the logical device graph
-		go agent.redoDeviceGraph()
+		go agent.generateDeviceGraph()
 	}
 	return nil
 }
@@ -835,7 +883,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPorts(deviceId string) error {
 		return err
 	}
 	// Reset the logical device graph
-	go agent.redoDeviceGraph()
+	go agent.generateDeviceGraph()
 
 	return nil
 }
@@ -1067,13 +1115,16 @@ func (agent *LogicalDeviceAgent) GetAllDefaultRules() *fu.DeviceRules {
 	return agent.DefaultFlowRules
 }
 
+//GetWildcardInputPorts filters out the logical port number from the set of logical ports on the device and
+//returns their port numbers.  This function is invoked only during flow decomposition where the lock on the logical
+//device is already held.  Therefore it is safe to retrieve the logical device without lock.
 func (agent *LogicalDeviceAgent) GetWildcardInputPorts(excludePort ...uint32) []uint32 {
 	lPorts := make([]uint32, 0)
 	var exclPort uint32
 	if len(excludePort) == 1 {
 		exclPort = excludePort[0]
 	}
-	if lDevice, _ := agent.GetLogicalDevice(); lDevice != nil {
+	if lDevice, _ := agent.getLogicalDeviceWithoutLock(); lDevice != nil {
 		for _, port := range lDevice.Ports {
 			if port.OfpPort.PortNo != exclPort {
 				lPorts = append(lPorts, port.OfpPort.PortNo)
@@ -1143,18 +1194,21 @@ func (agent *LogicalDeviceAgent) updateDeviceGraph(lp *voltha.LogicalPort) {
 	agent.deviceGraph.Print()
 }
 
-//redoDeviceGraph regenerates the device graph upon port changes on a device graph
-//TODO: it may yield better performance to have separate deleteLogicalPort functions that would remove
-// all the routes/nodes related to the deleted logical port.
-func (agent *LogicalDeviceAgent) redoDeviceGraph() {
-	log.Debugf("redoDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+//generateDeviceGraph regenerates the device graph
+func (agent *LogicalDeviceAgent) generateDeviceGraph() {
+	log.Debugf("generateDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	// Get the latest logical device
 	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
 		log.Errorw("logical-device-not-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
 	} else {
+		log.Debugw("generating-graph", log.Fields{"lDeviceId": agent.logicalDeviceId, "deviceGraph": agent.deviceGraph, "lPorts": len(ld.Ports)})
+		if agent.deviceGraph == nil {
+			agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceId, agent.deviceMgr.GetDevice)
+		}
 		agent.deviceGraph.ComputeRoutes(ld.Ports)
+		agent.deviceGraph.Print()
 	}
 }
 
@@ -1455,6 +1509,16 @@ func (agent *LogicalDeviceAgent) addLogicalPortToMap(portNo uint32, nniPort bool
 	defer agent.lockLogicalPortsNo.Unlock()
 	if exist := agent.logicalPortsNo[portNo]; !exist {
 		agent.logicalPortsNo[portNo] = nniPort
+	}
+}
+
+func (agent *LogicalDeviceAgent) addLogicalPortsToMap(lps []*voltha.LogicalPort) {
+	agent.lockLogicalPortsNo.Lock()
+	defer agent.lockLogicalPortsNo.Unlock()
+	for _, lp := range lps {
+		if exist := agent.logicalPortsNo[lp.DevicePortNo]; !exist {
+			agent.logicalPortsNo[lp.DevicePortNo] = lp.RootPort
+		}
 	}
 }
 
