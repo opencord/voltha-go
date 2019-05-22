@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96ba5853_52f4155d",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T21:08:38Z",
+      "side": 1,
+      "message": "the practice seems to be +dirty as opposed to -dirty",
+      "revId": "8c4e99c00e99d91dc45b6c68a1021e7cd513a5f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
