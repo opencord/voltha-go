@@ -414,7 +414,7 @@ func (ldMgr *LogicalDeviceManager) setupUNILogicalPorts(ctx context.Context, chi
 
 	log.Debugw("setupUNILogicalPorts", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
 
-	if parentId == "" || logDeviceId == nil {
+	if parentId == "" || *logDeviceId == "" {
 		return errors.New("device-in-invalid-state")
 	}
 
