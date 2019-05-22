@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bee71a81_47d0659e",
+        "filename": "afrouter/afrouter/api.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T14:33:58Z",
+      "side": 1,
+      "message": "why not just remove commented code. either use it or remove it, git will keep the history if we need it back.",
+      "revId": "6258ea9d63ce30ffac5d05bb236be2be27342302",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0348b3c0_db805576",
+        "filename": "afrouter/afrouter/enums.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T14:33:58Z",
+      "side": 1,
+      "message": "new file, 2019? (other new files as well)",
+      "revId": "6258ea9d63ce30ffac5d05bb236be2be27342302",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
