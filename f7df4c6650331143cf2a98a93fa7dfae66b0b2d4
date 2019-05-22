@@ -16,6 +16,24 @@
       "revId": "f7df4c6650331143cf2a98a93fa7dfae66b0b2d4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f81c096d_e440cac6",
+        "filename": "ro_core/core/model_proxy_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T22:15:19Z",
+      "side": 1,
+      "message": "Separating the two patches, this just deals with the filter aspect. Need to hunt down when things fail when no adapters are registered (or rather just the sentinel adapter is registered. There doesn\u0027t seem to be a way to tell Get to always return a list, so i need to understand if this is something that needs the caller to check (list v. single) or something else. And if the caller needs to check why doesn\u0027t it fail on a single device list. Anyway, wanted to separate the fix.",
+      "parentUuid": "c37fce62_4485dca3",
+      "revId": "f7df4c6650331143cf2a98a93fa7dfae66b0b2d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
