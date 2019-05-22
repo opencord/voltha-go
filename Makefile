@@ -18,35 +18,45 @@
 SHELL = bash -e -o pipefail
 
 # Variables
-VERSION                  ?= $(shell cat ./VERSION)
+VERSION                    ?= $(shell cat ./VERSION)
 
+DOCKER_LABEL_VCS_DIRTY     = false
+ifneq ($(shell git ls-files --others --modified --exclude-standard 2>/dev/null | wc -l | sed -e 's/ //g'),0)
+    DOCKER_LABEL_VCS_DIRTY = true
+endif
 ## Docker related
-DOCKER_REGISTRY          ?=
-DOCKER_REPOSITORY        ?=
-DOCKER_BUILD_ARGS        ?=
-DOCKER_TAG               ?= ${VERSION}
-RWCORE_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}
-ROCORE_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-core:${DOCKER_TAG}
-AFROUTER_IMAGENAME       := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouter:${DOCKER_TAG}
-AFROUTERTEST_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afroutertest:${DOCKER_TAG}
-AFROUTERD_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouterd:${DOCKER_TAG}
-SIMULATEDOLT_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-olt:${DOCKER_TAG}
-SIMULATEDONU_IMAGENAME   := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-onu:${DOCKER_TAG}
-OFAGENT_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent:${DOCKER_TAG}
-CLI_IMAGENAME            := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli:${DOCKER_TAG}
-PONSIMOLT_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-olt:${DOCKER_TAG}
-PONSIMONU_IMAGENAME      := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-onu:${DOCKER_TAG}
+DOCKER_REGISTRY            ?=
+DOCKER_REPOSITORY          ?=
+DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
+RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core
+ROCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-core
+AFROUTER_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouter
+AFROUTERTEST_IMAGENAME     := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afroutertest
+AFROUTERD_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouterd
+SIMULATEDOLT_IMAGENAME     := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-olt
+SIMULATEDONU_IMAGENAME     := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-onu
+OFAGENT_IMAGENAME          := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent
+CLI_IMAGENAME              := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli
+PONSIMOLT_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-olt
+PONSIMONU_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-onu
 
 ## Docker labels. Only set ref and commit date if committed
-DOCKER_LABEL_VCS_URL     ?= $(shell git remote get-url $(shell git remote))
-DOCKER_LABEL_BUILD_DATE  ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
-DOCKER_LABEL_COMMIT_DATE = $(shell git show -s --format=%cd --date=iso-strict HEAD)
+DOCKER_LABEL_VCS_URL       ?= $(shell git remote get-url $(shell git remote))
+DOCKER_LABEL_VCS_REF       = $(shell git rev-parse HEAD)
+DOCKER_LABEL_BUILD_DATE    ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
+DOCKER_LABEL_COMMIT_DATE   = $(shell git show -s --format=%cd --date=iso-strict HEAD)
 
-ifeq ($(shell git ls-files --others --modified --exclude-standard 2>/dev/null | wc -l | sed -e 's/ //g'),0)
-  DOCKER_LABEL_VCS_REF = $(shell git rev-parse HEAD)
-else
-  DOCKER_LABEL_VCS_REF = $(shell git rev-parse HEAD)+dirty
-endif
+DOCKER_BUILD_ARGS ?= \
+	--build-arg org_label_schema_version="${VERSION}" \
+	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
+	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
+	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
+	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
+	--build-arg org_opencord_vcs_dirty="${DOCKER_LABEL_VCS_DIRTY}"
+
+DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
+	--build-arg LOCAL_PYVOLTHA=${LOCAL_PYVOLTHA} \
+	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
 
 .PHONY: rw_core ro_core simulated_olt simulated_onu afrouter afrouterd local-protos local-pyvoltha
 
@@ -81,7 +91,7 @@ help:
 
 ## Local Development Helpers
 local-protos:
-	mkdir -p python/local_imports
+	@mkdir -p python/local_imports
 ifdef LOCAL_PROTOS
 	mkdir -p vendor/github.com/opencord/voltha-protos/go
 	cp -r ${GOPATH}/src/github.com/opencord/voltha-protos/go/* vendor/github.com/opencord/voltha-protos/go
@@ -90,7 +100,7 @@ ifdef LOCAL_PROTOS
 endif
 
 local-pyvoltha:
-	mkdir -p python/local_imports
+	@mkdir -p python/local_imports
 ifdef LOCAL_PYVOLTHA
 	mkdir -p python/local_imports/pyvoltha/dist
 	cp ../pyvoltha/dist/*.tar.gz python/local_imports/pyvoltha/dist/
@@ -121,134 +131,49 @@ build: docker-build
 docker-build: rw_core ro_core simulated_olt simulated_onu afrouter afrouterd ofagent cli adapter_ponsim_olt adapter_ponsim_onu
 
 afrouter: local-protos
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${AFROUTER_IMAGENAME} \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f docker/Dockerfile.afrouter .
+	docker build $(DOCKER_BUILD_ARGS) -t ${AFROUTER_IMAGENAME}:${DOCKER_TAG} -t ${AFROUTER_IMAGENAME}:latest -f docker/Dockerfile.afrouter .
 
 afrouterTest: local-protos
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${AFROUTERTEST_IMAGENAME} \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f docker/Dockerfile.afrouterTest .
+	docker build $(DOCKER_BUILD_ARGS) -t ${AFROUTERTEST_IMAGENAME}:${DOCKER_TAG} -t ${AFROUTERTEST_IMAGENAME}:latest -f docker/Dockerfile.afrouterTest .
 
 afrouterd: local-protos
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${AFROUTERD_IMAGENAME} \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f docker/Dockerfile.afrouterd .
+	docker build $(DOCKER_BUILD_ARGS) -t ${AFROUTERD_IMAGENAME}:${DOCKER_TAG} -t ${AFROUTERD_IMAGENAME}:latest -f docker/Dockerfile.afrouterd .
 
 rw_core: local-protos
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${RWCORE_IMAGENAME} \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -t ${RWCORE_IMAGENAME}:latest -f docker/Dockerfile.rw_core .
 
 ro_core: local-protos
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${ROCORE_IMAGENAME} \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f docker/Dockerfile.ro_core .
+	docker build $(DOCKER_BUILD_ARGS) -t ${ROCORE_IMAGENAME}:${DOCKER_TAG} -t ${ROCORE_IMAGENAME}:latest -f docker/Dockerfile.ro_core .
 
 simulated_olt: local-protos
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${SIMULATEDOLT_IMAGENAME} \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f docker/Dockerfile.simulated_olt .
+	docker build $(DOCKER_BUILD_ARGS) -t ${SIMULATEDOLT_IMAGENAME}:${DOCKER_TAG} -t ${SIMULATEDOLT_IMAGENAME}:latest -f docker/Dockerfile.simulated_olt .
 
 simulated_onu: local-protos
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${SIMULATEDONU_IMAGENAME} \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f docker/Dockerfile.simulated_onu .
+	docker build $(DOCKER_BUILD_ARGS) -t ${SIMULATEDONU_IMAGENAME}:${DOCKER_TAG} -t ${SIMULATEDONU_IMAGENAME}:latest -f docker/Dockerfile.simulated_onu .
 
 ofagent: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${OFAGENT_IMAGENAME} \
-	--build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
-	--build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f python/docker/Dockerfile.ofagent python
+	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${OFAGENT_IMAGENAME}:${DOCKER_TAG} -t ${OFAGENT_IMAGENAME}:latest -f python/docker/Dockerfile.ofagent python
 
 cli: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${CLI_IMAGENAME} \
-	--build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
-	--build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f python/docker/Dockerfile.cli python
+	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${CLI_IMAGENAME}:${DOCKER_TAG} -t ${CLI_IMAGENAME}:latest -f python/docker/Dockerfile.cli python
 
 adapter_ponsim_olt: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${PONSIMOLT_IMAGENAME} \
-	--build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
-	--build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f python/docker/Dockerfile.adapter_ponsim_olt python
+	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${PONSIMOLT_IMAGENAME}:${DOCKER_TAG} -t ${PONSIMOLT_IMAGENAME}:latest -f python/docker/Dockerfile.adapter_ponsim_olt python
 
 adapter_ponsim_onu: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS) \
-	-t ${PONSIMONU_IMAGENAME} \
-	--build-arg LOCAL_PYVOLTHA=$(LOCAL_PYVOLTHA) \
-	--build-arg LOCAL_PROTOS=$(LOCAL_PROTOS) \
-	--build-arg org_label_schema_version="${VERSION}" \
-	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
-	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
-	--build-arg org_label_schema_build_date="${DOCKER_LABEL_BUILD_DATE}" \
-	--build-arg org_opencord_vcs_commit_date="${DOCKER_LABEL_COMMIT_DATE}" \
-	-f python/docker/Dockerfile.adapter_ponsim_onu python
+	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${PONSIMONU_IMAGENAME}:${DOCKER_TAG} -t ${PONSIMONU_IMAGENAME}:latest -f python/docker/Dockerfile.adapter_ponsim_onu python
 
 docker-push:
-	docker push ${AFROUTER_IMAGENAME}
-	docker push ${AFROUTERD_IMAGENAME}
-	docker push ${RWCORE_IMAGENAME}
-	docker push ${ROCORE_IMAGENAME}
-	docker push ${SIMULATEDOLT_IMAGENAME}
-	docker push ${SIMULATEDONU_IMAGENAME}
-	docker push ${OFAGENT_IMAGENAME}
-	docker push ${CLI_IMAGENAME}
-	docker push ${PONSIMOLT_IMAGENAME}
-	docker push ${PONSIMONU_IMAGENAME}
+	docker push ${AFROUTER_IMAGENAME}:${DOCKER_TAG}
+	docker push ${AFROUTERD_IMAGENAME}:${DOCKER_TAG}
+	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
+	docker push ${ROCORE_IMAGENAME}:${DOCKER_TAG}
+	docker push ${SIMULATEDOLT_IMAGENAME}:${DOCKER_TAG}
+	docker push ${SIMULATEDONU_IMAGENAME}:${DOCKER_TAG}
+	docker push ${OFAGENT_IMAGENAME}:${DOCKER_TAG}
+	docker push ${CLI_IMAGENAME}:${DOCKER_TAG}
+	docker push ${PONSIMOLT_IMAGENAME}:${DOCKER_TAG}
+	docker push ${PONSIMONU_IMAGENAME}:${DOCKER_TAG}
 
 ## lint and unit tests
 
