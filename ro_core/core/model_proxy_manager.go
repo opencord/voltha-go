@@ -37,6 +37,8 @@ const (
 	Voltha
 )
 
+const SENTINEL_ADAPTER_ID = "adapter_sentinel"
+
 // String equivalent for data path agents
 var commonTypes = []string{
 	"Adapters",
@@ -108,6 +110,7 @@ func (mpMgr *ModelProxyManager) ListAdapters(ctx context.Context) (*voltha.Adapt
 
 	var agent *ModelProxy
 	var exists bool
+	var adapter *voltha.Adapter
 
 	if agent, exists = mpMgr.modelProxy[Adapters.String()]; !exists {
 		agent = newModelProxy("adapters", mpMgr.clusterDataProxy)
@@ -117,7 +120,10 @@ func (mpMgr *ModelProxyManager) ListAdapters(ctx context.Context) (*voltha.Adapt
 	adapters := &voltha.Adapters{}
 	if items, _ := agent.Get(); items != nil {
 		for _, item := range items.([]interface{}) {
-			adapters.Items = append(adapters.Items, item.(*voltha.Adapter))
+			adapter = item.(*voltha.Adapter)
+			if adapter.Id != SENTINEL_ADAPTER_ID { // don't report the sentinel
+				adapters.Items = append(adapters.Items, adapter)
+			}
 		}
 		log.Debugw("retrieved-adapters", log.Fields{"adapters": adapters})
 		return adapters, nil
