@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46b4ac86_9d0acfdf",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T19:05:44Z",
+      "side": 1,
+      "message": "nope, prefix was intentional. only way to tell what images are as repos can change. look at Kubernetes as an example, kube-everything.",
+      "revId": "5e98b9f302b17358f329ded9755a1a65450febda",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
