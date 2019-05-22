@@ -244,6 +244,8 @@ func (dg *DeviceGraph) addDevice(device *voltha.Device, g goraph.Graph, devicesA
 		return g
 	}
 
+	log.Debugw("Adding-device", log.Fields{"deviceId": device.Id, "ports": device.Ports})
+
 	if _, exist := (*devicesAdded)[device.Id]; !exist {
 		g.AddNode(goraph.NewNode(device.Id))
 		(*devicesAdded)[device.Id] = device.Id
