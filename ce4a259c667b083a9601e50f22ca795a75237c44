@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56a3d6dc_bcdcdbb2",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T19:40:41Z",
+      "side": 1,
+      "message": "If I understand this change correctly you have separated out the VCS_REF and the +dirty flag. the pattern of REF+dirty as one value is what is used in opencord so not doing so here would be inconsistent.\n\ncheck with @zdw",
+      "revId": "ce4a259c667b083a9601e50f22ca795a75237c44",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5914db02_a451e3fc",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T19:40:41Z",
+      "side": 1,
+      "message": "can\u0027t push dirty tags? if I build 2.0.0+dirty, should I also push 2.0.0+dirty, else I might push what i did not build.",
+      "revId": "ce4a259c667b083a9601e50f22ca795a75237c44",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
