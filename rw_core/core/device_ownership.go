@@ -190,6 +190,7 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 
 	deviceOwned, ownedByMe := da.getOwnership(ownershipKey)
 	if deviceOwned {
+		log.Debugw("ownership", log.Fields{"Id": ownershipKey, "owned": ownedByMe})
 		return ownedByMe
 	}
 	// Not owned by me or maybe nobody else.  Try to reserve it
@@ -283,6 +284,7 @@ func (da *DeviceOwnership) deleteDeviceKey(id string) {
 // device Id of a child device or the rootdevice of a logical device.   This function also returns the
 // id in string format of the id param via the ref output as well as if the data was retrieved from cache
 func (da *DeviceOwnership) getOwnershipKey(id interface{}) (ownershipKey string, ref string, cached bool, err error) {
+
 	if id == nil {
 		return "", "", false, status.Error(codes.InvalidArgument, "nil-id")
 	}

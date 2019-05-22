@@ -21,6 +21,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
+	"github.com/opencord/voltha-go/rw_core/utils"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
@@ -121,14 +122,21 @@ func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 		dMgr.lockDeviceAgentsMap.RUnlock()
 		return agent
 	} else {
-		//	Try to load into memory - loading will also create the device agent
+		//	Try to load into memory - loading will also create the device agent and set the device ownership
 		dMgr.lockDeviceAgentsMap.RUnlock()
 		if err := dMgr.load(deviceId); err == nil {
 			dMgr.lockDeviceAgentsMap.RLock()
 			defer dMgr.lockDeviceAgentsMap.RUnlock()
-			if agent, ok = dMgr.deviceAgents[deviceId]; ok {
+			if agent, ok = dMgr.deviceAgents[deviceId]; !ok {
+				return nil
+			} else {
+				// Register this device for ownership tracking
+				go dMgr.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: deviceId})
 				return agent
 			}
+		} else {
+			//TODO: Change the return params to return an error as well
+			log.Errorw("loading-device-failed", log.Fields{"deviceId": deviceId, "error": err})
 		}
 	}
 	return nil

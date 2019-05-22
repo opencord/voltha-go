@@ -1067,16 +1067,22 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 	log.Debugw("PacketIn", log.Fields{"deviceId": deviceId.Id, "port": portNo.Val, "packet": packet,
 		"transactionID": transactionID.Val})
 
-	// For performance reason, we do not compete for packet-in.  We process it and send the packet in.  later in the
-	// processing flow the duplicate packet will be discarded
-
+	// Try to grab the transaction as this core may be competing with another Core
+	// TODO: If this adds too much latencies then needs to remove transaction and let OFAgent filter out
+	// duplicates.
+	if rhp.competeForTransaction() {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
+			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
+			return nil, nil
+		} else {
+			defer txn.Close()
+		}
+	}
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
 	go rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), transactionID.Val, packet.Payload)
-	//if err := rhp.deviceMgr.PacketIn(deviceId.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
-	//	return nil, err
-	//}
+
 	return new(empty.Empty), nil
 }
 
