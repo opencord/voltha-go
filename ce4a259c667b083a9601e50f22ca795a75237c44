@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7e21d813_bd4291cc",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-05-22T21:26:16Z",
+      "side": 1,
+      "message": "Other opencord containers use `unknown` instead of the commit if dirty, but REF+dirty seems like a fine option as well.",
+      "parentUuid": "56a3d6dc_bcdcdbb2",
+      "revId": "ce4a259c667b083a9601e50f22ca795a75237c44",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5914db02_a451e3fc",
         "filename": "Makefile",
         "patchSetId": 2
