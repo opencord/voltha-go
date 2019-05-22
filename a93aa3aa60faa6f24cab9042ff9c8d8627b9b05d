@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2034219b_39e1cb40",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T22:30:18Z",
+      "side": 1,
+      "message": "should an error be returned? this seems a little bit different from best practice for go, either that or the condition isn\u0027t an error (i.e. expected) and the log shouldn\u0027t be an error?",
+      "revId": "a93aa3aa60faa6f24cab9042ff9c8d8627b9b05d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5a876c1_3adaf908",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-22T22:30:18Z",
+      "side": 1,
+      "message": "might logDeviceID be nil?",
+      "revId": "a93aa3aa60faa6f24cab9042ff9c8d8627b9b05d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
