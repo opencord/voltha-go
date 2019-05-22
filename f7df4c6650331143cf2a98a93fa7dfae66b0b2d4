@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c37fce62_4485dca3",
+        "filename": "ro_core/core/model_proxy_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-22T22:10:02Z",
+      "side": 1,
+      "message": "No need to use List instead of Get, right?",
+      "revId": "f7df4c6650331143cf2a98a93fa7dfae66b0b2d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
