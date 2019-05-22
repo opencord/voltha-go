@@ -16,6 +16,24 @@
       "revId": "5e98b9f302b17358f329ded9755a1a65450febda",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41966ae7_3a376729",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-22T19:09:56Z",
+      "side": 1,
+      "message": "I would argue that our use case is different.\nImages in the repo are tagged voltha/voltha-, which redundant.\nThere was some discussion in #voltha.",
+      "parentUuid": "46b4ac86_9d0acfdf",
+      "revId": "5e98b9f302b17358f329ded9755a1a65450febda",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
