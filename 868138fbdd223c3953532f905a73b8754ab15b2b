@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2a80056_cd47f620",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-23T15:26:49Z",
+      "side": 1,
+      "message": "In cases where \"this error should never occur\", either assume the error won\u0027t occur (remove the !ok check), or panic (so it\u0027s easy to find the issue quickly if this assumption changes)",
+      "revId": "868138fbdd223c3953532f905a73b8754ab15b2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21a6d4a9_e4cbb41a",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-23T15:26:49Z",
+      "side": 1,
+      "message": "Replace multiple Unlock()s with a single defer Unlock()?",
+      "revId": "868138fbdd223c3953532f905a73b8754ab15b2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
