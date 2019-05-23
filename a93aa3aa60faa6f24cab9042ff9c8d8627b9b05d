@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "96d16b87_3ac9e061",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-23T12:02:02Z",
+      "side": 1,
+      "message": "If we are able to load the device (dMgr.load) then this error should never occur.   Returning nil implies a device agent cannot be found and the calling function always raise an error for it.   It does differ from Go best practice though - can be dealt in a separate Jira as this function is used all over the place.",
+      "parentUuid": "2034219b_39e1cb40",
+      "revId": "a93aa3aa60faa6f24cab9042ff9c8d8627b9b05d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5a876c1_3adaf908",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-22T22:30:18Z",
       "side": 1,
       "message": "might logDeviceID be nil?",
+      "revId": "a93aa3aa60faa6f24cab9042ff9c8d8627b9b05d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36195a26_e3d77f40",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-23T12:02:02Z",
+      "side": 1,
+      "message": "Correct.   There is one scenario where a nil instead of an empty string could be return.   Will fix that.",
+      "parentUuid": "f5a876c1_3adaf908",
       "revId": "a93aa3aa60faa6f24cab9042ff9c8d8627b9b05d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
