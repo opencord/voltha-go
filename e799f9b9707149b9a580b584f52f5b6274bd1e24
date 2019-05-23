@@ -22,6 +22,30 @@
       "revId": "e799f9b9707149b9a580b584f52f5b6274bd1e24",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c67e1865_081740a2",
+        "filename": "Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-05-23T16:44:02Z",
+      "side": 1,
+      "message": "The default is currently meant to be undefined.  Unless the below ifdef and dockerfile changes along with this to look for an explicit \"true\".  \n\nBelow the makefile copies in local builds of pip files and vendored items if its defined at all.  Then the docker file copies them if the arg is defined.  Its purely meant for local development iterations that require changes in multiple repos before they are checked in.",
+      "parentUuid": "e01aa162_15493863",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 41
+      },
+      "revId": "e799f9b9707149b9a580b584f52f5b6274bd1e24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
