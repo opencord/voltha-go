@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dccbbe2e_030c341c",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-23T14:57:24Z",
+      "side": 1,
+      "message": "\u0027+\u0027 is not allowed in docker tag names.",
+      "parentUuid": "96ba5853_52f4155d",
+      "revId": "8c4e99c00e99d91dc45b6c68a1021e7cd513a5f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50cdf6b5_cc6e9173",
         "filename": "docker/Dockerfile.afrouter",
         "patchSetId": 3
@@ -30,6 +48,30 @@
       "writtenOn": "2019-05-22T21:26:16Z",
       "side": 1,
       "message": "This isn\u0027t defined by label-schema.org  - their recommendation is to add `-dirty` or similar to the `version` field.\n\nIf you still want to go this route, you could create a label named `org.opencord.dirty` (like the `org.opencord.vcs-commit-date` below in this file) to avoid using their label namespace.",
+      "range": {
+        "startLine": 74,
+        "startChar": 6,
+        "endLine": 74,
+        "endChar": 33
+      },
+      "revId": "8c4e99c00e99d91dc45b6c68a1021e7cd513a5f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fca376f0_0b3751e0",
+        "filename": "docker/Dockerfile.afrouter",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-23T14:57:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50cdf6b5_cc6e9173",
       "range": {
         "startLine": 74,
         "startChar": 6,
