@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2079cf6a_8ee32b4e",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-23T15:41:43Z",
+      "side": 1,
+      "message": "I am ambivalent on this one.  A panic may be too harsh of a treatment here.   This error will not go undetectable as the calling function will raise an error in this case.",
+      "parentUuid": "d2a80056_cd47f620",
+      "revId": "868138fbdd223c3953532f905a73b8754ab15b2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21a6d4a9_e4cbb41a",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-23T15:26:49Z",
       "side": 1,
       "message": "Replace multiple Unlock()s with a single defer Unlock()?",
+      "revId": "868138fbdd223c3953532f905a73b8754ab15b2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "977c359d_61f1f505",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-23T15:41:43Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "21a6d4a9_e4cbb41a",
       "revId": "868138fbdd223c3953532f905a73b8754ab15b2b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
