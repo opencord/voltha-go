@@ -54,6 +54,8 @@ func (t DataModelType) String() string {
 	return commonTypes[t-1]
 }
 
+const MultipleValuesMsg = "Expected a single value for KV query for an instance (%s) of type '%s', but received multiple values"
+
 // ModelProxyManager controls requests made to the miscellaneous data path agents
 type ModelProxyManager struct {
 	modelProxy       map[string]*ModelProxy
@@ -71,19 +73,12 @@ func newModelProxyManager(cdProxy *model.Proxy) *ModelProxyManager {
 func (mpMgr *ModelProxyManager) GetVoltha(ctx context.Context) (*voltha.Voltha, error) {
 	log.Debug("GetVoltha")
 
-	var agent *ModelProxy
-	var exists bool
-
-	if agent, exists = mpMgr.modelProxy[Voltha.String()]; !exists {
-		agent = newModelProxy("", mpMgr.clusterDataProxy)
-		mpMgr.modelProxy[Voltha.String()] = agent
-	}
-
-	if instance, _ := agent.Get(); instance != nil {
-		return instance.(*voltha.Voltha), nil
-	}
-
-	return &voltha.Voltha{}, status.Errorf(codes.NotFound, "no-voltha-instance")
+	// TODO: Need to retrieve VOLTHA core information, for now return empty
+	// value
+	return &voltha.Voltha{
+		// TODO: hardcoded for now until ldflags are supported
+		Version: "2.1.0-dev",
+	}, nil
 }
 
 // ListCoreInstances returns all the core instances known to the system
@@ -118,8 +113,14 @@ func (mpMgr *ModelProxyManager) ListAdapters(ctx context.Context) (*voltha.Adapt
 	}
 
 	adapters := &voltha.Adapters{}
-	if items, _ := agent.Get(); items != nil {
-		for _, item := range items.([]interface{}) {
+	if items, err := agent.Get(); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	} else if items != nil {
+		list, ok := items.([]interface{})
+		if !ok {
+			list = []interface{}{items}
+		}
+		for _, item := range list {
 			adapter = item.(*voltha.Adapter)
 			if adapter.Id != SENTINEL_ADAPTER_ID { // don't report the sentinel
 				adapters.Items = append(adapters.Items, adapter)
@@ -145,8 +146,14 @@ func (mpMgr *ModelProxyManager) ListDeviceTypes(ctx context.Context) (*voltha.De
 	}
 
 	deviceTypes := &voltha.DeviceTypes{}
-	if items, _ := agent.Get(); items != nil {
-		for _, item := range items.([]interface{}) {
+	if items, err := agent.Get(); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	} else if items != nil {
+		list, ok := items.([]interface{})
+		if !ok {
+			list = []interface{}{items}
+		}
+		for _, item := range list {
 			deviceTypes.Items = append(deviceTypes.Items, item.(*voltha.DeviceType))
 		}
 		return deviceTypes, nil
@@ -167,7 +174,14 @@ func (mpMgr *ModelProxyManager) GetDeviceType(ctx context.Context, id string) (*
 		mpMgr.modelProxy[DeviceTypes.String()] = agent
 	}
 
-	if deviceType, _ := agent.Get(id); deviceType != nil {
+	if deviceType, err := agent.Get(id); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	} else if deviceType != nil {
+		_, ok := deviceType.(*voltha.DeviceType)
+		if !ok {
+			return nil, status.Errorf(codes.Internal, MultipleValuesMsg,
+				id, DeviceTypes.String())
+		}
 		return deviceType.(*voltha.DeviceType), nil
 	}
 
@@ -187,8 +201,14 @@ func (mpMgr *ModelProxyManager) ListDeviceGroups(ctx context.Context) (*voltha.D
 	}
 
 	deviceGroups := &voltha.DeviceGroups{}
-	if items, _ := agent.Get(); items != nil {
-		for _, item := range items.([]interface{}) {
+	if items, err := agent.Get(); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	} else if items != nil {
+		list, ok := items.([]interface{})
+		if !ok {
+			list = []interface{}{items}
+		}
+		for _, item := range list {
 			deviceGroups.Items = append(deviceGroups.Items, item.(*voltha.DeviceGroup))
 		}
 		return deviceGroups, nil
@@ -209,7 +229,14 @@ func (mpMgr *ModelProxyManager) GetDeviceGroup(ctx context.Context, id string) (
 		mpMgr.modelProxy[DeviceGroups.String()] = agent
 	}
 
-	if deviceGroup, _ := agent.Get(id); deviceGroup != nil {
+	if deviceGroup, err := agent.Get(id); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	} else if deviceGroup != nil {
+		_, ok := deviceGroup.(*voltha.DeviceGroup)
+		if !ok {
+			return nil, status.Errorf(codes.Internal, MultipleValuesMsg,
+				id, DeviceGroups.String())
+		}
 		return deviceGroup.(*voltha.DeviceGroup), nil
 	}
 
@@ -229,8 +256,14 @@ func (mpMgr *ModelProxyManager) ListAlarmFilters(ctx context.Context) (*voltha.A
 	}
 
 	alarmFilters := &voltha.AlarmFilters{}
-	if items, _ := agent.Get(); items != nil {
-		for _, item := range items.([]interface{}) {
+	if items, err := agent.Get(); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	} else if items != nil {
+		list, ok := items.([]interface{})
+		if !ok {
+			list = []interface{}{items}
+		}
+		for _, item := range list {
 			alarmFilters.Filters = append(alarmFilters.Filters, item.(*voltha.AlarmFilter))
 		}
 		return alarmFilters, nil
@@ -251,7 +284,14 @@ func (mpMgr *ModelProxyManager) GetAlarmFilter(ctx context.Context, id string) (
 		mpMgr.modelProxy[AlarmFilters.String()] = agent
 	}
 
-	if alarmFilter, _ := agent.Get(id); alarmFilter != nil {
+	if alarmFilter, err := agent.Get(id); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	} else if alarmFilter != nil {
+		_, ok := alarmFilter.(*voltha.AlarmFilter)
+		if !ok {
+			return nil, status.Errorf(codes.Internal, MultipleValuesMsg,
+				id, AlarmFilters.String())
+		}
 		return alarmFilter.(*voltha.AlarmFilter), nil
 	}
 	return &voltha.AlarmFilter{}, status.Errorf(codes.NotFound, "alarm-filter-%s", id)

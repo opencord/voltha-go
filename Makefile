@@ -25,6 +25,7 @@ ifneq ($(shell git ls-files --others --modified --exclude-standard 2>/dev/null |
     DOCKER_LABEL_VCS_DIRTY = true
 endif
 ## Docker related
+DOCKER_EXTRA_ARGS          ?=
 DOCKER_REGISTRY            ?=
 DOCKER_REPOSITORY          ?=
 DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
@@ -47,6 +48,7 @@ DOCKER_LABEL_BUILD_DATE    ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
 DOCKER_LABEL_COMMIT_DATE   = $(shell git show -s --format=%cd --date=iso-strict HEAD)
 
 DOCKER_BUILD_ARGS ?= \
+	${DOCKER_EXTRA_ARGS} \
 	--build-arg org_label_schema_version="${VERSION}" \
 	--build-arg org_label_schema_vcs_url="${DOCKER_LABEL_VCS_URL}" \
 	--build-arg org_label_schema_vcs_ref="${DOCKER_LABEL_VCS_REF}" \
