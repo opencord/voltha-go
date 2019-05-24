@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78606a8f_78e1ec77",
+        "filename": "ro_core/core/model_proxy_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-24T21:06:14Z",
+      "side": 1,
+      "message": "Typo in received",
+      "revId": "341ba1fc9d0964a4b1eb050d80216d7bfef7975f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
