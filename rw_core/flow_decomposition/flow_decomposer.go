@@ -41,9 +41,8 @@ func NewFlowDecomposer(deviceMgr coreIf.DeviceManager) *FlowDecomposer {
 }
 
 //DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
-func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups, includeDefaultFlows bool) *fu.DeviceRules {
-	rules := agent.GetAllDefaultRules()
-	deviceRules := rules.Copy()
+func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) *fu.DeviceRules {
+	deviceRules := *fu.NewDeviceRules()
 	devicesToUpdate := make(map[string]string)
 
 	groupMap := make(map[uint32]*ofp.OfpGroupEntry)
@@ -60,12 +59,7 @@ func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows 
 			devicesToUpdate[deviceId] = deviceId
 		}
 	}
-	if includeDefaultFlows {
-		return deviceRules
-	}
-	updatedDeviceRules := deviceRules.FilterRules(devicesToUpdate)
-
-	return updatedDeviceRules
+	return deviceRules.FilterRules(devicesToUpdate)
 }
 
 // Handles special case of any controller-bound flow for a parent device

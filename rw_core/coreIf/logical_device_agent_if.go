@@ -21,7 +21,6 @@ package coreIf
 
 import (
 	"github.com/opencord/voltha-go/rw_core/graph"
-	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-protos/go/voltha"
 )
 
@@ -29,7 +28,6 @@ import (
 type LogicalDeviceAgent interface {
 	GetLogicalDevice() (*voltha.LogicalDevice, error)
 	GetDeviceGraph() *graph.DeviceGraph
-	GetAllDefaultRules() *utils.DeviceRules
 	GetWildcardInputPorts(excludePort ...uint32) []uint32
 	GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop
 }
