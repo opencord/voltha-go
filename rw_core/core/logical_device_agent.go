@@ -35,26 +35,23 @@ import (
 )
 
 type LogicalDeviceAgent struct {
-	logicalDeviceId string
-	//lastData          *voltha.LogicalDevice
-	rootDeviceId        string
-	deviceMgr           *DeviceManager
-	ldeviceMgr          *LogicalDeviceManager
-	clusterDataProxy    *model.Proxy
-	exitChannel         chan int
-	deviceGraph         *graph.DeviceGraph
-	DefaultFlowRules    *fu.DeviceRules
-	flowProxy           *model.Proxy
-	groupProxy          *model.Proxy
-	ldProxy             *model.Proxy
-	portProxies         map[string]*model.Proxy
-	portProxiesLock     sync.RWMutex
-	lockLogicalDevice   sync.RWMutex
-	logicalPortsNo      map[uint32]bool //value is true for NNI port
-	lockLogicalPortsNo  sync.RWMutex
-	flowDecomposer      *fd.FlowDecomposer
-	includeDefaultFlows bool
-	defaultTimeout      int64
+	logicalDeviceId    string
+	rootDeviceId       string
+	deviceMgr          *DeviceManager
+	ldeviceMgr         *LogicalDeviceManager
+	clusterDataProxy   *model.Proxy
+	exitChannel        chan int
+	deviceGraph        *graph.DeviceGraph
+	flowProxy          *model.Proxy
+	groupProxy         *model.Proxy
+	ldProxy            *model.Proxy
+	portProxies        map[string]*model.Proxy
+	portProxiesLock    sync.RWMutex
+	lockLogicalDevice  sync.RWMutex
+	logicalPortsNo     map[uint32]bool //value is true for NNI port
+	lockLogicalPortsNo sync.RWMutex
+	flowDecomposer     *fd.FlowDecomposer
+	defaultTimeout     int64
 }
 
 func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDeviceManager,
@@ -73,7 +70,6 @@ func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDevice
 	agent.portProxiesLock = sync.RWMutex{}
 	agent.lockLogicalPortsNo = sync.RWMutex{}
 	agent.logicalPortsNo = make(map[uint32]bool)
-	agent.includeDefaultFlows = true
 	agent.defaultTimeout = timeout
 	return &agent
 }
@@ -155,8 +151,6 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		log.Errorw("logical-device-proxy-null", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 		return status.Error(codes.Internal, "logical-device-proxy-null")
 	}
-
-	agent.includeDefaultFlows = true
 
 	return nil
 }
@@ -551,13 +545,10 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	}
 	if changed {
 		// Launch a routine to decompose the flows
-		if err := agent.decomposeAndSendFlows(&ofp.Flows{Items: updatedFlows}, lDevice.FlowGroups, agent.includeDefaultFlows); err != nil {
+		if err := agent.decomposeAndSendFlows(&ofp.Flows{Items: updatedFlows}, lDevice.FlowGroups); err != nil {
 			log.Errorw("decomposing-and-sending-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 			return err
 		}
-
-		// We no longer need to sent the default flows, unless there is a change in device topology
-		agent.includeDefaultFlows = false
 
 		//	Update model
 		flowsToUpdate := &ofp.Flows{}
@@ -572,10 +563,10 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	return nil
 }
 
-func (agent *LogicalDeviceAgent) decomposeAndSendFlows(flows *ofp.Flows, groups *ofp.FlowGroups, includeDefaultFlows bool) error {
+func (agent *LogicalDeviceAgent) decomposeAndSendFlows(flows *ofp.Flows, groups *ofp.FlowGroups) error {
 	log.Debugw("decomposeAndSendFlows", log.Fields{"logicalDeviceID": agent.logicalDeviceId})
 
-	deviceRules := agent.flowDecomposer.DecomposeRules(agent, *flows, *groups, includeDefaultFlows)
+	deviceRules := agent.flowDecomposer.DecomposeRules(agent, *flows, *groups)
 	log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 	chnlsList := make([]chan interface{}, 0)
@@ -1022,99 +1013,6 @@ func (agent *LogicalDeviceAgent) GetRoute(ingressPortNo uint32, egressPortNo uin
 	return agent.getPreCalculatedRoute(ingressPortNo, egressPortNo)
 }
 
-func (agent *LogicalDeviceAgent) rootDeviceDefaultRules() *fu.FlowsAndGroups {
-	return fu.NewFlowsAndGroups()
-}
-
-func (agent *LogicalDeviceAgent) leafDeviceDefaultRules(deviceId string) *fu.FlowsAndGroups {
-	fg := fu.NewFlowsAndGroups()
-	var device *voltha.Device
-	var err error
-	if device, err = agent.deviceMgr.GetDevice(deviceId); err != nil {
-		return fg
-	}
-	//set the upstream and downstream ports
-	upstreamPorts := make([]*voltha.Port, 0)
-	downstreamPorts := make([]*voltha.Port, 0)
-	for _, port := range device.Ports {
-		if port.Type == voltha.Port_PON_ONU || port.Type == voltha.Port_VENET_ONU {
-			upstreamPorts = append(upstreamPorts, port)
-		} else if port.Type == voltha.Port_ETHERNET_UNI {
-			downstreamPorts = append(downstreamPorts, port)
-		}
-	}
-	//it is possible that the downstream ports are not created, but the flow_decomposition has already
-	//kicked in. In such scenarios, cut short the processing and return.
-	if len(downstreamPorts) == 0 || len(upstreamPorts) == 0 {
-		return fg
-	}
-	// set up the default flows
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": 500},
-		MatchFields: []*ofp.OfpOxmOfbField{
-			fu.InPort(downstreamPorts[0].PortNo),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
-		},
-		Actions: []*ofp.OfpAction{
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
-			fu.Output(upstreamPorts[0].PortNo),
-		},
-	}
-	fg.AddFlow(fu.MkFlowStat(fa))
-
-	fa = &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": 500},
-		MatchFields: []*ofp.OfpOxmOfbField{
-			fu.InPort(downstreamPorts[0].PortNo),
-			fu.VlanVid(0),
-		},
-		Actions: []*ofp.OfpAction{
-			fu.PushVlan(0x8100),
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan)),
-			fu.Output(upstreamPorts[0].PortNo),
-		},
-	}
-	fg.AddFlow(fu.MkFlowStat(fa))
-
-	fa = &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": 500},
-		MatchFields: []*ofp.OfpOxmOfbField{
-			fu.InPort(upstreamPorts[0].PortNo),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | device.Vlan),
-		},
-		Actions: []*ofp.OfpAction{
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
-			fu.Output(downstreamPorts[0].PortNo),
-		},
-	}
-	fg.AddFlow(fu.MkFlowStat(fa))
-
-	return fg
-}
-
-func (agent *LogicalDeviceAgent) generateDefaultRules() *fu.DeviceRules {
-	rules := fu.NewDeviceRules()
-	var ld *voltha.LogicalDevice
-	var err error
-	if ld, err = agent.GetLogicalDevice(); err != nil {
-		log.Warnw("no-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-		return rules
-	}
-
-	deviceNodeIds := agent.deviceGraph.GetDeviceNodeIds()
-	for deviceId := range deviceNodeIds {
-		if deviceId == ld.RootDeviceId {
-			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
-		}
-	}
-	return rules
-}
-
-func (agent *LogicalDeviceAgent) GetAllDefaultRules() *fu.DeviceRules {
-	return agent.DefaultFlowRules
-}
-
 //GetWildcardInputPorts filters out the logical port number from the set of logical ports on the device and
 //returns their port numbers.  This function is invoked only during flow decomposition where the lock on the logical
 //device is already held.  Therefore it is safe to retrieve the logical device without lock.
@@ -1138,12 +1036,11 @@ func (agent *LogicalDeviceAgent) GetDeviceGraph() *graph.DeviceGraph {
 	return agent.deviceGraph
 }
 
-//updateRoutes redo the device graph if not done already and setup the default rules as well
+//updateRoutes rebuilds the device graph if not done already
 func (agent *LogicalDeviceAgent) updateRoutes(device *voltha.Device, port *voltha.Port) error {
 	log.Debugf("updateRoutes", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "device": device.Id, "port": port})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
-	rules := fu.NewDeviceRules()
 	if agent.deviceGraph == nil {
 		agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceId, agent.deviceMgr.GetDevice)
 	}
@@ -1155,17 +1052,6 @@ func (agent *LogicalDeviceAgent) updateRoutes(device *voltha.Device, port *volth
 		//TODO:  Find a better way to refresh only missing routes
 		agent.deviceGraph.ComputeRoutes(lDevice.Ports)
 	}
-	deviceNodeIds := agent.deviceGraph.GetDeviceNodeIds()
-	for deviceId := range deviceNodeIds {
-		if deviceId == agent.rootDeviceId {
-			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
-		}
-	}
-	agent.DefaultFlowRules = rules
-
-	// Reset the default flows flag to ensure all default flows are sent to all devices, including the newly added
-	// one when a flow request is received.
-	agent.includeDefaultFlows = true
 	agent.deviceGraph.Print()
 	return nil
 }
@@ -1175,22 +1061,10 @@ func (agent *LogicalDeviceAgent) updateDeviceGraph(lp *voltha.LogicalPort) {
 	log.Debugf("updateDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
-	rules := fu.NewDeviceRules()
 	if agent.deviceGraph == nil {
 		agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceId, agent.deviceMgr.GetDevice)
 	}
 	agent.deviceGraph.AddPort(lp)
-	deviceNodeIds := agent.deviceGraph.GetDeviceNodeIds()
-	for deviceId := range deviceNodeIds {
-		if deviceId == agent.rootDeviceId {
-			rules.AddFlowsAndGroup(deviceId, agent.rootDeviceDefaultRules())
-		}
-	}
-	agent.DefaultFlowRules = rules
-
-	// Reset the default flows flag to ensure all default flows are sent to all devices, including the newly added
-	// one when a flow request is received.
-	agent.includeDefaultFlows = true
 	agent.deviceGraph.Print()
 }
 
