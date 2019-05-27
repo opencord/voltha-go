@@ -183,6 +183,30 @@ func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, erro
 	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
 }
 
+func (agent *LogicalDeviceAgent) ListLogicalDeviceFlows() (*ofp.Flows, error) {
+	log.Debug("ListLogicalDeviceFlows")
+	agent.lockLogicalDevice.RLock()
+	defer agent.lockLogicalDevice.RUnlock()
+	logicalDevice := agent.clusterDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+		cFlows := (proto.Clone(lDevice.Flows)).(*ofp.Flows)
+		return cFlows, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+}
+
+func (agent *LogicalDeviceAgent) ListLogicalDeviceFlowGroups() (*ofp.FlowGroups, error) {
+	log.Debug("ListLogicalDeviceFlowGroups")
+	agent.lockLogicalDevice.RLock()
+	defer agent.lockLogicalDevice.RUnlock()
+	logicalDevice := agent.clusterDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+		cFlowGroups := (proto.Clone(lDevice.FlowGroups)).(*ofp.FlowGroups)
+		return cFlowGroups, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+}
+
 func (agent *LogicalDeviceAgent) ListLogicalDevicePorts() (*voltha.LogicalPorts, error) {
 	log.Debug("ListLogicalDevicePorts")
 	agent.lockLogicalDevice.RLock()

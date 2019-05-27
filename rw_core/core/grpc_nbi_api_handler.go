@@ -389,6 +389,16 @@ func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty)
 	return handler.adapterMgr.listAdapters(ctx)
 }
 
+func (handler *APIHandler) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
+	log.Debugw("ListLogicalDeviceFlows", log.Fields{"id": *id})
+	return handler.logicalDeviceMgr.ListLogicalDeviceFlows(ctx, id.Id)
+}
+
+func (handler *APIHandler) ListLogicalDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*openflow_13.FlowGroups, error) {
+	log.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"id": *id})
+	return handler.logicalDeviceMgr.ListLogicalDeviceFlowGroups(ctx, id.Id)
+}
+
 // ListLogicalDevicePorts must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})

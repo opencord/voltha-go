@@ -300,13 +300,28 @@ func (ldMgr *LogicalDeviceManager) getLogicalPortId(device *voltha.Device) (*vol
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
+func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, id string) (*openflow_13.Flows, error) {
+	log.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id})
+	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
+		return agent.ListLogicalDeviceFlows()
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", id)
+}
+
+func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlowGroups(ctx context.Context, id string) (*openflow_13.FlowGroups, error) {
+	log.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"logicaldeviceid": id})
+	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
+		return agent.ListLogicalDeviceFlowGroups()
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", id)
+}
+
 func (ldMgr *LogicalDeviceManager) ListLogicalDevicePorts(ctx context.Context, id string) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
 		return agent.ListLogicalDevicePorts()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
-
 }
 
 func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortId *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
