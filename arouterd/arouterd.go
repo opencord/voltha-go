@@ -18,9 +18,11 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"math"
 	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"time"
@@ -28,6 +30,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/version"
 	"github.com/opencord/voltha-go/kafka"
 	pb "github.com/opencord/voltha-protos/go/afrouter"
 	cmn "github.com/opencord/voltha-protos/go/common"
@@ -53,6 +56,10 @@ type volthaPod struct {
 type podTrack struct {
 	pod *volthaPod
 	dn  bool
+}
+
+type Configuration struct {
+	DisplayVersionOnly *bool
 }
 
 var (
@@ -783,6 +790,22 @@ func main() {
 	//var rwCorePodsPrev map[string]rwPod = make(map[string]rwPod)
 	var err error
 	var conn *grpc.ClientConn
+
+	config := &Configuration{}
+	cmdParse := flag.NewFlagSet(path.Base(os.Args[0]), flag.ContinueOnError)
+	config.DisplayVersionOnly = cmdParse.Bool("version", false, "Print version information and exit")
+
+	err = cmdParse.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if *config.DisplayVersionOnly {
+		fmt.Println("VOLTHA API Server (afrouterd)")
+		fmt.Println(version.VersionInfo.String("  "))
+		return
+	}
 
 	// Set up the regular expression to identify the voltha cores
 	rwCoreFltr := regexp.MustCompile(`rw-core[0-9]-`)

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/opencord/voltha-go/afrouter/afrouter"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/version"
 	"google.golang.org/grpc/grpclog"
 	slog "log"
 	"os"
@@ -39,6 +40,12 @@ func main() {
 	}
 
 	defer log.CleanUp()
+
+	if *conf.DisplayVersionOnly {
+		fmt.Println("VOLTHA API Server (afrouter)")
+		fmt.Println(version.VersionInfo.String("  "))
+		return
+	}
 
 	// Parse the config file
 	err = conf.LoadConfig()
