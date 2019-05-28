@@ -17,6 +17,13 @@
 
 FROM golang:1.12-alpine3.9 AS build-env
 
+ARG org_label_schema_version=unknown
+ARG org_label_schema_vcs_url=unknown
+ARG org_label_schema_vcs_ref=unknown
+ARG org_label_schema_build_date=unknown
+ARG org_opencord_vcs_commit_date=unknown
+ARG org_opencord_vcs_dirty=unknown
+
 # Install required packages
 RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
 
@@ -38,7 +45,15 @@ COPY vendor ./vendor
 COPY rw_core ./rw_core
 
 # Build
-RUN cd rw_core && go build -o /build/rw_core
+RUN cd rw_core && go build -o /build/rw_core \
+	-ldflags \
+	"-X github.com/opencord/voltha-go/common/version.version=$org_label_schema_version \
+	 -X github.com/opencord/voltha-go/common/version.vcsRef=$org_label_schema_vcs_ref  \
+	 -X github.com/opencord/voltha-go/common/version.vcsDirty=$org_opencord_vcs_dirty \
+	 -X github.com/opencord/voltha-go/common/version.goVersion=$(go version 2>&1 | sed -E  's/.*go([0-9]+\.[0-9]+\.[0-9]+).*/\1/g') \
+	 -X github.com/opencord/voltha-go/common/version.os=$(uname -s | tr A-Z a-z) \
+	 -X github.com/opencord/voltha-go/common/version.arch=$(uname -m | tr A-Z a-z) \
+	 -X github.com/opencord/voltha-go/common/version.buildTime=$org_label_schema_build_date"
 
 # -------------
 # Image creation stage

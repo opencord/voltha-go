@@ -21,6 +21,7 @@ import (
 	"fmt"
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/version"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/ro_core/config"
 	c "github.com/opencord/voltha-go/ro_core/core"
@@ -159,13 +160,19 @@ func waitForExit() int {
 }
 
 func printBanner() {
-	fmt.Println("                                            ")
-	fmt.Println(" ______        ______                       ")
-	fmt.Println("|  _ \\ \\      / / ___|___  _ __ ___       ")
-	fmt.Println("| |_) \\ \\ /\\ / / |   / _ \\| '__/ _ \\   ")
-	fmt.Println("|  _ < \\ V  V /| |__| (_) | | |  __/       ")
-	fmt.Println("|_| \\_\\ \\_/\\_/  \\____\\___/|_|  \\___| ")
-	fmt.Println("                                            ")
+	fmt.Println()
+	fmt.Println(" ____   ___   ____               ")
+	fmt.Println("|  _ \\ / _ \\ / ___|___  _ __ ___ ")
+	fmt.Println("| |_) | | | | |   / _ \\| '__/ _ \\")
+	fmt.Println("|  _ <| |_| | |__| (_) | | |  __/")
+	fmt.Println("|_| \\_\\\\___/ \\____\\___/|_|  \\___|")
+	fmt.Println()
+
+}
+
+func printVersion() {
+	fmt.Println("VOLTHA Read-Only Core")
+	fmt.Println(version.VersionInfo.String("  "))
 }
 
 func main() {
@@ -189,6 +196,12 @@ func main() {
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/ro_core/core", log.DebugLevel)
 
 	defer log.CleanUp()
+
+	// Print verison / build information and exit
+	if cf.Version {
+		printVersion()
+		return
+	}
 
 	// Print banner if specified
 	if cf.Banner {
