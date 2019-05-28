@@ -21,6 +21,7 @@ import (
 	"fmt"
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/version"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/kafka"
 	"github.com/opencord/voltha-go/rw_core/config"
@@ -210,6 +211,11 @@ func printBanner() {
 	fmt.Println("                                            ")
 }
 
+func printVersion() {
+	fmt.Println("VOLTHA Read-Write Core")
+	fmt.Println(version.VersionInfo.String("  "))
+}
+
 func main() {
 	start := time.Now()
 
@@ -237,6 +243,12 @@ func main() {
 	//log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
 
 	defer log.CleanUp()
+
+	// Print verison / build information and exit
+	if cf.Version {
+		printVersion()
+		return
+	}
 
 	// Print banner if specified
 	if cf.Banner {
