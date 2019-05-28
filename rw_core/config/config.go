@@ -41,6 +41,7 @@ const (
 	default_KVStoreDataPrefix         = "service/voltha"
 	default_LogLevel                  = 0
 	default_Banner                    = false
+	default_DisplayVersionOnly        = false
 	default_CoreTopic                 = "rwcore"
 	default_RWCoreEndpoint            = "rwcore"
 	default_RWCoreKey                 = "pki/voltha.key"
@@ -74,6 +75,7 @@ type RWCoreFlags struct {
 	CoreTopic                 string
 	LogLevel                  int
 	Banner                    bool
+	DisplayVersionOnly        bool
 	RWCoreKey                 string
 	RWCoreCert                string
 	RWCoreCA                  string
@@ -109,6 +111,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		CoreTopic:                 default_CoreTopic,
 		LogLevel:                  default_LogLevel,
 		Banner:                    default_Banner,
+		DisplayVersionOnly:        default_DisplayVersionOnly,
 		RWCoreKey:                 default_RWCoreKey,
 		RWCoreCert:                default_RWCoreCert,
 		RWCoreCA:                  default_RWCoreCA,
@@ -192,6 +195,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&cf.Banner, "banner", default_Banner, help)
+
+	help = fmt.Sprintf("Show version information and exit")
+	flag.BoolVar(&cf.DisplayVersionOnly, "version", default_DisplayVersionOnly, help)
 
 	help = fmt.Sprintf("The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
 	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", default_CoreBindingKey, help)

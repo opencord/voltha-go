@@ -17,7 +17,9 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/version"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -73,11 +75,22 @@ func newModelProxyManager(cdProxy *model.Proxy) *ModelProxyManager {
 func (mpMgr *ModelProxyManager) GetVoltha(ctx context.Context) (*voltha.Voltha, error) {
 	log.Debug("GetVoltha")
 
-	// TODO: Need to retrieve VOLTHA core information, for now return empty
-	// value
+	/*
+	 * For now, encode all the version information into a JSON object and
+	 * pass that back as "version" so the client can get all the
+	 * information associated with the version. Long term the API should
+	 * better accomidate this, but for now this will work.
+	 */
+	data, err := json.Marshal(&version.VersionInfo)
+	info := version.VersionInfo.Version
+	if err != nil {
+		log.Warnf("Unable to encode version information as JSON: %s", err.Error())
+	} else {
+		info = string(data)
+	}
+
 	return &voltha.Voltha{
-		// TODO: hardcoded for now until ldflags are supported
-		Version: "2.1.0-dev",
+		Version: info,
 	}, nil
 }
 
