@@ -34,6 +34,7 @@ func ParseCmd() (*Configuration, error) {
 	config.ConfigFile = cmdParse.String("config", "arouter.json", "The configuration file for the affinity router")
 	config.LogLevel = cmdParse.Int("logLevel", 0, "The log level for the affinity router")
 	config.GrpcLog = cmdParse.Bool("grpclog", false, "Enable GRPC logging")
+	config.DisplayVersionOnly = cmdParse.Bool("version", false, "Print version information and exit")
 
 	err := cmdParse.Parse(os.Args[1:])
 	if err != nil {
@@ -50,6 +51,7 @@ type Configuration struct {
 	ConfigFile         *string
 	LogLevel           *int
 	GrpcLog            *bool
+	DisplayVersionOnly *bool
 	Servers            []ServerConfig         `json:"servers"`
 	Ports              PortConfig             `json:"ports"`
 	ServerCertificates ServerCertConfig       `json:"serverCertificates"`

@@ -36,6 +36,7 @@ const (
 	default_KVTxnKeyDelTime       = 60
 	default_LogLevel              = 0
 	default_Banner                = false
+	default_DisplayVersionOnly    = false
 	default_CoreTopic             = "rocore"
 	default_ROCoreEndpoint        = "rocore"
 	default_ROCoreKey             = "pki/voltha.key"
@@ -59,6 +60,7 @@ type ROCoreFlags struct {
 	CoreTopic           string
 	LogLevel            int
 	Banner              bool
+	DisplayVersionOnly  bool
 	ROCoreKey           string
 	ROCoreCert          string
 	ROCoreCA            string
@@ -84,6 +86,7 @@ func NewROCoreFlags() *ROCoreFlags {
 		CoreTopic:           default_CoreTopic,
 		LogLevel:            default_LogLevel,
 		Banner:              default_Banner,
+		DisplayVersionOnly:  default_DisplayVersionOnly,
 		ROCoreKey:           default_ROCoreKey,
 		ROCoreCert:          default_ROCoreCert,
 		ROCoreCA:            default_ROCoreCA,
@@ -132,6 +135,9 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&cf.Banner, "banner", default_Banner, help)
+
+	help = fmt.Sprintf("Show version information and exit")
+	flag.BoolVar(&cf.DisplayVersionOnly, "version", default_DisplayVersionOnly, help)
 
 	flag.Parse()
 
