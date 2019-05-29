@@ -87,6 +87,24 @@
       "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47444890_42da4ab6",
+        "filename": "common/version/version.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-29T01:06:38Z",
+      "side": 1,
+      "message": "I had thought about that, but then we get into the issue of we might have something that is in the KV store, but not actually running or maybe even downloaded.\n\nI was wondering if the api-server needs to \"trap\" on a version request and query k8s for running \"core\" voltha components, get the version information from each of those and return a list of version blocks.\n\nI say \"core\" components because version information for adapters can be gotten from the adapters list API.",
+      "parentUuid": "e0369ed8_82853960",
+      "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
