@@ -129,7 +129,7 @@ In the example below we are using the docker-compose command to run these contai
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/docker-compose-zk-kafka-test.yml up -d
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/docker-compose-etcd.yml up -d
 DOCKER_HOST_IP=<Host IP> docker-compose -f compose/rw_core.yml up -d
-DOCKER_HOST_IP=<Host IP> docker-compose -f compose/compose/adapters-simulated.yml up -d
+DOCKER_HOST_IP=<Host IP> docker-compose -f compose/adapters-simulated.yml up -d
 ```
 
 
