@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "974a6790_9bd0da2a",
+        "filename": "afrouter/afrouter/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-29T00:50:28Z",
+      "side": 1,
+      "message": "Would the \"config.Version\" name be less confusing if we use \"config.DisplayVersionOnly\"? Just a thought.",
+      "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a9933b8_358907b6",
+        "filename": "common/version/version.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-29T00:50:28Z",
+      "side": 1,
+      "message": "The version string definition in the grpc file can be changed with a new version proto message added.   I don\u0027t believe anyone is using the version field other than the Core. Thoughts?",
+      "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
