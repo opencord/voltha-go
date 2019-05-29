@@ -134,6 +134,19 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalD
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
+func (ldMgr *LogicalDeviceManager) listManagedLogicalDevices() (*voltha.LogicalDevices, error) {
+	log.Debug("listManagedLogicalDevices")
+	result := &voltha.LogicalDevices{}
+	ldMgr.lockLogicalDeviceAgentsMap.RLock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.RUnlock()
+	for _, agent := range ldMgr.logicalDeviceAgents {
+		if ld, _ := agent.GetLogicalDevice(); ld != nil {
+			result.Items = append(result.Items, ld)
+		}
+	}
+	return result, nil
+}
+
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}

@@ -121,7 +121,24 @@ func (handler *APIHandler) competeForTransaction() bool {
 	return handler.coreInCompetingMode
 }
 
-// This function handles the creation of new devices
+// acquireRequestForList handles transaction processing for list requests, i.e. when there are no specific id requested.
+func (handler *APIHandler) acquireRequestForList(ctx context.Context, maxTimeout ...int64) (*KVTransaction, error) {
+	timeout := handler.defaultRequestTimeout
+	if len(maxTimeout) > 0 {
+		timeout = maxTimeout[0]
+	}
+	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
+	txn, err := handler.createKvTransaction(ctx)
+	if txn == nil {
+		return nil, err
+	} else if txn.Acquired(timeout) {
+		return txn, nil
+	} else {
+		return nil, errors.New("failed-to-seize-request")
+	}
+}
+
+// acquireRequest handles transaction processing for creation of new devices
 func (handler *APIHandler) acquireRequest(ctx context.Context, id interface{}, maxTimeout ...int64) (*KVTransaction, error) {
 	timeout := handler.defaultRequestTimeout
 	if len(maxTimeout) > 0 {
@@ -237,6 +254,19 @@ func (handler *APIHandler) GetMembership(ctx context.Context, empty *empty.Empty
 	return &voltha.Membership{}, nil
 }
 
+func (handler *APIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
+	log.Debugw("GetLogicalDevicePort-request", log.Fields{"id": *id})
+
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
+			return &voltha.LogicalPort{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
+	return handler.logicalDeviceMgr.getLogicalPort(id)
+}
+
 func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
 	log.Debugw("EnableLogicalDevicePort-request", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
 	if isTestMode(ctx) {
@@ -286,17 +316,11 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 		return out, nil
 	}
 
-	// TODO: Update this logic when the OF Controller (OFAgent in this case) is able to send a transaction Id in its
-	// request (the api-router binds the OfAgent to two Cores in a pair and let the traffic flows transparently)
 	if handler.competeForTransaction() {
-		if !handler.isOFControllerRequest(ctx) {
-			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
-				return new(empty.Empty), err
-			} else {
-				defer txn.Close()
-			}
-		} else if !handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{Id: flow.Id}) {
-			return new(empty.Empty), nil
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
+			return new(empty.Empty), err
+		} else {
+			defer txn.Close()
 		}
 	}
 
@@ -313,17 +337,11 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 		return out, nil
 	}
 
-	// TODO: Update this logic when the OF Controller (OFAgent in this case) is able to send a transaction Id in its
-	// request (the api-router binds the OfAgent to two Cores in a pair and let the traffic flows transparently)
 	if handler.competeForTransaction() {
-		if !handler.isOFControllerRequest(ctx) { // No need to acquire the transaction as request is sent to one core only
-			if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
-				return new(empty.Empty), err
-			} else {
-				defer txn.Close()
-			}
-		} else if !handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{Id: flow.Id}) {
-			return new(empty.Empty), nil
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: flow.Id}); err != nil {
+			return new(empty.Empty), err
+		} else {
+			defer txn.Close()
 		}
 	}
 
@@ -371,15 +389,32 @@ func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
-// GetLogicalDevice must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	log.Debugw("GetLogicalDevice-request", log.Fields{"id": id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
+			return &voltha.LogicalDevice{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
 	return handler.logicalDeviceMgr.getLogicalDevice(id.Id)
 }
 
-// ListLogicalDevices must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
-	log.Debug("ListLogicalDevices")
+	log.Debug("ListLogicalDevices-request")
+	if handler.competeForTransaction() {
+		if txn, err := handler.acquireRequestForList(ctx); err != nil {
+			return &voltha.LogicalDevices{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
+	if handler.isOFControllerRequest(ctx) {
+		//	Since an OF controller is only interested in the set of logical devices managed by thgis Core then return
+		//	only logical devices managed/monitored by this Core.
+		return handler.logicalDeviceMgr.listManagedLogicalDevices()
+	}
 	return handler.logicalDeviceMgr.listLogicalDevices()
 }
 
@@ -391,17 +426,37 @@ func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty)
 
 func (handler *APIHandler) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
 	log.Debugw("ListLogicalDeviceFlows", log.Fields{"id": *id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
+			return &openflow_13.Flows{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
 	return handler.logicalDeviceMgr.ListLogicalDeviceFlows(ctx, id.Id)
 }
 
 func (handler *APIHandler) ListLogicalDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*openflow_13.FlowGroups, error) {
 	log.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"id": *id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
+			return &openflow_13.FlowGroups{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
 	return handler.logicalDeviceMgr.ListLogicalDeviceFlowGroups(ctx, id.Id)
 }
 
-// ListLogicalDevicePorts must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
+			return &voltha.LogicalPorts{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
 	return handler.logicalDeviceMgr.ListLogicalDevicePorts(ctx, id.Id)
 }
 
@@ -413,7 +468,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.acquireRequest(ctx, nil); err != nil {
+		if txn, err := handler.acquireRequest(ctx, &utils.DeviceID{Id: device.Id}); err != nil {
 			return &voltha.Device{}, err
 		} else {
 			defer txn.Close()

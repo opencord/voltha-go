@@ -19,6 +19,7 @@ The gRPC client layer for the OpenFlow agent
 """
 from Queue import Queue, Empty
 import os
+import uuid
 
 from grpc import StatusCode
 from grpc._channel import _Rendezvous
@@ -39,18 +40,27 @@ log = get_logger()
 
 class GrpcClient(object):
 
-    def __init__(self, connection_manager, channel, grpc_timeout, core_binding_key):
+    def __init__(self, connection_manager, channel, grpc_timeout, core_binding_key, core_transaction_key):
 
         self.connection_manager = connection_manager
         self.channel = channel
         self.grpc_timeout = grpc_timeout
-        self.local_stub = VolthaServiceStub(channel)
+        self.grpc_stub = VolthaServiceStub(channel)
 
         # This is the rw-core cluster to which an OFAgent is bound.
         # It is the affinity router that forwards all OFAgent
         # requests to a specific rw-core in this back-end cluster.
         self.core_group_id = ''
         self.core_group_id_key = core_binding_key
+
+        # Since the api-router binds an OFAgent to two RW Cores in a pair and
+        # transparently forward requests between the two then the onus is on
+        # the OFAgent to fulfill part of the function of the api-server which
+        # involves sending a transaction key to both RW Cores for the latter
+        # to figure out which Core will handle the transaction. To prevent
+        # collision between the api-server ID and the one from OFAgent then the
+        # OFAgent ID will be prefixed with "O-".
+        self.core_transaction_key = core_transaction_key
 
         self.stopped = False
 
@@ -60,7 +70,8 @@ class GrpcClient(object):
 
     def start(self):
         log.debug('starting', grpc_timeout=self.grpc_timeout,
-                  core_binding_key=self.core_group_id_key)
+                  core_binding_key=self.core_group_id_key,
+                  core_transaction_key=self.core_transaction_key)
         self.start_packet_out_stream()
         self.start_packet_in_stream()
         self.start_change_event_in_stream()
@@ -73,6 +84,9 @@ class GrpcClient(object):
         log.debug('stopping')
         self.stopped = True
         log.info('stopped')
+
+    def get_core_transaction_metadata(self):
+        return (self.core_transaction_key, "O-" + uuid.uuid4().hex)
 
     def start_packet_out_stream(self):
 
@@ -89,8 +103,9 @@ class GrpcClient(object):
         def stream_packets_out():
             generator = packet_generator()
             try:
-                self.local_stub.StreamPacketsOut(generator,
-                                                 metadata=((self.core_group_id_key, self.core_group_id), ))
+                self.grpc_stub.StreamPacketsOut(generator,
+                                                metadata=((self.core_group_id_key, self.core_group_id),
+                                                           self.get_core_transaction_metadata(),))
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
@@ -101,9 +116,10 @@ class GrpcClient(object):
     def start_packet_in_stream(self):
 
         def receive_packet_in_stream():
-            streaming_rpc_method = self.local_stub.ReceivePacketsIn
+            streaming_rpc_method = self.grpc_stub.ReceivePacketsIn
             iterator = streaming_rpc_method(empty_pb2.Empty(),
-                                            metadata=((self.core_group_id_key, self.core_group_id),))
+                                            metadata=((self.core_group_id_key, self.core_group_id),
+                                                      self.get_core_transaction_metadata(),))
             try:
                 for packet_in in iterator:
                     reactor.callFromThread(self.packet_in_queue.put,
@@ -121,9 +137,10 @@ class GrpcClient(object):
     def start_change_event_in_stream(self):
 
         def receive_change_events():
-            streaming_rpc_method = self.local_stub.ReceiveChangeEvents
+            streaming_rpc_method = self.grpc_stub.ReceiveChangeEvents
             iterator = streaming_rpc_method(empty_pb2.Empty(),
-                                            metadata=((self.core_group_id_key, self.core_group_id),))
+                                            metadata=((self.core_group_id_key, self.core_group_id),
+                                                      self.get_core_transaction_metadata(),))
             try:
                 for event in iterator:
                     reactor.callFromThread(self.change_event_queue.put, event)
@@ -167,16 +184,18 @@ class GrpcClient(object):
     def get_port(self, device_id, port_id):
         req = LogicalPortId(id=device_id, port_id=port_id)
         res = yield threads.deferToThread(
-            self.local_stub.GetLogicalDevicePort, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.GetLogicalDevicePort, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res)
 
     @inlineCallbacks
     def get_port_list(self, device_id):
         req = ID(id=device_id)
         res = yield threads.deferToThread(
-            self.local_stub.ListLogicalDevicePorts, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.ListLogicalDevicePorts, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res.items)
 
     @inlineCallbacks
@@ -186,8 +205,9 @@ class GrpcClient(object):
             port_id=port_id
         )
         res = yield threads.deferToThread(
-            self.local_stub.EnableLogicalDevicePort, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.EnableLogicalDevicePort, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res)
 
     @inlineCallbacks
@@ -197,16 +217,18 @@ class GrpcClient(object):
             port_id=port_id
         )
         res = yield threads.deferToThread(
-            self.local_stub.DisableLogicalDevicePort, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.DisableLogicalDevicePort, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res)
 
     @inlineCallbacks
     def get_device_info(self, device_id):
         req = ID(id=device_id)
         res = yield threads.deferToThread(
-            self.local_stub.GetLogicalDevice, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.GetLogicalDevice, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res)
 
     @inlineCallbacks
@@ -216,8 +238,9 @@ class GrpcClient(object):
             flow_mod=flow_mod
         )
         res = yield threads.deferToThread(
-            self.local_stub.UpdateLogicalDeviceFlowTable, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.UpdateLogicalDeviceFlowTable, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res)
 
     @inlineCallbacks
@@ -227,46 +250,52 @@ class GrpcClient(object):
             group_mod=group_mod
         )
         res = yield threads.deferToThread(
-            self.local_stub.UpdateLogicalDeviceFlowGroupTable, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.UpdateLogicalDeviceFlowGroupTable, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res)
 
     @inlineCallbacks
     def list_flows(self, device_id):
         req = ID(id=device_id)
         res = yield threads.deferToThread(
-            self.local_stub.ListLogicalDeviceFlows, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.ListLogicalDeviceFlows, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res.items)
 
     @inlineCallbacks
     def list_groups(self, device_id):
         req = ID(id=device_id)
         res = yield threads.deferToThread(
-            self.local_stub.ListLogicalDeviceFlowGroups, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.ListLogicalDeviceFlowGroups, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res.items)
 
     @inlineCallbacks
     def list_ports(self, device_id):
         req = ID(id=device_id)
         res = yield threads.deferToThread(
-            self.local_stub.ListLogicalDevicePorts, req, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id),))
+            self.grpc_stub.ListLogicalDevicePorts, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res.items)
 
     @inlineCallbacks
     def list_logical_devices(self):
         res = yield threads.deferToThread(
-            self.local_stub.ListLogicalDevices, empty_pb2.Empty(), timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id), ))
+            self.grpc_stub.ListLogicalDevices, empty_pb2.Empty(), timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returnValue(res.items)
 
     @inlineCallbacks
     def subscribe(self, subscriber):
         res, call = yield threads.deferToThread(
-            self.local_stub.Subscribe.with_call, subscriber, timeout=self.grpc_timeout,
-            metadata=((self.core_group_id_key, self.core_group_id), ))
+            self.grpc_stub.Subscribe.with_call, subscriber, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
         returned_metadata = call.initial_metadata()
 
         # Update the core_group_id if present in the returned metadata

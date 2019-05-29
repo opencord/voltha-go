@@ -35,6 +35,7 @@ defs = dict(
     grpc_endpoint=os.environ.get('GRPC_ENDPOINT', 'localhost:50055'),
     grpc_timeout=os.environ.get('GRPC_TIMEOUT', '10'),
     core_binding_key=os.environ.get('CORE_BINDING_KEY', 'voltha_backend_name'),
+    core_transaction_key=os.environ.get('CORE_TRANSACTION_KEY', 'voltha_serial_number'),
     instance_id=os.environ.get('INSTANCE_ID', os.environ.get('HOSTNAME', '1')),
     internal_host_address=os.environ.get('INTERNAL_HOST_ADDRESS',
                                          get_my_primary_local_ipv4()),
@@ -104,6 +105,15 @@ def parse_args():
                         dest='core_binding_key',
                         action='store',
                         default=defs['core_binding_key'],
+                        help=_help)
+
+    _help = ('The name of the meta-key whose value is the transaction ID '
+             'used by the OFAgent to send requests to the Voltha RW Core. '
+             '(default: %s)' % defs['core_transaction_key'])
+    parser.add_argument('-ctk', '--core_transaction_key',
+                        dest='core_transaction_key',
+                        action='store',
+                        default=defs['core_transaction_key'],
                         help=_help)
 
     _help = ('<hostname> or <ip> at which ofagent is reachable from inside '
@@ -246,9 +256,16 @@ class Main(object):
         self.log.info('starting-internal-components')
         args = self.args
         self.connection_manager = yield ConnectionManager(
-            args.consul, args.grpc_endpoint, self.grpc_timeout,
-            args.core_binding_key, args.controller, args.instance_id,
-            args.enable_tls, args.key_file, args.cert_file).start()
+            args.consul,
+            args.grpc_endpoint,
+            self.grpc_timeout,
+            args.core_binding_key,
+            args.core_transaction_key,
+            args.controller,
+            args.instance_id,
+            args.enable_tls,
+            args.key_file,
+            args.cert_file).start()
         self.log.info('started-internal-services')
 
     @inlineCallbacks

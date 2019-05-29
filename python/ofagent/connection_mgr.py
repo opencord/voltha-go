@@ -39,7 +39,7 @@ log = get_logger()
 class ConnectionManager(object):
     def __init__(self, consul_endpoint,
                  vcore_endpoint, vcore_grpc_timeout, vcore_binding_key,
-                 controller_endpoints, instance_id,
+                 vcore_transaction_key, controller_endpoints, instance_id,
                  enable_tls=False, key_file=None, cert_file=None,
                  vcore_retry_interval=0.5, devices_refresh_interval=5,
                  subscription_refresh_interval=5):
@@ -51,6 +51,7 @@ class ConnectionManager(object):
         self.vcore_endpoint = vcore_endpoint
         self.grpc_timeout = vcore_grpc_timeout
         self.core_binding_key = vcore_binding_key
+        self.core_transaction_key = vcore_transaction_key
         self.instance_id = instance_id
         self.enable_tls = enable_tls
         self.key_file = key_file
@@ -162,7 +163,7 @@ class ConnectionManager(object):
                 container_name = self.instance_id
                 if self.grpc_client is None:
                     self.grpc_client = GrpcClient(self, self.channel, self.grpc_timeout,
-                                                  self.core_binding_key)
+                                                  self.core_binding_key, self.core_transaction_key)
                 subscription = yield self.grpc_client.subscribe(
                     OfAgentSubscriber(ofagent_id=container_name))
 
