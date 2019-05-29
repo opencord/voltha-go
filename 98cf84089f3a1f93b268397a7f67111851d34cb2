@@ -69,6 +69,24 @@
       "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0369ed8_82853960",
+        "filename": "common/version/version.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-29T01:03:28Z",
+      "side": 1,
+      "message": "The Core does nothing with the version today.\n\nI was thinking that on voltha startup every component would write a \"component\" info (including version) in the KV store following a proto format.   When a GetVoltha is issued then the ro core query the KV store and return a list of components.\n\nFor now, we can stay with the string and change later.  Another backlog item.",
+      "parentUuid": "6a3efdb7_ba000e5d",
+      "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
