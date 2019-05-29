@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fe146eac_a3195b18",
+        "filename": "afrouter/afrouter/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-29T00:55:32Z",
+      "side": 1,
+      "message": "I thought about that, because I agree it is a bit confusing, but was also thinking DisplayVersionOnly is quite long. Let me change it to the longer version, but I think the command line option `-version` stays the same.",
+      "parentUuid": "974a6790_9bd0da2a",
+      "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a9933b8_358907b6",
         "filename": "common/version/version.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-29T00:50:28Z",
       "side": 1,
       "message": "The version string definition in the grpc file can be changed with a new version proto message added.   I don\u0027t believe anyone is using the version field other than the Core. Thoughts?",
+      "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a3efdb7_ba000e5d",
+        "filename": "common/version/version.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-29T00:55:32Z",
+      "side": 1,
+      "message": "I was concerned about changing the protos because of the ramifications and I also wasn\u0027t sure what the final message format might be. i.e. might it be a collection of version each with a component name? something else? So I took the easy way out and override the value. \n\nWhat is core doing with the version today. Changing the version string to a JSON object didn\u0027t seem to affect anything as VOLTHA still worked.",
+      "parentUuid": "5a9933b8_358907b6",
       "revId": "98cf84089f3a1f93b268397a7f67111851d34cb2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
