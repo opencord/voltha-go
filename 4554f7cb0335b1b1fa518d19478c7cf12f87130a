@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "856aa70d_e772fe32",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-05-30T14:38:10Z",
+      "side": 1,
+      "message": "If DeviceOwnership is always passed as a pointer (*DeviceOwnership), then there\u0027s no reason for mutexes to be pointers.",
+      "revId": "4554f7cb0335b1b1fa518d19478c7cf12f87130a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fe1da81f_2f2e549e",
         "filename": "rw_core/core/device_ownership.go",
         "patchSetId": 2
