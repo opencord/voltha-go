@@ -50,6 +50,7 @@ type DeviceOwnership struct {
 	deviceMapLock      *sync.RWMutex
 	deviceToKeyMap     map[string]string
 	deviceToKeyMapLock *sync.RWMutex
+	ownershipLock      *sync.RWMutex
 }
 
 func NewDeviceOwnership(id string, kvClient kvstore.Client, deviceMgr *DeviceManager, logicalDeviceMgr *LogicalDeviceManager, ownershipPrefix string, reservationTimeout int64) *DeviceOwnership {
@@ -65,6 +66,7 @@ func NewDeviceOwnership(id string, kvClient kvstore.Client, deviceMgr *DeviceMan
 	deviceOwnership.deviceMapLock = &sync.RWMutex{}
 	deviceOwnership.deviceToKeyMap = make(map[string]string)
 	deviceOwnership.deviceToKeyMapLock = &sync.RWMutex{}
+	deviceOwnership.ownershipLock = &sync.RWMutex{}
 	return &deviceOwnership
 }
 
@@ -109,21 +111,23 @@ func (da *DeviceOwnership) renewReservation(id string) bool {
 }
 
 func (da *DeviceOwnership) MonitorOwnership(id string, chnl chan int) {
+	log.Debugw("start-device-monitoring", log.Fields{"id": id})
 	op := "starting"
 	exit := false
 	ticker := time.NewTicker(time.Duration(da.reservationTimeout) / 3 * time.Second)
 	for {
 		select {
 		case <-da.exitChannel:
-			log.Infow("closing-monitoring", log.Fields{"Id": id})
+			log.Debugw("closing-monitoring", log.Fields{"Id": id})
 			exit = true
 		case <-ticker.C:
 			log.Debugw(fmt.Sprintf("%s-reservation", op), log.Fields{"Id": id})
 		case <-chnl:
-			log.Infow("closing-device-monitoring", log.Fields{"Id": id})
+			log.Debugw("closing-device-monitoring", log.Fields{"Id": id})
 			exit = true
 		}
 		if exit {
+			log.Infow("exiting-device-monitoring", log.Fields{"Id": id})
 			ticker.Stop()
 			break
 		}
@@ -144,6 +148,7 @@ func (da *DeviceOwnership) MonitorOwnership(id string, chnl chan int) {
 			}
 		}
 	}
+	log.Debugw("device-monitoring-stopped", log.Fields{"id": id})
 }
 
 func (da *DeviceOwnership) getOwnership(id string) (bool, bool) {
@@ -187,6 +192,12 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 		da.deviceToKeyMap[idStr] = ownershipKey
 		da.deviceToKeyMapLock.Unlock()
 	}
+
+	// Add a lock to prevent creation of two separate monitoring routines for the same device. When a NB request for a
+	// device not in memory is received this results in this function being called in rapid succession, once when
+	// loading the device and once when handling the NB request.
+	da.ownershipLock.Lock()
+	defer da.ownershipLock.Unlock()
 
 	deviceOwned, ownedByMe := da.getOwnership(ownershipKey)
 	if deviceOwned {
