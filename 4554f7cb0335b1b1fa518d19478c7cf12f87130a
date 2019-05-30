@@ -16,6 +16,24 @@
       "revId": "4554f7cb0335b1b1fa518d19478c7cf12f87130a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ba6d1d2_d2a19686",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-30T02:29:07Z",
+      "side": 1,
+      "message": "Yes the root cause is valid.   When invoking a delete on a device and that device is not in one of the core pair then it needs to be loaded in memory.  As part of the loading the ownership of the device ownership gets set.  As this is part of a NB request then there is a check for device ownership as well.   Both of these happens in separate go routines.  This scenario happens only when deleting a device in preprovision state.",
+      "parentUuid": "fe1da81f_2f2e549e",
+      "revId": "4554f7cb0335b1b1fa518d19478c7cf12f87130a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
