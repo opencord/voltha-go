@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d5f127a8_d2634001",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-05-30T14:49:50Z",
+      "side": 1,
+      "message": "Correct.   Will address in one of those cleanups cycle.",
+      "parentUuid": "856aa70d_e772fe32",
+      "revId": "4554f7cb0335b1b1fa518d19478c7cf12f87130a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fe1da81f_2f2e549e",
         "filename": "rw_core/core/device_ownership.go",
         "patchSetId": 2
