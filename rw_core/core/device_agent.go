@@ -116,7 +116,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 	log.Debug("stopping-device-agent")
 	//	Remove the device from the KV store
 	if removed := agent.clusterDataProxy.Remove("/devices/"+agent.deviceId, ""); removed == nil {
-		log.Errorw("failed-removing-device", log.Fields{"id": agent.deviceId})
+		log.Debugw("device-already-removed", log.Fields{"id": agent.deviceId})
 	}
 	agent.exitChannel <- 1
 	log.Debug("device-agent-stopped")
@@ -348,6 +348,12 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 			log.Debugw("device-already-disabled", log.Fields{"id": agent.deviceId})
 			return nil
 		}
+		if device.AdminState == voltha.AdminState_PREPROVISIONED ||
+			device.AdminState == voltha.AdminState_DELETED {
+			log.Debugw("device-not-enabled", log.Fields{"id": agent.deviceId})
+			return status.Errorf(codes.FailedPrecondition, "deviceId:%s, invalid-admin-state:%s", agent.deviceId, device.AdminState)
+		}
+
 		// First send the request to an Adapter and wait for a response
 		if err := agent.adapterProxy.DisableDevice(ctx, device); err != nil {
 			log.Debugw("disableDevice-error", log.Fields{"id": agent.lastData.Id, "error": err})
@@ -422,12 +428,13 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 			//TODO:  Needs customized error message
 			return status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceId, voltha.AdminState_DISABLED)
 		}
-		// Send the request to an Adapter and wait for a response
-		if err := agent.adapterProxy.DeleteDevice(ctx, device); err != nil {
-			log.Debugw("deleteDevice-error", log.Fields{"id": agent.lastData.Id, "error": err})
-			return err
+		if device.AdminState != voltha.AdminState_PREPROVISIONED {
+			// Send the request to an Adapter only if the device is not in poreporovision state and wait for a response
+			if err := agent.adapterProxy.DeleteDevice(ctx, device); err != nil {
+				log.Debugw("deleteDevice-error", log.Fields{"id": agent.lastData.Id, "error": err})
+				return err
+			}
 		}
-
 		//	Set the state to deleted - this will trigger some background process to clean up the device as well
 		// as its association with the logical device
 		cloned := proto.Clone(device).(*voltha.Device)
