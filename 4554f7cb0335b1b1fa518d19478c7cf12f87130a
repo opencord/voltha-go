@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe1da81f_2f2e549e",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-30T02:20:33Z",
+      "side": 1,
+      "message": "Do we know the root cause of why it is called twice in rapid succession? Can we prevent that as opposed to introducing a lock?",
+      "revId": "4554f7cb0335b1b1fa518d19478c7cf12f87130a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
