@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fe383f3_e6102f72",
+        "filename": "rw_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-05-31T19:58:21Z",
+      "side": 1,
+      "message": "Why not just put os.GetEnv(\"HOSTNAME\") in line?",
+      "revId": "631fe5438088c528e5a7a68f6608d276293550d6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
