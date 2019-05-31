@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/kafka"
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
+	"github.com/opencord/voltha-go/rw_core/utils"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"os"
 	"os/signal"
@@ -117,7 +118,7 @@ func toString(value interface{}) (string, error) {
 	}
 }
 
-func (rw *rwCore) start(ctx context.Context) {
+func (rw *rwCore) start(ctx context.Context, instanceId string) {
 	log.Info("Starting RW Core components")
 
 	// Setup KV Client
@@ -126,7 +127,7 @@ func (rw *rwCore) start(ctx context.Context) {
 	if err == nil {
 		// Setup KV transaction context
 		txnPrefix := rw.config.KVStoreDataPrefix + "/transactions/"
-		if err = c.SetTransactionContext(rw.config.InstanceID,
+		if err = c.SetTransactionContext(instanceId,
 			txnPrefix,
 			rw.kvClient,
 			rw.config.KVStoreTimeout,
@@ -137,12 +138,12 @@ func (rw *rwCore) start(ctx context.Context) {
 	}
 
 	// Setup Kafka Client
-	if rw.kafkaClient, err = newKafkaClient("sarama", rw.config.KafkaAdapterHost, rw.config.KafkaAdapterPort, rw.config.InstanceID); err != nil {
+	if rw.kafkaClient, err = newKafkaClient("sarama", rw.config.KafkaAdapterHost, rw.config.KafkaAdapterPort, instanceId); err != nil {
 		log.Fatal("Unsupported-kafka-client")
 	}
 
 	// Create the core service
-	rw.core = c.NewCore(rw.config.InstanceID, rw.config, rw.kvClient, rw.kafkaClient)
+	rw.core = c.NewCore(instanceId, rw.config, rw.kvClient, rw.kafkaClient)
 
 	// start the core
 	rw.core.Start(ctx)
@@ -222,29 +223,33 @@ func main() {
 	cf := config.NewRWCoreFlags()
 	cf.ParseCommandArguments()
 
-	// Setup logging
+	// Set the instance ID as the hostname
+	var instanceId string
+	hostName := utils.GetHostName()
+	if len(hostName) > 0 {
+		instanceId = hostName
+	} else {
+		log.Fatal("HOSTNAME not set")
+	}
 
 	//Setup default logger - applies for packages that do not have specific logger set
-	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
+	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": instanceId}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
-	// Update all loggers (provisionned via init) with a common field
-	if err := log.UpdateAllLoggers(log.Fields{"instanceId": cf.InstanceID}); err != nil {
+	// Update all loggers (provisioned via init) with a common field
+	if err := log.UpdateAllLoggers(log.Fields{"instanceId": instanceId}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
-	//log.SetAllLogLevel(log.ErrorLevel)
+	// Update all loggers to log level specified as input parameter
+	log.SetAllLogLevel(cf.LogLevel)
 
-	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/flow_decomposition", log.DebugLevel)
-	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/graph", log.DebugLevel)
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/kafka", log.DebugLevel)
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 
 	defer log.CleanUp()
 
-	// Print verison / build information and exit
+	// Print version / build information and exit
 	if cf.DisplayVersionOnly {
 		printVersion()
 		return
@@ -261,7 +266,7 @@ func main() {
 	defer cancel()
 
 	rw := newRWCore(cf)
-	go rw.start(ctx)
+	go rw.start(ctx, instanceId)
 
 	code := waitForExit()
 	log.Infow("received-a-closing-signal", log.Fields{"code": code})
@@ -270,5 +275,5 @@ func main() {
 	rw.stop()
 
 	elapsed := time.Since(start)
-	log.Infow("rw-core-run-time", log.Fields{"core": rw.config.InstanceID, "time": elapsed / time.Second})
+	log.Infow("rw-core-run-time", log.Fields{"core": instanceId, "time": elapsed / time.Second})
 }

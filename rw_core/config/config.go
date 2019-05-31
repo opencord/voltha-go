@@ -19,14 +19,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/opencord/voltha-go/common/log"
-	"os"
 )
 
 // RW Core service default constants
 const (
 	ConsulStoreName                   = "consul"
 	EtcdStoreName                     = "etcd"
-	default_InstanceID                = "rwcore001"
 	default_GrpcPort                  = 50057
 	default_GrpcHost                  = ""
 	default_KafkaAdapterHost          = "127.0.0.1"
@@ -58,7 +56,6 @@ const (
 // RWCoreFlags represents the set of configurations used by the read-write core service
 type RWCoreFlags struct {
 	// Command line parameters
-	InstanceID                string
 	RWCoreEndpoint            string
 	GrpcHost                  string
 	GrpcPort                  int
@@ -94,7 +91,6 @@ func init() {
 // NewRWCoreFlags returns a new RWCore config
 func NewRWCoreFlags() *RWCoreFlags {
 	var rwCoreFlag = RWCoreFlags{ // Default values
-		InstanceID:                default_InstanceID,
 		RWCoreEndpoint:            default_RWCoreEndpoint,
 		GrpcHost:                  default_GrpcHost,
 		GrpcPort:                  default_GrpcPort,
@@ -129,9 +125,6 @@ func NewRWCoreFlags() *RWCoreFlags {
 func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	var help string
-
-	help = fmt.Sprintf("RW instance id")
-	flag.StringVar(&(cf.InstanceID), "instance-id", default_InstanceID, help)
 
 	help = fmt.Sprintf("RW core endpoint address")
 	flag.StringVar(&(cf.RWCoreEndpoint), "vcore-endpoint", default_RWCoreEndpoint, help)
@@ -203,14 +196,4 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", default_CoreBindingKey, help)
 
 	flag.Parse()
-
-	containerName := getContainerInfo()
-	if len(containerName) > 0 {
-		cf.InstanceID = containerName
-	}
-
-}
-
-func getContainerInfo() string {
-	return os.Getenv("HOSTNAME")
 }

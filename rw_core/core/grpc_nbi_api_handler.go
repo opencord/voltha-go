@@ -121,8 +121,9 @@ func (handler *APIHandler) competeForTransaction() bool {
 	return handler.coreInCompetingMode
 }
 
-// acquireRequestForList handles transaction processing for list requests, i.e. when there are no specific id requested.
-func (handler *APIHandler) acquireRequestForList(ctx context.Context, maxTimeout ...int64) (*KVTransaction, error) {
+// acquireRequest handles transaction processing for device creation and  list requests, i.e. when there are no
+// specific id requested (list scenario) or id present in the request (creation use case).
+func (handler *APIHandler) acquireRequest(ctx context.Context, maxTimeout ...int64) (*KVTransaction, error) {
 	timeout := handler.defaultRequestTimeout
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
@@ -134,37 +135,6 @@ func (handler *APIHandler) acquireRequestForList(ctx context.Context, maxTimeout
 	} else if txn.Acquired(timeout) {
 		return txn, nil
 	} else {
-		return nil, errors.New("failed-to-seize-request")
-	}
-}
-
-// acquireRequest handles transaction processing for creation of new devices
-func (handler *APIHandler) acquireRequest(ctx context.Context, id interface{}, maxTimeout ...int64) (*KVTransaction, error) {
-	timeout := handler.defaultRequestTimeout
-	if len(maxTimeout) > 0 {
-		timeout = maxTimeout[0]
-	}
-	log.Debugw("transaction-timeout", log.Fields{"timeout": timeout})
-	txn, err := handler.createKvTransaction(ctx)
-	if txn == nil {
-		return nil, err
-	} else if txn.Acquired(timeout) {
-		return txn, nil
-	} else {
-		if id != nil {
-			// The id can either be a device Id or a logical device id.
-			if dId, ok := id.(*utils.DeviceID); ok {
-				// Since this core has not processed this request, let's load the device, along with its extended
-				// family (parents and children) in memory.   This will keep this core in-sync with its paired core as
-				// much as possible. The watch feature in the core model will ensure that the contents of those objects in
-				// memory are in sync.
-				time.Sleep(2 * time.Second)
-				go handler.deviceMgr.load(dId.Id)
-			} else if ldId, ok := id.(*utils.LogicalDeviceID); ok {
-				// This will load the logical device along with its children and grandchildren
-				go handler.logicalDeviceMgr.load(ldId.Id)
-			}
-		}
 		return nil, errors.New("failed-to-seize-request")
 	}
 }
@@ -404,7 +374,7 @@ func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) 
 func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
 	log.Debug("ListLogicalDevices-request")
 	if handler.competeForTransaction() {
-		if txn, err := handler.acquireRequestForList(ctx); err != nil {
+		if txn, err := handler.acquireRequest(ctx); err != nil {
 			return &voltha.LogicalDevices{}, err
 		} else {
 			defer txn.Close()
@@ -468,7 +438,8 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 	}
 
 	if handler.competeForTransaction() {
-		if txn, err := handler.acquireRequest(ctx, &utils.DeviceID{Id: device.Id}); err != nil {
+		// There are no device Id present in this function.
+		if txn, err := handler.acquireRequest(ctx); err != nil {
 			return &voltha.Device{}, err
 		} else {
 			defer txn.Close()

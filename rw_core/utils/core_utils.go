@@ -18,6 +18,7 @@ package utils
 import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"os"
 	"reflect"
 	"time"
 )
@@ -28,6 +29,10 @@ type DeviceID struct {
 
 type LogicalDeviceID struct {
 	Id string
+}
+
+func GetHostName() string {
+	return os.Getenv("HOSTNAME")
 }
 
 //WaitForNilOrErrorResponses waits on a variadic number of channels for either a nil response or an error

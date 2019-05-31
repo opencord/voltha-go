@@ -47,10 +47,10 @@ type DeviceOwnership struct {
 	deviceMgr          *DeviceManager
 	logicalDeviceMgr   *LogicalDeviceManager
 	deviceMap          map[string]*ownership
-	deviceMapLock      *sync.RWMutex
+	deviceMapLock      sync.RWMutex
 	deviceToKeyMap     map[string]string
-	deviceToKeyMapLock *sync.RWMutex
-	ownershipLock      *sync.RWMutex
+	deviceToKeyMapLock sync.RWMutex
+	ownershipLock      sync.RWMutex
 }
 
 func NewDeviceOwnership(id string, kvClient kvstore.Client, deviceMgr *DeviceManager, logicalDeviceMgr *LogicalDeviceManager, ownershipPrefix string, reservationTimeout int64) *DeviceOwnership {
@@ -63,10 +63,10 @@ func NewDeviceOwnership(id string, kvClient kvstore.Client, deviceMgr *DeviceMan
 	deviceOwnership.ownershipPrefix = ownershipPrefix
 	deviceOwnership.reservationTimeout = reservationTimeout
 	deviceOwnership.deviceMap = make(map[string]*ownership)
-	deviceOwnership.deviceMapLock = &sync.RWMutex{}
+	deviceOwnership.deviceMapLock = sync.RWMutex{}
 	deviceOwnership.deviceToKeyMap = make(map[string]string)
-	deviceOwnership.deviceToKeyMapLock = &sync.RWMutex{}
-	deviceOwnership.ownershipLock = &sync.RWMutex{}
+	deviceOwnership.deviceToKeyMapLock = sync.RWMutex{}
+	deviceOwnership.ownershipLock = sync.RWMutex{}
 	return &deviceOwnership
 }
 

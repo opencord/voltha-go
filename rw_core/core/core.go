@@ -89,7 +89,7 @@ func (core *Core) Start(ctx context.Context) {
 	if err := core.startKafkaMessagingProxy(ctx); err != nil {
 		log.Fatal("Failure-starting-kafkaMessagingProxy")
 	}
-	log.Info("values", log.Fields{"kmp": core.kmp})
+	log.Debugw("values", log.Fields{"kmp": core.kmp})
 	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceId)
 	core.deviceMgr = newDeviceManager(core)
 	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy, core.config.DefaultCoreTimeout)
@@ -120,14 +120,12 @@ func (core *Core) Stop(ctx context.Context) {
 	log.Info("adaptercore-stopped")
 }
 
-//startGRPCService creates the grpc service handlers, registers it to the grpc server
-// and starts the server
+//startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server
 func (core *Core) startGRPCService(ctx context.Context) {
 	//	create an insecure gserver server
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false)
 	log.Info("grpc-server-created")
 
-	//core.grpcNBIAPIHandler = NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 	core.grpcNBIAPIHandler = NewAPIHandler(core)
 	log.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
 	core.logicalDeviceMgr.setGrpcNbiHandler(core.grpcNBIAPIHandler)
@@ -230,9 +228,6 @@ func (core *Core) getCoreMembership(ctx context.Context) *voltha.Membership {
 }
 
 func (core *Core) startDeviceManager(ctx context.Context) {
-	// TODO: Interaction between the logicaldevicemanager and devicemanager should mostly occur via
-	// callbacks.  For now, until the model is ready, devicemanager will keep a reference to the
-	// logicaldevicemanager to initiate the creation of logical devices
 	log.Info("DeviceManager-Starting...")
 	core.deviceMgr.start(ctx, core.logicalDeviceMgr)
 	log.Info("DeviceManager-Started")
