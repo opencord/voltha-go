@@ -114,3 +114,7 @@ required = [
 [[constraint]]
   branch = "master"
   name = "github.com/boljen/go-bitmap"
+
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "10.0.0"
