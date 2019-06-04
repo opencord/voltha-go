@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7db0a89c_7b4c1fbf",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-06-04T11:42:17Z",
+      "side": 1,
+      "message": "I guess this isn\u0027t really part of your patchset, but I would hope that arouterd could deal with a dynamic set of pods or at least be able to read this from the k8s API.",
+      "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81da240f_f9904aec",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-06-04T11:42:17Z",
+      "side": 1,
+      "message": "why not just assign \"config\" here instead of use an intermediate var c?",
+      "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5ded2eb_6b4e1aed",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-06-04T11:42:17Z",
+      "side": 1,
+      "message": "and here.",
+      "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03ca6c63_9fe40897",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-06-04T11:42:17Z",
+      "side": 1,
+      "message": "should we ever really give up? does a backoff make sense as opposed to just sleep 5?",
+      "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
