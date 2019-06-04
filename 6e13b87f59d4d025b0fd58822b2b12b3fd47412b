@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a0b30d88_9e02095b",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-06-04T15:15:50Z",
+      "side": 1,
+      "message": "I agree, but I\u0027m not sure how we should go about it.\nMy intuitive solution is to always bind pod#1\u00262, 3\u00264, 5\u00266, etc, to take advantage of the even/odd grouping in the helm charts.\nAlternatively, we could simply pair based on pre-defined labels, thus deferring the pairing problem to deployment-time.  (Which I think would drastically simplify this program...)",
+      "parentUuid": "7db0a89c_7b4c1fbf",
+      "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81da240f_f9904aec",
         "filename": "arouterd/arouterd.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-04T11:42:17Z",
       "side": 1,
       "message": "why not just assign \"config\" here instead of use an intermediate var c?",
+      "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13d0e829_4af04abd",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-06-04T15:15:50Z",
+      "side": 1,
+      "message": "Trying to assign to config with `:\u003d` would create a new variable within the if scope.  Using `\u003d` would work, but require pre-declaring err (`var err error`).  Either way, an extra line is required.",
+      "parentUuid": "81da240f_f9904aec",
       "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -64,6 +100,24 @@
       "writtenOn": "2019-06-04T11:42:17Z",
       "side": 1,
       "message": "should we ever really give up? does a backoff make sense as opposed to just sleep 5?",
+      "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c58eec55_139093af",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-06-04T15:15:50Z",
+      "side": 1,
+      "message": "This is called from multiple places, and should probably fail quickly in some cases.\nThere\u0027s also the issue of properly handling a connection drop (which, as far as I can tell, isn\u0027t addressed).\nThis is only a partial solution, to make the existing logic work as written.",
+      "parentUuid": "03ca6c63_9fe40897",
       "revId": "6e13b87f59d4d025b0fd58822b2b12b3fd47412b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
