@@ -810,6 +810,7 @@
     "google.golang.org/grpc/connectivity",
     "google.golang.org/grpc/credentials",
     "google.golang.org/grpc/grpclog",
+    "google.golang.org/grpc/keepalive",
     "google.golang.org/grpc/metadata",
     "google.golang.org/grpc/status",
     "gopkg.in/Shopify/sarama.v1",
