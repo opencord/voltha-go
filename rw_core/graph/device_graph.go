@@ -465,11 +465,11 @@ func splitIntoDeviceIdPortId(id string) (string, uint32, error) {
 	}
 }
 
-//getReverseRoute returns the reverse of the route in param
+//getReverseRoute returns the reverse of the route
 func getReverseRoute(route []RouteHop) []RouteHop {
 	reverse := make([]RouteHop, len(route))
-	for i, j := 0, len(route)-1; i < j; i, j = i+1, j-1 {
-		reverse[i], reverse[j] = route[j], route[i]
+	for i, j := 0, len(route)-1; j >= 0; i, j = i+1, j-1 {
+		reverse[i].DeviceID, reverse[i].Ingress, reverse[i].Egress = route[j].DeviceID, route[j].Egress, route[j].Ingress
 	}
 	return reverse
 }

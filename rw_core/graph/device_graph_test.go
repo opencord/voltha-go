@@ -21,6 +21,7 @@ import (
 	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
@@ -283,4 +284,81 @@ func TestGetRoutesPerPortNoNNI(t *testing.T) {
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
 	assert.EqualValues(t, 0, len(dg.Routes))
+}
+
+func TestReverseRoute(t *testing.T) {
+	// Test the typical use case - 2 hops in a route
+	route := make([]RouteHop, 2)
+	route[0].DeviceID = "d1"
+	route[0].Ingress = 1
+	route[0].Egress = 2
+	route[1].DeviceID = "d2"
+	route[1].Ingress = 10
+	route[1].Egress = 15
+
+	reverseRoute := getReverseRoute(route)
+	assert.Equal(t, 2, len(reverseRoute))
+	assert.Equal(t, "d2", reverseRoute[0].DeviceID)
+	assert.Equal(t, "d1", reverseRoute[1].DeviceID)
+	assert.Equal(t, uint32(15), reverseRoute[0].Ingress)
+	assert.Equal(t, uint32(10), reverseRoute[0].Egress)
+	assert.Equal(t, uint32(2), reverseRoute[1].Ingress)
+	assert.Equal(t, uint32(1), reverseRoute[1].Egress)
+
+	fmt.Println("Reverse of two hops successful.")
+
+	//Test 3 hops in a route
+	route = make([]RouteHop, 3)
+	route[0].DeviceID = "d1"
+	route[0].Ingress = 1
+	route[0].Egress = 2
+	route[1].DeviceID = "d2"
+	route[1].Ingress = 10
+	route[1].Egress = 15
+	route[2].DeviceID = "d3"
+	route[2].Ingress = 20
+	route[2].Egress = 25
+	reverseRoute = getReverseRoute(route)
+	assert.Equal(t, 3, len(reverseRoute))
+	assert.Equal(t, "d3", reverseRoute[0].DeviceID)
+	assert.Equal(t, "d2", reverseRoute[1].DeviceID)
+	assert.Equal(t, "d1", reverseRoute[2].DeviceID)
+	assert.Equal(t, uint32(25), reverseRoute[0].Ingress)
+	assert.Equal(t, uint32(20), reverseRoute[0].Egress)
+	assert.Equal(t, uint32(15), reverseRoute[1].Ingress)
+	assert.Equal(t, uint32(10), reverseRoute[1].Egress)
+	assert.Equal(t, uint32(2), reverseRoute[2].Ingress)
+	assert.Equal(t, uint32(1), reverseRoute[2].Egress)
+
+	fmt.Println("Reverse of three hops successful.")
+
+	// Test any number of hops in a route
+	numRoutes := rand.Intn(100)
+	route = make([]RouteHop, numRoutes)
+	deviceIds := make([]string, numRoutes)
+	ingressNos := make([]uint32, numRoutes)
+	egressNos := make([]uint32, numRoutes)
+	for i := 0; i < numRoutes; i++ {
+		deviceIds[i] = fmt.Sprintf("d-%d", i)
+		ingressNos[i] = rand.Uint32()
+		egressNos[i] = rand.Uint32()
+	}
+	for i := 0; i < numRoutes; i++ {
+		route[i].DeviceID = deviceIds[i]
+		route[i].Ingress = ingressNos[i]
+		route[i].Egress = egressNos[i]
+	}
+	reverseRoute = getReverseRoute(route)
+	assert.Equal(t, numRoutes, len(reverseRoute))
+	for i, j := 0, numRoutes-1; j >= 0; i, j = i+1, j-1 {
+		assert.Equal(t, deviceIds[j], reverseRoute[i].DeviceID)
+		assert.Equal(t, egressNos[j], reverseRoute[i].Ingress)
+		assert.Equal(t, ingressNos[j], reverseRoute[i].Egress)
+	}
+
+	fmt.Println(fmt.Sprintf("Reverse of %d hops successful.", numRoutes))
+
+	reverseOfReverse := getReverseRoute(reverseRoute)
+	assert.Equal(t, route, reverseOfReverse)
+	fmt.Println("Reverse of reverse successful.")
 }
