@@ -2,6 +2,8 @@ syntax = "proto3";
 
 option go_package = "github.com/opencord/voltha-protos/go/inter_container";
 
+import public "voltha_protos/common.proto";
+import public "voltha_protos/voltha.proto";
 import "google/protobuf/any.proto";
 import "voltha_protos/openflow_13.proto";
 import public "voltha_protos/logical_device.proto";
@@ -115,6 +117,8 @@ message InterAdapterHeader {
 
 message InterAdapterOmciMessage {
     bytes message = 1; // OMCI_REQUEST or OMCI_RESPONSE
+    common.ConnectStatus.ConnectStatus connect_status = 2;
+    voltha.Device.ProxyAddress proxy_address = 3;
 }
 
 message InterAdapterTechProfileDownloadMessage {
