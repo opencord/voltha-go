@@ -91,7 +91,7 @@ func (r *root) DeleteTxBranch(txid string) {
 		dirtyNode.DeleteBranch(txid)
 	}
 	delete(r.DirtyNodes, txid)
-	delete(r.node.Branches, txid)
+	r.node.DeleteBranch(txid)
 }
 
 // FoldTxBranch will merge the contents of a transaction branch with the root object
@@ -111,9 +111,8 @@ func (r *root) FoldTxBranch(txid string) {
 // ExecuteCallbacks will invoke all the callbacks linked to root object
 func (r *root) ExecuteCallbacks() {
 	r.mutex.Lock()
-	log.Debugf("ExecuteCallbacks has the ROOT lock : %+v", r)
 	defer r.mutex.Unlock()
-	defer log.Debugf("ExecuteCallbacks released the ROOT lock : %+v", r)
+
 	for len(r.Callbacks) > 0 {
 		callback := r.Callbacks[0]
 		r.Callbacks = r.Callbacks[1:]
@@ -133,36 +132,32 @@ func (r *root) hasCallbacks() bool {
 // getCallbacks returns the available callbacks
 func (r *root) GetCallbacks() []CallbackTuple {
 	r.mutex.Lock()
-	log.Debugf("getCallbacks has the ROOT lock : %+v", r)
 	defer r.mutex.Unlock()
-	defer log.Debugf("getCallbacks released the ROOT lock : %+v", r)
+
 	return r.Callbacks
 }
 
 // getCallbacks returns the available notification callbacks
 func (r *root) GetNotificationCallbacks() []CallbackTuple {
 	r.mutex.Lock()
-	log.Debugf("GetNotificationCallbacks has the ROOT lock : %+v", r)
 	defer r.mutex.Unlock()
-	defer log.Debugf("GetNotificationCallbacks released the ROOT lock : %+v", r)
+
 	return r.NotificationCallbacks
 }
 
 // AddCallback inserts a new callback with its arguments
 func (r *root) AddCallback(callback CallbackFunction, args ...interface{}) {
 	r.mutex.Lock()
-	log.Debugf("AddCallback has the ROOT lock : %+v", r)
 	defer r.mutex.Unlock()
-	defer log.Debugf("AddCallback released the ROOT lock : %+v", r)
+
 	r.Callbacks = append(r.Callbacks, CallbackTuple{callback, args})
 }
 
 // AddNotificationCallback inserts a new notification callback with its arguments
 func (r *root) AddNotificationCallback(callback CallbackFunction, args ...interface{}) {
 	r.mutex.Lock()
-	log.Debugf("AddNotificationCallback has the ROOT lock : %+v", r)
 	defer r.mutex.Unlock()
-	defer log.Debugf("AddNotificationCallback released the ROOT lock : %+v", r)
+
 	r.NotificationCallbacks = append(r.NotificationCallbacks, CallbackTuple{callback, args})
 }
 

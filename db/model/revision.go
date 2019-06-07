@@ -22,7 +22,6 @@ import (
 
 type Revision interface {
 	Finalize(bool)
-	IsDiscarded() bool
 	SetConfig(revision *DataRevision)
 	GetConfig() *DataRevision
 	Drop(txid string, includeConfig bool)

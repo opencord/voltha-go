@@ -55,7 +55,6 @@ type NonPersistedRevision struct {
 	Branch       *Branch
 	WeakRef      string
 	Name         string
-	discarded    bool
 	lastUpdate   time.Time
 }
 
@@ -66,12 +65,7 @@ func NewNonPersistedRevision(root *root, branch *Branch, data interface{}, child
 	r.Config = NewDataRevision(root, data)
 	r.Children = children
 	r.Hash = r.hashContent()
-	r.discarded = false
 	return r
-}
-
-func (npr *NonPersistedRevision) IsDiscarded() bool {
-	return npr.discarded
 }
 
 func (npr *NonPersistedRevision) SetConfig(config *DataRevision) {
@@ -356,14 +350,33 @@ func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision
 			if nameExists {
 				// Check if the data has changed or not
 				if existingChildren[nameIndex].GetData().(proto.Message).String() != newChild.GetData().(proto.Message).String() {
+					log.Debugw("replacing-existing-child", log.Fields{
+						"old-hash": existingChildren[nameIndex].GetHash(),
+						"old-data": existingChildren[nameIndex].GetData(),
+						"new-hash": newChild.GetHash(),
+						"new-data": newChild.GetData(),
+					})
+
 					// replace entry
 					newChild.GetNode().Root = existingChildren[nameIndex].GetNode().Root
 					updatedChildren = append(updatedChildren, newChild)
 				} else {
+					log.Debugw("keeping-existing-child", log.Fields{
+						"old-hash": existingChildren[nameIndex].GetHash(),
+						"old-data": existingChildren[nameIndex].GetData(),
+						"new-hash": newChild.GetHash(),
+						"new-data": newChild.GetData(),
+					})
+
 					// keep existing entry
 					updatedChildren = append(updatedChildren, existingChildren[nameIndex])
 				}
 			} else {
+				log.Debugw("adding-unknown-child", log.Fields{
+					"hash": newChild.GetHash(),
+					"data": newChild.GetData(),
+				})
+
 				// new entry ... just add it
 				updatedChildren = append(updatedChildren, newChild)
 			}
@@ -413,7 +426,6 @@ func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revisio
 // Drop is used to indicate when a revision is no longer required
 func (npr *NonPersistedRevision) Drop(txid string, includeConfig bool) {
 	log.Debugw("dropping-revision", log.Fields{"hash": npr.GetHash(), "name": npr.GetName()})
-	npr.discarded = true
 }
 
 // ChildDrop will remove a child entry matching the provided parameters from the current revision
@@ -458,6 +470,6 @@ func (npr *NonPersistedRevision) SetupWatch(key string) {
 	// stub ... required by interface
 }
 
-func (pr *NonPersistedRevision) StorageDrop(txid string, includeConfig bool) {
+func (npr *NonPersistedRevision) StorageDrop(txid string, includeConfig bool) {
 	// stub ... required by interface
 }

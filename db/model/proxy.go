@@ -100,8 +100,12 @@ func (p *Proxy) getFullPath() string {
 
 // getCallbacks returns the full list of callbacks associated to the proxy
 func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTuple {
-	if cb, exists := p.Callbacks[callbackType]; exists {
-		return cb
+	if p != nil {
+		if cb, exists := p.Callbacks[callbackType]; exists {
+			return cb
+		}
+	} else {
+		log.Debugw("proxy-is-nil", log.Fields{"callback-type": callbackType.String()})
 	}
 	return nil
 }
@@ -148,6 +152,7 @@ const (
 	PROXY_UPDATE
 	PROXY_REMOVE
 	PROXY_CREATE
+	PROXY_WATCH
 )
 
 var proxyOperationTypes = []string{
@@ -157,6 +162,7 @@ var proxyOperationTypes = []string{
 	"PROXY_UPDATE",
 	"PROXY_REMOVE",
 	"PROXY_CREATE",
+	"PROXY_WATCH",
 }
 
 func (t ProxyOperation) String() string {
