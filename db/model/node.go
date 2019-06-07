@@ -61,9 +61,10 @@ type Node interface {
 }
 
 type node struct {
-	mutex     sync.RWMutex
-	Root      *root
-	Type      interface{}
+	mutex sync.RWMutex
+	Root  *root
+	Type  interface{}
+
 	Branches  map[string]*Branch
 	Tags      map[string]Revision
 	Proxy     *Proxy
@@ -325,7 +326,11 @@ func (n *node) Get(path string, hash string, depth int, reconcile bool, txid str
 		if entry, exists := GetRevCache().Cache.Load(path); exists && entry.(Revision) != nil {
 			entryAge := time.Now().Sub(entry.(Revision).GetLastUpdate()).Nanoseconds() / int64(time.Millisecond)
 			if entryAge < DATA_REFRESH_PERIOD {
-				log.Debugw("using-cache-entry", log.Fields{"path": path, "hash": hash, "age": entryAge})
+				log.Debugw("using-cache-entry", log.Fields{
+					"path": path,
+					"hash": hash,
+					"age":  entryAge,
+				})
 				return proto.Clone(entry.(Revision).GetData().(proto.Message))
 			} else {
 				log.Debugw("cache-entry-expired", log.Fields{"path": path, "hash": hash, "age": entryAge})
@@ -950,6 +955,13 @@ func (n *node) CreateProxy(path string, exclusive bool) *Proxy {
 }
 
 func (n *node) createProxy(path string, fullPath string, parentNode *node, exclusive bool) *Proxy {
+	log.Debugw("node-create-proxy", log.Fields{
+		"node-type":        reflect.ValueOf(n.Type).Type(),
+		"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+		"path":             path,
+		"fullPath":         fullPath,
+	})
+
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
@@ -960,48 +972,130 @@ func (n *node) createProxy(path string, fullPath string, parentNode *node, exclu
 	rev := n.GetBranch(NONE).GetLatest()
 	partition := strings.SplitN(path, "/", 2)
 	name := partition[0]
+	var nodeType interface{}
+	// Node type is chosen depending on if we have reached the end of path or not
 	if len(partition) < 2 {
 		path = ""
+		nodeType = n.Type
 	} else {
 		path = partition[1]
+		nodeType = parentNode.Type
 	}
 
-	field := ChildrenFields(n.Type)[name]
-	if field.IsContainer {
-		if path == "" {
-			//log.Error("cannot proxy a container field")
-			newNode := n.MakeNode(reflect.New(field.ClassType.Elem()).Interface(), "")
-			return newNode.makeProxy(path, fullPath, parentNode, exclusive)
-		} else if field.Key != "" {
-			partition := strings.SplitN(path, "/", 2)
-			key := partition[0]
-			if len(partition) < 2 {
-				path = ""
+	field := ChildrenFields(nodeType)[name]
+
+	if field != nil {
+		if field.IsContainer {
+			log.Debugw("container-field", log.Fields{
+				"node-type":        reflect.ValueOf(n.Type).Type(),
+				"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+				"path":             path,
+				"name":             name,
+			})
+			if path == "" {
+				log.Debugw("folder-proxy", log.Fields{
+					"node-type":        reflect.ValueOf(n.Type).Type(),
+					"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+					"fullPath":         fullPath,
+					"name":             name,
+				})
+				newNode := n.MakeNode(reflect.New(field.ClassType.Elem()).Interface(), "")
+				return newNode.makeProxy(path, fullPath, parentNode, exclusive)
+			} else if field.Key != "" {
+				log.Debugw("key-proxy", log.Fields{
+					"node-type":        reflect.ValueOf(n.Type).Type(),
+					"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+					"fullPath":         fullPath,
+					"name":             name,
+				})
+				partition := strings.SplitN(path, "/", 2)
+				key := partition[0]
+				if len(partition) < 2 {
+					path = ""
+				} else {
+					path = partition[1]
+				}
+				keyValue := field.KeyFromStr(key)
+				var children []Revision
+				children = make([]Revision, len(rev.GetChildren(name)))
+				copy(children, rev.GetChildren(name))
+
+				// Try to find a matching revision in memory
+				// If not found try the db
+				var childRev Revision
+				if _, childRev = n.findRevByKey(children, field.Key, keyValue); childRev != nil {
+					log.Debugw("found-revision-matching-key-in-memory", log.Fields{
+						"node-type":        reflect.ValueOf(n.Type).Type(),
+						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+						"fullPath":         fullPath,
+						"name":             name,
+					})
+				} else if revs := n.GetBranch(NONE).GetLatest().LoadFromPersistence(fullPath, "", nil); revs != nil && len(revs) > 0 {
+					log.Debugw("found-revision-matching-key-in-db", log.Fields{
+						"node-type":        reflect.ValueOf(n.Type).Type(),
+						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+						"fullPath":         fullPath,
+						"name":             name,
+					})
+					childRev = revs[0]
+				} else {
+					log.Debugw("no-revision-matching-key", log.Fields{
+						"node-type":        reflect.ValueOf(n.Type).Type(),
+						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+						"fullPath":         fullPath,
+						"name":             name,
+					})
+				}
+				if childRev != nil {
+					childNode := childRev.GetNode()
+					return childNode.createProxy(path, fullPath, n, exclusive)
+				}
 			} else {
-				path = partition[1]
-			}
-			keyValue := field.KeyFromStr(key)
-			var children []Revision
-			children = make([]Revision, len(rev.GetChildren(name)))
-			copy(children, rev.GetChildren(name))
-			if _, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil {
-				childNode := childRev.GetNode()
-				return childNode.createProxy(path, fullPath, n, exclusive)
+				log.Errorw("cannot-access-index-of-empty-container", log.Fields{
+					"node-type":        reflect.ValueOf(n.Type).Type(),
+					"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+					"path":             path,
+					"name":             name,
+				})
 			}
 		} else {
-			log.Error("cannot index into container with no keys")
+			log.Debugw("non-container-field", log.Fields{
+				"node-type":        reflect.ValueOf(n.Type).Type(),
+				"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+				"path":             path,
+				"name":             name,
+			})
+			childRev := rev.GetChildren(name)[0]
+			childNode := childRev.GetNode()
+			return childNode.createProxy(path, fullPath, n, exclusive)
 		}
 	} else {
-		childRev := rev.GetChildren(name)[0]
-		childNode := childRev.GetNode()
-		return childNode.createProxy(path, fullPath, n, exclusive)
+		log.Debugw("field-object-is-nil", log.Fields{
+			"node-type":        reflect.ValueOf(n.Type).Type(),
+			"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+			"fullPath":         fullPath,
+			"name":             name,
+		})
 	}
 
-	log.Warnf("Cannot create proxy - latest rev:%s, all revs:%+v", rev.GetHash(), n.GetBranch(NONE).Revisions)
+	log.Warnw("cannot-create-proxy", log.Fields{
+		"node-type":        reflect.ValueOf(n.Type).Type(),
+		"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+		"path":             path,
+		"fullPath":         fullPath,
+		"latest-rev":       rev.GetHash(),
+	})
 	return nil
 }
 
 func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusive bool) *Proxy {
+	log.Debugw("node-make-proxy", log.Fields{
+		"node-type":        reflect.ValueOf(n.Type).Type(),
+		"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+		"path":             path,
+		"fullPath":         fullPath,
+	})
+
 	r := &root{
 		node:                  n,
 		Callbacks:             n.Root.GetCallbacks(),
@@ -1013,8 +1107,20 @@ func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusi
 	}
 
 	if n.Proxy == nil {
+		log.Debugw("constructing-new-proxy", log.Fields{
+			"node-type":        reflect.ValueOf(n.Type).Type(),
+			"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
+			"path":             path,
+			"fullPath":         fullPath,
+		})
 		n.Proxy = NewProxy(r, n, parentNode, path, fullPath, exclusive)
 	} else {
+		log.Debugw("node-has-existing-proxy", log.Fields{
+			"node-type":        reflect.ValueOf(n.Proxy.Node.Type).Type(),
+			"parent-node-type": reflect.ValueOf(n.Proxy.ParentNode.Type).Type(),
+			"path":             n.Proxy.Path,
+			"fullPath":         n.Proxy.FullPath,
+		})
 		if n.Proxy.Exclusive {
 			log.Error("node is already owned exclusively")
 		}

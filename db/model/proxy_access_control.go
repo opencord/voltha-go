@@ -255,7 +255,7 @@ func (pac *proxyAccessControl) CreateProxy(path string, exclusive bool, control 
 		defer log.Debugw("unlocked-access--create-proxy", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
 	}
 
-	result := pac.getProxy().GetRoot().CreateProxy(path, exclusive)
+	result := pac.getProxy().ParentNode.CreateProxy(path, exclusive)
 
 	if result != nil {
 		return result
