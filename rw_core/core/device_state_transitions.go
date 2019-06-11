@@ -130,7 +130,7 @@ func NewTransitionMap(dMgr coreIf.DeviceManager) *TransitionMap {
 			deviceType:    parent,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.DisableAllChildDevices}})
+			handlers:      []TransitionHandler{dMgr.UpdateAllChildDevices}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    child,

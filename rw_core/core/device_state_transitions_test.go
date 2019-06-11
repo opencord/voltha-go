@@ -78,6 +78,10 @@ func (tdm *testDeviceManager) RunPostDeviceDelete(to *voltha.Device) error {
 	return nil
 }
 
+func (tdm *testDeviceManager) UpdateAllChildDevices(to *voltha.Device) error {
+	return nil
+}
+
 func init() {
 	log.AddPackage(log.JSON, log.WarnLevel, nil)
 	//log.UpdateAllLoggers(log.Fields{"instanceId": "device-state-transition"})
@@ -132,12 +136,6 @@ func TestValidTransitions(t *testing.T) {
 	assert.Equal(t, 1, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.SetupUNILogicalPorts).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
-	from = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
-	to = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
-	handlers = transitionMap.GetTransitionHandler(from, to)
-	assert.Equal(t, 1, len(handlers))
-	assert.True(t, reflect.ValueOf(tdm.DisableAllChildDevices).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-
 	from = getDevice(false, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_ACTIVATING)
 	to = getDevice(false, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_ACTIVE)
 	handlers = transitionMap.GetTransitionHandler(from, to)
@@ -164,6 +162,12 @@ func TestValidTransitions(t *testing.T) {
 	assert.Equal(t, 2, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalPorts).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+
+	from = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	to = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.UpdateAllChildDevices).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 }
 
 func TestInvalidTransitions(t *testing.T) {

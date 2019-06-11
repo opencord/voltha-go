@@ -1221,3 +1221,29 @@ func (dMgr *DeviceManager) simulateAlarm(ctx context.Context, simulatereq *volth
 	//TODO CLI always get successful response
 	sendResponse(ctx, ch, res)
 }
+
+//UpdateAllChildDevices is invoked as a callback when the parent device is disabled
+func (dMgr *DeviceManager) UpdateAllChildDevices(parentDevice *voltha.Device) error {
+	log.Debug("UpdateAllChildDevices")
+	var childDeviceIds []string
+	var err error
+	if childDeviceIds, err = dMgr.getAllChildDeviceIds(parentDevice); err != nil {
+		return status.Errorf(codes.NotFound, "%s", parentDevice.Id)
+	}
+	if len(childDeviceIds) == 0 {
+		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
+	}
+
+	for _, childDeviceId := range childDeviceIds {
+		if agent := dMgr.getDeviceAgent(childDeviceId); agent != nil {
+			log.Info("SetConnectionStateToUnreachable")
+			if device, err := agent.getDevice(); device != nil && err == nil {
+				device.ConnectStatus = voltha.ConnectStatus_UNREACHABLE
+				return agent.updateDevice(device)
+			}
+		}
+		return status.Errorf(codes.NotFound, "%s", childDeviceId)
+	}
+
+	return nil
+}
