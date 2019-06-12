@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4172d63_8c0fa3d0",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-06-12T13:19:09Z",
+      "side": 1,
+      "message": "This will result in flows to be added instead of deleted as the decomposeAndSendFlows focus on adding flows only (which is incorrect).",
+      "revId": "c19644285219ff19eafbf8ef2c01c6336dfab8c4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
