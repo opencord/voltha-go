@@ -16,6 +16,24 @@
       "revId": "c19644285219ff19eafbf8ef2c01c6336dfab8c4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e006347_cb53accb",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-06-12T15:08:53Z",
+      "side": 1,
+      "message": "Actually this could work.   However, the method decomposeAndSendFlows need to be reworked.",
+      "parentUuid": "f4172d63_8c0fa3d0",
+      "revId": "c19644285219ff19eafbf8ef2c01c6336dfab8c4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
