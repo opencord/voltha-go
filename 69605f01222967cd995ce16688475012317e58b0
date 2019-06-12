@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "eb767ea7_862f8c0a",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-06-12T13:19:09Z",
+      "side": 1,
+      "message": "Hi Manikkaraj,\n\nIt will have to be part of an integration test file where all the components have to run.   I have one locally that needs polishing before submitting.",
+      "parentUuid": "393f8024_37aa6695",
+      "revId": "69605f01222967cd995ce16688475012317e58b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58afc1e8_bfb74593",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
