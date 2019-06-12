@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "393f8024_37aa6695",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-06-12T12:16:21Z",
+      "side": 1,
+      "message": "Hi Khen ,\n\nThis scenario had occurred only during delete flows from Logical device.(duplicate flows-to-add sent to adapter along with flows to be deleted)\n\nIn order to add delete test case, I am not able to find test file which validates add-flows to logical device\n \nkindly let me know where we have to augment test case for delete flows",
+      "parentUuid": "a970d83d_f27a0ed7",
+      "revId": "69605f01222967cd995ce16688475012317e58b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58afc1e8_bfb74593",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
