@@ -699,11 +699,13 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
 	}
+	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	flows := lDevice.Flows.Items
 	changed := false
 	flow := fu.FlowStatsEntryFromFlowModMessage(mod)
 	idx := fu.FindFlows(flows, flow)
 	if idx >= 0 {
+		flowsToDelete = append(flowsToDelete, flows[idx])
 		flows = append(flows[:idx], flows[idx+1:]...)
 		changed = true
 	} else {
@@ -711,6 +713,11 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 	}
 
 	if changed {
+		// Decompose flows to be deleted and send to adapter
+		if err := agent.decomposeAndSendFlows(&ofp.Flows{Items: flowsToDelete}, lDevice.FlowGroups); err != nil {
+			log.Errorw("decomposing-and-sending-flows failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			return err
+		}
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(&ofp.Flows{Items: flows}); err != nil {
 			log.Errorw("Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 			return err
