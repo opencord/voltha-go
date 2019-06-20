@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b4282cf_68dce80d",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1226,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-06-20T19:29:05Z",
+      "side": 1,
+      "message": "Would it be clearer if this method is named as \"MarkAllChildDevicesAsUnreachable\" ?",
+      "revId": "9509a8c55a7152b872484c18b35cd24454f3f6c4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
