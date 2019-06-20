@@ -462,3 +462,228 @@ func TestFlowHasOutGroup(t *testing.T) {
 	flow = MkFlowStat(fa)
 	assert.False(t, FlowHasOutGroup(flow, 1))
 }
+
+func TestMatchFlow(t *testing.T) {
+	assert.False(t, FlowMatch(nil, nil))
+	fa := &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1, "cookie": 38268468, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			Group(10),
+		},
+	}
+	flow1 := MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, nil))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			Group(10),
+		},
+	}
+	flow2 := MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, flow2))
+	assert.False(t, FlowMatch(nil, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1, "cookie": 38268468, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.True(t, FlowMatch(flow1, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 501, "table_id": 1, "cookie": 38268468, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			Group(10),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 2, "cookie": 38268468, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1, "cookie": 38268467, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1, "cookie": 38268468, "flags": 14},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1, "cookie": 38268468, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(4),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1, "cookie": 38268468, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.False(t, FlowMatch(flow1, flow2))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1, "cookie": 38268468, "flags": 12},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			PopVlan(),
+			Output(1),
+		},
+	}
+	flow2 = MkFlowStat(fa)
+	assert.True(t, FlowMatch(flow1, flow2))
+}
+
+func TestFlowMatchesMod(t *testing.T) {
+	assert.False(t, FlowMatchesMod(nil, nil))
+	fa := &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			Output(1),
+			Group(10),
+		},
+	}
+	flow := MkFlowStat(fa)
+	assert.False(t, FlowMatchesMod(flow, nil))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"priority": 500, "table_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			InPort(2),
+			VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			VlanPcp(0),
+			EthType(0x800),
+			Ipv4Dst(0xe00a0a0a),
+		},
+		Actions: []*ofp.OfpAction{
+			PopVlan(),
+			Output(1),
+		},
+	}
+	flowMod := MkSimpleFlowMod(ToOfpOxmField(fa.MatchFields), fa.Actions, fa.Command, fa.KV)
+	assert.False(t, FlowMatchesMod(nil, flowMod))
+	assert.False(t, FlowMatchesMod(flow, flowMod))
+	assert.True(t, FlowMatch(flow, FlowStatsEntryFromFlowModMessage(flowMod)))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"table_id": uint64(ofp.OfpTable_OFPTT_ALL),
+			"cookie_mask": 0,
+			"out_port":    uint64(ofp.OfpPortNo_OFPP_ANY),
+			"out_group":   uint64(ofp.OfpGroup_OFPG_ANY),
+		},
+	}
+	flowMod = MkSimpleFlowMod(ToOfpOxmField(fa.MatchFields), fa.Actions, fa.Command, fa.KV)
+	assert.True(t, FlowMatchesMod(flow, flowMod))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"table_id": 1,
+			"cookie_mask": 0,
+			"out_port":    uint64(ofp.OfpPortNo_OFPP_ANY),
+			"out_group":   uint64(ofp.OfpGroup_OFPG_ANY),
+		},
+	}
+	flowMod = MkSimpleFlowMod(ToOfpOxmField(fa.MatchFields), fa.Actions, fa.Command, fa.KV)
+	assert.True(t, FlowMatchesMod(flow, flowMod))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"table_id": 1,
+			"cookie_mask": 0,
+			"out_port":    1,
+			"out_group":   uint64(ofp.OfpGroup_OFPG_ANY),
+		},
+	}
+	flowMod = MkSimpleFlowMod(ToOfpOxmField(fa.MatchFields), fa.Actions, fa.Command, fa.KV)
+	assert.True(t, FlowMatchesMod(flow, flowMod))
+
+	fa = &FlowArgs{
+		KV: OfpFlowModArgs{"table_id": 1,
+			"cookie_mask": 0,
+			"out_port":    1,
+			"out_group":   10,
+		},
+	}
+	flowMod = MkSimpleFlowMod(ToOfpOxmField(fa.MatchFields), fa.Actions, fa.Command, fa.KV)
+	assert.True(t, FlowMatchesMod(flow, flowMod))
+}

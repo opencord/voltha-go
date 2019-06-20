@@ -592,8 +592,22 @@ func (dMgr *DeviceManager) addFlowsAndGroups(deviceId string, flows []*ofp.OfpFl
 	log.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceId})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
 		return agent.addFlowsAndGroups(flows, groups)
-		//go agent.addFlowsAndGroups(flows, groups)
-		//return nil
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceId)
+}
+
+func (dMgr *DeviceManager) deleteFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) error {
+	log.Debugw("deleteFlowsAndGroups", log.Fields{"deviceid": deviceId})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.deleteFlowsAndGroups(flows, groups)
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceId)
+}
+
+func (dMgr *DeviceManager) updateFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) error {
+	log.Debugw("updateFlowsAndGroups", log.Fields{"deviceid": deviceId})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.updateFlowsAndGroups(flows, groups)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }

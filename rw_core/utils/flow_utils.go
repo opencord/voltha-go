@@ -1082,7 +1082,7 @@ func FlowMatchesMod(flow *ofp.OfpFlowStats, mod *ofp.OfpFlowMod) bool {
 
 	//Check match condition
 	//If the flow_mod match field is empty, that is a special case and indicates the flow entry matches
-	if (mod.Match == nil) || (mod.Match.OxmFields == nil) {
+	if (mod.Match == nil) || (mod.Match.OxmFields == nil) || (len(mod.Match.OxmFields) == 0) {
 		//If we got this far and the match is empty in the flow spec, than the flow matches
 		return true
 	} // TODO : implement the flow match analysis
@@ -1155,4 +1155,12 @@ func FlowsDeleteByGroupId(flows []*ofp.OfpFlowStats, groupId uint32) (bool, []*o
 		}
 	}
 	return len(toKeep) < len(flows), toKeep
+}
+
+func ToOfpOxmField(from []*ofp.OfpOxmOfbField) []*ofp.OfpOxmField {
+	matchFields := make([]*ofp.OfpOxmField, 0)
+	for _, val := range from {
+		matchFields = append(matchFields, &ofp.OfpOxmField{Field: &ofp.OfpOxmField_OfbField{OfbField: val}})
+	}
+	return matchFields
 }

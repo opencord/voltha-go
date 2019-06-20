@@ -415,7 +415,7 @@ func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort ui
 }
 
 func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups) error {
-	log.Debugw("UpdateFlowsBulk", log.Fields{"deviceId": device.Id})
+	log.Debugw("UpdateFlowsBulk", log.Fields{"deviceId": device.Id, "flowsInUpdate": len(flows.Items), "groupsToUpdate": len(groups.Items)})
 	toTopic := ap.getAdapterTopic(device.Adapter)
 	rpc := "update_flows_bulk"
 	args := make([]*kafka.KVArg, 3)
@@ -440,7 +440,15 @@ func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flo
 }
 
 func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges) error {
-	log.Debugw("UpdateFlowsIncremental", log.Fields{"deviceId": device.Id})
+	log.Debugw("UpdateFlowsIncremental",
+		log.Fields{
+			"deviceId":       device.Id,
+			"flowsToAdd":     len(flowChanges.ToAdd.Items),
+			"flowsToDelete":  len(flowChanges.ToRemove.Items),
+			"groupsToAdd":    len(groupChanges.ToAdd.Items),
+			"groupsToDelete": len(groupChanges.ToRemove.Items),
+			"groupsToUpdate": len(groupChanges.ToUpdate.Items),
+		})
 	toTopic := ap.getAdapterTopic(device.Adapter)
 	rpc := "update_flows_incrementally"
 	args := make([]*kafka.KVArg, 3)

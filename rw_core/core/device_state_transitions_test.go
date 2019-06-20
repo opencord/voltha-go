@@ -126,6 +126,12 @@ func TestValidTransitions(t *testing.T) {
 	assert.Equal(t, 1, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.SetAdminStateToEnable).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
+	from = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_DISCOVERED)
+	to = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.SetAdminStateToEnable).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+
 	from = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_ACTIVE)
 	to = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_ACTIVE)
 	handlers = transitionMap.GetTransitionHandler(from, to)

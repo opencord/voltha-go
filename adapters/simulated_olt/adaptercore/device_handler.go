@@ -266,3 +266,15 @@ func (dh *DeviceHandler) DeleteDevice(device *voltha.Device) {
 
 	log.Debugw("DeleteDevice-end", log.Fields{"deviceId": device.Id})
 }
+
+func (dh *DeviceHandler) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups) {
+	log.Debugw("UpdateFlowsBulk", log.Fields{"deviceId": device.Id, "flows": flows, "groups": groups})
+	// For now we do nothing with it
+	return
+}
+
+func (dh *DeviceHandler) UpdateFlowsIncremental(device *voltha.Device, flowChanges *of.FlowChanges, groupChanges *of.FlowGroupChanges) {
+	log.Debugw("UpdateFlowsIncremental", log.Fields{"deviceId": device.Id, "flowChanges": flowChanges, "groupChanges": groupChanges})
+	// For now we do nothing with it
+	return
+}

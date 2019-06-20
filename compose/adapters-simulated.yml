@@ -32,7 +32,7 @@ services:
       "--simulator_topic=simulated_olt",
       "--kv_store_host=${DOCKER_HOST_IP}",
       "--kv_store_port=2379",
-      "--onu_number=1"
+      "--onu_number=4"
     ]
     networks:
     - default

@@ -233,7 +233,7 @@ func (a *adapter) setupRequestHandler(coreInstanceId string, iadapter adapters.I
 func (a *adapter) registerWithCore(retries int) error {
 	log.Info("registering-with-core")
 	adapterDescription := &voltha.Adapter{Id: "simulated_olt", Vendor: "simulation Enterprise Inc"}
-	types := []*voltha.DeviceType{{Id: "simulated_olt", Adapter: "simulated_olt"}}
+	types := []*voltha.DeviceType{{Id: "simulated_olt", Adapter: "simulated_olt", AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
 	count := 0
 	for {
