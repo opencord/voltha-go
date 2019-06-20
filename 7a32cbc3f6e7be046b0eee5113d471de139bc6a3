@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "94c22174_4a245b8d",
+        "filename": "afrouter/afrouter/backend.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-06-20T19:38:51Z",
+      "side": 1,
+      "message": "This is just a preliminary sanity check on the config file.  Real issues will be caught when the connection is attempted.",
+      "parentUuid": "9b4a6b86_77f2b0e9",
+      "range": {
+        "startLine": 254,
+        "startChar": 21,
+        "endLine": 254,
+        "endChar": 26
+      },
+      "revId": "7a32cbc3f6e7be046b0eee5113d471de139bc6a3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a2d75f4_5a11e764",
         "filename": "afrouter/afrouter/backend.go",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-20T16:36:53Z",
       "side": 1,
       "message": "if you are accepting DNS names then this message may not make sense ;)",
+      "range": {
+        "startLine": 255,
+        "startChar": 21,
+        "endLine": 255,
+        "endChar": 31
+      },
+      "revId": "7a32cbc3f6e7be046b0eee5113d471de139bc6a3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a4ca492_5eb90cd2",
+        "filename": "afrouter/afrouter/backend.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-06-20T19:38:51Z",
+      "side": 1,
+      "message": "Will fix...",
+      "parentUuid": "8a2d75f4_5a11e764",
       "range": {
         "startLine": 255,
         "startChar": 21,
