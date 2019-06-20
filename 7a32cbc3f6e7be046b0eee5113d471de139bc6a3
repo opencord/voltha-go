@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b4a6b86_77f2b0e9",
+        "filename": "afrouter/afrouter/backend.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-06-20T16:36:53Z",
+      "side": 1,
+      "message": "This, as well as before change, only validates the syntax. It also does not attempt to resolve a hostname or make sure the IP address is not a broadcast, mcast, etc. Assuming any connectivity errors are caught in the \"conntectAll\" func.",
+      "range": {
+        "startLine": 254,
+        "startChar": 21,
+        "endLine": 254,
+        "endChar": 26
+      },
+      "revId": "7a32cbc3f6e7be046b0eee5113d471de139bc6a3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a2d75f4_5a11e764",
+        "filename": "afrouter/afrouter/backend.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-06-20T16:36:53Z",
+      "side": 1,
+      "message": "if you are accepting DNS names then this message may not make sense ;)",
+      "range": {
+        "startLine": 255,
+        "startChar": 21,
+        "endLine": 255,
+        "endChar": 31
+      },
+      "revId": "7a32cbc3f6e7be046b0eee5113d471de139bc6a3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
