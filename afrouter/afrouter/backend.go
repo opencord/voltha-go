@@ -28,7 +28,7 @@ import (
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/metadata"
 	"io"
-	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -251,9 +251,9 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 			gc := &gConnection{conn: nil, cancel: nil, state: connectivity.Idle}
 			be.connections[cnConf.Name] = &connection{name: cnConf.Name, addr: cnConf.Addr, port: cnConf.Port, backend: be, gConn: gc}
 			if cnConf.Addr != "" { // This connection will be specified later.
-				if ip := net.ParseIP(cnConf.Addr); ip == nil {
-					log.Errorf("The IP address for connection %s in backend %s in cluster %s is invalid",
-						cnConf.Name, conf.Name, clusterName)
+				if _, err := url.Parse(cnConf.Addr); err != nil {
+					log.Errorf("The IP address for connection %s in backend %s in cluster %s is invalid: %s",
+						cnConf.Name, conf.Name, clusterName, err)
 					rtrn_err = true
 				}
 				// Validate the port number. This just validtes that it's a non 0 integer
