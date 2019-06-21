@@ -832,6 +832,11 @@ func (dMgr *DeviceManager) PacketIn(deviceId string, port uint32, transactionId 
 
 func (dMgr *DeviceManager) CreateLogicalDevice(cDevice *voltha.Device) error {
 	log.Info("CreateLogicalDevice")
+	// Verify whether the logical device has already been created
+	if cDevice.ParentId != "" {
+		log.Debugw("Parent device already exist.", log.Fields{"deviceId": cDevice.Id, "logicalDeviceId": cDevice.Id})
+		return nil
+	}
 	var logicalId *string
 	var err error
 	if logicalId, err = dMgr.logicalDeviceMgr.createLogicalDevice(nil, cDevice); err != nil {
@@ -881,6 +886,19 @@ func (dMgr *DeviceManager) DeleteLogicalPorts(device *voltha.Device) error {
 	return nil
 }
 
+func (dMgr *DeviceManager) MarkChildDevicesAsUnReachable(device *voltha.Device) error {
+	log.Info("MarkChildDevicesAsUnReachable")
+	// Set the connection status to unreachable
+	connStatus := voltha.ConnectStatus_UNREACHABLE
+	// Do not set the operational status.  Setting it to -1 will do the trick
+	operStatus := voltha.OperStatus_OperStatus(-1)
+	if err := dMgr.updateChildrenStatus(device.Id, operStatus, connStatus); err != nil {
+		log.Warnw("deleteLogical-ports-error", log.Fields{"deviceId": device.Id})
+		return err
+	}
+	return nil
+}
+
 func (dMgr *DeviceManager) getParentDevice(childDevice *voltha.Device) *voltha.Device {
 	//	Sanity check
 	if childDevice.Root {
@@ -923,16 +941,18 @@ func (dMgr *DeviceManager) childDevicesDetected(parentDeviceId string) error {
 	if len(childDeviceIds) == 0 {
 		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
 	}
-	allChildDisable := true
+	allChildEnableRequestSent := true
 	for _, childDeviceId := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(childDeviceId); agent != nil {
-			if err = agent.enableDevice(nil); err != nil {
-				log.Errorw("failure-enable-device", log.Fields{"deviceId": childDeviceId, "error": err.Error()})
-				allChildDisable = false
-			}
+			// Run the children re-registration in its own routine
+			go agent.enableDevice(nil)
+		} else {
+			err = status.Errorf(codes.Unavailable, "no agent for child device %s", childDeviceId)
+			log.Errorw("no-child-device-agent", log.Fields{"parentDeviceId": parentDevice.Id, "childId": childDeviceId})
+			allChildEnableRequestSent = false
 		}
 	}
-	if !allChildDisable {
+	if !allChildEnableRequestSent {
 		return err
 	}
 	return nil

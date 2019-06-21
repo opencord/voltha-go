@@ -547,7 +547,10 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 		return nil, nil
 	}
 	// Run child detection in it's own go routine as it can be a lengthy process
-	go rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val, vendorId.Val, serialNumber.Val, onuId.Val)
+	if err := rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val, vendorId.Val, serialNumber.Val, onuId.Val); err != nil {
+		log.Errorw("child-detection-failed", log.Fields{"parentId": pID.Id, "onuId": onuId.Val, "error": err})
+		return nil, err
+	}
 
 	return new(empty.Empty), nil
 }
@@ -922,7 +925,10 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(args []*ic.Argument)
 		return nil, nil
 	}
 
-	go rhp.deviceMgr.childDevicesDetected(parentDeviceId.Id)
+	if err := rhp.deviceMgr.childDevicesDetected(parentDeviceId.Id); err != nil {
+		log.Errorw("child-devices-dection-failed", log.Fields{"parentId": parentDeviceId.Id, "error": err})
+		return nil, err
+	}
 
 	return new(empty.Empty), nil
 }
