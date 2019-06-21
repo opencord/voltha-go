@@ -418,14 +418,16 @@ func (agent *LogicalDeviceAgent) setupUNILogicalPorts(ctx context.Context, child
 	log.Infow("setupUNILogicalPort", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 	// Build the logical device based on information retrieved from the device adapter
 	var err error
-
+	var added bool
 	//Get UNI port number
 	for _, port := range childDevice.Ports {
 		if port.Type == voltha.Port_ETHERNET_UNI {
-			if _, err = agent.addUNILogicalPort(childDevice, port); err != nil {
+			if added, err = agent.addUNILogicalPort(childDevice, port); err != nil {
 				log.Errorw("error-adding-UNI-port", log.Fields{"error": err})
 			}
-			agent.addLogicalPortToMap(port.PortNo, false)
+			if added {
+				agent.addLogicalPortToMap(port.PortNo, false)
+			}
 		}
 	}
 	return err
