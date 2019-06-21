@@ -16,6 +16,23 @@
       "revId": "9509a8c55a7152b872484c18b35cd24454f3f6c4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b78c408_59dadc82",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-06-21T15:30:30Z",
+      "side": 1,
+      "message": "There is a potential race condition where the device you are changing  is changed by a separate routine between the call to get device and update device.",
+      "revId": "9509a8c55a7152b872484c18b35cd24454f3f6c4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
