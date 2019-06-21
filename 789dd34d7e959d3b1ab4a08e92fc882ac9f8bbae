@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "782d0dc1_41f2890d",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-06-21T17:29:59Z",
+      "side": 1,
+      "message": "comment doesn\u0027t seem to match, unless the go routine is hidden now. Assume as we are no longer waiting for an ACK that time isn\u0027t any issue.",
+      "range": {
+        "startLine": 549,
+        "startChar": 4,
+        "endLine": 549,
+        "endChar": 7
+      },
+      "revId": "789dd34d7e959d3b1ab4a08e92fc882ac9f8bbae",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
