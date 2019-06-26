@@ -18,15 +18,16 @@ package kafka
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	scc "github.com/bsm/sarama-cluster"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"gopkg.in/Shopify/sarama.v1"
-	"strings"
-	"sync"
-	"time"
 )
 
 func init() {
@@ -73,6 +74,7 @@ type SaramaClient struct {
 	lockTopicToConsumerChannelMap sync.RWMutex
 	topicLockMap                  map[string]*sync.RWMutex
 	lockOfTopicLockMap            sync.RWMutex
+	metadataMaxRetry              int
 }
 
 type SaramaClientOption func(*SaramaClient)
@@ -179,6 +181,12 @@ func AutoCreateTopic(opt bool) SaramaClientOption {
 	}
 }
 
+func MetadatMaxRetries(retry int) SaramaClientOption {
+	return func(args *SaramaClient) {
+		args.metadataMaxRetry = retry
+	}
+}
+
 func NewSaramaClient(opts ...SaramaClientOption) *SaramaClient {
 	client := &SaramaClient{
 		KafkaHost: DefaultKafkaHost,
@@ -197,6 +205,7 @@ func NewSaramaClient(opts ...SaramaClientOption) *SaramaClient {
 	client.numPartitions = DefaultNumberPartitions
 	client.numReplicas = DefaultNumberReplicas
 	client.autoCreateTopic = DefaultAutoCreateTopic
+	client.metadataMaxRetry = DefaultMetadataMaxRetry
 
 	for _, option := range opts {
 		option(client)
@@ -679,6 +688,7 @@ func (sc *SaramaClient) createConsumer() error {
 	config.Consumer.MaxWaitTime = time.Duration(sc.consumerMaxwait) * time.Millisecond
 	config.Consumer.MaxProcessingTime = time.Duration(sc.maxProcessingTime) * time.Millisecond
 	config.Consumer.Offsets.Initial = sarama.OffsetNewest
+	config.Metadata.Retry.Max = sc.metadataMaxRetry
 	kafkaFullAddr := fmt.Sprintf("%s:%d", sc.KafkaHost, sc.KafkaPort)
 	brokers := []string{kafkaFullAddr}
 
