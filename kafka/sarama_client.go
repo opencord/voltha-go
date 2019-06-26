@@ -73,6 +73,7 @@ type SaramaClient struct {
 	lockTopicToConsumerChannelMap sync.RWMutex
 	topicLockMap                  map[string]*sync.RWMutex
 	lockOfTopicLockMap            sync.RWMutex
+        MetadataMaxRetry              int
 }
 
 type SaramaClientOption func(*SaramaClient)
@@ -208,6 +209,7 @@ func NewSaramaClient(opts ...SaramaClientOption) *SaramaClient {
 	client.topicLockMap = make(map[string]*sync.RWMutex)
 	client.lockOfTopicLockMap = sync.RWMutex{}
 	client.lockOfGroupConsumers = sync.RWMutex{}
+        client.MetadataMaxRetry = 3 //This is default , but the caller would use it to override the value
 	return client
 }
 
@@ -679,6 +681,7 @@ func (sc *SaramaClient) createConsumer() error {
 	config.Consumer.MaxWaitTime = time.Duration(sc.consumerMaxwait) * time.Millisecond
 	config.Consumer.MaxProcessingTime = time.Duration(sc.maxProcessingTime) * time.Millisecond
 	config.Consumer.Offsets.Initial = sarama.OffsetNewest
+        config.Metadata.Retry.Max = sc.MetadataMaxRetry
 	kafkaFullAddr := fmt.Sprintf("%s:%d", sc.KafkaHost, sc.KafkaPort)
 	brokers := []string{kafkaFullAddr}
 
