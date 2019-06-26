@@ -16,8 +16,9 @@
 package kafka
 
 import (
-	ca "github.com/opencord/voltha-protos/go/inter_container"
 	"time"
+
+	ca "github.com/opencord/voltha-protos/go/inter_container"
 )
 
 const (
@@ -53,6 +54,7 @@ const (
 	DefaultNumberPartitions         = 3
 	DefaultNumberReplicas           = 1
 	DefaultAutoCreateTopic          = false
+	DefaultMetadataMaxRetry         = 3
 )
 
 // MsgClient represents the set of APIs  a Kafka MsgClient must implement
