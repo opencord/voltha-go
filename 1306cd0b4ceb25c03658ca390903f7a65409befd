@@ -16,6 +16,24 @@
       "revId": "1306cd0b4ceb25c03658ca390903f7a65409befd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8167a223_9dc87c39",
+        "filename": "kafka/sarama_client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2019-06-26T13:24:39Z",
+      "side": 1,
+      "message": "MetadaMaxRetry is the field where  other modules using this package can override the default value to desired value. this has to be exported in order to make it configurable per modules.",
+      "parentUuid": "b204e328_f0fb4693",
+      "revId": "1306cd0b4ceb25c03658ca390903f7a65409befd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
