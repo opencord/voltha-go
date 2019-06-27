@@ -267,6 +267,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 		}
 	}
 
+	log.Debugw("DeviceUpdate got txn", log.Fields{"deviceId": device.Id, "transactionID": transactionID.Val})
 	if rhp.TestMode { // Execute only for test cases
 		return new(empty.Empty), nil
 	}
@@ -469,7 +470,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 // ChildDeviceDetected is invoked when a child device is detected.  The following
 // parameters are expected:
 // {parent_device_id, parent_port_no, child_device_type, channel_id, vendor_id, serial_number)
-func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) < 5 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -546,12 +547,13 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	if err := rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val, vendorId.Val, serialNumber.Val, onuId.Val); err != nil {
+	device, err := rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlId.Val, vendorId.Val, serialNumber.Val, onuId.Val)
+	if err != nil {
 		log.Errorw("child-detection-failed", log.Fields{"parentId": pID.Id, "onuId": onuId.Val, "error": err})
 		return nil, err
 	}
 
-	return new(empty.Empty), nil
+	return device, nil
 }
 
 func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*empty.Empty, error) {

@@ -270,7 +270,7 @@ func (dMgr *DeviceManager) GetChildDevice(parentDeviceId string, serialNumber st
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
 	}
 	if len(childDeviceIds) == 0 {
-		log.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id})
+		log.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id, "serialNumber": serialNumber, "onuId": onuId})
 		return nil, status.Errorf(codes.NotFound, "%s", parentDeviceId)
 	}
 
@@ -742,7 +742,7 @@ func (dMgr *DeviceManager) updatePortsState(deviceId string, state voltha.OperSt
 }
 
 func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPortNo int64, deviceType string,
-	channelId int64, vendorId string, serialNumber string, onuId int64) error {
+	channelId int64, vendorId string, serialNumber string, onuId int64) (*voltha.Device, error) {
 	log.Debugw("childDeviceDetected", log.Fields{"parentDeviceId": parentDeviceId})
 
 	// Create the ONU device
@@ -758,12 +758,12 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	parent, err := dMgr.GetDevice(parentDeviceId)
 	if err != nil {
 		log.Error("no-parent-found", log.Fields{"parentId": parentDeviceId})
-		return status.Errorf(codes.NotFound, "%s", parentDeviceId)
+		return nil, status.Errorf(codes.NotFound, "%s", parentDeviceId)
 	}
 
-	if _, err := dMgr.GetChildDevice(parentDeviceId, serialNumber, onuId, parentPortNo); err == nil {
+	if device, err := dMgr.GetChildDevice(parentDeviceId, serialNumber, onuId, parentPortNo); err == nil {
 		log.Warnw("child-device-exists", log.Fields{"parentId": parentDeviceId, "serialNumber": serialNumber})
-		return status.Errorf(codes.AlreadyExists, "%s", serialNumber)
+		return device, status.Errorf(codes.AlreadyExists, "%s", serialNumber)
 	}
 
 	childDevice.ProxyAddress = &voltha.Device_ProxyAddress{DeviceId: parentDeviceId, DeviceType: parent.Type, ChannelId: uint32(channelId), OnuId: uint32(onuId)}
@@ -781,7 +781,7 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	// Publish on the messaging bus that we have discovered new devices
 	go dMgr.kafkaICProxy.DeviceDiscovered(agent.deviceId, deviceType, parentDeviceId, dMgr.coreInstanceId)
 
-	return nil
+	return agent.lastData, nil
 }
 
 func (dMgr *DeviceManager) processTransition(previous *voltha.Device, current *voltha.Device) error {

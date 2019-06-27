@@ -231,7 +231,7 @@ func (ap *CoreProxy) DeviceStateUpdate(ctx context.Context, deviceId string,
 }
 
 func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId string, parentPortNo int,
-	childDeviceType string, channelId int, vendorId string, serialNumber string, onuId int64) error {
+	childDeviceType string, channelId int, vendorId string, serialNumber string, onuId int64) (*voltha.Device, error) {
 	log.Debugw("ChildDeviceDetected", log.Fields{"pDeviceId": parentDeviceId, "channelId": channelId})
 	rpc := "ChildDeviceDetected"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
@@ -278,7 +278,24 @@ func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId str
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
 	log.Debugw("ChildDeviceDetected-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
-	return unPackResponse(rpc, parentDeviceId, success, result)
+
+	if success {
+		volthaDevice := &voltha.Device{}
+		if err := ptypes.UnmarshalAny(result, volthaDevice); err != nil {
+			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+		}
+		return volthaDevice, nil
+	} else {
+		unpackResult := &ic.Error{}
+		var err error
+		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		}
+		log.Debugw("ChildDeviceDetected-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
+		// TODO: Need to get the real error code
+		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
+	}
 
 }
 
@@ -479,6 +496,6 @@ func (ap *CoreProxy) SendPacketIn(ctx context.Context, deviceId string, port uin
 		Value: pkt,
 	}
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("ChildDeviceDetected-response", log.Fields{"pDeviceId": deviceId, "success": success})
+	log.Debugw("SendPacketIn-response", log.Fields{"pDeviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
