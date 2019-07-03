@@ -17,13 +17,6 @@
 
 FROM golang:1.12-alpine3.9 AS build-env
 
-ARG org_label_schema_version=unknown
-ARG org_label_schema_vcs_url=unknown
-ARG org_label_schema_vcs_ref=unknown
-ARG org_label_schema_build_date=unknown
-ARG org_opencord_vcs_commit_date=unknown
-ARG org_opencord_vcs_dirty=unknown
-
 # Install required packages
 RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
 
@@ -45,6 +38,13 @@ COPY vendor ./vendor
 COPY adapters/simulated_onu ./adapters/simulated_onu
 COPY adapters/common ./adapters/common
 COPY adapters/*.go ./adapters/
+
+ARG org_label_schema_version=unknown
+ARG org_label_schema_vcs_url=unknown
+ARG org_label_schema_vcs_ref=unknown
+ARG org_label_schema_build_date=unknown
+ARG org_opencord_vcs_commit_date=unknown
+ARG org_opencord_vcs_dirty=unknown
 
 # Build
 RUN cd adapters/simulated_onu && go build -o /build/simulated_onu \
