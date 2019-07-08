@@ -22,7 +22,7 @@ sudo apt update
 sudo apt install build-essential docker-ce docker-compose virtualenv git python-setuptools python-dev libpcap-dev libffi-dev libssl-dev tox
 ```
 
-Snap install golang 1.12.  Inform apparmor (if being used) of the change.  The apparmor_parser step may need to be run again after reboot.  This appears to be a snapd bug.
+Snap install **golang 1.12**.  Inform apparmor (if being used) of the change.  The apparmor_parser step may need to be run again after reboot.  This appears to be a snapd bug.
 ```sh
 sudo snap install --classic go
 snap list
@@ -53,33 +53,13 @@ Logout/Login to assume new group membership needed for running docker as non-roo
 
 
 
-### VOLTHA Protos
+### VOLTHA Protos Library
 
-Library containing all VOLTHA gRPC Protobuf definitions and the build system to produce needed stubs in Python and Golang.  Stable versions of this package is available via python's pip or golang's "dep" or "go get".   If you need to **edit protos and test those changes locally** you will need to refer to the voltha-protos README and export needed environment variables to include the local build.
+Library containing all VOLTHA gRPC Protobuf definitions and the build system to produce needed stubs in Python and Golang.  Stable versions of this package is available via python's pip or golang's `dep` or `go get`.   If you need to **edit protos and test those changes locally** you will need to refer to the voltha-protos README and export needed environment variables to include the local build.
 
 https://github.com/opencord/voltha-protos/blob/master/README.md
 
-
-Below is a very quick summary of the steps needed to setup.  Specific versions of protobuf and libprotoc/protoc are needed to generate identical stubs:
-```sh
-mkdir -p ~/source
-cd ~/source
-git clone https://gerrit.opencord.org/voltha-protos
-
-mkdir -p $GOPATH/src/github.com/opencord
-ln -s ~/source/voltha-protos $GOPATH/src/github.com/opencord/voltha-protos
-
-go get -d github.com/golang/protobuf/
-cd $GOPATH/src/github.com/golang/protobuf
-git checkout v1.3.1   # needed to match stubs already generated
-make install
-
-cd $GOPATH/src/github.com/opencord/voltha-protos
-make install-protoc   # installs libprotoc/protoc 3.7.0
-make build
-```
-
-After following notes above verify local artifactes are generated.  After building the python and golang voltha-protos dev environment, set and environment variable to indicate the local voltha-protos for golang and python if editing/testing protos changes is needed:
+After following notes above verify local artifacts are generated.  After building the python and golang voltha-protos dev environment, set and environment variable to indicate the local voltha-protos for golang and python if editing/testing protos changes is needed:
 ```sh
 cd ~/source/voltha-protos/
 ls dist/    #python pip tarball output
@@ -90,6 +70,7 @@ Set an environment variable for below Golang and Python builds to inform the Mak
 ```sh
 export LOCAL_PROTOS=true
 ```
+Skip exporting the `LOCAL_*` variable step if you are not changing the library.
 
 
 
@@ -113,57 +94,46 @@ Set an environment variable for below Python builds to inform the Makefile to us
 ```sh
 export LOCAL_PYVOLTHA=true
 ```
+Skip exporting the `LOCAL_*` variable step if you are not changing the library.
 
 
 
-### VOLTHA 2.0 Go Core
+### VOLTHA 2.x Golang Core Containers
 
-For more details regarding building and debugging the 2.0 core outside of Docker refer to voltha-go BUILD.md.
+For more details regarding building and debugging the 2.x core outside of Docker refer to voltha-go BUILD.md.
 
 https://github.com/opencord/voltha-go/blob/master/BUILD.md
 
-
-Below is a very quick summary of the steps needed to setup:
-```sh
-mkdir -p ~/source
-cd ~/source
-git clone https://gerrit.opencord.org/voltha-go
-
-mkdir -p $GOPATH/src/github.com/opencord
-ln -s ~/source/voltha-go $GOPATH/src/github.com/opencord/voltha-go
-
-cd $GOPATH/src/github.com/opencord/voltha-go
-go build rw_core/main.go    # verify vendor and other dependancies. output binary not actually used in container builds
-```
-
-The steps below generate the needed docker images and the Docker build system sets up the Go environment within a container image.  Build Go docker images, rw_core being whats most needed for now.
+The steps below generate the needed docker images and the Docker build system sets up the Golang environment within a container image.  Build Golang docker images, `rw_core` being whats most needed for now.
 This should work without setting up a golang environment.  This also builds needed ofagent and cli docker images:
+
 ```sh
 export DOCKER_TAG=latest
 cd ~/source/voltha-go
 make build
 ```
 
+#### VOLTHA 2.x Golang Adapter Library
+
+Included in the VOLTHA core build for containers is building libraries used by Golang adapters for interfacing into the core.  Stable versions of these libraries are available via golang's `dep` or `go get`.
+
+If you need to **edit voltha-go libraries and test those changes locally** you will need to refer to needed environment variables to include the local build.
+
 Set an environment variable for other Golang builds to inform the Makefile to copy files into the local vendor folder.  Useful for development testing.
 ```sh
 export LOCAL_VOLTHAGO=true
 ```
+Skip exporting the `LOCAL_*` variable step if you are not changing the library.
 
 
 
-### VOLTHA 2.0 OpenOLT (Golang and Python)
+### VOLTHA 2.x OpenOLT Container (Golang and Python)
 
 Checkout and link openolt source into GOPATH for openolt development.  This is similar to voltha-go above.
-```sh
-cd ~/source/
-git clone https://gerrit.opencord.org/voltha-openolt-adapter.git
 
-mkdir -p $GOPATH/src/github.com/opencord
-ln -s ~/source/voltha-openolt-adapter $GOPATH/src/github.com/opencord/voltha-openolt-adapter
+For more details regarding building and debugging the openolt adapter container refer to voltha-openolt-adapter README.
 
-cd $GOPATH/src/github.com/opencord/voltha-openolt-adapter
-go build main.go    # verify vendor and other dependancies. output binary not actually used in container builds
-```
+https://github.com/opencord/voltha-openolt-adapter/blob/master/README.md
 
 Build the openolt container.  Above LOCAL environment variables can be used to include local library builds of PyVoltha, voltha-go, and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openolt build tree.
 
@@ -176,7 +146,7 @@ make build
 
 
 
-### VOLTHA 2.0 OpenONU (Python)
+### VOLTHA 2.x OpenONU Container (Python)
 
 ```sh
 cd ~/source/
@@ -192,7 +162,7 @@ make build
 
 
 
-### ONOS with VOLTHA Compatible Apps
+### ONOS Container with VOLTHA Compatible Apps
 
 By default the standard onos docker image does not contain nor start any apps needed by voltha.  If you use the standard image then you need to use the onos restful api to load needed apps.  For development convienence there is an onos docker image build that adds in the current compatible voltha apps.
 ```sh
@@ -211,7 +181,7 @@ make build
 
 ## Test
 
-Run the combined compose file that starts the core, its dependent systems and the openonu and openolt adapters.  Export an environment variable of your non-localhost ip address needed for inter-container communication.  For convienence you can also export DOCKER_TAG to signify the docker images tag you would like to use.  Though for typical development you may have to edit compose/system-test.yml to override the specific docker image DOCKER_TAG needed.
+Run the combined compose file that starts the core, its dependent systems and the openonu and openolt adapters.  Export an environment variable of your non-localhost ip address needed for inter-container communication.  For convenience you can also export `DOCKER_TAG` to signify the docker images tag you would like to use.  Though for typical development you may have to edit `compose/system-test.yml` to override the specific docker image `DOCKER_TAG` needed.
 ```sh
 export DOCKER_HOST_IP=##YOUR_LOCAL_IP##
 export DOCKER_TAG=latest
@@ -226,7 +196,7 @@ docker-compose -f compose/system-test.yml ps
 docker ps
 ```
 
-Login to cli and verify.  Password is admin
+Login to cli and verify.  Username is voltha, Password is admin
 ```sh
 ssh -p 5022 voltha@localhost
 ```
@@ -311,7 +281,7 @@ Device ports:
 +-----------+----------+--------------+-------------+-------------+--------------------------------------------------------------------+
 ```
 
-Verify onos device state and EAPoL authentication.  Password is karaf
+Verify onos device state and EAPoL authentication.  Username is karaf, Password is karaf
 ```sh
 ssh -p 8101 karaf@localhost
 ```

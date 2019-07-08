@@ -9,7 +9,7 @@ For advanced developers this may provide a more comfortable developer environmen
 
 * git installed
 * Docker-for-Mac installed
-* Go 1.9
+* Go 1.12
 * Python 2.7
 * virtualenv
 * brew (or macports if you prefer)
