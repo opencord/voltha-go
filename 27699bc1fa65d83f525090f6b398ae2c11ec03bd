@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69714ab8_591bdafa",
+        "filename": "kafka/sarama_client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2019-07-09T08:53:28Z",
+      "side": 1,
+      "message": "I guess this should be removed",
+      "revId": "27699bc1fa65d83f525090f6b398ae2c11ec03bd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
