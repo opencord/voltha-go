@@ -89,8 +89,9 @@ type ProxyAccessControl interface {
 
 // proxyAccessControl holds details of the path and proxy that requires access control
 type proxyAccessControl struct {
-	sync.RWMutex
+	mutex    sync.RWMutex
 	Proxy    *Proxy
+	
 	PathLock chan struct{}
 	Path     string
 
@@ -124,60 +125,67 @@ func (pac *proxyAccessControl) unlock() {
 
 // getStart is used for profiling purposes and returns the time at which access control was applied
 func (pac *proxyAccessControl) getStart() time.Time {
-	pac.Lock()
-	defer pac.Unlock()
+	pac.mutex.RLock()
+	defer pac.mutex.RUnlock()
 	return pac.start
 }
 
 // getStart is used for profiling purposes and returns the time at which access control was removed
 func (pac *proxyAccessControl) getStop() time.Time {
-	pac.Lock()
-	defer pac.Unlock()
+	pac.mutex.RLock()
+	defer pac.mutex.RUnlock()
 	return pac.stop
 }
 
 // getPath returns the access controlled path
 func (pac *proxyAccessControl) getPath() string {
-	pac.Lock()
-	defer pac.Unlock()
+	pac.mutex.RLock()
+	defer pac.mutex.RUnlock()
 	return pac.Path
 }
 
 // getProxy returns the proxy used to reach a specific location in the data model
 func (pac *proxyAccessControl) getProxy() *Proxy {
-	pac.Lock()
-	defer pac.Unlock()
+	pac.mutex.RLock()
+	defer pac.mutex.RUnlock()
 	return pac.Proxy
 }
 
 // setStart is for profiling purposes and applies a start time value at which access control was started
 func (pac *proxyAccessControl) setStart(time time.Time) {
-	pac.Lock()
-	defer pac.Unlock()
+	pac.mutex.Lock()
+	defer pac.mutex.Unlock()
 	pac.start = time
 }
 
 // setStop is for profiling purposes and applies a stop time value at which access control was stopped
 func (pac *proxyAccessControl) setStop(time time.Time) {
-	pac.Lock()
-	defer pac.Unlock()
+	pac.mutex.Lock()
+	defer pac.mutex.Unlock()
 	pac.stop = time
 }
 
 // SetProxy is used to changed the proxy object of an access controlled path
 func (pac *proxyAccessControl) SetProxy(proxy *Proxy) {
-	pac.Lock()
-	defer pac.Unlock()
+	pac.mutex.Lock()
+	defer pac.mutex.Unlock()
 	pac.Proxy = proxy
+}
+
+// GetProxy is used to retrieve the proxy object of an access controlled path
+func (pac *proxyAccessControl) GetProxy() *Proxy {
+	pac.mutex.RLock()
+	defer pac.mutex.RUnlock()
+	return pac.Proxy
 }
 
 // List retrieves data linked to a data model path
 func (pac *proxyAccessControl) List(path string, depth int, deep bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--list", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--list", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--list", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--list", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 	}
 
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
@@ -190,9 +198,9 @@ func (pac *proxyAccessControl) List(path string, depth int, deep bool, txid stri
 func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--get", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--get", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--get", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--get", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 	}
 
 	// FIXME: Forcing depth to 0 for now due to problems deep copying the data structure
@@ -204,9 +212,9 @@ func (pac *proxyAccessControl) Get(path string, depth int, deep bool, txid strin
 func (pac *proxyAccessControl) Update(path string, data interface{}, strict bool, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--update", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--update", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--update", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--update", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 	}
 
 	result := pac.getProxy().GetRoot().Update(path, data, strict, txid, nil)
@@ -223,7 +231,7 @@ func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, c
 		pac.lock()
 		log.Debugw("locked-access--add", log.Fields{"path": path, "fullPath": pac.Path})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--add", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--add", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 	}
 
 	result := pac.getProxy().GetRoot().Add(path, data, txid, nil)
@@ -238,9 +246,9 @@ func (pac *proxyAccessControl) Add(path string, data interface{}, txid string, c
 func (pac *proxyAccessControl) Remove(path string, txid string, control bool) interface{} {
 	if control {
 		pac.lock()
-		log.Debugw("locked-access--remove", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		log.Debugw("locked-access--remove", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--remove", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--remove", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 	}
 
 	return pac.getProxy().GetRoot().Remove(path, txid, nil)
@@ -252,7 +260,7 @@ func (pac *proxyAccessControl) CreateProxy(path string, exclusive bool, control 
 		pac.lock()
 		log.Debugw("locked-access--create-proxy", log.Fields{"path": path, "fullPath": pac.Path})
 		defer pac.unlock()
-		defer log.Debugw("unlocked-access--create-proxy", log.Fields{"path": path, "fullPath": pac.Proxy.getFullPath()})
+		defer log.Debugw("unlocked-access--create-proxy", log.Fields{"path": path, "fullPath": pac.GetProxy().getFullPath()})
 	}
 
 	result := pac.getProxy().ParentNode.CreateProxy(path, exclusive)

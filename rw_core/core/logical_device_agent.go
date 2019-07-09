@@ -340,7 +340,7 @@ func (agent *LogicalDeviceAgent) setupLogicalPorts(ctx context.Context) error {
 			ch := make(chan interface{})
 			chnlsList = append(chnlsList, ch)
 			go func(device *voltha.Device, ch chan interface{}) {
-				if err = agent.setupUNILogicalPorts(nil, device); err != nil {
+				if err := agent.setupUNILogicalPorts(nil, device); err != nil {
 					log.Error("setting-up-UNI-ports-failed", log.Fields{"deviceID": device.Id})
 					ch <- status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", device.Id)
 				}

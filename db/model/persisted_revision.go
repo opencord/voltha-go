@@ -67,13 +67,20 @@ func (pr *PersistedRevision) Finalize(skipOnExist bool) {
 }
 
 func (pr *PersistedRevision) store(skipOnExist bool) {
+	pr.mutex.Lock()
+	defer pr.mutex.Unlock()
+
 	if pr.GetBranch().Txid != "" {
 		return
 	}
 
 	log.Debugw("ready-to-store-revision", log.Fields{"hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetData()})
 
-	if blob, err := proto.Marshal(pr.GetConfig().Data.(proto.Message)); err != nil {
+	// clone the revision data to avoid any race conditions with processes
+	// accessing the same data
+	cloned := proto.Clone(pr.GetConfig().Data.(proto.Message))
+
+	if blob, err := proto.Marshal(cloned); err != nil {
 		// TODO report error
 	} else {
 		if pr.Compress {
@@ -181,13 +188,13 @@ StopWatchLoop:
 							log.Debugw("operation-in-progress", log.Fields{
 								"key":       latestRev.GetHash(),
 								"path":      latestRev.GetNode().GetProxy().getFullPath(),
-								"operation": latestRev.GetNode().GetProxy().Operation.String(),
+								"operation": latestRev.GetNode().GetProxy().GetOperation().String(),
 							})
 
 							//continue
 
 							// Identify the operation type and determine if the watch event should be applied or not.
-							switch latestRev.GetNode().GetProxy().Operation {
+							switch latestRev.GetNode().GetProxy().GetOperation() {
 							case PROXY_REMOVE:
 								fallthrough
 
@@ -201,7 +208,7 @@ StopWatchLoop:
 								log.Debugw("ignore-watch-event", log.Fields{
 									"key":       latestRev.GetHash(),
 									"path":      latestRev.GetNode().GetProxy().getFullPath(),
-									"operation": latestRev.GetNode().GetProxy().Operation.String(),
+									"operation": latestRev.GetNode().GetProxy().GetOperation().String(),
 								})
 
 								continue
@@ -222,7 +229,7 @@ StopWatchLoop:
 								log.Debugw("process-watch-event", log.Fields{
 									"key":       latestRev.GetHash(),
 									"path":      latestRev.GetNode().GetProxy().getFullPath(),
-									"operation": latestRev.GetNode().GetProxy().Operation.String(),
+									"operation": latestRev.GetNode().GetProxy().GetOperation().String(),
 								})
 							}
 						}
@@ -232,14 +239,14 @@ StopWatchLoop:
 						pac = PAC().ReservePath(latestRev.GetNode().GetProxy().getFullPath(),
 							latestRev.GetNode().GetProxy(), pathLock)
 						pac.lock()
-						latestRev.GetNode().GetProxy().Operation = PROXY_WATCH
+						latestRev.GetNode().GetProxy().SetOperation(PROXY_WATCH)
 						pac.SetProxy(latestRev.GetNode().GetProxy())
 
 						// Load changes and apply to memory
 						latestRev.LoadFromPersistence(latestRev.GetName(), "", blobs)
 
 						log.Debugw("release-and-unlock-path", log.Fields{"key": latestRev.GetHash(), "path": pathLock})
-						pac.getProxy().Operation = PROXY_GET
+						pac.getProxy().SetOperation(PROXY_GET)
 						pac.unlock()
 						PAC().ReleasePath(pathLock)
 
@@ -381,8 +388,8 @@ func (pr *PersistedRevision) verifyPersistedEntry(data interface{}, typeName str
 	parent := pr.GetBranch().Node.Root
 
 	// Get a copy of the parent's children
-	children := make([]Revision, len(parent.GetBranch(NONE).Latest.GetChildren(typeName)))
-	copy(children, parent.GetBranch(NONE).Latest.GetChildren(typeName))
+	children := make([]Revision, len(parent.GetBranch(NONE).GetLatest().GetChildren(typeName)))
+	copy(children, parent.GetBranch(NONE).GetLatest().GetChildren(typeName))
 
 	// Verify if a child with the provided key value can be found
 	if childIdx, childRev := pr.GetNode().findRevByKey(children, keyName, keyValue); childRev != nil {
@@ -423,14 +430,14 @@ func (pr *PersistedRevision) verifyPersistedEntry(data interface{}, typeName str
 			// BEGIN lock parent -- Update parent
 			parent.GetBranch(NONE).LatestLock.Lock()
 
-			updatedRev := parent.GetBranch(NONE).Latest.UpdateChildren(typeName, children, parent.GetBranch(NONE))
+			updatedRev := parent.GetBranch(NONE).GetLatest().UpdateChildren(typeName, children, parent.GetBranch(NONE))
 			parent.GetBranch(NONE).Node.makeLatest(parent.GetBranch(NONE), updatedRev, nil)
 
 			parent.GetBranch(NONE).LatestLock.Unlock()
 			// END lock parent
 
 			// Drop the previous child revision
-			parent.GetBranch(NONE).Latest.ChildDrop(typeName, childRev.GetHash())
+			parent.GetBranch(NONE).GetLatest().ChildDrop(typeName, childRev.GetHash())
 
 			if updatedChildRev != nil {
 				log.Debugw("verify-persisted-entry--adding-child", log.Fields{
@@ -490,7 +497,7 @@ func (pr *PersistedRevision) verifyPersistedEntry(data interface{}, typeName str
 		// BEGIN parent lock
 		parent.GetBranch(NONE).LatestLock.Lock()
 		children = append(children, childRev)
-		updatedRev := parent.GetBranch(NONE).Latest.UpdateChildren(typeName, children, parent.GetBranch(NONE))
+		updatedRev := parent.GetBranch(NONE).GetLatest().UpdateChildren(typeName, children, parent.GetBranch(NONE))
 		updatedRev.GetNode().SetProxy(parent.GetBranch(NONE).Node.GetProxy())
 		parent.GetBranch(NONE).Node.makeLatest(parent.GetBranch(NONE), updatedRev, nil)
 		parent.GetBranch(NONE).LatestLock.Unlock()

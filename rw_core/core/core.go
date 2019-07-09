@@ -49,7 +49,8 @@ type Core struct {
 	kvClient          kvstore.Client
 	kafkaClient       kafka.Client
 	coreMembership    *voltha.Membership
-	membershipLock    *sync.RWMutex
+	membershipLock    sync.RWMutex
+	ownershipLock     sync.RWMutex
 	deviceOwnership   *DeviceOwnership
 }
 
@@ -80,7 +81,6 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
 	core.clusterDataProxy = core.clusterDataRoot.CreateProxy("/", false)
 	core.localDataProxy = core.localDataRoot.CreateProxy("/", false)
-	core.membershipLock = &sync.RWMutex{}
 	return &core
 }
 
@@ -103,6 +103,8 @@ func (core *Core) Start(ctx context.Context) {
 	go core.startAdapterManager(ctx)
 
 	// Setup device ownership context
+	core.ownershipLock.Lock()
+	defer core.ownershipLock.Unlock()
 	core.deviceOwnership = NewDeviceOwnership(core.instanceId, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
 		"service/voltha/owns_device", 10)
 
@@ -118,6 +120,12 @@ func (core *Core) Stop(ctx context.Context) {
 	core.deviceMgr.stop(ctx)
 	core.kmp.Stop()
 	log.Info("adaptercore-stopped")
+}
+
+func (core *Core) getDeviceOwnership() *DeviceOwnership {
+	core.ownershipLock.RLock()
+	defer core.ownershipLock.RUnlock()
+	return core.deviceOwnership
 }
 
 //startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server

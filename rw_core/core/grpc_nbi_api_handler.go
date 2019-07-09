@@ -156,7 +156,7 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 
 	owned := false
 	if id != nil {
-		owned = handler.core.deviceOwnership.OwnedByMe(id)
+		owned = handler.core.getDeviceOwnership().OwnedByMe(id)
 	}
 	if owned {
 		if txn.Acquired(timeout) {
@@ -456,7 +456,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 				return &voltha.Device{}, err
 			}
 			if d, ok := res.(*voltha.Device); ok {
-				handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: d.Id})
+				handler.core.getDeviceOwnership().OwnedByMe(&utils.DeviceID{Id: d.Id})
 				return d, nil
 			}
 		}
@@ -769,7 +769,7 @@ func (handler *APIHandler) forwardPacketOut(packet *openflow_13.PacketOut) {
 	//TODO: Update this logic once the OF Controller (OFAgent in this case) can include a transaction Id in its
 	// request.  For performance reason we can let both Cores in a Core-Pair forward the Packet to the adapters and
 	// let once of the shim layer (kafka proxy or adapter request handler filters out the duplicate packet)
-	if handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{Id: packet.Id}) {
+	if handler.core.getDeviceOwnership().OwnedByMe(&utils.LogicalDeviceID{Id: packet.Id}) {
 		agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id)
 		agent.packetOut(packet.PacketOut)
 	}

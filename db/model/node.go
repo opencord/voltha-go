@@ -65,9 +65,12 @@ type node struct {
 	Root  *root
 	Type  interface{}
 
-	Branches  map[string]*Branch
-	Tags      map[string]Revision
+	Branches map[string]*Branch
+	Tags     map[string]Revision
+
+	proxyMutex sync.RWMutex
 	Proxy     *Proxy
+
 	EventBus  *EventBus
 	AutoPrune bool
 }
@@ -144,17 +147,17 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	}
 
 	if changeAnnouncement != nil && branch.Txid == "" {
-		if n.Proxy != nil {
+		if n.GetProxy() != nil {
 			for _, change := range changeAnnouncement {
 				log.Debugw("adding-callback",
 					log.Fields{
-						"callbacks":    n.Proxy.getCallbacks(change.Type),
+						"callbacks":    n.GetProxy().getCallbacks(change.Type),
 						"type":         change.Type,
 						"previousData": change.PreviousData,
 						"latestData":   change.LatestData,
 					})
 				n.Root.AddCallback(
-					n.Proxy.InvokeCallbacks,
+					n.GetProxy().InvokeCallbacks,
 					change.Type,
 					true,
 					change.PreviousData,
@@ -523,8 +526,8 @@ func (n *node) Update(path string, data interface{}, strict bool, txid string, m
 
 			// Save proxy in child node to ensure callbacks are called later on
 			// only assign in cases of non sub-folder proxies, i.e. "/"
-			if childNode.Proxy == nil && n.Proxy != nil && n.Proxy.getFullPath() == "" {
-				childNode.Proxy = n.Proxy
+			if childNode.GetProxy() == nil && n.GetProxy() != nil && n.GetProxy().getFullPath() == "" {
+				childNode.SetProxy(n.GetProxy())
 			}
 
 			newChildRev := childNode.Update(path, data, strict, txid, makeBranch)
@@ -802,8 +805,8 @@ func (n *node) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 			if path != "" {
 				if idx, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil {
 					childNode := childRev.GetNode()
-					if childNode.Proxy == nil {
-						childNode.Proxy = n.Proxy
+					if childNode.GetProxy() == nil {
+						childNode.SetProxy(n.GetProxy())
 					}
 					newChildRev := childNode.Remove(path, txid, makeBranch)
 
@@ -1106,27 +1109,27 @@ func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusi
 		RevisionClass:         n.Root.RevisionClass,
 	}
 
-	if n.Proxy == nil {
+	if n.GetProxy() == nil {
 		log.Debugw("constructing-new-proxy", log.Fields{
 			"node-type":        reflect.ValueOf(n.Type).Type(),
 			"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 			"path":             path,
 			"fullPath":         fullPath,
 		})
-		n.Proxy = NewProxy(r, n, parentNode, path, fullPath, exclusive)
+		n.SetProxy(NewProxy(r, n, parentNode, path, fullPath, exclusive))
 	} else {
 		log.Debugw("node-has-existing-proxy", log.Fields{
-			"node-type":        reflect.ValueOf(n.Proxy.Node.Type).Type(),
-			"parent-node-type": reflect.ValueOf(n.Proxy.ParentNode.Type).Type(),
-			"path":             n.Proxy.Path,
-			"fullPath":         n.Proxy.FullPath,
+			"node-type":        reflect.ValueOf(n.GetProxy().Node.Type).Type(),
+			"parent-node-type": reflect.ValueOf(n.GetProxy().ParentNode.Type).Type(),
+			"path":             n.GetProxy().Path,
+			"fullPath":         n.GetProxy().FullPath,
 		})
-		if n.Proxy.Exclusive {
+		if n.GetProxy().Exclusive {
 			log.Error("node is already owned exclusively")
 		}
 	}
 
-	return n.Proxy
+	return n.GetProxy()
 }
 
 func (n *node) makeEventBus() *EventBus {
@@ -1137,10 +1140,14 @@ func (n *node) makeEventBus() *EventBus {
 }
 
 func (n *node) SetProxy(proxy *Proxy) {
+	n.proxyMutex.Lock()
+	defer n.proxyMutex.Unlock()
 	n.Proxy = proxy
 }
 
 func (n *node) GetProxy() *Proxy {
+	n.proxyMutex.RLock()
+	defer n.proxyMutex.RUnlock()
 	return n.Proxy
 }
 
