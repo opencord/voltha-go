@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6dcdcb85_2d89f5a7",
+        "filename": "db/model/node.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-09T19:42:29Z",
+      "side": 1,
+      "message": "Value of GetProxy() could change between here and the usages it\u0027s gating.  Proposal: save in local variable.\n\n(I have not looked at the logic in detail, but testing and using a mutexed variable with an Unlock(),Lock() in between is a red flag.)\n\nI see similar usage in other places...",
+      "revId": "72cefcfd98f20764d6151c956db53587f86e06ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
