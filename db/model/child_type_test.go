@@ -39,10 +39,10 @@ func TestChildType_01_Device_Proto_ChildrenFields(t *testing.T) {
 
 // Verify that the cache contains an entry for types on which ChildrenFields was performed
 func TestChildType_02_Cache_Keys(t *testing.T) {
-	if _, exists := getChildTypeCache().Cache[reflect.TypeOf(&voltha.Device{}).String()]; !exists {
-		t.Errorf("getChildTypeCache().Cache should have an entry of type: %+v\n", reflect.TypeOf(&voltha.Device{}).String())
+	if _, exists := getChildTypes().Cache[reflect.TypeOf(&voltha.Device{}).String()]; !exists {
+		t.Errorf("getChildTypes().Cache should have an entry of type: %+v\n", reflect.TypeOf(&voltha.Device{}).String())
 	}
-	for k := range getChildTypeCache().Cache {
-		t.Logf("getChildTypeCache().Cache Key:%+v\n", k)
+	for k := range getChildTypes().Cache {
+		t.Logf("getChildTypes().Cache Key:%+v\n", k)
 	}
 }

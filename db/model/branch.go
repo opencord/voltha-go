@@ -26,7 +26,7 @@ import (
 
 // Branch structure is used to classify a collection of transaction based revisions
 type Branch struct {
-	sync.RWMutex
+	mutex      sync.RWMutex
 	Node       *node
 	Txid       string
 	Origin     Revision
@@ -85,8 +85,8 @@ func (b *Branch) findMissingChildrenNames(previousNames, latestNames []string) [
 
 // SetLatest assigns the latest revision for this branch
 func (b *Branch) SetLatest(latest Revision) {
-	b.Lock()
-	defer b.Unlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
 	if b.Latest != nil {
 		log.Debugw("updating-latest-revision", log.Fields{"current": b.Latest.GetHash(), "new": latest.GetHash()})
@@ -119,16 +119,16 @@ func (b *Branch) SetLatest(latest Revision) {
 
 // GetLatest retrieves the latest revision of the branch
 func (b *Branch) GetLatest() Revision {
-	b.Lock()
-	defer b.Unlock()
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
 
 	return b.Latest
 }
 
 // GetOrigin retrieves the original revision of the branch
 func (b *Branch) GetOrigin() Revision {
-	b.Lock()
-	defer b.Unlock()
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
 
 	return b.Origin
 }
@@ -142,8 +142,8 @@ func (b *Branch) AddRevision(revision Revision) {
 
 // GetRevision pulls a revision entry at the specified hash
 func (b *Branch) GetRevision(hash string) Revision {
-	b.Lock()
-	defer b.Unlock()
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
 
 	if revision, ok := b.Revisions[hash]; ok {
 		return revision
@@ -154,16 +154,16 @@ func (b *Branch) GetRevision(hash string) Revision {
 
 // SetRevision updates a revision entry at the specified hash
 func (b *Branch) SetRevision(hash string, revision Revision) {
-	b.Lock()
-	defer b.Unlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
 	b.Revisions[hash] = revision
 }
 
 // DeleteRevision removes a revision with the specified hash
 func (b *Branch) DeleteRevision(hash string) {
-	b.Lock()
-	defer b.Unlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
 	if _, ok := b.Revisions[hash]; ok {
 		delete(b.Revisions, hash)

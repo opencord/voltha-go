@@ -54,7 +54,7 @@ func (oc *OperationContext) Update(data interface{}) *OperationContext {
 
 // Proxy holds the information for a specific location with the data model
 type Proxy struct {
-	sync.RWMutex
+	mutex      sync.RWMutex
 	Root       *root
 	Node       *node
 	ParentNode *node
@@ -62,7 +62,7 @@ type Proxy struct {
 	FullPath   string
 	Exclusive  bool
 	Callbacks  map[CallbackType]map[string]*CallbackTuple
-	Operation  ProxyOperation
+	operation  ProxyOperation
 }
 
 // NewProxy instantiates a new proxy to a specific location
@@ -112,8 +112,8 @@ func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTupl
 
 // getCallback returns a specific callback matching the type and function hash
 func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *CallbackTuple {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.RLock()
+	defer p.mutex.RUnlock()
 	if tuple, exists := p.Callbacks[callbackType][funcHash]; exists {
 		return tuple
 	}
@@ -122,22 +122,22 @@ func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *Callbac
 
 // setCallbacks applies a callbacks list to a type
 func (p *Proxy) setCallbacks(callbackType CallbackType, callbacks map[string]*CallbackTuple) {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	p.Callbacks[callbackType] = callbacks
 }
 
 // setCallback applies a callback to a type and hash value
 func (p *Proxy) setCallback(callbackType CallbackType, funcHash string, tuple *CallbackTuple) {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	p.Callbacks[callbackType][funcHash] = tuple
 }
 
 // DeleteCallback removes a callback matching the type and hash
 func (p *Proxy) DeleteCallback(callbackType CallbackType, funcHash string) {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	delete(p.Callbacks[callbackType], funcHash)
 }
 
@@ -167,6 +167,18 @@ var proxyOperationTypes = []string{
 
 func (t ProxyOperation) String() string {
 	return proxyOperationTypes[t]
+}
+
+func (p *Proxy) GetOperation() ProxyOperation {
+	p.mutex.RLock()
+	defer p.mutex.RUnlock()
+	return p.operation
+}
+
+func (p *Proxy) SetOperation(operation ProxyOperation) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.operation = operation
 }
 
 // parseForControlledPath verifies if a proxy path matches a pattern
@@ -214,11 +226,9 @@ func (p *Proxy) List(path string, depth int, deep bool, txid string) interface{}
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
-	p.Operation = PROXY_LIST
+	p.SetOperation(PROXY_LIST)
+	defer p.SetOperation(PROXY_GET)
 	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
 
 	rv := pac.List(path, depth, deep, txid, controlled)
 
@@ -245,7 +255,7 @@ func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} 
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
-	p.Operation = PROXY_GET
+	p.SetOperation(PROXY_GET)
 	pac.SetProxy(p)
 
 	rv := pac.Get(path, depth, deep, txid, controlled)
@@ -281,13 +291,11 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
-
-	p.Operation = PROXY_UPDATE
+	p.SetOperation(PROXY_UPDATE)
+	defer p.SetOperation(PROXY_GET)
 	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
-	log.Debugw("proxy-operation--update", log.Fields{"operation": p.Operation})
+
+	log.Debugw("proxy-operation--update", log.Fields{"operation": p.GetOperation()})
 
 	return pac.Update(fullPath, data, strict, txid, controlled)
 }
@@ -322,15 +330,12 @@ func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string)
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
-
-	p.Operation = PROXY_ADD
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
+	p.SetOperation(PROXY_ADD)
+	defer p.SetOperation(PROXY_GET)
 
 	pac.SetProxy(p)
 
-	log.Debugw("proxy-operation--add", log.Fields{"operation": p.Operation})
+	log.Debugw("proxy-operation--add", log.Fields{"operation": p.GetOperation()})
 
 	return pac.Add(fullPath, data, txid, controlled)
 }
@@ -363,14 +368,10 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
+	p.SetOperation(PROXY_ADD)
+	defer p.SetOperation(PROXY_GET)
 
-	p.Operation = PROXY_ADD
-	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
-
-	log.Debugw("proxy-operation--add", log.Fields{"operation": p.Operation})
+	log.Debugw("proxy-operation--add", log.Fields{"operation": p.GetOperation()})
 
 	return pac.Add(fullPath, data, txid, controlled)
 }
@@ -403,14 +404,11 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 
 	pac := PAC().ReservePath(effectivePath, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
-
-	p.Operation = PROXY_REMOVE
+	p.SetOperation(PROXY_REMOVE)
+	defer p.SetOperation(PROXY_GET)
 	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
 
-	log.Debugw("proxy-operation--remove", log.Fields{"operation": p.Operation})
+	log.Debugw("proxy-operation--remove", log.Fields{"operation": p.GetOperation()})
 
 	return pac.Remove(fullPath, txid, controlled)
 }
@@ -444,14 +442,11 @@ func (p *Proxy) CreateProxy(path string, exclusive bool) *Proxy {
 
 	pac := PAC().ReservePath(path, p, pathLock)
 	defer PAC().ReleasePath(pathLock)
-
-	p.Operation = PROXY_CREATE
+	p.SetOperation(PROXY_CREATE)
+	defer p.SetOperation(PROXY_GET)
 	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
 
-	log.Debugw("proxy-operation--create-proxy", log.Fields{"operation": p.Operation})
+	log.Debugw("proxy-operation--create-proxy", log.Fields{"operation": p.GetOperation()})
 
 	return pac.CreateProxy(fullPath, exclusive, controlled)
 }
@@ -553,7 +548,7 @@ func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 	var err error
 
 	if callbacks := p.getCallbacks(callbackType); callbacks != nil {
-		p.Lock()
+		p.mutex.RLock()
 		for _, callback := range callbacks {
 			if result, err = p.invoke(callback, context); err != nil {
 				if !proceedOnError {
@@ -563,7 +558,7 @@ func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 				log.Info("An error occurred.  Invoking next callback")
 			}
 		}
-		p.Unlock()
+		p.mutex.RUnlock()
 	}
 
 	return result

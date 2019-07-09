@@ -33,20 +33,21 @@ import (
 )
 
 type DeviceManager struct {
-	deviceAgents        map[string]*DeviceAgent
-	rootDevices         map[string]bool
-	lockRootDeviceMap   sync.RWMutex
-	core                *Core
-	adapterProxy        *AdapterProxy
-	adapterMgr          *AdapterManager
-	logicalDeviceMgr    *LogicalDeviceManager
-	kafkaICProxy        *kafka.InterContainerProxy
-	stateTransitions    *TransitionMap
-	clusterDataProxy    *model.Proxy
-	coreInstanceId      string
-	exitChannel         chan int
-	defaultTimeout      int64
-	lockDeviceAgentsMap sync.RWMutex
+	deviceAgents         map[string]*DeviceAgent
+	rootDevices          map[string]bool
+	lockRootDeviceMap    sync.RWMutex
+	core                 *Core
+	adapterProxy         *AdapterProxy
+	adapterMgr           *AdapterManager
+	logicalDeviceMgr     *LogicalDeviceManager
+	kafkaICProxy         *kafka.InterContainerProxy
+	lockStateTransitions sync.RWMutex
+	stateTransitions     *TransitionMap
+	clusterDataProxy     *model.Proxy
+	coreInstanceId       string
+	exitChannel          chan int
+	defaultTimeout       int64
+	lockDeviceAgentsMap  sync.RWMutex
 }
 
 func newDeviceManager(core *Core) *DeviceManager {
@@ -69,7 +70,9 @@ func newDeviceManager(core *Core) *DeviceManager {
 func (dMgr *DeviceManager) start(ctx context.Context, logicalDeviceMgr *LogicalDeviceManager) {
 	log.Info("starting-device-manager")
 	dMgr.logicalDeviceMgr = logicalDeviceMgr
+	dMgr.lockStateTransitions.Lock()
 	dMgr.stateTransitions = NewTransitionMap(dMgr)
+	dMgr.lockStateTransitions.Unlock()
 	log.Info("device-manager-started")
 }
 
@@ -786,7 +789,10 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 
 func (dMgr *DeviceManager) processTransition(previous *voltha.Device, current *voltha.Device) error {
 	// This will be triggered on every update to the device.
+	dMgr.lockStateTransitions.RLock()
 	handlers := dMgr.stateTransitions.GetTransitionHandler(previous, current)
+	dMgr.lockStateTransitions.RUnlock()
+
 	if handlers == nil {
 		log.Debugw("no-op-transition", log.Fields{"deviceId": current.Id})
 		return nil

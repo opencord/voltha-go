@@ -26,9 +26,11 @@ import (
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"sync"
 )
 
 type AdapterProxy struct {
+	mutex                 sync.RWMutex
 	TestMode              bool
 	deviceTopicRegistered bool
 	coreTopic             *kafka.Topic
@@ -74,6 +76,9 @@ func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic {
 }
 
 func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) error {
+	ap.mutex.Lock()
+	defer ap.mutex.Unlock()
+
 	log.Debugw("AdoptDevice", log.Fields{"device": device})
 	rpc := "adopt_device"
 	toTopic := ap.getAdapterTopic(device.Adapter)
