@@ -28,6 +28,7 @@ UNTRACKED="$(git ls-files --exclude-standard --others)"
 
 if [ "$STAGED" == "staged" ] || [ "$UNTRACKED" != "" ]; then
     echo "Please commit or ignore local changes before executing this test"
+    git status
     exit 1
 fi
 
@@ -43,6 +44,7 @@ UNTRACKED_POST="$(git ls-files --exclude-standard --others)"
 if [ "$STAGED_POST" == "staged" ] || [ "$UNTRACKED_POST" != "" ] ; then
     echo "You have go proto build outputs that are not committed."
     echo "Check git status and commit updated files."
+    git status
     exit 1
 else
     echo "Test successful. All go proto build outputs are committed"

@@ -102,6 +102,8 @@ message KpiEvent2 {
 
 /*
  * Identify to the area of the system impacted by the alarm
+ * To be deprecated once python version of OpenOLT adapter
+ * moves to the new event defination for device alarms
  */
 message AlarmEventType {
     enum AlarmEventType {
@@ -116,6 +118,9 @@ message AlarmEventType {
 
 /*
  * Identify to the functional category originating the alarm
+ * To be deprecated once python version of OpenOLT adapter
+ * as well as OpenONU adapter moves to the new event
+ * defination for device alarms
  */
 message AlarmEventCategory {
     enum AlarmEventCategory {
@@ -129,6 +134,9 @@ message AlarmEventCategory {
 
 /*
  * Active state of the alarm
+ * To be deprecated once python version of OpenOLT adapter
+ * as well as OpenONU adapter moves to the new event
+ * defination for device alarms
  */
 message AlarmEventState {
     enum AlarmEventState {
@@ -139,6 +147,9 @@ message AlarmEventState {
 
 /*
  * Identify the overall impact of the alarm on the system
+ * To be deprecated once python version of OpenOLT adapter
+ * as well as OpenONU adapter moves to the new event
+ * defination for device alarms
  */
 message AlarmEventSeverity {
     enum AlarmEventSeverity {
@@ -151,7 +162,9 @@ message AlarmEventSeverity {
 }
 
 /*
- *
+ * To be deprecated once python version of OpenOLT adapter
+ * as well as OpenONU adapter moves to the new event
+ * defination for device alarms
  */
 message AlarmEvent {
     // Unique ID for this alarm.  e.g. voltha.some_olt.1234
@@ -193,3 +206,128 @@ message AlarmEvent {
     // alarm_type  name indicates clearly the name of the alarm
     string alarm_type_name = 13;
 }
+/*
+ * Describes the events specific to device
+ */
+message DeviceEvent {
+    // Identifier of the originating resource of the event, for ex: device_id
+    string resource_id = 1;
+
+    // device_event_name indicates clearly the name of the device event
+    string device_event_name = 2;
+
+    // Textual explanation of the device event
+    string description = 3;
+
+    // Key/Value storage for extra information that may give context to the event
+    map<string, string> context = 4;
+
+}
+
+/*
+ * Identify the area of the system impacted by the event.
+ */
+message EventCategory {
+    enum EventCategory {
+        COMMUNICATION = 0;
+        ENVIRONMENT = 1;
+        EQUIPMENT = 2;
+        SERVICE = 3;
+        PROCESSING = 4;
+        SECURITY = 5;
+        // Add new event areas here
+    }
+}
+
+/*
+ * Identify the functional category originating the event
+ */
+message EventSubCategory {
+    enum EventSubCategory {
+        PON = 0;
+        OLT = 1;
+        ONT = 2;
+        ONU = 3;
+        NNI = 4;
+        // Add new event categories here.
+    }
+}
+
+/*
+ * Identify the type of event
+*/
+message EventType {
+   enum EventType {
+       CONFIG_EVENT = 0;
+       KPI_EVENT    = 1;
+       KPI_EVENT2   = 2;
+       DEVICE_EVENT = 3;
+
+   }
+}
+
+/*
+ * Identify the functional category originating the event
+ */
+message EventHeader {
+    // Unique ID for this event.  e.g. voltha.some_olt.1234
+    string id = 1;
+
+    // Refers to the functional area affect by the event
+    EventCategory.EventCategory category = 2;
+
+    // Refers to functional category of the event
+    EventSubCategory.EventSubCategory sub_category = 3;
+
+    // Refers to the type of the event
+    EventType.EventType type = 4;
+
+    // The version identifier for this event type, thus allowing each
+    // event type to evolve independently. The version should be in the
+    // format “MAJOR.MINOR” format and minor changes must only be additive
+    // and non-breaking.
+    string type_version = 5;
+
+    // Timestamp at which the event was first raised.
+    // This represents the UTC time stamp since epoch (in seconds) when the
+    // the event was first raised from the source entity.
+    // If the source entity doesn't send the raised_ts, this shall be set
+    // to timestamp when the event was received.
+    float raised_ts = 6;
+
+    // Timestamp at which the event was reported.
+    // This represents the UTC time stamp since epoch (in seconds) when the
+    // the event was reported (this time stamp is >= raised_ts).
+    // If the source entity that reported this event doesn't send the 
+    // reported_ts, this shall be set to the same value as raised_ts.
+    float reported_ts = 7;
+
+
+}
+
+/*
+ * Event Structure
+ */
+message Event {
+    // event header
+    EventHeader header = 1;
+
+    // oneof event types referred by EventType.
+    oneof event_type {
+        // Refers to ConfigEvent
+        ConfigEvent config_event = 2;
+
+        // Refers to KpiEvent
+        KpiEvent    kpi_event = 3;
+
+        // Refers to KpiEvent2
+        KpiEvent2   kpi_event2 = 4;
+
+        // Refers to DeviceEvent
+        DeviceEvent device_event = 5;
+
+        // Add other event types here.
+
+    }
+}
+
