@@ -16,6 +16,24 @@
       "revId": "27699bc1fa65d83f525090f6b398ae2c11ec03bd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9097998_fd2a5246",
+        "filename": "kafka/sarama_client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2019-07-09T08:57:17Z",
+      "side": 1,
+      "message": "Yes this line seems to be wrong, it is overriding the value set by the caller",
+      "parentUuid": "69714ab8_591bdafa",
+      "revId": "27699bc1fa65d83f525090f6b398ae2c11ec03bd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
