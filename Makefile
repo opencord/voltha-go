@@ -84,6 +84,7 @@ help:
 	@echo "clean                : Remove files created by the build and tests"
 	@echo "distclean            : Remove venv directory"
 	@echo "docker-push          : Push the docker images to an external repository"
+	@echo "lint-dockerfile      : Perform static analysis on Dockerfiles"
 	@echo "lint-style           : Verify code is properly gofmt-ed"
 	@echo "lint-sanity          : Verify that 'go vet' doesn't report any issues"
 	@echo "lint-dep             : Verify the integrity of the 'dep' files"
@@ -179,6 +180,18 @@ docker-push:
 
 ## lint and unit tests
 
+PATH:=$(GOPATH)/bin:$(PATH)
+HADOLINT=$(shell PATH=$(GOPATH):$(PATH) which hadolint)
+lint-dockerfile:
+ifeq (,$(shell PATH=$(GOPATH):$(PATH) which hadolint))
+	mkdir -p $(GOPATH)/bin
+	curl -o $(GOPATH)/bin/hadolint -sNSL https://github.com/hadolint/hadolint/releases/download/v1.17.1/hadolint-$(shell uname -s)-$(shell uname -m)
+	chmod 755 $(GOPATH)/bin/hadolint
+endif
+	@echo "Running Dockerfile lint check ..."
+	@hadolint $$(find . -name "Dockerfile.*")
+	@echo "Dockerfile lint check OK"
+
 lint-style:
 ifeq (,$(shell which gofmt))
 	go get -u github.com/golang/go/src/cmd/gofmt
@@ -202,7 +215,7 @@ lint-dep:
 	@dep check
 	@echo "Dependency check OK"
 
-lint: lint-style lint-sanity lint-dep
+lint: lint-style lint-sanity lint-dep lint-dockerfile
 
 GO_JUNIT_REPORT:=$(shell which go-junit-report)
 GOCOVER_COBERTURA:=$(shell which gocover-cobertura)
