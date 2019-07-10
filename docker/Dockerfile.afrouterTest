@@ -18,13 +18,19 @@
 FROM golang:1.12-alpine3.9 AS build-env
 
 # Install required packages
-RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
+RUN apk add --no-cache \
+        wget=1.20.3-r0 \
+        git=2.20.1-r0 \
+        make=4.2.1-r2 \
+        build-base=0.5-r1 \
+        protobuf=3.6.1-r1 \
+        protobuf-dev=3.6.1-r1
 
 # Prepare directory structure
-RUN ["mkdir", "-p", "/build"]
-RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
-RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord"]
-RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
+RUN mkdir -p /build \
+        "$GOPATH/src/" "$GOPATH/pkg" "$GOPATH/bin" \
+        "$GOPATH/src/github.com/opencord" \
+        "$GOPATH/src/github.com/opencord/voltha-go"
 
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
@@ -55,7 +61,9 @@ ARG org_opencord_vcs_commit_date=unknown
 ARG org_opencord_vcs_dirty=unknown
 
 # Build
-RUN cd afrouter && go build --tags integration -o /build/afrouter \
+WORKDIR $GOPATH/src/github.com/opencord/voltha-go/afrouter
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+RUN go build --tags integration -o /build/afrouter \
 	-ldflags \
 	"-X github.com/opencord/voltha-go/common/version.version=$org_label_schema_version \
 	 -X github.com/opencord/voltha-go/common/version.vcsRef=$org_label_schema_vcs_ref  \
@@ -65,18 +73,20 @@ RUN cd afrouter && go build --tags integration -o /build/afrouter \
 	 -X github.com/opencord/voltha-go/common/version.arch=$(go env GOHOSTARCH) \
 	 -X github.com/opencord/voltha-go/common/version.buildTime=$org_label_schema_build_date"
 
-RUN cd tests/afrouter && go build --tags integration -o /build/afrouterTest \
+WORKDIR $GOPATH/src/github.com/opencord/voltha-go/tests./afrouter
+RUN go build --tags integration -o /build/afrouterTest \
 	-ldflags \
 	"-X github.com/opencord/voltha-go/common/version.version=$org_label_schema_version \
 	 -X github.com/opencord/voltha-go/common/version.vcsRef=$org_label_schema_vcs_ref  \
 	 -X github.com/opencord/voltha-go/common/version.vcsDirty=$org_opencord_vcs_dirty \
 	 -X github.com/opencord/voltha-go/common/version.goVersion=$(go version 2>&1 | sed -E  's/.*go([0-9]+\.[0-9]+\.[0-9]+).*/\1/g') \
-	 -X github.com/opencord/voltha-go/common/version.os=$(uname -s | tr A-Z a-z) \
-	 -X github.com/opencord/voltha-go/common/version.arch=$(uname -m | tr A-Z a-z) \
+	 -X github.com/opencord/voltha-go/common/version.os=$(uname -s | tr "[:upper:]" "[:lower:]") \
+	 -X github.com/opencord/voltha-go/common/version.arch=$(uname -m | tr "[:upper:]" "[:lower:]") \
 	 -X github.com/opencord/voltha-go/common/version.buildTime=$org_label_schema_build_date"
 
 # Run tests
-RUN cd /build/tests/suites && /build/afrouterTest -config main.json -logLevel 1
+WORKDIR /build/tests/suites
+RUN /build/afrouterTest -config main.json -logLevel 1
 
 # -------------
 # Image creation stage
@@ -94,7 +104,7 @@ COPY --from=build-env /build/tests/suites/voltha.pb /app/tests/
 COPY --from=build-env /build/tests /app/tests/
 COPY --from=build-env /src/tests /app/tests/
 
-CMD tests/runAll tests
+CMD ["tests/runAll", "tests"]
 
 # Label image
 ARG org_label_schema_version=unknown
