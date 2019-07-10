@@ -18,13 +18,19 @@
 FROM golang:1.12-alpine3.9 AS build-env
 
 # Install required packages
-RUN apk add --no-cache wget git make build-base protobuf protobuf-dev
+RUN apk add --no-cache \
+        wget=1.20.3-r0 \
+        git=2.20.1-r0 \
+        make=4.2.1-r2 \
+        build-base=0.5-r1 \
+        protobuf=3.6.1-r1 \
+        protobuf-dev=3.6.1-r1
 
 # Prepare directory structure
-RUN ["mkdir", "-p", "/build"]
-RUN ["mkdir", "-p", "$GOPATH/src", "$GOPATH/pkg", "$GOPATH/bin"]
-RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord"]
-RUN ["mkdir", "-p", "$GOPATH/src/github.com/opencord/voltha-go"]
+RUN mkdir -p /build \
+        "$GOPATH/src/" "$GOPATH/pkg" "$GOPATH/bin" \
+        "$GOPATH/src/github.com/opencord" \
+        "$GOPATH/src/github.com/opencord/voltha-go"
 
 WORKDIR $GOPATH/src/github.com/opencord/voltha-go
 
@@ -50,7 +56,9 @@ ARG org_opencord_vcs_commit_date=unknown
 ARG org_opencord_vcs_dirty=unknown
 
 # Build
-RUN cd arouterd && go build -o /build/arouterd \
+WORKDIR $GOPATH/src/github.com/opencord/voltha-go/arouterd
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+RUN go build -o /build/arouterd \
 	-ldflags \
 	"-X github.com/opencord/voltha-go/common/version.version=$org_label_schema_version \
 	 -X github.com/opencord/voltha-go/common/version.vcsRef=$org_label_schema_vcs_ref  \
