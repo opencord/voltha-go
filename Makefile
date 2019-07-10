@@ -84,6 +84,7 @@ help:
 	@echo "clean                : Remove files created by the build and tests"
 	@echo "distclean            : Remove venv directory"
 	@echo "docker-push          : Push the docker images to an external repository"
+	@echo "lint-dockerfile      : Perform static analysis on Dockerfiles"
 	@echo "lint-style           : Verify code is properly gofmt-ed"
 	@echo "lint-sanity          : Verify that 'go vet' doesn't report any issues"
 	@echo "lint-dep             : Verify the integrity of the 'dep' files"
@@ -179,6 +180,11 @@ docker-push:
 
 ## lint and unit tests
 
+lint-dockerfile:
+	@echo "Running Dockerfile lint check ..."
+	@docker run -ti --rm -v $$(pwd)/docker:/docker -v $$(pwd)/python/docker:/python/docker hadolint/hadolint hadolint $$(find . -name "Dockerfile.*" | sed -e 's/^\.//g')
+	@echo "Dockerfile lint check OK"
+
 lint-style:
 ifeq (,$(shell which gofmt))
 	go get -u github.com/golang/go/src/cmd/gofmt
@@ -202,7 +208,7 @@ lint-dep:
 	@dep check
 	@echo "Dependency check OK"
 
-lint: lint-style lint-sanity lint-dep
+lint: lint-style lint-sanity lint-dep lint-dockerfile
 
 GO_JUNIT_REPORT:=$(shell which go-junit-report)
 GOCOVER_COBERTURA:=$(shell which gocover-cobertura)
