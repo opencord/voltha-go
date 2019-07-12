@@ -166,12 +166,27 @@ def ofp_flow_stats_to_loxi_flow_stats(pb):
         elif type == pb2.OFPIT_GOTO_TABLE:
             return of13.instruction.goto_table(
                 table_id=inst['goto_table']['table_id'])
-
+        elif type == pb2.OFPIT_WRITE_ACTIONS:
+            return of13.instruction.write_actions(
+                actions=[make_loxi_action(a)
+                         for a in inst['actions']['actions']])
+        elif type == pb2.OFPIT_WRITE_METADATA:
+            if 'metadata' in inst['write_metadata']:
+                return of13.instruction.write_metadata(
+                        metadata=inst['write_metadata']['metadata'])
+            else:
+                return of13.instruction.write_metadata(0)
+        elif type == pb2.OFPIT_METER:
+            return of13.instruction.meter(
+                meter_id=inst['meter']['meter_id'])
+                
         else:
             raise NotImplementedError('Instruction type %d' % type)
 
     kw['match'] = make_loxi_match(kw['match'])
-    kw['instructions'] = [make_loxi_instruction(i) for i in kw['instructions']]
+    # if the flow action is drop, then the instruction is not found in the dict
+    if 'instructions' in kw:
+        kw['instructions'] = [make_loxi_instruction(i) for i in kw['instructions']]
     del kw['id']
     return of13.flow_stats_entry(**kw)
 
