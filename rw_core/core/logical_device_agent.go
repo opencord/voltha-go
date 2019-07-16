@@ -1236,10 +1236,8 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 	deletedPorts = make([]*voltha.LogicalPort, 0)
 	for _, o := range oldList {
 		found := false
-		changed := false
 		for _, n := range newList {
 			if o.Id == n.Id {
-				changed = !reflect.DeepEqual(o, n)
 				found = true
 				break
 			}
@@ -1247,20 +1245,22 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 		if !found {
 			deletedPorts = append(deletedPorts, o)
 		}
-		if changed {
-			changedPorts = append(changedPorts, o)
-		}
 	}
 	for _, n := range newList {
 		found := false
+		changed := false
 		for _, o := range oldList {
 			if o.Id == n.Id {
+				changed = !reflect.DeepEqual(o, n)
 				found = true
 				break
 			}
 		}
 		if !found {
 			newPorts = append(newPorts, n)
+		}
+		if changed {
+			changedPorts = append(changedPorts, n)
 		}
 	}
 	return
