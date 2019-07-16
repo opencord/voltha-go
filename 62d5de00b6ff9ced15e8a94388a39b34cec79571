@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53d4c3a9_27c10d0f",
+        "filename": "adapters/common/events_proxy.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-16T14:33:19Z",
+      "side": 1,
+      "message": "Will this have an exception if eventName is an empty string?",
+      "revId": "62d5de00b6ff9ced15e8a94388a39b34cec79571",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a165897d_3765ff1c",
+        "filename": "adapters/common/events_proxy.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-16T14:33:19Z",
+      "side": 1,
+      "message": "Checking got nil deviceEvent would help.",
+      "revId": "62d5de00b6ff9ced15e8a94388a39b34cec79571",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
