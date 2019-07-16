@@ -43,13 +43,16 @@ ARG LOCAL_PYVOLTHA
 ARG LOCAL_PROTOS
 COPY local_imports/ /local_imports/
 RUN if [ -n "$LOCAL_PYVOLTHA" ] ; then \
-    pip install /local_imports/pyvoltha/dist/*.tar.gz==* ; \
+    PYVOLTHA_PATH=$(ls ./local_imports/pyvoltha/dist/) ; \
+    printf "./local_imports/pyvoltha/dist/%s\npyvoltha" "$PYVOLTHA_PATH" > pyvoltha-install.txt ; \
+    pip install -r pyvoltha-install.txt ; \
 fi
 
 RUN if [ -n "$LOCAL_PROTOS" ] ; then \
-    pip install /local_imports/voltha-protos/dist/*.tar.gz==* ; \
-fi
-
+    PROTOS_PATH=$(ls ./local_imports/voltha-protos/dist/) ; \
+    printf "./local_imports/voltha-protos/dist/%s\nvoltha-protos" "$PROTOS_PATH" > protos-install.txt ; \
+    pip install -r protos-install.txt ; \
+ fi
 # Bundle app source
 RUN mkdir /voltha && touch /voltha/__init__.py
 ENV PYTHONPATH=/voltha
