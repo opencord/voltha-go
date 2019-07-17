@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae8cd22f_cfc5dce5",
+        "filename": "python/ofagent/converter.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-07-17T08:10:00Z",
+      "side": 1,
+      "message": "Please remove this odd space.",
+      "revId": "c7000fe8542678ddb781fefbf132c38a07c1ee7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69d4ac2d_3fee4dfb",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-07-17T08:10:00Z",
+      "side": 1,
+      "message": "There are some odd tabs here. Please remove",
+      "revId": "c7000fe8542678ddb781fefbf132c38a07c1ee7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
