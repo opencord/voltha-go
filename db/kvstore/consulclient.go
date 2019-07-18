@@ -79,7 +79,7 @@ func (c *ConsulClient) List(key string, timeout int, lock ...bool) (map[string]*
 	}
 	m := make(map[string]*KVPair)
 	for _, kvp := range kvps {
-		m[string(kvp.Key)] = NewKVPair(string(kvp.Key), kvp.Value, string(kvp.Session), 0)
+		m[string(kvp.Key)] = NewKVPair(string(kvp.Key), kvp.Value, string(kvp.Session), 0, -1)
 	}
 	return m, nil
 }
@@ -100,7 +100,7 @@ func (c *ConsulClient) Get(key string, timeout int, lock ...bool) (*KVPair, erro
 		return nil, err
 	}
 	if kvp != nil {
-		return NewKVPair(string(kvp.Key), kvp.Value, string(kvp.Session), 0), nil
+		return NewKVPair(string(kvp.Key), kvp.Value, string(kvp.Session), 0, -1), nil
 	}
 
 	return nil, nil
@@ -455,7 +455,7 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 		default:
 			if err != nil {
 				log.Warnw("error-from-watch", log.Fields{"error": err})
-				ch <- NewEvent(CONNECTIONDOWN, key, []byte(""))
+				ch <- NewEvent(CONNECTIONDOWN, key, []byte(""), -1)
 			} else {
 				log.Debugw("index-state", log.Fields{"lastindex": lastIndex, "newindex": meta.LastIndex, "key": key})
 			}
@@ -469,12 +469,12 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 		} else {
 			log.Debugw("update-received", log.Fields{"pair": pair})
 			if pair == nil {
-				ch <- NewEvent(DELETE, key, []byte(""))
+				ch <- NewEvent(DELETE, key, []byte(""), -1)
 			} else if !c.isKVEqual(pair, previousKVPair) {
 				// Push the change onto the channel if the data has changed
 				// For now just assume it's a PUT change
 				log.Debugw("pair-details", log.Fields{"session": pair.Session, "key": pair.Key, "value": pair.Value})
-				ch <- NewEvent(PUT, pair.Key, pair.Value)
+				ch <- NewEvent(PUT, pair.Key, pair.Value, -1)
 			}
 			previousKVPair = pair
 			lastIndex = meta.LastIndex

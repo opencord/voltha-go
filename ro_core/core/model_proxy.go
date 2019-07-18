@@ -16,6 +16,7 @@
 package core
 
 import (
+	"context"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
 	"google.golang.org/grpc/codes"
@@ -55,7 +56,7 @@ func (mp *ModelProxy) Get(parts ...string) (interface{}, error) {
 
 	log.Debugw("get-data", log.Fields{"path": path})
 
-	if data := mp.rootProxy.Get(path, 1, false, ""); data != nil {
+	if data := mp.rootProxy.Get(context.Background(), path, 1, false, ""); data != nil {
 		return data, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "data-path: %s", path)

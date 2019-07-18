@@ -49,7 +49,7 @@ type Core struct {
 	kvClient          kvstore.Client
 	kafkaClient       kafka.Client
 	coreMembership    *voltha.Membership
-	membershipLock    *sync.RWMutex
+	membershipLock    sync.RWMutex
 	deviceOwnership   *DeviceOwnership
 }
 
@@ -78,9 +78,8 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 		PathPrefix: cf.KVStoreDataPrefix}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy("/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy("/", false)
-	core.membershipLock = &sync.RWMutex{}
+	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
 	return &core
 }
 
