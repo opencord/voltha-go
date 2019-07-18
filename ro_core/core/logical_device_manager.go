@@ -26,7 +26,7 @@ import (
 )
 
 type LogicalDeviceManager struct {
-	logicalDeviceAgents        map[string]*LogicalDeviceAgent
+	logicalDeviceAgents        sync.Map
 	deviceMgr                  *DeviceManager
 	grpcNbiHdlr                *APIHandler
 	clusterDataProxy           *model.Proxy
@@ -37,7 +37,6 @@ type LogicalDeviceManager struct {
 func newLogicalDeviceManager(deviceMgr *DeviceManager, cdProxy *model.Proxy) *LogicalDeviceManager {
 	var logicalDeviceMgr LogicalDeviceManager
 	logicalDeviceMgr.exitChannel = make(chan int, 1)
-	logicalDeviceMgr.logicalDeviceAgents = make(map[string]*LogicalDeviceAgent)
 	logicalDeviceMgr.deviceMgr = deviceMgr
 	logicalDeviceMgr.clusterDataProxy = cdProxy
 	logicalDeviceMgr.lockLogicalDeviceAgentsMap = sync.RWMutex{}
@@ -60,26 +59,21 @@ func (ldMgr *LogicalDeviceManager) stop(ctx context.Context) {
 }
 
 func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDeviceAgent) {
-	ldMgr.lockLogicalDeviceAgentsMap.Lock()
-	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
-	if _, exist := ldMgr.logicalDeviceAgents[agent.logicalDeviceId]; !exist {
-		ldMgr.logicalDeviceAgents[agent.logicalDeviceId] = agent
+	if _, exist := ldMgr.logicalDeviceAgents.Load(agent.logicalDeviceId); !exist {
+		ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceId, agent)
 	}
 }
 
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string) *LogicalDeviceAgent {
-	ldMgr.lockLogicalDeviceAgentsMap.Lock()
-	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
-	if agent, ok := ldMgr.logicalDeviceAgents[logicalDeviceId]; ok {
-		return agent
+	if agent, ok := ldMgr.logicalDeviceAgents.Load(logicalDeviceId); ok {
+		//return agent
+		return agent.(*LogicalDeviceAgent)
 	}
 	return nil
 }
 
 func (ldMgr *LogicalDeviceManager) deleteLogicalDeviceAgent(logicalDeviceId string) {
-	ldMgr.lockLogicalDeviceAgentsMap.Lock()
-	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
-	delete(ldMgr.logicalDeviceAgents, logicalDeviceId)
+	ldMgr.logicalDeviceAgents.Delete(logicalDeviceId)
 }
 
 // GetLogicalDevice provides a cloned most up to date logical device
@@ -94,14 +88,15 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalD
 func (ldMgr *LogicalDeviceManager) IsLogicalDeviceInCache(id string) bool {
 	ldMgr.lockLogicalDeviceAgentsMap.Lock()
 	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
-	_, exist := ldMgr.logicalDeviceAgents[id]
+	_, exist := ldMgr.logicalDeviceAgents.Load(id)
 	return exist
 }
 
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.List("/logical_devices", 0, false, ""); logicalDevices != nil {
+	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false,
+		""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
 			// If device is not in memory then set it up
 			if !ldMgr.IsLogicalDeviceInCache(logicalDevice.(*voltha.LogicalDevice).Id) {
@@ -130,16 +125,14 @@ func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
 	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
 	// To prevent a race condition, let's hold the logical device agent map lock.  This will prevent a loading and
 	// a create logical device callback from occurring at the same time.
-	ldMgr.lockLogicalDeviceAgentsMap.Lock()
-	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
-	if ldAgent, _ := ldMgr.logicalDeviceAgents[lDeviceId]; ldAgent == nil {
+	if ldAgent, _ := ldMgr.logicalDeviceAgents.Load(lDeviceId); ldAgent == nil {
 		// Logical device not in memory - create a temp logical device Agent and let it load from memory
 		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
 		if err := agent.start(nil, true); err != nil {
 			agent.stop(nil)
 			return err
 		}
-		ldMgr.logicalDeviceAgents[agent.logicalDeviceId] = agent
+		ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceId, agent)
 	}
 	// TODO: load the child device
 	return nil

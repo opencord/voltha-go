@@ -57,7 +57,7 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDb bool) err
 	if loadFromDb {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
-		if logicalDevice := agent.clusterDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 0, false, ""); logicalDevice != nil {
+		if logicalDevice := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceId, 0, false, ""); logicalDevice != nil {
 			if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 				agent.lastData = proto.Clone(lDevice).(*voltha.LogicalDevice)
 			}
@@ -85,8 +85,7 @@ func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, erro
 	log.Debug("GetLogicalDevice")
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
-	if logicalDevice := agent.clusterDataProxy.Get("/logical_devices/"+agent.logicalDeviceId, 0, false,
-		""); logicalDevice != nil {
+	if logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, ""); logicalDevice != nil {
 		if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 			return lDevice, nil
 		}
