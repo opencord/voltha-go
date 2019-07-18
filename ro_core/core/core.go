@@ -66,8 +66,8 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 		PathPrefix: "service/voltha"}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy("/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy("/", false)
+	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
 	return &core
 }
 

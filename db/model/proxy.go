@@ -17,9 +17,11 @@
 package model
 
 import (
+	"context"
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	"reflect"
 	"runtime"
@@ -54,7 +56,7 @@ func (oc *OperationContext) Update(data interface{}) *OperationContext {
 
 // Proxy holds the information for a specific location with the data model
 type Proxy struct {
-	sync.RWMutex
+	mutex      sync.RWMutex
 	Root       *root
 	Node       *node
 	ParentNode *node
@@ -62,7 +64,7 @@ type Proxy struct {
 	FullPath   string
 	Exclusive  bool
 	Callbacks  map[CallbackType]map[string]*CallbackTuple
-	Operation  ProxyOperation
+	operation  ProxyOperation
 }
 
 // NewProxy instantiates a new proxy to a specific location
@@ -100,6 +102,9 @@ func (p *Proxy) getFullPath() string {
 
 // getCallbacks returns the full list of callbacks associated to the proxy
 func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTuple {
+	p.mutex.RLock()
+	defer p.mutex.RUnlock()
+
 	if p != nil {
 		if cb, exists := p.Callbacks[callbackType]; exists {
 			return cb
@@ -112,8 +117,8 @@ func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTupl
 
 // getCallback returns a specific callback matching the type and function hash
 func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *CallbackTuple {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	if tuple, exists := p.Callbacks[callbackType][funcHash]; exists {
 		return tuple
 	}
@@ -122,22 +127,22 @@ func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *Callbac
 
 // setCallbacks applies a callbacks list to a type
 func (p *Proxy) setCallbacks(callbackType CallbackType, callbacks map[string]*CallbackTuple) {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	p.Callbacks[callbackType] = callbacks
 }
 
 // setCallback applies a callback to a type and hash value
 func (p *Proxy) setCallback(callbackType CallbackType, funcHash string, tuple *CallbackTuple) {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	p.Callbacks[callbackType][funcHash] = tuple
 }
 
 // DeleteCallback removes a callback matching the type and hash
 func (p *Proxy) DeleteCallback(callbackType CallbackType, funcHash string) {
-	p.Lock()
-	defer p.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	delete(p.Callbacks[callbackType], funcHash)
 }
 
@@ -146,7 +151,8 @@ type ProxyOperation uint8
 
 // Enumerated list of callback types
 const (
-	PROXY_GET ProxyOperation = iota
+	PROXY_NONE ProxyOperation = iota
+	PROXY_GET
 	PROXY_LIST
 	PROXY_ADD
 	PROXY_UPDATE
@@ -156,6 +162,7 @@ const (
 )
 
 var proxyOperationTypes = []string{
+	"PROXY_NONE",
 	"PROXY_GET",
 	"PROXY_LIST",
 	"PROXY_ADD",
@@ -167,6 +174,18 @@ var proxyOperationTypes = []string{
 
 func (t ProxyOperation) String() string {
 	return proxyOperationTypes[t]
+}
+
+func (p *Proxy) GetOperation() ProxyOperation {
+	p.mutex.RLock()
+	defer p.mutex.RUnlock()
+	return p.operation
+}
+
+func (p *Proxy) SetOperation(operation ProxyOperation) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.operation = operation
 }
 
 // parseForControlledPath verifies if a proxy path matches a pattern
@@ -195,7 +214,7 @@ func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled
 
 // List will retrieve information from the data model at the specified path location
 // A list operation will force access to persistence storage
-func (p *Proxy) List(path string, depth int, deep bool, txid string) interface{} {
+func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) interface{} {
 	var effectivePath string
 	if path == "/" {
 		effectivePath = p.getFullPath()
@@ -204,29 +223,25 @@ func (p *Proxy) List(path string, depth int, deep bool, txid string) interface{}
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
+
+	p.SetOperation(PROXY_LIST)
+	defer p.SetOperation(PROXY_NONE)
 
 	log.Debugw("proxy-list", log.Fields{
 		"path":       path,
 		"effective":  effectivePath,
 		"pathLock":   pathLock,
 		"controlled": controlled,
+		"operation":  p.GetOperation(),
 	})
 
-	pac := PAC().ReservePath(effectivePath, p, pathLock)
-	defer PAC().ReleasePath(pathLock)
-	p.Operation = PROXY_LIST
-	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
-
-	rv := pac.List(path, depth, deep, txid, controlled)
+	rv := p.GetRoot().List(ctx, path, "", depth, deep, txid)
 
 	return rv
 }
 
 // Get will retrieve information from the data model at the specified path location
-func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} {
+func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid string) interface{} {
 	var effectivePath string
 	if path == "/" {
 		effectivePath = p.getFullPath()
@@ -236,25 +251,24 @@ func (p *Proxy) Get(path string, depth int, deep bool, txid string) interface{} 
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
+	p.SetOperation(PROXY_GET)
+	defer p.SetOperation(PROXY_NONE)
+
 	log.Debugw("proxy-get", log.Fields{
 		"path":       path,
 		"effective":  effectivePath,
 		"pathLock":   pathLock,
 		"controlled": controlled,
+		"operation":  p.GetOperation(),
 	})
 
-	pac := PAC().ReservePath(effectivePath, p, pathLock)
-	defer PAC().ReleasePath(pathLock)
-	p.Operation = PROXY_GET
-	pac.SetProxy(p)
-
-	rv := pac.Get(path, depth, deep, txid, controlled)
+	rv := p.GetRoot().Get(ctx, path, "", depth, deep, txid)
 
 	return rv
 }
 
 // Update will modify information in the data model at the specified location with the provided data
-func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) interface{} {
+func (p *Proxy) Update(ctx context.Context, path string, data interface{}, strict bool, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
 		return nil
@@ -271,31 +285,36 @@ func (p *Proxy) Update(path string, data interface{}, strict bool, txid string) 
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
+	p.SetOperation(PROXY_UPDATE)
+	defer p.SetOperation(PROXY_NONE)
+
 	log.Debugw("proxy-update", log.Fields{
 		"path":       path,
 		"effective":  effectivePath,
 		"full":       fullPath,
 		"pathLock":   pathLock,
 		"controlled": controlled,
+		"operation":  p.GetOperation(),
 	})
 
-	pac := PAC().ReservePath(effectivePath, p, pathLock)
-	defer PAC().ReleasePath(pathLock)
+	if p.GetRoot().KvStore != nil {
+		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	}
 
-	p.Operation = PROXY_UPDATE
-	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
-	log.Debugw("proxy-operation--update", log.Fields{"operation": p.Operation})
+	result := p.GetRoot().Update(ctx, fullPath, data, strict, txid, nil)
 
-	return pac.Update(fullPath, data, strict, txid, controlled)
+	if result != nil {
+		return result.GetData()
+	}
+
+	return nil
 }
 
 // AddWithID will insert new data at specified location.
 // This method also allows the user to specify the ID of the data entry to ensure
 // that access control is active while inserting the information.
-func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string) interface{} {
+func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data interface{}, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
 		return nil
@@ -312,31 +331,34 @@ func (p *Proxy) AddWithID(path string, id string, data interface{}, txid string)
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
+	p.SetOperation(PROXY_ADD)
+	defer p.SetOperation(PROXY_NONE)
+
 	log.Debugw("proxy-add-with-id", log.Fields{
 		"path":       path,
 		"effective":  effectivePath,
 		"full":       fullPath,
 		"pathLock":   pathLock,
 		"controlled": controlled,
+		"operation":  p.GetOperation(),
 	})
 
-	pac := PAC().ReservePath(path, p, pathLock)
-	defer PAC().ReleasePath(pathLock)
+	if p.GetRoot().KvStore != nil {
+		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	}
 
-	p.Operation = PROXY_ADD
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
+	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
 
-	pac.SetProxy(p)
+	if result != nil {
+		return result.GetData()
+	}
 
-	log.Debugw("proxy-operation--add", log.Fields{"operation": p.Operation})
-
-	return pac.Add(fullPath, data, txid, controlled)
+	return nil
 }
 
 // Add will insert new data at specified location.
-func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
+func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
 		return nil
@@ -352,6 +374,9 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
+
+	p.SetOperation(PROXY_ADD)
+	defer p.SetOperation(PROXY_NONE)
 
 	log.Debugw("proxy-add", log.Fields{
 		"path":       path,
@@ -359,24 +384,25 @@ func (p *Proxy) Add(path string, data interface{}, txid string) interface{} {
 		"full":       fullPath,
 		"pathLock":   pathLock,
 		"controlled": controlled,
+		"operation":  p.GetOperation(),
 	})
 
-	pac := PAC().ReservePath(path, p, pathLock)
-	defer PAC().ReleasePath(pathLock)
+	if p.GetRoot().KvStore != nil {
+		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	}
 
-	p.Operation = PROXY_ADD
-	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
+	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
 
-	log.Debugw("proxy-operation--add", log.Fields{"operation": p.Operation})
+	if result != nil {
+		return result.GetData()
+	}
 
-	return pac.Add(fullPath, data, txid, controlled)
+	return nil
 }
 
 // Remove will delete an entry at the specified location
-func (p *Proxy) Remove(path string, txid string) interface{} {
+func (p *Proxy) Remove(ctx context.Context, path string, txid string) interface{} {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
 		return nil
@@ -392,6 +418,9 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 	}
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
+
+	p.SetOperation(PROXY_REMOVE)
+	defer p.SetOperation(PROXY_NONE)
 
 	log.Debugw("proxy-remove", log.Fields{
 		"path":       path,
@@ -399,24 +428,25 @@ func (p *Proxy) Remove(path string, txid string) interface{} {
 		"full":       fullPath,
 		"pathLock":   pathLock,
 		"controlled": controlled,
+		"operation":  p.GetOperation(),
 	})
 
-	pac := PAC().ReservePath(effectivePath, p, pathLock)
-	defer PAC().ReleasePath(pathLock)
+	if p.GetRoot().KvStore != nil {
+		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	}
 
-	p.Operation = PROXY_REMOVE
-	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
+	result := p.GetRoot().Remove(ctx, fullPath, txid, nil)
 
-	log.Debugw("proxy-operation--remove", log.Fields{"operation": p.Operation})
+	if result != nil {
+		return result.GetData()
+	}
 
-	return pac.Remove(fullPath, txid, controlled)
+	return nil
 }
 
 // CreateProxy to interact with specific path directly
-func (p *Proxy) CreateProxy(path string, exclusive bool) *Proxy {
+func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) *Proxy {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
 		return nil
@@ -434,26 +464,24 @@ func (p *Proxy) CreateProxy(path string, exclusive bool) *Proxy {
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
+	p.SetOperation(PROXY_CREATE)
+	defer p.SetOperation(PROXY_NONE)
+
 	log.Debugw("proxy-create", log.Fields{
 		"path":       path,
 		"effective":  effectivePath,
 		"full":       fullPath,
 		"pathLock":   pathLock,
 		"controlled": controlled,
+		"operation":  p.GetOperation(),
 	})
 
-	pac := PAC().ReservePath(path, p, pathLock)
-	defer PAC().ReleasePath(pathLock)
+	if p.GetRoot().KvStore != nil {
+		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	}
 
-	p.Operation = PROXY_CREATE
-	pac.SetProxy(p)
-	defer func(op ProxyOperation) {
-		pac.getProxy().Operation = op
-	}(PROXY_GET)
-
-	log.Debugw("proxy-operation--create-proxy", log.Fields{"operation": p.Operation})
-
-	return pac.CreateProxy(fullPath, exclusive, controlled)
+	return p.GetRoot().CreateProxy(ctx, fullPath, exclusive)
 }
 
 // OpenTransaction creates a new transaction branch to isolate operations made to the data model
@@ -553,7 +581,7 @@ func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 	var err error
 
 	if callbacks := p.getCallbacks(callbackType); callbacks != nil {
-		p.Lock()
+		p.mutex.Lock()
 		for _, callback := range callbacks {
 			if result, err = p.invoke(callback, context); err != nil {
 				if !proceedOnError {
@@ -563,7 +591,7 @@ func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 				log.Info("An error occurred.  Invoking next callback")
 			}
 		}
-		p.Unlock()
+		p.mutex.Unlock()
 	}
 
 	return result

@@ -17,6 +17,7 @@
 package model
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"github.com/golang/protobuf/proto"
@@ -103,7 +104,7 @@ func (r *root) FoldTxBranch(txid string) {
 		r.DeleteTxBranch(txid)
 	} else {
 		r.node.MergeBranch(txid, false)
-		r.ExecuteCallbacks()
+		r.node.GetRoot().ExecuteCallbacks()
 		r.DeleteTxBranch(txid)
 	}
 }
@@ -162,7 +163,7 @@ func (r *root) AddNotificationCallback(callback CallbackFunction, args ...interf
 }
 
 func (r *root) syncParent(childRev Revision, txid string) {
-	data := proto.Clone(r.Proxy.ParentNode.Latest().GetData().(proto.Message))
+	data := proto.Clone(r.GetProxy().ParentNode.Latest().GetData().(proto.Message))
 
 	for fieldName, _ := range ChildrenFields(data) {
 		childDataName, childDataHolder := GetAttributeValue(data, fieldName, 0)
@@ -172,12 +173,12 @@ func (r *root) syncParent(childRev Revision, txid string) {
 		}
 	}
 
-	r.Proxy.ParentNode.Latest().SetConfig(NewDataRevision(r.Proxy.ParentNode.Root, data))
-	r.Proxy.ParentNode.Latest(txid).Finalize(false)
+	r.GetProxy().ParentNode.Latest().SetConfig(NewDataRevision(r.GetProxy().ParentNode.GetRoot(), data))
+	r.GetProxy().ParentNode.Latest(txid).Finalize(false)
 }
 
 // Update modifies the content of an object at a given path with the provided data
-func (r *root) Update(path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
+func (r *root) Update(ctx context.Context, path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
 
 	if makeBranch != nil {
@@ -193,13 +194,13 @@ func (r *root) Update(path string, data interface{}, strict bool, txid string, m
 			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
 			return node.MakeBranch(txid)
 		}
-		result = r.node.Update(path, data, strict, txid, trackDirty)
+		result = r.node.Update(ctx, path, data, strict, txid, trackDirty)
 	} else {
-		result = r.node.Update(path, data, strict, "", nil)
+		result = r.node.Update(ctx, path, data, strict, "", nil)
 	}
 
 	if result != nil {
-		if r.Proxy.FullPath != r.Proxy.Path {
+		if r.GetProxy().FullPath != r.GetProxy().Path {
 			r.syncParent(result, txid)
 		} else {
 			result.Finalize(false)
@@ -212,7 +213,7 @@ func (r *root) Update(path string, data interface{}, strict bool, txid string, m
 }
 
 // Add creates a new object at the given path with the provided data
-func (r *root) Add(path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
+func (r *root) Add(ctx context.Context, path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
 
 	if makeBranch != nil {
@@ -228,9 +229,9 @@ func (r *root) Add(path string, data interface{}, txid string, makeBranch MakeBr
 			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
 			return node.MakeBranch(txid)
 		}
-		result = r.node.Add(path, data, txid, trackDirty)
+		result = r.node.Add(ctx, path, data, txid, trackDirty)
 	} else {
-		result = r.node.Add(path, data, "", nil)
+		result = r.node.Add(ctx, path, data, "", nil)
 	}
 
 	if result != nil {
@@ -241,7 +242,7 @@ func (r *root) Add(path string, data interface{}, txid string, makeBranch MakeBr
 }
 
 // Remove discards an object at a given path
-func (r *root) Remove(path string, txid string, makeBranch MakeBranchFunction) Revision {
+func (r *root) Remove(ctx context.Context, path string, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
 
 	if makeBranch != nil {
@@ -257,9 +258,9 @@ func (r *root) Remove(path string, txid string, makeBranch MakeBranchFunction) R
 			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
 			return node.MakeBranch(txid)
 		}
-		result = r.node.Remove(path, txid, trackDirty)
+		result = r.node.Remove(ctx, path, txid, trackDirty)
 	} else {
-		result = r.node.Remove(path, "", nil)
+		result = r.node.Remove(ctx, path, "", nil)
 	}
 
 	r.node.GetRoot().ExecuteCallbacks()
