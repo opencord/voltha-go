@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0aa1e34_a7d04d5c",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-18T20:45:12Z",
+      "side": 1,
+      "message": "p.GetOperation() ?",
+      "revId": "5e9fa180620a93da360a9f4e3d06005787b31d21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37e144c5_885da965",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-18T20:45:12Z",
+      "side": 1,
+      "message": "Should this be removed?  Deleted code can always be recovered from version control.",
+      "revId": "5e9fa180620a93da360a9f4e3d06005787b31d21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95dcf960_ac68ffa2",
+        "filename": "ro_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-18T20:45:12Z",
+      "side": 1,
+      "message": "Is lockDeviceAgentsMap still used?",
+      "revId": "5e9fa180620a93da360a9f4e3d06005787b31d21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
