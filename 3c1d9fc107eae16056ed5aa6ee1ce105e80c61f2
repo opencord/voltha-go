@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b116fcd_d886ec37",
+        "filename": "db/model/branch.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-18T20:45:12Z",
+      "side": 1,
+      "message": "This should be RUnlock(), not Unlock()",
+      "revId": "3c1d9fc107eae16056ed5aa6ee1ce105e80c61f2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
