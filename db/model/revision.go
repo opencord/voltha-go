@@ -16,6 +16,7 @@
 package model
 
 import (
+	"context"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"time"
 )
@@ -34,6 +35,7 @@ type Revision interface {
 	SetHash(hash string)
 	GetHash() string
 	ClearHash()
+	getVersion() int64
 	SetupWatch(key string)
 	SetName(name string)
 	GetName() string
@@ -42,10 +44,10 @@ type Revision interface {
 	Get(int) interface{}
 	GetData() interface{}
 	GetNode() *node
-	LoadFromPersistence(path string, txid string, blobs map[string]*kvstore.KVPair) []Revision
 	SetLastUpdate(ts ...time.Time)
 	GetLastUpdate() time.Time
-	UpdateData(data interface{}, branch *Branch) Revision
-	UpdateChildren(name string, children []Revision, branch *Branch) Revision
+	LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) []Revision
+	UpdateData(ctx context.Context, data interface{}, branch *Branch) Revision
+	UpdateChildren(ctx context.Context, name string, children []Revision, branch *Branch) Revision
 	UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision
 }

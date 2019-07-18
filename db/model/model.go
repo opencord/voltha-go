@@ -23,3 +23,15 @@ func init() {
 	log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"})
 	defer log.CleanUp()
 }
+
+const (
+	// period to determine when data requires a refresh (in milliseconds)
+	// TODO: make this configurable?
+	DataRefreshPeriod int64 = 5000
+
+	// Attribute used to store a timestamp in the context object
+	RequestTimestamp = "request-timestamp"
+
+	// Time limit for a KV path reservation (in seconds)
+	ReservationTTL int64 = 180
+)

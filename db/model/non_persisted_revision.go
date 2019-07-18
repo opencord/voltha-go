@@ -17,6 +17,7 @@ package model
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -33,6 +34,16 @@ import (
 type revCacheSingleton struct {
 	sync.RWMutex
 	Cache sync.Map
+}
+
+func (s *revCacheSingleton) Get(path string) (interface{}, bool) {
+	return s.Cache.Load(path)
+}
+func (s *revCacheSingleton) Set(path string, value interface{}) {
+	s.Cache.Store(path, value)
+}
+func (s *revCacheSingleton) Delete(path string) {
+	s.Cache.Delete(path)
 }
 
 var revCacheInstance *revCacheSingleton
@@ -269,9 +280,16 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 }
 
 // UpdateData will refresh the data content of the revision
-func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Revision {
+func (npr *NonPersistedRevision) UpdateData(ctx context.Context, data interface{}, branch *Branch) Revision {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
+
+	if ctx != nil {
+		if ctxTS, ok := ctx.Value(RequestTimestamp).(int64); ok && npr.lastUpdate.UnixNano() > ctxTS {
+			log.Warnw("data-is-older-than-current", log.Fields{"ctx-ts": ctxTS, "rev-ts": npr.lastUpdate.UnixNano()})
+			return npr
+		}
+	}
 
 	// Do not update the revision if data is the same
 	if npr.Config.Data != nil && npr.Config.hashData(npr.Root, data) == npr.Config.Hash {
@@ -300,7 +318,7 @@ func (npr *NonPersistedRevision) UpdateData(data interface{}, branch *Branch) Re
 
 // UpdateChildren will refresh the list of children with the provided ones
 // It will carefully go through the list and ensure that no child is lost
-func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision, branch *Branch) Revision {
+func (npr *NonPersistedRevision) UpdateChildren(ctx context.Context, name string, children []Revision, branch *Branch) Revision {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 
@@ -358,7 +376,7 @@ func (npr *NonPersistedRevision) UpdateChildren(name string, children []Revision
 					})
 
 					// replace entry
-					newChild.GetNode().Root = existingChildren[nameIndex].GetNode().Root
+					newChild.GetNode().SetRoot(existingChildren[nameIndex].GetNode().GetRoot())
 					updatedChildren = append(updatedChildren, newChild)
 				} else {
 					log.Debugw("keeping-existing-child", log.Fields{
@@ -461,7 +479,7 @@ func (npr *NonPersistedRevision) GetLastUpdate() time.Time {
 	return npr.lastUpdate
 }
 
-func (npr *NonPersistedRevision) LoadFromPersistence(path string, txid string, blobs map[string]*kvstore.KVPair) []Revision {
+func (npr *NonPersistedRevision) LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) []Revision {
 	// stub... required by interface
 	return nil
 }
@@ -472,4 +490,8 @@ func (npr *NonPersistedRevision) SetupWatch(key string) {
 
 func (npr *NonPersistedRevision) StorageDrop(txid string, includeConfig bool) {
 	// stub ... required by interface
+}
+
+func (npr *NonPersistedRevision) getVersion() int64 {
+	return -1
 }

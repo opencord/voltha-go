@@ -74,7 +74,7 @@ func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KV
 	}
 	m := make(map[string]*KVPair)
 	for _, ev := range resp.Kvs {
-		m[string(ev.Key)] = NewKVPair(string(ev.Key), ev.Value, "", ev.Lease)
+		m[string(ev.Key)] = NewKVPair(string(ev.Key), ev.Value, "", ev.Lease, ev.Version)
 	}
 	return m, nil
 }
@@ -94,7 +94,7 @@ func (c *EtcdClient) Get(key string, timeout int, lock ...bool) (*KVPair, error)
 	}
 	for _, ev := range resp.Kvs {
 		// Only one value is returned
-		return NewKVPair(string(ev.Key), ev.Value, "", ev.Lease), nil
+		return NewKVPair(string(ev.Key), ev.Value, "", ev.Lease, ev.Version), nil
 	}
 	return nil, nil
 }
@@ -399,7 +399,7 @@ func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *E
 	for resp := range channel {
 		for _, ev := range resp.Events {
 			//log.Debugf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
-			ch <- NewEvent(getEventType(ev), ev.Kv.Key, ev.Kv.Value)
+			ch <- NewEvent(getEventType(ev), ev.Kv.Key, ev.Kv.Value, ev.Kv.Version)
 		}
 	}
 	log.Debug("stop-listening-on-channel ...")

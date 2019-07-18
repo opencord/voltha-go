@@ -27,18 +27,50 @@ import (
 	"sync"
 )
 
-type singletonChildTypeCache struct {
+type childTypesSingleton struct {
+	mutex sync.RWMutex
 	Cache map[interface{}]map[string]*ChildType
 }
 
-var instanceChildTypeCache *singletonChildTypeCache
-var onceChildTypeCache sync.Once
+var instanceChildTypes *childTypesSingleton
+var onceChildTypes sync.Once
 
-func getChildTypeCache() *singletonChildTypeCache {
-	onceChildTypeCache.Do(func() {
-		instanceChildTypeCache = &singletonChildTypeCache{}
+func getChildTypes() *childTypesSingleton {
+	onceChildTypes.Do(func() {
+		instanceChildTypes = &childTypesSingleton{}
 	})
-	return instanceChildTypeCache
+	return instanceChildTypes
+}
+
+func (s *childTypesSingleton) GetCache() map[interface{}]map[string]*ChildType {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.Cache
+}
+
+func (s *childTypesSingleton) SetCache(cache map[interface{}]map[string]*ChildType) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.Cache = cache
+}
+
+func (s *childTypesSingleton) GetCacheEntry(key interface{}) (map[string]*ChildType, bool) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	childTypeMap, exists := s.Cache[key]
+	return childTypeMap, exists
+}
+
+func (s *childTypesSingleton) SetCacheEntry(key interface{}, value map[string]*ChildType) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.Cache[key] = value
+}
+
+func (s *childTypesSingleton) ResetCache() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.Cache = make(map[interface{}]map[string]*ChildType)
 }
 
 // ChildType structure contains construct details of an object
@@ -58,12 +90,12 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 	var names map[string]*ChildType
 	var namesExist bool
 
-	if getChildTypeCache().Cache == nil {
-		getChildTypeCache().Cache = make(map[interface{}]map[string]*ChildType)
+	if getChildTypes().Cache == nil {
+		getChildTypes().Cache = make(map[interface{}]map[string]*ChildType)
 	}
 
 	msgType := reflect.TypeOf(cls)
-	inst := getChildTypeCache()
+	inst := getChildTypes()
 
 	if names, namesExist = inst.Cache[msgType.String()]; !namesExist {
 		names = make(map[string]*ChildType)
@@ -127,9 +159,10 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 			}
 		}
 
-		getChildTypeCache().Cache[msgType.String()] = names
+		getChildTypes().Cache[msgType.String()] = names
 	} else {
-		log.Debugf("Cache entry for %s: %+v", msgType.String(), inst.Cache[msgType.String()])
+		entry, _ := inst.GetCacheEntry(msgType.String())
+		log.Debugf("Cache entry for %s: %+v", msgType.String(), entry)
 	}
 
 	return names
