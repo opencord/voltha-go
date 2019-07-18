@@ -26,21 +26,18 @@ import (
 )
 
 type DeviceManager struct {
-	deviceAgents        map[string]*DeviceAgent
-	logicalDeviceMgr    *LogicalDeviceManager
-	clusterDataProxy    *model.Proxy
-	coreInstanceId      string
-	exitChannel         chan int
-	lockDeviceAgentsMap sync.RWMutex
+	deviceAgents     sync.Map
+	logicalDeviceMgr *LogicalDeviceManager
+	clusterDataProxy *model.Proxy
+	coreInstanceId   string
+	exitChannel      chan int
 }
 
 func newDeviceManager(cdProxy *model.Proxy, coreInstanceId string) *DeviceManager {
 	var deviceMgr DeviceManager
 	deviceMgr.exitChannel = make(chan int, 1)
-	deviceMgr.deviceAgents = make(map[string]*DeviceAgent)
 	deviceMgr.coreInstanceId = coreInstanceId
 	deviceMgr.clusterDataProxy = cdProxy
-	deviceMgr.lockDeviceAgentsMap = sync.RWMutex{}
 	return &deviceMgr
 }
 
@@ -69,32 +66,23 @@ func sendResponse(ctx context.Context, ch chan interface{}, result interface{}) 
 }
 
 func (dMgr *DeviceManager) addDeviceAgentToMap(agent *DeviceAgent) {
-	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
-	if _, exist := dMgr.deviceAgents[agent.deviceId]; !exist {
-		dMgr.deviceAgents[agent.deviceId] = agent
+	if _, exist := dMgr.deviceAgents.Load(agent.deviceId); !exist {
+		dMgr.deviceAgents.Store(agent.deviceId, agent)
 	}
 }
 
 func (dMgr *DeviceManager) deleteDeviceAgentToMap(agent *DeviceAgent) {
-	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
-	delete(dMgr.deviceAgents, agent.deviceId)
+	dMgr.deviceAgents.Delete(agent.deviceId)
 }
 
 func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
-	dMgr.lockDeviceAgentsMap.Lock()
-	if agent, ok := dMgr.deviceAgents[deviceId]; ok {
-		dMgr.lockDeviceAgentsMap.Unlock()
-		return agent
+	if agent, ok := dMgr.deviceAgents.Load(deviceId); ok {
+		return agent.(*DeviceAgent)
 	} else {
 		//	Try to load into memory - loading will also create the device agent
-		dMgr.lockDeviceAgentsMap.Unlock()
 		if err := dMgr.load(deviceId); err == nil {
-			dMgr.lockDeviceAgentsMap.Lock()
-			defer dMgr.lockDeviceAgentsMap.Unlock()
-			if agent, ok = dMgr.deviceAgents[deviceId]; ok {
-				return agent
+			if agent, ok = dMgr.deviceAgents.Load(deviceId); ok {
+				return agent.(*DeviceAgent)
 			}
 		}
 	}
@@ -103,12 +91,11 @@ func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 
 // listDeviceIdsFromMap returns the list of device IDs that are in memory
 func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
-	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
 	result := &voltha.IDs{Items: make([]*voltha.ID, 0)}
-	for key, _ := range dMgr.deviceAgents {
-		result.Items = append(result.Items, &voltha.ID{Id: key})
-	}
+	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
+		result.Items = append(result.Items, &voltha.ID{Id: key.(string)})
+		return true
+	})
 	return result
 }
 
@@ -122,9 +109,7 @@ func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
 }
 
 func (dMgr *DeviceManager) IsDeviceInCache(id string) bool {
-	dMgr.lockDeviceAgentsMap.Lock()
-	defer dMgr.lockDeviceAgentsMap.Unlock()
-	_, exist := dMgr.deviceAgents[id]
+	_, exist := dMgr.deviceAgents.Load(id)
 	return exist
 }
 
@@ -140,7 +125,7 @@ func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
 func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	log.Debug("ListDevices")
 	result := &voltha.Devices{}
-	if devices := dMgr.clusterDataProxy.List("/devices", 0, false, ""); devices != nil {
+	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
 		for _, device := range devices.([]interface{}) {
 			// If device is not in memory then set it up
 			if !dMgr.IsDeviceInCache(device.(*voltha.Device).Id) {

@@ -38,6 +38,7 @@ const (
 type KVPair struct {
 	Key     string
 	Value   interface{}
+	Version int64
 	Session string
 	Lease   int64
 }
@@ -47,12 +48,13 @@ func init() {
 }
 
 // NewKVPair creates a new KVPair object
-func NewKVPair(key string, value interface{}, session string, lease int64) *KVPair {
+func NewKVPair(key string, value interface{}, session string, lease int64, version int64) *KVPair {
 	kv := new(KVPair)
 	kv.Key = key
 	kv.Value = value
 	kv.Session = session
 	kv.Lease = lease
+	kv.Version = version
 	return kv
 }
 
@@ -61,14 +63,16 @@ type Event struct {
 	EventType int
 	Key       interface{}
 	Value     interface{}
+	Version   int64
 }
 
 // NewEvent creates a new Event object
-func NewEvent(eventType int, key interface{}, value interface{}) *Event {
+func NewEvent(eventType int, key interface{}, value interface{}, version int64) *Event {
 	evnt := new(Event)
 	evnt.EventType = eventType
 	evnt.Key = key
 	evnt.Value = value
+	evnt.Version = version
 
 	return evnt
 }
