@@ -1,0 +1,48 @@
+"nodes":
+  - "voltha-minimal-control-plane"
+  - "voltha-minimal-worker"
+  - "voltha-minimal-worker2"
+
+"charts":
+  - "etcd-operator"
+  - "open-olt"
+  - "open-onu"
+  - "sim"
+  - "voltha"
+
+"pods":
+  - "adapter-open-olt"
+  - "adapter-open-onu"
+  - "adapter-simulated-olt"
+  - "adapter-simulated-onu"
+  - "etcd-operator-etcd-operator-etcd-operator"
+  - "ofagent"
+  - "voltha"
+  - "arouter"
+  - "vcli"
+  - "etcd"
+  - "kafka-broker"
+  - "zookeeper"
+
+"deployments":
+  - "adapter-open-olt"
+  - "adapter-open-onu"
+  - "adapter-simulated-olt"
+  - "adapter-simulated-onu"
+  - "etcd-operator-etcd-operator-etcd-operator"
+  - "ro-core"
+  - "ofagent"
+  - "rw-core1"
+  - "rw-core2"
+  - "voltha-api-server"
+  - "voltha-cli-server"
+
+"services":
+  - "voltha-api"
+  - "voltha-cli"
+  - "voltha-etcd-cluster"
+  - "voltha-etcd-cluster-client"
+  - "voltha-kafka"
+  - "voltha-kafka-headless"
+  - "voltha-zookeeper"
+  - "voltha-zookeeper-headless"
