@@ -36,23 +36,25 @@ import (
 )
 
 type LogicalDeviceAgent struct {
-	logicalDeviceId    string
-	rootDeviceId       string
-	deviceMgr          *DeviceManager
-	ldeviceMgr         *LogicalDeviceManager
-	clusterDataProxy   *model.Proxy
-	exitChannel        chan int
-	deviceGraph        *graph.DeviceGraph
-	flowProxy          *model.Proxy
-	groupProxy         *model.Proxy
-	ldProxy            *model.Proxy
-	portProxies        map[string]*model.Proxy
-	portProxiesLock    sync.RWMutex
-	lockLogicalDevice  sync.RWMutex
-	logicalPortsNo     map[uint32]bool //value is true for NNI port
-	lockLogicalPortsNo sync.RWMutex
-	flowDecomposer     *fd.FlowDecomposer
-	defaultTimeout     int64
+	logicalDeviceId       string
+	rootDeviceId          string
+	deviceMgr             *DeviceManager
+	ldeviceMgr            *LogicalDeviceManager
+	clusterDataProxy      *model.Proxy
+	exitChannel           chan int
+	deviceGraph           *graph.DeviceGraph
+	flowProxy             *model.Proxy
+	groupProxy            *model.Proxy
+	meterProxy            *model.Proxy
+	ldProxy               *model.Proxy
+	portProxies           map[string]*model.Proxy
+	portProxiesLock       sync.RWMutex
+	lockLogicalDevice     sync.RWMutex
+	logicalPortsNo        map[uint32]bool //value is true for NNI port
+	lockLogicalPortsNo    sync.RWMutex
+	flowDecomposer        *fd.FlowDecomposer
+	defaultTimeout        int64
+	flowsWithUnknownMeter map[uint32]uint32 // meter ID is key, flowcount is value
 }
 
 func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDeviceManager,
@@ -71,6 +73,7 @@ func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDevice
 	agent.portProxiesLock = sync.RWMutex{}
 	agent.lockLogicalPortsNo = sync.RWMutex{}
 	agent.logicalPortsNo = make(map[uint32]bool)
+	agent.flowsWithUnknownMeter = make(map[uint32]uint32)
 	agent.defaultTimeout = timeout
 	return &agent
 }
@@ -139,6 +142,10 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceId),
 		false)
+	agent.meterProxy = agent.clusterDataProxy.CreateProxy(
+		ctx,
+		fmt.Sprintf("/logical_devices/%s/meters", agent.logicalDeviceId),
+		false)
 	agent.groupProxy = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/flow_groups", agent.logicalDeviceId),
@@ -195,6 +202,18 @@ func (agent *LogicalDeviceAgent) ListLogicalDeviceFlows() (*ofp.Flows, error) {
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		cFlows := (proto.Clone(lDevice.Flows)).(*ofp.Flows)
 		return cFlows, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+}
+
+func (agent *LogicalDeviceAgent) ListLogicalDeviceMeters() (*ofp.Meters, error) {
+	log.Debug("ListLogicalDeviceMeters")
+	agent.lockLogicalDevice.RLock()
+	defer agent.lockLogicalDevice.RUnlock()
+	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+		cMeters := (proto.Clone(lDevice.Meters)).(*ofp.Meters)
+		return cMeters, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
 }
@@ -256,6 +275,16 @@ func (agent *LogicalDeviceAgent) updateLogicalDeviceFlowsWithoutLock(flows *ofp.
 	afterUpdate := agent.flowProxy.Update(updateCtx, "/", flows, false, "")
 	if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "failed-updating-logical-device-flows:%s", agent.logicalDeviceId)
+	}
+	return nil
+}
+
+//updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
+func (agent *LogicalDeviceAgent) updateLogicalDeviceMetersWithoutLock(meters *ofp.Meters) error {
+	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
+	afterUpdate := agent.meterProxy.Update(updateCtx, "/", meters, false, "")
+	if afterUpdate == nil {
+		return status.Errorf(codes.Internal, "failed-updating-logical-device-meters:%s", agent.logicalDeviceId)
 	}
 	return nil
 }
@@ -520,6 +549,239 @@ func (agent *LogicalDeviceAgent) updateGroupTable(ctx context.Context, groupMod 
 		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, groupMod.GetCommand())
 }
 
+// updateMeterTable updates the meter table of that logical device
+func (agent *LogicalDeviceAgent) updateMeterTable(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
+	log.Debug("updateMeterTable")
+	if meterMod == nil {
+		return nil
+	}
+	switch meterMod.GetCommand() {
+	case ofp.OfpMeterModCommand_OFPMC_ADD:
+		return agent.meterAdd(meterMod)
+	case ofp.OfpMeterModCommand_OFPMC_DELETE:
+		return agent.meterDelete(meterMod)
+	case ofp.OfpMeterModCommand_OFPMC_MODIFY:
+		return agent.meterModify(meterMod)
+	}
+	return status.Errorf(codes.Internal,
+		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, meterMod.GetCommand())
+
+}
+
+func (agent *LogicalDeviceAgent) meterAdd(meterMod *ofp.OfpMeterMod) error {
+	log.Debugw("meterAdd", log.Fields{"metermod": *meterMod})
+	if meterMod == nil {
+		return nil
+	}
+	log.Debug("Waiting for logical device lock!!")
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	log.Debug("Acquired logical device lock")
+	var lDevice *voltha.LogicalDevice
+	var err error
+	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+	}
+
+	var meters []*ofp.OfpMeterEntry
+	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
+		meters = lDevice.Meters.Items
+	}
+	log.Debugw("Available meters", log.Fields{"meters": meters})
+
+	for _, meter := range meters {
+		if meterMod.MeterId == meter.Config.MeterId {
+			log.Infow("Meter-already-exists", log.Fields{"meter": *meterMod})
+			return nil
+		}
+	}
+
+	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
+	if val, exists := agent.flowsWithUnknownMeter[meterMod.MeterId]; exists {
+		meterEntry.Stats.FlowCount = val
+		log.Debugw("updated-flow-count-of-this-meter", log.Fields{"no_of_flows": meterEntry.Stats.FlowCount,
+			"meterId": meterMod.MeterId})
+		delete(agent.flowsWithUnknownMeter, meterMod.MeterId)
+	}
+	meters = append(meters, meterEntry)
+	/*metersToUpdate := &ofp.Meters{}
+	if lDevice.Meters != nil {
+		metersToUpdate = &ofp.Meters{Items: meters}
+	}*/
+	//Update model
+	if err := agent.updateLogicalDeviceMetersWithoutLock(&ofp.Meters{Items: meters}); err != nil {
+		log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return err
+	}
+	log.Debugw("Meter-added-successfully", log.Fields{"Added-meter": meterEntry, "updated-meters": lDevice.Meters})
+	return nil
+}
+
+func (agent *LogicalDeviceAgent) meterDelete(meterMod *ofp.OfpMeterMod) error {
+	log.Debug("meterDelete", log.Fields{"meterMod": *meterMod})
+	if meterMod == nil {
+		return nil
+	}
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+
+	var lDevice *voltha.LogicalDevice
+	var err error
+	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+	}
+
+	var meters []*ofp.OfpMeterEntry
+	var flows []*ofp.OfpFlowStats
+	updatedFlows := make([]*ofp.OfpFlowStats, 0)
+	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
+		meters = lDevice.Meters.Items
+	}
+	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
+		flows = lDevice.Flows.Items
+	}
+
+	changedMeter := false
+	changedFow := false
+	log.Debugw("Available meters", log.Fields{"meters": meters})
+	for index, meter := range meters {
+		if meterMod.MeterId == meter.Config.MeterId {
+			flows = lDevice.Flows.Items
+			changedFow, updatedFlows = agent.getUpdatedFlowsAfterDeletebyMeterId(flows, meterMod.MeterId)
+			meters = append(meters[:index], meters[index+1:]...)
+			log.Infow("Meter has been deleted", log.Fields{"meter": meter, "index": index})
+			changedMeter = true
+			break
+		}
+	}
+	if changedMeter {
+		//Update model
+		metersToUpdate := &ofp.Meters{}
+		if lDevice.Meters != nil {
+			metersToUpdate = &ofp.Meters{Items: meters}
+		}
+		if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
+			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			return err
+		}
+		log.Debug("Meter-deleted-from-DB-successfully", log.Fields{"updatedMeters": metersToUpdate, "no-of-meter": len(metersToUpdate.Items)})
+
+	}
+	if changedFow {
+		//Update model
+		if err := agent.updateLogicalDeviceFlowsWithoutLock(&ofp.Flows{Items: updatedFlows}); err != nil {
+			log.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			return err
+		}
+		log.Debug("Flows-associated-with-meter-deleted-from-DB-successfully",
+			log.Fields{"updated-no-of-flows": len(updatedFlows), "meter": meterMod.MeterId})
+	}
+	log.Debug("meterDelete success")
+	return nil
+}
+
+func (agent *LogicalDeviceAgent) meterModify(meterMod *ofp.OfpMeterMod) error {
+	log.Debug("meterModify")
+	if meterMod == nil {
+		return nil
+	}
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+
+	var lDevice *voltha.LogicalDevice
+	var err error
+	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+	}
+
+	var meters []*ofp.OfpMeterEntry
+	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
+		meters = lDevice.Meters.Items
+	}
+	changedMeter := false
+	for index, meter := range meters {
+		if meterMod.MeterId == meter.Config.MeterId {
+			newmeterEntry := fu.MeterEntryFromMeterMod(meterMod)
+			newmeterEntry.Stats.FlowCount = meter.Stats.FlowCount
+			meters[index] = newmeterEntry
+			changedMeter = true
+			log.Debugw("Found meter, replaced with new meter", log.Fields{"old meter": meter, "new meter": newmeterEntry})
+			break
+		}
+	}
+	if changedMeter {
+		//Update model
+		metersToUpdate := &ofp.Meters{}
+		if lDevice.Meters != nil {
+			metersToUpdate = &ofp.Meters{Items: meters}
+		}
+		if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
+			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			return err
+		}
+		log.Debugw("meter-updated-in-DB-successfully", log.Fields{"updated_meters": meters})
+	}
+
+	log.Errorw("Meter not found ", log.Fields{"meter": meterMod})
+	return nil
+
+}
+
+func (agent *LogicalDeviceAgent) getUpdatedFlowsAfterDeletebyMeterId(flows []*ofp.OfpFlowStats, meterId uint32) (bool, []*ofp.OfpFlowStats) {
+	log.Infow("Delete flows matching meter", log.Fields{"meter": meterId})
+	changed := false
+	//updatedFlows := make([]*ofp.OfpFlowStats, 0)
+	for index := len(flows) - 1; index >= 0; index-- {
+		if mId := fu.GetMeterIdFromFlow(flows[index]); mId != 0 && mId == meterId {
+			log.Debugw("Flow to be deleted", log.Fields{"flow": flows[index], "index": index})
+			flows = append(flows[:index], flows[index+1:]...)
+			changed = true
+		}
+	}
+	return changed, flows
+}
+
+func (agent *LogicalDeviceAgent) updateFlowCountOfMeterStats(modCommand *ofp.OfpFlowMod, meters []*ofp.OfpMeterEntry, flow *ofp.OfpFlowStats) bool {
+
+	flowCommand := modCommand.GetCommand()
+	meterId := fu.GetMeterIdFromFlow(flow)
+	log.Debugw("Meter-id-in-flow-mod", log.Fields{"meterId": meterId})
+	if meterId == 0 {
+		log.Debugw("No meter present in the flow", log.Fields{"flow": *flow})
+		return false
+	}
+	if meters == nil {
+		log.Debug("No meters present in logical device")
+		return false
+	}
+	changedMeter := false
+	for _, meter := range meters {
+		if meterId == meter.Config.MeterId { // Found meter in Logicaldevice
+			changedMeter = true
+			if flowCommand == ofp.OfpFlowModCommand_OFPFC_ADD {
+				meter.Stats.FlowCount += 1
+			} else if flowCommand == ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
+				meter.Stats.FlowCount -= 1
+			}
+			log.Debugw("Found meter, updated meter flow stats", log.Fields{" meterId": meterId})
+			break
+		}
+	}
+	if !changedMeter { // Not found meter in Logicaldevice
+		if _, exists := agent.flowsWithUnknownMeter[meterId]; exists {
+			agent.flowsWithUnknownMeter[meterId] += 1
+		} else {
+			agent.flowsWithUnknownMeter[meterId] = 1
+		}
+		log.Warnw("meter is not found in Logicaldevice",
+			log.Fields{"meterId": meterId, "flowsWithUnknownMeter": agent.flowsWithUnknownMeter[meterId]})
+	}
+	return changedMeter
+}
+
 //flowAdd adds a flow to the flow table of that logical device
 func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	log.Debug("flowAdd")
@@ -537,12 +799,19 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	}
 
 	var flows []*ofp.OfpFlowStats
+	var meters []*ofp.OfpMeterEntry
+	var flow *ofp.OfpFlowStats
+
 	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
 		flows = lDevice.Flows.Items
 	}
 
+	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
+		meters = lDevice.Meters.Items
+	}
 	updatedFlows := make([]*ofp.OfpFlowStats, 0)
 	changed := false
+	updated := false
 	checkOverlap := (mod.Flags & uint32(ofp.OfpFlowModFlags_OFPFF_CHECK_OVERLAP)) != 0
 	if checkOverlap {
 		if overlapped := fu.FindOverlappingFlows(flows, mod); len(overlapped) != 0 {
@@ -550,13 +819,13 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 			log.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 		} else {
 			//	Add flow
-			flow := fu.FlowStatsEntryFromFlowModMessage(mod)
+			flow = fu.FlowStatsEntryFromFlowModMessage(mod)
 			flows = append(flows, flow)
 			updatedFlows = append(updatedFlows, flow)
 			changed = true
 		}
 	} else {
-		flow := fu.FlowStatsEntryFromFlowModMessage(mod)
+		flow = fu.FlowStatsEntryFromFlowModMessage(mod)
 		idx := fu.FindFlows(flows, flow)
 		if idx >= 0 {
 			oldFlow := flows[idx]
@@ -568,6 +837,7 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 				flows[idx] = flow
 				updatedFlows = append(updatedFlows, flow)
 				changed = true
+				updated = true
 			}
 		} else {
 			flows = append(flows, flow)
@@ -576,10 +846,15 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 		}
 	}
 	if changed {
+		var flowMetadata voltha.FlowMetadata
+		if err := agent.GetMeterConfig(updatedFlows, meters, &flowMetadata); err != nil { // This should never happen,meters should be installed before flow arrives
+			log.Error("Meter-referred-in-flows-not-present")
+			return err
+		}
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: updatedFlows}, *lDevice.FlowGroups)
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
-		if err := agent.addDeviceFlowsAndGroups(deviceRules); err != nil {
+		if err := agent.addDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
 			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
 			return err
 		}
@@ -589,8 +864,53 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 			log.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 			return err
 		}
+		if !updated {
+			changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, flow)
+			metersToUpdate := &ofp.Meters{}
+			if lDevice.Meters != nil {
+				metersToUpdate = &ofp.Meters{Items: meters}
+			}
+			if changedMeterStats {
+				//Update model
+				if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
+					log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+					return err
+				}
+				log.Debugw("meter-stats-updated-in-DB-successfully", log.Fields{"updated_meters": meters})
+
+			}
+		}
+
 	}
 	return nil
+}
+
+func (agent *LogicalDeviceAgent) GetMeterConfig(flows []*ofp.OfpFlowStats, meters []*ofp.OfpMeterEntry, metadata *voltha.FlowMetadata) error {
+	m := make(map[uint32]bool)
+	for _, flow := range flows {
+		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 && m[flowMeterID] == false {
+			foundMeter := false
+			// Meter is present in the flow , Get from logical device
+			for _, meter := range meters {
+				if flowMeterID == meter.Config.MeterId {
+					metadata.Meters = append(metadata.Meters, meter.Config)
+					log.Debugw("Found meter in logical device",
+						log.Fields{"meterID": flowMeterID, "meter-band": meter.Config})
+					m[flowMeterID] = true
+					foundMeter = true
+					break
+				}
+			}
+			if !foundMeter {
+				log.Errorw("Meter-referred-by-flow-is-not-found-in-logicaldevice",
+					log.Fields{"meterID": flowMeterID, "Avaliable-meters": meters, "flow": *flow})
+				return errors.New("Meter-referred-by-flow-is-not-found-in-logicaldevice")
+			}
+		}
+	}
+	log.Debugw("meter-bands-for-flows", log.Fields{"flows": len(flows), "metadata": metadata})
+	return nil
+
 }
 
 //flowDelete deletes a flow from the flow table of that logical device
@@ -608,8 +928,17 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
 	}
-	flows := lDevice.Flows.Items
 
+	var meters []*ofp.OfpMeterEntry
+	var flows []*ofp.OfpFlowStats
+
+	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
+		flows = lDevice.Flows.Items
+	}
+
+	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
+		meters = lDevice.Meters.Items
+	}
 	//build a list of what to keep vs what to delete
 	toKeep := make([]*ofp.OfpFlowStats, 0)
 	toDelete := make([]*ofp.OfpFlowStats, 0)
@@ -631,10 +960,15 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 
 	//Update flows
 	if len(toDelete) > 0 {
+		var flowMetadata voltha.FlowMetadata
+		if err := agent.GetMeterConfig(toDelete, meters, &flowMetadata); err != nil { // This should never happen
+			log.Error("Meter-referred-in-flows-not-present")
+			return errors.New("Meter-referred-in-flows-not-present")
+		}
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: toDelete}, ofp.FlowGroups{})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
-		if err := agent.deleteDeviceFlowsAndGroups(deviceRules); err != nil {
+		if err := agent.deleteDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
 			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
 			return err
 		}
@@ -649,15 +983,15 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 	return nil
 }
 
-func (agent *LogicalDeviceAgent) addDeviceFlowsAndGroups(deviceRules *fu.DeviceRules) error {
-	log.Debugw("addDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceId})
+func (agent *LogicalDeviceAgent) addDeviceFlowsAndGroups(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) error {
+	log.Debugw("addDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceId, "deviceRules": deviceRules, "flowMetadata": flowMetadata})
 
 	chnlsList := make([]chan interface{}, 0)
 	for deviceId, value := range deviceRules.GetRules() {
 		ch := make(chan interface{})
 		chnlsList = append(chnlsList, ch)
 		go func(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) {
-			if err := agent.deviceMgr.addFlowsAndGroups(deviceId, flows, groups); err != nil {
+			if err := agent.deviceMgr.addFlowsAndGroups(deviceId, flows, groups, flowMetadata); err != nil {
 				log.Errorw("flow-add-failed", log.Fields{"deviceID": deviceId, "error": err})
 				ch <- status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId)
 			}
@@ -671,7 +1005,7 @@ func (agent *LogicalDeviceAgent) addDeviceFlowsAndGroups(deviceRules *fu.DeviceR
 	return nil
 }
 
-func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.DeviceRules) error {
+func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("deleteDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceId})
 
 	chnlsList := make([]chan interface{}, 0)
@@ -679,7 +1013,7 @@ func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.Devi
 		ch := make(chan interface{})
 		chnlsList = append(chnlsList, ch)
 		go func(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) {
-			if err := agent.deviceMgr.deleteFlowsAndGroups(deviceId, flows, groups); err != nil {
+			if err := agent.deviceMgr.deleteFlowsAndGroups(deviceId, flows, groups, flowMetadata); err != nil {
 				log.Error("flow-delete-failed", log.Fields{"deviceID": deviceId, "error": err})
 				ch <- status.Errorf(codes.Internal, "flow-delete-failed: %s", deviceId)
 			}
@@ -693,7 +1027,7 @@ func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.Devi
 	return nil
 }
 
-func (agent *LogicalDeviceAgent) updateDeviceFlowsAndGroups(deviceRules *fu.DeviceRules) error {
+func (agent *LogicalDeviceAgent) updateDeviceFlowsAndGroups(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("updateDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceId})
 
 	chnlsList := make([]chan interface{}, 0)
@@ -701,7 +1035,7 @@ func (agent *LogicalDeviceAgent) updateDeviceFlowsAndGroups(deviceRules *fu.Devi
 		ch := make(chan interface{})
 		chnlsList = append(chnlsList, ch)
 		go func(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) {
-			if err := agent.deviceMgr.updateFlowsAndGroups(deviceId, flows, groups); err != nil {
+			if err := agent.deviceMgr.updateFlowsAndGroups(deviceId, flows, groups, flowMetadata); err != nil {
 				log.Error("flow-update-failed", log.Fields{"deviceID": deviceId, "error": err})
 				ch <- status.Errorf(codes.Internal, "flow-update-failed: %s", deviceId)
 			}
@@ -730,22 +1064,50 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
 	}
-	flows := lDevice.Flows.Items
-	changed := false
+	var meters []*ofp.OfpMeterEntry
+	var flows []*ofp.OfpFlowStats
+	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
+		meters = lDevice.Meters.Items
+	}
+	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
+		flows = lDevice.Flows.Items
+	}
+
+	changedFlow := false
+	changedMeter := false
 	flow := fu.FlowStatsEntryFromFlowModMessage(mod)
+	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	idx := fu.FindFlows(flows, flow)
 	if idx >= 0 {
+		changedMeter = agent.updateFlowCountOfMeterStats(mod, meters, flow)
+		flowsToDelete = append(flowsToDelete, flows[idx])
 		flows = append(flows[:idx], flows[idx+1:]...)
-		changed = true
+		changedFlow = true
 	} else {
 		return errors.New(fmt.Sprintf("Cannot delete flow - %s", flow))
 	}
+	if changedMeter {
+		//Update model
+		metersToUpdate := &ofp.Meters{}
+		if lDevice.Meters != nil {
+			metersToUpdate = &ofp.Meters{Items: meters}
+		}
+		if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
+			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			return err
+		}
 
-	if changed {
-		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: []*ofp.OfpFlowStats{flow}}, ofp.FlowGroups{})
+	}
+	if changedFlow {
+		var flowMetadata voltha.FlowMetadata
+		if err := agent.GetMeterConfig(flowsToDelete, meters, &flowMetadata); err != nil {
+			log.Error("Meter-referred-in-flows-not-present")
+			return err
+		}
+		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: flowsToDelete}, ofp.FlowGroups{})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
-		if err := agent.deleteDeviceFlowsAndGroups(deviceRules); err != nil {
+		if err := agent.deleteDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
 			log.Errorw("failure-deleting-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
 			return err
 		}
@@ -788,8 +1150,7 @@ func (agent *LogicalDeviceAgent) groupAdd(groupMod *ofp.OfpGroupMod) error {
 
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, *lDevice.Flows, ofp.FlowGroups{Items: groups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
-
-		if err := agent.addDeviceFlowsAndGroups(deviceRules); err != nil {
+		if err := agent.addDeviceFlowsAndGroups(deviceRules, nil); err != nil {
 			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
 			return err
 		}
@@ -841,7 +1202,7 @@ func (agent *LogicalDeviceAgent) groupDelete(groupMod *ofp.OfpGroupMod) error {
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: flows}, ofp.FlowGroups{Items: groups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
-		if err := agent.updateDeviceFlowsAndGroups(deviceRules); err != nil {
+		if err := agent.updateDeviceFlowsAndGroups(deviceRules, nil); err != nil {
 			log.Errorw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
 			return err
 		}
@@ -891,7 +1252,7 @@ func (agent *LogicalDeviceAgent) groupModify(groupMod *ofp.OfpGroupMod) error {
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: lDevice.Flows.Items}, ofp.FlowGroups{Items: groups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
-		if err := agent.updateDeviceFlowsAndGroups(deviceRules); err != nil {
+		if err := agent.updateDeviceFlowsAndGroups(deviceRules, nil); err != nil {
 			log.Errorw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
 			return err
 		}
