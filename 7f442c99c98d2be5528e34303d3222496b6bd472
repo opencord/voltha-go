@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "100f885a_10558ffd",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-23T15:48:14Z",
+      "side": 1,
+      "message": "Here , intention is to get device without lock, Since observed contention in getting lock during flow processing (flow-add timed out )",
+      "parentUuid": "5a953d11_a9513f37",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b453abb3_39e4217d",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-07-23T15:25:24Z",
       "side": 1,
       "message": "Should any of the meter updates trigger a request to the adapter?",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b5e6a27_1c0608c3",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-23T15:48:14Z",
+      "side": 1,
+      "message": "Currently NO. \nAdapter requests for meter during flow processing.\nBut it is good to send meter update to adapters so that core/adapters will be in sync , hence no further sync calls required towards core during flow processing",
+      "parentUuid": "b453abb3_39e4217d",
       "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "651890fd_c67a0268",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-23T15:48:14Z",
+      "side": 1,
+      "message": "Already Logical device is under lock by core during same flow processing . Please refer function header comment",
+      "parentUuid": "568866d5_269dc683",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5300132e_83d259ab",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 1
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "a4bb2da0_facf4820",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-23T15:48:14Z",
+      "side": 1,
+      "message": "Sure, will update",
+      "parentUuid": "5300132e_83d259ab",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22beaf9e_ff86fd06",
         "filename": "rw_core/flow_decomposition/flow_decomposer.go",
         "patchSetId": 1
@@ -81,6 +153,24 @@
       "writtenOn": "2019-07-23T15:25:24Z",
       "side": 1,
       "message": "Might as well remove the commented code with just a comment.",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a99a94e3_95f4fb59",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-23T15:48:14Z",
+      "side": 1,
+      "message": "Sure , will update",
+      "parentUuid": "22beaf9e_ff86fd06",
       "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
