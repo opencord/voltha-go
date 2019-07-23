@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e7c57de1_f5f5ee7e",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-23T15:56:51Z",
+      "side": 1,
+      "message": "A request from the Adapter should not prevent getting a device with lock.  If there is a contention issue then there is an issue with the order of processing.  Upon receiving a flow add request the adapter must immediately reply with an Ack to the core request before processing the request.",
+      "parentUuid": "100f885a_10558ffd",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b453abb3_39e4217d",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -101,6 +119,24 @@
       "side": 1,
       "message": "Already Logical device is under lock by core during same flow processing . Please refer function header comment",
       "parentUuid": "568866d5_269dc683",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1938fe9_782005ff",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-23T15:56:51Z",
+      "side": 1,
+      "message": "Please see comments in the device manager.   Locking is a must otherwise we will end up with a data integrity issue.",
+      "parentUuid": "651890fd_c67a0268",
       "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
