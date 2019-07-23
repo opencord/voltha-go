@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "a8219bbe_d3778294",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-23T16:17:10Z",
+      "side": 1,
+      "message": "Actually, I don\u0027t see it as a Core limitation as the Adapter needs to ACK immediately for all requests from the Core except for getxxxx requests.  \n\nIf in oder to process the flowadd request the Adapter needs more information from the core that could have be provided with that request then, as you mentioned, the flowAdd API needs to change to add these information.   It will perform better without having a callback into the Core for additional data.\n\nPlease go ahead and update the flowAdd API with the additional data.\n\nThanks\nKhen",
+      "parentUuid": "6e914ab2_7c867854",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b453abb3_39e4217d",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
