@@ -25,6 +25,7 @@ import (
 	"github.com/opencord/voltha-go/kafka"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
+	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -343,6 +344,54 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 		return &voltha.Device{Id: pID.Id}, nil
 	}
 	return rhp.deviceMgr.GetChildDevice(pID.Id, serialNumber.Val, onuId.Val, parentPortNo.Val)
+}
+
+func (rhp *AdapterRequestHandlerProxy) GetMeterBand(args []*ic.Argument) (*openflow_13.OfpMeterConfig, error) {
+	if len(args) < 2 {
+		log.Warn("GetMeterBand-invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+
+	pID := &voltha.ID{}
+	meterId := &ic.IntType{}
+	transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, pID); err != nil {
+				log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case "meter_id":
+			if err := ptypes.UnmarshalAny(arg.Value, meterId); err != nil {
+				log.Warnw("cannot-unmarshal-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("GetMeterBand", log.Fields{"deviceId": pID.Id, "meterId": meterId.Val, "transactionID": transactionID.Val})
+
+	// Try to grab the transaction as this core may be competing with another Core
+	if rhp.competeForTransaction() {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
+			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
+			// returning nil, nil instructs the callee to ignore this request
+			return nil, nil
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	if rhp.TestMode { // Execute only for test cases
+		return &openflow_13.OfpMeterConfig{MeterId: uint32(meterId.Val)}, nil
+	}
+	return rhp.deviceMgr.GetMeterBand(pID.Id, uint32(meterId.Val))
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic.Argument) (*voltha.Device, error) {

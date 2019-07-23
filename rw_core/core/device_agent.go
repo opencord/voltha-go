@@ -324,6 +324,7 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 	go agent.updateDeviceWithoutLockAsync(device, chdB)
 
 	if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chAdapters, chdB); res != nil {
+		log.Debugw("Failed to get response from adapter[or] DB", log.Fields{"result": res})
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 

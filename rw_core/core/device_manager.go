@@ -242,6 +242,33 @@ func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
+//GetMeterBand returns meter band config of meter
+/* WARNING: This function should only be called by adapter during flow processing due to reason that
+   device is fetched without taking lock since adapter is processing flow under logical device
+   lock
+*/
+func (dMgr *DeviceManager) GetMeterBand(deviceId string, meterId uint32) (*ofp.OfpMeterConfig, error) {
+	log.Debugw("GetMeterBand", log.Fields{"deviceId": deviceId, "meterId": meterId})
+	// Get the logical device Id based on the deviceId
+	var device *voltha.Device
+	var err error
+	agent := dMgr.getDeviceAgent(deviceId)
+	if agent == nil {
+		log.Errorw("Error getting device agent", log.Fields{"deviceId": deviceId})
+		return nil, status.Errorf(codes.NotFound, "%s", deviceId)
+	}
+	log.Debug("Getting device without lock")
+	if device, err = agent.getDeviceWithoutLock(); err != nil {
+		log.Errorw("device-not-found", log.Fields{"deviceId": deviceId})
+		return nil, err
+	}
+	if !device.Root {
+		log.Errorw("device-not-root", log.Fields{"deviceId": deviceId})
+		return nil, status.Errorf(codes.FailedPrecondition, "%s", deviceId)
+	}
+	return dMgr.logicalDeviceMgr.GetMeterBand(device, meterId)
+}
+
 func (dMgr *DeviceManager) GetChildDevice(parentDeviceId string, serialNumber string, onuId int64, parentPortNo int64) (*voltha.Device, error) {
 	log.Debugw("GetChildDevice", log.Fields{"parentDeviceid": parentDeviceId, "serialNumber": serialNumber,
 		"parentPortNo": parentPortNo, "onuId": onuId})

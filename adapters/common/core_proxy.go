@@ -22,6 +22,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/kafka"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
+	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -430,6 +431,49 @@ func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, 
 			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 		}
 		log.Debugw("GetChildDevice-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
+		// TODO:  Need to get the real error code
+		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
+	}
+}
+
+func (ap *CoreProxy) GetMeterBand(ctx context.Context, parentDeviceId string, meterId uint32) (*openflow_13.OfpMeterConfig, error) {
+	log.Debugw("GetMeterBand", log.Fields{"DeviceId": parentDeviceId, "meterId": meterId})
+	rpc := "GetMeterBand"
+
+	toTopic := ap.getCoreTopic(parentDeviceId)
+	replyToTopic := ap.getAdapterTopic()
+
+	args := make([]*kafka.KVArg, 2)
+	id := &voltha.ID{Id: parentDeviceId}
+	args[0] = &kafka.KVArg{
+		Key:   "device_id",
+		Value: id,
+	}
+
+	val := &ic.IntType{Val: int64(meterId)}
+	args[1] = &kafka.KVArg{
+		Key:   "meter_id",
+		Value: val,
+	}
+
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
+	log.Debugw("GetMeterBand-response", log.Fields{"pDeviceId": parentDeviceId, "meterId": meterId, "success": success})
+
+	if success {
+		meterBand := &openflow_13.OfpMeterConfig{}
+		if err := ptypes.UnmarshalAny(result, meterBand); err != nil {
+			log.Warnw("cannot-unmarshal-meterBand-response", log.Fields{"error": err})
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+		}
+		return meterBand, nil
+	} else {
+		unpackResult := &ic.Error{}
+		var err error
+		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			log.Warnw("cannot-unmarshal-meterBand-response", log.Fields{"error": err})
+		}
+		log.Debugw("GetMeterBand fails ", log.Fields{"deviceid": parentDeviceId, "meterid": meterId,
+			"success": success, "error": err})
 		// TODO:  Need to get the real error code
 		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}

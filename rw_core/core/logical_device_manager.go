@@ -298,6 +298,41 @@ func (ldMgr *LogicalDeviceManager) getLogicalPortId(device *voltha.Device) (*vol
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
+/* WARNING: This function should only be called by adapter during flow processing due to reason that
+   device is fetched without taking lock since adapter is processing flow under logical device
+   lock
+*/
+func (ldMgr *LogicalDeviceManager) GetMeterBand(device *voltha.Device, meterId uint32) (*openflow_13.OfpMeterConfig, error) {
+	// Get the logical device where this device is attached
+	var err error
+	log.Debugw("GetMeterBand", log.Fields{"meterId": meterId, "lDeviceId": device.ParentId})
+	var lDevice *voltha.LogicalDevice
+	agent := ldMgr.getLogicalDeviceAgent(device.ParentId)
+	if agent == nil {
+		log.Error("Failed to get logical device agent")
+		return nil, status.Errorf(codes.NotFound, "%s", device.ParentId)
+	}
+	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		return nil, status.Errorf(codes.NotFound, "%s", agent.logicalDeviceId)
+	}
+	if lDevice.Meters.Items == nil {
+		log.Info("No meters available in Logical device")
+		return nil, errors.New("no-meter-in-logical-device")
+	}
+	// Go over list of meters
+	log.Debugw("Available meters", log.Fields{"meters": lDevice.Meters.Items})
+	for _, meter := range lDevice.Meters.Items {
+		if meter.Config.MeterId == meterId {
+			log.Debugw("Got meter from logical device", log.Fields{"meterId": meterId})
+			return meter.Config, nil
+		}
+	}
+	// This will happen  when flow was landed at adapter before meter been created at core
+	log.Warn("Unable to find meter in logical device")
+	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
+}
+
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, id string) (*openflow_13.Flows, error) {
 	log.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
@@ -487,6 +522,25 @@ func (ldMgr *LogicalDeviceManager) updateFlowTable(ctx context.Context, id strin
 	sendAPIResponse(ctx, ch, res)
 }
 
+func (ldMgr *LogicalDeviceManager) updateMeterTable(ctx context.Context, id string, meter *openflow_13.OfpMeterMod, ch chan interface{}) {
+	log.Debugw("updateMeterTable", log.Fields{"logicalDeviceId": id})
+	var res interface{}
+	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
+		res = agent.updateMeterTable(ctx, meter)
+		log.Debugw("updateMeterTable-result", log.Fields{"result": res})
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", id)
+	}
+	sendAPIResponse(ctx, ch, res)
+}
+
+func (ldMgr *LogicalDeviceManager) ListLogicalDeviceMeters(ctx context.Context, id string) (*openflow_13.Meters, error) {
+	log.Debugw("ListLogicalDeviceMeters", log.Fields{"logicalDeviceId": id})
+	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
+		return agent.ListLogicalDeviceMeters()
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", id)
+}
 func (ldMgr *LogicalDeviceManager) updateGroupTable(ctx context.Context, id string, groupMod *openflow_13.OfpGroupMod, ch chan interface{}) {
 	log.Debugw("updateGroupTable", log.Fields{"logicalDeviceId": id})
 	var res interface{}
