@@ -414,11 +414,11 @@ func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort ui
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
-func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups) error {
+func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("UpdateFlowsBulk", log.Fields{"deviceId": device.Id, "flowsInUpdate": len(flows.Items), "groupsToUpdate": len(groups.Items)})
 	toTopic := ap.getAdapterTopic(device.Adapter)
 	rpc := "update_flows_bulk"
-	args := make([]*kafka.KVArg, 3)
+	args := make([]*kafka.KVArg, 4)
 	args[0] = &kafka.KVArg{
 		Key:   "device",
 		Value: device,
@@ -431,6 +431,10 @@ func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flo
 		Key:   "groups",
 		Value: groups,
 	}
+	args[3] = &kafka.KVArg{
+		Key:   "flow_metadata",
+		Value: flowMetadata,
+	}
 
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
@@ -439,7 +443,7 @@ func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flo
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
-func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges) error {
+func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("UpdateFlowsIncremental",
 		log.Fields{
 			"deviceId":       device.Id,
@@ -451,7 +455,7 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChange
 		})
 	toTopic := ap.getAdapterTopic(device.Adapter)
 	rpc := "update_flows_incrementally"
-	args := make([]*kafka.KVArg, 3)
+	args := make([]*kafka.KVArg, 4)
 	args[0] = &kafka.KVArg{
 		Key:   "device",
 		Value: device,
@@ -465,6 +469,10 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChange
 		Value: groupChanges,
 	}
 
+	args[3] = &kafka.KVArg{
+		Key:   "flow_metadata",
+		Value: flowMetadata,
+	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, device.Id, args...)

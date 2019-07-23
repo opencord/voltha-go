@@ -299,3 +299,9 @@ func (handler *APIHandler) UpdateLogicalDeviceMeterTable(
 	log.Debug("UpdateLogicalDeviceMeterTable-stub")
 	return nil, nil
 }
+
+//@TODO useless stub, what should this actually do?
+func (handler *APIHandler) ListLogicalDeviceMeters(ctx context.Context, id *voltha.ID) (*openflow_13.Meters, error) {
+	log.Debugw("ListLogicalDeviceMeters-unimplemented", log.Fields{"id": *id})
+	return nil, nil
+}
