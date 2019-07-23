@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "6e914ab2_7c867854",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-23T16:10:01Z",
+      "side": 1,
+      "message": "Yes Agreed . But logical device is maintained in core so that we need to modify flowAdd API to include all information required for flow processing by adapter ( Ex: meter) ,so that adapter will immediately ACK without having dependency back on CORE\n\nEffectively, All the adapters should know the current limitations of the core and do the necessary work-around in their space.",
+      "parentUuid": "e7c57de1_f5f5ee7e",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b453abb3_39e4217d",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
