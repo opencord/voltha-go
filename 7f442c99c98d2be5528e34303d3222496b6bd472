@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "b2209292_f31b68d7",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-24T06:12:44Z",
+      "side": 1,
+      "message": "Yes Khen , That would be the good way . We will take this as an opportunity to modify flowadd interface, So that in-future we will not have further issues  . I will submit another patch-set",
+      "parentUuid": "a8219bbe_d3778294",
+      "revId": "7f442c99c98d2be5528e34303d3222496b6bd472",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b453abb3_39e4217d",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
