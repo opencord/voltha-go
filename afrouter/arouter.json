@@ -176,13 +176,13 @@
           "connections": [
             {
               "name": "vcore11",
-              "addr": "voltha-rw-core-11.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             },
             {
               "name": "vcore12",
-              "addr": "voltha-rw-core-12.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             }
           ]
         },
@@ -198,13 +198,13 @@
           "connections": [
             {
               "name": "vcore21",
-              "addr": "voltha-rw-core-21.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             },
             {
               "name": "vcore22",
-              "addr": "voltha-rw-core-22.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             }
           ]
         },
@@ -220,13 +220,13 @@
           "connections": [
             {
               "name": "vcore31",
-              "addr": "voltha-rw-core-31.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             },
             {
               "name": "vcore32",
-              "addr": "voltha-rw-core-32.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             }
           ]
         }
@@ -241,8 +241,8 @@
           "connections": [
             {
               "name": "ro_vcore11",
-              "addr": "voltha-ro-core-0.voltha-ro-core.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             }
           ]
         },
@@ -252,8 +252,8 @@
           "connections": [
             {
               "name": "ro_vcore21",
-              "addr": "voltha-ro-core-1.voltha-ro-core.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             }
           ]
         },
@@ -263,8 +263,8 @@
           "connections": [
             {
               "name": "ro_vcore31",
-              "addr": "voltha-ro-core-2.voltha-ro-core.voltha.svc.cluster.local",
-              "port": "50057"
+              "addr": "",
+              "port": ""
             }
           ]
         }
