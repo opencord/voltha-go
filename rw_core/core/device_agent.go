@@ -128,9 +128,14 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.RLock()
 	defer agent.lockDevice.RUnlock()
+	if agent.lastData != nil {
+		log.Debugw("found-device-in-cache", log.Fields{"deviceId: ": agent.deviceId})
+		return agent.lastData, nil
+	}
 	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, true, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
+			agent.lastData = cloned
 			return cloned, nil
 		}
 	}
@@ -140,9 +145,13 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
+	if agent.lastData != nil {
+		return agent.lastData, nil
+	}
 	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
+			agent.lastData = cloned
 			return cloned, nil
 		}
 	}
@@ -188,9 +197,8 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 		cloned.AdminState = voltha.AdminState_ENABLED
 		cloned.OperStatus = voltha.OperStatus_ACTIVATING
 
-		updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return err
 		}
 
 		// Adopt the device if it was in preprovision state.  In all other cases, try to reenable it.
@@ -550,9 +558,8 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 		cloned := proto.Clone(device).(*voltha.Device)
 		cloned.AdminState = voltha.AdminState_DISABLED
 		cloned.OperStatus = voltha.OperStatus_UNKNOWN
-		updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return err
 		}
 
 		if err := agent.adapterProxy.DisableDevice(ctx, device); err != nil {
@@ -578,9 +585,8 @@ func (agent *DeviceAgent) updateAdminState(adminState voltha.AdminState_AdminSta
 		// Received an Ack (no error found above).  Now update the device in the model to the expected state
 		cloned := proto.Clone(device).(*voltha.Device)
 		cloned.AdminState = adminState
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -631,11 +637,9 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 		//	the device as well as its association with the logical device
 		cloned := proto.Clone(device).(*voltha.Device)
 		cloned.AdminState = voltha.AdminState_DELETED
-		updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return err
 		}
-
 		//	If this is a child device then remove the associated peer ports on the parent device
 		if !device.Root {
 			go agent.deviceMgr.deletePeerPorts(device.ParentId, device.Id)
@@ -666,9 +670,8 @@ func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDo
 			cloned.ImageDownloads = append(cloned.ImageDownloads, clonedImg)
 		}
 		cloned.AdminState = voltha.AdminState_DOWNLOADING_IMAGE
-		updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return nil, status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return nil, err
 		}
 		// Send the request to the adapter
 		if err := agent.adapterProxy.DownloadImage(ctx, cloned, clonedImg); err != nil {
@@ -713,9 +716,8 @@ func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.I
 		if device.AdminState == voltha.AdminState_DOWNLOADING_IMAGE {
 			// Set the device to Enabled
 			cloned.AdminState = voltha.AdminState_ENABLED
-			updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-			if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-				return nil, status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+			if err := agent.UpdateDeviceInStore(cloned); err != nil {
+				return nil, err
 			}
 			// Send the request to teh adapter
 			if err := agent.adapterProxy.CancelImageDownload(ctx, device, img); err != nil {
@@ -752,9 +754,8 @@ func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDo
 		}
 		// Set the device to downloading_image
 		cloned.AdminState = voltha.AdminState_DOWNLOADING_IMAGE
-		updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return nil, status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return nil, err
 		}
 
 		if err := agent.adapterProxy.ActivateImageUpdate(ctx, device, img); err != nil {
@@ -790,9 +791,9 @@ func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDown
 				image.ImageState = voltha.ImageDownload_IMAGE_REVERTING
 			}
 		}
-		updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return nil, status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return nil, err
 		}
 
 		if err := agent.adapterProxy.RevertImageUpdate(ctx, device, img); err != nil {
@@ -846,9 +847,8 @@ func (agent *DeviceAgent) updateImageDownload(img *voltha.ImageDownload) error {
 			cloned.AdminState = voltha.AdminState_ENABLED
 		}
 
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+		if err := agent.UpdateDeviceInStore(cloned); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -976,23 +976,13 @@ func (agent *DeviceAgent) updateDevice(device *voltha.Device) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("updateDevice", log.Fields{"deviceId": device.Id})
 	cloned := proto.Clone(device).(*voltha.Device)
-	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+device.Id, cloned, false, "")
-	if afterUpdate == nil {
-		return status.Errorf(codes.Internal, "%s", device.Id)
-	}
-	return nil
+	return agent.UpdateDeviceInStore(cloned)
 }
 
 func (agent *DeviceAgent) updateDeviceWithoutLock(device *voltha.Device) error {
 	log.Debugw("updateDevice", log.Fields{"deviceId": device.Id})
 	cloned := proto.Clone(device).(*voltha.Device)
-	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+device.Id, cloned, false, "")
-	if afterUpdate == nil {
-		return status.Errorf(codes.Internal, "%s", device.Id)
-	}
-	return nil
+	return agent.UpdateDeviceInStore(cloned)
 }
 
 func (agent *DeviceAgent) updateDeviceStatus(operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
@@ -1015,11 +1005,7 @@ func (agent *DeviceAgent) updateDeviceStatus(operStatus voltha.OperStatus_OperSt
 		}
 		log.Debugw("updateDeviceStatus", log.Fields{"deviceId": cloned.Id, "operStatus": cloned.OperStatus, "connectStatus": cloned.ConnectStatus})
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1036,11 +1022,7 @@ func (agent *DeviceAgent) enablePorts() error {
 			port.OperStatus = voltha.OperStatus_ACTIVE
 		}
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1058,11 +1040,7 @@ func (agent *DeviceAgent) disablePorts() error {
 			port.OperStatus = voltha.OperStatus_UNKNOWN
 		}
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1093,11 +1071,7 @@ func (agent *DeviceAgent) updatePortState(portType voltha.Port_PortType, portNo 
 		}
 		log.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1123,11 +1097,7 @@ func (agent *DeviceAgent) deleteAllPorts() error {
 		cloned.Ports = []*voltha.Port{}
 		log.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1143,12 +1113,7 @@ func (agent *DeviceAgent) updatePmConfigs(pmConfigs *voltha.PmConfigs) error {
 		cloned := proto.Clone(storeDevice).(*voltha.Device)
 		cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
-		if afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1182,12 +1147,7 @@ func (agent *DeviceAgent) addPort(port *voltha.Port) error {
 		}
 		cloned.Ports = append(cloned.Ports, cp)
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
-		if afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1211,12 +1171,7 @@ func (agent *DeviceAgent) addPeerPort(port *voltha.Port_PeerPort) error {
 			}
 		}
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
-		if afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1242,12 +1197,7 @@ func (agent *DeviceAgent) deletePeerPorts(deviceId string) error {
 		}
 
 		// Store the device with updated peer ports
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
-		if afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.UpdateDeviceInStore(cloned)
 	}
 }
 
@@ -1285,8 +1235,7 @@ func (agent *DeviceAgent) updateDeviceAttribute(name string, value interface{}) 
 	log.Debugw("update-field-status", log.Fields{"deviceId": storeDevice.Id, "name": name, "updated": updated})
 	//	Save the data
 	cloned := proto.Clone(storeDevice).(*voltha.Device)
-	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
+	if err = agent.UpdateDeviceInStore(cloned); err != nil {
 		log.Warnw("attribute-update-failed", log.Fields{"attribute": name, "value": value})
 	}
 	return
@@ -1306,5 +1255,16 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 			return err
 		}
 	}
+	return nil
+}
+
+func (agent *DeviceAgent) UpdateDeviceInStore(device *voltha.Device) error {
+	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
+	if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, device, false, ""); afterUpdate == nil {
+		return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
+	}
+	agent.lastData = device
+	log.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceId})
+
 	return nil
 }
