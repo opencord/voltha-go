@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "462ff435_5272041c",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-24T18:37:09Z",
+      "side": 1,
+      "message": "Lastdata cannot be used for caching as it may go stale due to other watch events. The model already caches this data.",
+      "revId": "c5d18dd4f9e625eea7093adb343aca9db8bb14d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9691f0cb_26b49de7",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-24T18:37:09Z",
+      "side": 1,
+      "message": "See comments above.",
+      "revId": "c5d18dd4f9e625eea7093adb343aca9db8bb14d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e09fce7c_6500625a",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1266,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-24T18:37:09Z",
+      "side": 1,
+      "message": "Lastdata needs to be removed.",
+      "revId": "c5d18dd4f9e625eea7093adb343aca9db8bb14d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
