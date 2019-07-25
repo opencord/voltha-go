@@ -725,7 +725,30 @@ func (handler *APIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *v
 		out := new(empty.Empty)
 		return out, nil
 	}
-	return nil, errors.New("UnImplemented")
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: configs.Id}); err != nil {
+			return new(empty.Empty), err
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.updatePmConfigs(ctx, configs, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
+}
+
+func (handler *APIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*voltha.PmConfigs, error) {
+	log.Debugw("ListDevicePmConfigs-request", log.Fields{"deviceId": *id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
+			return &voltha.PmConfigs{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
+	return handler.deviceMgr.listPmConfigs(ctx, id.Id)
 }
 
 func (handler *APIHandler) CreateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {

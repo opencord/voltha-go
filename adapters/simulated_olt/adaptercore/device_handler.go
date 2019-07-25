@@ -29,6 +29,24 @@ import (
 	"sync"
 )
 
+// A set of pm names to create the initial pm config.  This is used only for testing in this simulated adapter
+var pmNames = []string{
+	"tx_64_pkts",
+	"tx_65_127_pkts",
+	"tx_128_255_pkts",
+	"tx_256_511_pkts",
+	"tx_512_1023_pkts",
+	"tx_1024_1518_pkts",
+	"tx_1519_9k_pkts",
+	"rx_64_pkts",
+	"rx_65_127_pkts",
+	"rx_128_255_pkts",
+	"rx_256_511_pkts",
+	"rx_512_1023_pkts",
+	"rx_1024_1518_pkts",
+	"rx_1519_9k_pkts",
+}
+
 //DeviceHandler follows the same patterns as ponsim_olt.  The only difference is that it does not
 // interact with an OLT device.
 type DeviceHandler struct {
@@ -41,6 +59,7 @@ type DeviceHandler struct {
 	ponPort      *voltha.Port
 	exitChannel  chan int
 	lockDevice   sync.RWMutex
+	metrics      *com.PmMetrics
 }
 
 //NewDeviceHandler creates a new device handler
@@ -54,6 +73,14 @@ func NewDeviceHandler(cp *com.CoreProxy, device *voltha.Device, adapter *Simulat
 	dh.simulatedOLT = adapter
 	dh.exitChannel = make(chan int, 1)
 	dh.lockDevice = sync.RWMutex{}
+	// Set up PON metrics
+	dh.metrics = com.NewPmMetrics(
+		cloned.Id,
+		com.Frequency(150),
+		com.Grouped(false),
+		com.FrequencyOverride(false),
+		com.Metrics(pmNames),
+	)
 	return &dh
 }
 
@@ -103,6 +130,11 @@ func (dh *DeviceHandler) AdoptDevice(device *voltha.Device) {
 	// Synchronous call to update device - this method is run in its own go routine
 	if err := dh.coreProxy.DeviceUpdate(nil, cloned); err != nil {
 		log.Errorw("error-updating-device", log.Fields{"deviceId": device.Id, "error": err})
+	}
+
+	// Now, set the initial PM configuration for that device
+	if err := dh.coreProxy.DevicePMConfigUpdate(nil, dh.metrics.ToPmConfigs()); err != nil {
+		log.Errorw("error-updating-PMs", log.Fields{"deviceId": device.Id, "error": err})
 	}
 
 	//	Now create the NNI Port
@@ -275,6 +307,12 @@ func (dh *DeviceHandler) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Fl
 
 func (dh *DeviceHandler) UpdateFlowsIncremental(device *voltha.Device, flowChanges *of.FlowChanges, groupChanges *of.FlowGroupChanges) {
 	log.Debugw("UpdateFlowsIncremental", log.Fields{"deviceId": device.Id, "flowChanges": flowChanges, "groupChanges": groupChanges})
+	// For now we do nothing with it
+	return
+}
+
+func (dh *DeviceHandler) UpdatePmConfigs(device *voltha.Device, pmConfigs *voltha.PmConfigs) {
+	log.Debugw("UpdatePmConfigs", log.Fields{"deviceId": device.Id, "pmConfigs": pmConfigs})
 	// For now we do nothing with it
 	return
 }

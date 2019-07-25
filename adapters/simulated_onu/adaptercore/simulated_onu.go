@@ -233,8 +233,17 @@ func (so *SimulatedONU) Update_flows_incrementally(device *voltha.Device, flowCh
 	return nil
 }
 
-func (so *SimulatedONU) Update_pm_config(device *voltha.Device, pm_configs *voltha.PmConfigs) error {
-	return errors.New("UnImplemented")
+func (so *SimulatedONU) Update_pm_config(device *voltha.Device, pmConfigs *voltha.PmConfigs) error {
+	if device == nil {
+		log.Warn("device-is-nil")
+		return errors.New("nil-device")
+	}
+	log.Debugw("update_pm_config", log.Fields{"deviceId": device.Id, "pmConfigs": pmConfigs})
+	var handler *DeviceHandler
+	if handler = so.getDeviceHandler(device.Id); handler != nil {
+		go handler.UpdatePmConfigs(device, pmConfigs)
+	}
+	return nil
 }
 
 func (so *SimulatedONU) Receive_packet_out(deviceId string, egress_port_no int, msg *openflow_13.OfpPacketOut) error {

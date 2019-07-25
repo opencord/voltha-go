@@ -499,3 +499,21 @@ func (ap *CoreProxy) SendPacketIn(ctx context.Context, deviceId string, port uin
 	log.Debugw("SendPacketIn-response", log.Fields{"pDeviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
+
+func (ap *CoreProxy) DevicePMConfigUpdate(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
+	log.Debugw("DevicePMConfigUpdate", log.Fields{"pmConfigs": pmConfigs})
+	rpc := "DevicePMConfigUpdate"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(pmConfigs.Id)
+	replyToTopic := ap.getAdapterTopic()
+
+	args := make([]*kafka.KVArg, 1)
+	args[0] = &kafka.KVArg{
+		Key:   "device_pm_config",
+		Value: pmConfigs,
+	}
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, pmConfigs.Id, args...)
+	log.Debugw("DevicePMConfigUpdate-response", log.Fields{"pDeviceId": pmConfigs.Id, "success": success})
+	return unPackResponse(rpc, pmConfigs.Id, success, result)
+}
