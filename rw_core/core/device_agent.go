@@ -1020,12 +1020,36 @@ func (agent *DeviceAgent) processUpdate(args ...interface{}) interface{} {
 	return nil
 }
 
-func (agent *DeviceAgent) updateDevice(device *voltha.Device) error {
+// updatePartialDeviceData updates a subset of a device that an Adapter can update.
+// TODO:  May need a specific proto to handle only a subset of a device that can be changed by an adapter
+func (agent *DeviceAgent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
+	//		First retrieve the most up to date device info
+	var currentDevice *voltha.Device
+	var err error
+	if currentDevice, err = agent.getDeviceWithoutLock(); err != nil {
+		return nil, err
+	}
+	cloned := proto.Clone(currentDevice).(*voltha.Device)
+	cloned.Root = device.Root
+	cloned.Vendor = device.Vendor
+	cloned.Model = device.Model
+	cloned.SerialNumber = device.SerialNumber
+	cloned.MacAddress = device.MacAddress
+	cloned.Vlan = device.Vlan
+	cloned.Reason = device.Reason
+	return cloned, nil
+}
+func (agent *DeviceAgent) updateDeviceUsingAdapterData(device *voltha.Device) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	log.Debugw("updateDevice", log.Fields{"deviceId": device.Id})
-	cloned := proto.Clone(device).(*voltha.Device)
-	return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
+	log.Debugw("updateDeviceUsingAdapterData", log.Fields{"deviceId": device.Id})
+	if updatedDevice, err := agent.mergeDeviceInfoFromAdapter(device); err != nil {
+		log.Errorw("failed to update device ", log.Fields{"deviceId": device.Id})
+		return status.Errorf(codes.Internal, "%s", err.Error())
+	} else {
+		cloned := proto.Clone(updatedDevice).(*voltha.Device)
+		return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
+	}
 }
 
 func (agent *DeviceAgent) updateDeviceWithoutLock(device *voltha.Device) error {

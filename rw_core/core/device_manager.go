@@ -625,10 +625,10 @@ func (dMgr *DeviceManager) reconcileChildDevices(parentDeviceId string) error {
 	return nil
 }
 
-func (dMgr *DeviceManager) updateDevice(device *voltha.Device) error {
-	log.Debugw("updateDevice", log.Fields{"deviceid": device.Id, "device": device})
+func (dMgr *DeviceManager) updateDeviceUsingAdapterData(device *voltha.Device) error {
+	log.Debugw("updateDeviceUsingAdapterData", log.Fields{"deviceid": device.Id, "device": device})
 	if agent := dMgr.getDeviceAgent(device.Id); agent != nil {
-		return agent.updateDevice(device)
+		return agent.updateDeviceUsingAdapterData(device)
 	}
 	return status.Errorf(codes.NotFound, "%s", device.Id)
 }
