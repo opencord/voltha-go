@@ -17,7 +17,6 @@ package core
 
 import (
 	"errors"
-	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/common/log"
@@ -211,26 +210,6 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 	}
 }
 
-// updatePartialDeviceData updates a subset of a device that an Adapter can update.
-// TODO:  May need a specific proto to handle only a subset of a device that can be changed by an adapter
-func (rhp *AdapterRequestHandlerProxy) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
-	//		First retrieve the most up to date device info
-	var currentDevice *voltha.Device
-	var err error
-	if currentDevice, err = rhp.deviceMgr.GetDevice(device.Id); err != nil {
-		return nil, err
-	}
-	cloned := proto.Clone(currentDevice).(*voltha.Device)
-	cloned.Root = device.Root
-	cloned.Vendor = device.Vendor
-	cloned.Model = device.Model
-	cloned.SerialNumber = device.SerialNumber
-	cloned.MacAddress = device.MacAddress
-	cloned.Vlan = device.Vlan
-	cloned.Reason = device.Reason
-	return cloned, nil
-}
-
 func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
@@ -271,17 +250,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 	if rhp.TestMode { // Execute only for test cases
 		return new(empty.Empty), nil
 	}
-
-	//Merge the adapter device info (only the ones an adapter can change) with the latest device data
-	if updatedDevice, err := rhp.mergeDeviceInfoFromAdapter(device); err != nil {
-		return nil, status.Errorf(codes.Internal, "%s", err.Error())
-	} else {
-		go rhp.deviceMgr.updateDevice(updatedDevice)
-		//if err := rhp.deviceMgr.updateDevice(updatedDevice); err != nil {
-		//	return nil, err
-		//}
-	}
-
+	go rhp.deviceMgr.updateDevice(device)
 	return new(empty.Empty), nil
 }
 
