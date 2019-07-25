@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eae09f6d_8a6410be",
+        "filename": "adapters/common/request_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-25T15:59:22Z",
+      "side": 1,
+      "message": "No default switch case?",
+      "revId": "b312747acade903166b90b29e38e892594928cf2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d98efa9_58c8b100",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-25T15:59:22Z",
+      "side": 1,
+      "message": "Small thing, but this could be inline: args:\u003d []*kafka.KVArg{ ...values... }",
+      "revId": "b312747acade903166b90b29e38e892594928cf2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2594bae6_785bae52",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1006,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-07-25T15:59:22Z",
+      "side": 1,
+      "message": "Again, no default case.",
+      "revId": "b312747acade903166b90b29e38e892594928cf2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
