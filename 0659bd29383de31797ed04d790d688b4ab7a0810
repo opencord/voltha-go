@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "958bd5b3_9140b7a2",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1252,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-25T13:02:56Z",
+      "side": 1,
+      "message": "This function must never be invoked by another function unless the latter holds a lock on the device.  It is an internal helper function. Comments needs to be added and the function name should reflect that as well (e.g. cannot start with an uppercase letter and add a \"withoutLock\" to the name to make it more obvious.\n\nInstead of hardcoding \"false\" and \"\" in the function it\u0027s preferable to pass them as parameters.",
+      "revId": "0659bd29383de31797ed04d790d688b4ab7a0810",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
