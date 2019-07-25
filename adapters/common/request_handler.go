@@ -256,7 +256,7 @@ func (rhp *RequestHandlerProxy) Delete_device(args []*ic.Argument) (*empty.Empty
 	}
 	//Update the core reference for that device
 	rhp.coreProxy.UpdateCoreReference(device.Id, fromTopic.Val)
-	//Invoke the Disable_device API on the adapter
+	//Invoke the delete_device API on the adapter
 	if err := rhp.adapter.Delete_device(device); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
 	}
@@ -303,7 +303,7 @@ func (rhp *RequestHandlerProxy) Update_flows_bulk(args []*ic.Argument) (*empty.E
 		}
 	}
 	log.Debugw("Update_flows_bulk", log.Fields{"flows": flows, "groups": groups})
-	//Invoke the adopt device on the adapter
+	//Invoke the bulk flow update API of the adapter
 	if err := rhp.adapter.Update_flows_bulk(device, flows, groups); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
 	}
@@ -346,7 +346,7 @@ func (rhp *RequestHandlerProxy) Update_flows_incrementally(args []*ic.Argument) 
 		}
 	}
 	log.Debugw("Update_flows_incrementally", log.Fields{"flows": flows, "groups": groups})
-	//Invoke the adopt device on the adapter
+	//Invoke the incremental flow update API of the adapter
 	if err := rhp.adapter.Update_flows_incrementally(device, flows, groups); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
 	}
@@ -354,6 +354,39 @@ func (rhp *RequestHandlerProxy) Update_flows_incrementally(args []*ic.Argument) 
 }
 
 func (rhp *RequestHandlerProxy) Update_pm_config(args []*ic.Argument) (*empty.Empty, error) {
+	log.Debug("Update_pm_config")
+	if len(args) < 2 {
+		log.Warn("Update_pm_config-invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	device := &voltha.Device{}
+	transactionID := &ic.StrType{}
+	pmConfigs := &voltha.PmConfigs{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				log.Warnw("cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "pm_configs":
+			if err := ptypes.UnmarshalAny(arg.Value, pmConfigs); err != nil {
+				log.Warnw("cannot-unmarshal-pm-configs", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("Update_pm_config", log.Fields{"deviceId": device.Id, "pmConfigs": pmConfigs})
+	//Invoke the pm config update API of the adapter
+	if err := rhp.adapter.Update_pm_config(device, pmConfigs); err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
 	return new(empty.Empty), nil
 }
 

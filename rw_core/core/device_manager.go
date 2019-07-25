@@ -596,11 +596,36 @@ func (dMgr *DeviceManager) updateFlowsAndGroups(deviceId string, flows []*ofp.Of
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
-func (dMgr *DeviceManager) updatePmConfigs(deviceId string, pmConfigs *voltha.PmConfigs) error {
+// updatePmConfigs updates the PM configs.  This is executed when the northbound gRPC API is invoked, typically
+// following a user action
+func (dMgr *DeviceManager) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs, ch chan interface{}) {
+	var res interface{}
+	if pmConfigs.Id == "" {
+		res = status.Errorf(codes.FailedPrecondition, "invalid-device-Id")
+	} else if agent := dMgr.getDeviceAgent(pmConfigs.Id); agent != nil {
+		res = agent.updatePmConfigs(ctx, pmConfigs)
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", pmConfigs.Id)
+	}
+	sendResponse(ctx, ch, res)
+}
+
+// initPmConfigs initialize the pm configs as defined by the adapter.
+func (dMgr *DeviceManager) initPmConfigs(deviceId string, pmConfigs *voltha.PmConfigs) error {
+	if pmConfigs.Id == "" {
+		return status.Errorf(codes.FailedPrecondition, "invalid-device-Id")
+	}
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
-		return agent.updatePmConfigs(pmConfigs)
+		return agent.initPmConfigs(pmConfigs)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceId)
+}
+
+func (dMgr *DeviceManager) listPmConfigs(ctx context.Context, deviceId string) (*voltha.PmConfigs, error) {
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.listPmConfigs(ctx)
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
 func (dMgr *DeviceManager) getSwitchCapability(ctx context.Context, deviceId string) (*ic.SwitchCapability, error) {
@@ -617,7 +642,6 @@ func (dMgr *DeviceManager) getPorts(ctx context.Context, deviceId string, portTy
 		return agent.getPorts(ctx, portType), nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceId)
-
 }
 
 func (dMgr *DeviceManager) getPortCapability(ctx context.Context, deviceId string, portNo uint32) (*ic.PortCapability, error) {

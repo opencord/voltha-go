@@ -472,9 +472,24 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChange
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
-func (ap *AdapterProxy) UpdatePmConfig(device voltha.Device, pmConfigs voltha.PmConfigs) error {
-	log.Debug("UpdatePmConfig")
-	return nil
+func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Device, pmConfigs *voltha.PmConfigs) error {
+	log.Debugw("UpdatePmConfigs", log.Fields{"deviceId": device.Id})
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	rpc := "Update_pm_config"
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "pm_configs",
+		Value: pmConfigs,
+	}
+
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("UpdatePmConfigs-response", log.Fields{"deviceid": device.Id, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
 }
 
 func (ap *AdapterProxy) ReceivePacketOut(deviceId voltha.ID, egressPortNo int, msg interface{}) error {

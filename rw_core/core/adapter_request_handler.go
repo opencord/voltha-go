@@ -984,24 +984,18 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 }
 
 func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument) (*empty.Empty, error) {
-	if len(args) < 3 {
+	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
 		return nil, err
 	}
 	pmConfigs := &voltha.PmConfigs{}
-	init := &ic.BoolType{}
 	transactionID := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_pm_config":
 			if err := ptypes.UnmarshalAny(arg.Value, pmConfigs); err != nil {
 				log.Warnw("cannot-unmarshal-pm-config", log.Fields{"error": err})
-				return nil, err
-			}
-		case "init":
-			if err := ptypes.UnmarshalAny(arg.Value, init); err != nil {
-				log.Warnw("cannot-unmarshal-boolean", log.Fields{"error": err})
 				return nil, err
 			}
 		case kafka.TransactionKey:
@@ -1012,7 +1006,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 		}
 	}
 	log.Debugw("DevicePMConfigUpdate", log.Fields{"deviceId": pmConfigs.Id, "configs": pmConfigs,
-		"init": init, "transactionID": transactionID.Val})
+		"transactionID": transactionID.Val})
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
@@ -1029,10 +1023,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 		return nil, nil
 	}
 
-	go rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs)
-	//if err := rhp.deviceMgr.updatePmConfigs(pmConfigs.Id, pmConfigs); err != nil {
-	//	return nil, err
-	//}
+	go rhp.deviceMgr.initPmConfigs(pmConfigs.Id, pmConfigs)
 
 	return new(empty.Empty), nil
 }

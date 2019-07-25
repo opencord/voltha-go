@@ -644,6 +644,66 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 	return nil
 }
 
+func (agent *DeviceAgent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("updatePmConfigs", log.Fields{"id": pmConfigs.Id})
+	// Work only on latest data
+	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// clone the device
+		cloned := proto.Clone(storeDevice).(*voltha.Device)
+		cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
+		// Store the device
+		updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
+		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
+		if afterUpdate == nil {
+			return status.Errorf(codes.Internal, "%s", agent.deviceId)
+		}
+		// Send the request to the adapter
+		if err := agent.adapterProxy.UpdatePmConfigs(ctx, cloned, pmConfigs); err != nil {
+			log.Errorw("update-pm-configs-error", log.Fields{"id": agent.lastData.Id, "error": err})
+			return err
+		}
+		return nil
+	}
+}
+
+func (agent *DeviceAgent) initPmConfigs(pmConfigs *voltha.PmConfigs) error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("initPmConfigs", log.Fields{"id": pmConfigs.Id})
+	// Work only on latest data
+	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// clone the device
+		cloned := proto.Clone(storeDevice).(*voltha.Device)
+		cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
+		// Store the device
+		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
+		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
+		if afterUpdate == nil {
+			return status.Errorf(codes.Internal, "%s", agent.deviceId)
+		}
+		return nil
+	}
+}
+
+func (agent *DeviceAgent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error) {
+	agent.lockDevice.RLock()
+	defer agent.lockDevice.RUnlock()
+	log.Debugw("listPmConfigs", log.Fields{"id": agent.deviceId})
+	// Get the most up to date the device info
+	if device, err := agent.getDeviceWithoutLock(); err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		cloned := proto.Clone(device).(*voltha.Device)
+		return cloned.PmConfigs, nil
+	}
+}
+
 func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
@@ -1125,27 +1185,6 @@ func (agent *DeviceAgent) deleteAllPorts() error {
 		// Store the device
 		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
 		if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, ""); afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
-	}
-}
-
-func (agent *DeviceAgent) updatePmConfigs(pmConfigs *voltha.PmConfigs) error {
-	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
-	log.Debug("updatePmConfigs")
-	// Work only on latest data
-	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
-		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
-	} else {
-		// clone the device
-		cloned := proto.Clone(storeDevice).(*voltha.Device)
-		cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
-		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
-		if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
 		return nil
