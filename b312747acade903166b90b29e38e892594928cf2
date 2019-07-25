@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8590bbcb_1a3a1b7f",
+        "filename": "adapters/common/request_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-25T17:28:37Z",
+      "side": 1,
+      "message": "No default case is required as we are just extracting the parameters from a kafka request.",
+      "parentUuid": "eae09f6d_8a6410be",
+      "revId": "b312747acade903166b90b29e38e892594928cf2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d98efa9_58c8b100",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a07a1369_f112ed03",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-25T17:28:37Z",
+      "side": 1,
+      "message": "Correct.   As it is all throughout the file then it will be done as part of a separate Jira.",
+      "parentUuid": "1d98efa9_58c8b100",
+      "revId": "b312747acade903166b90b29e38e892594928cf2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2594bae6_785bae52",
         "filename": "rw_core/core/adapter_request_handler.go",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2019-07-25T15:59:22Z",
       "side": 1,
       "message": "Again, no default case.",
+      "revId": "b312747acade903166b90b29e38e892594928cf2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "943dda3d_25eac15c",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1006,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-25T17:28:37Z",
+      "side": 1,
+      "message": "Not needed as specific keys are being extracted.  The caller guarantees the keys are present, otherwise it will fail at origin.",
+      "parentUuid": "2594bae6_785bae52",
       "revId": "b312747acade903166b90b29e38e892594928cf2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
