@@ -29,7 +29,9 @@ import (
 
 var (
 	// Instructions shortcut
-	APPLY_ACTIONS = ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS
+	APPLY_ACTIONS  = ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS
+	WRITE_METADATA = ofp.OfpInstructionType_OFPIT_WRITE_METADATA
+	METER_ACTION   = ofp.OfpInstructionType_OFPIT_METER
 
 	//OFPAT_* shortcuts
 	OUTPUT       = ofp.OfpActionType_OFPAT_OUTPUT
@@ -456,6 +458,22 @@ func GetGotoTableId(flow *ofp.OfpFlowStats) uint32 {
 	return 0
 }
 
+func GetMeterId(flow *ofp.OfpFlowStats) uint32 {
+	if flow == nil {
+		return 0
+	}
+	for _, instruction := range flow.Instructions {
+		if instruction.Type == uint32(ofp.OfpInstructionType_OFPIT_METER) {
+			MeterInstruction := instruction.GetMeter()
+			if MeterInstruction == nil {
+				return 0
+			}
+			return MeterInstruction.GetMeterId()
+		}
+	}
+	return 0
+}
+
 func GetTunnelId(flow *ofp.OfpFlowStats) uint64 {
 	if flow == nil {
 		return 0
@@ -475,9 +493,10 @@ func GetMetaData(flow *ofp.OfpFlowStats) uint32 {
 	}
 	for _, field := range GetOfbFields(flow) {
 		if field.Type == METADATA {
-			return uint32(field.GetTableMetadata() & 0xffffffff)
+			return uint32(field.GetTableMetadata() & 0xFFFFFFFF)
 		}
 	}
+	log.Debug("No-metadata-present")
 	return 0
 }
 
@@ -490,28 +509,83 @@ func GetMetaData64Bit(flow *ofp.OfpFlowStats) uint64 {
 			return field.GetTableMetadata()
 		}
 	}
+	log.Debug("No-metadata-present")
 	return 0
 }
 
-// GetPortNumberFromMetadata retrieves the port number from the Metadata_ofp. The port number (UNI on ONU) is in the
-// lower 32-bits of Metadata_ofp and the inner_tag is in the upper 32-bits. This is set in the ONOS OltPipeline as
-// a Metadata_ofp field
-func GetPortNumberFromMetadata(flow *ofp.OfpFlowStats) uint64 {
-	md := GetMetaData64Bit(flow)
-	if md == 0 {
-		return 0
+// function returns write metadata value from write_metadata action field
+func GetMetadataFromWriteMetadataAction(flow *ofp.OfpFlowStats) uint64 {
+	if flow != nil {
+		for _, instruction := range flow.Instructions {
+			if instruction.Type == uint32(WRITE_METADATA) {
+				if writeMetadata := instruction.GetWriteMetadata(); writeMetadata != nil {
+					return writeMetadata.GetMetadata()
+				}
+			}
+		}
 	}
-	if md <= 0xffffffff {
-		log.Debugw("onos-upgrade-suggested", log.Fields{"Metadata_ofp": md, "message": "Legacy MetaData detected form OltPipeline"})
-		return md
+	log.Debugw("No-write-metadata-present", log.Fields{"flow": flow})
+	return 0
+}
+
+func GetTechProfileIDFromWriteMetaData(metadata uint64) uint16 {
+	/*
+	   Write metadata instruction value (metadata) is 8 bytes:
+	   MS 2 bytes: C Tag
+	   Next 2 bytes: Technology Profile Id
+	   Next 4 bytes: Port number (uni or nni)
+
+	   This is set in the ONOS OltPipeline as a write metadata instruction
+	*/
+	var tpId uint16 = 0
+	log.Debugw("Write metadata value for Techprofile ID", log.Fields{"metadata": metadata})
+	if metadata != 0 {
+		tpId = uint16((metadata >> 32) & 0xFFFF)
+		log.Debugw("Found techprofile ID from write metadata action", log.Fields{"tpid": tpId})
 	}
-	return md & 0xffffffff
+	return tpId
+}
+
+func GetEgressPortNumberFromWriteMetadata(flow *ofp.OfpFlowStats) uint32 {
+	/*
+			  Write metadata instruction value (metadata) is 8 bytes:
+		    	MS 2 bytes: C Tag
+		    	Next 2 bytes: Technology Profile Id
+		    	Next 4 bytes: Port number (uni or nni)
+		    	This is set in the ONOS OltPipeline as a write metadata instruction
+	*/
+	var uniPort uint32 = 0
+	md := GetMetadataFromWriteMetadataAction(flow)
+	log.Debugw("Metadata found for egress/uni port ", log.Fields{"metadata": md})
+	if md != 0 {
+		uniPort = uint32(md & 0xFFFFFFFF)
+		log.Debugw("Found EgressPort from write metadata action", log.Fields{"egress_port": uniPort})
+	}
+	return uniPort
+
+}
+
+func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint16 {
+	/*
+			  Write metadata instruction value (metadata) is 8 bytes:
+		    	MS 2 bytes: C Tag
+		    	Next 2 bytes: Technology Profile Id
+		    	Next 4 bytes: Port number (uni or nni)
+		    	This is set in the ONOS OltPipeline as a write metadata instruction
+	*/
+	var innerTag uint16 = 0
+	md := GetMetadataFromWriteMetadataAction(flow)
+	if md != 0 {
+		innerTag = uint16((md >> 48) & 0xFFFF)
+		log.Debugw("Found  CVLAN from write metadate action", log.Fields{"c_vlan": innerTag})
+	}
+	return innerTag
 }
 
 //GetInnerTagFromMetaData retrieves the inner tag from the Metadata_ofp. The port number (UNI on ONU) is in the
 // lower 32-bits of Metadata_ofp and the inner_tag is in the upper 32-bits. This is set in the ONOS OltPipeline as
 //// a Metadata_ofp field
-func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint64 {
+/*func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint64 {
 	md := GetMetaData64Bit(flow)
 	if md == 0 {
 		return 0
@@ -521,7 +595,7 @@ func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint64 {
 		return md
 	}
 	return (md >> 32) & 0xffffffff
-}
+}*/
 
 // Extract the child device port from a flow that contains the parent device peer port.  Typically the UNI port of an
 // ONU child device.  Per TST agreement this will be the lower 32 bits of tunnel id reserving upper 32 bits for later
@@ -569,6 +643,23 @@ func GetNextTableId(kw OfpFlowModArgs) *uint32 {
 		return &ret
 	}
 	return nil
+}
+
+// GetMeterIdFlowModArgs returns the meterId if the "meter_id" is present in the map, otherwise return 0
+func GetMeterIdFlowModArgs(kw OfpFlowModArgs) uint32 {
+	if val, exist := kw["meter_id"]; exist {
+		return uint32(val)
+	}
+	return 0
+}
+
+// Function returns the metadata if the "write_metadata" is present in the map, otherwise return nil
+func GetMetadataFlowModArgs(kw OfpFlowModArgs) uint64 {
+	if val, exist := kw["write_metadata"]; exist {
+		ret := uint64(val)
+		return ret
+	}
+	return 0
 }
 
 // Return unique 64-bit integer hash for flow covering the following attributes:
@@ -619,6 +710,53 @@ func GroupEntryFromGroupMod(mod *ofp.OfpGroupMod) *ofp.OfpGroupEntry {
 	return group
 }
 
+// flowStatsEntryFromFlowModMessage maps an ofp_flow_mod message to an ofp_flow_stats message
+func MeterEntryFromMeterMod(meterMod *ofp.OfpMeterMod) *ofp.OfpMeterEntry {
+	bandStats := make([]*ofp.OfpMeterBandStats, 0)
+	meter := &ofp.OfpMeterEntry{Config: &ofp.OfpMeterConfig{},
+		Stats: &ofp.OfpMeterStats{BandStats: bandStats}}
+	if meterMod == nil {
+		log.Error("Invalid meter mod command")
+		return meter
+	}
+	// config init
+	meter.Config.MeterId = meterMod.MeterId
+	meter.Config.Flags = meterMod.Flags
+	meter.Config.Bands = meterMod.Bands
+	// meter stats init
+	meter.Stats.MeterId = meterMod.MeterId
+	meter.Stats.FlowCount = 0
+	meter.Stats.PacketInCount = 0
+	meter.Stats.ByteInCount = 0
+	meter.Stats.DurationSec = 0
+	meter.Stats.DurationNsec = 0
+	// band stats init
+	for _, _ = range meterMod.Bands {
+		band := &ofp.OfpMeterBandStats{}
+		band.PacketBandCount = 0
+		band.ByteBandCount = 0
+		bandStats = append(bandStats, band)
+	}
+	meter.Stats.BandStats = bandStats
+	log.Debugw("Allocated meter entry", log.Fields{"meter": *meter})
+	return meter
+
+}
+
+func GetMeterIdFromFlow(flow *ofp.OfpFlowStats) uint32 {
+	if flow != nil {
+		for _, instruction := range flow.Instructions {
+			if instruction.Type == uint32(METER_ACTION) {
+				if meterInst := instruction.GetMeter(); meterInst != nil {
+					return meterInst.GetMeterId()
+				}
+			}
+		}
+	}
+
+	return uint32(0)
+}
+
 func MkOxmFields(matchFields []ofp.OfpOxmField) []*ofp.OfpOxmField {
 	oxmFields := make([]*ofp.OfpOxmField, 0)
 	for _, matchField := range matchFields {
@@ -651,6 +789,20 @@ func MkSimpleFlowMod(matchFields []*ofp.OfpOxmField, actions []*ofp.OfpAction, c
 		var instGotoTable ofp.OfpInstruction_GotoTable
 		instGotoTable.GotoTable = &ofp.OfpInstructionGotoTable{TableId: *tableId}
 		inst := ofp.OfpInstruction{Type: uint32(ofp.OfpInstructionType_OFPIT_GOTO_TABLE), Data: &instGotoTable}
+		instructions = append(instructions, &inst)
+	}
+	// Process meter action
+	if meterId := GetMeterIdFlowModArgs(kw); meterId != 0 {
+		var instMeter ofp.OfpInstruction_Meter
+		instMeter.Meter = &ofp.OfpInstructionMeter{MeterId: meterId}
+		inst := ofp.OfpInstruction{Type: uint32(METER_ACTION), Data: &instMeter}
+		instructions = append(instructions, &inst)
+	}
+	//process write_metadata action
+	if metadata := GetMetadataFlowModArgs(kw); metadata != 0 {
+		var instWriteMetadata ofp.OfpInstruction_WriteMetadata
+		instWriteMetadata.WriteMetadata = &ofp.OfpInstructionWriteMetadata{Metadata: metadata}
+		inst := ofp.OfpInstruction{Type: uint32(WRITE_METADATA), Data: &instWriteMetadata}
 		instructions = append(instructions, &inst)
 	}
 
@@ -745,7 +897,7 @@ func MkPacketIn(port uint32, packet []byte) *ofp.OfpPacketIn {
 
 // MkFlowStat is a helper method to build flows
 func MkFlowStat(fa *FlowArgs) *ofp.OfpFlowStats {
-	//Build the matchfields
+	//Build the match-fields
 	matchFields := make([]*ofp.OfpOxmField, 0)
 	for _, val := range fa.MatchFields {
 		matchFields = append(matchFields, &ofp.OfpOxmField{Field: &ofp.OfpOxmField_OfbField{OfbField: val}})

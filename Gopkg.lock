@@ -300,8 +300,7 @@
   version = "1.0.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d586f927d55891fbfee6e6ef98ed498fed401afe2222f81ba7a472d628f4de7a"
+  digest = "1:5ede0ad5117fba74316edc0e824a820b8e3f7fa7e7a9bbbe6807a074dab26360"
   name = "github.com/opencord/voltha-protos"
   packages = [
     "go/afrouter",
@@ -309,11 +308,12 @@
     "go/inter_container",
     "go/omci",
     "go/openflow_13",
-    "go/openolt",
+    "go/tech_profile",
     "go/voltha",
   ]
   pruneopts = "T"
-  revision = "f98ca1386c16a1c767dc8642cae9d1bdae8ec43a"
+  revision = "792553b747df7f751d864f7c638aa5b667c0993e"
+  version = "1.0.0"
 
 [[projects]]
   branch = "master"
@@ -787,7 +787,7 @@
     "github.com/opencord/voltha-protos/go/inter_container",
     "github.com/opencord/voltha-protos/go/omci",
     "github.com/opencord/voltha-protos/go/openflow_13",
-    "github.com/opencord/voltha-protos/go/openolt",
+    "github.com/opencord/voltha-protos/go/tech_profile",
     "github.com/opencord/voltha-protos/go/voltha",
     "github.com/stretchr/testify/assert",
     "go.etcd.io/etcd/clientv3",
