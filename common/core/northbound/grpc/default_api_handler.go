@@ -313,3 +313,13 @@ func (handler *DefaultAPIHandler) Subscribe(
 	log.Debugw("Subscribe-request", log.Fields{"ofAgent": ofAgent})
 	return nil, errors.New("UnImplemented")
 }
+
+func (handler *DefaultAPIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, mod *openflow_13.MeterModUpdate) (*empty.Empty, error) {
+	log.Debugw("UpdateLogicalDeviceMeterTable-request", log.Fields{"meter": mod})
+	return nil, errors.New("UnImplemented")
+}
+
+func (handler *DefaultAPIHandler) ListLogicalDeviceMeters(ctx context.Context, id *voltha.ID) (*openflow_13.Meters, error) {
+	log.Debugw("ListLogicalDeviceMeters-unimplemented", log.Fields{"id": id})
+	return nil, nil
+}
