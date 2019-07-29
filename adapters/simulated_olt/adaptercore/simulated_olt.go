@@ -228,7 +228,7 @@ func (so *SimulatedOLT) Get_device_details(device *voltha.Device) error {
 	return errors.New("UnImplemented")
 }
 
-func (so *SimulatedOLT) Update_flows_bulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups) error {
+func (so *SimulatedOLT) Update_flows_bulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, metadata *voltha.FlowMetadata) error {
 	if device == nil {
 		log.Warn("device-is-nil")
 		return errors.New("nil-device")
@@ -236,12 +236,12 @@ func (so *SimulatedOLT) Update_flows_bulk(device *voltha.Device, flows *voltha.F
 	log.Debugw("bulk-flow-updates", log.Fields{"deviceId": device.Id, "flows": flows, "groups": groups})
 	var handler *DeviceHandler
 	if handler = so.getDeviceHandler(device.Id); handler != nil {
-		go handler.UpdateFlowsBulk(device, flows, groups)
+		go handler.UpdateFlowsBulk(device, flows, groups, metadata)
 	}
 	return nil
 }
 
-func (so *SimulatedOLT) Update_flows_incrementally(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges) error {
+func (so *SimulatedOLT) Update_flows_incrementally(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges, metadata *voltha.FlowMetadata) error {
 	if device == nil {
 		log.Warn("device-is-nil")
 		return errors.New("nil-device")
@@ -249,7 +249,7 @@ func (so *SimulatedOLT) Update_flows_incrementally(device *voltha.Device, flowCh
 	log.Debugw("incremental-flow-update", log.Fields{"deviceId": device.Id, "flowChanges": flowChanges, "groupChanges": groupChanges})
 	var handler *DeviceHandler
 	if handler = so.getDeviceHandler(device.Id); handler != nil {
-		go handler.UpdateFlowsIncremental(device, flowChanges, groupChanges)
+		go handler.UpdateFlowsIncremental(device, flowChanges, groupChanges, metadata)
 	}
 	return nil
 }
