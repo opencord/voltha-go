@@ -476,6 +476,25 @@ func (ldMgr *LogicalDeviceManager) updateFlowTable(ctx context.Context, id strin
 	sendAPIResponse(ctx, ch, res)
 }
 
+func (ldMgr *LogicalDeviceManager) updateMeterTable(ctx context.Context, id string, meter *openflow_13.OfpMeterMod, ch chan interface{}) {
+	log.Debugw("updateMeterTable", log.Fields{"logicalDeviceId": id})
+	var res interface{}
+	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
+		res = agent.updateMeterTable(ctx, meter)
+		log.Debugw("updateMeterTable-result", log.Fields{"result": res})
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", id)
+	}
+	sendAPIResponse(ctx, ch, res)
+}
+
+func (ldMgr *LogicalDeviceManager) ListLogicalDeviceMeters(ctx context.Context, id string) (*openflow_13.Meters, error) {
+	log.Debugw("ListLogicalDeviceMeters", log.Fields{"logicalDeviceId": id})
+	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
+		return agent.ListLogicalDeviceMeters()
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", id)
+}
 func (ldMgr *LogicalDeviceManager) updateGroupTable(ctx context.Context, id string, groupMod *openflow_13.OfpGroupMod, ch chan interface{}) {
 	log.Debugw("updateGroupTable", log.Fields{"logicalDeviceId": id})
 	var res interface{}
