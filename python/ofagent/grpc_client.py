@@ -29,7 +29,7 @@ from twisted.internet import threads
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredQueue
 
 from voltha_protos.voltha_pb2_grpc import VolthaServiceStub
-from voltha_protos.voltha_pb2 import ID, FlowTableUpdate, \
+from voltha_protos.voltha_pb2 import ID, FlowTableUpdate, MeterModUpdate, \
     FlowGroupTableUpdate, PacketOut
 from voltha_protos.logical_device_pb2 import LogicalPortId
 from google.protobuf import empty_pb2
@@ -246,6 +246,20 @@ class GrpcClient(object):
         returnValue(res)
 
     @inlineCallbacks
+    def update_meter_mod_table(self, device_id, meter_mod):
+        log.debug('In update_meter_mod_table grpc')
+        req = MeterModUpdate(
+            id=device_id,
+            meter_mod=meter_mod
+        )
+        res = yield threads.deferToThread(
+            self.grpc_stub.UpdateLogicalDeviceMeterTable, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
+        log.debug('update_meter_mod_table grpc done')
+        returnValue(res)
+
+    @inlineCallbacks
     def update_group_table(self, device_id, group_mod):
         req = FlowGroupTableUpdate(
             id=device_id,
@@ -310,3 +324,14 @@ class GrpcClient(object):
                     self.core_group_id = pair[1]
                     log.debug('core-binding', core_group=self.core_group_id)
         returnValue(res)
+
+    @inlineCallbacks
+    def list_meters(self, device_id):
+        log.debug('list_meters')
+        req = ID(id=device_id)
+        res = yield threads.deferToThread(
+            self.grpc_stub.ListLogicalDeviceMeters, req, timeout=self.grpc_timeout,
+            metadata=((self.core_group_id_key, self.core_group_id),
+                      self.get_core_transaction_metadata(),))
+        log.debug('done stat query', resp=res)
+        returnValue(res.items)
