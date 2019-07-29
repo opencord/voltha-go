@@ -880,13 +880,17 @@ func (handler *APIHandler) GetAlarmDeviceData(
 	return nil, nil
 }
 
-//@TODO useless stub, what should this actually do?
-func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
-	ctx context.Context,
-	in *common.ID,
-) (*openflow_13.MeterStatsReply, error) {
-	log.Debug("GetMeterStatsOfLogicalDevice-stub")
-	return nil, nil
+func (handler *APIHandler) ListLogicalDeviceMeters(ctx context.Context, id *voltha.ID) (*openflow_13.Meters, error) {
+
+	log.Debugw("ListLogicalDeviceMeters", log.Fields{"id": *id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: id.Id}); err != nil {
+			return nil, err // TODO: Return empty meter entry
+		} else {
+			defer txn.Close()
+		}
+	}
+	return handler.logicalDeviceMgr.ListLogicalDeviceMeters(ctx, id.Id)
 }
 
 //@TODO useless stub, what should this actually do?
@@ -923,11 +927,25 @@ func (handler *APIHandler) SimulateAlarm(
 	return successResp, nil
 }
 
-//@TODO useless stub, what should this actually do?
-func (handler *APIHandler) UpdateLogicalDeviceMeterTable(
-	ctx context.Context,
-	in *openflow_13.MeterModUpdate,
-) (*empty.Empty, error) {
-	log.Debug("UpdateLogicalDeviceMeterTable-stub")
-	return nil, nil
+// This function sends meter mod request to logical device manager and waits for response
+func (handler *APIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, meter *openflow_13.MeterModUpdate) (*empty.Empty, error) {
+	log.Debugw("UpdateLogicalDeviceMeterTable-request",
+		log.Fields{"meter": meter, "test": common.TestModeKeys_api_test.String()})
+	if isTestMode(ctx) {
+		out := new(empty.Empty)
+		return out, nil
+	}
+
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.LogicalDeviceID{Id: meter.Id}); err != nil {
+			return new(empty.Empty), err
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.logicalDeviceMgr.updateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
 }
