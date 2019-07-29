@@ -753,6 +753,27 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	channelId int64, vendorId string, serialNumber string, onuId int64) (*voltha.Device, error) {
 	log.Debugw("childDeviceDetected", log.Fields{"parentDeviceId": parentDeviceId})
 
+	if deviceType == "" {
+		log.Debug("device-type-is-nil-fetching-device-type")
+		if deviceTypesIf := dMgr.adapterMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); deviceTypesIf != nil {
+			for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
+				if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
+					for _, v := range dType.VendorIds {
+						if v == vendorId {
+							deviceType = dType.Adapter
+							break
+						}
+					}
+				}
+			}
+		}
+		//if no match found for the vendorid,report adapter with the custom error message
+		if deviceType == "" {
+			log.Errorw("failed-to-fetch-adapter-name ", log.Fields{"vendorId": vendorId})
+			return nil, status.Errorf(codes.NotFound, "%s", vendorId)
+		}
+
+	}
 	// Create the ONU device
 	childDevice := &voltha.Device{}
 	childDevice.Type = deviceType
