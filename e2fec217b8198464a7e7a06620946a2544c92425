@@ -1,0 +1,310 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65024552_4e9dc67b",
+        "filename": "adapters/common/request_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Adopt device?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec8f75d6_a3691395",
+        "filename": "adapters/common/request_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Cut and paste error?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8b95222_5202a108",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "debug instead of info?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2c2c258_b469c65e",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Debug?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a88648f_03786809",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "debug?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f6db7ba_b9dfd530",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Debug?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca0a4e77_6d4243ed",
+        "filename": "python/ofagent/of_protocol_handler.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Should a failed response be sent back to the controller?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7544ad40_475267b8",
+        "filename": "python/ofagent/of_protocol_handler.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Should a failed response be sent back to the controller?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65591d64_5c1600c2",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Unimplemented functions should be in voltha-go/common/core/northbound/grpc/default_api_handler.go\"",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "636220a6_ec026a57",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Unimplemented functions should be in voltha-go/common/core/northbound/grpc/default_api_handler.go\"",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82b1cca5_ecea2824",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "This variable to store unknown meters in memory.  Upon a Core restart (or another core takes over that logical device) then this memory data will be lost.  Is this the intent?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f4f3249_62b9dba0",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Remove commented code, especially with new code.",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a69f3a2b_927f46e6",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Debug?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d1de71d_77ac1b6f",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Adding a meter id would be beneficial for debugging.",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "503ef150_91185443",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Should this be true is any of the if or else if (below) does not get executed?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a896b04a_7a45537c",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Should this be \"!updated\" or \"updated\"?  Since this addresses only meter update then it\u0027s better to use a \"meterUpdated\" name.",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d229ada_8477a36c",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Won\u0027t break out of the outer loop.  Is that the intent?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ef7f7ed_3b1e2252",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T15:45:53Z",
+      "side": 1,
+      "message": "Please remove commented code.",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
