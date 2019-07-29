@@ -290,12 +290,3 @@ func (handler *APIHandler) SimulateAlarm(
 	log.Debug("SimulateAlarm-stub")
 	return nil, nil
 }
-
-//@TODO useless stub, what should this actually do?
-func (handler *APIHandler) UpdateLogicalDeviceMeterTable(
-	ctx context.Context,
-	in *openflow_13.MeterModUpdate,
-) (*empty.Empty, error) {
-	log.Debug("UpdateLogicalDeviceMeterTable-stub")
-	return nil, nil
-}
