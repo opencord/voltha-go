@@ -150,6 +150,12 @@ message Membership {
     string id = 2;
 }
 
+// Additional information required to process flow at device adapters
+message FlowMetadata {
+    // Meters associated with flow-update to adapter
+    repeated openflow_13.ofp_meter_config meters = 1;
+}
+
 /*
  * Voltha APIs
  *
@@ -282,12 +288,13 @@ service VolthaService {
         };
     }
 
-    // Get all meter stats for logical device
-    rpc GetMeterStatsOfLogicalDevice(common.ID)
-            returns(openflow_13.MeterStatsReply) {
+    // List all meters of a logical device
+    rpc ListLogicalDeviceMeters(common.ID) returns (openflow_13.Meters) {
         option (google.api.http) = {
-            get: "/api/v1/logical_devices/{id}/meters_stats"
+            get: "/api/v1/logical_devices/{id}/meters"
         };
+        option (common.yang_xml_tag).xml_tag = 'meters';
+        option (common.yang_xml_tag).list_items_name = 'items';
     }
 
     // List all flow groups of a logical device
@@ -600,5 +607,6 @@ service VolthaService {
     }
     rpc Subscribe (OfAgentSubscriber) returns (OfAgentSubscriber) {
     }
+
 }
 

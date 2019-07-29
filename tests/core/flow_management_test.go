@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"math"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -60,9 +61,10 @@ var allLogicalDevices map[string]*voltha.LogicalDevice
 var composePath string
 
 const (
-	GRPC_PORT        = 50057
-	NUM_OLTS         = 1
-	NUM_ONUS_PER_OLT = 4 // This should coincide with the number of onus per olt in adapters-simulated.yml file
+	GrpcPort        = 50057
+	NumOfOLTs       = 1
+	NumOfONUsPerOLT = 4 // This should coincide with the number of onus per olt in adapters-simulated.yml file
+	MeterID         = 1
 )
 
 func setup() {
@@ -94,7 +96,7 @@ func setup() {
 		os.Exit(10)
 	}
 
-	stub, err = tu.SetupGrpcConnectionToCore(grpcHostIP, GRPC_PORT)
+	stub, err = tu.SetupGrpcConnectionToCore(grpcHostIP, GrpcPort)
 	if err != nil {
 		fmt.Println("Failure connecting to Voltha Core:", err)
 		os.Exit(11)
@@ -143,10 +145,11 @@ func makeSimpleFlowMod(fa *fu.FlowArgs) *ofp.OfpFlowMod {
 	return fu.MkSimpleFlowMod(matchFields, fa.Actions, fa.Command, fa.KV)
 }
 
-func addEAPOLFlow(stub voltha.VolthaServiceClient, ld *voltha.LogicalDevice, port *voltha.LogicalPort, ch chan interface{}) {
+func addEAPOLFlow(stub voltha.VolthaServiceClient, ld *voltha.LogicalDevice, port *voltha.LogicalPort, meterID uint64,
+	ch chan interface{}) {
 	var fa *fu.FlowArgs
 	fa = &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": 2000},
+		KV: fu.OfpFlowModArgs{"priority": 2000, "meter_id": meterID},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(port.OfpPort.PortNo),
 			fu.EthType(0x888e),
@@ -155,6 +158,11 @@ func addEAPOLFlow(stub voltha.VolthaServiceClient, ld *voltha.LogicalDevice, por
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
+	// Don't add meterID 0
+	if meterID == 0 {
+		delete(fa.KV, "meter_id")
+	}
+
 	matchFields := make([]*ofp.OfpOxmField, 0)
 	for _, val := range fa.MatchFields {
 		matchFields = append(matchFields, &ofp.OfpOxmField{Field: &ofp.OfpOxmField_OfbField{OfbField: val}})
@@ -202,8 +210,9 @@ func filterOutPort(lPort *voltha.LogicalPort, lPortNos ...uint32) bool {
 	return true
 }
 
-func verifyEAPOLFlows(t *testing.T, ld *voltha.LogicalDevice, lPortNos ...uint32) {
+func verifyEAPOLFlows(t *testing.T, ld *voltha.LogicalDevice, meterID uint64, lPortNos ...uint32) {
 	// First get the flows from the logical device
+	fmt.Println("Info: verifying EAPOL flows")
 	lFlows := ld.Flows
 	assert.Equal(t, getNumUniPort(ld, lPortNos...), len(lFlows.Items))
 
@@ -220,7 +229,7 @@ func verifyEAPOLFlows(t *testing.T, ld *voltha.LogicalDevice, lPortNos ...uint32
 		onuDeviceId = lPort.DeviceId
 		var fa *fu.FlowArgs
 		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": 2000},
+			KV: fu.OfpFlowModArgs{"priority": 2000, "meter_id": meterID},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(lPort.OfpPort.PortNo),
 				fu.EthType(0x888e),
@@ -235,7 +244,7 @@ func verifyEAPOLFlows(t *testing.T, ld *voltha.LogicalDevice, lPortNos ...uint32
 
 	//	Verify the OLT flows
 	retrievedOltFlows := allDevices[ld.RootDeviceId].Flows.Items
-	assert.Equal(t, NUM_OLTS*getNumUniPort(ld, lPortNos...)*2, len(retrievedOltFlows))
+	assert.Equal(t, NumOfOLTs*getNumUniPort(ld, lPortNos...)*1, len(retrievedOltFlows))
 	for _, lPort := range ld.Ports {
 		if lPort.RootPort {
 			continue
@@ -245,10 +254,9 @@ func verifyEAPOLFlows(t *testing.T, ld *voltha.LogicalDevice, lPortNos ...uint32
 		}
 
 		fa := &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": 2000},
+			KV: fu.OfpFlowModArgs{"priority": 2000, "meter_id": meterID},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(1),
-				fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | lPort.OfpPort.PortNo),
 				fu.TunnelId(uint64(lPort.OfpPort.PortNo)),
 				fu.EthType(0x888e),
 			},
@@ -259,23 +267,6 @@ func verifyEAPOLFlows(t *testing.T, ld *voltha.LogicalDevice, lPortNos ...uint32
 			},
 		}
 		expectedOltFlow := fu.MkFlowStat(fa)
-		assert.Equal(t, true, tu.IsFlowPresent(expectedOltFlow, retrievedOltFlows))
-
-		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": 2000},
-			MatchFields: []*ofp.OfpOxmOfbField{
-				fu.InPort(2),
-				fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000),
-				fu.VlanPcp(0),
-				fu.Metadata_ofp(uint64(lPort.OfpPort.PortNo)),
-				fu.TunnelId(uint64(lPort.OfpPort.PortNo)),
-			},
-			Actions: []*ofp.OfpAction{
-				fu.PopVlan(),
-				fu.Output(1),
-			},
-		}
-		expectedOltFlow = fu.MkFlowStat(fa)
 		assert.Equal(t, true, tu.IsFlowPresent(expectedOltFlow, retrievedOltFlows))
 	}
 	//	Verify the ONU flows
@@ -311,7 +302,7 @@ func verifyNOFlows(t *testing.T, ld *voltha.LogicalDevice, lPortNos ...uint32) {
 
 }
 
-func installEapolFlows(stub voltha.VolthaServiceClient, lDevice *voltha.LogicalDevice, lPortNos ...uint32) error {
+func installEapolFlows(stub voltha.VolthaServiceClient, lDevice *voltha.LogicalDevice, meterID uint64, lPortNos ...uint32) error {
 	requestNum := 0
 	combineCh := make(chan interface{})
 	if len(lPortNos) > 0 {
@@ -319,20 +310,19 @@ func installEapolFlows(stub voltha.VolthaServiceClient, lDevice *voltha.LogicalD
 		for _, p := range lPortNos {
 			for _, lport := range lDevice.Ports {
 				if !lport.RootPort && lport.OfpPort.PortNo == p {
-					go addEAPOLFlow(stub, lDevice, lport, combineCh)
+					go addEAPOLFlow(stub, lDevice, lport, meterID, combineCh)
 					requestNum += 1
 				}
 			}
 		}
 	} else {
-		fmt.Println("Installing EAPOL flows on logical device ", lDevice.Id)
+		fmt.Println("Installing EAPOL flows on logical device", lDevice.Id)
 		for _, lport := range lDevice.Ports {
 			if !lport.RootPort {
-				go addEAPOLFlow(stub, lDevice, lport, combineCh)
+				go addEAPOLFlow(stub, lDevice, lport, meterID, combineCh)
 				requestNum += 1
 			}
 		}
-
 	}
 	receivedResponse := 0
 	var err error
@@ -373,13 +363,13 @@ func deleteAllFlows(stub voltha.VolthaServiceClient, lDevice *voltha.LogicalDevi
 	return err
 }
 
-func deleteEapolFlow(stub voltha.VolthaServiceClient, lDevice *voltha.LogicalDevice, lPortNo uint32) error {
+func deleteEapolFlow(stub voltha.VolthaServiceClient, lDevice *voltha.LogicalDevice, meterID uint64, lPortNo uint32) error {
 	fmt.Println("Deleting flows from port ", lPortNo, " of logical device ", lDevice.Id)
 	ui := uuid.New()
 	var fa *fu.FlowArgs
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(volthaSerialNumberKey, ui.String()))
 	fa = &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": 2000},
+		KV: fu.OfpFlowModArgs{"priority": 2000, "meter_id": meterID},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(lPortNo),
 			fu.EthType(0x888e),
@@ -399,20 +389,19 @@ func deleteEapolFlow(stub voltha.VolthaServiceClient, lDevice *voltha.LogicalDev
 	return err
 }
 
-func runInstallEapolFlows(t *testing.T, stub voltha.VolthaServiceClient, lPortNos ...uint32) {
+func runInstallEapolFlows(t *testing.T, stub voltha.VolthaServiceClient, meterID uint64, lPortNos ...uint32) {
 	err := refreshLocalDeviceCache(stub)
 	assert.Nil(t, err)
 
 	for _, ld := range allLogicalDevices {
-		err = installEapolFlows(stub, ld, lPortNos...)
+		err = installEapolFlows(stub, ld, meterID, lPortNos...)
 		assert.Nil(t, err)
 	}
 
 	err = refreshLocalDeviceCache(stub)
 	assert.Nil(t, err)
-
 	for _, ld := range allLogicalDevices {
-		verifyEAPOLFlows(t, ld, lPortNos...)
+		verifyEAPOLFlows(t, ld, meterID, lPortNos...)
 	}
 }
 
@@ -434,7 +423,7 @@ func runDeleteAllFlows(t *testing.T, stub voltha.VolthaServiceClient) {
 	}
 }
 
-func runDeleteEapolFlows(t *testing.T, stub voltha.VolthaServiceClient, ld *voltha.LogicalDevice, lPortNos ...uint32) {
+func runDeleteEapolFlows(t *testing.T, stub voltha.VolthaServiceClient, ld *voltha.LogicalDevice, meterID uint64, lPortNos ...uint32) {
 	err := refreshLocalDeviceCache(stub)
 	assert.Nil(t, err)
 
@@ -443,7 +432,7 @@ func runDeleteEapolFlows(t *testing.T, stub voltha.VolthaServiceClient, ld *volt
 		assert.Nil(t, err)
 	} else {
 		for _, lPortNo := range lPortNos {
-			err = deleteEapolFlow(stub, ld, lPortNo)
+			err = deleteEapolFlow(stub, ld, meterID, lPortNo)
 			assert.Nil(t, err)
 		}
 	}
@@ -472,23 +461,23 @@ func createAndEnableDevices(t *testing.T) {
 	oltDevice, err := tu.PreProvisionDevice(stub)
 	assert.Nil(t, err)
 
-	fmt.Println("Creation of ", NUM_OLTS, " OLT devices took:", time.Since(startTime))
+	fmt.Println("Creation of ", NumOfOLTs, " OLT devices took:", time.Since(startTime))
 
 	startTime = time.Now()
 
 	//Enable all parent device - this will enable the child devices as well as validate the child devices
-	err = tu.EnableDevice(stub, oltDevice, NUM_ONUS_PER_OLT)
+	err = tu.EnableDevice(stub, oltDevice, NumOfONUsPerOLT)
 	assert.Nil(t, err)
 
 	fmt.Println("Enabling of  OLT device took:", time.Since(startTime))
 
 	// Wait until the core and adapters sync up after an enabled
-	time.Sleep(time.Duration(math.Max(10, float64(NUM_OLTS*NUM_ONUS_PER_OLT)/2)) * time.Second)
+	time.Sleep(time.Duration(math.Max(10, float64(NumOfOLTs*NumOfONUsPerOLT)/2)) * time.Second)
 
-	err = tu.VerifyDevices(stub, NUM_ONUS_PER_OLT)
+	err = tu.VerifyDevices(stub, NumOfONUsPerOLT)
 	assert.Nil(t, err)
 
-	lds, err := tu.VerifyLogicalDevices(stub, oltDevice, NUM_ONUS_PER_OLT)
+	lds, err := tu.VerifyLogicalDevices(stub, oltDevice, NumOfONUsPerOLT)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(lds.Items))
 }
@@ -498,19 +487,169 @@ func TestFlowManagement(t *testing.T) {
 	createAndEnableDevices(t)
 
 	//2. Test installation of EAPOL flows
-	runInstallEapolFlows(t, stub)
+	runInstallEapolFlows(t, stub, 0)
 
 	//3. Test deletion of all EAPOL flows
 	runDeleteAllFlows(t, stub)
 
 	//4. Test installation of EAPOL flows on specific ports
-	runInstallEapolFlows(t, stub, 101, 102)
+	runInstallEapolFlows(t, stub, 0, 101, 102)
 
 	lds, err := tu.ListLogicalDevices(stub)
 	assert.Nil(t, err)
 
 	//5. Test deletion of EAPOL on a specific port for a given logical device
-	runDeleteEapolFlows(t, stub, lds.Items[0], 101)
+	runDeleteEapolFlows(t, stub, lds.Items[0], 0, 101)
+}
+
+func formulateMeterModUpdateRequest(command ofp.OfpMeterModCommand, meterType ofp.OfpMeterBandType, ldID string, rate,
+	burstSize uint32) *ofp.MeterModUpdate {
+	meterModUpdateRequest := &ofp.MeterModUpdate{
+		Id: ldID,
+		MeterMod: &ofp.OfpMeterMod{
+			Command: command,
+			Flags:   0,
+			MeterId: MeterID,
+			Bands: []*ofp.OfpMeterBandHeader{{
+				Type:      meterType,
+				Rate:      rate,
+				BurstSize: burstSize,
+				Data:      nil,
+			}},
+		},
+	}
+	return meterModUpdateRequest
+}
+
+func formulateMeters(rate, burstsize, meterID uint32) *ofp.Meters {
+	// Formulate and return the applied meter band
+	ofpMeterBandHeaderSlice := []*ofp.OfpMeterBandHeader{{
+		Type:      ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER,
+		Rate:      rate,
+		BurstSize: burstsize,
+	}}
+	BandStats := []*ofp.OfpMeterBandStats{{}}
+	appliedMeters_Meters := []*ofp.OfpMeterEntry{{
+		Config: &ofp.OfpMeterConfig{
+			Flags:   0,
+			MeterId: meterID,
+			Bands:   ofpMeterBandHeaderSlice,
+		},
+		Stats: &ofp.OfpMeterStats{
+			MeterId:   meterID,
+			BandStats: BandStats,
+		},
+	}}
+	appliedMeters := &ofp.Meters{
+		Items: appliedMeters_Meters,
+	}
+	return appliedMeters
+}
+
+// Meter Add Test
+func TestMeters(t *testing.T) {
+	//1. Start test for meter add
+	meterAdd(t)
+	//2. Start test for meter mod
+	meterMod(t)
+	//3. Start test for meter del
+	meterDel(t)
+}
+
+func meterAdd(t *testing.T) {
+	err := refreshLocalDeviceCache(stub)
+	assert.Nil(t, err)
+	assert.NotEqual(t, len(allLogicalDevices), 0)
+
+	for _, logicalDevice := range allLogicalDevices {
+		meterModupdateRequest := formulateMeterModUpdateRequest(ofp.OfpMeterModCommand_OFPMC_ADD,
+			ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER, logicalDevice.Id, uint32(1600), uint32(1600))
+		_, err = stub.UpdateLogicalDeviceMeterTable(context.Background(), meterModupdateRequest)
+		assert.Nil(t, err)
+	}
+	err = refreshLocalDeviceCache(stub)
+	assert.Nil(t, err)
+	appliedMeters := formulateMeters(1600, 1600, MeterID)
+	// Verify the applied meters are present on the device
+	for _, logicalDevice := range allLogicalDevices {
+		result := reflect.DeepEqual(logicalDevice.Meters, appliedMeters)
+		assert.Equal(t, result, true)
+	}
+	err = tu.VerifyDevices(stub, NumOfONUsPerOLT)
+	assert.Nil(t, err)
+}
+
+func meterMod(t *testing.T) {
+	err := refreshLocalDeviceCache(stub)
+	assert.Nil(t, err)
+	assert.NotEqual(t, len(allLogicalDevices), 0)
+
+	for _, logicalDevice := range allLogicalDevices {
+		meterModUpdateRequest := formulateMeterModUpdateRequest(ofp.OfpMeterModCommand_OFPMC_MODIFY,
+			ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER, logicalDevice.Id, uint32(3200), uint32(3200))
+		_, err = stub.UpdateLogicalDeviceMeterTable(context.Background(), meterModUpdateRequest)
+		assert.Nil(t, err)
+	}
+	err = refreshLocalDeviceCache(stub)
+	assert.Nil(t, err)
+	appliedMeters := formulateMeters(3200, 3200, MeterID)
+	// Verify the updated meters is present on the device
+	for _, logicalDevice := range allLogicalDevices {
+		result := reflect.DeepEqual(logicalDevice.Meters, appliedMeters)
+		assert.Equal(t, result, true)
+	}
+	err = tu.VerifyDevices(stub, NumOfONUsPerOLT)
+	assert.Nil(t, err)
+}
+
+//Meter Del Test
+func meterDel(t *testing.T) {
+	err := refreshLocalDeviceCache(stub)
+	assert.Nil(t, err)
+
+	for _, logicalDevice := range allLogicalDevices {
+		meterModUpdateRequest := formulateMeterModUpdateRequest(ofp.OfpMeterModCommand_OFPMC_DELETE,
+			ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER, logicalDevice.Id, uint32(1600), uint32(1600))
+		_, err = stub.UpdateLogicalDeviceMeterTable(context.Background(), meterModUpdateRequest)
+		assert.Nil(t, err)
+	}
+
+	err = refreshLocalDeviceCache(stub)
+	assert.Nil(t, err)
+
+	expectedMeters := &ofp.Meters{}
+	for _, logicalDevice := range allLogicalDevices {
+		result := reflect.DeepEqual(logicalDevice.Meters, expectedMeters)
+		assert.Equal(t, result, true)
+	}
+	err = tu.VerifyDevices(stub, NumOfONUsPerOLT)
+	assert.Nil(t, err)
+}
+
+func TestFlowManagementWithMeters(t *testing.T) {
+
+	//1. Delete existing flows
+	for _, logicaldevice := range allLogicalDevices {
+		err := deleteAllFlows(stub, logicaldevice)
+		assert.Nil(t, err)
+	}
+
+	//2. Add meter and verify that meters are applied
+	meterAdd(t)
+	//3. Test installation of EAPOL flows with meter
+	runInstallEapolFlows(t, stub, MeterID)
+
+	//4. Test deletion of all EAPOL flows
+	runDeleteAllFlows(t, stub)
+
+	//5. Test installation of EAPOL flows on specific ports with meter
+	runInstallEapolFlows(t, stub, MeterID, 101, 102)
+
+	lds, err := tu.ListLogicalDevices(stub)
+	assert.Nil(t, err)
+
+	//6. Test deletion of EAPOL on a specific port for a given logical device
+	runDeleteEapolFlows(t, stub, lds.Items[0], MeterID, 101)
 }
 
 func TestMain(m *testing.M) {
