@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1745966_e820a0f9",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T13:35:31Z",
+      "side": 1,
+      "message": "You may want to increase this log to include all the parameters.",
+      "revId": "ffdc33ffc607ec02c34d86db9afea0725552197a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0673a6cf_1a6c6d83",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 756,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T13:35:31Z",
+      "side": 1,
+      "message": "What if vendorId is also empty?",
+      "revId": "ffdc33ffc607ec02c34d86db9afea0725552197a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b7f3b4d_e9dca85a",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-29T13:35:31Z",
+      "side": 1,
+      "message": "This is within another for loop.  The break is not breaking out of the outer loop.",
+      "revId": "ffdc33ffc607ec02c34d86db9afea0725552197a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
