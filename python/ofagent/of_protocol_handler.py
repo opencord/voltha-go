@@ -29,6 +29,10 @@ class OpenFlowProtocolHandler(object):
 
     ofp_version = [4]  # OFAgent supported versions
 
+    MAX_METER_IDS = 4294967295
+    MAX_METER_BANDS = 255
+    MAX_METER_COLORS = 255
+
     def __init__(self, datapath_id, device_id, agent, cxn, rpc):
         """
         The upper half of the OpenFlow protocol, focusing on message
@@ -128,6 +132,30 @@ class OpenFlowProtocolHandler(object):
         elif self.role == ofp.OFPCR_ROLE_SLAVE:
            self.cxn.send(ofp.message.bad_request_error_msg(code=ofp.OFPBRC_IS_SLAVE))
 
+
+    def handle_meter_mod_request(self, req):
+        log.info('Received  handle_meter_mod_request', request=req)
+        if self.role == ofp.OFPCR_ROLE_MASTER or self.role == ofp.OFPCR_ROLE_EQUAL:
+            try:
+                grpc_req = to_grpc(req)
+            except Exception, e:
+                log.exception('failed-to-convert-meter-mod-request', e=e)
+            else:
+                return self.rpc.update_meter_mod_table(self.device_id, grpc_req)
+
+        elif self.role == ofp.OFPCR_ROLE_SLAVE:
+            self.cxn.send(ofp.message.bad_request_error_msg(code=ofp.OFPBRC_IS_SLAVE))
+
+    @inlineCallbacks
+    def handle_meter_stats_request(self, req):
+        log.info('Received  handle_meter_stats_request', request=req)
+        try:
+            meters = yield self.rpc.list_meters(self.device_id)
+            self.cxn.send(ofp.message.meter_stats_reply(
+                xid=req.xid, entries=[to_loxi(m.stats) for m in meters]))
+        except Exception, e:
+            log.exception("failed-meter-stats-request", req=req, e=e)
+
     def handle_get_async_request(self, req):
         raise NotImplementedError()
 
@@ -143,10 +171,6 @@ class OpenFlowProtocolHandler(object):
            yield self.rpc.update_group_table(self.device_id, to_grpc(req))
         elif self.role == ofp.OFPCR_ROLE_SLAVE:
            self.cxn.send(ofp.message.bad_request_error_msg(code=ofp.OFPBRC_IS_SLAVE))
-
-
-    def handle_meter_mod_request(self, req):
-        raise NotImplementedError()
 
     def handle_role_request(self, req):
         if req.role == ofp.OFPCR_ROLE_MASTER or req.role == ofp.OFPCR_ROLE_SLAVE:
@@ -238,16 +262,17 @@ class OpenFlowProtocolHandler(object):
     def handle_group_features_request(self, req):
         raise NotImplementedError()
 
-    def handle_meter_stats_request(self, req):
-        meter_stats = []  # see https://jira.opencord.org/browse/CORD-825
-        self.cxn.send(ofp.message.meter_stats_reply(
-            xid=req.xid, entries=meter_stats))
-
     def handle_meter_config_request(self, req):
         raise NotImplementedError()
 
     def handle_meter_features_request(self, req):
-        self.cxn.send(ofp.message.bad_request_error_msg())
+        feature = ofp.meter_features(max_meter=OpenFlowProtocolHandler.MAX_METER_IDS,
+                                     band_types=ofp.OFPMBT_DROP,
+                                     capabilities=ofp.OFPMF_KBPS,
+                                     max_bands=OpenFlowProtocolHandler.MAX_METER_BANDS,
+                                     max_color=OpenFlowProtocolHandler.MAX_METER_COLORS)
+        self.cxn.send(ofp.message.meter_features_stats_reply(xid=req.xid, flags=None,
+                                                             features=feature))
 
     @inlineCallbacks
     def handle_port_stats_request(self, req):

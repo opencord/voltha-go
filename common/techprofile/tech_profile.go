@@ -25,7 +25,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
-	openolt_pb "github.com/opencord/voltha-protos/go/openolt"
+	tp_pb "github.com/opencord/voltha-protos/go/tech_profile"
 )
 
 // Interface to pon resource manager APIs
@@ -171,8 +171,8 @@ type GemPortAttribute struct {
 	PbitMap          string        `json:"pbit_map"`
 	AesEncryption    string        `json:"aes_encryption"`
 	SchedulingPolicy string        `json:"scheduling_policy"`
-	PriorityQueue    int           `json:"priority_q"`
-	Weight           int           `json:"weight"`
+	PriorityQueue    uint32        `json:"priority_q"`
+	Weight           uint32        `json:"weight"`
 	DiscardPolicy    string        `json:"discard_policy"`
 	DiscardConfig    DiscardConfig `json:"discard_config"`
 }
@@ -191,8 +191,8 @@ type iGemPortAttribute struct {
 	PbitMap          string        `json:"pbit_map"`
 	AesEncryption    string        `json:"aes_encryption"`
 	SchedulingPolicy string        `json:"scheduling_policy"`
-	PriorityQueue    int           `json:"priority_q"`
-	Weight           int           `json:"weight"`
+	PriorityQueue    uint32        `json:"priority_q"`
+	Weight           uint32        `json:"weight"`
 	DiscardPolicy    string        `json:"discard_policy"`
 	DiscardConfig    DiscardConfig `json:"discard_config"`
 }
@@ -442,6 +442,7 @@ func (t *TechProfileMgr) getDefaultTechProfile() *DefaultTechProfile {
 	var dsGemPortAttributeList []GemPortAttribute
 
 	for _, pbit := range t.config.DefaultPbits {
+		log.Debugw("Creating GEM port", log.Fields{"pbit": pbit})
 		usGemPortAttributeList = append(usGemPortAttributeList,
 			GemPortAttribute{
 				MaxQueueSize:     defaultMaxQueueSize,
@@ -498,26 +499,26 @@ func (t *TechProfileMgr) GetprotoBufParamValue(paramType string, paramKey string
 	var result int32 = -1
 
 	if paramType == "direction" {
-		for key, val := range openolt_pb.Direction_value {
+		for key, val := range tp_pb.Direction_value {
 			if key == paramKey {
 				result = val
 			}
 		}
 	} else if paramType == "discard_policy" {
-		for key, val := range openolt_pb.DiscardPolicy_value {
+		for key, val := range tp_pb.DiscardPolicy_value {
 			if key == paramKey {
 				result = val
 			}
 		}
 	} else if paramType == "sched_policy" {
-		for key, val := range openolt_pb.SchedulingPolicy_value {
+		for key, val := range tp_pb.SchedulingPolicy_value {
 			if key == paramKey {
 				log.Debugw("Got value in proto", log.Fields{"key": key, "value": val})
 				result = val
 			}
 		}
 	} else if paramType == "additional_bw" {
-		for key, val := range openolt_pb.AdditionalBW_value {
+		for key, val := range tp_pb.AdditionalBW_value {
 			if key == paramKey {
 				result = val
 			}
@@ -530,23 +531,23 @@ func (t *TechProfileMgr) GetprotoBufParamValue(paramType string, paramKey string
 	return result
 }
 
-func (t *TechProfileMgr) GetUsScheduler(tpInstance *TechProfile) *openolt_pb.Scheduler {
-	dir := openolt_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.UsScheduler.Direction))
+func (t *TechProfileMgr) GetUsScheduler(tpInstance *TechProfile) *tp_pb.SchedulerConfig {
+	dir := tp_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.UsScheduler.Direction))
 	if dir == -1 {
 		log.Fatal("Error in getting Proto for direction for upstream scheduler")
 		return nil
 	}
-	bw := openolt_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.UsScheduler.AdditionalBw))
+	bw := tp_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.UsScheduler.AdditionalBw))
 	if bw == -1 {
 		log.Fatal("Error in getting Proto for bandwidth for upstream scheduler")
 		return nil
 	}
-	policy := openolt_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.UsScheduler.QSchedPolicy))
+	policy := tp_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.UsScheduler.QSchedPolicy))
 	if policy == -1 {
 		log.Fatal("Error in getting Proto for scheduling policy for upstream scheduler")
 		return nil
 	}
-	return &openolt_pb.Scheduler{
+	return &tp_pb.SchedulerConfig{
 		Direction:    dir,
 		AdditionalBw: bw,
 		Priority:     tpInstance.UsScheduler.Priority,
@@ -554,25 +555,25 @@ func (t *TechProfileMgr) GetUsScheduler(tpInstance *TechProfile) *openolt_pb.Sch
 		SchedPolicy:  policy}
 }
 
-func (t *TechProfileMgr) GetDsScheduler(tpInstance *TechProfile) *openolt_pb.Scheduler {
+func (t *TechProfileMgr) GetDsScheduler(tpInstance *TechProfile) *tp_pb.SchedulerConfig {
 
-	dir := openolt_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.DsScheduler.Direction))
+	dir := tp_pb.Direction(t.GetprotoBufParamValue("direction", tpInstance.DsScheduler.Direction))
 	if dir == -1 {
 		log.Fatal("Error in getting Proto for direction for downstream scheduler")
 		return nil
 	}
-	bw := openolt_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.DsScheduler.AdditionalBw))
+	bw := tp_pb.AdditionalBW(t.GetprotoBufParamValue("additional_bw", tpInstance.DsScheduler.AdditionalBw))
 	if bw == -1 {
 		log.Fatal("Error in getting Proto for bandwidth for downstream scheduler")
 		return nil
 	}
-	policy := openolt_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.DsScheduler.QSchedPolicy))
+	policy := tp_pb.SchedulingPolicy(t.GetprotoBufParamValue("sched_policy", tpInstance.DsScheduler.QSchedPolicy))
 	if policy == -1 {
 		log.Fatal("Error in getting Proto for scheduling policy for downstream scheduler")
 		return nil
 	}
 
-	return &openolt_pb.Scheduler{
+	return &tp_pb.SchedulerConfig{
 		Direction:    dir,
 		AdditionalBw: bw,
 		Priority:     tpInstance.DsScheduler.Priority,
@@ -580,33 +581,112 @@ func (t *TechProfileMgr) GetDsScheduler(tpInstance *TechProfile) *openolt_pb.Sch
 		SchedPolicy:  policy}
 }
 
-func (t *TechProfileMgr) GetTconts(tpInstance *TechProfile, usSched *openolt_pb.Scheduler, dsSched *openolt_pb.Scheduler) []*openolt_pb.Tcont {
-	if usSched == nil {
-		if usSched = t.GetUsScheduler(tpInstance); usSched == nil {
-			log.Fatal("Error in getting upstream scheduler from techprofile")
-			return nil
+func (t *TechProfileMgr) GetTrafficScheduler(tpInstance *TechProfile, SchedCfg *tp_pb.SchedulerConfig,
+	ShapingCfg *tp_pb.TrafficShapingInfo) *tp_pb.TrafficScheduler {
+
+	tSched := &tp_pb.TrafficScheduler{
+		Direction:          SchedCfg.Direction,
+		AllocId:            tpInstance.UsScheduler.AllocID,
+		TrafficShapingInfo: ShapingCfg,
+		Scheduler:          SchedCfg}
+
+	return tSched
+}
+
+func (tpm *TechProfileMgr) GetTrafficQueues(tp *TechProfile, Dir tp_pb.Direction) []*tp_pb.TrafficQueue {
+
+	var encryp bool
+	if Dir == tp_pb.Direction_UPSTREAM {
+		// upstream GEM ports
+		NumGemPorts := len(tp.UpstreamGemPortAttributeList)
+		GemPorts := make([]*tp_pb.TrafficQueue, 0)
+		for Count := 0; Count < NumGemPorts; Count++ {
+			if tp.UpstreamGemPortAttributeList[Count].AesEncryption == "True" {
+				encryp = true
+			} else {
+				encryp = false
+			}
+			GemPorts = append(GemPorts, &tp_pb.TrafficQueue{
+				Direction:     tp_pb.Direction(tpm.GetprotoBufParamValue("direction", tp.UsScheduler.Direction)),
+				GemportId:     tp.UpstreamGemPortAttributeList[Count].GemportID,
+				PbitMap:       tp.UpstreamGemPortAttributeList[Count].PbitMap,
+				AesEncryption: encryp,
+				SchedPolicy:   tp_pb.SchedulingPolicy(tpm.GetprotoBufParamValue("sched_policy", tp.UpstreamGemPortAttributeList[Count].SchedulingPolicy)),
+				Priority:      tp.UpstreamGemPortAttributeList[Count].PriorityQueue,
+				Weight:        tp.UpstreamGemPortAttributeList[Count].Weight,
+				DiscardPolicy: tp_pb.DiscardPolicy(tpm.GetprotoBufParamValue("discard_policy", tp.UpstreamGemPortAttributeList[Count].DiscardPolicy)),
+			})
+		}
+		log.Debugw("Upstream Traffic queue list ", log.Fields{"queuelist": GemPorts})
+		return GemPorts
+	} else if Dir == tp_pb.Direction_DOWNSTREAM {
+		//downstream GEM ports
+		NumGemPorts := len(tp.DownstreamGemPortAttributeList)
+		GemPorts := make([]*tp_pb.TrafficQueue, 0)
+		for Count := 0; Count < NumGemPorts; Count++ {
+			if tp.DownstreamGemPortAttributeList[Count].AesEncryption == "True" {
+				encryp = true
+			} else {
+				encryp = false
+			}
+			GemPorts = append(GemPorts, &tp_pb.TrafficQueue{
+				Direction:     tp_pb.Direction(tpm.GetprotoBufParamValue("direction", tp.DsScheduler.Direction)),
+				GemportId:     tp.DownstreamGemPortAttributeList[Count].GemportID,
+				PbitMap:       tp.DownstreamGemPortAttributeList[Count].PbitMap,
+				AesEncryption: encryp,
+				SchedPolicy:   tp_pb.SchedulingPolicy(tpm.GetprotoBufParamValue("sched_policy", tp.DownstreamGemPortAttributeList[Count].SchedulingPolicy)),
+				Priority:      tp.DownstreamGemPortAttributeList[Count].PriorityQueue,
+				Weight:        tp.DownstreamGemPortAttributeList[Count].Weight,
+				DiscardPolicy: tp_pb.DiscardPolicy(tpm.GetprotoBufParamValue("discard_policy", tp.DownstreamGemPortAttributeList[Count].DiscardPolicy)),
+			})
+		}
+		log.Debugw("Downstream Traffic queue list ", log.Fields{"queuelist": GemPorts})
+		return GemPorts
+	}
+	return nil
+}
+
+func (tpm *TechProfileMgr) GetUsTrafficScheduler(tp *TechProfile) *tp_pb.TrafficScheduler {
+	UsScheduler := tpm.GetUsScheduler(tp)
+
+	return &tp_pb.TrafficScheduler{Direction: UsScheduler.Direction,
+		AllocId:   tp.UsScheduler.AllocID,
+		Scheduler: UsScheduler}
+}
+
+func (t *TechProfileMgr) GetGemportIDForPbit(tp *TechProfile, Dir tp_pb.Direction, pbit uint32) uint32 {
+	/*
+	   Function to get the Gemport ID mapped to a pbit.
+	*/
+	if Dir == tp_pb.Direction_UPSTREAM {
+		// upstream GEM ports
+		NumGemPorts := len(tp.UpstreamGemPortAttributeList)
+		for Count := 0; Count < NumGemPorts; Count++ {
+			NumPbitMaps := len(tp.UpstreamGemPortAttributeList[Count].PbitMap)
+			for ICount := 2; ICount < NumPbitMaps; ICount++ {
+				if p, err := strconv.Atoi(string(tp.UpstreamGemPortAttributeList[Count].PbitMap[ICount])); err == nil {
+					if uint32(ICount-2) == pbit && p == 1 { // Check this p-bit is set
+						log.Debugw("Found-US-GEMport-for-Pcp", log.Fields{"pbit": pbit, "GEMport": tp.UpstreamGemPortAttributeList[Count].GemportID})
+						return tp.UpstreamGemPortAttributeList[Count].GemportID
+					}
+				}
+			}
+		}
+	} else if Dir == tp_pb.Direction_DOWNSTREAM {
+		//downstream GEM ports
+		NumGemPorts := len(tp.DownstreamGemPortAttributeList)
+		for Count := 0; Count < NumGemPorts; Count++ {
+			NumPbitMaps := len(tp.DownstreamGemPortAttributeList[Count].PbitMap)
+			for ICount := 2; ICount < NumPbitMaps; ICount++ {
+				if p, err := strconv.Atoi(string(tp.DownstreamGemPortAttributeList[Count].PbitMap[ICount])); err == nil {
+					if uint32(ICount-2) == pbit && p == 1 { // Check this p-bit is set
+						log.Debugw("Found-DS-GEMport-for-Pcp", log.Fields{"pbit": pbit, "GEMport": tp.DownstreamGemPortAttributeList[Count].GemportID})
+						return tp.DownstreamGemPortAttributeList[Count].GemportID
+					}
+				}
+			}
 		}
 	}
-	if dsSched == nil {
-		if dsSched = t.GetDsScheduler(tpInstance); dsSched == nil {
-			log.Fatal("Error in getting downstream scheduler from techprofile")
-			return nil
-		}
-	}
-	tconts := []*openolt_pb.Tcont{}
-	// upstream scheduler
-	tcont_us := &openolt_pb.Tcont{
-		Direction: usSched.Direction,
-		AllocId:   tpInstance.UsScheduler.AllocID,
-		Scheduler: usSched} /*TrafficShapingInfo: ? */
-	tconts = append(tconts, tcont_us)
-
-	// downstream scheduler
-	tcont_ds := &openolt_pb.Tcont{
-		Direction: dsSched.Direction,
-		AllocId:   tpInstance.DsScheduler.AllocID,
-		Scheduler: dsSched}
-
-	tconts = append(tconts, tcont_ds)
-	return tconts
+	log.Errorw("No-GemportId-Found-For-Pcp", log.Fields{"pcpVlan": pbit})
+	return 0
 }
