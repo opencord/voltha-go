@@ -309,7 +309,43 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d586f927d55891fbfee6e6ef98ed498fed401afe2222f81ba7a472d628f4de7a"
+  digest = "1:e8c1e3e3e8aa82df63df04fb38165533d634941d5b6ddc33a7e88d92380e8a19"
+  name = "github.com/opencord/voltha-go"
+  packages = [
+    "adapters",
+    "adapters/common",
+    "adapters/simulated_olt/adaptercore",
+    "adapters/simulated_olt/config",
+    "adapters/simulated_onu/adaptercore",
+    "adapters/simulated_onu/config",
+    "afrouter/afrouter",
+    "cli/menu/devicemenu",
+    "cli/menu/mainmenu",
+    "cli/util",
+    "common/core/northbound/grpc",
+    "common/grpc",
+    "common/log",
+    "common/techprofile",
+    "common/version",
+    "db/kvstore",
+    "db/model",
+    "kafka",
+    "ro_core/config",
+    "ro_core/core",
+    "rw_core/config",
+    "rw_core/core",
+    "rw_core/coreIf",
+    "rw_core/flow_decomposition",
+    "rw_core/graph",
+    "rw_core/utils",
+    "tests/utils",
+  ]
+  pruneopts = "UT"
+  revision = "b5851677c2d6df37e73631dc8128fedd44b42c08"
+
+[[projects]]
+  branch = "master"
+  digest = "1:aa10d40c65e781abd611e6ba710dc99d1ba8f401815ce660ee74abda66b8d760"
   name = "github.com/opencord/voltha-protos"
   packages = [
     "go/afrouter",
@@ -318,10 +354,11 @@
     "go/omci",
     "go/openflow_13",
     "go/openolt",
+    "go/tech_profile",
     "go/voltha",
   ]
   pruneopts = "T"
-  revision = "f98ca1386c16a1c767dc8642cae9d1bdae8ec43a"
+  revision = "166cb204cb19244060c49d94511e0e0cf30ce8a1"
 
 [[projects]]
   branch = "master"
@@ -791,12 +828,39 @@
     "github.com/google/uuid",
     "github.com/gyuho/goraph",
     "github.com/hashicorp/consul/api",
+    "github.com/opencord/voltha-go/adapters",
+    "github.com/opencord/voltha-go/adapters/common",
+    "github.com/opencord/voltha-go/adapters/simulated_olt/adaptercore",
+    "github.com/opencord/voltha-go/adapters/simulated_olt/config",
+    "github.com/opencord/voltha-go/adapters/simulated_onu/adaptercore",
+    "github.com/opencord/voltha-go/adapters/simulated_onu/config",
+    "github.com/opencord/voltha-go/afrouter/afrouter",
+    "github.com/opencord/voltha-go/cli/menu/devicemenu",
+    "github.com/opencord/voltha-go/cli/menu/mainmenu",
+    "github.com/opencord/voltha-go/cli/util",
+    "github.com/opencord/voltha-go/common/core/northbound/grpc",
+    "github.com/opencord/voltha-go/common/grpc",
+    "github.com/opencord/voltha-go/common/log",
+    "github.com/opencord/voltha-go/common/techprofile",
+    "github.com/opencord/voltha-go/common/version",
+    "github.com/opencord/voltha-go/db/kvstore",
+    "github.com/opencord/voltha-go/db/model",
+    "github.com/opencord/voltha-go/kafka",
+    "github.com/opencord/voltha-go/ro_core/config",
+    "github.com/opencord/voltha-go/ro_core/core",
+    "github.com/opencord/voltha-go/rw_core/config",
+    "github.com/opencord/voltha-go/rw_core/core",
+    "github.com/opencord/voltha-go/rw_core/coreIf",
+    "github.com/opencord/voltha-go/rw_core/flow_decomposition",
+    "github.com/opencord/voltha-go/rw_core/graph",
+    "github.com/opencord/voltha-go/rw_core/utils",
+    "github.com/opencord/voltha-go/tests/utils",
     "github.com/opencord/voltha-protos/go/afrouter",
     "github.com/opencord/voltha-protos/go/common",
     "github.com/opencord/voltha-protos/go/inter_container",
     "github.com/opencord/voltha-protos/go/omci",
     "github.com/opencord/voltha-protos/go/openflow_13",
-    "github.com/opencord/voltha-protos/go/openolt",
+    "github.com/opencord/voltha-protos/go/tech_profile",
     "github.com/opencord/voltha-protos/go/voltha",
     "github.com/stretchr/testify/assert",
     "go.etcd.io/etcd/clientv3",
