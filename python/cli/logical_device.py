@@ -96,6 +96,16 @@ class LogicalDeviceCli(Cmd):
             groups=logical_device['flow_groups']['items']
         )
 
+    def do_meters(self, _):
+        """Show flow meter table for logical device"""
+        logical_device = pb2dict(self.get_logical_device(-1))
+        print_meters(
+            'Logical Device',
+            self.logical_device_id,
+            type='n/a',
+            meters=logical_device['meters']['items']
+        )
+
     def do_devices(self, line):
         """List devices that belong to this logical device"""
         logical_device = self.get_logical_device()

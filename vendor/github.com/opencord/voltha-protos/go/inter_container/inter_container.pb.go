@@ -151,6 +151,9 @@ type OfAgentSubscriber = voltha.OfAgentSubscriber
 // Membership from public import voltha_protos/voltha.proto
 type Membership = voltha.Membership
 
+// FlowMetadata from public import voltha_protos/voltha.proto
+type FlowMetadata = voltha.FlowMetadata
+
 // AlarmFilterRuleKey_AlarmFilterRuleKey from public import voltha_protos/voltha.proto
 type AlarmFilterRuleKey_AlarmFilterRuleKey = voltha.AlarmFilterRuleKey_AlarmFilterRuleKey
 
