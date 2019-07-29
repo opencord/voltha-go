@@ -671,26 +671,26 @@ func (dMgr *DeviceManager) deletePeerPorts(fromDeviceId string, deviceId string)
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
-func (dMgr *DeviceManager) addFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) error {
-	log.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceId})
+func (dMgr *DeviceManager) addFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+	log.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceId, "flowMetadata": flowMetadata})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
-		return agent.addFlowsAndGroups(flows, groups)
+		return agent.addFlowsAndGroups(flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
-func (dMgr *DeviceManager) deleteFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) error {
+func (dMgr *DeviceManager) deleteFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("deleteFlowsAndGroups", log.Fields{"deviceid": deviceId})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
-		return agent.deleteFlowsAndGroups(flows, groups)
+		return agent.deleteFlowsAndGroups(flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }
 
-func (dMgr *DeviceManager) updateFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry) error {
+func (dMgr *DeviceManager) updateFlowsAndGroups(deviceId string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("updateFlowsAndGroups", log.Fields{"deviceid": deviceId})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
-		return agent.updateFlowsAndGroups(flows, groups)
+		return agent.updateFlowsAndGroups(flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }

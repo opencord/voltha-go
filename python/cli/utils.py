@@ -140,15 +140,21 @@ def print_flows(what, id, type, flows, groups, printfn=_printfn):
 
         for instruction in flow['instructions']:
             itype = instruction['type']
-            if itype == 4:
+            if itype == 4 or itype == 3:
                 for action in instruction['actions']['actions']:
                     atype = action['type'][len('OFPAT_'):]
                     table.add_cell(i, *action_printers[atype](action))
             elif itype == 1:
                 table.add_cell(i, 10000, 'goto-table',
                                instruction['goto_table']['table_id'])
+            elif itype == 2:
+                table.add_cell(i, 10001, 'write-metadata',
+                               instruction['write_metadata']['metadata'])
             elif itype == 5:
-                table.add_cell(i, 10000, 'clear-actions', [])
+                table.add_cell(i, 10002, 'clear-actions', [])
+            elif itype == 6:
+                table.add_cell(i, 10003, 'meter',
+                               instruction['meter']['meter_id'])
             else:
                 raise NotImplementedError(
                     'not handling instruction type {}'.format(itype))
@@ -176,6 +182,26 @@ def print_groups(what, id, type, groups, printfn=_printfn):
         table.add_cell(i, 1, 'buckets', value=str(dict(output=output_ports)))
 
     table.print_table(header, printfn)
+
+def print_meters(what, id, type, meters, printfn=_printfn):
+    header = ''.join([
+        '{} '.format(what),
+        colored(id, color='green', attrs=['bold']),
+        ' (type: ',
+        colored(type, color='blue'),
+        ')'
+    ]) + '\nMeters ({}):'.format(len(meters))
+
+    table = TablePrinter()
+    for i, meter in enumerate(meters):
+        bands = []
+        for meter_band in meter['config']['bands']:
+            bands.append(meter_band)
+        table.add_cell(i, 0, 'meter_id', value=str(meter['config']['meter_id']))
+        table.add_cell(i, 1, 'meter_bands', value=str(dict(bands=bands)))
+
+    table.print_table(header, printfn)
+
 
 def dict2line(d):
     assert isinstance(d, dict)
