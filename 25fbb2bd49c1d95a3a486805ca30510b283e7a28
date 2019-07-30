@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f04247d2_ad04a749",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-30T19:54:33Z",
+      "side": 1,
+      "message": "You can remove the getmembership and updatemembership from here.  The default API handler (under common/core/northbound/grpc) already  handles the unimplemented case.",
+      "revId": "25fbb2bd49c1d95a3a486805ca30510b283e7a28",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
