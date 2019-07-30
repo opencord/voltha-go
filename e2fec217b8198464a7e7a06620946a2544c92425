@@ -509,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "9be9fa98_b1cea8c3",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:30:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "503ef150_91185443",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a896b04a_7a45537c",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 8
@@ -526,6 +544,24 @@
     },
     {
       "key": {
+        "uuid": "5680ee15_5e7e7e43",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:30:15Z",
+      "side": 1,
+      "message": "Here intention is to update flow count only when flow is newly added  not the existing flow got updated",
+      "parentUuid": "a896b04a_7a45537c",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d229ada_8477a36c",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 8
@@ -537,6 +573,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Won\u0027t break out of the outer loop.  Is that the intent?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5db85779_d7c52d26",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:30:15Z",
+      "side": 1,
+      "message": "Yes , all flows should be processed here . So not breaking outer loop. But even if failed to get meter for one flow , function will return",
+      "parentUuid": "3d229ada_8477a36c",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
