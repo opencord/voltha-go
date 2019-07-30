@@ -31,15 +31,16 @@ import (
 type AdapterProxy struct {
 	TestMode              bool
 	deviceTopicRegistered bool
-	coreTopic             *kafka.Topic
+	corePairTopic         string
 	kafkaICProxy          *kafka.InterContainerProxy
 }
 
-func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy) *AdapterProxy {
-	var proxy AdapterProxy
-	proxy.kafkaICProxy = kafkaProxy
-	proxy.deviceTopicRegistered = false
-	return &proxy
+func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy, corePairTopic string) *AdapterProxy {
+	return &AdapterProxy{
+		kafkaICProxy:          kafkaProxy,
+		corePairTopic:         corePairTopic,
+		deviceTopicRegistered: false,
+	}
 }
 
 func unPackResponse(rpc string, deviceId string, success bool, response *a.Any) error {
@@ -58,15 +59,8 @@ func unPackResponse(rpc string, deviceId string, success bool, response *a.Any) 
 	}
 }
 
-func (ap *AdapterProxy) updateCoreTopic(coreTopic *kafka.Topic) {
-	ap.coreTopic = coreTopic
-}
-
 func (ap *AdapterProxy) getCoreTopic() kafka.Topic {
-	if ap.coreTopic != nil {
-		return *ap.coreTopic
-	}
-	return kafka.Topic{Name: ap.kafkaICProxy.DefaultTopic.Name}
+	return kafka.Topic{Name: ap.corePairTopic}
 }
 
 func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic {
