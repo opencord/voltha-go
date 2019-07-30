@@ -98,6 +98,7 @@ local-protos:
 ifdef LOCAL_PROTOS
 	mkdir -p vendor/github.com/opencord/voltha-protos/go
 	cp -r ${GOPATH}/src/github.com/opencord/voltha-protos/go/* vendor/github.com/opencord/voltha-protos/go
+	rm -rf python/local_imports/voltha-protos
 	mkdir -p python/local_imports/voltha-protos/dist
 	cp ../voltha-protos/dist/*.tar.gz python/local_imports/voltha-protos/dist/
 endif
@@ -105,6 +106,7 @@ endif
 local-pyvoltha:
 	@mkdir -p python/local_imports
 ifdef LOCAL_PYVOLTHA
+	rm -rf python/local_imports/pyvoltha
 	mkdir -p python/local_imports/pyvoltha/dist
 	cp ../pyvoltha/dist/*.tar.gz python/local_imports/pyvoltha/dist/
 endif
