@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff09bc21_20703378",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-07-30T13:22:53Z",
+      "side": 1,
+      "message": "Minor comment: A better way would be to use a \"break \u003couter tag\u003e \" statement where the outer tag is on the outer loop, similar to a goto statement.",
+      "revId": "5222797ff418ca630a8731889274efd6dd08e7e4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
