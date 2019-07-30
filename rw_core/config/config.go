@@ -51,6 +51,7 @@ const (
 	default_DefaultRequestTimeout     = int64(500)
 	default_CoreTimeout               = int64(500)
 	default_CoreBindingKey            = "voltha_backend_name"
+	default_CorePairTopic             = "rwcore_1"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -82,6 +83,7 @@ type RWCoreFlags struct {
 	DefaultRequestTimeout     int64
 	DefaultCoreTimeout        int64
 	CoreBindingKey            string
+	CorePairTopic             string
 }
 
 func init() {
@@ -117,6 +119,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		LongRunningRequestTimeout: default_LongRunningRequestTimeout,
 		DefaultCoreTimeout:        default_CoreTimeout,
 		CoreBindingKey:            default_CoreBindingKey,
+		CorePairTopic:             default_CorePairTopic,
 	}
 	return &rwCoreFlag
 }
@@ -194,6 +197,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
 	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", default_CoreBindingKey, help)
+
+	help = fmt.Sprintf("Core pairing group topic")
+	flag.StringVar(&cf.CorePairTopic, "core_pair_topic", default_CorePairTopic, help)
 
 	flag.Parse()
 }

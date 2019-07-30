@@ -207,23 +207,6 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	return out, nil
 }
 
-func (handler *APIHandler) UpdateMembership(ctx context.Context, membership *voltha.Membership) (*empty.Empty, error) {
-	log.Debugw("UpdateMembership-request", log.Fields{"membership": membership})
-	out := new(empty.Empty)
-	if err := handler.core.updateCoreMembership(ctx, membership); err != nil {
-		return out, err
-	}
-	return out, nil
-}
-
-func (handler *APIHandler) GetMembership(ctx context.Context, empty *empty.Empty) (*voltha.Membership, error) {
-	log.Debug("GetMembership-request")
-	if membership := handler.core.getCoreMembership(ctx); membership != nil {
-		return membership, nil
-	}
-	return &voltha.Membership{}, nil
-}
-
 func (handler *APIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
 	log.Debugw("GetLogicalDevicePort-request", log.Fields{"id": *id})
 
