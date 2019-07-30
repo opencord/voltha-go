@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fa7bb974_39dff392",
+        "filename": "adapters/common/request_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65024552_4e9dc67b",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec8f75d6_a3691395",
         "filename": "adapters/common/request_handler.go",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Cut and paste error?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e343d2f3_208eb29a",
+        "filename": "adapters/common/request_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec8f75d6_a3691395",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f3aa71c8_92b63a64",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8b95222_5202a108",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2c2c258_b469c65e",
         "filename": "python/ofagent/grpc_client.py",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Debug?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d00796bd_c8ea2971",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2c2c258_b469c65e",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "93481879_4c6e0c11",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a88648f_03786809",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f6db7ba_b9dfd530",
         "filename": "python/ofagent/grpc_client.py",
         "patchSetId": 8
@@ -98,6 +188,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Debug?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24f65770_b0752c61",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f6db7ba_b9dfd530",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "ac794ba1_86d5bccf",
+        "filename": "python/ofagent/of_protocol_handler.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "we are sending reponse success/failure if no exception, should it be fine ?",
+      "parentUuid": "ca0a4e77_6d4243ed",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7544ad40_475267b8",
         "filename": "python/ofagent/of_protocol_handler.py",
         "patchSetId": 8
@@ -132,6 +258,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Should a failed response be sent back to the controller?",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f9c5c7a_d0ec9b42",
+        "filename": "python/ofagent/of_protocol_handler.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "we are sending reponse success/failure if no exception, should it be fine ?",
+      "parentUuid": "7544ad40_475267b8",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "7448b02e_3af0fb00",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65591d64_5c1600c2",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "636220a6_ec026a57",
         "filename": "ro_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 8
@@ -166,6 +328,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Unimplemented functions should be in voltha-go/common/core/northbound/grpc/default_api_handler.go\"",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8d002e2_6ec7b53c",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "636220a6_ec026a57",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "707722a2_ad82b22b",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Now while processing the flow , if meter which is referred by flow is not installed on logical device , we are failing the flow processing and retry will happen   . So this cache is no more needed . Also verified the behavior with ONOS that Flow will be not be pushed down when meter-referred  is not installed on OF logical device . So ONOS always makes sure that meter is installed before push down the flow .",
+      "parentUuid": "82b1cca5_ecea2824",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f4f3249_62b9dba0",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 8
@@ -200,6 +398,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Remove commented code, especially with new code.",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6c8172e_f7ccf66a",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1f4f3249_62b9dba0",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "9762b929_4514e473",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a69f3a2b_927f46e6",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d1de71d_77ac1b6f",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 8
@@ -234,6 +468,24 @@
       "writtenOn": "2019-07-29T15:45:53Z",
       "side": 1,
       "message": "Adding a meter id would be beneficial for debugging.",
+      "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1da4ddac_b6a56ca1",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-07-30T11:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d1de71d_77ac1b6f",
       "revId": "e2fec217b8198464a7e7a06620946a2544c92425",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
