@@ -41,6 +41,7 @@ COPY kafka ./kafka
 COPY vendor ./vendor
 
 # Copy files
+COPY adapters/adapterif ./adapters/adapterif
 COPY adapters/simulated_olt ./adapters/simulated_olt
 COPY adapters/common ./adapters/common
 COPY adapters/*.go ./adapters/
