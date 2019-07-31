@@ -44,6 +44,7 @@ COPY vendor ./vendor
 COPY adapters/simulated_onu ./adapters/simulated_onu
 COPY adapters/common ./adapters/common
 COPY adapters/*.go ./adapters/
+COPY adapters/adapterif ./adapters/adapterif
 
 ARG org_label_schema_version=unknown
 ARG org_label_schema_vcs_url=unknown
