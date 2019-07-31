@@ -33,10 +33,10 @@ type RequestHandlerProxy struct {
 	TestMode       bool
 	coreInstanceId string
 	adapter        adapters.IAdapter
-	coreProxy      *CoreProxy
+	coreProxy      CoreProxyIntf
 }
 
-func NewRequestHandlerProxy(coreInstanceId string, iadapter adapters.IAdapter, cProxy *CoreProxy) *RequestHandlerProxy {
+func NewRequestHandlerProxy(coreInstanceId string, iadapter adapters.IAdapter, cProxy CoreProxyIntf) *RequestHandlerProxy {
 	var proxy RequestHandlerProxy
 	proxy.coreInstanceId = coreInstanceId
 	proxy.adapter = iadapter

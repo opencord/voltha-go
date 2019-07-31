@@ -27,6 +27,18 @@ import (
 	"time"
 )
 
+// AdapterProxyIntf interface for AdapterProxy implementation.
+type AdapterProxyIntf interface {
+	SendInterAdapterMessage(ctx context.Context,
+		msg proto.Message,
+		msgType ic.InterAdapterMessageType_Types,
+		fromAdapter string,
+		toAdapter string,
+		toDeviceID string,
+		proxyDeviceID string,
+		messageID string) error
+}
+
 type AdapterProxy struct {
 	kafkaICProxy *kafka.InterContainerProxy
 	adapterTopic string
