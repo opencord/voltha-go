@@ -20,6 +20,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/adapters"
+	"github.com/opencord/voltha-go/adapters/adapterif"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/kafka"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
@@ -33,10 +34,10 @@ type RequestHandlerProxy struct {
 	TestMode       bool
 	coreInstanceId string
 	adapter        adapters.IAdapter
-	coreProxy      *CoreProxy
+	coreProxy      adapterif.CoreProxy
 }
 
-func NewRequestHandlerProxy(coreInstanceId string, iadapter adapters.IAdapter, cProxy *CoreProxy) *RequestHandlerProxy {
+func NewRequestHandlerProxy(coreInstanceId string, iadapter adapters.IAdapter, cProxy adapterif.CoreProxy) *RequestHandlerProxy {
 	var proxy RequestHandlerProxy
 	proxy.coreInstanceId = coreInstanceId
 	proxy.adapter = iadapter

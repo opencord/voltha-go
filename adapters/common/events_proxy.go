@@ -19,22 +19,14 @@ package common
 import (
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/kafka"
-	"github.com/opencord/voltha-protos/go/voltha"
 	"strconv"
 	"strings"
 	"time"
-)
 
-const (
-	EventTypeVersion = "0.1"
-)
-
-type (
-	EventType        = voltha.EventType_EventType
-	EventCategory    = voltha.EventCategory_EventCategory
-	EventSubCategory = voltha.EventSubCategory_EventSubCategory
+	"github.com/opencord/voltha-go/adapters/adapterif"
+	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/kafka"
+	"github.com/opencord/voltha-protos/go/voltha"
 )
 
 type EventProxy struct {
@@ -68,7 +60,7 @@ func (ep *EventProxy) formatId(eventName string) string {
 	return fmt.Sprintf("Voltha.openolt.%s.%s", eventName, strconv.FormatInt(time.Now().UnixNano(), 10))
 }
 
-func (ep *EventProxy) getEventHeader(eventName string, category EventCategory, subCategory EventSubCategory, eventType EventType, raisedTs int64) *voltha.EventHeader {
+func (ep *EventProxy) getEventHeader(eventName string, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, eventType adapterif.EventType, raisedTs int64) *voltha.EventHeader {
 	var header voltha.EventHeader
 	if strings.Contains(eventName, "_") {
 		eventName = strings.Join(strings.Split(eventName, "_")[:len(strings.Split(eventName, "_"))-2], "_")
@@ -80,14 +72,14 @@ func (ep *EventProxy) getEventHeader(eventName string, category EventCategory, s
 	header.Category = category
 	header.SubCategory = subCategory
 	header.Type = eventType
-	header.TypeVersion = EventTypeVersion
+	header.TypeVersion = adapterif.EventTypeVersion
 	header.RaisedTs = float32(raisedTs)
 	header.ReportedTs = float32(time.Now().UnixNano())
 	return &header
 }
 
 /* Send out device events*/
-func (ep *EventProxy) SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category EventCategory, subCategory EventSubCategory, raisedTs int64) error {
+func (ep *EventProxy) SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
 	if deviceEvent == nil {
 		log.Error("Recieved empty device event")
 		return errors.New("Device event nil")
