@@ -28,6 +28,7 @@ import (
 	"sync"
 )
 
+
 type CoreProxy struct {
 	kafkaICProxy        *kafka.InterContainerProxy
 	adapterTopic        string
