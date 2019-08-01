@@ -29,6 +29,7 @@ services:
     - 2181:2181
     networks:
     - default
+    restart: unless-stopped
 
 
   kafka:
@@ -45,6 +46,7 @@ services:
      - 9092:9092
     networks:
     - default
+    restart: unless-stopped
 
 
   etcd:
@@ -66,10 +68,11 @@ services:
     - 4001
     networks:
     - default
+    restart: unless-stopped
 
 
   rw_core:
-    image: voltha-rw-core
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}"
     entrypoint:
         - /app/rw_core
         - -kv_store_type=etcd
@@ -85,7 +88,6 @@ services:
         - -kv_store_data_prefix=service/voltha
         - -in_competing_mode=false
         - -log_level=0
-        - -log_level=0
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     ports:
@@ -96,12 +98,7 @@ services:
 
 
   cli:
-    image: "${REGISTRY}${REPOSITORY}voltha-cli:latest"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli:${DOCKER_TAG}"
     environment:
       DOCKER_HOST_IP: "${DOCKER_HOST_IP}"
     entrypoint:
@@ -111,15 +108,11 @@ services:
     - default
     ports:
     - "5022:22"
+    restart: unless-stopped
 
 
   ofagent:
-    image: "${REGISTRY}${REPOSITORY}voltha-ofagent:latest"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent:${DOCKER_TAG}"
     command: [
       "/ofagent/ofagent/main.py",
       "--consul=${DOCKER_HOST_IP}:8500",
@@ -135,35 +128,42 @@ services:
     restart: unless-stopped
 
 
-  adapter_openolt:
-    image: "${REGISTRY}${REPOSITORY}voltha-openolt-adapter${TAG}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    command: [
-      "/voltha/adapters/openolt/main.py",
-      "-v",
-      "--name=openolt",
-      "--kafka_adapter=${DOCKER_HOST_IP}:9092",
-      "--kafka_cluster=${DOCKER_HOST_IP}:9092",
-      "--backend=etcd",
-      "--etcd=${DOCKER_HOST_IP}:2379",
-      "--core_topic=rwcore"
-    ]
+  onos:
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-onos:${DOCKER_TAG}"
+    ports:
+    - "8101:8101" # ssh
+    - "6653:6653" # OF
+    - "8181:8181" # UI
+    environment:
+      ONOS_APPS: 'drivers,openflow-base'
+    volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock"
+    - "./network-cfg-bbsim.json:/root/onos/config/network-cfg.json"
     networks:
     - default
     restart: unless-stopped
 
 
+  adapter_openolt:
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}-go"
+    command: [
+      "/app/openolt",
+      "--kafka_adapter_host=${DOCKER_HOST_IP}",
+      "--kafka_adapter_port=9092",
+      "--kafka_cluster_host=${DOCKER_HOST_IP}",
+      "--kafka_cluster_port=9092",
+      "--core_topic=rwcore",
+      "--kv_store_host=${DOCKER_HOST_IP}",
+      "--kv_store_port=2379"
+    ]
+    ports:
+      - "50062:50062"
+    networks:
+    - default
+
+
   adapter_openonu:
-    image: "${REGISTRY}${REPOSITORY}voltha-openonu-adapter${TAG}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openonu-adapter:${DOCKER_TAG}"
     command: [
       "/voltha/adapters/brcm_openomci_onu/main.py",
       "-v",
@@ -176,20 +176,21 @@ services:
     ]
     networks:
     - default
-    restart: unless-stopped
+
 
   bbsim:
     image: "voltha/voltha-bbsim:latest"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    privileged: true
     command: [
-      "./bbsim"
+      "./bbsim",
+      "-m",
+      "both",
+      "-i",
+      "1",
+      "-n",
+      "1"
     ]
-    networks:
-    - default
     ports:
     - "50060:50060"
-    restart: unless-stopped
+    networks:
+    - default
