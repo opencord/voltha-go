@@ -155,19 +155,17 @@ services:
 
 
   adapter_openolt:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}-py"
     command: [
-      "/app/openolt",
-      "--kafka_adapter_host=${DOCKER_HOST_IP}",
-      "--kafka_adapter_port=9092",
-      "--kafka_cluster_host=${DOCKER_HOST_IP}",
-      "--kafka_cluster_port=9092",
-      "--core_topic=rwcore",
-      "--kv_store_host=${DOCKER_HOST_IP}",
-      "--kv_store_port=2379"
+      "/voltha/adapters/openolt/main.py",
+      "-v",
+      "--name=openolt",
+      "--kafka_adapter=${DOCKER_HOST_IP}:9092",
+      "--kafka_cluster=${DOCKER_HOST_IP}:9092",
+      "--backend=etcd",
+      "--etcd=${DOCKER_HOST_IP}:2379",
+      "--core_topic=rwcore"
     ]
-    ports:
-      - "50062:50062"
     networks:
     - default
 

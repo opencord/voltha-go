@@ -1,0 +1,62 @@
+{
+  "devices" : {
+    "of:000000000a000001" : {
+      "accessDevice" : {
+        "uplink" : "65536",
+        "vlan" : "1"
+      },
+      "basic" : {
+        "driver" : "voltha"
+      }
+    }
+  },
+  "apps" : {
+    "org.opencord.dhcpl2relay" : {
+      "dhcpl2relay" : {
+        "useOltUplinkForServerPktInOut" : true
+      }
+    },
+    "org.opencord.aaa" : {
+      "AAA" : {
+        "radiusIp" : "172.16.0.1",
+        "radiusServerPort" : "1645",
+        "radiusSecret" : "secret",
+        "nasIp" : "172.16.0.10",
+        "radiusConnectionType" : "socket",
+        "packetCustomizer" : "att"
+      }
+    },
+    "org.opencord.sadis" : {
+      "sadis" : {
+        "integration" : {
+          "cache" : {
+            "enabled" : true,
+            "maxsize" : 50,
+            "ttl" : "PT1m"
+          }
+        },
+        "entries" : [ {
+          "id" : "BBSIMOLT000",
+          "uplinkPort" : 65536,
+          "hardwareIdentifier" : "00:00:0a:00:00:01",
+          "ipAddress" : "10.0.0.1",
+          "nasId" : "ATLEDGEVOLT1"
+        }, {
+          "id" : "BBSM00000001-1",
+          "cTag" : 900,
+          "sTag" : 900,
+          "nasPortId" : "BBSM00000001-1",
+          "circuitId" : "BBSM00000001-1",
+          "remoteId" : "ATLEDGEVOLT1-RID"
+        }, {
+          "id" : "BBSM00000002-1",
+          "cTag" : 901,
+          "sTag" : 901,
+          "nasPortId" : "BBSM00000002-1",
+          "circuitId" : "BBSM00000002-1",
+          "remoteId" : "ATLEDGEVOLT1-RID"
+        }]
+      }
+    }
+  }
+}

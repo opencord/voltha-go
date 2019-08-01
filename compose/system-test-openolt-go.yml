@@ -139,7 +139,7 @@ services:
 
 
   onos:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha/voltha-onos:2.0.0"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-onos:${DOCKER_TAG}"
     ports:
     - "8101:8101" # ssh
     - "6653:6653" # OF
@@ -156,11 +156,6 @@ services:
 
   adapter_openolt:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}-go"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     command: [
       "/app/openolt",
       "--kafka_adapter_host=${DOCKER_HOST_IP}",
@@ -175,16 +170,10 @@ services:
       - "50062:50062"
     networks:
     - default
-    restart: unless-stopped
 
 
   adapter_openonu:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openonu-adapter:${DOCKER_TAG}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     command: [
       "/voltha/adapters/brcm_openomci_onu/main.py",
       "-v",
@@ -197,4 +186,3 @@ services:
     ]
     networks:
     - default
-    restart: unless-stopped
