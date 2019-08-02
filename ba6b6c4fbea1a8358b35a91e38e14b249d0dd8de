@@ -34,6 +34,92 @@
       "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a9a09aa_674a33cf",
+        "filename": "adapters/simulated_olt/adaptercore/simulated_olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-02T16:23:28Z",
+      "side": 1,
+      "message": "as part of the clean up do we want to normalize the error messages, for example is \"nil-device\" used more than a single place? does it make sense to have error definitions that are referenced?",
+      "parentUuid": "d2affd6b_5f585011",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acf6456c_219c0bbb",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-02T16:23:28Z",
+      "side": 1,
+      "message": "these are fire and forget?",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e84db2b1_d93ab984",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-02T16:23:28Z",
+      "side": 1,
+      "message": "again, fire and forget",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7994eee0_5565a4d0",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1169,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-02T16:23:28Z",
+      "side": 1,
+      "message": "don\u0027t really need else here as there is a return in clause above, do defer can just follow.",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c860fec_5d72f736",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-02T16:23:28Z",
+      "side": 1,
+      "message": "fire and forget? assuming that a failure is just logged somewhere and the consequences are handled then?",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
