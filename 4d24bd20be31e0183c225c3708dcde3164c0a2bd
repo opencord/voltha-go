@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5593d855_24eba316",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-08-02T14:33:01Z",
+      "side": 1,
+      "message": "Good catch ,  i will correct it . Currently openolt adapter does not handle bulk flow updates . Need change in adapter to test bulk flow",
+      "parentUuid": "5ac65b1c_1d2a6eb7",
+      "revId": "4d24bd20be31e0183c225c3708dcde3164c0a2bd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efdca792_6a6f48d3",
         "filename": "rw_core/utils/flow_utils.go",
         "patchSetId": 14
