@@ -16,6 +16,24 @@
       "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2affd6b_5f585011",
+        "filename": "adapters/simulated_olt/adaptercore/simulated_olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-02T15:27:29Z",
+      "side": 1,
+      "message": "That was a cut and paste thingy.   I will create a cleanup Jira to uniformize the coding style (low priority)",
+      "parentUuid": "d7d20296_c2bb05e7",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
