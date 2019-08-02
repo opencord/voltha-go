@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "a6c76f77_929af01f",
+        "filename": "adapters/simulated_olt/adaptercore/simulated_olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-02T17:26:42Z",
+      "side": 1,
+      "message": "That would make sense.  Would need several tasks for formalization, I guess.",
+      "parentUuid": "1a9a09aa_674a33cf",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "acf6456c_219c0bbb",
         "filename": "rw_core/core/adapter_manager.go",
         "patchSetId": 1
@@ -66,6 +84,24 @@
       "writtenOn": "2019-08-02T16:23:28Z",
       "side": 1,
       "message": "these are fire and forget?",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33c88531_d98512d1",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-02T17:26:42Z",
+      "side": 1,
+      "message": "This is a case where a failure would be put on the event bus as there are no listening component (or a component that can act on failure) for this change.",
+      "parentUuid": "acf6456c_219c0bbb",
       "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -89,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "3a9f3522_4f033598",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-02T17:26:42Z",
+      "side": 1,
+      "message": "Correct.  Since is processing that occurs in the core that does not handle the primary request. If there is an error then the only way to make it visible is via an event onto the kafka bus (or other system).  Once Event is implemented in the Core then these errors will be visible.",
+      "parentUuid": "e84db2b1_d93ab984",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7994eee0_5565a4d0",
         "filename": "rw_core/core/adapter_request_handler.go",
         "patchSetId": 1
@@ -106,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "ced863c6_40ee4a6e",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1169,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-02T17:26:42Z",
+      "side": 1,
+      "message": "This is because txn is declared in the if statement .",
+      "parentUuid": "7994eee0_5565a4d0",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c860fec_5d72f736",
         "filename": "rw_core/core/adapter_request_handler.go",
         "patchSetId": 1
@@ -117,6 +189,24 @@
       "writtenOn": "2019-08-02T16:23:28Z",
       "side": 1,
       "message": "fire and forget? assuming that a failure is just logged somewhere and the consequences are handled then?",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7ab9475_08c3a6f7",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-02T17:26:42Z",
+      "side": 1,
+      "message": "At this time the consequence of failure to reconciling child devices (or any of them) is just an error log (and eventually an event).   This is a tricky scenario as it involves at least 3 components (olt adapter, onu adapter, core).  A failure can happen anywhere.  Tracking a request until full completion is something missing in the core.  For sure it will have to be dealt with.   I will create a Jira for it.",
+      "parentUuid": "4c860fec_5d72f736",
       "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
