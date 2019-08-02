@@ -93,13 +93,14 @@ type AdapterManager struct {
 	clusterDataProxy            *model.Proxy
 	adapterProxy                *model.Proxy
 	deviceTypeProxy             *model.Proxy
+	deviceMgr                   *DeviceManager
 	coreInstanceId              string
 	exitChannel                 chan int
 	lockAdaptersMap             sync.RWMutex
 	lockdDeviceTypeToAdapterMap sync.RWMutex
 }
 
-func newAdapterManager(cdProxy *model.Proxy, coreInstanceId string) *AdapterManager {
+func newAdapterManager(cdProxy *model.Proxy, coreInstanceId string, deviceMgr *DeviceManager) *AdapterManager {
 	var adapterMgr AdapterManager
 	adapterMgr.exitChannel = make(chan int, 1)
 	adapterMgr.coreInstanceId = coreInstanceId
@@ -108,6 +109,7 @@ func newAdapterManager(cdProxy *model.Proxy, coreInstanceId string) *AdapterMana
 	adapterMgr.deviceTypeToAdapterMap = make(map[string]string)
 	adapterMgr.lockAdaptersMap = sync.RWMutex{}
 	adapterMgr.lockdDeviceTypeToAdapterMap = sync.RWMutex{}
+	adapterMgr.deviceMgr = deviceMgr
 	return &adapterMgr
 }
 
@@ -169,7 +171,13 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() {
 }
 
 //updateAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
-func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory() {
+func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha.Adapter) {
+	if aMgr.getAdapter(adapter.Id) != nil {
+		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
+		go aMgr.deviceMgr.adapterRestarted(adapter)
+		return
+	}
+
 	// Update the adapters
 	if adaptersIf := aMgr.clusterDataProxy.List(context.Background(), "/adapters", 0, false, ""); adaptersIf != nil {
 		for _, adapterIf := range adaptersIf.([]interface{}) {
@@ -306,7 +314,8 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 	log.Debugw("registerAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
 
 	if aMgr.getAdapter(adapter.Id) != nil {
-		//	Already registered
+		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
+		go aMgr.deviceMgr.adapterRestarted(adapter)
 		return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceId}
 	}
 	// Save the adapter and the device types

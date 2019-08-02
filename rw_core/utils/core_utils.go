@@ -41,6 +41,9 @@ func GetHostName() string {
 //If no errors is found then nil is returned.  This method also takes in a timeout in milliseconds. If a
 //timeout is obtained then this function will stop waiting for the remaining responses and abort.
 func WaitForNilOrErrorResponses(timeout int64, chnls ...chan interface{}) []error {
+	if len(chnls) == 0 {
+		return nil
+	}
 	// Create a timeout channel
 	tChnl := make(chan *interface{})
 	go func() {

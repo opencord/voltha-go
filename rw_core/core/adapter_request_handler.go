@@ -148,7 +148,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 		if txn, err := rhp.acquireRequest(transactionID.Val); err != nil {
 			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
 			// Update our adapters in memory
-			go rhp.adapterMgr.updateAdaptersAndDevicetypesInMemory()
+			go rhp.adapterMgr.updateAdaptersAndDevicetypesInMemory(adapter)
 			// returning nil, nil instructs the callee to ignore this request
 			return nil, nil
 		} else {
@@ -1133,5 +1133,50 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 	//if err := rhp.deviceMgr.updateImageDownload(deviceId.Id, img); err != nil {
 	//	return nil, err
 	//}
+	return new(empty.Empty), nil
+}
+
+func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument) (*empty.Empty, error) {
+	if len(args) < 2 {
+		log.Warn("invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	parentDeviceId := &voltha.ID{}
+	transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "parent_device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, parentDeviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("ReconcileChildDevices", log.Fields{"deviceId": parentDeviceId.Id, "transactionID": transactionID.Val})
+
+	// Try to grab the transaction as this core may be competing with another Core
+	if rhp.competeForTransaction() {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, parentDeviceId.Id); err != nil {
+			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
+			// returning nil, nil instructs the callee to ignore this request
+			return nil, nil
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+
+	// Run it in its own routine
+	go rhp.deviceMgr.reconcileChildDevices(parentDeviceId.Id)
+
 	return new(empty.Empty), nil
 }

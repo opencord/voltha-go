@@ -157,7 +157,20 @@ func (so *SimulatedOLT) Health() (*voltha.HealthStatus, error) {
 }
 
 func (so *SimulatedOLT) Reconcile_device(device *voltha.Device) error {
-	return errors.New("UnImplemented")
+	if device == nil {
+		log.Warn("device-is-nil")
+		return errors.New("nil-device")
+	}
+	log.Infow("reconcile-device", log.Fields{"deviceId": device.Id})
+	var handler *DeviceHandler
+	handler = so.getDeviceHandler(device.Id)
+	if handler == nil {
+		//	Adapter has restarted
+		handler = NewDeviceHandler(so.coreProxy, device, so)
+		so.addDeviceHandlerToMap(handler)
+	}
+	go handler.ReconcileDevice(device)
+	return nil
 }
 
 func (so *SimulatedOLT) Abandon_device(device *voltha.Device) error {

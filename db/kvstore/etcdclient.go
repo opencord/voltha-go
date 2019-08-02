@@ -311,7 +311,9 @@ func (c *EtcdClient) Watch(key string) chan *Event {
 
 	channelMaps := c.addChannelMap(key, channelMap)
 
-	log.Debugw("watched-channels", log.Fields{"channels": channelMaps})
+	// Changing the log field (from channelMaps) as the underlying logger cannot format the map of channels into a
+	// json format.
+	log.Debugw("watched-channels", log.Fields{"len": len(channelMaps)})
 	// Launch a go routine to listen for updates
 	go c.listenForKeyChange(channel, ch)
 

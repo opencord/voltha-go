@@ -173,6 +173,19 @@ func (da *DeviceOwnership) setOwnership(id string, owner bool) error {
 	return status.Error(codes.NotFound, fmt.Sprintf("id-inexistent-%s", id))
 }
 
+// getAllDeviceIdsOwnedByMe returns all the deviceIds (root device Ids) that is managed by this Core
+func (da *DeviceOwnership) GetAllDeviceIdsOwnedByMe() []string {
+	deviceIds := []string{}
+	da.deviceMapLock.Lock()
+	defer da.deviceMapLock.Unlock()
+	for _, ownership := range da.deviceMap {
+		if ownership.owned {
+			deviceIds = append(deviceIds, ownership.id)
+		}
+	}
+	return deviceIds
+}
+
 // OwnedByMe returns where this Core instance active owns this device.   This function will automatically
 // trigger the process to monitor the device and update the device ownership regularly.
 func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {

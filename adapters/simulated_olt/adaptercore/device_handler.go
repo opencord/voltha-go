@@ -316,3 +316,20 @@ func (dh *DeviceHandler) UpdatePmConfigs(device *voltha.Device, pmConfigs *volth
 	// For now we do nothing with it
 	return
 }
+
+func (dh *DeviceHandler) ReconcileDevice(device *voltha.Device) {
+	// Update the device info
+	cloned := proto.Clone(device).(*voltha.Device)
+	cloned.ConnectStatus = voltha.ConnectStatus_REACHABLE
+	cloned.OperStatus = voltha.OperStatus_ACTIVE
+
+	dh.device = cloned
+
+	// Update the device state
+	if err := dh.coreProxy.DeviceStateUpdate(nil, cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
+		log.Errorw("error-creating-nni-port", log.Fields{"deviceId": device.Id, "error": err})
+	}
+
+	// Since we don't know how long we were down, let's reconcile the child devices
+	go dh.coreProxy.ReconcileChildDevices(nil, cloned.Id)
+}

@@ -239,9 +239,19 @@ func (ap *AdapterProxy) Health() (*voltha.HealthStatus, error) {
 	return nil, nil
 }
 
-func (ap *AdapterProxy) ReconcileDevice(device *voltha.Device) error {
-	log.Debug("ReconcileDevice")
-	return nil
+func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Device) error {
+	log.Debugw("ReconcileDevice", log.Fields{"deviceId": device.Id})
+	rpc := "Reconcile_device"
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	args := []*kafka.KVArg{
+		{Key: "device", Value: device},
+	}
+	// Use a device specific topic as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("ReconcileDevice-response", log.Fields{"deviceid": device.Id, "success": success})
+
+	return unPackResponse(rpc, device.Id, success, result)
 }
 
 func (ap *AdapterProxy) AbandonDevice(device voltha.Device) error {

@@ -517,3 +517,20 @@ func (ap *CoreProxy) DevicePMConfigUpdate(ctx context.Context, pmConfigs *voltha
 	log.Debugw("DevicePMConfigUpdate-response", log.Fields{"pDeviceId": pmConfigs.Id, "success": success})
 	return unPackResponse(rpc, pmConfigs.Id, success, result)
 }
+
+func (ap *CoreProxy) ReconcileChildDevices(ctx context.Context, parentDeviceId string) error {
+	log.Debugw("ReconcileChildDevices", log.Fields{"parentDeviceId": parentDeviceId})
+	rpc := "ReconcileChildDevices"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(parentDeviceId)
+	replyToTopic := ap.getAdapterTopic()
+
+	args := []*kafka.KVArg{
+		{Key: "parent_device_id", Value: &voltha.ID{Id: parentDeviceId}},
+	}
+
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
+	log.Debugw("ReconcileChildDevices-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	return unPackResponse(rpc, parentDeviceId, success, result)
+}

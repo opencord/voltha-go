@@ -526,6 +526,105 @@ func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 	sendResponse(ctx, ch, res)
 }
 
+// isOkToReconcile validates whether a device is in the correct status to be reconciled
+func isOkToReconcile(device *voltha.Device) bool {
+	if device == nil {
+		return false
+	}
+	return device.AdminState != voltha.AdminState_PREPROVISIONED && device.AdminState != voltha.AdminState_DELETED
+}
+
+// adapterRestarted is invoked whenever an adapter is restarted
+func (dMgr *DeviceManager) adapterRestarted(adapter *voltha.Adapter) error {
+	log.Debugw("adapter-restarted", log.Fields{"adapter": adapter.Id})
+
+	// Let's reconcile the device managed by this Core only
+	rootDeviceIds := dMgr.core.deviceOwnership.GetAllDeviceIdsOwnedByMe()
+	if len(rootDeviceIds) == 0 {
+		log.Debugw("nothing-to-reconcile", log.Fields{"adapterId": adapter.Id})
+		return nil
+	}
+
+	chnlsList := make([]chan interface{}, 0)
+	for _, rootDeviceId := range rootDeviceIds {
+		if rootDevice, _ := dMgr.getDeviceFromModel(rootDeviceId); rootDevice != nil {
+			if rootDevice.Adapter == adapter.Id {
+				if isOkToReconcile(rootDevice) {
+					log.Debugw("reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
+					chnlsList = dMgr.sendReconcileDeviceRequest(rootDevice, chnlsList)
+				} else {
+					log.Debugw("not-reconciling-root-device", log.Fields{"rootId": rootDevice.Id, "state": rootDevice.AdminState})
+				}
+			} else { // Should we be reconciling the root's children instead?
+			childManagedByAdapter:
+				for _, port := range rootDevice.Ports {
+					for _, peer := range port.Peers {
+						if childDevice, _ := dMgr.getDeviceFromModel(peer.DeviceId); childDevice != nil {
+							if childDevice.Adapter == adapter.Id {
+								if isOkToReconcile(childDevice) {
+									log.Debugw("reconciling-child-device", log.Fields{"childId": childDevice.Id})
+									chnlsList = dMgr.sendReconcileDeviceRequest(childDevice, chnlsList)
+								} else {
+									log.Debugw("not-reconciling-child-device", log.Fields{"childId": childDevice.Id, "state": childDevice.AdminState})
+								}
+							} else {
+								// All child devices under a parent device are typically managed by the same adapter type.
+								// Therefore we only need to check whether the first device we retrieved is managed by that adapter
+								break childManagedByAdapter
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if len(chnlsList) > 0 {
+		// Wait for completion
+		if res := utils.WaitForNilOrErrorResponses(dMgr.defaultTimeout, chnlsList...); res != nil {
+			return status.Errorf(codes.Aborted, "errors-%s", res)
+		}
+	} else {
+		log.Debugw("no-managed-device-to-reconcile", log.Fields{"adapterId": adapter.Id})
+	}
+	return nil
+}
+
+func (dMgr *DeviceManager) sendReconcileDeviceRequest(device *voltha.Device, chnlsList []chan interface{}) []chan interface{} {
+	// Send a reconcile request to the adapter. Since this Core may not be managing this device then there is no
+	// point of creating a device agent (if the device is not being managed by this Core) before sending the request
+	// to the adapter.   We will therefore bypass the adapter adapter and send the request directly to teh adapter via
+	// the adapter_proxy.
+	ch := make(chan interface{})
+	chnlsList = append(chnlsList, ch)
+	go func(device *voltha.Device) {
+		if err := dMgr.adapterProxy.ReconcileDevice(context.Background(), device); err != nil {
+			log.Errorw("reconcile-request-failed", log.Fields{"deviceId": device.Id, "error": err})
+			ch <- status.Errorf(codes.Internal, "device: %s", device.Id)
+		}
+		ch <- nil
+	}(device)
+
+	return chnlsList
+}
+
+func (dMgr *DeviceManager) reconcileChildDevices(parentDeviceId string) error {
+	if parentDevice, _ := dMgr.getDeviceFromModel(parentDeviceId); parentDevice != nil {
+		chnlsList := make([]chan interface{}, 0)
+		for _, port := range parentDevice.Ports {
+			for _, peer := range port.Peers {
+				if childDevice, _ := dMgr.getDeviceFromModel(peer.DeviceId); childDevice != nil {
+					chnlsList = dMgr.sendReconcileDeviceRequest(childDevice, chnlsList)
+				}
+			}
+		}
+		// Wait for completion
+		if res := utils.WaitForNilOrErrorResponses(dMgr.defaultTimeout, chnlsList...); res != nil {
+			return status.Errorf(codes.Aborted, "errors-%s", res)
+		}
+	}
+	return nil
+}
+
 func (dMgr *DeviceManager) updateDevice(device *voltha.Device) error {
 	log.Debugw("updateDevice", log.Fields{"deviceid": device.Id, "device": device})
 	if agent := dMgr.getDeviceAgent(device.Id); agent != nil {

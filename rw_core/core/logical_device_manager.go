@@ -134,23 +134,12 @@ func (ldMgr *LogicalDeviceManager) listManagedLogicalDevices() (*voltha.LogicalD
 	return result, nil
 }
 
+//listLogicalDevices returns the list of all logical devices
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
 	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false, ""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
-			if agent := ldMgr.getLogicalDeviceAgent(logicalDevice.(*voltha.LogicalDevice).Id); agent == nil {
-				agent = newLogicalDeviceAgent(
-					logicalDevice.(*voltha.LogicalDevice).Id,
-					logicalDevice.(*voltha.LogicalDevice).RootDeviceId,
-					ldMgr,
-					ldMgr.deviceMgr,
-					ldMgr.clusterDataProxy,
-					ldMgr.defaultTimeout,
-				)
-				ldMgr.addLogicalDeviceAgentToMap(agent)
-				go agent.start(nil, true)
-			}
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
 	}
