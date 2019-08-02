@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7d20296_c2bb05e7",
+        "filename": "adapters/simulated_olt/adaptercore/simulated_olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-08-02T15:24:08Z",
+      "side": 1,
+      "message": "I see this code style a lot in voltha; could be done one one line:\nhandler :\u003d so.getDevicehandler(device.Id)\nJust a minor, code style thing ¯\\_(ツ)_/¯",
+      "revId": "ba6b6c4fbea1a8358b35a91e38e14b249d0dd8de",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
