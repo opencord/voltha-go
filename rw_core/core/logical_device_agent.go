@@ -80,8 +80,13 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId, "loadFromdB": loadFromdB})
 	var ld *voltha.LogicalDevice
 	if !loadFromdB {
+		//Build the logical device based on information retrieved from the device adapter
+		var switchCap *ic.SwitchCapability
 		var err error
-		// First create and store the logical device
+		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceId); err != nil {
+			log.Errorw("error-creating-logical-device", log.Fields{"error": err})
+			return err
+		}
 		ld = &voltha.LogicalDevice{Id: agent.logicalDeviceId, RootDeviceId: agent.rootDeviceId}
 
 		// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
@@ -91,6 +96,9 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 			return err
 		}
 		ld.DatapathId = datapathID
+		ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
+		log.Debugw("Switch-capability", log.Fields{"Desc": ld.Desc, "fromAd": switchCap.Desc})
+		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 		ld.Flows = &ofp.Flows{Items: nil}
 		ld.FlowGroups = &ofp.FlowGroups{Items: nil}
 
@@ -101,25 +109,6 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		} else {
 			log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 		}
-		agent.lockLogicalDevice.Unlock()
-
-		//Retrieve the switch capability from the device adapter
-		var switchCap *ic.SwitchCapability
-		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceId); err != nil {
-			log.Errorw("error-creating-logical-device", log.Fields{"error": err})
-			return err
-		}
-
-		// Save the data
-		agent.lockLogicalDevice.Lock()
-		if ld, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-			log.Warnw("failed-to-load-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-			return err
-		}
-		clonedLd := (proto.Clone(ld)).(*voltha.LogicalDevice)
-		clonedLd.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
-		log.Debugw("Switch-capability", log.Fields{"Desc": clonedLd.Desc})
-		clonedLd.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 		agent.lockLogicalDevice.Unlock()
 
 		// TODO:  Set the logical ports in a separate call once the port update issue is fixed.
