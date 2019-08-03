@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5552864_be6d5ac0",
+        "filename": "compose/network-cfg-bbsim.json",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-03T17:02:02Z",
+      "side": 1,
+      "message": "Is the MAC and DPID consist or random?",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 29
+      },
+      "revId": "912cf067e0c17e7bd1b71d00c0c913051a62cbdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
