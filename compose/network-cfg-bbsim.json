@@ -1,6 +1,6 @@
 {
   "devices" : {
-    "of:000000000a000001" : {
+    "of:00000000ac110001" : {
       "accessDevice" : {
         "uplink" : "65536",
         "vlan" : "1"
@@ -18,12 +18,11 @@
     },
     "org.opencord.aaa" : {
       "AAA" : {
-        "radiusIp" : "172.16.0.1",
-        "radiusServerPort" : "1645",
-        "radiusSecret" : "secret",
-        "nasIp" : "172.16.0.10",
-        "radiusConnectionType" : "socket",
-        "packetCustomizer" : "att"
+        "radiusIp" : "172.17.0.1",
+        "radiusServerPort" : "1812",
+        "radiusSecret" : "SECRET",
+        "nasIp" : "172.17.0.1",
+        "radiusConnectionType" : "socket"
       }
     },
     "org.opencord.sadis" : {
@@ -38,9 +37,9 @@
         "entries" : [ {
           "id" : "BBSIMOLT000",
           "uplinkPort" : 65536,
-          "hardwareIdentifier" : "00:00:0a:00:00:01",
-          "ipAddress" : "10.0.0.1",
-          "nasId" : "ATLEDGEVOLT1"
+          "hardwareIdentifier" : "00:00:ac:11:00:01",
+          "ipAddress" : "172.17.0.1",
+          "nasId" : "BBSIMOLT000"
         }, {
           "id" : "BBSM00000001-1",
           "cTag" : 900,
