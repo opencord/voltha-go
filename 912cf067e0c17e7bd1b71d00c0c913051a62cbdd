@@ -94,6 +94,30 @@
       "revId": "912cf067e0c17e7bd1b71d00c0c913051a62cbdd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db8ae30f_3db22ee6",
+        "filename": "compose/network-cfg-bbsim.json",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-08-03T18:32:21Z",
+      "side": 1,
+      "message": "Yes in the dev setup given this netcfg is seeded in at onos start time you need to know the ip your working with before calling preprovision.  In the case of bbsim given the docker0 ip is defaulted to 172.17.0.1 that show work for most folks.  And with a hardware olt i know the ip ahead of time and change this entry before starting docker-compose. \n\nIn a seba style setup this and the sadis entries below are injected into voltha and onos using API when the devices is added into xos.\n\nAn extra config you need for all the plumbing to work is the DOCKER_HOST_IP environment variable.  Try this:\n\n\nDOCKER_HOST_IP\u003d172.17.0.1 DOCKER_TAG\u003dmaster DOCKER_REPOSITORY\u003dvoltha/ docker-compose -f compose/system-test-bbsim.yml up -d",
+      "parentUuid": "6b717647_97914d6b",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 29
+      },
+      "revId": "912cf067e0c17e7bd1b71d00c0c913051a62cbdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
