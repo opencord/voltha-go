@@ -46,6 +46,30 @@
       "revId": "912cf067e0c17e7bd1b71d00c0c913051a62cbdd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf7cdddd_a2387a9f",
+        "filename": "compose/network-cfg-bbsim.json",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-08-03T18:16:13Z",
+      "side": 1,
+      "message": "so yes it is consistent.  in the case of bbsim i typically use the host\u0027s ip on the docker0 bridge, 172.17.0.1",
+      "parentUuid": "499e2b36_4ed89e33",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 29
+      },
+      "revId": "912cf067e0c17e7bd1b71d00c0c913051a62cbdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
