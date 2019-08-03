@@ -170,6 +170,7 @@ services:
       - "50062:50062"
     networks:
     - default
+    restart: unless-stopped
 
 
   adapter_openonu:
@@ -186,3 +187,4 @@ services:
     ]
     networks:
     - default
+    restart: unless-stopped

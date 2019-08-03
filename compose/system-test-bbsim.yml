@@ -160,6 +160,7 @@ services:
       - "50062:50062"
     networks:
     - default
+    restart: unless-stopped
 
 
   adapter_openonu:
@@ -176,6 +177,7 @@ services:
     ]
     networks:
     - default
+    restart: unless-stopped
 
 
   bbsim:
@@ -194,3 +196,22 @@ services:
     - "50060:50060"
     networks:
     - default
+    restart: unless-stopped
+
+
+  radius:
+    image: "tpdock/freeradius:2.2.9"
+    environment:
+      RADIUS_LISTEN_IP: "*"
+      USERS_FILE: "/etc/raddb/users"
+      RADIUS_CLIENTS: "SECRET@0.0.0.0/0"
+    volumes:
+      - "./radius-clients.conf:/etc/raddb/clients.conf"
+      - "./radius-users.conf:/etc/raddb/users"
+    ports:
+     - "1812:1812/udp"
+     - "1813:1813"
+     - "18120:18120"
+    networks:
+    - default
+    restart: unless-stopped
