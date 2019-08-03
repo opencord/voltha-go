@@ -70,6 +70,30 @@
       "revId": "912cf067e0c17e7bd1b71d00c0c913051a62cbdd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b717647_97914d6b",
+        "filename": "compose/network-cfg-bbsim.json",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-03T18:19:51Z",
+      "side": 1,
+      "message": "So there is a bit of \"expectation\" that the IP will be the same then? Also I tried to start with `DOCKER_TAG\u003dmaster DOCKER_REPOSITORY\u003dvoltha/ docker-compose -f compose/system-test-bbsim.yml up` to pull the latest images and then ssh into the CLI and the CLI didn\u0027t connect to the server nor was i able to preprovision a device. The CLI gave its typical silent failure, which I just love ;)",
+      "parentUuid": "499e2b36_4ed89e33",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 29
+      },
+      "revId": "912cf067e0c17e7bd1b71d00c0c913051a62cbdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
