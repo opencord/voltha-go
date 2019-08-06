@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90e59f05_fa002c82",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-06T18:17:53Z",
+      "side": 1,
+      "message": "It\u0027s better to make this request as specific as possible, i.e. make it something like \"updateDeviceUsingAdapterData\" .  This way it won\u0027t be used for anything else.",
+      "revId": "cd722572ac938cebd6b0982bd045a48fc1086c8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d8c3c76_11a6d7f9",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-06T18:17:53Z",
+      "side": 1,
+      "message": "See my other comments on function name change.  You will also need to change it in the device manager.",
+      "revId": "cd722572ac938cebd6b0982bd045a48fc1086c8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e87110aa_fc01f213",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1046,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-06T18:17:53Z",
+      "side": 1,
+      "message": "Given that the merge function will be used by this function only, then it may be clearer to imbed the merge function here.",
+      "revId": "cd722572ac938cebd6b0982bd045a48fc1086c8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a61936f4_d301e452",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-06T18:17:53Z",
+      "side": 1,
+      "message": "This will actually be a serious error is the device cannot be found.  I suggest output an error log (later an event on kafka must also be generated, not required right away).  We should not be updating the device in this scenario as we don\u0027t know what is the correct data.",
+      "revId": "cd722572ac938cebd6b0982bd045a48fc1086c8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
