@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "141e0f9f_5c377320",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-08-08T21:35:08Z",
+      "side": 1,
+      "message": "Bogus code as condition won\u0027t be hit as its entered when outPort is non-zero",
+      "revId": "2144ac14d873355723bbf08ef8a75348583dcd35",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
