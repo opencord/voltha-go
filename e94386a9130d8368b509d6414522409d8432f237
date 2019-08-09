@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f684e14_99337df4",
+        "filename": "adapters/common/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-09T20:04:10Z",
+      "side": 1,
+      "message": "Typically, in Go, you would just name the interface \"AdapterProxy\" and have it in a separate package in this case not to conflict with the name in this package.\n\nIn places where we currently refer to AdapterProxy(the one in this file), you will refer to the interface one (in a separate package).    \n\nThis way the interface can be implemented by different structs, the actual implementation and the test implementation.\n\nPlease take a look at device_manager_if.go in the voltha rw_core.",
+      "revId": "e94386a9130d8368b509d6414522409d8432f237",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
