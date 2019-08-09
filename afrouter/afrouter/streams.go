@@ -18,6 +18,7 @@ package afrouter
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
@@ -118,7 +119,7 @@ func (s *streams) forwardClientToServer(dst grpc.ServerStream, f *sbFrame) chan 
 					break
 				}
 			}
-			log.Debugf("Northbound frame %v", f.payload)
+			log.Debugf("Northbound frame %v", hex.EncodeToString(f.payload))
 			if err := dst.SendMsg(f); err != nil {
 				srcS.c2sReturn <- err
 				break
@@ -208,7 +209,7 @@ func (s *streams) forwardServerToClient(src grpc.ServerStream, f *nbFrame) chan 
 				log.Debugf("SendAll failed %s", err.Error())
 				break
 			}
-			log.Debugf("Southbound frame %v", f.payload)
+			log.Debugf("Southbound frame %v", hex.EncodeToString(f.payload))
 			if err := src.RecvMsg(f); err != nil {
 				ret <- err // this can be io.EOF which is happy case
 				break
