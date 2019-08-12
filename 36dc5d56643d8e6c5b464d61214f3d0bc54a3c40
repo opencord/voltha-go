@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fefd65d_50c2c4ee",
+        "filename": "adapters/common/request_handler.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-12T19:52:38Z",
+      "side": 1,
+      "message": "Isn\u0027t this suppose to be flow_metadata?",
+      "revId": "36dc5d56643d8e6c5b464d61214f3d0bc54a3c40",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
