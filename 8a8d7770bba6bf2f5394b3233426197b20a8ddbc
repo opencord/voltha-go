@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6972a0d1_49b6d304",
+        "filename": "python/ofagent/grpc_client.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-13T21:26:21Z",
+      "side": 1,
+      "message": "Is the timeout and metadata missing here?  See the other calls to the core.",
+      "revId": "8a8d7770bba6bf2f5394b3233426197b20a8ddbc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
