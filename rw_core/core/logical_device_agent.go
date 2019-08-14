@@ -1401,8 +1401,7 @@ func (agent *LogicalDeviceAgent) portExist(device *voltha.Device, port *voltha.P
 func (agent *LogicalDeviceAgent) addUNILogicalPort(childDevice *voltha.Device, port *voltha.Port) (bool, error) {
 	log.Debugw("addUNILogicalPort", log.Fields{"port": port})
 	if childDevice.AdminState != voltha.AdminState_ENABLED || childDevice.OperStatus != voltha.OperStatus_ACTIVE {
-		log.Infow("device-not-ready", log.Fields{"deviceId": childDevice.Id, "admin": childDevice.AdminState, "oper": childDevice.OperStatus})
-		return false, nil
+		log.Infow("device-not-ready-updating-ports-anyway", log.Fields{"deviceId": childDevice.Id, "admin": childDevice.AdminState, "oper": childDevice.OperStatus})
 	}
 	agent.lockLogicalDevice.RLock()
 	if agent.portExist(childDevice, port) {
