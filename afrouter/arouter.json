@@ -131,7 +131,9 @@
             "ListLogicalDevices",
             "ListLogicalDeviceFlows",
             "ListLogicalDeviceFlowGroups",
-            "ListLogicalDevicePorts"
+            "ListLogicalDevicePorts",
+            "ListLogicalDeviceMeters",
+            "UpdateLogicalDeviceMeterTable"
           ],
           "_TODO": "Overrides not implemented yet, config ignored",
           "overrides": [
