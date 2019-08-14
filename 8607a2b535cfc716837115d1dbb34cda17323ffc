@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6175fe9e_2591f277",
+        "filename": "Gopkg.lock",
+        "patchSetId": 21
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-08-14T10:06:04Z",
+      "side": 1,
+      "message": "Jenkins is failing because it tried to run \u0027dep ensure\u0027 and Gopkg.lock for voltha-go cannot reference voltha-go.  Also Gopkg.toml has not changed to add voltha-go, yet it is somehow in this file.  \n\nSo im not sure how this file could end up in this state.  Last time this happened with this patch set I had to manually remove entries from Gopkg.lock and run \u0027dep ensure\u0027 to fix it.",
+      "range": {
+        "startLine": 313,
+        "startChar": 2,
+        "endLine": 313,
+        "endChar": 40
+      },
+      "revId": "8607a2b535cfc716837115d1dbb34cda17323ffc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
