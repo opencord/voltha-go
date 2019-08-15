@@ -34,6 +34,24 @@
       "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97d60d77_f8ff7400",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-08-15T13:41:04Z",
+      "side": 1,
+      "message": "And for the onu adapter there is still some work to do in this space.  Rather than reporting operstatus UP on all uni on device enable, it should report if there is actually anything plugged into the UNI (link up on the ethernet port).  \n\nSo the initial port add\u0027s and getPortCapability being DOWN may actually stay DOWN if there is not actually an RG plugged into the UNI/Ethernet port.  The additional UNI being DOWN should prevent the pushing of flows that are not needed (yet).  There is a JIRA for this somewhere.",
+      "parentUuid": "8f148b26_8553a599",
+      "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
