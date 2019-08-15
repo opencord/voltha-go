@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"net"
+	"net/url"
 	"strconv"
 )
 
@@ -58,7 +59,7 @@ func newServer(config *ServerConfig) (*server, error) {
 		rtrn_err = true
 	}
 	// Validate the ip address if one is provided
-	if ip := net.ParseIP(config.Addr); config.Addr != "" && ip == nil {
+	if _, err := url.Parse(config.Addr); err != nil {
 		log.Errorf("Invalid address '%s' provided for server '%s'", config.Addr, config.Name)
 		rtrn_err = true
 	}
