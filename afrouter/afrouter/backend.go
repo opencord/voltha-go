@@ -25,7 +25,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/metadata"
 	"io"
 	"net/url"
@@ -74,18 +73,16 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 	log.Debugf("There are %d connections to open", len(be.connections))
 	for _, cn := range be.connections {
 		// Copy in the metadata
-		if cn.getState() == connectivity.Ready && cn.getConn() != nil {
+		if conn, ready := cn.getConn(); ready {
 			log.Debugf("Opening southbound stream for connection '%s'", cn.name)
 			// Create an outgoing context that includes the incoming metadata
 			// and that will cancel if the server's context is canceled
 			clientCtx, clientCancel := context.WithCancel(serverStream.Context())
 			clientCtx = metadata.NewOutgoingContext(clientCtx, md.Copy())
 			//TODO: Same check here, only add the serial number if necessary
-			clientCtx = metadata.AppendToOutgoingContext(clientCtx, "voltha_serial_number",
-				strconv.FormatUint(f.serialNo, 10))
+			clientCtx = metadata.AppendToOutgoingContext(clientCtx, "voltha_serial_number", strconv.FormatUint(f.serialNo, 10))
 			// Create the client stream
-			if clientStream, err := grpc.NewClientStream(clientCtx, clientStreamDescForProxying,
-				cn.getConn(), f.methodInfo.all); err != nil {
+			if clientStream, err := grpc.NewClientStream(clientCtx, clientStreamDescForProxying, conn, f.methodInfo.all); err != nil {
 				log.Debugf("Failed to create a client stream '%s', %v", cn.name, err)
 				fmt.Fprintf(&errStr, "{{Failed to create a client stream '%s', %v}} ", cn.name, err)
 				rtrn.streams[cn.name] = nil
@@ -96,10 +93,6 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 					c2sReturn: make(chan error, 1)}
 				atLeastOne = true
 			}
-		} else if cn.getConn() == nil {
-			err := errors.New(fmt.Sprintf("Connection '%s' is closed", cn.name))
-			fmt.Fprint(&errStr, err.Error())
-			log.Debug(err)
 		} else {
 			err := errors.New(fmt.Sprintf("Connection '%s' isn't ready", cn.name))
 			fmt.Fprint(&errStr, err.Error())
@@ -248,8 +241,8 @@ func newBackend(conf *BackendConfig, clusterName string) (*backend, error) {
 			log.Errorf("A connection must have a name for backend %s in cluster %s",
 				conf.Name, clusterName)
 		} else {
-			gc := &gConnection{conn: nil, cancel: nil, state: connectivity.Idle}
-			be.connections[cnConf.Name] = &connection{name: cnConf.Name, addr: cnConf.Addr, port: cnConf.Port, backend: be, gConn: gc}
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			be.connections[cnConf.Name] = &connection{name: cnConf.Name, addr: cnConf.Addr, port: cnConf.Port, backend: be, ctx: ctx, close: cancelFunc}
 			if cnConf.Addr != "" { // This connection will be specified later.
 				if _, err := url.Parse(cnConf.Addr); err != nil {
 					log.Errorf("The address for connection %s in backend %s in cluster %s is invalid: %s",
