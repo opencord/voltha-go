@@ -106,6 +106,24 @@
       "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d5b13dd_e427181b",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-08-15T15:13:07Z",
+      "side": 1,
+      "message": "ok just so its painfully clear to me:\n\nif device is not Admin enabled:\n  log device-not-ready\n  return false",
+      "parentUuid": "253abdb3_6256be74",
+      "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
