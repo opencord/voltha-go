@@ -124,6 +124,24 @@
       "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9d6eddf_e27e4c44",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-15T15:17:16Z",
+      "side": 1,
+      "message": "Correct :)\n\nOne suggestion (can be a TODO comment) is when we receive the port capability we check the port status against the device operational state/connection state.   This way if a device is reporting an UP status with the incorrect operational/connection state we could just reject it.  Like I said it\u0027s a minor and can be done later.",
+      "parentUuid": "3d5b13dd_e427181b",
+      "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
