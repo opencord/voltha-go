@@ -88,6 +88,24 @@
       "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "253abdb3_6256be74",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-15T13:59:52Z",
+      "side": 1,
+      "message": "It should be if the device is not enabled then do not let the adapter do anything.  This will cover the case of disabled and deleted (temp state).\n\nBefore we were not setting the logical port state correctly when sending a changed event to ONOS.   There was also a race condition when we were building the device graph and it was around this code.   Can\u0027t remember the actual reason.",
+      "parentUuid": "42ac2b4c_58d01ea9",
+      "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
