@@ -52,6 +52,24 @@
       "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67b85a5d_ea7fdca8",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-15T13:49:05Z",
+      "side": 1,
+      "message": "Fair enough.\n\nIn 1.x the ONU Adapter was responsible to change the admin state of the device.  In 2.x the admin state of a child device is set to enabled before a request to enable that device is made.  Therefore, I think the check for admin state is still relevant to prevent some odd behaviors from other adapters.  Thoughts?",
+      "parentUuid": "8f148b26_8553a599",
+      "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
