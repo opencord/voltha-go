@@ -70,6 +70,24 @@
       "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42ac2b4c_58d01ea9",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-08-15T13:52:45Z",
+      "side": 1,
+      "message": "I think that\u0027s fair.  Basically if the device instance is admin down do not let the adapter do anything.  Ill update and test.\n\nFWIW there was a time i thought this may be causing issues, but ive since found its not.  So this is not a rush.",
+      "parentUuid": "67b85a5d_ea7fdca8",
+      "revId": "1fe5a1040f2007eff21d64b87c68c707e40e69e6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
