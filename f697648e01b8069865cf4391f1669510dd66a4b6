@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59764e82_084c81e3",
+        "filename": "afrouter/afrouter/api.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-19T16:25:54Z",
+      "side": 1,
+      "message": "If this func is no longer used/required, it should be removed.",
+      "revId": "f697648e01b8069865cf4391f1669510dd66a4b6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
