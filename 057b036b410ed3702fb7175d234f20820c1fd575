@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d79be45f_ffc4e3b8",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-19T21:45:07Z",
+      "side": 1,
+      "message": "Would 1 debug log be sufficient?",
+      "revId": "057b036b410ed3702fb7175d234f20820c1fd575",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2cb625f_047ebb53",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-19T21:45:07Z",
+      "side": 1,
+      "message": "Same comment as above",
+      "revId": "057b036b410ed3702fb7175d234f20820c1fd575",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
