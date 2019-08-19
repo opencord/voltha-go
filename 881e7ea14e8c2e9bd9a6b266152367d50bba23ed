@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "b1e11b1f_3eb20ae8",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-08-19T23:34:11Z",
+      "side": 1,
+      "message": "Its not an expected error. A grpc failure is something to be scared about. It won\u0027t come now because of the fix but if it does come as a valid grpc failure, its better to be aware about the failure of grpc. I am also thinking if the severity is right. As of now, I think its ok. If you want to lower, we can move it to Info also.",
+      "parentUuid": "8cc757a4_7bb4746b",
+      "revId": "881e7ea14e8c2e9bd9a6b266152367d50bba23ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2b92c54_38cc5ffd",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 3
