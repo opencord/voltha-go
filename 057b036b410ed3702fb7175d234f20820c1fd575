@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "09913a0d_5dc6caec",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-08-19T21:54:53Z",
+      "side": 1,
+      "message": "Updated. Removed useless debug logs",
+      "parentUuid": "d79be45f_ffc4e3b8",
+      "revId": "057b036b410ed3702fb7175d234f20820c1fd575",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d2cb625f_047ebb53",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 2
