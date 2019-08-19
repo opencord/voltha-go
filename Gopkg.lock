@@ -119,14 +119,6 @@
   version = "v1.2.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d6abd135858a47cf5863d9f095bfa88c43f8f18dcf43c94498c2af7c6d72f6c2"
-  name = "github.com/golang-collections/go-datastructures"
-  packages = ["queue"]
-  pruneopts = "UT"
-  revision = "59788d5eb2591d3497ffb8fafed2f16fe00e7775"
-
-[[projects]]
   digest = "1:c33a34578570e05f7aab50030acfbeee2d95ee7690bfb803a08bbd9a7b820e4e"
   name = "github.com/golang/protobuf"
   packages = [
@@ -780,7 +772,6 @@
     "github.com/bsm/sarama-cluster",
     "github.com/cevaris/ordered_map",
     "github.com/gogo/protobuf/proto",
-    "github.com/golang-collections/go-datastructures/queue",
     "github.com/golang/protobuf/descriptor",
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/protoc-gen-go",

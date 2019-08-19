@@ -18,7 +18,6 @@ package core
 import (
 	"context"
 	"errors"
-	"github.com/golang-collections/go-datastructures/queue"
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-go/common/log"
@@ -31,6 +30,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"io"
+	"sync"
 	"time"
 )
 
@@ -45,8 +45,10 @@ type APIHandler struct {
 	deviceMgr                 *DeviceManager
 	logicalDeviceMgr          *LogicalDeviceManager
 	adapterMgr                *AdapterManager
-	packetInQueue             *queue.Queue
-	changeEventQueue          *queue.Queue
+	packetInQueue             chan openflow_13.PacketIn
+	changeEventQueue          chan openflow_13.ChangeEvent
+	packetInQueueDone         chan bool
+	changeEventQueueDone      chan bool
 	coreInCompetingMode       bool
 	longRunningRequestTimeout int64
 	defaultRequestTimeout     int64
@@ -62,10 +64,11 @@ func NewAPIHandler(core *Core) *APIHandler {
 		coreInCompetingMode:       core.config.InCompetingMode,
 		longRunningRequestTimeout: core.config.LongRunningRequestTimeout,
 		defaultRequestTimeout:     core.config.DefaultRequestTimeout,
-		// TODO: Figure out what the 'hint' parameter to queue.New does
-		packetInQueue:    queue.New(10),
-		changeEventQueue: queue.New(10),
-		core:             core,
+		packetInQueue:             make(chan openflow_13.PacketIn, 100),
+		changeEventQueue:          make(chan openflow_13.ChangeEvent, 100),
+		packetInQueueDone:         make(chan bool, 1),
+		changeEventQueueDone:      make(chan bool, 1),
+		core:                      core,
 	}
 	return handler
 }
@@ -805,31 +808,80 @@ func (handler *APIHandler) sendPacketIn(deviceId string, transationId string, pa
 	// TODO: Augment the OF PacketIn to include the transactionId
 	packetIn := openflow_13.PacketIn{Id: deviceId, PacketIn: packet}
 	log.Debugw("sendPacketIn", log.Fields{"packetIn": packetIn})
-	// Enqueue the packet
-	if err := handler.packetInQueue.Put(packetIn); err != nil {
-		log.Errorw("failed-to-enqueue-packet", log.Fields{"error": err})
+	handler.packetInQueue <- packetIn
+}
+
+type callTracker struct {
+	failedPacket interface{}
+}
+type streamTracker struct {
+	calls map[string]*callTracker
+	sync.Mutex
+}
+
+var streamingTracker = &streamTracker{calls: make(map[string]*callTracker)}
+
+func (handler *APIHandler) getStreamingTracker(method string, done chan<- bool) *callTracker {
+	streamingTracker.Lock()
+	defer streamingTracker.Unlock()
+	if _, ok := streamingTracker.calls[method]; ok {
+		// bail out the other packet in thread
+		log.Debugf("%s streaming call already running. Exiting it", method)
+		done <- true
+		log.Debugf("Last %s exited. Continuing ...", method)
+	} else {
+		streamingTracker.calls[method] = &callTracker{failedPacket: nil}
 	}
+	return streamingTracker.calls[method]
+}
+
+func (handler *APIHandler) flushFailedPackets(tracker *callTracker) error {
+	if tracker.failedPacket != nil {
+		switch tracker.failedPacket.(type) {
+		case openflow_13.PacketIn:
+			log.Debug("Enqueueing last failed packetIn")
+			handler.packetInQueue <- tracker.failedPacket.(openflow_13.PacketIn)
+		case openflow_13.ChangeEvent:
+			log.Debug("Enqueueing last failed changeEvent")
+			handler.changeEventQueue <- tracker.failedPacket.(openflow_13.ChangeEvent)
+		}
+	}
+	return nil
 }
 
 func (handler *APIHandler) ReceivePacketsIn(
 	empty *empty.Empty,
 	packetsIn voltha.VolthaService_ReceivePacketsInServer,
 ) error {
+	var streamingTracker = handler.getStreamingTracker("ReceivePacketsIn", handler.packetInQueueDone)
 	log.Debugw("ReceivePacketsIn-request", log.Fields{"packetsIn": packetsIn})
 
+	handler.flushFailedPackets(streamingTracker)
+
+loop:
 	for {
-		// Dequeue a packet
-		if packets, err := handler.packetInQueue.Get(1); err == nil {
-			log.Debugw("dequeued-packet", log.Fields{"packet": packets[0]})
-			if packet, ok := packets[0].(openflow_13.PacketIn); ok {
-				log.Debugw("sending-packet-in", log.Fields{"packet": packet})
-				if err := packetsIn.Send(&packet); err != nil {
-					log.Errorw("failed-to-send-packet", log.Fields{"error": err})
+		select {
+		case packet := <-handler.packetInQueue:
+			log.Debugw("dequeued-packet from channel", log.Fields{"packet": packet})
+			log.Debugw("sending-packet-in", log.Fields{"packet": packet})
+			if err := packetsIn.Send(&packet); err != nil {
+				log.Errorw("failed-to-send-packet", log.Fields{"error": err})
+				// save the last failed packet in
+				streamingTracker.failedPacket = packet
+			} else {
+				if streamingTracker.failedPacket != nil {
+					// reset last failed packet saved to avoid flush
+					streamingTracker.failedPacket = nil
 				}
 			}
+		case <-handler.packetInQueueDone:
+			log.Debug("Another ReceivePacketsIn running. Bailing out ...")
+			break loop
 		}
 	}
-	//TODO: FInd an elegant way to get out of the above loop when the Core is stopped
+
+	//TODO: Find an elegant way to get out of the above loop when the Core is stopped
+	return nil
 }
 
 func (handler *APIHandler) sendChangeEvent(deviceId string, portStatus *openflow_13.OfpPortStatus) {
@@ -838,29 +890,42 @@ func (handler *APIHandler) sendChangeEvent(deviceId string, portStatus *openflow
 	//}
 	event := openflow_13.ChangeEvent{Id: deviceId, Event: &openflow_13.ChangeEvent_PortStatus{PortStatus: portStatus}}
 	log.Debugw("sendChangeEvent", log.Fields{"event": event})
-	// Enqueue the change event
-	if err := handler.changeEventQueue.Put(event); err != nil {
-		log.Errorw("failed-to-enqueue-change-event", log.Fields{"error": err})
-	}
+	handler.changeEventQueue <- event
 }
 
 func (handler *APIHandler) ReceiveChangeEvents(
 	empty *empty.Empty,
 	changeEvents voltha.VolthaService_ReceiveChangeEventsServer,
 ) error {
+	var streamingTracker = handler.getStreamingTracker("ReceiveChangeEvents", handler.changeEventQueueDone)
 	log.Debugw("ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
+
+	handler.flushFailedPackets(streamingTracker)
+
+loop:
 	for {
+		select {
 		// Dequeue a change event
-		if events, err := handler.changeEventQueue.Get(1); err == nil {
-			log.Debugw("dequeued-change-event", log.Fields{"event": events[0]})
-			if event, ok := events[0].(openflow_13.ChangeEvent); ok {
-				log.Debugw("sending-change-event", log.Fields{"event": event})
-				if err := changeEvents.Send(&event); err != nil {
-					log.Errorw("failed-to-send-change-event", log.Fields{"error": err})
+		case event := <-handler.changeEventQueue:
+			log.Debugw("dequeued-change-event from channel", log.Fields{"event": event})
+			log.Debugw("sending-change-event", log.Fields{"event": event})
+			if err := changeEvents.Send(&event); err != nil {
+				log.Errorw("failed-to-send-change-event", log.Fields{"error": err})
+				// save last failed changeevent
+				streamingTracker.failedPacket = event
+			} else {
+				if streamingTracker.failedPacket != nil {
+					// reset last failed event saved on success to avoid flushing
+					streamingTracker.failedPacket = nil
 				}
 			}
+		case <-handler.changeEventQueueDone:
+			log.Debug("Another ReceiveChangeEvents already running. Bailing out ...")
+			break loop
 		}
 	}
+
+	return nil
 }
 
 func (handler *APIHandler) Subscribe(
