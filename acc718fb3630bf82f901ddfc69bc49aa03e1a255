@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "22a8ae2c_a58863ea",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-21T21:15:00Z",
+      "side": 1,
+      "message": "should this be of type `time.Duration`? and then the user can specify things like \"1s\" or \"1m\".\n\nthis is my attempt to move all parameters that are meant to be durations to actually durations.",
+      "revId": "acc718fb3630bf82f901ddfc69bc49aa03e1a255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4310aaf6_66e4cb40",
         "filename": "rw_core/core/core.go",
         "patchSetId": 1
