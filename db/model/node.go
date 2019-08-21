@@ -457,7 +457,7 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	log.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid": txid, "makeBranch": makeBranch})
+	log.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid": txid})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -626,7 +626,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	log.Debugw("node-add-request", log.Fields{"path": path, "txid": txid, "makeBranch": makeBranch})
+	log.Debugw("node-add-request", log.Fields{"path": path, "txid": txid})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]

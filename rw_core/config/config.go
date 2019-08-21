@@ -52,6 +52,8 @@ const (
 	default_CoreTimeout               = int64(500)
 	default_CoreBindingKey            = "voltha_backend_name"
 	default_CorePairTopic             = "rwcore_1"
+	default_MaxConnectionRetries      = -1 // retries forever
+	default_ConnectionRetryInterval   = 2  // in seconds
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -84,6 +86,8 @@ type RWCoreFlags struct {
 	DefaultCoreTimeout        int64
 	CoreBindingKey            string
 	CorePairTopic             string
+	MaxConnectionRetries      int
+	ConnectionRetryInterval   int
 }
 
 func init() {
@@ -120,6 +124,8 @@ func NewRWCoreFlags() *RWCoreFlags {
 		DefaultCoreTimeout:        default_CoreTimeout,
 		CoreBindingKey:            default_CoreBindingKey,
 		CorePairTopic:             default_CorePairTopic,
+		MaxConnectionRetries:      default_MaxConnectionRetries,
+		ConnectionRetryInterval:   default_ConnectionRetryInterval,
 	}
 	return &rwCoreFlag
 }
@@ -200,6 +206,12 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Core pairing group topic")
 	flag.StringVar(&cf.CorePairTopic, "core_pair_topic", default_CorePairTopic, help)
+
+	help = fmt.Sprintf("The number of retries to connect to a dependent component")
+	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", default_MaxConnectionRetries, help)
+
+	help = fmt.Sprintf("The number of seconds between each connection retry attempt ")
+	flag.IntVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
 
 	flag.Parse()
 }
