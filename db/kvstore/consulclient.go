@@ -63,6 +63,12 @@ func NewConsulClient(addr string, timeout int) (*ConsulClient, error) {
 	return &ConsulClient{consul: consul, doneCh: &doneCh, watchedChannelsContext: wChannelsContext, keyReservations: reservations}, nil
 }
 
+// IsConnectionUp returns whether the connection to the Consul KV store is up
+func (c *ConsulClient) IsConnectionUp(timeout int) bool {
+	log.Error("Unimplemented function")
+	return false
+}
+
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
 func (c *ConsulClient) List(key string, timeout int, lock ...bool) (map[string]*KVPair, error) {

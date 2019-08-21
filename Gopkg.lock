@@ -767,6 +767,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Shopify/sarama",
     "github.com/bclicn/color",
     "github.com/boljen/go-bitmap",
     "github.com/bsm/sarama-cluster",
