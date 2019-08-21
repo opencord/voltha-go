@@ -1,60 +1,116 @@
 {
-  "devices" : {
-    "of:00000000ac110001" : {
-      "accessDevice" : {
-        "uplink" : "65536",
-        "vlan" : "1"
+  "devices": {
+    "of:00000000ac110001": {
+      "accessDevice": {
+        "uplink": "65536",
+        "vlan": "1"
       },
-      "basic" : {
-        "driver" : "voltha"
+      "basic": {
+        "driver": "voltha"
       }
     }
   },
-  "apps" : {
-    "org.opencord.dhcpl2relay" : {
-      "dhcpl2relay" : {
-        "useOltUplinkForServerPktInOut" : true
+  "apps": {
+    "org.opencord.dhcpl2relay": {
+      "dhcpl2relay": {
+        "useOltUplinkForServerPktInOut": true
       }
     },
-    "org.opencord.aaa" : {
-      "AAA" : {
-        "radiusIp" : "172.17.0.1",
-        "radiusServerPort" : "1812",
-        "radiusSecret" : "SECRET",
-        "nasIp" : "172.17.0.1",
-        "radiusConnectionType" : "socket"
+    "org.opencord.kafka": {
+      "kafka": {
+        "bootstrapServers": "172.17.0.1:9092"
       }
     },
-    "org.opencord.sadis" : {
-      "sadis" : {
-        "integration" : {
-          "cache" : {
-            "enabled" : true,
-            "maxsize" : 50,
-            "ttl" : "PT1m"
+    "org.opencord.aaa": {
+      "AAA": {
+        "radiusIp": "172.17.0.1",
+        "radiusServerPort": "1812",
+        "radiusSecret": "SECRET",
+        "nasIp": "172.17.0.1",
+        "radiusConnectionType": "socket"
+      }
+    },
+    "org.opencord.sadis": {
+      "sadis": {
+        "integration": {
+          "cache": {
+            "enabled": true,
+            "maxsize": 50,
+            "ttl": "PT1m"
           }
         },
-        "entries" : [ {
-          "id" : "BBSIMOLT000",
-          "uplinkPort" : 65536,
-          "hardwareIdentifier" : "00:00:ac:11:00:01",
-          "ipAddress" : "172.17.0.1",
-          "nasId" : "BBSIMOLT000"
-        }, {
-          "id" : "BBSM00000001-1",
-          "cTag" : 900,
-          "sTag" : 900,
-          "nasPortId" : "BBSM00000001-1",
-          "circuitId" : "BBSM00000001-1",
-          "remoteId" : "BBSIMOLT000"
-        }, {
-          "id" : "BBSM00000002-1",
-          "cTag" : 901,
-          "sTag" : 901,
-          "nasPortId" : "BBSM00000002-1",
-          "circuitId" : "BBSM00000002-1",
-          "remoteId" : "BBSIMOLT000"
-        }]
+        "entries": [
+          {
+            "id": "BBSIMOLT000",
+            "uplinkPort": 65536,
+            "hardwareIdentifier": "00:00:ac:11:00:01",
+            "ipAddress": "172.17.0.1",
+            "nasId": "BBSIMOLT000"
+          },
+          {
+            "id": "BBSM00000001-1",
+            "cTag": 900,
+            "sTag": 900,
+            "nasPortId": "BBSM00000001-1",
+            "circuitId": "BBSM00000001-1",
+            "remoteId": "BBSIMOLT000",
+            "technologyProfileId": 64,
+            "upstreamBandwidthProfile": "Default",
+            "downstreamBandwidthProfile": "Default"
+          },
+          {
+            "id": "BBSM00000001-2",
+            "cTag": 900,
+            "sTag": 900,
+            "nasPortId": "BBSM00000001-2",
+            "circuitId": "BBSM00000001-2",
+            "remoteId": "BBSIMOLT000",
+            "technologyProfileId": 64,
+            "upstreamBandwidthProfile": "Default",
+            "downstreamBandwidthProfile": "Default"
+          },
+          {
+            "id": "BBSM00000001-3",
+            "cTag": 900,
+            "sTag": 900,
+            "nasPortId": "BBSM00000001-3",
+            "circuitId": "BBSM00000001-3",
+            "remoteId": "BBSIMOLT000",
+            "technologyProfileId": 64,
+            "upstreamBandwidthProfile": "Default",
+            "downstreamBandwidthProfile": "Default"
+          },
+          {
+            "id": "BBSM00000001-4",
+            "cTag": 900,
+            "sTag": 900,
+            "nasPortId": "BBSM00000001-4",
+            "circuitId": "BBSM00000001-4",
+            "remoteId": "BBSIMOLT000",
+            "technologyProfileId": 64,
+            "upstreamBandwidthProfile": "Default",
+            "downstreamBandwidthProfile": "Default"
+          }
+        ]
+      },
+      "bandwidthprofile": {
+        "integration": {
+          "cache": {
+            "enabled": true,
+            "maxsize": 40,
+            "ttl": "PT1m"
+          }
+        },
+        "entries": [
+          {
+            "id": "Default",
+            "cir": 1000000,
+            "cbs": 1001,
+            "eir": 1002,
+            "ebs": 1003,
+            "air": 1004
+          }
+        ]
       }
     }
   }
