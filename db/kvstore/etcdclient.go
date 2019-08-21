@@ -59,6 +59,16 @@ func NewEtcdClient(addr string, timeout int) (*EtcdClient, error) {
 		lockToSessionMap: lockSessionMap}, nil
 }
 
+// IsConnectionUp returns whether the connection to the Etcd KV store is up.  If a timeout occurs then
+// it is assumed the connection is down or unreachable.
+func (c *EtcdClient) IsConnectionUp(timeout int) bool {
+	// Let's try to get a non existent key.  If the connection is up then there will be no error returned.
+	if _, err := c.Get("non-existent-key", timeout); err != nil {
+		return false
+	}
+	return true
+}
+
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
 func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KVPair, error) {
