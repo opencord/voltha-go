@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5b974124_993d2a27",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-21T20:54:23Z",
+      "side": 1,
+      "message": "Since this is at the start time then we are waiting for kafka to comes up as quickly as possible.   Nothing else happens. At this phase I don\u0027t see the benefits of exponential backup.",
+      "parentUuid": "4310aaf6_66e4cb40",
+      "revId": "acc718fb3630bf82f901ddfc69bc49aa03e1a255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b6a494f5_23e26c9c",
         "filename": "rw_core/core/core.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-21T20:43:12Z",
       "side": 1,
       "message": "Is it be feasible to use events/channels instead of polling?",
+      "revId": "acc718fb3630bf82f901ddfc69bc49aa03e1a255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35737f9e_bf5d225d",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-21T20:54:23Z",
+      "side": 1,
+      "message": "This is an API to be used to test connectivity with the KV store.  We are not really communicating with another routine.  If we use channel here then we will need to move the polling into the library as there are no channel available from etcd at this phase to push events.",
+      "parentUuid": "b6a494f5_23e26c9c",
       "revId": "acc718fb3630bf82f901ddfc69bc49aa03e1a255",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
