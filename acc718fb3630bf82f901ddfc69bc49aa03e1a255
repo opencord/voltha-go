@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "9b9a6f3c_e0c90c4b",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-21T21:27:52Z",
+      "side": 1,
+      "message": "Perhaps a separate JIRA that does all make more sense.",
+      "parentUuid": "9c0982bb_2d20308f",
+      "revId": "acc718fb3630bf82f901ddfc69bc49aa03e1a255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4310aaf6_66e4cb40",
         "filename": "rw_core/core/core.go",
         "patchSetId": 1
