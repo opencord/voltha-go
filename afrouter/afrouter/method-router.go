@@ -176,16 +176,16 @@ func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 	return nil
 }
 
-func (mr MethodRouter) Route(sel interface{}) *backend {
+func (mr MethodRouter) Route(sel interface{}) (*backend, *connection) {
 	switch sl := sel.(type) {
 	case *requestFrame:
 		if r, ok := mr.methodRouter[sl.metaKey][sl.methodInfo.method]; ok {
 			return r.Route(sel)
 		}
 		log.Errorf("Attept to route on non-existent method '%s'", sl.methodInfo.method)
-		return nil
+		return nil, nil
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
