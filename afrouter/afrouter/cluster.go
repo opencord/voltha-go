@@ -157,6 +157,7 @@ func (c *cluster) assignBackend(src grpc.ServerStream, f *nbFrame) (*backend, er
 	if err := src.RecvMsg(f); err != nil {
 		return nil, err
 	}
+	log.Debugf("Assigned backend %v", f.backend)
 	// Check that the backend was routable and actually has connections open.
 	// If it doesn't then return a nil backend to indicate this
 	if f.backend == nil {
