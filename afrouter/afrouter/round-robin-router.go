@@ -88,20 +88,20 @@ func (rr RoundRobinRouter) Name() string {
 	return rr.name
 }
 
-func (rr RoundRobinRouter) Route(sel interface{}) *backend {
+func (rr RoundRobinRouter) Route(sel interface{}) (*backend, *connection) {
 	var err error
 	switch sl := sel.(type) {
 	case *nbFrame:
 		// Since this is a round robin router just get the next backend
 		if *rr.currentBackend, err = rr.cluster.nextBackend(*rr.currentBackend, BackendSequenceRoundRobin); err == nil {
-			return *rr.currentBackend
+			return *rr.currentBackend, nil
 		} else {
 			sl.err = err
-			return nil
+			return nil, nil
 		}
 	default:
 		log.Errorf("Internal: invalid data type in Route call %v", sel)
-		return nil
+		return nil, nil
 	}
 }
 

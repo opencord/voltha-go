@@ -76,37 +76,37 @@ func (br BindingRouter) FindBackendCluster(becName string) *cluster {
 func (br BindingRouter) ReplyHandler(v interface{}) error {
 	return nil
 }
-func (br BindingRouter) Route(sel interface{}) *backend {
+func (br BindingRouter) Route(sel interface{}) (*backend, *connection) {
 	var err error
 	switch sl := sel.(type) {
 	case *nbFrame:
 		if b, ok := br.bindings[sl.metaVal]; ok == true { // binding exists, just return it
-			return b
+			return b, nil
 		} else { // establish a new binding or error.
 			if sl.metaVal != "" {
 				err = errors.New(fmt.Sprintf("Attempt to route on non-existent metadata value '%s' in key '%s'",
 					sl.metaVal, sl.metaKey))
 				log.Error(err)
 				sl.err = err
-				return nil
+				return nil, nil
 			}
 			if sl.methodInfo.method != br.bindingMethod {
 				err = errors.New(fmt.Sprintf("Binding must occur with method %s but attempted with method %s",
 					br.bindingMethod, sl.methodInfo.method))
 				log.Error(err)
 				sl.err = err
-				return nil
+				return nil, nil
 			}
 			log.Debugf("MUST CREATE A NEW BINDING MAP ENTRY!!")
 			if len(br.bindings) < len(br.beCluster.backends) {
 				if *br.currentBackend, err = br.beCluster.nextBackend(*br.currentBackend, BackendSequenceRoundRobin); err == nil {
 					// Use the name of the backend as the metaVal for this new binding
 					br.bindings[(*br.currentBackend).name] = *br.currentBackend
-					return *br.currentBackend
+					return *br.currentBackend, nil
 				} else {
 					log.Error(err)
 					sl.err = err
-					return nil
+					return nil, nil
 				}
 			} else {
 				err = errors.New(fmt.Sprintf("Backends exhausted in attempt to bind for metakey '%s' with value '%s'",
@@ -115,9 +115,9 @@ func (br BindingRouter) Route(sel interface{}) *backend {
 				sl.err = err
 			}
 		}
-		return nil
+		return nil, nil
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
