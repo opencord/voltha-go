@@ -73,6 +73,12 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 	var errStr strings.Builder
 	log.Debugf("There are %d connections to open", len(be.connections))
 	for _, cn := range be.connections {
+		// If source-router was used, it will indicate a specific connection to be used
+		if f.connection != nil && f.connection != cn {
+			log.Debugf("Skipping connection %s. Looking for %s", cn.name, f.connection.name)
+			continue
+		}
+
 		// Copy in the metadata
 		if cn.getState() == connectivity.Ready && cn.getConn() != nil {
 			log.Debugf("Opening southbound stream for connection '%s'", cn.name)
