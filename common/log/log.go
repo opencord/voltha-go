@@ -286,6 +286,17 @@ func UpdateAllLoggers(defaultFields Fields) error {
 	return nil
 }
 
+// Return a list of all packages that have individually-configured loggers
+func GetPackageNames() []string {
+	i := 0
+	keys := make([]string, len(loggers))
+	for k := range loggers {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
+
 // UpdateLogger deletes the logger associated with a caller's package and creates a new logger with the
 // defaultFields.  If a calling package is holding on to a Logger reference obtained from AddPackage invocation, then
 // that package needs to invoke UpdateLogger if it needs to make changes to the default fields and obtain a new logger
@@ -371,6 +382,11 @@ func GetPackageLogLevel(packageName ...string) (int, error) {
 	return 0, errors.New(fmt.Sprintf("unknown-package-%s", name))
 }
 
+//GetDefaultLogLevel gets the log level used for packages that don't have specific loggers
+func GetDefaultLogLevel() int {
+	return levelToInt(cfg.Level.Level())
+}
+
 //SetLogLevel sets the log level for the logger corresponding to the caller's package
 func SetLogLevel(level int) error {
 	pkgName, _, _, _ := getCallerInfo()
@@ -380,6 +396,11 @@ func SetLogLevel(level int) error {
 	cfg := cfgs[pkgName]
 	setLevel(cfg, level)
 	return nil
+}
+
+//SetDefaultLogLevel sets the log level used for packages that don't have specific loggers
+func SetDefaultLogLevel(level int) {
+	setLevel(cfg, level)
 }
 
 // CleanUp flushed any buffered log entries. Applications should take care to call

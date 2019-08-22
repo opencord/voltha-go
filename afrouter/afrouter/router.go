@@ -27,7 +27,11 @@ var allRouters = make(map[string]Router)
 // The router interface
 type Router interface {
 	Name() string
-	Route(interface{}) *backend
+
+	// Route() returns a backend and a connection. The connection is optional and if unspecified, then any
+	// connection on the backend may be used.
+	Route(interface{}) (*backend, *connection)
+
 	Service() string
 	IsStreaming(string) (bool, bool)
 	BackendCluster(string, string) (*cluster, error)
@@ -60,6 +64,12 @@ func newSubRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 		return r, err
 	case RouteTypeRoundRobin:
 		r, err := newRoundRobinRouter(rconf, config)
+		if err == nil {
+			allRouters[rconf.Name+config.Name] = r
+		}
+		return r, err
+	case RouteTypeSource:
+		r, err := newSourceRouter(rconf, config)
 		if err == nil {
 			allRouters[rconf.Name+config.Name] = r
 		}
