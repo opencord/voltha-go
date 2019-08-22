@@ -300,7 +300,7 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:5ede0ad5117fba74316edc0e824a820b8e3f7fa7e7a9bbbe6807a074dab26360"
+  digest = "1:bca55336c1cf0f6a5c10ab41d49b5a3022872677553815b4e74ba4337a16b27f"
   name = "github.com/opencord/voltha-protos"
   packages = [
     "go/afrouter",
@@ -312,8 +312,8 @@
     "go/voltha",
   ]
   pruneopts = "T"
-  revision = "792553b747df7f751d864f7c638aa5b667c0993e"
-  version = "1.0.0"
+  revision = "78ea333b402a315e5d755cb438fc842d8449882a"
+  version = "1.0.1"
 
 [[projects]]
   branch = "master"

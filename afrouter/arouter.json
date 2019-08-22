@@ -79,6 +79,17 @@
           ]
         },
         {
+          "name": "logger",
+          "proto_descriptor": "voltha.pb",
+          "type": "source",
+          "routing_field": "component_name",
+          "backend_cluster": "ro_vcore",
+          "methods": [
+            "UpdateLogLevel",
+            "GetLogLevels"
+          ]
+        },
+        {
           "name": "read_only",
           "type": "round_robin",
           "association": "round_robin",
