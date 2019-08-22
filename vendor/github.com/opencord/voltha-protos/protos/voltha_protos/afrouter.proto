@@ -6,10 +6,15 @@ option go_package = "github.com/opencord/voltha-protos/go/afrouter";
 
 package afrouter;
 
+// For logging
+import "voltha_protos/common.proto";
+
 service Configuration {
-    	rpc SetConnection (Conn) returns (Result) {}
+   	rpc SetConnection (Conn) returns (Result) {}
 	rpc SetAffinity(Affinity) returns (Result) {}
 	rpc GetGoroutineCount(Empty) returns (Count) {}
+	rpc UpdateLogLevel(common.Logging) returns (Empty) {}
+	rpc GetLogLevels(common.LoggingComponent) returns (common.Loggings) {}
 }
 
 message Result {
@@ -43,3 +48,4 @@ message Affinity {
 	string backend = 4;
 	string id = 5;
 }
+
