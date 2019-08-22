@@ -133,11 +133,12 @@ const (
 	RouteTypeRpcAffinityHeader
 	RouteTypeBinding
 	RouteTypeRoundRobin
+	RouteTypeSource
 )
 
 // String names for display in error messages.
-var stringToRouteType = map[string]routeType{"rpc_affinity_message": RouteTypeRpcAffinityMessage, "rpc_affinity_header": RouteTypeRpcAffinityHeader, "binding": RouteTypeBinding, "round_robin": RouteTypeRoundRobin}
-var routeTypeToString = map[routeType]string{RouteTypeRpcAffinityMessage: "rpc_affinity_message", RouteTypeRpcAffinityHeader: "rpc_affinity_header", RouteTypeBinding: "binding", RouteTypeRoundRobin: "round_robin"}
+var stringToRouteType = map[string]routeType{"rpc_affinity_message": RouteTypeRpcAffinityMessage, "rpc_affinity_header": RouteTypeRpcAffinityHeader, "binding": RouteTypeBinding, "round_robin": RouteTypeRoundRobin, "source": RouteTypeSource}
+var routeTypeToString = map[routeType]string{RouteTypeRpcAffinityMessage: "rpc_affinity_message", RouteTypeRpcAffinityHeader: "rpc_affinity_header", RouteTypeBinding: "binding", RouteTypeRoundRobin: "round_robin", RouteTypeSource: "source"}
 
 func (t routeType) String() string {
 	if str, have := routeTypeToString[t]; have {
