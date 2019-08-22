@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/opencord/voltha-go/common/log"
 	pb "github.com/opencord/voltha-protos/go/afrouter"
+	common_pb "github.com/opencord/voltha-protos/go/common"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"net"
@@ -217,6 +218,52 @@ func (aa ArouterApi) SetConnection(ctx context.Context, in *pb.Conn) (*pb.Result
 
 func (aa ArouterApi) GetGoroutineCount(ctx context.Context, in *pb.Empty) (*pb.Count, error) {
 	return &pb.Count{Count: uint32(runtime.NumGoroutine())}, nil
+}
+
+func (aa ArouterApi) UpdateLogLevel(ctx context.Context, in *common_pb.Logging) (*pb.Result, error) {
+	intLevel := int(in.Level)
+
+	log.Warnf("SetLogLevel %s %d", in.PackageName, intLevel)
+
+	if in.PackageName == "" {
+		log.Warnf("XXX one")
+		log.SetAllLogLevel(intLevel)
+		log.SetDefaultLogLevel(intLevel)
+	} else if in.PackageName == "default" {
+		log.Warnf("XXX two")
+		log.SetDefaultLogLevel(intLevel)
+	} else {
+		log.Warnf("XXX three")
+		log.SetPackageLogLevel(in.PackageName, intLevel)
+	}
+
+	return &pb.Result{Success: true, Error: ""}, nil
+}
+
+func (aa ArouterApi) GetLogLevels(ctx context.Context, in *pb.Empty) (*common_pb.Loggings, error) {
+	logLevels := &common_pb.Loggings{}
+
+	// do the per-package log levels
+	for _, packageName := range log.GetPackageNames() {
+		level, err := log.GetPackageLogLevel(packageName)
+		if err != nil {
+			return nil, err
+		}
+		logLevel := &common_pb.Logging{
+			ComponentName: "arouter",
+			PackageName:   packageName,
+			Level:         common_pb.LogLevel_LogLevel(level)}
+		logLevels.Items = append(logLevels.Items, logLevel)
+	}
+
+	// now do the default log level
+	logLevel := &common_pb.Logging{
+		ComponentName: "arouter",
+		PackageName:   "default",
+		Level:         common_pb.LogLevel_LogLevel(log.GetDefaultLogLevel())}
+	logLevels.Items = append(logLevels.Items, logLevel)
+
+	return logLevels, nil
 }
 
 func (aa *ArouterApi) serve() {
