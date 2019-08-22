@@ -50,6 +50,7 @@ type requestFrame struct {
 	payload    []byte
 	router     Router
 	backend    *backend
+	connection *connection // optional, if the router preferred one connection over another
 	err        error
 	methodInfo methodDetails
 	serialNo   uint64
@@ -79,12 +80,13 @@ func (cdc *transparentRoutingCodec) Unmarshal(data []byte, v interface{}) error 
 		t.payload = data
 		// This is were the afinity value is pulled from the payload
 		// and the backend selected.
-		t.backend = t.router.Route(v)
+		t.backend, t.connection = t.router.Route(v)
 		name := "<nil>"
 		if t.backend != nil {
 			name = t.backend.name
 		}
 		log.Debugf("Routing returned %s for method %s", name, t.methodInfo.method)
+
 		return nil
 	default:
 		return cdc.parentCodec.Unmarshal(data, v)
