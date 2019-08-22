@@ -33,6 +33,15 @@ type IDs = common.IDs
 // LogLevel from public import voltha_protos/common.proto
 type LogLevel = common.LogLevel
 
+// Logging from public import voltha_protos/common.proto
+type Logging = common.Logging
+
+// LoggingComponent from public import voltha_protos/common.proto
+type LoggingComponent = common.LoggingComponent
+
+// Loggings from public import voltha_protos/common.proto
+type Loggings = common.Loggings
+
 // AdminState from public import voltha_protos/common.proto
 type AdminState = common.AdminState
 
@@ -129,9 +138,6 @@ type AlarmFilter = voltha.AlarmFilter
 
 // AlarmFilters from public import voltha_protos/voltha.proto
 type AlarmFilters = voltha.AlarmFilters
-
-// Logging from public import voltha_protos/voltha.proto
-type Logging = voltha.Logging
 
 // CoreInstance from public import voltha_protos/voltha.proto
 type CoreInstance = voltha.CoreInstance
