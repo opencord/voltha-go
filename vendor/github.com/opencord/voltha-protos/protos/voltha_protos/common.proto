@@ -34,6 +34,22 @@ message LogLevel {
     }
 }
 
+message Logging {
+    common.LogLevel.LogLevel level = 1;
+    string package_name = 2;
+    string component_name = 3;
+}
+
+// For GetLogLevels(), select component to query
+message LoggingComponent {
+    string component_name = 1;
+}
+
+// For returning multiple log levels
+message Loggings {
+	repeated Logging items = 1;
+}
+
 message AdminState {
     option (yang_child_rule) = MOVE_TO_PARENT_LEVEL;
 

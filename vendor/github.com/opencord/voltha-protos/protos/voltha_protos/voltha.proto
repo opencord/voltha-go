@@ -70,11 +70,6 @@ message AlarmFilters {
     repeated AlarmFilter filters = 1;
 }
 
-message Logging {
-    common.LogLevel.LogLevel level = 1;
-    string package_name = 2;
-}
-
 // CoreInstance represents a core instance.  It is data held in memory when a core
 // is running.  This data is not persistent.
 message CoreInstance {
@@ -163,7 +158,14 @@ message FlowMetadata {
 service VolthaService {
 
     // Get more information on a given physical device
-    rpc UpdateLogLevel(Logging) returns(google.protobuf.Empty) {
+    rpc UpdateLogLevel(common.Logging) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/logs"
+            body: "*"
+        };
+    }
+
+    rpc GetLogLevels(common.LoggingComponent) returns (common.Loggings) {
         option (google.api.http) = {
             get: "/api/v1/logs"
         };

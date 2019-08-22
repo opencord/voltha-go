@@ -111,8 +111,18 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 	// connections are non-existent.
 	var atLeastOne = false
 	var errStr strings.Builder
+
 	log.Debugf("There are %d/%d streams to open", len(be.openConns), len(be.connections))
+	if nf.connection != nil {
+		// Debug statement triggered by source router. Other routers have no connection preference.
+		log.Debugf("Looking for connection %s", nf.connection.name)
+	}
 	for cn, conn := range be.openConns {
+		// If source-router was used, it will indicate a specific connection to be used
+		if nf.connection != nil && nf.connection != cn {
+			continue
+		}
+
 		log.Debugf("Opening stream for connection '%s'", cn.name)
 		if stream, err := grpc.NewClientStream(r.ctx, clientStreamDescForProxying, conn, r.methodInfo.all); err != nil {
 			log.Debugf("Failed to create a client stream '%s', %v", cn.name, err)
