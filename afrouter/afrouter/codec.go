@@ -42,6 +42,7 @@ type sbFrame struct {
 	router  Router
 	method  string
 	backend *backend
+	//connection *connection // optional, if the router preferred one connection over another
 	mutex   sync.Mutex
 	metaKey string
 	metaVal string
@@ -52,6 +53,7 @@ type nbFrame struct {
 	payload    []byte
 	router     Router
 	backend    *backend
+	connection *connection // optional, if the router preferred one connection over another
 	err        error
 	methodInfo methodDetails
 	serialNo   uint64
@@ -81,7 +83,7 @@ func (cdc *transparentRoutingCodec) Unmarshal(data []byte, v interface{}) error 
 		t.payload = data
 		// This is were the afinity value is pulled from the payload
 		// and the backend selected.
-		t.backend = t.router.Route(v)
+		t.backend, t.connection = t.router.Route(v)
 		log.Debugf("Routing returned %v for method %s", t.backend, t.methodInfo.method)
 		return nil
 	default:
