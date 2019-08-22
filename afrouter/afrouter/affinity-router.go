@@ -282,7 +282,7 @@ func (ar AffinityRouter) decodeProtoField(payload []byte, fieldId byte) (string,
 	}
 }
 
-func (ar AffinityRouter) Route(sel interface{}) *backend {
+func (ar AffinityRouter) Route(sel interface{}) (*backend, *connection) {
 	switch sl := sel.(type) {
 	case *nbFrame:
 		log.Debugf("Route called for nbFrame with method %s", sl.methodInfo.method)
@@ -293,17 +293,17 @@ func (ar AffinityRouter) Route(sel interface{}) *backend {
 			log.Debugf("Method '%s' affinity binds on reply", sl.methodInfo.method)
 			// Just round robin route the southbound request
 			if *ar.currentBackend, err = ar.cluster.nextBackend(*ar.currentBackend, BackendSequenceRoundRobin); err == nil {
-				return *ar.currentBackend
+				return *ar.currentBackend, nil
 			} else {
 				sl.err = err
-				return nil
+				return nil, nil
 			}
 		}
 		// Not a south affinity binding method, proceed with north affinity binding.
 		if selector, err := ar.decodeProtoField(sl.payload, ar.methodMap[sl.methodInfo.method]); err == nil {
 			log.Debugf("Establishing affinity for selector: %s", selector)
 			if rtrn, ok := ar.affinity[selector]; ok {
-				return rtrn
+				return rtrn, nil
 			} else {
 				// The selector isn't in the map, create a new affinity mapping
 				log.Debugf("MUST CREATE A NEW AFFINITY MAP ENTRY!!")
@@ -312,19 +312,19 @@ func (ar AffinityRouter) Route(sel interface{}) *backend {
 					ar.setAffinity(selector, *ar.currentBackend)
 					//ar.affinity[selector] = *ar.currentBackend
 					//log.Debugf("New affinity set to backend %s",(*ar.currentBackend).name)
-					return *ar.currentBackend
+					return *ar.currentBackend, nil
 				} else {
 					sl.err = err
-					return nil
+					return nil, nil
 				}
 			}
 		}
 	default:
 		log.Errorf("Internal: invalid data type in Route call %v", sel)
-		return nil
+		return nil, nil
 	}
 	log.Errorf("Bad lookup in affinity map %v", ar.affinity)
-	return nil
+	return nil, nil
 }
 
 func (ar AffinityRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, string, error) {
