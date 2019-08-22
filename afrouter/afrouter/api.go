@@ -219,6 +219,65 @@ func (aa ArouterApi) GetGoroutineCount(ctx context.Context, in *pb.Empty) (*pb.C
 	return &pb.Count{Count: uint32(runtime.NumGoroutine())}, nil
 }
 
+func (aa ArouterApi) SetLogLevel(ctx context.Context, in *pb.LogLevel) (*pb.Result, error) {
+
+	intLevel, err := log.StringToIntLevel(in.Level)
+
+	log.Warnf("SetLogLevel %s %s %d", in.PackageName, in.Level, intLevel)
+
+	if err != nil {
+		return &pb.Result{Success: false, Error: err.Error()}, nil
+	}
+
+	if in.PackageName == "" {
+		log.Warnf("XXX one")
+		log.SetAllLogLevel(intLevel)
+		log.SetDefaultLogLevel(intLevel)
+	} else if in.PackageName == "default" {
+		log.Warnf("XXX two")
+		log.SetDefaultLogLevel(intLevel)
+	} else {
+		log.Warnf("XXX three")
+		log.SetPackageLogLevel(in.PackageName, intLevel)
+	}
+
+	return &pb.Result{Success: true, Error: ""}, nil
+}
+
+func (aa ArouterApi) GetLogLevels(ctx context.Context, in *pb.Empty) (*pb.LogLevels, error) {
+	logLevels := &pb.LogLevels{}
+
+	// do the per-package log levels
+	for _, packageName := range log.GetPackageNames() {
+		level, err := log.GetPackageLogLevel(packageName)
+		if err != nil {
+			return nil, err
+		}
+		levelString, err := log.IntLevelToString(level)
+		if err != nil {
+			return nil, err
+		}
+		logLevel := &pb.LogLevel{
+			ComponentName: "arouter",
+			PackageName:   packageName,
+			Level:         levelString}
+		logLevels.Items = append(logLevels.Items, logLevel)
+	}
+
+	// now do the default log level
+	levelString, err := log.IntLevelToString(log.GetDefaultLogLevel())
+	if err != nil {
+		return nil, err
+	}
+	logLevel := &pb.LogLevel{
+		ComponentName: "arouter",
+		PackageName:   "default",
+		Level:         levelString}
+	logLevels.Items = append(logLevels.Items, logLevel)
+
+	return logLevels, nil
+}
+
 func (aa *ArouterApi) serve() {
 	// Start a serving thread
 	go func() {
