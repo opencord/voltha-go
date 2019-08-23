@@ -257,28 +257,32 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 	var flowsToDelete []*ofp.OfpFlowStats
 	var groupsToDelete []*ofp.OfpGroupEntry
 	var updatedGroups []*ofp.OfpGroupEntry
+	var flowsToAdd []*ofp.OfpFlowStats
+	var groupsToAdd []*ofp.OfpGroupEntry
 
 	// Process flows
 	for _, flow := range newFlows {
 		updatedFlows = append(updatedFlows, flow)
+		if fu.FindFlows(existingFlows.Items, flow) == -1 { // does not exist now
+			flowsToAdd = append(flowsToAdd, flow)
+		}
 	}
 	for _, flow := range existingFlows.Items {
-		if idx := fu.FindFlows(newFlows, flow); idx == -1 {
-			updatedFlows = append(updatedFlows, flow)
-		} else {
-			flowsToDelete = append(flowsToDelete, flow)
+		if fu.FindFlows(newFlows, flow) == -1 {
+			updatedFlows = append(updatedFlows, flow) // add existing flows
 		}
 	}
 
 	// Process groups
 	for _, g := range newGroups {
 		updatedGroups = append(updatedGroups, g)
+		if fu.FindGroup(existingGroups.Items, g.Desc.GroupId) == -1 { // does not exist now
+			groupsToAdd = append(groupsToAdd, g)
+		}
 	}
 	for _, group := range existingGroups.Items {
-		if fu.FindGroup(newGroups, group.Desc.GroupId) == -1 { // does not exist now
-			updatedGroups = append(updatedGroups, group)
-		} else {
-			groupsToDelete = append(groupsToDelete, group)
+		if fu.FindGroup(newGroups, group.Desc.GroupId) == -1 {
+			updatedGroups = append(updatedGroups, group) // Add existing groups
 		}
 	}
 
@@ -306,11 +310,11 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 
 	} else {
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: newFlows},
+			ToAdd:    &voltha.Flows{Items: flowsToAdd},
 			ToRemove: &voltha.Flows{Items: flowsToDelete},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: newGroups},
+			ToAdd:    &voltha.FlowGroups{Items: groupsToAdd},
 			ToRemove: &voltha.FlowGroups{Items: groupsToDelete},
 			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
