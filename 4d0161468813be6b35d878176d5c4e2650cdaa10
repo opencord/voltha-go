@@ -16,6 +16,24 @@
       "revId": "4d0161468813be6b35d878176d5c4e2650cdaa10",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7aedd96_9eadb376",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-08-23T14:09:38Z",
+      "side": 1,
+      "message": "1. Flows should be added only  if device does not\n    have it before \n2.  Flow/group delete is handled as part of\n      another function DeleteFlowsAndGroups()",
+      "parentUuid": "b555ae24_4eea838b",
+      "revId": "4d0161468813be6b35d878176d5c4e2650cdaa10",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
