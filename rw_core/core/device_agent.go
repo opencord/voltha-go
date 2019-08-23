@@ -255,35 +255,42 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 
 	var updatedFlows []*ofp.OfpFlowStats
 	var flowsToDelete []*ofp.OfpFlowStats
-	var groupsToDelete []*ofp.OfpGroupEntry
 	var updatedGroups []*ofp.OfpGroupEntry
+	var flowsToAdd []*ofp.OfpFlowStats
+	var groupsToAdd []*ofp.OfpGroupEntry
 
 	// Process flows
 	for _, flow := range newFlows {
 		updatedFlows = append(updatedFlows, flow)
+		if idx := fu.FindFlows(existingFlows.Items, flow); idx == -1 { // does not exist now , add new flow
+			flowsToAdd = append(flowsToAdd, flow)
+		}
 	}
 	for _, flow := range existingFlows.Items {
 		if idx := fu.FindFlows(newFlows, flow); idx == -1 {
-			updatedFlows = append(updatedFlows, flow)
+			updatedFlows = append(updatedFlows, flow) // append existing flows
 		} else {
+			// OF-1.3.1: If a flow entry with identical match fields and priority already resides , clear old flow and add new flow
 			flowsToDelete = append(flowsToDelete, flow)
+			flowsToAdd = append(flowsToAdd, newFlows[idx])
 		}
 	}
 
 	// Process groups
 	for _, g := range newGroups {
 		updatedGroups = append(updatedGroups, g)
+		if fu.FindGroup(existingGroups.Items, g.Desc.GroupId) == -1 { // does not exist now
+			groupsToAdd = append(groupsToAdd, g)
+		}
 	}
 	for _, group := range existingGroups.Items {
-		if fu.FindGroup(newGroups, group.Desc.GroupId) == -1 { // does not exist now
-			updatedGroups = append(updatedGroups, group)
-		} else {
-			groupsToDelete = append(groupsToDelete, group)
+		if fu.FindGroup(newGroups, group.Desc.GroupId) == -1 {
+			updatedGroups = append(updatedGroups, group) // Add existing groups
 		}
 	}
 
 	// Sanity check
-	if (len(updatedFlows) | len(flowsToDelete) | len(updatedGroups) | len(groupsToDelete)) == 0 {
+	if (len(updatedFlows) | len(flowsToDelete) | len(updatedGroups)) == 0 {
 		log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceId, "flows": newFlows, "groups": newGroups})
 		return nil
 	}
@@ -306,12 +313,12 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 
 	} else {
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: newFlows},
+			ToAdd:    &voltha.Flows{Items: flowsToAdd},
 			ToRemove: &voltha.Flows{Items: flowsToDelete},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: newGroups},
-			ToRemove: &voltha.FlowGroups{Items: groupsToDelete},
+			ToAdd:    &voltha.FlowGroups{Items: groupsToAdd},
+			ToRemove: &voltha.FlowGroups{Items: nil},
 			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
 		go agent.sendIncrementalFlowsToAdapters(device, flowChanges, groupChanges, flowMetadata, chAdapters)
