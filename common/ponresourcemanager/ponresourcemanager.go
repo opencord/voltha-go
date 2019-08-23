@@ -443,6 +443,67 @@ func (PONRMgr *PONResourceManager) InitResourceIDPool(Intf uint32, ResourceType 
 	return err
 }
 
+func (PONRMgr *PONResourceManager) ClearDeviceResourcePool() error {
+
+	//clear resource pool for all PON ports.
+
+	log.Debug("Clear device resource pool")
+
+	SharedPoolID := PONRMgr.PonResourceRanges[ONU_ID_SHARED_IDX].(uint32)
+	for _, Intf := range PONRMgr.IntfIDs {
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if ok := PONRMgr.ClearResourceIDPool(Intf, ONU_ID); !ok {
+			log.Error("Failed to clear ONU ID resource pool for intf %d", Intf)
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+
+	SharedPoolID = PONRMgr.PonResourceRanges[ALLOC_ID_SHARED_IDX].(uint32)
+	for _, Intf := range PONRMgr.IntfIDs {
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if ok := PONRMgr.ClearResourceIDPool(Intf, ALLOC_ID); !ok {
+			log.Errorf("Failed to clear ALLOC ID resource pool for intf %d", Intf)
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+
+	SharedPoolID = PONRMgr.PonResourceRanges[GEMPORT_ID_SHARED_IDX].(uint32)
+	for _, Intf := range PONRMgr.IntfIDs {
+
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if ok := PONRMgr.ClearResourceIDPool(Intf, GEMPORT_ID); !ok {
+			log.Error("Failed to clear GEMPORT ID resource pool for intf %d", Intf)
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+
+	SharedPoolID = PONRMgr.PonResourceRanges[FLOW_ID_SHARED_IDX].(uint32)
+	for _, Intf := range PONRMgr.IntfIDs {
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if ok := PONRMgr.ClearResourceIDPool(Intf, FLOW_ID); !ok {
+			log.Error("Failed to clear FLOW ID resource pool for intf %d", Intf)
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+	return nil
+}
+
 func (PONRMgr *PONResourceManager) FormatResource(IntfID uint32, StartIDx uint32, EndIDx uint32) ([]byte, error) {
 	/*
 	   Format resource as json.
