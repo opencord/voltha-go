@@ -34,6 +34,24 @@
       "revId": "4d0161468813be6b35d878176d5c4e2650cdaa10",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "719ca066_e92b74a0",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-23T16:36:13Z",
+      "side": 1,
+      "message": "Ok, so we do not have to delete an existing flow before updating it (assume it\u0027s a similar flow with minor change in it), correct?\n\nIf yes, then I would suggest to add a comment to this method and also remove the flowstodelete and groupstodelete variables.   The \"ToRemove\" attribute in both the FlowChanges and GroupChanges can just be assigned an empty array.",
+      "parentUuid": "a7aedd96_9eadb376",
+      "revId": "4d0161468813be6b35d878176d5c4e2650cdaa10",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
