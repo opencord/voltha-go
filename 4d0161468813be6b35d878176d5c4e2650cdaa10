@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b555ae24_4eea838b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-23T13:45:55Z",
+      "side": 1,
+      "message": "Flows and groups to delete will always be empty with this changed logic.  Doesn\u0027t the adapter expect delete flows and groups as well?",
+      "revId": "4d0161468813be6b35d878176d5c4e2650cdaa10",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
