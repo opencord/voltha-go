@@ -225,6 +225,18 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["onu4"].Ports[1].PortNo,
 		},
 	}
+	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 10}] = []graph.RouteHop{
+		{
+			DeviceID: "olt",
+			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+		},
+		{
+			DeviceID: "olt",
+			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+		},
+	}
 
 	//UPSTREAM DATA PLANE
 
@@ -562,6 +574,44 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 		Actions: []*ofp.OfpAction{
 			fu.PushVlan(0x8100),
 			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
+			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
+		},
+	}
+	expectedOltFlow := fu.MkFlowStat(fa)
+	derivedFlow := oltFlowAndGroup.GetFlow(0)
+	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
+}
+
+func TestLldpReRouteRuleDecomposition(t *testing.T) {
+	var fa *fu.FlowArgs
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(10),
+			fu.EthType(0x88CC),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
+		},
+	}
+
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
+	groups := ofp.FlowGroups{}
+	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	onu1FlowAndGroup := deviceRules.Rules["onu1"]
+	oltFlowAndGroup := deviceRules.Rules["olt"]
+	assert.Nil(t, onu1FlowAndGroup)
+	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
+
+	fa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(2),
+			fu.EthType(0x88CC),
+		},
+		Actions: []*ofp.OfpAction{
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
