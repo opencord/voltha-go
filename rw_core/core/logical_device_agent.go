@@ -1383,26 +1383,25 @@ func (agent *LogicalDeviceAgent) GetRoute(ingressPortNo uint32, egressPortNo uin
 	if egressPortNo != 0 && ((egressPortNo & 0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER)) {
 		log.Debugw("controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "logicalPortsNo": agent.logicalPortsNo})
 		if agent.isNNIPort(ingressPortNo) {
-			log.Debug("returning-half-route")
-			//This is a trap on the NNI Port
-			if len(agent.deviceGraph.Routes) == 0 {
-				// If there are no routes set (usually when the logical device has only NNI port(s), then just return an
-				// internal route
-				hop := graph.RouteHop{DeviceID: agent.rootDeviceId, Ingress: ingressPortNo, Egress: egressPortNo}
-				routes = append(routes, hop)
-				routes = append(routes, hop)
-				return routes
-			}
-			//Return a 'half' route to make the flow decomposer logic happy
-			for routeLink, route := range agent.deviceGraph.Routes {
-				if agent.isNNIPort(routeLink.Egress) {
-					routes = append(routes, graph.RouteHop{}) // first hop is set to empty
-					routes = append(routes, route[1])
-					return routes
+			var cloned *voltha.Device
+			// This is a trap on the NNI Port
+			if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.rootDeviceId, 0, true, ""); device != nil {
+				if d, ok := device.(*voltha.Device); ok {
+					cloned = proto.Clone(d).(*voltha.Device)
+					// for NNI port, retrun the routes with ingressHop equal to egressHop.
+					for _, port := range cloned.Ports {
+						if port.Type == voltha.Port_ETHERNET_NNI {
+							ingressHop := graph.RouteHop{DeviceID: agent.rootDeviceId, Ingress: port.PortNo, Egress: port.PortNo}
+							egressHop := ingressHop
+							routes = append(routes, ingressHop)
+							routes = append(routes, egressHop)
+							return routes
+						}
+					}
+
 				}
 			}
-			log.Warnw("no-upstream-route", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "logicalPortsNo": agent.logicalPortsNo})
-			return nil
+
 		}
 		//treat it as if the output port is the first NNI of the OLT
 		var err error
