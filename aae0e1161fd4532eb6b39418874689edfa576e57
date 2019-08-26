@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df6837b7_d29f97c9",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1388,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-26T20:12:56Z",
+      "side": 1,
+      "message": "Logical device should be invoking the device mgr to get the device in case there is concurrent access/change to the device.   You need to be careful here as the lock may already have been obtained, hence causing a deadlock.  It is preferable not to invoke a getdevice at all here and use the data passed in params.   If the root device is absolutely required then it is better to pass it as a param.",
+      "revId": "aae0e1161fd4532eb6b39418874689edfa576e57",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3240680_c0eb9e9f",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-08-26T20:12:56Z",
+      "side": 1,
+      "message": "How is that logic different from the previous one?",
+      "revId": "aae0e1161fd4532eb6b39418874689edfa576e57",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
