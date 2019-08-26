@@ -79,7 +79,7 @@ func (br BindingRouter) ReplyHandler(v interface{}) error {
 func (br BindingRouter) Route(sel interface{}) *backend {
 	var err error
 	switch sl := sel.(type) {
-	case *nbFrame:
+	case *requestFrame:
 		if b, ok := br.bindings[sl.metaVal]; ok == true { // binding exists, just return it
 			return b
 		} else { // establish a new binding or error.

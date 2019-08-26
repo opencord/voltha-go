@@ -91,7 +91,7 @@ func (rr RoundRobinRouter) Name() string {
 func (rr RoundRobinRouter) Route(sel interface{}) *backend {
 	var err error
 	switch sl := sel.(type) {
-	case *nbFrame:
+	case *requestFrame:
 		// Since this is a round robin router just get the next backend
 		if *rr.currentBackend, err = rr.cluster.nextBackend(*rr.currentBackend, BackendSequenceRoundRobin); err == nil {
 			return *rr.currentBackend

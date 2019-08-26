@@ -24,6 +24,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"net"
+	"net/url"
 	"runtime"
 	"strconv"
 )
@@ -41,7 +42,7 @@ func newApi(config *ApiConfig, ar *ArouterProxy) (*ArouterApi, error) {
 	var rtrn_err bool
 	// Create a seperate server and listener for the API
 	// Validate the ip address if one is provided
-	if ip := net.ParseIP(config.Addr); config.Addr != "" && ip == nil {
+	if _, err := url.Parse(config.Addr); err != nil {
 		log.Errorf("Invalid address '%s' provided for API server", config.Addr)
 		rtrn_err = true
 	}
@@ -118,17 +119,7 @@ func (aa *ArouterApi) getConnection(b *backend, con string) (*connection, error)
 }
 
 func (aa *ArouterApi) updateConnection(in *pb.Conn, cn *connection, b *backend) error {
-	sPort := strconv.FormatUint(in.Port, 10)
-	// Check that the ip address and or port are different
-	if in.Addr == cn.addr && sPort == cn.port {
-		err := errors.New(fmt.Sprintf("Refusing to change connection '%s' to identical values", in.Connection))
-		return err
-	}
-	cn.close()
-	cn.addr = in.Addr
-	cn.port = sPort
-	cn.connect()
-	return nil
+	return errors.New("updateConnection not implemented")
 }
 
 func (aa ArouterApi) SetAffinity(ctx context.Context, in *pb.Affinity) (*pb.Result, error) {

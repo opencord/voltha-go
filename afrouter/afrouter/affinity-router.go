@@ -123,7 +123,7 @@ func newAffinityRouter(rconf *RouterConfig, config *RouteConfig) (Router, error)
 			}
 		}
 	}
-	log.Debugf("The map contains: %v", msgs)
+	//log.Debugf("The map contains: %v", msgs)
 	for _, f := range dr.protoDescriptor.File {
 		if *f.Package == rconf.ProtoPackage {
 			for _, s := range f.Service {
@@ -284,8 +284,8 @@ func (ar AffinityRouter) decodeProtoField(payload []byte, fieldId byte) (string,
 
 func (ar AffinityRouter) Route(sel interface{}) *backend {
 	switch sl := sel.(type) {
-	case *nbFrame:
-		log.Debugf("Route called for nbFrame with method %s", sl.methodInfo.method)
+	case *requestFrame:
+		log.Debugf("Route called for requestFrame with method %s", sl.methodInfo.method)
 		// Check if this method should be affinity bound from the
 		// reply rather than the request.
 		if _, ok := ar.nbBindingMethodMap[sl.methodInfo.method]; ok {
@@ -344,10 +344,10 @@ func (ar AffinityRouter) FindBackendCluster(beName string) *cluster {
 
 func (ar AffinityRouter) ReplyHandler(sel interface{}) error {
 	switch sl := sel.(type) {
-	case *sbFrame:
+	case *responseFrame:
 		sl.mutex.Lock()
 		defer sl.mutex.Unlock()
-		log.Debugf("Reply handler called for sbFrame with method %s", sl.method)
+		log.Debugf("Reply handler called for responseFrame with method %s", sl.method)
 		// Determine if reply action is required.
 		if fld, ok := ar.nbBindingMethodMap[sl.method]; ok && len(sl.payload) > 0 {
 			// Extract the field value from the frame and

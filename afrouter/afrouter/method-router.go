@@ -121,13 +121,13 @@ func (mr MethodRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, st
 
 func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 	switch sl := sel.(type) {
-	case *sbFrame:
+	case *responseFrame:
 		if r, ok := mr.methodRouter[NoMeta][sl.method]; ok {
 			return r.ReplyHandler(sel)
 		}
 		// TODO: this case should also be an error
 	default: //TODO: This should really be a big error
-		// A reply handler should only be called on the sbFrame
+		// A reply handler should only be called on the responseFrame
 		return nil
 	}
 	return nil
@@ -135,7 +135,7 @@ func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 
 func (mr MethodRouter) Route(sel interface{}) *backend {
 	switch sl := sel.(type) {
-	case *nbFrame:
+	case *requestFrame:
 		if r, ok := mr.methodRouter[sl.metaKey][sl.methodInfo.method]; ok {
 			return r.Route(sel)
 		}
