@@ -228,6 +228,13 @@ func (sc *SaramaClient) Start() error {
 
 	var err error
 
+	// Add a cleanup in case of failure to startup
+	defer func() {
+		if err != nil {
+			sc.Stop()
+		}
+	}()
+
 	// Create the Cluster Admin
 	if err = sc.createClusterAdmin(); err != nil {
 		log.Errorw("Cannot-create-cluster-admin", log.Fields{"error": err})

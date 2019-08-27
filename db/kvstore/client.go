@@ -77,7 +77,7 @@ func NewEvent(eventType int, key interface{}, value interface{}, version int64) 
 	return evnt
 }
 
-// Client represents the set of APIs  a KV Client must implement
+// Client represents the set of APIs a KV Client must implement
 type Client interface {
 	List(key string, timeout int, lock ...bool) (map[string]*KVPair, error)
 	Get(key string, timeout int, lock ...bool) (*KVPair, error)
@@ -90,6 +90,7 @@ type Client interface {
 	Watch(key string) chan *Event
 	AcquireLock(lockName string, timeout int) error
 	ReleaseLock(lockName string) error
+	IsConnectionUp(timeout int) bool // timeout in second
 	CloseWatch(key string, ch chan *Event)
 	Close()
 }
