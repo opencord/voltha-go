@@ -395,6 +395,69 @@ func (PONRMgr *PONResourceManager) InitDeviceResourcePool() error {
 	return err
 }
 
+func (PONRMgr *PONResourceManager) ClearDeviceResourcePool() error {
+
+	//Clear resource pool for all PON ports.
+
+	log.Debug("Clear resource ranges")
+
+	for _, Intf := range PONRMgr.IntfIDs {
+		SharedPoolID := PONRMgr.PonResourceRanges[ONU_ID_SHARED_IDX].(uint32)
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if status := PONRMgr.ClearResourceIDPool(Intf, ONU_ID); status != true {
+			log.Error("Failed to clear ONU ID resource pool")
+			return errors.New("Failed to clear ONU ID resource pool")
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+
+	for _, Intf := range PONRMgr.IntfIDs {
+		SharedPoolID := PONRMgr.PonResourceRanges[ALLOC_ID_SHARED_IDX].(uint32)
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if status := PONRMgr.ClearResourceIDPool(Intf, ALLOC_ID); status != true {
+			log.Error("Failed to clear ALLOC ID resource pool ")
+			return errors.New("Failed to clear ALLOC ID resource pool")
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+	for _, Intf := range PONRMgr.IntfIDs {
+		SharedPoolID := PONRMgr.PonResourceRanges[GEMPORT_ID_SHARED_IDX].(uint32)
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if status := PONRMgr.ClearResourceIDPool(Intf, GEMPORT_ID); status != true {
+			log.Error("Failed to clear GEMPORT ID resource pool")
+			return errors.New("Failed to clear GEMPORT ID resource pool")
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+
+	for _, Intf := range PONRMgr.IntfIDs {
+		SharedPoolID := PONRMgr.PonResourceRanges[FLOW_ID_SHARED_IDX].(uint32)
+		if SharedPoolID != 0 {
+			Intf = SharedPoolID
+		}
+		if status := PONRMgr.ClearResourceIDPool(Intf, FLOW_ID); status != true {
+			log.Error("Failed to clear FLOW ID resource pool")
+			return errors.New("Failed to clear FLOW ID resource pool")
+		}
+		if SharedPoolID != 0 {
+			break
+		}
+	}
+	return nil
+}
+
 func (PONRMgr *PONResourceManager) InitResourceIDPool(Intf uint32, ResourceType string, StartID uint32, EndID uint32) error {
 
 	/*Initialize Resource ID pool for a given Resource Type on a given PON Port
