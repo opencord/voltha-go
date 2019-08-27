@@ -52,6 +52,24 @@
       "revId": "4d0161468813be6b35d878176d5c4e2650cdaa10",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9f3c14b_a1e0444b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-08-27T09:31:20Z",
+      "side": 1,
+      "message": "Yes khen . I have updated the patch setup addressed your comments . Thanks",
+      "parentUuid": "719ca066_e92b74a0",
+      "revId": "4d0161468813be6b35d878176d5c4e2650cdaa10",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
