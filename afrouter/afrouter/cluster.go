@@ -94,7 +94,7 @@ func (c *cluster) nextBackend(be *backend, seq backendSequence) (*backend, error
 			log.Debug("Previous backend is nil")
 			be = c.backends[0]
 			in = be
-			if be.openConns != 0 {
+			if be.NumOpenConnections() != 0 {
 				return be, nil
 			}
 		}
@@ -106,7 +106,7 @@ func (c *cluster) nextBackend(be *backend, seq backendSequence) (*backend, error
 				cur = 0
 			}
 			log.Debugf("Next backend is %d:%s", cur, c.backends[cur].name)
-			if c.backends[cur].openConns > 0 {
+			if c.backends[cur].NumOpenConnections() > 0 {
 				return c.backends[cur], nil
 			}
 			if c.backends[cur] == in {
@@ -133,8 +133,8 @@ func (c *cluster) handler(srv interface{}, serverStream grpc.ServerStream, r Rou
 	// now.
 
 	// Get the backend to use.
-	// Allocate the nbFrame here since it holds the "context" of this communication
-	nf := &nbFrame{router: r, methodInfo: methodInfo, serialNo: c.allocateSerialNumber(), metaKey: mk, metaVal: mv}
+	// Allocate the requestFrame here since it holds the "context" of this communication
+	nf := &requestFrame{router: r, methodInfo: methodInfo, serialNo: c.allocateSerialNumber(), metaKey: mk, metaVal: mv}
 	log.Debugf("Nb frame allocate with method %s", nf.methodInfo.method)
 
 	if be, err := c.assignBackend(serverStream, nf); err != nil {
@@ -143,14 +143,14 @@ func (c *cluster) handler(srv interface{}, serverStream grpc.ServerStream, r Rou
 		return err
 	} else {
 		log.Debugf("Backend '%s' selected", be.name)
-		// Allocate a sbFrame here because it might be needed for return value intercept
-		sf := &sbFrame{router: r, backend: be, method: nf.methodInfo.method, metaKey: mk, metaVal: mv}
+		// Allocate a responseFrame here because it might be needed for return value intercept
+		sf := &responseFrame{router: r, backend: be, method: nf.methodInfo.method, metaKey: mk, metaVal: mv}
 		log.Debugf("Sb frame allocated with router %s", r.Name())
 		return be.handler(srv, serverStream, nf, sf)
 	}
 }
 
-func (c *cluster) assignBackend(src grpc.ServerStream, f *nbFrame) (*backend, error) {
+func (c *cluster) assignBackend(src grpc.ServerStream, f *requestFrame) (*backend, error) {
 	// Receive the first message from the server. This calls the assigned codec in which
 	// Unmarshal gets executed. That will use the assigned router to select a backend
 	// and add it to the frame
@@ -163,7 +163,7 @@ func (c *cluster) assignBackend(src grpc.ServerStream, f *nbFrame) (*backend, er
 		err := fmt.Errorf("Unable to route method '%s'", f.methodInfo.method)
 		log.Error(err)
 		return nil, err
-	} else if f.backend.openConns == 0 {
+	} else if len(f.backend.openConns) == 0 {
 		err := fmt.Errorf("No open connections on backend '%s'", f.backend.name)
 		log.Error(err)
 		return f.backend, err
