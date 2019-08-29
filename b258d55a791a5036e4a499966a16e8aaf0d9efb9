@@ -34,6 +34,24 @@
       "revId": "b258d55a791a5036e4a499966a16e8aaf0d9efb9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14ba6636_c0f989a6",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-08-29T21:45:32Z",
+      "side": 1,
+      "message": "i may have asked this before, the benefit of mutex vs. putting responses on a channel and then having a channel writer just take responses of the channel?",
+      "parentUuid": "3bdce858_f20e38f1",
+      "revId": "b258d55a791a5036e4a499966a16e8aaf0d9efb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
