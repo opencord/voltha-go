@@ -19,23 +19,66 @@ package afrouter
 import (
 	"errors"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"io/ioutil"
 )
 
 const NoMeta = "nometa"
 
 type MethodRouter struct {
-	name         string
-	service      string
-	methodRouter map[string]map[string]Router // map of [metadata][method]
+	name            string
+	service         string
+	methodRouter    map[string]map[string]Router // map of [metadata][method]
+	methodStreaming map[string]streamingDirections
+}
+
+type streamingDirections struct {
+	request  bool
+	response bool
 }
 
 func newMethodRouter(config *RouterConfig) (Router, error) {
-	mr := MethodRouter{name: config.Name, service: config.ProtoService, methodRouter: make(map[string]map[string]Router)}
-	mr.methodRouter[NoMeta] = make(map[string]Router) // For routes not needing metadata (all expcept binding at this time)
+	// Load the protobuf descriptor file
+	fb, err := ioutil.ReadFile(config.ProtoFile)
+	if err != nil {
+		log.Errorf("Could not open proto file '%s'", config.ProtoFile)
+		return nil, err
+	}
+	if err := proto.Unmarshal(fb, &config.protoDescriptor); err != nil {
+		log.Errorf("Could not unmarshal %s, %v", "proto.pb", err)
+		return nil, err
+	}
+
+	mr := MethodRouter{
+		name:    config.Name,
+		service: config.ProtoService,
+		methodRouter: map[string]map[string]Router{
+			NoMeta: make(map[string]Router), // For routes not needing metadata (all except binding at this time)
+		},
+		methodStreaming: make(map[string]streamingDirections),
+	}
 	log.Debugf("Processing MethodRouter config %v", *config)
+
+	for _, file := range config.protoDescriptor.File {
+		if *file.Package == config.ProtoPackage {
+			for _, service := range file.Service {
+				if *service.Name == config.ProtoService {
+					for _, method := range service.Method {
+						if clientStreaming, serverStreaming := method.ClientStreaming != nil && *method.ClientStreaming, method.ServerStreaming != nil && *method.ServerStreaming; clientStreaming || serverStreaming {
+							mr.methodStreaming[*method.Name] = streamingDirections{
+								request:  clientStreaming,
+								response: serverStreaming,
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if len(config.Routes) == 0 {
 		return nil, errors.New(fmt.Sprintf("Router %s must have at least one route", config.Name))
 	}
@@ -121,13 +164,13 @@ func (mr MethodRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, st
 
 func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 	switch sl := sel.(type) {
-	case *sbFrame:
+	case *responseFrame:
 		if r, ok := mr.methodRouter[NoMeta][sl.method]; ok {
 			return r.ReplyHandler(sel)
 		}
 		// TODO: this case should also be an error
 	default: //TODO: This should really be a big error
-		// A reply handler should only be called on the sbFrame
+		// A reply handler should only be called on the responseFrame
 		return nil
 	}
 	return nil
@@ -135,7 +178,7 @@ func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 
 func (mr MethodRouter) Route(sel interface{}) *backend {
 	switch sl := sel.(type) {
-	case *nbFrame:
+	case *requestFrame:
 		if r, ok := mr.methodRouter[sl.metaKey][sl.methodInfo.method]; ok {
 			return r.Route(sel)
 		}
@@ -144,6 +187,11 @@ func (mr MethodRouter) Route(sel interface{}) *backend {
 	default:
 		return nil
 	}
+}
+
+func (mr MethodRouter) IsStreaming(method string) (bool, bool) {
+	streamingDirections := mr.methodStreaming[method]
+	return streamingDirections.request, streamingDirections.response
 }
 
 func (mr MethodRouter) BackendCluster(mthd string, metaKey string) (*cluster, error) {

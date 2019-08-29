@@ -36,8 +36,8 @@ type transparentRoutingCodec struct {
 	parentCodec grpc.Codec
 }
 
-// sbFrame is a frame being "returned" to whomever established the connection
-type sbFrame struct {
+// responseFrame is a frame being "returned" to whomever established the connection
+type responseFrame struct {
 	payload []byte
 	router  Router
 	method  string
@@ -47,8 +47,8 @@ type sbFrame struct {
 	metaVal string
 }
 
-// nbFrame is a frame coming in from whomever established the connection
-type nbFrame struct {
+// requestFrame is a frame coming in from whomever established the connection
+type requestFrame struct {
 	payload    []byte
 	router     Router
 	backend    *backend
@@ -61,9 +61,9 @@ type nbFrame struct {
 
 func (cdc *transparentRoutingCodec) Marshal(v interface{}) ([]byte, error) {
 	switch t := v.(type) {
-	case *sbFrame:
+	case *responseFrame:
 		return t.payload, nil
-	case *nbFrame:
+	case *requestFrame:
 		return t.payload, nil
 	default:
 		return cdc.parentCodec.Marshal(v)
@@ -72,17 +72,21 @@ func (cdc *transparentRoutingCodec) Marshal(v interface{}) ([]byte, error) {
 
 func (cdc *transparentRoutingCodec) Unmarshal(data []byte, v interface{}) error {
 	switch t := v.(type) {
-	case *sbFrame:
+	case *responseFrame:
 		t.payload = data
 		// This is where the affinity is established on a northbound response
 		t.router.ReplyHandler(v)
 		return nil
-	case *nbFrame:
+	case *requestFrame:
 		t.payload = data
 		// This is were the afinity value is pulled from the payload
 		// and the backend selected.
 		t.backend = t.router.Route(v)
-		log.Debugf("Routing returned %v for method %s", t.backend, t.methodInfo.method)
+		name := "<nil>"
+		if t.backend != nil {
+			name = t.backend.name
+		}
+		log.Debugf("Routing returned %s for method %s", name, t.methodInfo.method)
 		return nil
 	default:
 		return cdc.parentCodec.Unmarshal(data, v)
