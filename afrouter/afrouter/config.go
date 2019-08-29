@@ -22,6 +22,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/opencord/voltha-go/common/log"
 	"io/ioutil"
 	"os"
@@ -62,16 +63,17 @@ type Configuration struct {
 }
 
 type RouterConfig struct {
-	Name         string        `json:"name"`
-	ProtoService string        `json:"service"`
-	ProtoPackage string        `json:"package"`
-	Routes       []RouteConfig `json:"routes"`
+	Name            string        `json:"name"`
+	ProtoService    string        `json:"service"`
+	ProtoPackage    string        `json:"package"`
+	ProtoFile       string        `json:"proto_descriptor"`
+	Routes          []RouteConfig `json:"routes"`
+	protoDescriptor descriptor.FileDescriptorSet
 }
 
 type RouteConfig struct {
 	Name             string           `json:"name"`
 	Type             routeType        `json:"type"`
-	ProtoFile        string           `json:"proto_descriptor"`
 	Association      associationType  `json:"association"`
 	RouteField       string           `json:"routing_field"`
 	Methods          []string         `json:"methods"` // The GRPC methods to route using the route field

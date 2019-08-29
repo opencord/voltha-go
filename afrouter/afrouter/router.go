@@ -29,6 +29,7 @@ type Router interface {
 	Name() string
 	Route(interface{}) *backend
 	Service() string
+	IsStreaming(string) (bool, bool)
 	BackendCluster(string, string) (*cluster, error)
 	FindBackendCluster(string) *cluster
 	ReplyHandler(interface{}) error

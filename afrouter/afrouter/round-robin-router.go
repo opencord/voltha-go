@@ -80,6 +80,10 @@ func (rr RoundRobinRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string
 	return "", "", nil
 }
 
+func (rr RoundRobinRouter) IsStreaming(_ string) (bool, bool) {
+	panic("not implemented")
+}
+
 func (rr RoundRobinRouter) BackendCluster(s string, mk string) (*cluster, error) {
 	return rr.cluster, nil
 }
@@ -91,7 +95,7 @@ func (rr RoundRobinRouter) Name() string {
 func (rr RoundRobinRouter) Route(sel interface{}) *backend {
 	var err error
 	switch sl := sel.(type) {
-	case *nbFrame:
+	case *requestFrame:
 		// Since this is a round robin router just get the next backend
 		if *rr.currentBackend, err = rr.cluster.nextBackend(*rr.currentBackend, BackendSequenceRoundRobin); err == nil {
 			return *rr.currentBackend
