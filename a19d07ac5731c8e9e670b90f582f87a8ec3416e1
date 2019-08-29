@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "187bf7a5_18c29ba2",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-08-29T21:27:01Z",
+      "side": 1,
+      "message": "Do we really need this responseStreamMutex?",
+      "revId": "a19d07ac5731c8e9e670b90f582f87a8ec3416e1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
