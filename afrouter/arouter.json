@@ -3,7 +3,7 @@
     {
       "name": "grpc_command",
       "port": 55555,
-      "address": "",
+      "address": "localhost",
       "type": "grpc",
       "routers": [
         {
@@ -20,10 +20,10 @@
       "name": "vcore",
       "package": "voltha",
       "service": "VolthaService",
+      "proto_descriptor": "vendor/github.com/opencord/voltha-protos/go/voltha.pb",
       "routes": [
         {
           "name": "dev_manager",
-          "proto_descriptor": "voltha.pb",
           "type": "rpc_affinity_message",
           "association": "round_robin",
           "routing_field": "id",
@@ -273,7 +273,7 @@
   ],
   "api": {
     "_comment": "If this isn't defined then no api is available for dynamic configuration and queries",
-    "address": "",
+    "address": "localhost",
     "port": 55554
   }
 }

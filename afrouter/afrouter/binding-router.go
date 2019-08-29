@@ -39,6 +39,10 @@ type BindingRouter struct {
 	currentBackend **backend
 }
 
+func (br BindingRouter) IsStreaming(_ string) (bool, bool) {
+	panic("not implemented")
+}
+
 func (br BindingRouter) BackendCluster(s string, metaKey string) (*cluster, error) {
 	return br.beCluster, nil
 	//return nil,errors.New("Not implemented yet")
@@ -79,7 +83,7 @@ func (br BindingRouter) ReplyHandler(v interface{}) error {
 func (br BindingRouter) Route(sel interface{}) *backend {
 	var err error
 	switch sl := sel.(type) {
-	case *nbFrame:
+	case *requestFrame:
 		if b, ok := br.bindings[sl.metaVal]; ok == true { // binding exists, just return it
 			return b
 		} else { // establish a new binding or error.
