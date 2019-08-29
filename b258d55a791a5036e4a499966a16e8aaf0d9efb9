@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66d63fd6_cc7f8a3f",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-08-29T21:19:58Z",
+      "side": 1,
+      "message": "Do we really need this mutex for response?",
+      "revId": "b258d55a791a5036e4a499966a16e8aaf0d9efb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
