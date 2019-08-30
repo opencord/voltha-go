@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fd76138_375d7c99",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-08-30T16:36:09Z",
+      "side": 1,
+      "message": "Should this error be returned to the caller?",
+      "revId": "87f4d63bff7b07d9a279f5a8cca26bb9ff3cfbd8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
