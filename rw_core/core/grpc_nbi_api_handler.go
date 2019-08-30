@@ -788,13 +788,25 @@ func (handler *APIHandler) StreamPacketsOut(
 	packets voltha.VolthaService_StreamPacketsOutServer,
 ) error {
 	log.Debugw("StreamPacketsOut-request", log.Fields{"packets": packets})
+loop:
 	for {
+		select {
+		case <-packets.Context().Done():
+			log.Infow("StreamPacketsOut-context-done", log.Fields{"packets": packets, "error": packets.Context().Err()})
+			break loop
+		default:
+		}
+
 		packet, err := packets.Recv()
 
 		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Errorw("Failed to receive packet", log.Fields{"error": err})
+			log.Debugw("Received-EOF", log.Fields{"packets": packets})
+			break loop
+		}
+
+		if err != nil {
+			log.Errorw("Failed to receive packet out", log.Fields{"error": err})
+			continue
 		}
 
 		handler.forwardPacketOut(packet)
