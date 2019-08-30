@@ -789,12 +789,23 @@ func (handler *APIHandler) StreamPacketsOut(
 ) error {
 	log.Debugw("StreamPacketsOut-request", log.Fields{"packets": packets})
 	for {
+		select {
+		case <-packets.Context().Done():
+			log.Infow("StreamPacketsOut-context-done", log.Fields{"packets": packets, "error": packets.Context().Err()})
+			return packets.Context().Err()
+		default:
+		}
+
 		packet, err := packets.Recv()
 
 		if err == io.EOF {
+			log.Debugw("Received-EOF", log.Fields{"packets": packets})
 			break
-		} else if err != nil {
-			log.Errorw("Failed to receive packet", log.Fields{"error": err})
+		}
+
+		if err != nil {
+			log.Errorw("Failed to receive packet out", log.Fields{"error": err})
+			continue
 		}
 
 		handler.forwardPacketOut(packet)
