@@ -87,10 +87,6 @@ required = [
   name = "go.uber.org/zap"
   version = "1.9.1"
 
-[[override]]
-  branch = "master"
-  name = "golang.org/x/net"
-
 [[constraint]]
   name = "google.golang.org/grpc"
   version = "1.17.0"
@@ -113,4 +109,12 @@ required = [
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "10.0.0"
+  version = "12.0.0"
+
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.15.4"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.15.4"
