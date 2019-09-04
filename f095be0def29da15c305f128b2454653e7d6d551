@@ -16,6 +16,24 @@
       "revId": "f095be0def29da15c305f128b2454653e7d6d551",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0998beab_90f105c4",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1087,
+      "author": {
+        "id": 1000544
+      },
+      "writtenOn": "2019-09-04T11:46:20Z",
+      "side": 1,
+      "message": "Actually i do not see the necessity wherein we need to ensure flows sync if the device state is other than (ENABLED,ACTIVE,REACHABLE) which will be taken care by core itself.",
+      "parentUuid": "781d1524_016eec95",
+      "revId": "f095be0def29da15c305f128b2454653e7d6d551",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
