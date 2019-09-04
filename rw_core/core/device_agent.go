@@ -18,6 +18,10 @@ package core
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/model"
@@ -27,9 +31,6 @@ import (
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
-	"sync"
-	"time"
 )
 
 type DeviceAgent struct {
@@ -1079,6 +1080,16 @@ func (agent *DeviceAgent) updateDeviceStatus(operStatus voltha.OperStatus_OperSt
 			cloned.OperStatus = operStatus
 		}
 		log.Debugw("updateDeviceStatus", log.Fields{"deviceId": cloned.Id, "operStatus": cloned.OperStatus, "connectStatus": cloned.ConnectStatus})
+
+		chAdapters := make(chan interface{})
+		dType := agent.adapterMgr.getDeviceType(cloned.Type)
+		flowMetadata := &voltha.FlowMetadata{}
+		if dType.AcceptsBulkFlowUpdate {
+			if connStatus == voltha.ConnectStatus_REACHABLE && operStatus == voltha.OperStatus_ACTIVE {
+				log.Debug("replaying flows for the device ", "flows:", cloned.Flows, " flowgroups:", cloned.FlowGroups)
+				go agent.sendBulkFlowsToAdapters(cloned, cloned.Flows, cloned.FlowGroups, flowMetadata, chAdapters)
+			}
+		}
 		// Store the device
 		return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
 	}
