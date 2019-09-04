@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "781d1524_016eec95",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1087,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2019-09-04T08:09:13Z",
+      "side": 1,
+      "message": "Should all these lines of code added be inside this condition? ie. we need to do all these only when the connStatus is REACHABLE and the operStatus is ACTIVE.",
+      "revId": "f095be0def29da15c305f128b2454653e7d6d551",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
