@@ -16,6 +16,24 @@
       "revId": "4ce8fdf967238ac34fdd643891fb3eadd64a927e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07384e29_902f5e11",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-05T20:57:24Z",
+      "side": 1,
+      "message": "Good catch. That\u0027s what it looks like it was intended for. first discovery notification.",
+      "parentUuid": "a9349b53_f0c56dec",
+      "revId": "4ce8fdf967238ac34fdd643891fb3eadd64a927e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
