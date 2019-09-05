@@ -257,13 +257,15 @@ func setAffinity(ctx context.Context, client pb.ConfigurationClient, deviceId st
 	}
 }
 
-func monitorDiscovery(ctx context.Context, client pb.ConfigurationClient, ch <-chan *ic.InterContainerMessage, doneCh chan<- struct{}) {
+func monitorDiscovery(kc kafka.Client, ctx context.Context, client pb.ConfigurationClient, ch <-chan *ic.InterContainerMessage, doneCh chan<- struct{}) {
 	defer close(doneCh)
+	defer kc.Stop()
 
 monitorLoop:
 	for {
 		select {
 		case <-ctx.Done():
+			break monitorLoop
 		case msg := <-ch:
 			log.Debug("Received a device discovery notification")
 			device := &ic.DeviceDiscovered{}
@@ -279,7 +281,6 @@ monitorLoop:
 					log.Error("backend is unknown")
 				}
 			}
-			break monitorLoop
 		}
 	}
 }
@@ -291,17 +292,21 @@ func startDiscoveryMonitor(ctx context.Context, client pb.ConfigurationClient) (
 	if err != nil {
 		panic(err)
 	}
-	kc.Start()
-	defer kc.Stop()
+	if err := kc.Start(); err != nil {
+		log.Error("Could not connect to kafka, discovery disabled")
+		close(doneCh)
+		return doneCh, err
+	}
 
 	ch, err := kc.Subscribe(&kafka.Topic{Name: kafkaTopic})
 	if err != nil {
 		log.Errorf("Could not subscribe to the '%s' channel, discovery disabled", kafkaTopic)
 		close(doneCh)
+		kc.Stop()
 		return doneCh, err
 	}
 
-	go monitorDiscovery(ctx, client, ch, doneCh)
+	go monitorDiscovery(kc, ctx, client, ch, doneCh)
 	return doneCh, nil
 }
 
