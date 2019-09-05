@@ -284,25 +284,28 @@ monitorLoop:
 	}
 }
 
-func startDiscoveryMonitor(ctx context.Context, client pb.ConfigurationClient) (<-chan struct{}, error) {
+func startDiscoveryMonitor(ctx context.Context, client pb.ConfigurationClient) (kafka.Client, <-chan struct{}, error) {
 	doneCh := make(chan struct{})
 	// Connect to kafka for discovery events
 	kc, err := newKafkaClient(kafkaClientType, kafkaHost, kafkaPort, kafkaInstanceID)
 	if err != nil {
 		panic(err)
 	}
-	kc.Start()
-	defer kc.Stop()
+	if err := kc.Start(); err != nil {
+		log.Error("Could not connect to kafka, discovery disabled")
+		close(doneCh)
+		return nil, doneCh, err
+	}
 
 	ch, err := kc.Subscribe(&kafka.Topic{Name: kafkaTopic})
 	if err != nil {
 		log.Errorf("Could not subscribe to the '%s' channel, discovery disabled", kafkaTopic)
 		close(doneCh)
-		return doneCh, err
+		return kc, doneCh, err
 	}
 
 	go monitorDiscovery(ctx, client, ch, doneCh)
-	return doneCh, nil
+	return kc, doneCh, nil
 }
 
 // coreMonitor polls the list of devices from all RW cores, pushes these devices
@@ -421,7 +424,7 @@ func main() {
 		// these two processes do the majority of the work
 
 		log.Info("Starting discovery monitoring")
-		doneCh, _ := startDiscoveryMonitor(ctx, client)
+		kc, doneCh, _ := startDiscoveryMonitor(ctx, client)
 
 		log.Info("Starting core monitoring")
 		coreMonitor(ctx, client, clientset)
@@ -429,6 +432,10 @@ func main() {
 		//ensure the discovery monitor to quit
 		<-doneCh
 
+		if kc != nil {
+			// Stop the kafka client
+			kc.Stop()
+		}
 		conn.Close()
 	}
 }
