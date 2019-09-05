@@ -79,7 +79,7 @@ var (
 
 	kafkaTopic      = getStrEnv("KAFKA_TOPIC", "AffinityRouter")
 	kafkaClientType = getStrEnv("KAFKA_CLIENT_TYPE", "sarama")
-	kafkaHost       = getStrEnv("KAFKA_HOST", "kafka")
+	kafkaHost       = getStrEnv("KAFKA_HOST", "voltha-kafka")
 	kafkaPort       = getIntEnv("KAFKA_PORT", 0, math.MaxUint16, 9092)
 	kafkaInstanceID = getStrEnv("KAFKA_INSTANCE_ID", "arouterd")
 )
@@ -291,7 +291,15 @@ func startDiscoveryMonitor(ctx context.Context, client pb.ConfigurationClient) (
 	if err != nil {
 		panic(err)
 	}
-	kc.Start()
+	for {
+		if err := kc.Start(); err != nil {
+			log.Infow("error-starting-kafka-messaging-proxy. retrying-after-a-delay", log.Fields{"error": err})
+			time.Sleep(5 * time.Second)
+		} else {
+			log.Info("started-kafka-messaging-proxy")
+			break
+		}
+	}
 	defer kc.Stop()
 
 	ch, err := kc.Subscribe(&kafka.Topic{Name: kafkaTopic})
