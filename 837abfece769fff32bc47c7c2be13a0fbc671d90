@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aae5b88b_d0daca1c",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-05T17:49:11Z",
+      "side": 1,
+      "message": "i think this should remain `kafka` the fix for this should be in the helm chart not here.",
+      "revId": "837abfece769fff32bc47c7c2be13a0fbc671d90",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8606d086_37c7b477",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-05T17:49:11Z",
+      "side": 1,
+      "message": "should this be a backoff time with a max of some value. i suspect it really doesn\u0027t matter in the long run, just a thought. if nothing else the 5 second delay likely should be configurable.",
+      "range": {
+        "startLine": 297,
+        "startChar": 3,
+        "endLine": 297,
+        "endChar": 7
+      },
+      "revId": "837abfece769fff32bc47c7c2be13a0fbc671d90",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
