@@ -104,6 +104,24 @@
       "revId": "94bd84f0ee0d5f5ba965035330b1907f42ed489b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f609dee1_f6a37d01",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-05T20:34:04Z",
+      "side": 1,
+      "message": "If connection to the afrouter is lost id \"DoneCh invoked?",
+      "parentUuid": "5b049631_5fd752d1",
+      "revId": "94bd84f0ee0d5f5ba965035330b1907f42ed489b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
