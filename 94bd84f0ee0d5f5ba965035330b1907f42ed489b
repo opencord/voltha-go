@@ -122,6 +122,24 @@
       "revId": "94bd84f0ee0d5f5ba965035330b1907f42ed489b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30368f13_1b937bbe",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-05T20:39:36Z",
+      "side": 1,
+      "message": "If connection to the afrouter is lost, the ctx (line 418) is closed, and everything shuts down.\ndoneCh is closed when the discoveryMonitor exits (and is thus used to to ensure that it has stopped.)",
+      "parentUuid": "f609dee1_f6a37d01",
+      "revId": "94bd84f0ee0d5f5ba965035330b1907f42ed489b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
