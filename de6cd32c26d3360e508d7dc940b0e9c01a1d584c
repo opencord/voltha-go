@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "077d9943_d9394b32",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-06T18:25:42Z",
+      "side": 1,
+      "message": "I see the point for serializing now. Spoke too early. \nI think the purpose of sync map is not served here since the \ncheck for cache and store are not atomic anyway. \nSeems to be an overhead to use a sync map on top for this specific case. Anyway I get the race between check and load and sync map only makes it confusing.",
+      "parentUuid": "f4468ea5_8b9eac57",
+      "range": {
+        "startLine": 400,
+        "startChar": 6,
+        "endLine": 400,
+        "endChar": 23
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a45bcc13_c5743b39",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
