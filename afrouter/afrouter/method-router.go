@@ -140,6 +140,33 @@ func (mr MethodRouter) Service() string {
 	return mr.service
 }
 
+func (mr MethodRouter) GetReference(be *backend, sel interface{}) error {
+	switch sl := sel.(type) {
+	case *requestFrame:
+		if r, ok := mr.methodRouter[sl.metaKey][sl.methodInfo.method]; ok {
+			return r.GetReference(be, sel)
+		}
+		log.Warnf("Attempt to take reference on non-existent method %s", sl.methodInfo.method)
+		return nil
+	default:
+		return nil
+	}
+}
+
+func (mr MethodRouter) DropReference(be *backend, sel interface{}, rpc_status error) error {
+	switch sl := sel.(type) {
+	case *requestFrame:
+		// route the reference to the subrouter
+		if r, ok := mr.methodRouter[sl.metaKey][sl.methodInfo.method]; ok {
+			return r.DropReference(be, sel, rpc_status)
+		}
+		log.Warnf("Attempt to drop reference on non-existent method %s", sl.methodInfo.method)
+		return nil
+	default:
+		return nil
+	}
+}
+
 func (mr MethodRouter) GetMetaKeyVal(serverStream grpc.ServerStream) (string, string, error) {
 	var rtrnK = NoMeta
 	var rtrnV = ""

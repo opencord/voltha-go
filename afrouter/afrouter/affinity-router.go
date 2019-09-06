@@ -322,6 +322,14 @@ func (ar AffinityRouter) BackendCluster(mthd string, metaKey string) (*cluster, 
 	return ar.cluster, nil
 }
 
+func (ar AffinityRouter) GetReference(be *backend, sel interface{}) error {
+	return nil
+}
+
+func (ar AffinityRouter) DropReference(be *backend, sel interface{}, rpc_status error) error {
+	return nil
+}
+
 func (ar AffinityRouter) FindBackendCluster(beName string) *cluster {
 	if beName == ar.cluster.name {
 		return ar.cluster

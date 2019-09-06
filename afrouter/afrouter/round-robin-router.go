@@ -92,6 +92,14 @@ func (rr RoundRobinRouter) Name() string {
 	return rr.name
 }
 
+func (rr RoundRobinRouter) GetReference(be *backend, sel interface{}) error {
+	return nil
+}
+
+func (rr RoundRobinRouter) DropReference(be *backend, sel interface{}, rpc_status error) error {
+	return nil
+}
+
 func (rr RoundRobinRouter) Route(sel interface{}) *backend {
 	var err error
 	switch sl := sel.(type) {

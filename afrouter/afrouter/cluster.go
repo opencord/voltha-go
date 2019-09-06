@@ -146,7 +146,10 @@ func (c *cluster) handler(srv interface{}, serverStream grpc.ServerStream, r Rou
 		// Allocate a responseFrame here because it might be needed for return value intercept
 		sf := &responseFrame{router: r, backend: be, method: nf.methodInfo.method, metaKey: mk, metaVal: mv}
 		log.Debugf("Sb frame allocated with router %s", r.Name())
-		return be.handler(srv, serverStream, nf, sf)
+		r.GetReference(be, nf)
+		err := be.handler(srv, serverStream, nf, sf)
+		r.DropReference(be, nf, err)
+		return err
 	}
 }
 

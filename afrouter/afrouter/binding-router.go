@@ -22,6 +22,7 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"sync"
 )
 
 type BindingRouter struct {
@@ -31,12 +32,15 @@ type BindingRouter struct {
 	grpcService string
 	//protoDescriptor *pb.FileDescriptorSet
 	//methodMap map[string]byte
-	beCluster      *cluster
-	bindings       map[string]*backend
+	beCluster *cluster
+	bindings  map[string]*backend
+	// map of backend references
+	references     map[string]int
 	bindingType    string
 	bindingField   string
 	bindingMethod  string
 	currentBackend **backend
+	refLock        *sync.Mutex
 }
 
 func (br BindingRouter) IsStreaming(_ string) (bool, bool) {
@@ -80,8 +84,68 @@ func (br BindingRouter) FindBackendCluster(becName string) *cluster {
 func (br BindingRouter) ReplyHandler(v interface{}) error {
 	return nil
 }
+
+func (br BindingRouter) GetReference(be *backend, sel interface{}) error {
+	switch sl := sel.(type) {
+	case *requestFrame:
+		br.refLock.Lock()
+		defer br.refLock.Unlock()
+		_, streamingResponse := sl.router.IsStreaming(sl.methodInfo.method)
+		if sl.metaVal != "" && streamingResponse {
+			if _, ok := br.references[be.name]; ok {
+				br.references[be.name] += 1
+			} else {
+				br.references[be.name] = 1
+			}
+			log.Debugf("Increasing reference for backend %s to %d for meta key %s, method %s",
+				be.name, br.references[be.name], sl.metaKey, sl.methodInfo.method)
+		}
+		return nil
+	default:
+		return nil
+	}
+}
+
+func (br BindingRouter) DropReference(be *backend, sel interface{}, rpc_status error) error {
+	switch sl := sel.(type) {
+	case *requestFrame:
+		br.refLock.Lock()
+		defer br.refLock.Unlock()
+		_, streamingResponse := sl.router.IsStreaming(sl.methodInfo.method)
+		if sl.metaVal != "" && streamingResponse {
+			if _, ok := br.references[be.name]; ok {
+				br.references[be.name] -= 1
+				log.Debugf("Dropping reference for backend %s to %d for meta key %s, method %s",
+					be.name, br.references[be.name], sl.metaKey, sl.methodInfo.method)
+				if br.references[be.name] <= 0 {
+					br.references[be.name] = 0
+					log.Debugf("No reference for backend found."+
+						"Removing backend %s from bindings with no references for meta key %s, method %s",
+						be.name, sl.metaKey, sl.methodInfo.method)
+					delete(br.bindings, be.name)
+				}
+			} else {
+				log.Debugf("No reference for backend %s", be.name)
+				return errors.New(fmt.Sprintf("No reference for backend %s", be.name))
+			}
+		} else if sl.metaVal == "" && rpc_status != nil {
+			// if we failed to send Subscribe request but had bound the backend, unbind
+			// The subscribe would be retried again
+			br.references[be.name] = 0
+			if _, ok := br.bindings[be.name]; ok {
+				delete(br.bindings, be.name)
+				log.Debugf("Removing backend %s from bindings as Subscribe had failed", be.name)
+			}
+		}
+		return nil
+	default:
+		return nil
+	}
+}
+
 func (br BindingRouter) Route(sel interface{}) *backend {
 	var err error
+
 	switch sl := sel.(type) {
 	case *requestFrame:
 		if b, ok := br.bindings[sl.metaVal]; ok == true { // binding exists, just return it
@@ -105,6 +169,7 @@ func (br BindingRouter) Route(sel interface{}) *backend {
 			if len(br.bindings) < len(br.beCluster.backends) {
 				if *br.currentBackend, err = br.beCluster.nextBackend(*br.currentBackend, BackendSequenceRoundRobin); err == nil {
 					// Use the name of the backend as the metaVal for this new binding
+					log.Debugf("Assigning backend %s", (*br.currentBackend).name)
 					br.bindings[(*br.currentBackend).name] = *br.currentBackend
 					return *br.currentBackend
 				} else {
@@ -166,8 +231,10 @@ func newBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) 
 		name:        config.Name,
 		grpcService: rconf.ProtoService,
 		bindings:    make(map[string]*backend),
+		references:  make(map[string]int),
 		//methodMap:make(map[string]byte),
 		currentBackend: &bptr,
+		refLock:        new(sync.Mutex),
 		//serialNo:0,
 	}
 

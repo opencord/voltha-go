@@ -34,6 +34,8 @@ type Router interface {
 	FindBackendCluster(string) *cluster
 	ReplyHandler(interface{}) error
 	GetMetaKeyVal(serverStream grpc.ServerStream) (string, string, error)
+	GetReference(be *backend, sel interface{}) error
+	DropReference(be *backend, sel interface{}, rpc_status error) error
 }
 
 func newRouter(config *RouterConfig) (Router, error) {
