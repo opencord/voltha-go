@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "26fc5d8c_d7583ffe",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-06T14:19:55Z",
+      "side": 1,
+      "message": "my concern is that when the unlock at line 407 is executed by thread (A), then thread (B) may then proceed past line 400. At this point, if IsDeviceInCache essentially checks the \"map\" for entry existence then this may return true for thread (B), but then right after that check, the map entry may be deleted by thread (A) at line 410.\n\nI get that the mutex is meant to help serialize adds and not protect the map, but i am wondering that if in this case, the delete outside protection may cause an issue with the checking for existence logic.\n\nHaven\u0027t done a real deep dive on the code, so could be way off.",
+      "parentUuid": "9101c2ce_94de51bc",
+      "range": {
+        "startLine": 410,
+        "startChar": 9,
+        "endLine": 410,
+        "endChar": 33
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e32322fe_f6d754be",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
