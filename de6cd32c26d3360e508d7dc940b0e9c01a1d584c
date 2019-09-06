@@ -215,6 +215,30 @@
     },
     {
       "key": {
+        "uuid": "10a22b0c_b2ce13e7",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T15:47:02Z",
+      "side": 1,
+      "message": "A recursive loading implies loading either a child device, a parent device (handle by device manager) or a logical device (handled by a logical device manager).  During the loading (especially logical device loading) other operations are run (e.g. generating a device graph) which may result in other devices being loaded in memory.  Having a queue/channel for this and let everything handle by a single thread will result in deadlock conditions.   \n\nTo cater for the edge case, I will change that code to ensure no partial results are returned, most likely using a lock per device.",
+      "parentUuid": "64ea6ba4_6e77b872",
+      "range": {
+        "startLine": 410,
+        "startChar": 9,
+        "endLine": 410,
+        "endChar": 33
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e32322fe_f6d754be",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
