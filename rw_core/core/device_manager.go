@@ -33,19 +33,21 @@ import (
 )
 
 type DeviceManager struct {
-	deviceAgents      sync.Map
-	rootDevices       map[string]bool
-	lockRootDeviceMap sync.RWMutex
-	core              *Core
-	adapterProxy      *AdapterProxy
-	adapterMgr        *AdapterManager
-	logicalDeviceMgr  *LogicalDeviceManager
-	kafkaICProxy      *kafka.InterContainerProxy
-	stateTransitions  *TransitionMap
-	clusterDataProxy  *model.Proxy
-	coreInstanceId    string
-	exitChannel       chan int
-	defaultTimeout    int64
+	deviceAgents            sync.Map
+	rootDevices             map[string]bool
+	lockRootDeviceMap       sync.RWMutex
+	core                    *Core
+	adapterProxy            *AdapterProxy
+	adapterMgr              *AdapterManager
+	logicalDeviceMgr        *LogicalDeviceManager
+	kafkaICProxy            *kafka.InterContainerProxy
+	stateTransitions        *TransitionMap
+	clusterDataProxy        *model.Proxy
+	coreInstanceId          string
+	exitChannel             chan int
+	defaultTimeout          int64
+	devicesLoadingLock      sync.RWMutex
+	deviceLoadingInProgress sync.Map // Item in map defined as {deviceid, []channels}
 }
 
 func newDeviceManager(core *Core) *DeviceManager {
@@ -60,6 +62,7 @@ func newDeviceManager(core *Core) *DeviceManager {
 	deviceMgr.adapterMgr = core.adapterMgr
 	deviceMgr.lockRootDeviceMap = sync.RWMutex{}
 	deviceMgr.defaultTimeout = core.config.DefaultCoreTimeout
+	deviceMgr.devicesLoadingLock = sync.RWMutex{}
 	return &deviceMgr
 }
 
@@ -98,7 +101,7 @@ func (dMgr *DeviceManager) addDeviceAgentToMap(agent *DeviceAgent) {
 
 }
 
-func (dMgr *DeviceManager) deleteDeviceAgentToMap(agent *DeviceAgent) {
+func (dMgr *DeviceManager) deleteDeviceAgentFromMap(agent *DeviceAgent) {
 	dMgr.deviceAgents.Delete(agent.deviceId)
 	dMgr.lockRootDeviceMap.Lock()
 	defer dMgr.lockRootDeviceMap.Unlock()
@@ -220,7 +223,7 @@ func (dMgr *DeviceManager) stopManagingDevice(id string) {
 		}
 		if agent := dMgr.getDeviceAgent(id); agent != nil {
 			agent.stop(nil)
-			dMgr.deleteDeviceAgentToMap(agent)
+			dMgr.deleteDeviceAgentFromMap(agent)
 			// Abandon the device ownership
 			dMgr.core.deviceOwnership.AbandonDevice(id)
 		}
@@ -390,28 +393,51 @@ func (dMgr *DeviceManager) getDeviceFromModel(deviceId string) (*voltha.Device, 
 
 // loadDevice loads the deviceId in memory, if not present
 func (dMgr *DeviceManager) loadDevice(deviceId string) (*DeviceAgent, error) {
-	log.Debugw("loading-device", log.Fields{"deviceId": deviceId})
-	// Sanity check
 	if deviceId == "" {
 		return nil, status.Error(codes.InvalidArgument, "deviceId empty")
 	}
-	if !dMgr.IsDeviceInCache(deviceId) {
-		// Proceed with the loading only if the device exist in the Model (could have been deleted)
-		if device, err := dMgr.getDeviceFromModel(deviceId); err == nil {
-			agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
-			if err := agent.start(nil, true); err != nil {
-				agent.stop(nil)
-				return nil, err
+	var err error
+	var device *voltha.Device
+	dMgr.devicesLoadingLock.Lock()
+	if val, exist := dMgr.deviceLoadingInProgress.Load(deviceId); !exist {
+		if !dMgr.IsDeviceInCache(deviceId) {
+			dMgr.deviceLoadingInProgress.Store(deviceId, []chan int{make(chan int, 1)})
+			dMgr.devicesLoadingLock.Unlock()
+			// Proceed with the loading only if the device exist in the Model (could have been deleted)
+			if device, err = dMgr.getDeviceFromModel(deviceId); err == nil {
+				log.Debugw("loading-device", log.Fields{"deviceId": deviceId})
+				agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
+				if err = agent.start(nil, true); err != nil {
+					agent.stop(nil)
+				} else {
+					dMgr.addDeviceAgentToMap(agent)
+				}
 			}
-			dMgr.addDeviceAgentToMap(agent)
+			// announce completion of task to any number of waiting channels
+			dMgr.devicesLoadingLock.Lock()
+			if v, ok := dMgr.deviceLoadingInProgress.Load(deviceId); ok {
+				for _, ch := range v.([]chan int) {
+					close(ch)
+				}
+				dMgr.deviceLoadingInProgress.Delete(deviceId)
+			}
+			dMgr.devicesLoadingLock.Unlock()
 		} else {
-			return nil, status.Error(codes.NotFound, deviceId)
+			dMgr.devicesLoadingLock.Unlock()
 		}
+	} else {
+		ch := make(chan int, 1)
+		chnls := val.([]chan int)
+		chnls = append(chnls, ch)
+		dMgr.deviceLoadingInProgress.Store(deviceId, chnls)
+		dMgr.devicesLoadingLock.Unlock()
+		//	Wait for the channel to be closed, implying the process loading this device is done.
+		<-ch
 	}
-	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
-		return agent, nil
+	if agent, ok := dMgr.deviceAgents.Load(deviceId); ok {
+		return agent.(*DeviceAgent), nil
 	}
-	return nil, status.Error(codes.NotFound, deviceId) // This should not happen
+	return nil, status.Errorf(codes.Aborted, "Error loading device %s", deviceId)
 }
 
 // loadRootDeviceParentAndChildren loads the children and parents of a root device in memory
@@ -490,35 +516,24 @@ func (dMgr *DeviceManager) ListDeviceIds() (*voltha.IDs, error) {
 	return dMgr.listDeviceIdsFromMap(), nil
 }
 
-//ReconcileDevices is a request to a voltha core to managed a list of devices based on their IDs
+//ReconcileDevices is a request to a voltha core to update its list of managed devices.  This will
+//trigger loading the devices along with their children and parent in memory
 func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs, ch chan interface{}) {
-	log.Debug("ReconcileDevices")
+	log.Debugw("ReconcileDevices", log.Fields{"numDevices": len(ids.Items)})
 	var res interface{}
-	if ids != nil {
+	if ids != nil && len(ids.Items) != 0 {
 		toReconcile := len(ids.Items)
 		reconciled := 0
+		var err error
 		for _, id := range ids.Items {
-			//	 Act on the device only if its not present in the agent map
-			if !dMgr.IsDeviceInCache(id.Id) {
-				//	Device Id not in memory
-				log.Debugw("reconciling-device", log.Fields{"id": id.Id})
-				// Proceed with the loading only if the device exist in the Model (could have been deleted)
-				if device, err := dMgr.getDeviceFromModel(id.Id); err == nil {
-					agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
-					if err := agent.start(nil, true); err != nil {
-						log.Warnw("failure-loading-device", log.Fields{"deviceId": id.Id})
-						agent.stop(nil)
-					} else {
-						dMgr.addDeviceAgentToMap(agent)
-						reconciled += 1
-					}
-				} else {
-					reconciled += 1
-				}
+			if err = dMgr.load(id.Id); err != nil {
+				log.Warnw("failure-reconciling-device", log.Fields{"deviceId": id.Id, "error": err})
+			} else {
+				reconciled += 1
 			}
 		}
 		if toReconcile != reconciled {
-			res = status.Errorf(codes.DataLoss, "less-device-reconciled:%d/%d", reconciled, toReconcile)
+			res = status.Errorf(codes.DataLoss, "less-device-reconciled-than-requested:%d/%d", reconciled, toReconcile)
 		}
 	} else {
 		res = status.Errorf(codes.InvalidArgument, "empty-list-of-ids")
@@ -1137,7 +1152,7 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(parentDevice *voltha.Device) er
 				allChildDeleted = false
 			} else {
 				agent.stop(nil)
-				dMgr.deleteDeviceAgentToMap(agent)
+				dMgr.deleteDeviceAgentFromMap(agent)
 			}
 		}
 	}
@@ -1369,12 +1384,12 @@ func (dMgr *DeviceManager) UpdateDeviceAttribute(deviceId string, attribute stri
 	}
 }
 
-func (dMgr *DeviceManager) GetParentDeviceId(deviceId string) *string {
+func (dMgr *DeviceManager) GetParentDeviceId(deviceId string) string {
 	if device, _ := dMgr.GetDevice(deviceId); device != nil {
 		log.Infow("GetParentDeviceId", log.Fields{"deviceId": device.Id, "parentId": device.ParentId})
-		return &device.ParentId
+		return device.ParentId
 	}
-	return nil
+	return ""
 }
 
 func (dMgr *DeviceManager) simulateAlarm(ctx context.Context, simulatereq *voltha.SimulateAlarmRequest, ch chan interface{}) {
