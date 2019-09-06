@@ -191,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "64ea6ba4_6e77b872",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-06T15:38:04Z",
+      "side": 1,
+      "message": "if loading is recursive, should the lock either be moved outside of the call so that the recursion is covered? Or could the recussion be handled by a queue/channel (i.e. load isn\u0027t called directly, but you enqueue a device to be loaded then have a single thread load each device, which may mean more devices are enqueued). This second approach means that if the caller wants the result of the load then they have to wait for a \"return event\" as opposed to a simple func call. It also means that depending on how its implemented you may get a partially loaded device at some point (i.e. not all parents, children are loaded).\n\nAnyway, I will leave it to you as to what if anything needs to be done, just concerned there is a latent issue that might bite us when we are under load.",
+      "parentUuid": "71a7899e_8f37ad98",
+      "range": {
+        "startLine": 410,
+        "startChar": 9,
+        "endLine": 410,
+        "endChar": 33
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e32322fe_f6d754be",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
