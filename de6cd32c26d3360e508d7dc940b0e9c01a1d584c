@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "2c78bb21_c1d0e4b3",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T18:30:40Z",
+      "side": 1,
+      "message": "In this specific function the sync map is not doing much.  However, since the structure is already defined as a sync map and it used elsewhere then we have to use it as is in this function.\n\nI am changing this function to cater for the edge case of partial return \n when multiple threads invoke loading of the same device (function will be more complex :)",
+      "parentUuid": "077d9943_d9394b32",
+      "range": {
+        "startLine": 400,
+        "startChar": 6,
+        "endLine": 400,
+        "endChar": 23
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a45bcc13_c5743b39",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
