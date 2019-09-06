@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "71a7899e_8f37ad98",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T14:39:02Z",
+      "side": 1,
+      "message": "In your example with Thread A and B trying to load the same device:  It\u0027s true that Thread A can delete the device right before Thread B returns true.  This scenario will occur only in the case where loading of a device results in a failure.  The action of loading a device is very basic, hence if Thread A fails then thread B would have likely failed as well (especially since these two Thread must be running close to simultaneously).  In the big picture, this is an acceptable scenario because the next call to do an operation on that device will result in it being loaded again.   I will still need to tweak the returning call to cater for this scenario.\n\nOn a separate note, device loading is recursive (i.e.resulting of children and parent loading as well), meaning a child or a parent may request the same device to be loaded again.   Putting the entire block in a lock will end up in a deadlock (tried that before and had to change).",
+      "parentUuid": "26fc5d8c_d7583ffe",
+      "range": {
+        "startLine": 410,
+        "startChar": 9,
+        "endLine": 410,
+        "endChar": 33
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e32322fe_f6d754be",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
