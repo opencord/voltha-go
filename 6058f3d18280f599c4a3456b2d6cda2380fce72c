@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d58db4ee_ef61315e",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-06T20:29:59Z",
+      "side": 1,
+      "message": "Nice. But since the deviceLoadingInProgress map for the device is already protected by the device loading lock, this should be a simple map instead of a sync map which isn\u0027t required for this use-case.",
+      "revId": "6058f3d18280f599c4a3456b2d6cda2380fce72c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
