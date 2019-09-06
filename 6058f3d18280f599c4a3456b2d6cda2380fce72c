@@ -16,6 +16,24 @@
       "revId": "6058f3d18280f599c4a3456b2d6cda2380fce72c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b35a7da9_48fbc362",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T20:33:32Z",
+      "side": 1,
+      "message": "A simple map won\u0027t be totally protected when there are multiple device loading (not the same Id) in which case the map needs to be protected.",
+      "parentUuid": "d58db4ee_ef61315e",
+      "revId": "6058f3d18280f599c4a3456b2d6cda2380fce72c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
