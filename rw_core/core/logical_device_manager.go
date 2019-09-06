@@ -30,15 +30,16 @@ import (
 )
 
 type LogicalDeviceManager struct {
-	logicalDeviceAgents sync.Map
-	core                *Core
-	deviceMgr           *DeviceManager
-	grpcNbiHdlr         *APIHandler
-	adapterProxy        *AdapterProxy
-	kafkaICProxy        *kafka.InterContainerProxy
-	clusterDataProxy    *model.Proxy
-	exitChannel         chan int
-	defaultTimeout      int64
+	logicalDeviceAgents      sync.Map
+	core                     *Core
+	deviceMgr                *DeviceManager
+	grpcNbiHdlr              *APIHandler
+	adapterProxy             *AdapterProxy
+	kafkaICProxy             *kafka.InterContainerProxy
+	clusterDataProxy         *model.Proxy
+	exitChannel              chan int
+	defaultTimeout           int64
+	lockLoadingLogicalDevice sync.RWMutex
 }
 
 func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy, timeout int64) *LogicalDeviceManager {
@@ -49,6 +50,7 @@ func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy 
 	logicalDeviceMgr.kafkaICProxy = kafkaICProxy
 	logicalDeviceMgr.clusterDataProxy = cdProxy
 	logicalDeviceMgr.defaultTimeout = timeout
+	logicalDeviceMgr.lockLoadingLogicalDevice = sync.RWMutex{}
 	return &logicalDeviceMgr
 }
 
@@ -205,22 +207,27 @@ func (ldMgr *LogicalDeviceManager) getLogicalDeviceFromModel(lDeviceId string) (
 
 // load loads a logical device manager in memory
 func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
-	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
-	// To prevent a race condition, let's hold the logical device agent map lock.  This will prevent a loading and
-	// a create logical device callback from occurring at the same time.
+	// Sanity
+	if lDeviceId == "" {
+		return nil
+	}
+	// Add a lock to prevent two concurrent calls from loading the same device twice
+	ldMgr.lockLoadingLogicalDevice.Lock()
 	if ldAgent, _ := ldMgr.logicalDeviceAgents.Load(lDeviceId); ldAgent == nil {
-		// Proceed with the loading only if the logical device exist in the Model (could have been deleted)
 		if _, err := ldMgr.getLogicalDeviceFromModel(lDeviceId); err == nil {
-			// Create a temp logical device Agent and let it load from memory
+			log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
 			agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
+			ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceId, agent)
+			ldMgr.lockLoadingLogicalDevice.Unlock()
 			if err := agent.start(nil, true); err != nil {
 				agent.stop(nil)
+				ldMgr.logicalDeviceAgents.Delete(lDeviceId)
 				return err
 			}
-			ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceId, agent)
+			return nil
 		}
 	}
-	// TODO: load the child device
+	ldMgr.lockLoadingLogicalDevice.Unlock()
 	return nil
 }
 
@@ -416,11 +423,11 @@ func (ldMgr *LogicalDeviceManager) setupUNILogicalPorts(ctx context.Context, chi
 
 	log.Debugw("setupUNILogicalPorts", log.Fields{"logDeviceId": logDeviceId, "parentId": parentId})
 
-	if parentId == "" || logDeviceId == nil || *logDeviceId == "" {
+	if parentId == "" || logDeviceId == "" {
 		return errors.New("device-in-invalid-state")
 	}
 
-	if agent := ldMgr.getLogicalDeviceAgent(*logDeviceId); agent != nil {
+	if agent := ldMgr.getLogicalDeviceAgent(logDeviceId); agent != nil {
 		if err := agent.setupUNILogicalPorts(ctx, childDevice); err != nil {
 			return err
 		}

@@ -210,6 +210,22 @@ func (dg *DeviceGraph) Print() error {
 	return nil
 }
 
+func (dg *DeviceGraph) IsUpToDate(ld *voltha.LogicalDevice) bool {
+	if ld != nil {
+		if len(dg.boundaryPorts) != len(ld.Ports) {
+			return false
+		}
+		for _, lp := range ld.Ports {
+			portId := concatDeviceIdPortId(lp.DeviceId, lp.DevicePortNo)
+			if val, ok := dg.boundaryPorts[portId]; !ok || val != lp.OfpPort.PortNo {
+				return false
+			}
+		}
+		return true
+	}
+	return len(dg.boundaryPorts) == 0
+}
+
 //getDevice returns the device either from the local cache (default) or from the model.
 //TODO: Set a cache timeout such that we do not use invalid data.  The full device lifecycle should also
 //be taken in consideration

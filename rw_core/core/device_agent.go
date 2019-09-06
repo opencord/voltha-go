@@ -95,7 +95,7 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 			log.Errorw("failed-to-load-device", log.Fields{"deviceId": agent.deviceId})
 			return status.Errorf(codes.NotFound, "device-%s", agent.deviceId)
 		}
-		log.Debugw("device-loaded-from-dB", log.Fields{"device": agent.lastData})
+		log.Debugw("device-loaded-from-dB", log.Fields{"deviceId": agent.deviceId})
 	} else {
 		// Add the initial device to the local model
 		if added := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceId, agent.lastData, ""); added == nil {
@@ -106,7 +106,7 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 	agent.deviceProxy = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceId, false)
 	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
 
-	log.Debug("device-agent-started")
+	log.Debugw("device-agent-started", log.Fields{"deviceId": agent.deviceId})
 	return nil
 }
 
