@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "076023f5_a687cafa",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "Yup , a plea for sanity",
+      "parentUuid": "e5be0240_90075f86",
+      "range": {
+        "startLine": 395,
+        "startChar": 4,
+        "endLine": 395,
+        "endChar": 10
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb966395_fe4dd497",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-09-06T01:30:48Z",
       "side": 1,
       "message": "Is this lock per device ID, or are all adds serialized",
+      "range": {
+        "startLine": 400,
+        "startChar": 6,
+        "endLine": 400,
+        "endChar": 23
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fd0151b_baff44ed",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "The lock is there just to make sure another call to add the same device (at the same time) does not result in multiple adds.  If there are two different devices being added then their addition  into the device agent map will be serialized.  Once added then they can proceed independently.",
+      "parentUuid": "cb966395_fe4dd497",
       "range": {
         "startLine": 400,
         "startChar": 6,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9101c2ce_94de51bc",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "The device agent map is a sync map, hence only one action will take place,   The \"lockloadingdevice\" lock is not to protect the map, it\u0027s to protect the map.",
+      "parentUuid": "a45bcc13_c5743b39",
+      "range": {
+        "startLine": 410,
+        "startChar": 9,
+        "endLine": 410,
+        "endChar": 33
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e32322fe_f6d754be",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2019-09-06T01:30:48Z",
       "side": 1,
       "message": "technically err is being re-allocated on the stack for each loop iteration. might we want to declare it as a var outside of the loop and reuse it?",
+      "range": {
+        "startLine": 505,
+        "startChar": 6,
+        "endLine": 505,
+        "endChar": 9
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aff2ec9c_7e4efe1a",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "Good point, will update",
+      "parentUuid": "e32322fe_f6d754be",
       "range": {
         "startLine": 505,
         "startChar": 6,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "40a5fafc_ba7db01c",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1131,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "It\u0027s a sync map.",
+      "parentUuid": "b4cd4b0f_67101d47",
+      "range": {
+        "startLine": 1131,
+        "startChar": 9,
+        "endLine": 1131,
+        "endChar": 33
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "149e5b35_d4164a1c",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -128,6 +248,30 @@
       "writtenOn": "2019-09-06T01:30:48Z",
       "side": 1,
       "message": "if code block isn\u0027t needed, then it should be deleted.",
+      "range": {
+        "startLine": 272,
+        "startChar": 2,
+        "endLine": 280,
+        "endChar": 3
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f385508_6b2d1f01",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "149e5b35_d4164a1c",
       "range": {
         "startLine": 272,
         "startChar": 2,
@@ -186,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "43026879_06da824b",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "Update without a lock implies the caller is already holding the lock.   It\u0027s not very pretty but the other option would have been to put all the code together, hence a bunch of duplicated codes.",
+      "parentUuid": "9e59cd24_98dd41ed",
+      "range": {
+        "startLine": 346,
+        "startChar": 35,
+        "endLine": 346,
+        "endChar": 46
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "629ee300_84213345",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -197,6 +365,30 @@
       "writtenOn": "2019-09-06T01:30:48Z",
       "side": 1,
       "message": "What is the difference between getLogicalDeviceWithoutLock and GetLogicalDevice? presumably GetLogicalDevice does it with a lock?\n\nAre we getting a copy, or do we now have a lock until we call unlock? Wondering if GetLogicalDevice should change to GetLogicalDeviceWithLock to make this clear.",
+      "range": {
+        "startLine": 566,
+        "startChar": 21,
+        "endLine": 566,
+        "endChar": 37
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45d2e374_94a05ac1",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "GetLogicalDevice returns a copy of the data.  That method uses a readlock to get the data from the model.   The caller should not hold the lock before calling this method otherwise it will cause a deadlock.   This method can be access outside the package.   getLogicalDeviceWithoutLock is an internal method and the caller must hold the device lock before calling that method.",
+      "parentUuid": "629ee300_84213345",
       "range": {
         "startLine": 566,
         "startChar": 21,
@@ -232,6 +424,30 @@
     },
     {
       "key": {
+        "uuid": "83a13550_d467548d",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "Same comments as in previous file.   This is a sync map.",
+      "parentUuid": "5b79f18d_b51a1404",
+      "range": {
+        "startLine": 224,
+        "startChar": 10,
+        "endLine": 224,
+        "endChar": 29
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ae708ff_ea6b1d66",
         "filename": "rw_core/graph/device_graph.go",
         "patchSetId": 1
@@ -255,6 +471,30 @@
     },
     {
       "key": {
+        "uuid": "ba735af2_6601999e",
+        "filename": "rw_core/graph/device_graph.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "Sure will update",
+      "parentUuid": "7ae708ff_ea6b1d66",
+      "range": {
+        "startLine": 219,
+        "startChar": 3,
+        "endLine": 219,
+        "endChar": 9
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2273a93e_2ba4de0b",
         "filename": "rw_core/graph/device_graph.go",
         "patchSetId": 1
@@ -266,6 +506,30 @@
       "writtenOn": "2019-09-06T01:30:48Z",
       "side": 1,
       "message": "declare outside of loop?",
+      "range": {
+        "startLine": 220,
+        "startChar": 6,
+        "endLine": 220,
+        "endChar": 13
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc661cfe_75f21ca5",
+        "filename": "rw_core/graph/device_graph.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-06T13:07:02Z",
+      "side": 1,
+      "message": "Will update",
+      "parentUuid": "2273a93e_2ba4de0b",
       "range": {
         "startLine": 220,
         "startChar": 6,
