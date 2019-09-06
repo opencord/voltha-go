@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "494eea8b_17183334",
+        "filename": "Gopkg.toml",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-06T14:26:34Z",
+      "side": 1,
+      "message": "Did we want to stay at version 10 of client-go or move to 11 or 12, which would mean different versions for the API machinery I believe.\n\nI do think if would benefit the project for all components to use the same version of the client-go.",
+      "range": {
+        "startLine": 112,
+        "startChar": 15,
+        "endLine": 112,
+        "endChar": 16
+      },
+      "revId": "4d64de5a9d998df82f85b54e27e8d5d948143d3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
