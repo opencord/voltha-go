@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "f4468ea5_8b9eac57",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-06T18:20:54Z",
+      "side": 1,
+      "message": "I don\u0027t think this lock is required. \nSince the device agents map is a \"sync\" map, the load is safe for multiple threads even for the same device. \nConsidering that, the cache hit would result in the second guy not doing anything. \nThis also seems to result in another lock on top of root device lock which already exists for root device loading. \nThis lock can be safely removed.",
+      "parentUuid": "7fd0151b_baff44ed",
+      "range": {
+        "startLine": 400,
+        "startChar": 6,
+        "endLine": 400,
+        "endChar": 23
+      },
+      "revId": "de6cd32c26d3360e508d7dc940b0e9c01a1d584c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a45bcc13_c5743b39",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
