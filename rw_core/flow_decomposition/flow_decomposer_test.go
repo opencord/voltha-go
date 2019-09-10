@@ -16,15 +16,15 @@
 package flow_decomposition
 
 import (
-	"errors"
-	"github.com/opencord/voltha-go/rw_core/graph"
-	fu "github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/pkg/log"
-	ofp "github.com/opencord/voltha-protos/go/openflow_13"
-	"github.com/opencord/voltha-protos/go/voltha"
-	"github.com/stretchr/testify/assert"
+        "errors"
+        "github.com/opencord/voltha-go/rw_core/graph"
+        fu "github.com/opencord/voltha-go/rw_core/utils"
+        "github.com/opencord/voltha-lib-go/pkg/log"
+        ofp "github.com/opencord/voltha-protos/go/openflow_13"
+        "github.com/opencord/voltha-protos/go/voltha"
+        "github.com/stretchr/testify/assert"
 
-	"testing"
+        "testing"
 )
 
 func init() {
@@ -143,10 +143,6 @@ func (tdm *testDeviceManager) DeleteAllChildDevices(cDevice *voltha.Device) erro
 }
 
 func (tdm *testDeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) MarkChildDevicesAsUnReachable(cDevice *voltha.Device) error {
 	return nil
 }
 
