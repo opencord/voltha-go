@@ -34,5 +34,4 @@ type DeviceManager interface {
 	DeleteLogicalPorts(cDevice *voltha.Device) error
 	DeleteAllChildDevices(cDevice *voltha.Device) error
 	RunPostDeviceDelete(cDevice *voltha.Device) error
-	MarkChildDevicesAsUnReachable(cDevice *voltha.Device) error
 }

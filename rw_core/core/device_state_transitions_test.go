@@ -78,10 +78,6 @@ func (tdm *testDeviceManager) RunPostDeviceDelete(to *voltha.Device) error {
 	return nil
 }
 
-func (tdm *testDeviceManager) MarkChildDevicesAsUnReachable(to *voltha.Device) error {
-	return nil
-}
-
 func init() {
 	log.AddPackage(log.JSON, log.WarnLevel, nil)
 	//log.UpdateAllLoggers(log.Fields{"instanceId": "device-state-transition"})
@@ -201,30 +197,6 @@ func TestValidTransitions(t *testing.T) {
 	handlers = transitionMap.GetTransitionHandler(from, to)
 	assert.Equal(t, 1, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.SetupUNILogicalPorts).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-
-	from = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
-	to = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
-	handlers = transitionMap.GetTransitionHandler(from, to)
-	assert.Equal(t, 1, len(handlers))
-	assert.True(t, reflect.ValueOf(tdm.MarkChildDevicesAsUnReachable).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-
-	from = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
-	to = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
-	handlers = transitionMap.GetTransitionHandler(from, to)
-	assert.Equal(t, 1, len(handlers))
-	assert.True(t, reflect.ValueOf(tdm.MarkChildDevicesAsUnReachable).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-
-	from = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_ACTIVE)
-	to = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
-	handlers = transitionMap.GetTransitionHandler(from, to)
-	assert.Equal(t, 1, len(handlers))
-	assert.True(t, reflect.ValueOf(tdm.MarkChildDevicesAsUnReachable).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-
-	from = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
-	to = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_ACTIVE)
-	handlers = transitionMap.GetTransitionHandler(from, to)
-	assert.Equal(t, 1, len(handlers))
-	assert.True(t, reflect.ValueOf(tdm.MarkChildDevicesAsUnReachable).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
 	from = getDevice(true, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
 	to = getDevice(true, voltha.AdminState_DELETED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
