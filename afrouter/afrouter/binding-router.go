@@ -102,24 +102,16 @@ func (br BindingRouter) Route(sel interface{}) *backend {
 				return nil
 			}
 			log.Debugf("MUST CREATE A NEW BINDING MAP ENTRY!!")
-			if len(br.bindings) < len(br.beCluster.backends) {
-				if *br.currentBackend, err = br.beCluster.nextBackend(*br.currentBackend, BackendSequenceRoundRobin); err == nil {
-					// Use the name of the backend as the metaVal for this new binding
-					br.bindings[(*br.currentBackend).name] = *br.currentBackend
-					return *br.currentBackend
-				} else {
-					log.Error(err)
-					sl.err = err
-					return nil
-				}
+			if *br.currentBackend, err = br.beCluster.nextBackend(*br.currentBackend, BackendSequenceRoundRobin); err == nil {
+				// Use the name of the backend as the metaVal for this new binding
+				br.bindings[(*br.currentBackend).name] = *br.currentBackend
+				return *br.currentBackend
 			} else {
-				err = errors.New(fmt.Sprintf("Backends exhausted in attempt to bind for metakey '%s' with value '%s'",
-					sl.metaKey, sl.metaVal))
 				log.Error(err)
 				sl.err = err
+				return nil
 			}
 		}
-		return nil
 	default:
 		return nil
 	}
