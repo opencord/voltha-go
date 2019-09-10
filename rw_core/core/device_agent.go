@@ -18,6 +18,10 @@ package core
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 	fu "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/pkg/db/model"
@@ -27,9 +31,6 @@ import (
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
-	"sync"
-	"time"
 )
 
 type DeviceAgent struct {
