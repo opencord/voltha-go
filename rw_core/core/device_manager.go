@@ -1068,19 +1068,6 @@ func (dMgr *DeviceManager) DeleteLogicalPorts(device *voltha.Device) error {
 	return nil
 }
 
-func (dMgr *DeviceManager) MarkChildDevicesAsUnReachable(device *voltha.Device) error {
-	log.Info("MarkChildDevicesAsUnReachable")
-	// Set the connection status to unreachable
-	connStatus := voltha.ConnectStatus_UNREACHABLE
-	// Do not set the operational status.  Setting it to -1 will do the trick
-	operStatus := voltha.OperStatus_OperStatus(-1)
-	if err := dMgr.updateChildrenStatus(device.Id, operStatus, connStatus); err != nil {
-		log.Warnw("deleteLogical-ports-error", log.Fields{"deviceId": device.Id})
-		return err
-	}
-	return nil
-}
-
 func (dMgr *DeviceManager) getParentDevice(childDevice *voltha.Device) *voltha.Device {
 	//	Sanity check
 	if childDevice.Root {
