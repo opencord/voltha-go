@@ -17,6 +17,7 @@ package flow_decomposition
 
 import (
 	"errors"
+
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	fu "github.com/opencord/voltha-go/rw_core/utils"
@@ -143,10 +144,6 @@ func (tdm *testDeviceManager) DeleteAllChildDevices(cDevice *voltha.Device) erro
 }
 
 func (tdm *testDeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) MarkChildDevicesAsUnReachable(cDevice *voltha.Device) error {
 	return nil
 }
 
