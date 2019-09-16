@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "f2f08d91_5be451ab",
+        "filename": "afrouter/afrouter/router.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-09-16T21:45:56Z",
+      "side": 1,
+      "message": "Agree that this is a larger architectural change than we want to do now. Would be nice to untangle the control flow a bit and make it all clearer. Will defer for now.",
+      "parentUuid": "e45fe610_0be95156",
+      "revId": "9a6f7382b786b97d6aadfe98e28c2e00fadfa039",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5021695_3d476cac",
         "filename": "afrouter/afrouter/source-router.go",
         "patchSetId": 16
