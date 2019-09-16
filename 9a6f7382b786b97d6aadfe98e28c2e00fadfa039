@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1835d1d6_825be5cb",
+        "filename": "afrouter/afrouter/backend.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-16T17:35:00Z",
+      "side": 1,
+      "message": "This will log every skipped connection.  Better to just print \"looking for connection x\" once?",
+      "revId": "9a6f7382b786b97d6aadfe98e28c2e00fadfa039",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b4efeb4_8452dfd7",
+        "filename": "afrouter/afrouter/cluster.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-16T17:35:00Z",
+      "side": 1,
+      "message": "Use f.backend.name instead?",
+      "revId": "9a6f7382b786b97d6aadfe98e28c2e00fadfa039",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e45fe610_0be95156",
+        "filename": "afrouter/afrouter/router.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-16T17:35:00Z",
+      "side": 1,
+      "message": "Honestly, I don\u0027t like this.  \n\n(Architecture change required, probably shouldn\u0027t block this merge.)\n\nIt would probably be cleaner to change each implementation of Route() to internally call the backend\u0027s handler() method, returning no arguments.  Then we can have have a customized implementation for SourceRouter without polluting the API.",
+      "revId": "9a6f7382b786b97d6aadfe98e28c2e00fadfa039",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5021695_3d476cac",
+        "filename": "afrouter/afrouter/source-router.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-16T17:35:00Z",
+      "side": 1,
+      "message": "Can just remove commented-out code.",
+      "revId": "9a6f7382b786b97d6aadfe98e28c2e00fadfa039",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da7bd207_25796777",
+        "filename": "afrouter/afrouter/source-router_test.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-16T17:35:00Z",
+      "side": 1,
+      "message": "No need to leave \u0026 re-enter voltha-go.",
+      "revId": "9a6f7382b786b97d6aadfe98e28c2e00fadfa039",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3508c2f_b9e49859",
+        "filename": "afrouter/afrouter/source-router_test.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-16T17:35:00Z",
+      "side": 1,
+      "message": "Can just remove unused code.",
+      "revId": "9a6f7382b786b97d6aadfe98e28c2e00fadfa039",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
