@@ -22,6 +22,30 @@
       "revId": "4d64de5a9d998df82f85b54e27e8d5d948143d3d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93e1fd2a_93c9f2ac",
+        "filename": "Gopkg.toml",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-09-16T11:16:55Z",
+      "side": 1,
+      "message": "We can also move to v12 of client-go. That would need us to also move api and apimachinery dependency to 1.15.x. \n\nBuild is fine after moving voltha-go dependency to v12 of k8s client-go and 1.15 of k8s api \u0026 apimachinery. Also, pods are coming up fine in kind-voltha setup.\n\nI see that you have initiated a query if we should move dependency of voltha-openolt-adapter and voltctl also to v12 of client-go; will wait for an answer on that before submitting an updated patch",
+      "parentUuid": "494eea8b_17183334",
+      "range": {
+        "startLine": 112,
+        "startChar": 15,
+        "endLine": 112,
+        "endChar": 16
+      },
+      "revId": "4d64de5a9d998df82f85b54e27e8d5d948143d3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
