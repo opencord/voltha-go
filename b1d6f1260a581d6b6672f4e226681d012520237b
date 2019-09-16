@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbf27fa9_556de9a3",
+        "filename": "compose/ofagent.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-16T15:06:18Z",
+      "side": 1,
+      "message": "Isn\u0027t is a better solution to enable TLS in voltha-onos as opposed to disable it in ofagent?",
+      "revId": "b1d6f1260a581d6b6672f4e226681d012520237b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
