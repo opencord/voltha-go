@@ -34,7 +34,6 @@ services:
 #      "--grpc-timeout=15",
 #      "--core-binding-key=non_default_voltha_backend_name",
       "--instance-id-is-container-name",
-      "--enable-tls",
       "--key-file=/ofagent/pki/voltha.key",
       "--cert-file=/ofagent/pki/voltha.crt",
       "-v"
