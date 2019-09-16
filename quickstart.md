@@ -108,7 +108,7 @@ The steps below generate the needed docker images and the Docker build system se
 This should work without setting up a golang environment.  This also builds needed ofagent and cli docker images:
 
 ```sh
-export DOCKER_TAG=latest
+export DOCKER_TAG=master
 cd ~/source/voltha-go
 make build
 ```
@@ -139,7 +139,7 @@ Build the openolt container.  Above LOCAL environment variables can be used to i
 
 Golang and Python Openolt
 ```sh
-export DOCKER_TAG=latest
+export DOCKER_TAG=master
 cd ~/source/voltha-openolt-adapter/
 make build
 ```
@@ -155,7 +155,7 @@ git clone https://gerrit.opencord.org/voltha-openonu-adapter.git
 
 Build the openonu container.  Above LOCAL environment variables can be used to include local builds of PyVoltha and voltha-protos.  This will copy the pyvoltha tar.gz and voltha-protos from their respective build tree and include in the openonu build tree.
 ```sh
-export DOCKER_TAG=latest
+export DOCKER_TAG=master
 cd ~/source/voltha-openonu-adapter/
 make build
 ```
@@ -181,10 +181,11 @@ make build
 
 ## Test
 
-Run the combined compose file that starts the core, its dependent systems and the openonu and openolt adapters.  Export an environment variable of your non-localhost ip address needed for inter-container communication.  For convenience you can also export `DOCKER_TAG` to signify the docker images tag you would like to use.  Though for typical development you may have to edit `compose/system-test.yml` to override the specific docker image `DOCKER_TAG` needed.
+Run the combined compose file that starts the core, its dependent systems and the openonu and openolt adapters.  Export an environment variable of your non-localhost ip address needed for inter-container communication.  For convenience you can also export `DOCKER_TAG` to signify the docker images tag you would like to use.  Though for typical development you may have to edit `compose/system-test.yml` to override the specific docker image `DOCKER_TAG` needed. The default repository for `DOCKER_REPOSITORY` is `voltha/`.
 ```sh
 export DOCKER_HOST_IP=##YOUR_LOCAL_IP##
-export DOCKER_TAG=latest
+export DOCKER_TAG=master
+export DOCKER_REPOSITORY=voltha/
 
 cd ~/source/voltha-go
 docker-compose -f compose/system-test.yml up -d
