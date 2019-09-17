@@ -43,28 +43,30 @@ const (
 	default_ROCoreCert            = "pki/voltha.crt"
 	default_ROCoreCA              = "pki/voltha-CA.pem"
 	default_Affinity_Router_Topic = "affinityRouter"
+	default_TxnProcessedMDKey     = "txn_processed" // Use to indicate whether a trasaction was processed by this core
 )
 
 // ROCoreFlags represents the set of configurations used by the read-only core service
 type ROCoreFlags struct {
 	// Command line parameters
-	InstanceID          string
-	ROCoreEndpoint      string
-	GrpcHost            string
-	GrpcPort            int
-	KVStoreType         string
-	KVStoreTimeout      int // in seconds
-	KVStoreHost         string
-	KVStorePort         int
-	KVTxnKeyDelTime     int
-	CoreTopic           string
-	LogLevel            int
-	Banner              bool
-	DisplayVersionOnly  bool
-	ROCoreKey           string
-	ROCoreCert          string
-	ROCoreCA            string
-	AffinityRouterTopic string
+	InstanceID              string
+	ROCoreEndpoint          string
+	GrpcHost                string
+	GrpcPort                int
+	KVStoreType             string
+	KVStoreTimeout          int // in seconds
+	KVStoreHost             string
+	KVStorePort             int
+	KVTxnKeyDelTime         int
+	CoreTopic               string
+	LogLevel                int
+	Banner                  bool
+	DisplayVersionOnly      bool
+	ROCoreKey               string
+	ROCoreCert              string
+	ROCoreCA                string
+	AffinityRouterTopic     string
+	TxnProcessedMetaDataKey string
 }
 
 func init() {
@@ -74,23 +76,24 @@ func init() {
 // NewROCoreFlags returns a new ROCore config
 func NewROCoreFlags() *ROCoreFlags {
 	var roCoreFlag = ROCoreFlags{ // Default values
-		InstanceID:          default_InstanceID,
-		ROCoreEndpoint:      default_ROCoreEndpoint,
-		GrpcHost:            default_GrpcHost,
-		GrpcPort:            default_GrpcPort,
-		KVStoreType:         default_KVStoreType,
-		KVStoreTimeout:      default_KVStoreTimeout,
-		KVStoreHost:         default_KVStoreHost,
-		KVStorePort:         default_KVStorePort,
-		KVTxnKeyDelTime:     default_KVTxnKeyDelTime,
-		CoreTopic:           default_CoreTopic,
-		LogLevel:            default_LogLevel,
-		Banner:              default_Banner,
-		DisplayVersionOnly:  default_DisplayVersionOnly,
-		ROCoreKey:           default_ROCoreKey,
-		ROCoreCert:          default_ROCoreCert,
-		ROCoreCA:            default_ROCoreCA,
-		AffinityRouterTopic: default_Affinity_Router_Topic,
+		InstanceID:              default_InstanceID,
+		ROCoreEndpoint:          default_ROCoreEndpoint,
+		GrpcHost:                default_GrpcHost,
+		GrpcPort:                default_GrpcPort,
+		KVStoreType:             default_KVStoreType,
+		KVStoreTimeout:          default_KVStoreTimeout,
+		KVStoreHost:             default_KVStoreHost,
+		KVStorePort:             default_KVStorePort,
+		KVTxnKeyDelTime:         default_KVTxnKeyDelTime,
+		CoreTopic:               default_CoreTopic,
+		LogLevel:                default_LogLevel,
+		Banner:                  default_Banner,
+		DisplayVersionOnly:      default_DisplayVersionOnly,
+		ROCoreKey:               default_ROCoreKey,
+		ROCoreCert:              default_ROCoreCert,
+		ROCoreCA:                default_ROCoreCA,
+		AffinityRouterTopic:     default_Affinity_Router_Topic,
+		TxnProcessedMetaDataKey: default_TxnProcessedMDKey,
 	}
 	return &roCoreFlag
 }
@@ -138,6 +141,9 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Show version information and exit")
 	flag.BoolVar(&cf.DisplayVersionOnly, "version", default_DisplayVersionOnly, help)
+
+	help = fmt.Sprintf("The name of the meta-key that indicates this Core has processed a transaction")
+	flag.StringVar(&(cf.TxnProcessedMetaDataKey), "txn_processed_md_key", default_TxnProcessedMDKey, help)
 
 	flag.Parse()
 
