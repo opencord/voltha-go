@@ -25,9 +25,11 @@ import (
 	"github.com/opencord/voltha-protos/go/omci"
 	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"strconv"
 )
 
 type APIHandler struct {
@@ -35,13 +37,15 @@ type APIHandler struct {
 	deviceMgr        *DeviceManager
 	logicalDeviceMgr *LogicalDeviceManager
 	da.DefaultAPIHandler
+	txnProcessedMDKey string
 }
 
-func NewAPIHandler(generalMgr *ModelProxyManager, deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager) *APIHandler {
+func NewAPIHandler(generalMgr *ModelProxyManager, deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager, txnMDKey string) *APIHandler {
 	handler := &APIHandler{
-		commonMgr:        generalMgr,
-		deviceMgr:        deviceMgr,
-		logicalDeviceMgr: lDeviceMgr,
+		commonMgr:         generalMgr,
+		deviceMgr:         deviceMgr,
+		logicalDeviceMgr:  lDeviceMgr,
+		txnProcessedMDKey: txnMDKey,
 	}
 	return handler
 }
@@ -51,6 +55,17 @@ func isTestMode(ctx context.Context) bool {
 	md, _ := metadata.FromIncomingContext(ctx)
 	_, exist := md[common.TestModeKeys_api_test.String()]
 	return exist
+}
+
+//setProcessedGrpcMD adds a processing key to the gRPC metadata.
+func (handler *APIHandler) setProcessedGrpcMD(ctx context.Context, owner bool) error {
+	if ctx != nil && ctx.Err() == nil {
+		if err := grpc.SetHeader(ctx, metadata.Pairs(handler.txnProcessedMDKey, strconv.FormatBool(owner))); err != nil {
+			log.Errorw("failure-setting-metadata", log.Fields{"error": err})
+		}
+		return nil
+	}
+	return status.Error(codes.InvalidArgument, "invalid-context")
 }
 
 // waitForNilResponseOnSuccess is a helper function to wait for a response on channel ch where an nil
@@ -76,42 +91,49 @@ func waitForNilResponseOnSuccess(ctx context.Context, ch chan interface{}) (*emp
 // GetVoltha returns the contents of all components (i.e. devices, logical_devices, ...)
 func (handler *APIHandler) GetVoltha(ctx context.Context, empty *empty.Empty) (*voltha.Voltha, error) {
 	log.Debug("GetVoltha")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.GetVoltha(ctx)
 }
 
 // ListCoreInstances returns details on the running core containers
 func (handler *APIHandler) ListCoreInstances(ctx context.Context, empty *empty.Empty) (*voltha.CoreInstances, error) {
 	log.Debug("ListCoreInstances")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.ListCoreInstances(ctx)
 }
 
 // GetCoreInstance returns the details of a specific core container
 func (handler *APIHandler) GetCoreInstance(ctx context.Context, id *voltha.ID) (*voltha.CoreInstance, error) {
 	log.Debugw("GetCoreInstance", log.Fields{"id": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.GetCoreInstance(ctx, id.Id)
 }
 
 // ListAdapters returns the contents of all adapters known to the system
 func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
 	log.Debug("ListDevices")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.ListAdapters(ctx)
 }
 
 // GetDevice returns the details a specific device
 func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
 	log.Debugw("GetDevice-request", log.Fields{"id": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.GetDevice(id.Id)
 }
 
 // ListDevices returns the contents of all devices known to the system
 func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
 	log.Debug("ListDevices")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.ListDevices()
 }
 
 // ListDeviceIds returns the list of device ids managed by a voltha core
 func (handler *APIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty) (*voltha.IDs, error) {
 	log.Debug("ListDeviceIDs")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	if isTestMode(ctx) {
 		out := &voltha.IDs{Items: make([]*voltha.ID, 0)}
 		return out, nil
@@ -122,90 +144,105 @@ func (handler *APIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty
 // ListDevicePorts returns the ports details for a specific device entry
 func (handler *APIHandler) ListDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.Ports, error) {
 	log.Debugw("ListDevicePorts", log.Fields{"deviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.ListDevicePorts(ctx, id.Id)
 }
 
 // ListDevicePmConfigs returns the PM config details for a specific device entry
 func (handler *APIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*voltha.PmConfigs, error) {
 	log.Debugw("ListDevicePmConfigs", log.Fields{"deviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.ListDevicePmConfigs(ctx, id.Id)
 }
 
 // ListDeviceFlows returns the flow details for a specific device entry
 func (handler *APIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*voltha.Flows, error) {
 	log.Debugw("ListDeviceFlows", log.Fields{"deviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.ListDeviceFlows(ctx, id.Id)
 }
 
 // ListDeviceFlowGroups returns the flow group details for a specific device entry
 func (handler *APIHandler) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
 	log.Debugw("ListDeviceFlowGroups", log.Fields{"deviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.ListDeviceFlowGroups(ctx, id.Id)
 }
 
 // ListDeviceTypes returns all the device types known to the system
 func (handler *APIHandler) ListDeviceTypes(ctx context.Context, empty *empty.Empty) (*voltha.DeviceTypes, error) {
 	log.Debug("ListDeviceTypes")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.ListDeviceTypes(ctx)
 }
 
 // GetDeviceType returns the device type for a specific device entry
 func (handler *APIHandler) GetDeviceType(ctx context.Context, id *voltha.ID) (*voltha.DeviceType, error) {
 	log.Debugw("GetDeviceType", log.Fields{"typeid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.GetDeviceType(ctx, id.Id)
 }
 
 // ListDeviceGroups returns all the device groups known to the system
 func (handler *APIHandler) ListDeviceGroups(ctx context.Context, empty *empty.Empty) (*voltha.DeviceGroups, error) {
 	log.Debug("ListDeviceGroups")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.ListDeviceGroups(ctx)
 }
 
 // GetDeviceGroup returns a specific device group entry
 func (handler *APIHandler) GetDeviceGroup(ctx context.Context, id *voltha.ID) (*voltha.DeviceGroup, error) {
 	log.Debugw("GetDeviceGroup", log.Fields{"groupid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.GetDeviceGroup(ctx, id.Id)
 }
 
 // GetImageDownloadStatus returns the download status for a specific image entry
 func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("GetImageDownloadStatus", log.Fields{"deviceid": img.GetId(), "imagename": img.GetName()})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.GetImageDownloadStatus(ctx, img.GetId(), img.GetName())
 }
 
 // GetImageDownload return the download details for a specific image entry
 func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("GetImageDownload", log.Fields{"deviceid": img.GetId(), "imagename": img.GetName()})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.GetImageDownload(ctx, img.GetId(), img.GetName())
 }
 
 // ListImageDownloads returns all image downloads known to the system
 func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
 	log.Debugw("GetImageDownload", log.Fields{"deviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.ListImageDownloads(ctx, id.Id)
 }
 
 // GetImages returns all images for a specific device entry
 func (handler *APIHandler) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
 	log.Debugw("GetImages", log.Fields{"deviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.deviceMgr.GetImages(ctx, id.Id)
 }
 
 // ListAlarmFilters return all alarm filters known to the system
 func (handler *APIHandler) ListAlarmFilters(ctx context.Context, empty *empty.Empty) (*voltha.AlarmFilters, error) {
 	log.Debug("ListAlarmFilters")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.ListAlarmFilters(ctx)
 }
 
 // GetAlarmFilter returns a specific alarm filter entry
 func (handler *APIHandler) GetAlarmFilter(ctx context.Context, id *voltha.ID) (*voltha.AlarmFilter, error) {
 	log.Debugw("GetAlarmFilter", log.Fields{"alarmid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.commonMgr.GetAlarmFilter(ctx, id.Id)
 }
 
 //ReconcileDevices is a request to a voltha core to managed a list of devices  based on their IDs
 func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
 	log.Debug("ReconcileDevices")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	if isTestMode(ctx) {
 		out := new(empty.Empty)
 		return out, nil
@@ -219,35 +256,41 @@ func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 // GetLogicalDevice returns the details for a specific logical device entry
 func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	log.Debugw("GetLogicalDevice-request", log.Fields{"id": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.logicalDeviceMgr.getLogicalDevice(id.Id)
 }
 
 // ListLogicalDevices returns all logical devices known to the system
 func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
 	log.Debug("ListLogicalDevices")
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.logicalDeviceMgr.listLogicalDevices()
 }
 
 // ListLogicalDevicePorts returns port details for a specific logical device entry
 func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.logicalDeviceMgr.ListLogicalDevicePorts(ctx, id.Id)
 }
 
 // ListLogicalDeviceFlows returns flow details for a specific logical device entry
 func (handler *APIHandler) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*voltha.Flows, error) {
 	log.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.logicalDeviceMgr.ListLogicalDeviceFlows(ctx, id.Id)
 }
 
 // ListLogicalDeviceFlowGroups returns flow group details for a specific logical device entry
 func (handler *APIHandler) ListLogicalDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
 	log.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	return handler.logicalDeviceMgr.ListLogicalDeviceFlowGroups(ctx, id.Id)
 }
 
 func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
 	log.Debugw("SelfTest-request", log.Fields{"id": id})
+	defer handler.setProcessedGrpcMD(ctx, true)
 	if isTestMode(ctx) {
 		resp := &voltha.SelfTestResponse{Result: voltha.SelfTestResponse_SUCCESS}
 		return resp, nil
@@ -260,6 +303,7 @@ func (handler *APIHandler) GetAlarmDeviceData(
 	ctx context.Context,
 	in *common.ID,
 ) (*omci.AlarmDeviceData, error) {
+	defer handler.setProcessedGrpcMD(ctx, true)
 	log.Debug("GetAlarmDeviceData-stub")
 	return nil, nil
 }
@@ -269,6 +313,7 @@ func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
 	ctx context.Context,
 	in *common.ID,
 ) (*openflow_13.MeterStatsReply, error) {
+	defer handler.setProcessedGrpcMD(ctx, true)
 	log.Debug("GetMeterStatsOfLogicalDevice-stub")
 	return nil, nil
 }
@@ -278,6 +323,7 @@ func (handler *APIHandler) GetMibDeviceData(
 	ctx context.Context,
 	in *common.ID,
 ) (*omci.MibDeviceData, error) {
+	defer handler.setProcessedGrpcMD(ctx, true)
 	log.Debug("GetMibDeviceData-stub")
 	return nil, nil
 }
@@ -287,6 +333,7 @@ func (handler *APIHandler) SimulateAlarm(
 	ctx context.Context,
 	in *voltha.SimulateAlarmRequest,
 ) (*common.OperationResp, error) {
+	defer handler.setProcessedGrpcMD(ctx, true)
 	log.Debug("SimulateAlarm-stub")
 	return nil, nil
 }

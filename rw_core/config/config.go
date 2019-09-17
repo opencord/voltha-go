@@ -52,8 +52,9 @@ const (
 	default_CoreTimeout               = int64(500)
 	default_CoreBindingKey            = "voltha_backend_name"
 	default_CorePairTopic             = "rwcore_1"
-	default_MaxConnectionRetries      = -1 // retries forever
-	default_ConnectionRetryInterval   = 2  // in seconds
+	default_MaxConnectionRetries      = -1              // retries forever
+	default_ConnectionRetryInterval   = 2               // in seconds
+	default_TxnProcessedMDKey         = "txn_processed" // Use to indicate whether a trasaction was processed by this core
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -88,6 +89,7 @@ type RWCoreFlags struct {
 	CorePairTopic             string
 	MaxConnectionRetries      int
 	ConnectionRetryInterval   int
+	TxnProcessedMetaDataKey   string
 }
 
 func init() {
@@ -126,6 +128,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		CorePairTopic:             default_CorePairTopic,
 		MaxConnectionRetries:      default_MaxConnectionRetries,
 		ConnectionRetryInterval:   default_ConnectionRetryInterval,
+		TxnProcessedMetaDataKey:   default_TxnProcessedMDKey,
 	}
 	return &rwCoreFlag
 }
@@ -212,6 +215,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The number of seconds between each connection retry attempt ")
 	flag.IntVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
+
+	help = fmt.Sprintf("The name of the meta-key that indicates which Core in a pair has processed a transaction")
+	flag.StringVar(&(cf.TxnProcessedMetaDataKey), "txn_processed_md_key", default_TxnProcessedMDKey, help)
 
 	flag.Parse()
 }
