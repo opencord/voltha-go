@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ffb7fca_02a52405",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-17T23:37:02Z",
+      "side": 1,
+      "message": "Single-threaded use of sync.Once",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "298ea33d_428466d2",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-17T23:37:02Z",
+      "side": 1,
+      "message": "This does not account for the case where multiple cores return the key.\n\nIt may be theoretically impossible in the cores, but a faulty double-response this will cause cascading issues in the afrouter.",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eafb22a6_cdad8eb0",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-17T23:37:02Z",
+      "side": 1,
+      "message": "Remove commented code.",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6f84609_92ec6911",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-17T23:37:02Z",
+      "side": 1,
+      "message": "This function returns an error, but is called with defer, so the error is ignored.",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "746250a1_8a5969ba",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-17T23:37:02Z",
+      "side": 1,
+      "message": "Defer is called even in case of an error or panic, but always sets the header to true?",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "feecf671_b9161aff",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-17T23:37:02Z",
+      "side": 1,
+      "message": "Again, return value from function called with defer.  The error will be ignored, no reason to return it.",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25015048_2f314dcd",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-17T23:37:02Z",
+      "side": 1,
+      "message": "if processed was passed as a pointer, the use of an anonymous function would be unnecessary.",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
