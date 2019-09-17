@@ -22,8 +22,16 @@ import (
 	"errors"
 	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"io"
+	"strconv"
 	"sync"
+)
+
+const (
+	txnProcessedMetadataKey = "txn_processed"
 )
 
 type request struct {
@@ -70,18 +78,32 @@ func (r *request) catchupRequestStreamThenForwardResponseStream(connName string,
 	r.forwardResponseStream(connName, stream)
 }
 
+//extractProcessMetaData returns the processing returned value from the metadata
+func extractProcessMetaData(md metadata.MD) (bool, error) {
+	if md != nil && md.Len() > 0 {
+		pVal := md.Get(txnProcessedMetadataKey)
+		if len(pVal) > 0 {
+			log.Debugf("Processed metadata: %s", pVal)
+			if res, err := strconv.ParseBool(pVal[0]); err == nil {
+				return res, nil
+			}
+		}
+	}
+	return false, status.Error(codes.NotFound, "processed-key-absent")
+}
+
 // forwardResponseStream forwards the response stream
 func (r *request) forwardResponseStream(connName string, stream grpc.ClientStream) {
 	var queuedFrames [][]byte
+	var streamHeaderOnce sync.Once
 	frame := *r.responseFrame
 	var err error
 	activeStream := false
 	for {
 		err = stream.RecvMsg(&frame)
-		// the first thread to reach this point (first to receive a response frame) will become the active stream
-		r.activeResponseStreamOnce.Do(func() { activeStream = true })
 		if err != nil {
 			// this can be io.EOF which is the success case
+			log.Debugf("Error received: %s", err.Error())
 			break
 		}
 
@@ -91,20 +113,27 @@ func (r *request) forwardResponseStream(connName string, stream grpc.ClientStrea
 				break
 			}
 		} else { // !r.isStreamingResponse
-
 			if r.isStreamingRequest { // && !r.isStreamingResponse
 				// queue the frame (only send response when the last stream closes)
 				queuedFrames = append(queuedFrames, frame.payload)
 			} else { // !r.isStreamingRequest && !r.isStreamingResponse
-
-				// only the active stream will respond
-				if activeStream { // && !r.isStreamingRequest && !r.isStreamingResponse
-					// send the response immediately
+				// extract the transaction processing meta key from the grpc stream to
+				// ensure the response from the backend that processed the request is actually
+				// processed.
+				streamHeaderOnce.Do(func() {
+					if md, err := stream.Header(); err != nil {
+						log.Warnf("Error extracting grpc header: %s", err.Error())
+					} else {
+						if activeStream, err = extractProcessMetaData(md); err != nil {
+							log.Warn("Metadata processing key not found")
+						}
+					}
+				})
+				log.Debugf("Received processing metadata: %v", activeStream)
+				if activeStream {
 					if err = r.sendResponseFrame(stream, frame); err != nil {
 						break
 					}
-				} else { // !activeStream && !r.isStreamingRequest && !r.isStreamingResponse
-					// just read & discard until the stream dies
 				}
 			}
 		}
@@ -166,6 +195,10 @@ func (r *request) sendResponseFrame(stream grpc.ClientStream, f responseFrame) e
 		if err != nil {
 			return err
 		}
+
+		//// Remove any transaction processing key from the MD first
+		//delete(md, txnProcessedMetadataKey)
+
 		// Update the metadata for the response.
 		if f.metaKey != NoMeta {
 			if f.metaVal == "" {
@@ -175,7 +208,9 @@ func (r *request) sendResponseFrame(stream grpc.ClientStream, f responseFrame) e
 				md.Set(f.metaKey, f.metaVal)
 			}
 		}
+
 		if err := r.serverStream.SendHeader(md); err != nil {
+			log.Errorw("error-sending-error", log.Fields{"error": err})
 			return err
 		}
 	}
