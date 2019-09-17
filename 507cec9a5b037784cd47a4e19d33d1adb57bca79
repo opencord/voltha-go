@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b008dc4c_ef66cebe",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-17T23:58:09Z",
+      "side": 1,
+      "message": "It is intentional as the code needs to be run only once for both the threads to extract the key",
+      "parentUuid": "9ffb7fca_02a52405",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "298ea33d_428466d2",
         "filename": "afrouter/afrouter/request.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-17T23:37:02Z",
       "side": 1,
       "message": "This does not account for the case where multiple cores return the key.\n\nIt may be theoretically impossible in the cores, but a faulty double-response this will cause cascading issues in the afrouter.",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6944649_eb474fb1",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-17T23:58:09Z",
+      "side": 1,
+      "message": "streamHeaderOnce is a local var. Both cores would return the key and both threads for streams would run that code only once to determine whether the transaction was processed. That was the intention.",
+      "parentUuid": "298ea33d_428466d2",
       "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
