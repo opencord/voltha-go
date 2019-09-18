@@ -166,7 +166,7 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 			log.Debugw("acquired-transaction", log.Fields{"transaction-timeout": timeout})
 			return txn, nil
 		} else {
-			return nil, errors.New("failed-to-seize-request")
+			return nil, errorTransactionNotAcquired
 		}
 	} else {
 		if txn.Monitor(timeout) {
@@ -174,7 +174,7 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 			return txn, nil
 		} else {
 			log.Debugw("transaction-completed-by-other", log.Fields{"timeout": timeout, "waited-time": time.Since(t)})
-			return nil, errors.New(string(COMPLETED_BY_OTHER))
+			return nil, errorTransactionNotAcquired
 		}
 	}
 }
@@ -557,8 +557,8 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 
 	if handler.competeForTransaction() {
 		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}); err != nil {
-			// Remove the device in memory
-			if err.Error() == (errors.New(string(COMPLETED_BY_OTHER)).Error()) {
+			if err == errorTransactionNotAcquired && handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: id.Id}) {
+				// Remove the device in memory
 				handler.deviceMgr.stopManagingDevice(id.Id)
 			}
 			return new(empty.Empty), err

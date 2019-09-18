@@ -37,6 +37,8 @@ package core
 import (
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/db/kvstore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -49,6 +51,8 @@ const (
 	STOPPED_WATCHING_KEY
 	STOPPED_WAITING_FOR_KEY
 )
+
+var errorTransactionNotAcquired = status.Error(codes.Canceled, "transaction-not-acquired")
 
 const (
 	TRANSACTION_COMPLETE = "TRANSACTION-COMPLETE"
