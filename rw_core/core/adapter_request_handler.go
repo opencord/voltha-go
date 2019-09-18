@@ -72,7 +72,7 @@ func (rhp *AdapterRequestHandlerProxy) acquireRequest(transactionId string, maxT
 		log.Debugw("acquired-request", log.Fields{"xtrnsId": transactionId})
 		return txn, nil
 	} else {
-		return nil, errors.New("failed-to-seize-request")
+		return nil, errorTransactionNotAcquired
 	}
 }
 
@@ -93,7 +93,7 @@ func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string
 			log.Debugw("processing-request", log.Fields{"Id": devId})
 			return txn, nil
 		} else {
-			return nil, errors.New("failed-to-seize-request")
+			return nil, errorTransactionNotAcquired
 		}
 	} else {
 		log.Debugw("not-owned-by-me", log.Fields{"Id": devId})
@@ -101,7 +101,7 @@ func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string
 			log.Debugw("timeout-processing-request", log.Fields{"Id": devId})
 			return txn, nil
 		} else {
-			return nil, errors.New("device-not-owned")
+			return nil, errorTransactionNotAcquired
 		}
 	}
 }
