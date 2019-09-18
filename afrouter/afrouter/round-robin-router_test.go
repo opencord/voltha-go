@@ -21,11 +21,12 @@ import (
 	"github.com/opencord/voltha-go/common/log"
 	common_pb "github.com/opencord/voltha-protos/go/common"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 	"testing"
 )
 
 const (
-	SOURCE_ROUTER_PROTOFILE = "../../vendor/github.com/opencord/voltha-protos/go/voltha.pb"
+	ROUND_ROBIN_ROUTER_PROTOFILE = "../../vendor/github.com/opencord/voltha-protos/go/voltha.pb"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func init() {
 	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
-func MakeSourceRouterTestConfig() (*ConnectionConfig, *BackendConfig, *BackendClusterConfig, *RouteConfig, *RouterConfig) {
+func MakeRoundRobinTestConfig() (*ConnectionConfig, *BackendConfig, *BackendClusterConfig, *RouteConfig, *RouterConfig) {
 	connectionConfig := ConnectionConfig{
 		Name: "ro_vcore01",
 		Addr: "foo",
@@ -52,12 +53,12 @@ func MakeSourceRouterTestConfig() (*ConnectionConfig, *BackendConfig, *BackendCl
 	}
 
 	routeConfig := RouteConfig{
-		Name:           "logger",
-		Type:           RouteTypeSource,
-		RouteField:     "component_name",
+		Name:           "read_only",
+		Type:           RouteTypeRoundRobin,
+		Association:    AssociationRoundRobin,
 		BackendCluster: "ro_vcore",
 		backendCluster: &backendClusterConfig,
-		Methods:        []string{"UpdateLogLevel", "GetLogLevel"},
+		Methods:        []string{"ListDevicePorts"},
 	}
 
 	routerConfig := RouterConfig{
@@ -65,72 +66,55 @@ func MakeSourceRouterTestConfig() (*ConnectionConfig, *BackendConfig, *BackendCl
 		ProtoService: "VolthaService",
 		ProtoPackage: "voltha",
 		Routes:       []RouteConfig{routeConfig},
-		ProtoFile:    SOURCE_ROUTER_PROTOFILE,
+		ProtoFile:    ROUND_ROBIN_ROUTER_PROTOFILE,
 	}
 	return &connectionConfig, &backendConfig, &backendClusterConfig, &routeConfig, &routerConfig
 }
 
-func TestSourceRouterInit(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
+func TestRoundRobinRouterInit(t *testing.T) {
+	_, _, _, routeConfig, routerConfig := MakeRoundRobinTestConfig()
 
-	router, err := newSourceRouter(routerConfig, routeConfig)
+	router, err := newRoundRobinRouter(routerConfig, routeConfig)
 
-	assert.NotEqual(t, router, nil)
-	assert.Equal(t, err, nil)
+	assert.NotNil(t, router)
+	assert.Nil(t, err)
 
 	assert.Equal(t, router.Service(), "VolthaService")
-	assert.Equal(t, router.Name(), "logger")
+	assert.Equal(t, router.Name(), "read_only")
 
 	cluster, err := router.BackendCluster("foo", "bar")
 	assert.Equal(t, cluster, clusters["ro_vcore"])
-	assert.Equal(t, err, nil)
+	assert.Nil(t, err)
 
 	assert.Equal(t, router.FindBackendCluster("ro_vcore"), clusters["ro_vcore"])
-	assert.Equal(t, router.ReplyHandler("foo"), nil)
+	assert.Nil(t, router.ReplyHandler("foo"))
 }
 
-func TestSourceRouterDecodeProtoField(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
+func TestRoundRobinRoute(t *testing.T) {
+	_, _, _, routeConfig, routerConfig := MakeRoundRobinTestConfig()
 
-	router, err := newSourceRouter(routerConfig, routeConfig)
+	router, err := newRoundRobinRouter(routerConfig, routeConfig)
 	assert.Equal(t, err, nil)
 
-	loggingMessage := &common_pb.Logging{Level: 1,
-		PackageName:   "default",
-		ComponentName: "ro_vcore0.ro_vcore01"}
+	cluster := router.FindBackendCluster("ro_vcore")
+	assert.Equal(t, nil, err)
 
-	loggingData, err := proto.Marshal(loggingMessage)
+	conn := cluster.backends[0].connections["ro_cvore01"]
+	cluster.backends[0].openConns[conn] = &grpc.ClientConn{}
+
+	idMessage := &common_pb.ID{Id: "1234"}
+
+	idData, err := proto.Marshal(idMessage)
 	assert.Equal(t, err, nil)
 
-	s, err := router.(SourceRouter).decodeProtoField(loggingData, 2) // field 2 is package_name
-	assert.Equal(t, s, "default")
-
-	s, err = router.(SourceRouter).decodeProtoField(loggingData, 3) // field 2 is component_name
-	assert.Equal(t, s, "ro_vcore0.ro_vcore01")
-}
-
-func TestSourceRouterRoute(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
-
-	router, err := newSourceRouter(routerConfig, routeConfig)
-	assert.Equal(t, err, nil)
-
-	loggingMessage := &common_pb.Logging{Level: 1,
-		PackageName:   "default",
-		ComponentName: "ro_vcore0.ro_vcore01"}
-
-	loggingData, err := proto.Marshal(loggingMessage)
-	assert.Equal(t, err, nil)
-
-	sel := &requestFrame{payload: loggingData,
+	sel := &requestFrame{payload: idData,
 		err:        nil,
-		methodInfo: newMethodDetails("/volta.VolthaService/UpdateLogLevel")}
+		methodInfo: newMethodDetails("/volta.VolthaService/ListDevicePorts")}
 
 	backend, connection := router.Route(sel)
 
-	assert.Equal(t, sel.err, nil)
-	assert.NotEqual(t, backend, nil)
-	assert.Equal(t, backend.name, "ro_vcore0")
-	assert.NotEqual(t, connection, nil)
-	assert.Equal(t, connection.name, "ro_vcore01")
+	assert.Nil(t, sel.err)
+	assert.NotNil(t, backend)
+	assert.Equal(t, "ro_vcore0", backend.name)
+	assert.Nil(t, connection)
 }
