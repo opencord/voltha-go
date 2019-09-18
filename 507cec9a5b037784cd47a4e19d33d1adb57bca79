@@ -106,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "c8fee642_ede4a899",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-18T13:38:54Z",
+      "side": 1,
+      "message": "The only time an error might occur when setting the grpc header is if that grpc context is invalid.  In such a scenario, the caller of this function can\u0027t do anything with that error as it can\u0027t even send a response back with an invalid context.   \n\nThe other option would be to not return an error and then the question would be why not return an error?",
+      "parentUuid": "b6f84609_92ec6911",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "746250a1_8a5969ba",
         "filename": "ro_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 2
@@ -117,6 +135,24 @@
       "writtenOn": "2019-09-17T23:37:02Z",
       "side": 1,
       "message": "Defer is called even in case of an error or panic, but always sets the header to true?",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "241f50a6_b9064910",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-18T13:38:54Z",
+      "side": 1,
+      "message": "Yes, because it\u0027s the read-only core and it has to handle every request.  The metadata is an indication of whether a core handles a request, it does not imply that the request has been successful or not.",
+      "parentUuid": "746250a1_8a5969ba",
       "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -140,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "448ceb81_5056ffca",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-18T13:38:54Z",
+      "side": 1,
+      "message": "The function is doing an action that can return an error.  It should therefore return one. It\u0027s up to the callee to do something with it or not depending on the context.",
+      "parentUuid": "feecf671_b9161aff",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25015048_2f314dcd",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 2
@@ -151,6 +205,24 @@
       "writtenOn": "2019-09-17T23:37:02Z",
       "side": 1,
       "message": "if processed was passed as a pointer, the use of an anonymous function would be unnecessary.",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7db36556_ae3edd6e",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-18T13:38:54Z",
+      "side": 1,
+      "message": "Good point.   Will update if there are any major changes required.",
+      "parentUuid": "25015048_2f314dcd",
       "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
