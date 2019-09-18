@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8538756b_1fb09ae5",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-09-18T18:32:39Z",
+      "side": 1,
+      "message": "Any thoughts on defaulting this behavior to `true` and not returning an error? Seems to me most consistent with gRPC behavior that if a request was responded to it was processed. Then we could only return the header when requests were responded to but explicitly not processed.",
+      "range": {
+        "startLine": 92,
+        "startChar": 1,
+        "endLine": 92,
+        "endChar": 67
+      },
+      "revId": "c7ef01b4e261fe9c4385a04dbb08ae18997acb36",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
