@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "ba9c1675_5a09287c",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-18T16:18:02Z",
+      "side": 1,
+      "message": "See line 156.  activeStream _must_ be set by at least one, and only one, stream.  Else the request will never be cleaned up.\n\nIn the case of an issue where more than one core processed a request, or where no core processes a request, the afrouter will have issues.",
+      "parentUuid": "b6944649_eb474fb1",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eafb22a6_cdad8eb0",
         "filename": "afrouter/afrouter/request.go",
         "patchSetId": 2
@@ -124,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "ee6925e0_3289680a",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-18T16:18:02Z",
+      "side": 1,
+      "message": "I was trying to imply that an error should be logged, cause a panic, or just be ignored.  Returning it is confusing \u0026 unhelpful.",
+      "parentUuid": "c8fee642_ede4a899",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "746250a1_8a5969ba",
         "filename": "ro_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 2
@@ -153,6 +189,24 @@
       "side": 1,
       "message": "Yes, because it\u0027s the read-only core and it has to handle every request.  The metadata is an indication of whether a core handles a request, it does not imply that the request has been successful or not.",
       "parentUuid": "746250a1_8a5969ba",
+      "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27790382_22468a2a",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-18T16:18:02Z",
+      "side": 1,
+      "message": "Would it make sense to reverse this then?  Only set the metadata if the core did _not_ handle the request?\n\nCould remove many redundant lines of code.",
+      "parentUuid": "241f50a6_b9064910",
       "revId": "507cec9a5b037784cd47a4e19d33d1adb57bca79",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
