@@ -78,6 +78,10 @@ func (r *request) forwardResponseStream(connName string, stream grpc.ClientStrea
 	activeStream := false
 	for {
 		err = stream.RecvMsg(&frame)
+		// if this is an inactive responder, ignore everything it sends
+		if err != nil && err.Error() == "rpc error: code = Unknown desc = failed-to-seize-request" {
+			break
+		}
 		// the first thread to reach this point (first to receive a response frame) will become the active stream
 		r.activeResponseStreamOnce.Do(func() { activeStream = true })
 		if err != nil {
@@ -122,6 +126,11 @@ func (r *request) forwardResponseStream(connName string, stream grpc.ClientStrea
 	r.mutex.Lock()
 	delete(r.streams, connName)
 	streamsLeft := len(r.streams)
+
+	// handle the case where no cores are the active responder.  Should never happen, but just in case...
+	if streamsLeft == 0 {
+		r.activeResponseStreamOnce.Do(func() { activeStream = true })
+	}
 
 	// if this the active stream (for non-streaming requests), or this is the last stream (for streaming requests)
 	if (activeStream && !r.isStreamingRequest && !r.isStreamingResponse) || (streamsLeft == 0 && (r.isStreamingRequest || r.isStreamingResponse)) {
