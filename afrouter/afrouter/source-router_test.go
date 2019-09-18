@@ -17,19 +17,15 @@
 package afrouter
 
 import (
-	//	"github.com/fullstorydev/grpcurl"
 	"github.com/golang/protobuf/proto"
-	//	descpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	//	"github.com/jhump/protoreflect/dynamic"
 	"github.com/opencord/voltha-go/common/log"
 	common_pb "github.com/opencord/voltha-protos/go/common"
 	"github.com/stretchr/testify/assert"
-	//"io/ioutil"
 	"testing"
 )
 
 const (
-	PROTOFILE = "../../vendor/github.com/opencord/voltha-protos/go/voltha.pb"
+	SOURCE_ROUTER_PROTOFILE = "../../vendor/github.com/opencord/voltha-protos/go/voltha.pb"
 )
 
 func init() {
@@ -37,7 +33,7 @@ func init() {
 	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
-func MakeTestConfig() (*ConnectionConfig, *BackendConfig, *BackendClusterConfig, *RouteConfig, *RouterConfig) {
+func MakeSourceRouterTestConfig() (*ConnectionConfig, *BackendConfig, *BackendClusterConfig, *RouteConfig, *RouterConfig) {
 	connectionConfig := ConnectionConfig{
 		Name: "ro_vcore01",
 		Addr: "foo",
@@ -69,13 +65,13 @@ func MakeTestConfig() (*ConnectionConfig, *BackendConfig, *BackendClusterConfig,
 		ProtoService: "VolthaService",
 		ProtoPackage: "voltha",
 		Routes:       []RouteConfig{routeConfig},
-		ProtoFile:    PROTOFILE,
+		ProtoFile:    SOURCE_ROUTER_PROTOFILE,
 	}
 	return &connectionConfig, &backendConfig, &backendClusterConfig, &routeConfig, &routerConfig
 }
 
 func TestSourceRouterInit(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeTestConfig()
+	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
 
 	router, err := newSourceRouter(routerConfig, routeConfig)
 
@@ -93,8 +89,8 @@ func TestSourceRouterInit(t *testing.T) {
 	assert.Equal(t, router.ReplyHandler("foo"), nil)
 }
 
-func TestDecodeProtoField(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeTestConfig()
+func TestSourceRouterDecodeProtoField(t *testing.T) {
+	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
 
 	router, err := newSourceRouter(routerConfig, routeConfig)
 	assert.Equal(t, err, nil)
@@ -113,8 +109,8 @@ func TestDecodeProtoField(t *testing.T) {
 	assert.Equal(t, s, "ro_vcore0.ro_vcore01")
 }
 
-func TestRoute(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeTestConfig()
+func TestSourceRouterRoute(t *testing.T) {
+	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
 
 	router, err := newSourceRouter(routerConfig, routeConfig)
 	assert.Equal(t, err, nil)
@@ -128,7 +124,7 @@ func TestRoute(t *testing.T) {
 
 	sel := &requestFrame{payload: loggingData,
 		err:        nil,
-		methodInfo: newMethodDetails("/volta.VolthaService/UpdateLogLevel")}
+		methodInfo: newMethodDetails("/voltha.VolthaService/UpdateLogLevel")}
 
 	backend, connection := router.Route(sel)
 
