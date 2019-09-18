@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2d310a41_b735f1a0",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-18T18:47:13Z",
+      "side": 0,
+      "message": "Yes they are required.  Will update.",
+      "parentUuid": "8a295987_fdd9b28d",
+      "range": {
+        "startLine": 76,
+        "startChar": 27,
+        "endLine": 76,
+        "endChar": 41
+      },
+      "revId": "112b0d45b0bdc10d4c32289378a56df0e5761e93",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "042f504b_eec2f72c",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 4

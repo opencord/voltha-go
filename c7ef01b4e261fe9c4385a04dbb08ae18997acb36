@@ -22,6 +22,30 @@
       "revId": "c7ef01b4e261fe9c4385a04dbb08ae18997acb36",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20aed434_a6439b11",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-18T18:47:13Z",
+      "side": 1,
+      "message": "Since we have to return something that abide to the grpc API return signature then we can\u0027t just send a header in the grpc context and not return the api return signature. So we have to respond.  It would have been nice if the core could just discard the request and not respond, but we have to.",
+      "parentUuid": "8538756b_1fb09ae5",
+      "range": {
+        "startLine": 92,
+        "startChar": 1,
+        "endLine": 92,
+        "endChar": 67
+      },
+      "revId": "c7ef01b4e261fe9c4385a04dbb08ae18997acb36",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
