@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28690664_dc50fba9",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-19T17:24:46Z",
+      "side": 1,
+      "message": "Should the frame be reset here? If we get an EOF error first followed by a notacquired error would we be forwarding the incorrect frame?  Not sure how that can happen, just a thought.",
+      "revId": "62234bc73260ed592c3b67633dc8565a439a62d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8693274_2e44eefe",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-19T17:24:46Z",
+      "side": 1,
+      "message": "The condition should be not \"owned by me\".",
+      "revId": "62234bc73260ed592c3b67633dc8565a439a62d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
