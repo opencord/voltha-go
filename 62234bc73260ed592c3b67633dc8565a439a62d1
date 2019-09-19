@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bdb77db2_711e9d1a",
+        "filename": "afrouter/afrouter/request.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-19T18:04:16Z",
+      "side": 1,
+      "message": "\"frame\" is a thread-local variable, so it cannot have any affect on the other streams.",
+      "parentUuid": "28690664_dc50fba9",
+      "revId": "62234bc73260ed592c3b67633dc8565a439a62d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8693274_2e44eefe",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-19T17:24:46Z",
       "side": 1,
       "message": "The condition should be not \"owned by me\".",
+      "revId": "62234bc73260ed592c3b67633dc8565a439a62d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4b4f404_c8ee3ed9",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-09-19T18:04:16Z",
+      "side": 1,
+      "message": "Will fix.",
+      "parentUuid": "b8693274_2e44eefe",
       "revId": "62234bc73260ed592c3b67633dc8565a439a62d1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
