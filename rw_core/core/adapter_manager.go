@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"reflect"
@@ -127,13 +128,14 @@ func (aMgr *AdapterManager) start(ctx context.Context) {
 	// Register the callbacks
 	aMgr.adapterProxy.RegisterCallback(model.POST_UPDATE, aMgr.adapterUpdated)
 	aMgr.deviceTypeProxy.RegisterCallback(model.POST_UPDATE, aMgr.deviceTypesUpdated)
-
+	probe.UpdateStatusFromContext(ctx, "adapter-manager", probe.ServiceStatusRunning)
 	log.Info("adapter-manager-started")
 }
 
 func (aMgr *AdapterManager) stop(ctx context.Context) {
 	log.Info("stopping-device-manager")
 	aMgr.exitChannel <- 1
+	probe.UpdateStatusFromContext(ctx, "adapter-manager", probe.ServiceStatusStopped)
 	log.Info("device-manager-stopped")
 }
 
