@@ -19,9 +19,9 @@ package afrouter
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
-	"sync/atomic"
 )
 
 var clusters = make(map[string]*cluster)
@@ -30,9 +30,8 @@ var clusters = make(map[string]*cluster)
 type cluster struct {
 	name string
 	//backends map[string]*backend
-	backends        []*backend
-	backendIDMap    map[*backend]int
-	serialNoCounter uint64
+	backends     []*backend
+	backendIDMap map[*backend]int
 }
 
 //TODO: Move the backend type (active/active etc) to the cluster
@@ -80,8 +79,8 @@ func (c *cluster) getBackend(name string) *backend {
 	return nil
 }
 
-func (c *cluster) allocateSerialNumber() uint64 {
-	return atomic.AddUint64(&c.serialNoCounter, 1) - 1
+func (c *cluster) allocateSerialNumber() string {
+	return uuid.New().String()
 }
 
 func (c *cluster) nextBackend(be *backend, seq backendSequence) (*backend, error) {

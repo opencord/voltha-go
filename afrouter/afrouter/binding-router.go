@@ -168,7 +168,6 @@ func newBindingRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) 
 		bindings:    make(map[string]*backend),
 		//methodMap:make(map[string]byte),
 		currentBackend: &bptr,
-		//serialNo:0,
 	}
 
 	// A binding association must exist
