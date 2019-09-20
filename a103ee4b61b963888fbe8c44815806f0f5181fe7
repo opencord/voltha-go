@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98e35eb7_cf5e2d71",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-20T22:18:25Z",
+      "side": 1,
+      "message": "Special log? :)",
+      "revId": "a103ee4b61b963888fbe8c44815806f0f5181fe7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "219023b9_0c14aae6",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-20T22:18:25Z",
+      "side": 1,
+      "message": "continue or break?",
+      "revId": "a103ee4b61b963888fbe8c44815806f0f5181fe7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
