@@ -27,7 +27,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
-	"gopkg.in/Shopify/sarama.v1"
+	"github.com/Shopify/sarama"
 )
 
 func init() {
