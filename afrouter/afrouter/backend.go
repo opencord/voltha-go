@@ -87,7 +87,7 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 
 	r := &request{
 		// Create an outgoing context that includes the incoming metadata and that will cancel if the server's context is canceled
-		ctx: metadata.AppendToOutgoingContext(metadata.NewOutgoingContext(serverStream.Context(), md.Copy()), "voltha_serial_number", strconv.FormatUint(nf.serialNo, 10)),
+		ctx: metadata.AppendToOutgoingContext(metadata.NewOutgoingContext(serverStream.Context(), md.Copy()), "voltha_serial_number", nf.serialNo),
 
 		streams:         make(map[string]grpc.ClientStream),
 		responseErrChan: make(chan error, 1),
@@ -105,7 +105,7 @@ func (be *backend) openSouthboundStreams(srv interface{}, serverStream grpc.Serv
 
 	// TODO: Need to check if this is an active/active backend cluster
 	// with a serial number in the header.
-	log.Debugf("Serial number for transaction allocated: %d", nf.serialNo)
+	log.Debugf("Serial number for transaction allocated: %s", nf.serialNo)
 	// If even one stream can be created then proceed. If none can be
 	// created then report an error because both the primary and redundant
 	// connections are non-existent.

@@ -53,7 +53,7 @@ type requestFrame struct {
 	connection *connection // optional, if the router preferred one connection over another
 	err        error
 	methodInfo methodDetails
-	serialNo   uint64
+	serialNo   string
 	metaKey    string
 	metaVal    string
 }
