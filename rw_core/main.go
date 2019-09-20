@@ -21,6 +21,7 @@ import (
 	"fmt"
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/common/version"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/kafka"
@@ -149,7 +150,7 @@ func (rw *rwCore) start(ctx context.Context, instanceId string) {
 	rw.core.Start(ctx)
 }
 
-func (rw *rwCore) stop() {
+func (rw *rwCore) stop(ctx context.Context) {
 	// Stop leadership tracking
 	rw.halted = true
 
@@ -166,7 +167,7 @@ func (rw *rwCore) stop() {
 		rw.kvClient.Close()
 	}
 
-	rw.core.Stop(nil)
+	rw.core.Stop(ctx)
 
 	//if rw.kafkaClient != nil {
 	//	rw.kafkaClient.Stop()
@@ -262,17 +263,32 @@ func main() {
 
 	log.Infow("rw-core-config", log.Fields{"config": *cf})
 
+	// Create the core
+	rw := newRWCore(cf)
+
+	// Create a context adding the status update channel
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	rw := newRWCore(cf)
-	go rw.start(ctx, instanceId)
+	/*
+	 * Create and start the liveness and readiness container management probes. This
+	 * is done in the main function so just in case the main starts multiple other
+	 * objects there can be a single probe end point for the process.
+	 */
+	p := &probe.Probe{}
+	go p.ListenAndServe(rw.config.ProbePort)
+
+	// Add the probe to the context to pass to all the services started
+	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
+
+	// Start the core
+	go rw.start(probeCtx, instanceId)
 
 	code := waitForExit()
 	log.Infow("received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
-	rw.stop()
+	rw.stop(probeCtx)
 
 	elapsed := time.Since(start)
 	log.Infow("rw-core-run-time", log.Fields{"core": instanceId, "time": elapsed / time.Second})
