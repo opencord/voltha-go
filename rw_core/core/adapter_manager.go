@@ -128,6 +128,13 @@ func (aMgr *AdapterManager) start(ctx context.Context) {
 	aMgr.adapterProxy.RegisterCallback(model.POST_UPDATE, aMgr.adapterUpdated)
 	aMgr.deviceTypeProxy.RegisterCallback(model.POST_UPDATE, aMgr.deviceTypesUpdated)
 
+	value := ctx.Value(ReadyKey)
+	if value != nil {
+		if ready, ok := value.(chan bool); ok {
+			ready <- true
+		}
+	}
+
 	log.Info("adapter-manager-started")
 }
 

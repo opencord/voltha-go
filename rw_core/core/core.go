@@ -30,6 +30,12 @@ import (
 	"time"
 )
 
+type CoreContextKey string
+
+const (
+	ReadyKey = CoreContextKey("ready-probe")
+)
+
 type Core struct {
 	instanceId        string
 	deviceMgr         *DeviceManager
@@ -77,6 +83,9 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 }
 
 func (core *Core) Start(ctx context.Context) {
+	ready := make(chan bool, 4)
+	defer close(ready)
+	innerCtx := context.WithValue(ctx, ReadyKey, ready)
 	log.Info("starting-core-services", log.Fields{"coreId": core.instanceId})
 
 	// Wait until connection to KV Store is up
@@ -98,14 +107,39 @@ func (core *Core) Start(ctx context.Context) {
 		log.Fatal("Failure-registering-adapterRequestHandler")
 	}
 
-	go core.startDeviceManager(ctx)
-	go core.startLogicalDeviceManager(ctx)
-	go core.startGRPCService(ctx)
-	go core.startAdapterManager(ctx)
+	go core.startDeviceManager(innerCtx)
+	go core.startLogicalDeviceManager(innerCtx)
+	go core.startGRPCService(innerCtx)
+	go core.startAdapterManager(innerCtx)
 
 	// Setup device ownership context
 	core.deviceOwnership = NewDeviceOwnership(core.instanceId, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
 		"service/voltha/owns_device", 10)
+
+	readyCount := 0
+readyLoop:
+	for {
+		select {
+		case <-ready:
+			log.Debug("DKB: +1")
+			readyCount += 1
+			if readyCount == 4 {
+				// All services are read
+				continue readyLoop
+			}
+		}
+	}
+
+	// When all 4 of our services are ready, notify
+	value := ctx.Value(ReadyKey)
+	if value != nil {
+		log.Debug("DKB NIL")
+		if ready, ok := value.(chan bool); ok {
+			ready <- true
+		} else {
+			log.Debug("DKB NOT CHAN")
+		}
+	}
 
 	log.Info("core-services-started")
 }
@@ -143,6 +177,11 @@ func (core *Core) startGRPCService(ctx context.Context) {
 
 	//	Start the server
 	core.grpcServer.Start(context.Background())
+	if value := ctx.Value(ReadyKey); value != nil {
+		if ready, ok := value.(chan bool); ok {
+			ready <- true
+		}
+	}
 	log.Info("grpc-server-started")
 }
 

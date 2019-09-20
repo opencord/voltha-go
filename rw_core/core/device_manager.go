@@ -71,6 +71,12 @@ func (dMgr *DeviceManager) start(ctx context.Context, logicalDeviceMgr *LogicalD
 	log.Info("starting-device-manager")
 	dMgr.logicalDeviceMgr = logicalDeviceMgr
 	dMgr.stateTransitions = NewTransitionMap(dMgr)
+	value := ctx.Value(ReadyKey)
+	if value != nil {
+		if ready, ok := value.(chan bool); ok {
+			ready <- true
+		}
+	}
 	log.Info("device-manager-started")
 }
 

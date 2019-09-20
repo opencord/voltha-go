@@ -262,11 +262,25 @@ func main() {
 
 	log.Infow("rw-core-config", log.Fields{"config": *cf})
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ready := make(chan bool)
+	defer close(ready)
+	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), c.ReadyKey, ready))
 	defer cancel()
 
 	rw := newRWCore(cf)
 	go rw.start(ctx, instanceId)
+
+	log.Infow("rw-core-wait-for-services", log.Fields{"core": instanceId})
+	select {
+	case <-ready:
+		log.Infow("rw-core-received-notification-ready", log.Fields{"core": instanceId})
+	case <-time.After(5 * time.Minute):
+		// Timeout waiting for service to start, fail fast ...
+		rw.stop()
+		log.Errorw("rw-core-start-services-fail", log.Fields{"core": instanceId})
+		os.Exit(1)
+	}
+	log.Infow("rw-core-ready", log.Fields{"core": instanceId})
 
 	code := waitForExit()
 	log.Infow("received-a-closing-signal", log.Fields{"code": code})

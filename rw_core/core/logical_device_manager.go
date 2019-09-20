@@ -62,6 +62,12 @@ func (ldMgr *LogicalDeviceManager) setGrpcNbiHandler(grpcNbiHandler *APIHandler)
 
 func (ldMgr *LogicalDeviceManager) start(ctx context.Context) {
 	log.Info("starting-logical-device-manager")
+	value := ctx.Value(ReadyKey)
+	if value != nil {
+		if ready, ok := value.(chan bool); ok {
+			ready <- true
+		}
+	}
 	log.Info("logical-device-manager-started")
 }
 
