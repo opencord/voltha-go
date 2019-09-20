@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
 	"github.com/opencord/voltha-go/rw_core/utils"
@@ -71,12 +72,24 @@ func (dMgr *DeviceManager) start(ctx context.Context, logicalDeviceMgr *LogicalD
 	log.Info("starting-device-manager")
 	dMgr.logicalDeviceMgr = logicalDeviceMgr
 	dMgr.stateTransitions = NewTransitionMap(dMgr)
+	if value := ctx.Value(probe.ProbeContextKey); value != nil {
+		if p, ok := value.(*probe.Probe); ok {
+			p.UpdateStatus("device-manager", probe.ServiceStatusRunning)
+		}
+	}
 	log.Info("device-manager-started")
 }
 
 func (dMgr *DeviceManager) stop(ctx context.Context) {
 	log.Info("stopping-device-manager")
 	dMgr.exitChannel <- 1
+	if ctx != nil {
+		if value := ctx.Value(probe.ProbeContextKey); value != nil {
+			if p, ok := value.(*probe.Probe); ok {
+				p.UpdateStatus("device-manager", probe.ServiceStatusStopped)
+			}
+		}
+	}
 	log.Info("device-manager-stopped")
 }
 
