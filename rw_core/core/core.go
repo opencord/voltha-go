@@ -19,6 +19,7 @@ import (
 	"context"
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/kafka"
@@ -77,15 +78,38 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 }
 
 func (core *Core) Start(ctx context.Context) {
+
+	// If the context has a probe then fetch it and register our services
+	var p *probe.Probe
+	if value := ctx.Value(probe.ProbeContextKey); value != nil {
+		if _, ok := value.(*probe.Probe); ok {
+			p = value.(*probe.Probe)
+			p.RegisterService(
+				"message-bus",
+				"kv-store",
+				"device-manager",
+				"logical-device-manager",
+				"adapter-manager",
+				"grpc-service",
+			)
+		}
+	}
+
 	log.Info("starting-core-services", log.Fields{"coreId": core.instanceId})
 
 	// Wait until connection to KV Store is up
 	if err := core.waitUntilKVStoreReachableOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
 		log.Fatal("Unable-to-connect-to-KV-store")
 	}
+	if p != nil {
+		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
+	}
 
 	if err := core.waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
 		log.Fatal("Failure-starting-kafkaMessagingProxy")
+	}
+	if p != nil {
+		p.UpdateStatus("message-bus", probe.ServiceStatusRunning)
 	}
 
 	log.Debugw("values", log.Fields{"kmp": core.kmp})
@@ -140,9 +164,34 @@ func (core *Core) startGRPCService(ctx context.Context) {
 
 	core.grpcServer.AddService(f)
 	log.Info("grpc-service-added")
+	// Grab the probe from the context (if it exists)
+	var p *probe.Probe
+	if value := ctx.Value(probe.ProbeContextKey); value != nil {
+		if _, ok := value.(*probe.Probe); ok {
+			p = value.(*probe.Probe)
+		}
+	}
 
-	//	Start the server
-	core.grpcServer.Start(context.Background())
+	/*
+	 * Start the GRPC server
+	 *
+	 * This is a bit sub-optimal here as the grpcServer.Start call does not return (blocks)
+	 * until something fails, but we want to send a "start" status update. As written this
+	 * means that we are actually sending the "start" status update before the server is
+	 * started, which means it is possible that the status is "running" before it actually is.
+	 *
+	 * This means that there is a small window in which the core could return its status as
+	 * ready, when it really isn't.
+	 */
+	go func() {
+		if p != nil {
+			p.UpdateStatus("grpc-service", probe.ServiceStatusRunning)
+		}
+		core.grpcServer.Start(context.Background())
+		if p != nil {
+			p.UpdateStatus("grpc-service", probe.ServiceStatusStopped)
+		}
+	}()
 	log.Info("grpc-server-started")
 }
 

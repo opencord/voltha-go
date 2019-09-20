@@ -54,6 +54,7 @@ const (
 	default_CorePairTopic             = "rwcore_1"
 	default_MaxConnectionRetries      = -1 // retries forever
 	default_ConnectionRetryInterval   = 2  // in seconds
+	default_ProbePort                 = 8080
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -88,6 +89,7 @@ type RWCoreFlags struct {
 	CorePairTopic             string
 	MaxConnectionRetries      int
 	ConnectionRetryInterval   int
+	ProbePort                 int
 }
 
 func init() {
@@ -126,6 +128,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		CorePairTopic:             default_CorePairTopic,
 		MaxConnectionRetries:      default_MaxConnectionRetries,
 		ConnectionRetryInterval:   default_ConnectionRetryInterval,
+		ProbePort:                 default_ProbePort,
 	}
 	return &rwCoreFlag
 }
@@ -212,6 +215,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The number of seconds between each connection retry attempt ")
 	flag.IntVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
+
+	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
+	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
 
 	flag.Parse()
 }
