@@ -202,10 +202,14 @@ func (ar AffinityRouter) Name() string {
 func (ar AffinityRouter) skipField(data *[]byte, idx *int) error {
 	switch (*data)[*idx] & 3 {
 	case 0: // Varint
+		// skip the field number/type
 		*idx++
+		// if the msb is set, then more bytes to follow
 		for (*data)[*idx] >= 128 {
 			*idx++
 		}
+		// the last byte doesn't have the msb set
+		*idx++
 	case 1: // 64 bit
 		*idx += 9
 	case 2: // Length delimited
