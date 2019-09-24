@@ -33,7 +33,7 @@ func init() {
 	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
-func MakeSourceRouterTestConfig() (*ConnectionConfig, *BackendConfig, *BackendClusterConfig, *RouteConfig, *RouterConfig) {
+func MakeSourceRouterTestConfig() (*RouteConfig, *RouterConfig) {
 	connectionConfig := ConnectionConfig{
 		Name: "ro_vcore01",
 		Addr: "foo",
@@ -67,70 +67,74 @@ func MakeSourceRouterTestConfig() (*ConnectionConfig, *BackendConfig, *BackendCl
 		Routes:       []RouteConfig{routeConfig},
 		ProtoFile:    SOURCE_ROUTER_PROTOFILE,
 	}
-	return &connectionConfig, &backendConfig, &backendClusterConfig, &routeConfig, &routerConfig
+	return &routeConfig, &routerConfig
 }
 
 func TestSourceRouterInit(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
+	routeConfig, routerConfig := MakeSourceRouterTestConfig()
 
 	router, err := newSourceRouter(routerConfig, routeConfig)
 
-	assert.NotEqual(t, router, nil)
-	assert.Equal(t, err, nil)
+	assert.NotNil(t, router)
+	assert.Nil(t, err)
 
 	assert.Equal(t, router.Service(), "VolthaService")
 	assert.Equal(t, router.Name(), "logger")
 
 	cluster, err := router.BackendCluster("foo", "bar")
 	assert.Equal(t, cluster, clusters["ro_vcore"])
-	assert.Equal(t, err, nil)
+	assert.Nil(t, err)
 
 	assert.Equal(t, router.FindBackendCluster("ro_vcore"), clusters["ro_vcore"])
-	assert.Equal(t, router.ReplyHandler("foo"), nil)
+	assert.Nil(t, router.ReplyHandler("foo"))
 }
 
 func TestSourceRouterDecodeProtoField(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
+	_, routerConfig := MakeSourceRouterTestConfig()
+	_, err := newRouter(routerConfig)
+	assert.Nil(t, err)
 
-	router, err := newSourceRouter(routerConfig, routeConfig)
-	assert.Equal(t, err, nil)
+	// Get the created AffinityRouter so we can inspect its state
+	sourceRouter := allRouters["vcorelogger"].(SourceRouter)
 
 	loggingMessage := &common_pb.Logging{Level: 1,
 		PackageName:   "default",
 		ComponentName: "ro_vcore0.ro_vcore01"}
 
 	loggingData, err := proto.Marshal(loggingMessage)
-	assert.Equal(t, err, nil)
+	assert.Nil(t, err)
 
-	s, err := router.(SourceRouter).decodeProtoField(loggingData, 2) // field 2 is package_name
+	s, err := sourceRouter.decodeProtoField(loggingData, 2) // field 2 is package_name
 	assert.Equal(t, s, "default")
 
-	s, err = router.(SourceRouter).decodeProtoField(loggingData, 3) // field 2 is component_name
+	s, err = sourceRouter.decodeProtoField(loggingData, 3) // field 2 is component_name
 	assert.Equal(t, s, "ro_vcore0.ro_vcore01")
 }
 
 func TestSourceRouterRoute(t *testing.T) {
-	_, _, _, routeConfig, routerConfig := MakeSourceRouterTestConfig()
+	_, routerConfig := MakeSourceRouterTestConfig()
+	_, err := newRouter(routerConfig)
+	assert.Nil(t, err)
 
-	router, err := newSourceRouter(routerConfig, routeConfig)
-	assert.Equal(t, err, nil)
+	// Get the created AffinityRouter so we can inspect its state
+	sourceRouter := allRouters["vcorelogger"].(SourceRouter)
 
 	loggingMessage := &common_pb.Logging{Level: 1,
 		PackageName:   "default",
 		ComponentName: "ro_vcore0.ro_vcore01"}
 
 	loggingData, err := proto.Marshal(loggingMessage)
-	assert.Equal(t, err, nil)
+	assert.Nil(t, err)
 
 	sel := &requestFrame{payload: loggingData,
 		err:        nil,
 		methodInfo: newMethodDetails("/voltha.VolthaService/UpdateLogLevel")}
 
-	backend, connection := router.Route(sel)
+	backend, connection := sourceRouter.Route(sel)
 
-	assert.Equal(t, sel.err, nil)
-	assert.NotEqual(t, backend, nil)
+	assert.Nil(t, sel.err)
+	assert.NotNil(t, backend)
 	assert.Equal(t, backend.name, "ro_vcore0")
-	assert.NotEqual(t, connection, nil)
+	assert.NotNil(t, connection)
 	assert.Equal(t, connection.name, "ro_vcore01")
 }
