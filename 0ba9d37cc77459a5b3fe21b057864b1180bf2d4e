@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "835f1e70_14b8d68c",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T17:07:32Z",
+      "side": 1,
+      "message": "Since indexes are incremental, 0 starting, will never change in this case except additions which require a trivial change to a data store, map should make it easier to implement and read.",
+      "parentUuid": "ade20e44_9e4063f6",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90c37f08_2c16de8d",
         "filename": "common/probe/probe.go",
         "patchSetId": 6
@@ -136,6 +154,24 @@
       "side": 1,
       "message": "ok, 2 votes for deferring in reviews, will change. although I still think there isn\u0027t a substantive difference in this case.",
       "parentUuid": "808463f8_0cd45f4a",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a695238a_7882fc39",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T17:07:32Z",
+      "side": 1,
+      "message": "defer makes the code less error prone and easier to maintain. Nice to have.",
+      "parentUuid": "a930e1a0_85c10fad",
       "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
