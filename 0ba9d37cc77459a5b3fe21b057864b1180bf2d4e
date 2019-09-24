@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "487b2c81_7ed50ced",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-24T14:08:26Z",
+      "side": 1,
+      "message": "Would defer the unlock be better?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae47bfc3_0dc5e0c0",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-24T14:08:26Z",
+      "side": 1,
+      "message": "why not using \"StatusServiceUnavailable\" instead of a fresh brew of tea?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e9f2ebd_6aed9a91",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-24T14:08:26Z",
+      "side": 1,
+      "message": "Could use a channel to at least report everything on the grpc level is fine right before the grpc server starts serving.",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
