@@ -280,6 +280,40 @@
       "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73428848_32eba730",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T17:59:54Z",
+      "side": 1,
+      "message": "startGRPCService is anyway started as a go routine on the outside from core.Start. \nSo any real use in doing the grpcserver start as a goroutine? \nWhy not let it be blocked like before and mark it stopped after return ?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05bd9150_57d5ea2e",
+        "filename": "rw_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T17:59:54Z",
+      "side": 1,
+      "message": "I think this should be instantiated as part of NewCore in core.go which is called with rw.config. And probe server started in core.go: Start() with core.config.ProbePort\n\nSince all the services are instantiated with core instance, \n\nit just becomes easier to update probe status instead of fetching probe instance from context which looks convoluted.\n\n\nldMgr.core.probeInstance.UpdateStatus()\naMgr.core.probeInstance.UpdateStatus()\ndMgr.core.probeInstance.UpdateStatus()\ncore.probeInstance.UpdateStatus for core grpc service start.\n\ninstead of trying to fetch the value for a key from context and then updating, you can just do update service status with core probeInstance or core.probeInstance !\u003d nil.\n\nAnd its part of the core module anyway which launches those service starts.",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
