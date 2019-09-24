@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "42740ee4_b4e3164e",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T15:46:27Z",
+      "side": 1,
+      "message": "Can this just pull from a pre-defined map[ServiceStatus]string ?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90c37f08_2c16de8d",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T15:46:27Z",
+      "side": 1,
+      "message": "Could just be a void func as it takes a reference anyway?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "487b2c81_7ed50ced",
         "filename": "common/probe/probe.go",
         "patchSetId": 6
@@ -19,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "808463f8_0cd45f4a",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T15:46:27Z",
+      "side": 1,
+      "message": "defer might be better after Lock",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae47bfc3_0dc5e0c0",
         "filename": "common/probe/probe.go",
         "patchSetId": 6
@@ -30,6 +81,23 @@
       "writtenOn": "2019-09-24T14:08:26Z",
       "side": 1,
       "message": "why not using \"StatusServiceUnavailable\" instead of a fresh brew of tea?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bcf332c_35cf2601",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T15:46:27Z",
+      "side": 1,
+      "message": "defer after RLock should suffice?",
       "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
