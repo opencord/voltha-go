@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08b9ab57_759b6ad5",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T18:27:37Z",
+      "side": 1,
+      "message": "Everything now looks good except this over map[ServiceStatus]string. LOL. +1 anyway :)",
+      "revId": "b4a9ab0fe92b67fc5a9f54b4d34294781ec154ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
