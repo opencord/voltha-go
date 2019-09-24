@@ -350,6 +350,24 @@
       "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3da678a6_1fd685c4",
+        "filename": "rw_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-24T18:14:57Z",
+      "side": 1,
+      "message": "I see your point. But the \"core\" instance is the holy grail for all services that are tracked and started. \nMy heart rate increased seeing the fetching of probe instance from context. That\u0027s all.",
+      "parentUuid": "e389302a_805b51a1",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
