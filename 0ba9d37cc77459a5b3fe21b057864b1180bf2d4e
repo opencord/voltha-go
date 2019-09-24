@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "c650b037_4606c2bf",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-24T15:54:00Z",
+      "side": 1,
+      "message": "I thought about using defers, not sure it makes much of a difference as the only what to exit is a panic error at some low level, in which case all hope is lost. Is there a \"best practice\" in this instance? is defer preferred?",
+      "parentUuid": "487b2c81_7ed50ced",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "808463f8_0cd45f4a",
         "filename": "common/probe/probe.go",
         "patchSetId": 6
@@ -87,6 +105,24 @@
     },
     {
       "key": {
+        "uuid": "5910b8b3_d70011f5",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-24T15:54:00Z",
+      "side": 1,
+      "message": "I really debated with myself what was the correct error here. From a k8s point of view anything 400+ works. To me, ServicUnavailable is if the REST request and be processed (which it can) v the functions of the pod are available. Again, I don\u0027t really have a preference here other than the oddity of using Teapot :)",
+      "parentUuid": "ae47bfc3_0dc5e0c0",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bcf332c_35cf2601",
         "filename": "common/probe/probe.go",
         "patchSetId": 6
@@ -115,6 +151,24 @@
       "writtenOn": "2019-09-24T14:08:26Z",
       "side": 1,
       "message": "Could use a channel to at least report everything on the grpc level is fine right before the grpc server starts serving.",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfd08c36_d005e295",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-24T15:54:00Z",
+      "side": 1,
+      "message": "I was originally using channels for service updates. It really doesn\u0027t make a substantive difference (channel v. sync call). I think in both cases you might get a \"Running\" quickly followed by a \"Stopped\" so not introducing a channel (although i like channels) seems a bit of an overhead.",
+      "parentUuid": "6e9f2ebd_6aed9a91",
       "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
