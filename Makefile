@@ -34,8 +34,6 @@ ROCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-co
 AFROUTER_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouter
 AFROUTERTEST_IMAGENAME     := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afroutertest
 AFROUTERD_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-afrouterd
-SIMULATEDOLT_IMAGENAME     := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-olt
-SIMULATEDONU_IMAGENAME     := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-simulated-onu
 OFAGENT_IMAGENAME          := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent
 CLI_IMAGENAME              := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli
 PONSIMOLT_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-olt
@@ -60,7 +58,7 @@ DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
 	--build-arg LOCAL_PYVOLTHA=${LOCAL_PYVOLTHA} \
 	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
 
-.PHONY: rw_core ro_core simulated_olt simulated_onu afrouter afrouterd local-protos local-pyvoltha
+.PHONY: rw_core ro_core afrouter afrouterd local-protos local-pyvoltha
 
 # This should to be the first and default target in this Makefile
 help:
@@ -74,8 +72,6 @@ help:
 	@echo "afrouter             : Build the afrouter docker image"
 	@echo "afrouterTest         : Build the afrouterTest docker image"
 	@echo "afrouterd            : Build the afrouterd docker image"
-	@echo "simulated_olt        : Build the simulated_olt docker image"
-	@echo "simulated_onu        : Build the simulated_onu docker image"
 	@echo "ofagent              : Build the openflow agent docker image"
 	@echo "cli                  : Build the voltha CLI docker image"
 	@echo "adapter_ponsim_olt   : Build the ponsim olt adapter docker image"
@@ -133,7 +129,7 @@ endif
 
 build: docker-build
 
-docker-build: rw_core ro_core simulated_olt simulated_onu afrouter afrouterd ofagent cli adapter_ponsim_olt adapter_ponsim_onu
+docker-build: rw_core ro_core afrouter afrouterd ofagent cli adapter_ponsim_olt adapter_ponsim_onu
 
 afrouter: local-protos
 	docker build $(DOCKER_BUILD_ARGS) -t ${AFROUTER_IMAGENAME}:${DOCKER_TAG} -t ${AFROUTER_IMAGENAME}:latest -f docker/Dockerfile.afrouter .
@@ -149,12 +145,6 @@ rw_core: local-protos
 
 ro_core: local-protos
 	docker build $(DOCKER_BUILD_ARGS) -t ${ROCORE_IMAGENAME}:${DOCKER_TAG} -t ${ROCORE_IMAGENAME}:latest -f docker/Dockerfile.ro_core .
-
-simulated_olt: local-protos
-	docker build $(DOCKER_BUILD_ARGS) -t ${SIMULATEDOLT_IMAGENAME}:${DOCKER_TAG} -t ${SIMULATEDOLT_IMAGENAME}:latest -f docker/Dockerfile.simulated_olt .
-
-simulated_onu: local-protos
-	docker build $(DOCKER_BUILD_ARGS) -t ${SIMULATEDONU_IMAGENAME}:${DOCKER_TAG} -t ${SIMULATEDONU_IMAGENAME}:latest -f docker/Dockerfile.simulated_onu .
 
 ofagent: local-protos local-pyvoltha
 	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${OFAGENT_IMAGENAME}:${DOCKER_TAG} -t ${OFAGENT_IMAGENAME}:latest -f python/docker/Dockerfile.ofagent python
@@ -173,8 +163,6 @@ docker-push:
 	docker push ${AFROUTERD_IMAGENAME}:${DOCKER_TAG}
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 	docker push ${ROCORE_IMAGENAME}:${DOCKER_TAG}
-	docker push ${SIMULATEDOLT_IMAGENAME}:${DOCKER_TAG}
-	docker push ${SIMULATEDONU_IMAGENAME}:${DOCKER_TAG}
 	docker push ${OFAGENT_IMAGENAME}:${DOCKER_TAG}
 	docker push ${CLI_IMAGENAME}:${DOCKER_TAG}
 	docker push ${PONSIMOLT_IMAGENAME}:${DOCKER_TAG}
