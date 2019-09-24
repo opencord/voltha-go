@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ade20e44_9e4063f6",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-24T15:58:39Z",
+      "side": 1,
+      "message": "yes, is there a benefit of a pre-defined map vs a switch in this case?",
+      "parentUuid": "42740ee4_b4e3164e",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90c37f08_2c16de8d",
         "filename": "common/probe/probe.go",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-24T15:46:27Z",
       "side": 1,
       "message": "Could just be a void func as it takes a reference anyway?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4db8726_13411a97",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-24T15:58:39Z",
+      "side": 1,
+      "message": "A bit of a legacy here. Originally I have more than a single \"With\" function so this allowed chaining. but yes, with a single With function it makes less sense. I wonder if I should split WithHealthFunc and WithReadyFunc?",
+      "parentUuid": "90c37f08_2c16de8d",
       "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -88,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "a930e1a0_85c10fad",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-24T15:58:39Z",
+      "side": 1,
+      "message": "ok, 2 votes for deferring in reviews, will change. although I still think there isn\u0027t a substantive difference in this case.",
+      "parentUuid": "808463f8_0cd45f4a",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae47bfc3_0dc5e0c0",
         "filename": "common/probe/probe.go",
         "patchSetId": 6
@@ -134,6 +188,24 @@
       "writtenOn": "2019-09-24T15:46:27Z",
       "side": 1,
       "message": "defer after RLock should suffice?",
+      "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5ab3823_f3ffbb39",
+        "filename": "common/probe/probe.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-24T15:58:39Z",
+      "side": 1,
+      "message": "will change. I debated deferring v. this approach. given you can\u0027t exit the func other than a lower level panic I don\u0027t think it really matters.",
+      "parentUuid": "3bcf332c_35cf2601",
       "revId": "0ba9d37cc77459a5b3fe21b057864b1180bf2d4e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
