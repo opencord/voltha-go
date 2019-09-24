@@ -36,10 +36,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/opencord/voltha-go/common/log"
 	"google.golang.org/grpc"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 )
@@ -47,11 +45,10 @@ import (
 type SourceRouter struct {
 	name string
 	//association     associationType
-	routingField    string
-	grpcService     string
-	protoDescriptor *pb.FileDescriptorSet
-	methodMap       map[string]byte
-	cluster         *cluster
+	routingField string
+	grpcService  string
+	methodMap    map[string]byte
+	cluster      *cluster
 }
 
 func newSourceRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
@@ -91,37 +88,23 @@ func newSourceRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 		methodMap:   make(map[string]byte),
 	}
 
-	// Load the protobuf descriptor file
-	dr.protoDescriptor = &pb.FileDescriptorSet{}
-	fb, err := ioutil.ReadFile(rconf.ProtoFile)
-	if err != nil {
-		log.Errorf("Could not open proto file '%s'", rconf.ProtoFile)
-		rtrn_err = true
-	}
-	err = proto.Unmarshal(fb, dr.protoDescriptor)
-	if err != nil {
-		log.Errorf("Could not unmarshal %s, %v", "proto.pb", err)
-		rtrn_err = true
-	}
-
 	// Build the routing structure based on the loaded protobuf
 	// descriptor file and the config information.
 	type key struct {
 		method string
 		field  string
 	}
-	var msgs = make(map[key]byte)
-	for _, f := range dr.protoDescriptor.File {
+	var fieldNumberLookup = make(map[key]byte)
+	for _, f := range rconf.protoDescriptor.File {
 		// Build a temporary map of message types by name.
 		for _, m := range f.MessageType {
 			for _, fld := range m.Field {
 				log.Debugf("Processing message '%s', field '%s'", *m.Name, *fld.Name)
-				msgs[key{*m.Name, *fld.Name}] = byte(*fld.Number)
+				fieldNumberLookup[key{*m.Name, *fld.Name}] = byte(*fld.Number)
 			}
 		}
 	}
-	log.Debugf("The map contains: %v", msgs)
-	for _, f := range dr.protoDescriptor.File {
+	for _, f := range rconf.protoDescriptor.File {
 		if *f.Package == rconf.ProtoPackage {
 			for _, s := range f.Service {
 				if *s.Name == rconf.ProtoService {
@@ -144,7 +127,7 @@ func newSourceRouter(rconf *RouterConfig, config *RouteConfig) (Router, error) {
 							// The input type has the package name prepended to it. Remove it.
 							//in := (*m.InputType)[len(rconf.ProtoPackage)+2:]
 							in := pkg_methd[PKG_MTHD_MTHD]
-							dr.methodMap[*m.Name], ok = msgs[key{in, config.RouteField}]
+							dr.methodMap[*m.Name], ok = fieldNumberLookup[key{in, config.RouteField}]
 							if !ok {
 								log.Errorf("Method '%s' has no field named '%s' in it's parameter message '%s'",
 									*m.Name, config.RouteField, in)
