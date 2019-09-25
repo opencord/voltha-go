@@ -153,17 +153,19 @@ func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
 // enableDevice activates a preprovisioned or a disable device
 func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
+
 	log.Debugw("enableDevice", log.Fields{"id": agent.deviceId})
 
 	if device, err := agent.getDeviceWithoutLock(); err != nil {
+		agent.lockDevice.Unlock()
 		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
 	} else {
 		// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 		// pre-provisionned with the required adapter not registered.   At this stage, since we need to communicate
 		// with the adapter then we need to know the adapter that will handle this request
 		if adapterName, err := agent.adapterMgr.getAdapterName(device.Type); err != nil {
-			log.Warnw("no-adapter-registered-for-device-type", log.Fields{"deviceType": device.Type, "deviceAdapter": device.Adapter})
+			log.Warnw("no-adapter-registered-for-device-type", log.Fields{"deviceType": device.Type, "deviceAdapter": device.Adapter, "id": agent.deviceId,})
+			agent.lockDevice.Unlock()
 			return err
 		} else {
 			device.Adapter = adapterName
@@ -171,6 +173,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 
 		if device.AdminState == voltha.AdminState_ENABLED {
 			log.Debugw("device-already-enabled", log.Fields{"id": agent.deviceId})
+			agent.lockDevice.Unlock()
 			return nil
 		}
 
@@ -178,6 +181,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 			// This is a temporary state when a device is deleted before it gets removed from the model.
 			err = status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-a-deleted-device: %s ", device.Id))
 			log.Warnw("invalid-state", log.Fields{"id": agent.deviceId, "state": device.AdminState, "error": err})
+			agent.lockDevice.Unlock()
 			return err
 		}
 
@@ -190,8 +194,10 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 		cloned.OperStatus = voltha.OperStatus_ACTIVATING
 
 		if err := agent.updateDeviceInStoreWithoutLock(cloned, false, ""); err != nil {
+			agent.lockDevice.Unlock()
 			return err
 		}
+		agent.lockDevice.Unlock()
 
 		// Adopt the device if it was in preprovision state.  In all other cases, try to reenable it.
 		if previousAdminState == voltha.AdminState_PREPROVISIONED {
