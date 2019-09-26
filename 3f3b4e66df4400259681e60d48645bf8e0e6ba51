@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "49b10792_52333d4d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2019-09-26T18:06:35Z",
+      "side": 1,
+      "message": "By keeping lock, as you said, you prevent others to change the data, so adapter itself can not change the data, so why do we wait for adapter response for data integrity if it has no effect on data? And we also don\u0027t do anything to change or get the data after this point regardless of the response(ACK or NACK). If we did all about data, then I think we are done with the lock.\n\nAbout possible problems of keeping the lock for long, I wrote something as a response of David\u0027s comment.",
+      "parentUuid": "cd551897_3a8f6b6b",
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7764087c_b92ec4f6",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2019-09-26T14:29:47Z",
       "side": 1,
       "message": "By removing this out of the lock protection is there a risk that multiple threads attempt to adopt the device? What is the benefit of moving this out of lock protection or what is the harm by keeping it in protection?",
+      "range": {
+        "startLine": 203,
+        "startChar": 5,
+        "endLine": 203,
+        "endChar": 23
+      },
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "533712ae_f25b3416",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2019-09-26T18:06:35Z",
+      "side": 1,
+      "message": "The aim of lock is to prevent simultaneous read or writes to a data(here it is Device), and you generally want to get rid of it as soon as possible to prevent other threads wait for a long time on the same lock. Here after this point we do not get or update the data, so IMHO no need to keep the lock until the message sent from Kafka and the response received. There is also nothing done by the negative  response of the Kafka message as transaction rollback etc. So why do we wait for Kafka response to unlock the agent?\nThere is no change in behavior for the risk you mentioned David, because we already did the changes in data, and committed it to cache and KV store. Another thread should check the state in KV store, not Kafka message transfer success. As I said we don\u0027t make a change in data in NACK case.\n\nAnother risk for keeping locks too long is  changing the order of the access to data. We have upcoming statusUpdates and GetDevices from olt-adapter when this enableDevice operation ongoing. Because we are using mutexes, but not channels, if this lock takes too much time, then we probably receive more than one thread waiting for the same mutex(first an UpdateState, then a GetDevice). After the unlock there is no guarantee that the UpdateState thread will get the lock before GetDevice thread. This will fail your ONU activation then. By the way it may be beter to open a discussion to change the mutex allocation by golang channels.",
+      "parentUuid": "7764087c_b92ec4f6",
       "range": {
         "startLine": 203,
         "startChar": 5,
