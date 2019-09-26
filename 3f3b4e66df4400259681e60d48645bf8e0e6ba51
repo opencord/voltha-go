@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "c9068766_e324abec",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2019-09-26T18:21:38Z",
+      "side": 1,
+      "message": "Sure, they can do. I mean by locking the Kafka messaging time, how can we keep data integrity. We already got the device, made our changes and commit it to DB. We don\u0027t have anything to do after Kafka response, so why waiting Kafka response.",
+      "parentUuid": "e81f1d06_3269f4e1",
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7764087c_b92ec4f6",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
