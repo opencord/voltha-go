@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "f2f4a18e_a3ec8973",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2019-09-26T19:09:14Z",
+      "side": 1,
+      "message": "Yes Khen, I remember the case. In our system now, receiving a response from olt-adapter or Core, means that the message received by the appropriate container(because it sends the response immediately), but does not mean that the related data is changed or all the related things are done. So we prevent nothing by keeping lock during this Kafka messaging. In that previous case, we changed this behavior for a specific message and sent some info in the message.  \nI agree with the general approach but still think that the locks should cover the code blocks that we reached data to read or write and should immediately be released after data manipulation is done.",
+      "parentUuid": "bcab8be3_b45634e9",
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7764087c_b92ec4f6",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
