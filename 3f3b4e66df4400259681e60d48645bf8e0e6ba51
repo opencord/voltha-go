@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "bcab8be3_b45634e9",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-26T18:34:02Z",
+      "side": 1,
+      "message": "A transaction in the Core starts when it receives a request and, in the case where the request will go to the adapter, the request is send to an adapter and an ACK is received.  This is the general pattern.   The lock is a safeguard for a transaction not fully being completed and another transaction start changing the data.   If I remember well there was a time openolt was not returning an ACK after an adopt_device and started changing data leading to incorrect behavior.  You were involved in that. We should have a lock for the duration of a transaction in the Core.",
+      "parentUuid": "c9068766_e324abec",
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7764087c_b92ec4f6",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
