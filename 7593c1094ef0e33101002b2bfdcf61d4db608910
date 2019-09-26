@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09ff1c6c_41cff3b4",
+        "filename": "afrouter/afrouter/method-router_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-09-26T14:51:15Z",
+      "side": 1,
+      "message": "I assume this is OK because it\u0027s in the vendor directory?  Will switching to `go mod` break this?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 88
+      },
+      "revId": "7593c1094ef0e33101002b2bfdcf61d4db608910",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
