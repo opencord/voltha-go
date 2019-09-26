@@ -135,6 +135,30 @@
       "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4970ce5c_820f7b96",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-26T19:00:20Z",
+      "side": 1,
+      "message": "In your example of statusUpdates and getDevices from the adapter, since these messages come over kafka then kafka guarantees the order of these messages.   Also, using channels instead of mutex may theoretically be better but adds more complexity. \n\nNote that we started a transaction management discussion a few weeks ago (with rollbacks) on a TST call.  It got sidetrack to pursue Adapter HA.   Once that discussion gets resumed and the lifecycle of a transaction is agreed upon then we may or may not need to review the locking phases.",
+      "parentUuid": "533712ae_f25b3416",
+      "range": {
+        "startLine": 203,
+        "startChar": 5,
+        "endLine": 203,
+        "endChar": 23
+      },
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
