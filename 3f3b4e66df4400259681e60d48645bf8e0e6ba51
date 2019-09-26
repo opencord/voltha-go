@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e81f1d06_3269f4e1",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-09-26T18:16:27Z",
+      "side": 1,
+      "message": "Mahir, you are assuming that a change to the data happens only from the adapter.  There are NB API that can change the data as well.",
+      "parentUuid": "49b10792_52333d4d",
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7764087c_b92ec4f6",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
