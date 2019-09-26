@@ -177,6 +177,30 @@
       "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16a49667_9737703e",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2019-09-26T19:17:30Z",
+      "side": 1,
+      "message": "Kafka does its job and give it to Core in order, but core takes it from Kafka and executes them in different threads. It is not Kafka\u0027s responsibility any more. These two different threads are now waiting for same lockout the same time, which is acquired by eanbleDevice thread, to be released. \nIt makes sense  waiting the tr management discussion.",
+      "parentUuid": "4970ce5c_820f7b96",
+      "range": {
+        "startLine": 203,
+        "startChar": 5,
+        "endLine": 203,
+        "endChar": 23
+      },
+      "revId": "3f3b4e66df4400259681e60d48645bf8e0e6ba51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
