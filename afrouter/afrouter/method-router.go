@@ -168,10 +168,9 @@ func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 		if r, ok := mr.methodRouter[NoMeta][sl.method]; ok {
 			return r.ReplyHandler(sel)
 		}
-		// TODO: this case should also be an error
-	default: //TODO: This should really be a big error
-		// A reply handler should only be called on the responseFrame
-		return nil
+		return errors.New("MethodRouter.ReplyHandler called with unknown meta or method")
+	default:
+		return errors.New("MethodRouter.ReplyHandler called with non-reponseFrame")
 	}
 	return nil
 }
