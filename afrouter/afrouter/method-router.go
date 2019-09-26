@@ -168,12 +168,10 @@ func (mr MethodRouter) ReplyHandler(sel interface{}) error {
 		if r, ok := mr.methodRouter[NoMeta][sl.method]; ok {
 			return r.ReplyHandler(sel)
 		}
-		// TODO: this case should also be an error
-	default: //TODO: This should really be a big error
-		// A reply handler should only be called on the responseFrame
-		return nil
+		return errors.New("MethodRouter.ReplyHandler called with unknown meta or method")
+	default:
+		return errors.New("MethodRouter.ReplyHandler called with non-reponseFrame")
 	}
-	return nil
 }
 
 func (mr MethodRouter) Route(sel interface{}) (*backend, *connection) {
@@ -182,9 +180,11 @@ func (mr MethodRouter) Route(sel interface{}) (*backend, *connection) {
 		if r, ok := mr.methodRouter[sl.metaKey][sl.methodInfo.method]; ok {
 			return r.Route(sel)
 		}
-		log.Errorf("Attept to route on non-existent method '%s'", sl.methodInfo.method)
+		sl.err = fmt.Errorf("MethodRouter.Route unable to resolve meta %s, method %s", sl.metaKey, sl.methodInfo.method)
+		log.Error(sl.err)
 		return nil, nil
 	default:
+		log.Errorf("Internal: invalid data type in Route call %v", sel)
 		return nil, nil
 	}
 }
