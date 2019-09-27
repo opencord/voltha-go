@@ -198,8 +198,8 @@ type iGemPortAttribute struct {
 }
 
 type TechProfileMgr struct {
-	config      *TechProfileFlags
-	resourceMgr iPonResourceMgr
+	Config      *TechProfileFlags
+	ResourceMgr iPonResourceMgr
 }
 type DefaultTechProfile struct {
 	Name                           string             `json:"name"`
@@ -268,19 +268,19 @@ func newKVClient(storeType string, address string, timeout int) (kvstore.Client,
 func NewTechProfile(resourceMgr iPonResourceMgr, KVStoreType string, KVStoreHost string, KVStorePort int) (*TechProfileMgr, error) {
 	var techprofileObj TechProfileMgr
 	log.Debug("Initializing techprofile Manager")
-	techprofileObj.config = NewTechProfileFlags(KVStoreType, KVStoreHost, KVStorePort)
-	techprofileObj.config.KVBackend = techprofileObj.SetKVClient()
+	techprofileObj.Config = NewTechProfileFlags(KVStoreType, KVStoreHost, KVStorePort)
+	techprofileObj.Config.KVBackend = techprofileObj.SetKVClient()
 	if techprofileObj.config.KVBackend == nil {
 		log.Error("Failed to initialize KV backend\n")
 		return nil, errors.New("KV backend init failed")
 	}
-	techprofileObj.resourceMgr = resourceMgr
+	techprofileObj.ResourceMgr = resourceMgr
 	log.Debug("Initializing techprofile object instance success")
 	return &techprofileObj, nil
 }
 
 func (t *TechProfileMgr) GetTechProfileInstanceKVPath(techProfiletblID uint32, uniPortName string) string {
-	return fmt.Sprintf(t.config.TPInstanceKVPath, t.resourceMgr.GetTechnology(), techProfiletblID, uniPortName)
+	return fmt.Sprintf(t.Config.TPInstanceKVPath, t.resourceMgr.GetTechnology(), techProfiletblID, uniPortName)
 }
 
 func (t *TechProfileMgr) GetTPInstanceFromKVStore(techProfiletblID uint32, path string) (*TechProfile, error) {
@@ -289,7 +289,7 @@ func (t *TechProfileMgr) GetTPInstanceFromKVStore(techProfiletblID uint32, path 
 	var err error
 	/*path := t.GetTechProfileInstanceKVPath(techProfiletblID, uniPortName)*/
 	log.Infow("Getting tech profile instance from KV store", log.Fields{"path": path})
-	kvresult, err := t.config.KVBackend.Get(path)
+	kvresult, err := t.Config.KVBackend.Get(path)
 	if err != nil {
 		log.Errorw("Error while fetching tech-profile instance  from KV backend", log.Fields{"key": path})
 		return nil, err
@@ -314,7 +314,7 @@ func (t *TechProfileMgr) addTechProfInstanceToKVStore(techProfiletblID uint32, u
 	if err == nil {
 		// Backend will convert JSON byte array into string format
 		log.Debugw("Storing tech profile instance to KV Store", log.Fields{"key": path, "val": tpInstanceJson})
-		err = t.config.KVBackend.Put(path, tpInstanceJson)
+		err = t.Config.KVBackend.Put(path, tpInstanceJson)
 	} else {
 		log.Errorw("Error in marshaling into Json format", log.Fields{"key": path, "tpinstance": tpInstance})
 	}
@@ -322,9 +322,9 @@ func (t *TechProfileMgr) addTechProfInstanceToKVStore(techProfiletblID uint32, u
 }
 func (t *TechProfileMgr) getTPFromKVStore(techProfiletblID uint32) *DefaultTechProfile {
 	var kvtechprofile DefaultTechProfile
-	key := fmt.Sprintf(t.config.TPFileKVPath, t.resourceMgr.GetTechnology(), techProfiletblID)
+	key := fmt.Sprintf(t.Config.TPFileKVPath, t.resourceMgr.GetTechnology(), techProfiletblID)
 	log.Debugw("Getting techprofile from KV store", log.Fields{"techProfiletblID": techProfiletblID, "Key": key})
-	kvresult, err := t.config.KVBackend.Get(key)
+	kvresult, err := t.Config.KVBackend.Get(key)
 	if err != nil {
 		log.Errorw("Error while fetching value from KV store", log.Fields{"key": key})
 		return nil
@@ -350,7 +350,7 @@ func (t *TechProfileMgr) CreateTechProfInstance(techProfiletblID uint32, uniPort
 		tp = t.getDefaultTechProfile()
 		log.Infow("Creating tech profile instance with default values", log.Fields{"tpid": techProfiletblID})
 	}
-	tpInstance = t.allocateTPInstance(uniPortName, tp, intfId, t.config.DefaultNumTconts)
+	tpInstance = t.allocateTPInstance(uniPortName, tp, intfId, t.Config.DefaultNumTconts)
 	if err := t.addTechProfInstanceToKVStore(techProfiletblID, uniPortName, tpInstance); err != nil {
 		log.Errorw("Error in adding tech profile instance to KV ", log.Fields{"tableid": techProfiletblID, "uni": uniPortName})
 		return nil
@@ -441,7 +441,7 @@ func (t *TechProfileMgr) getDefaultTechProfile() *DefaultTechProfile {
 	var usGemPortAttributeList []GemPortAttribute
 	var dsGemPortAttributeList []GemPortAttribute
 
-	for _, pbit := range t.config.DefaultPbits {
+	for _, pbit := range t.Config.DefaultPbits {
 		log.Debugw("Creating GEM port", log.Fields{"pbit": pbit})
 		usGemPortAttributeList = append(usGemPortAttributeList,
 			GemPortAttribute{
@@ -471,9 +471,9 @@ func (t *TechProfileMgr) getDefaultTechProfile() *DefaultTechProfile {
 					MaxProbability: defaultMaxProbability}})
 	}
 	return &DefaultTechProfile{
-		Name:        t.config.DefaultTPName,
+		Name:        t.Config.DefaultTPName,
 		ProfileType: t.resourceMgr.GetTechnology(),
-		Version:     t.config.TPVersion,
+		Version:     t.Config.TPVersion,
 		NumGemPorts: uint32(len(usGemPortAttributeList)),
 		InstanceCtrl: InstanceControl{
 			Onu:               defaultOnuInstance,
