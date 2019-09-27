@@ -18,6 +18,9 @@ import argparse
 import os
 
 import yaml
+import SocketServer
+
+from probe import Probe
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 
@@ -282,8 +285,13 @@ class Main(object):
 
         reactor.addSystemEventTrigger('before', 'shutdown',
                                       self.shutdown_components)
+        reactor.callInThread(self.start_probe)
         reactor.run()
 
+    def start_probe(self):
+        port = 8000
+        server = SocketServer.TCPServer(("", port), Probe)
+        server.serve_forever()
 
 if __name__ == '__main__':
     Main().start()
