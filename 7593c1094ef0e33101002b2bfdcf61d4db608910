@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "914f7d81_59e193ba",
+        "filename": "afrouter/afrouter/method-router.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-09-27T16:18:30Z",
+      "side": 1,
+      "message": "@Kent to clarify, you\u0027re suggesting removing setting the error field, and only emitting a log message? My assumption was that if an internal error happens that we should cease processing (ideally seems to me that Route() should return an error). I\u0027ll take a look at the callers of Route() and refresh my mind on how it works -- maybe the assumption is that it should be able to try calling Route() on a different Router.",
+      "parentUuid": "1ebd6815_d9d7860a",
+      "revId": "7593c1094ef0e33101002b2bfdcf61d4db608910",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09ff1c6c_41cff3b4",
         "filename": "afrouter/afrouter/method-router_test.go",
         "patchSetId": 4
@@ -30,6 +48,30 @@
       "writtenOn": "2019-09-26T14:51:15Z",
       "side": 1,
       "message": "I assume this is OK because it\u0027s in the vendor directory?  Will switching to `go mod` break this?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 88
+      },
+      "revId": "7593c1094ef0e33101002b2bfdcf61d4db608910",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ae49fed_9e3a4942",
+        "filename": "afrouter/afrouter/method-router_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-09-27T16:18:30Z",
+      "side": 1,
+      "message": "We will have to figure that out when we switch to `go mod`. Somehow the tests are going to have to have access to the proto file, as it\u0027s a required input to the router configuration.",
+      "parentUuid": "09ff1c6c_41cff3b4",
       "range": {
         "startLine": 31,
         "startChar": 0,
