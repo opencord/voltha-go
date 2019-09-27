@@ -40,8 +40,26 @@ spec:
         - "/ofagent/ofagent/main.py"
         - "-v"
         - "--consul=consul.$(NAMESPACE).svc.cluster.local:8500"
+        - "--probe=localhost:9090"
         - "--controller=onos.$(NAMESPACE).svc.cluster.local:6653"
         - "--grpc-endpoint=afrouter.$(NAMESPACE).svc.cluster.local:55555"
         - "--enable-tls"
         - "--key-file=/ofagent/pki/voltha.key"
         - "--cert-file=/ofagent/pki/voltha.crt"
+        ports:
+        - name: probe-port
+          containerPort: 9090
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: probe-port
+          initialDelaySeconds: 10
+          failureThreshold: 3
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: probe-port
+          initialDelaySeconds: 10
+          failureThreshold: 2
+          periodSeconds: 10
