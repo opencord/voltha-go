@@ -37,6 +37,11 @@ log = get_logger()
 # _ = third_party
 
 class ConnectionManager(object):
+    running = False
+    channel = None
+    subscription = None
+    grpc_client = None
+
     def __init__(self, consul_endpoint,
                  vcore_endpoint, vcore_grpc_timeout, vcore_binding_key,
                  vcore_transaction_key, controller_endpoints, instance_id,
@@ -78,6 +83,7 @@ class ConnectionManager(object):
         log.debug('starting')
 
         self.running = True
+        ConnectionManager.running = True
 
         # Get a subscription to vcore
         reactor.callInThread(self.get_vcore_subscription)
@@ -88,6 +94,16 @@ class ConnectionManager(object):
         log.info('started')
 
         return self
+
+    @classmethod
+    def liveness_probe(cls):
+        # Pod restarts when liveness condition fails
+        return ConnectionManager.running
+
+    @classmethod
+    def readiness_probe(cls):
+        # Pod is isolated when readiness condition fails
+        return bool(ConnectionManager.channel and ConnectionManager.subscription and ConnectionManager.grpc_client)
 
     def stop(self):
         log.debug('stopping')
@@ -126,10 +142,13 @@ class ConnectionManager(object):
         if self.channel is not None:
             del self.channel
 
-        self.is_alive = False
         self.channel = None
         self.subscription = None
         self.grpc_client = None
+
+        ConnectionManager.channel = None
+        ConnectionManager.subscription = None
+        ConnectionManager.grpc_client = None
 
         log.debug('stop-reset-grpc-attributes')
 
@@ -144,7 +163,9 @@ class ConnectionManager(object):
 
         # Establish a connection to the vcore GRPC server
         self.channel = grpc.insecure_channel('{}:{}'.format(host, port))
-        self.is_alive = True
+
+        # For Readiness probe
+        ConnectionManager.channel = self.channel
 
         log.debug('stop-assign-grpc-attributes')
 
@@ -167,6 +188,9 @@ class ConnectionManager(object):
                 subscription = yield self.grpc_client.subscribe(
                     OfAgentSubscriber(ofagent_id=container_name))
 
+                #For Readiness probes
+                ConnectionManager.subscription =  subscription
+                ConnectionManager.grpc_client = self.grpc_client
                 # If the subscriber id matches the current instance
                 # ... then the subscription has succeeded
                 if subscription is not None and subscription.ofagent_id == container_name:
