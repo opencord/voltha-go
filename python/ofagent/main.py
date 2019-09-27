@@ -18,6 +18,9 @@ import argparse
 import os
 
 import yaml
+import SocketServer
+
+from probe import Probe
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 
@@ -30,6 +33,7 @@ defs = dict(
     config=os.environ.get('CONFIG', './ofagent.yml'),
     consul=os.environ.get('CONSUL', 'localhost:8500'),
     controller=os.environ.get('CONTROLLER', 'localhost:6653'),
+    probe=os.environ.get('PROBE', 'localhost:8000'),
     external_host_address=os.environ.get('EXTERNAL_HOST_ADDRESS',
                                          get_my_primary_local_ipv4()),
     grpc_endpoint=os.environ.get('GRPC_ENDPOINT', 'localhost:50055'),
@@ -69,6 +73,12 @@ def parse_args():
     parser.add_argument(
         '-O', '--controller',nargs = '*', dest='controller', action='store',
         default=defs['controller'],
+        help=_help)
+
+    _help = '<hostname>:<port> for liveness and readiness probes (default: %s)' % defs['probe']
+    parser.add_argument(
+        '-P', '--probe', dest='probe', action='store',
+        default=defs['probe'],
         help=_help)
 
     _help = ('<hostname> or <ip> at which ofagent is reachable from outside '
@@ -282,8 +292,17 @@ class Main(object):
 
         reactor.addSystemEventTrigger('before', 'shutdown',
                                       self.shutdown_components)
+        reactor.callInThread(self.start_probe)
         reactor.run()
 
+    def start_probe(self):
+        args = self.args
+        host = args.probe.split(':')[0]
+        port = args.probe.split(':')[1]
+        if host == "localhost":
+            host = "0.0.0.0"
+        server = SocketServer.TCPServer((host, int(port)), Probe)
+        server.serve_forever()
 
 if __name__ == '__main__':
     Main().start()
