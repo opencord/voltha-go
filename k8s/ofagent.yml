@@ -45,3 +45,20 @@ spec:
         - "--enable-tls"
         - "--key-file=/ofagent/pki/voltha.key"
         - "--cert-file=/ofagent/pki/voltha.crt"
+        ports:
+        - name: liveness-port
+          containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: liveness-port
+          initialDelaySeconds: 5
+          failureThreshold: 2
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: liveness-port
+          initialDelaySeconds: 10
+          failureThreshold: 2
+          periodSeconds: 10
