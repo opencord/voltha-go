@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "787b9c85_eb8342f6",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2019-09-27T16:24:57Z",
+      "side": 1,
+      "message": "When is_alive parameter set to False? Once the grpc connection is established, it seems it will always be True. Is there a way to understand the grpc connection is disconnected?",
+      "revId": "d3b6ba8c4be1f070101cdbacf28bad107fabdb8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
