@@ -37,6 +37,11 @@ log = get_logger()
 # _ = third_party
 
 class ConnectionManager(object):
+    is_alive = False
+    channel = None
+    subscription = None
+    grpc_client = None
+
     def __init__(self, consul_endpoint,
                  vcore_endpoint, vcore_grpc_timeout, vcore_binding_key,
                  vcore_transaction_key, controller_endpoints, instance_id,
@@ -88,6 +93,15 @@ class ConnectionManager(object):
         log.info('started')
 
         return self
+
+    @classmethod
+    def liveness_probe(cls):
+        
+        if ConnectionManager.is_alive and ConnectionManager.channel and ConnectionManager.subscription\
+                and ConnectionManager.grpc_client:
+            return True
+        else:
+            False
 
     def stop(self):
         log.debug('stopping')
@@ -146,6 +160,10 @@ class ConnectionManager(object):
         self.channel = grpc.insecure_channel('{}:{}'.format(host, port))
         self.is_alive = True
 
+        # For Liveness and Ready probes
+        ConnectionManager.channel = self.channel
+        ConnectionManager.is_alive =  True
+
         log.debug('stop-assign-grpc-attributes')
 
     @inlineCallbacks
@@ -167,6 +185,9 @@ class ConnectionManager(object):
                 subscription = yield self.grpc_client.subscribe(
                     OfAgentSubscriber(ofagent_id=container_name))
 
+                #For Liveness and Ready probes
+                ConnectionManager.subscription =  subscription
+                ConnectionManager.grpc_client = self.grpc_client
                 # If the subscriber id matches the current instance
                 # ... then the subscription has succeeded
                 if subscription is not None and subscription.ofagent_id == container_name:
