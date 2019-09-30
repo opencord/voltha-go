@@ -265,6 +265,7 @@ monitorLoop:
 	for {
 		select {
 		case <-ctx.Done():
+			break monitorLoop
 		case msg := <-ch:
 			log.Debug("Received a device discovery notification")
 			device := &ic.DeviceDiscovered{}
@@ -280,7 +281,6 @@ monitorLoop:
 					log.Error("backend is unknown")
 				}
 			}
-			break monitorLoop
 		}
 	}
 }

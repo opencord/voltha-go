@@ -106,6 +106,7 @@ func (br BindingRouter) Route(sel interface{}) (*backend, *connection) {
 				// Use the name of the backend as the metaVal for this new binding
 				br.bindings[(*br.currentBackend).name] = *br.currentBackend
 				return *br.currentBackend, nil
+
 			} else {
 				log.Error(err)
 				sl.err = err
