@@ -274,7 +274,7 @@ monitorLoop:
 			} else {
 				// somewhat hackish solution, backend is known from the first digit found in the publisher name
 				group := regexp.MustCompile(`\d`).FindString(device.Publisher)
-				if group == "" {
+				if group != "" {
 					// set the affinity of the discovered device
 					setAffinity(ctx, client, device.Id, afrouterRWClusterName+group)
 				} else {
@@ -292,12 +292,28 @@ func startDiscoveryMonitor(ctx context.Context, client pb.ConfigurationClient) (
 	if err != nil {
 		panic(err)
 	}
-	if err := kc.Start(); err != nil {
-		log.Error("Could not connect to kafka, discovery disabled")
-		close(doneCh)
-		return doneCh, err
-	}
 
+	stop := time.After(60 * time.Second)
+kafkaLoop:
+	for {
+		select {
+		case <-ctx.Done():
+			close(doneCh)
+			return doneCh, errors.New("GRPC context done")
+
+		case <-time.After(5 * time.Second):
+			if err := kc.Start(); err != nil {
+				log.Error("Could not connect to kafka")
+			} else {
+				break kafkaLoop
+			}
+
+		case <-stop:
+			log.Error("Could not connect to kafka. Giving up")
+			close(doneCh)
+			return doneCh, errors.New("Error connecting to kafka")
+		}
+	}
 	ch, err := kc.Subscribe(&kafka.Topic{Name: kafkaTopic})
 	if err != nil {
 		log.Errorf("Could not subscribe to the '%s' channel, discovery disabled", kafkaTopic)
