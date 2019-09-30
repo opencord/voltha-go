@@ -19,6 +19,7 @@ import (
 	"context"
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
@@ -113,9 +114,24 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer.AddService(f)
 	log.Info("grpc-service-added")
 
+	/*
+	 * Start the GRPC server
+	 *
+	 * This is a bit sub-optimal here as the grpcServer.Start call does not return (blocks)
+	 * until something fails, but we want to send a "start" status update. As written this
+	 * means that we are actually sending the "start" status update before the server is
+	 * started, which means it is possible that the status is "running" before it actually is.
+	 *
+	 * This means that there is a small window in which the core could return its status as
+	 * ready, when it really isn't.
+	 */
+	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusRunning)
+
 	//	Start the server
-	core.grpcServer.Start(context.Background())
 	log.Info("grpc-server-started")
+	core.grpcServer.Start(context.Background())
+
+	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
 }
 
 func (core *Core) startDeviceManager(ctx context.Context) {
