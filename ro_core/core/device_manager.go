@@ -18,6 +18,7 @@ package core
 import (
 	"context"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -44,12 +45,14 @@ func newDeviceManager(cdProxy *model.Proxy, coreInstanceId string) *DeviceManage
 func (dMgr *DeviceManager) start(ctx context.Context, logicalDeviceMgr *LogicalDeviceManager) {
 	log.Info("starting-device-manager")
 	dMgr.logicalDeviceMgr = logicalDeviceMgr
+	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusRunning)
 	log.Info("device-manager-started")
 }
 
 func (dMgr *DeviceManager) stop(ctx context.Context) {
 	log.Info("stopping-device-manager")
 	dMgr.exitChannel <- 1
+	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusStopped)
 	log.Info("device-manager-stopped")
 }
 

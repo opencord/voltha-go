@@ -18,6 +18,7 @@ package core
 import (
 	"context"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -49,12 +50,14 @@ func (ldMgr *LogicalDeviceManager) setGrpcNbiHandler(grpcNbiHandler *APIHandler)
 
 func (ldMgr *LogicalDeviceManager) start(ctx context.Context) {
 	log.Info("starting-logical-device-manager")
+	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusRunning)
 	log.Info("logical-device-manager-started")
 }
 
 func (ldMgr *LogicalDeviceManager) stop(ctx context.Context) {
 	log.Info("stopping-logical-device-manager")
 	ldMgr.exitChannel <- 1
+	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusStopped)
 	log.Info("logical-device-manager-stopped")
 }
 
