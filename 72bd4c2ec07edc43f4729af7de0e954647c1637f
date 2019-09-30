@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "520cd501_c176eec7",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2019-09-30T10:24:49Z",
+      "side": 1,
+      "message": "Do we really need the is_alive flag? Once we set it to True, we never set it to False, so do we need it?",
+      "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c391e1a_647fb493",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2019-09-30T10:24:49Z",
+      "side": 1,
+      "message": "Trying to understand the concept and the behaviour we are trying to create. My understanding is that if the liveness/readiness probes fail then K8s will restart the service. \n\nNow if the grpc connection between the ofagent and the vcore is lost, do we want k8s to restart ofagent? Will that help?",
+      "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
