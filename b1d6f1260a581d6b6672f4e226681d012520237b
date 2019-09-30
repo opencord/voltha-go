@@ -16,6 +16,24 @@
       "revId": "b1d6f1260a581d6b6672f4e226681d012520237b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe847340_ce254504",
+        "filename": "compose/ofagent.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-09-30T09:18:05Z",
+      "side": 1,
+      "message": "We have fixed this to maintain TLS parity between ONOS and OFAgent and enable easier debugging for the current release of Voltha. Also TLS can be enabled once when we have stabilized the VOLTHA release.",
+      "parentUuid": "fbf27fa9_556de9a3",
+      "revId": "b1d6f1260a581d6b6672f4e226681d012520237b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
