@@ -16,6 +16,24 @@
       "revId": "d3b6ba8c4be1f070101cdbacf28bad107fabdb8f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3daa5c2e_147c0b38",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-09-30T06:43:17Z",
+      "side": 1,
+      "message": "Hi Serkant\nThank you for the comments. \n_reset_grpc_attributes(self) reinitializes all the variables including self.is_alive \u003d False. Shall we add \nConnectionManager.is_alive \u003d False there?\nDoes it answer your query.",
+      "parentUuid": "787b9c85_eb8342f6",
+      "revId": "d3b6ba8c4be1f070101cdbacf28bad107fabdb8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
