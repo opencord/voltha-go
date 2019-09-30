@@ -33,6 +33,24 @@
       "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bac55e51_f3791d81",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-09-30T16:53:22Z",
+      "side": 1,
+      "message": "readiness determines it k8s will send a request to a container/pod. i.e. if readiness is false then k8s will not load balance to the pod.\n\nliveness is the one k8s uses to determine a restart. \n\nso when a connection goes down, readiness may go false, but liveness may stay as true (if the component can get back to ready when the connection recovers)",
+      "parentUuid": "3c391e1a_647fb493",
+      "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
