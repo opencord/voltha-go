@@ -43,6 +43,7 @@ const (
 	default_ROCoreCert            = "pki/voltha.crt"
 	default_ROCoreCA              = "pki/voltha-CA.pem"
 	default_Affinity_Router_Topic = "affinityRouter"
+	default_ProbePort             = 8080
 )
 
 // ROCoreFlags represents the set of configurations used by the read-only core service
@@ -65,6 +66,7 @@ type ROCoreFlags struct {
 	ROCoreCert          string
 	ROCoreCA            string
 	AffinityRouterTopic string
+	ProbePort           int
 }
 
 func init() {
@@ -91,6 +93,7 @@ func NewROCoreFlags() *ROCoreFlags {
 		ROCoreCert:          default_ROCoreCert,
 		ROCoreCA:            default_ROCoreCA,
 		AffinityRouterTopic: default_Affinity_Router_Topic,
+		ProbePort:           default_ProbePort,
 	}
 	return &roCoreFlag
 }
@@ -138,6 +141,9 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Show version information and exit")
 	flag.BoolVar(&cf.DisplayVersionOnly, "version", default_DisplayVersionOnly, help)
+
+	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
+	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
 
 	flag.Parse()
 

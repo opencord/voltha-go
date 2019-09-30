@@ -21,6 +21,7 @@ import (
 	"fmt"
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-go/common/probe"
 	"github.com/opencord/voltha-go/common/version"
 	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/ro_core/config"
@@ -95,6 +96,20 @@ func toString(value interface{}) (string, error) {
 func (ro *roCore) start(ctx context.Context) {
 	log.Info("Starting RW Core components")
 
+	// If the context has a probe then fetch it and register our services
+	var p *probe.Probe
+	if value := ctx.Value(probe.ProbeContextKey); value != nil {
+		if _, ok := value.(*probe.Probe); ok {
+			p = value.(*probe.Probe)
+			p.RegisterService(
+				"kv-store",
+				"device-manager",
+				"logical-device-manager",
+				"grpc-service",
+			)
+		}
+	}
+
 	// Setup KV Client
 	log.Debugw("create-kv-client", log.Fields{"kvstore": ro.config.KVStoreType})
 
@@ -106,11 +121,15 @@ func (ro *roCore) start(ctx context.Context) {
 	// Create the core service
 	ro.core = c.NewCore(ro.config.InstanceID, ro.config, ro.kvClient)
 
+	if p != nil {
+		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
+	}
+
 	// start the core
 	ro.core.Start(ctx)
 }
 
-func (ro *roCore) stop() {
+func (ro *roCore) stop(ctx context.Context) {
 	// Stop leadership tracking
 	ro.halted = true
 
@@ -127,7 +146,7 @@ func (ro *roCore) stop() {
 		ro.kvClient.Close()
 	}
 
-	ro.core.Stop(nil)
+	ro.core.Stop(ctx)
 }
 
 func waitForExit() int {
@@ -210,17 +229,31 @@ func main() {
 
 	log.Infow("ro-core-config", log.Fields{"config": *cf})
 
+	// Create the RO Core
+	ro := newROCore(cf)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ro := newROCore(cf)
-	go ro.start(ctx)
+	/*
+	 * Create and start the liveness and readiness container management probes. This
+	 * is done in the main function so just in case the main starts multiple other
+	 * objects there can be a single probe end point for the process.
+	 */
+	p := &probe.Probe{}
+	go p.ListenAndServe(ro.config.ProbePort)
+
+	// Add the probe to the context to pass to all the services started
+	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
+
+	// Start the RO core
+	go ro.start(probeCtx)
 
 	code := waitForExit()
 	log.Infow("received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
-	ro.stop()
+	ro.stop(probeCtx)
 
 	elapsed := time.Since(start)
 	log.Infow("ro-core-run-time", log.Fields{"core": ro.config.InstanceID, "time": elapsed / time.Second})
