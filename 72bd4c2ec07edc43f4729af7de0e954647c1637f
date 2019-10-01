@@ -87,6 +87,24 @@
       "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d105cb99_1d68ef28",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-01T11:09:56Z",
+      "side": 1,
+      "message": "Thanks Amit. We have modified the code as per your suggestions. \nWe have removed is_alive from the code. \nWe consider running flag for Liveness probe\nWe check channel, subscription and grpc_client for Readiness probe.\nWill abandon this commit and push a new commit for review",
+      "parentUuid": "26d927f1_65cad679",
+      "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
