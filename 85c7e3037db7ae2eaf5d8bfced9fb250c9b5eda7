@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "09188a04_107cf82f",
+        "filename": "VERSION",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-01T16:46:43Z",
+      "side": 1,
+      "message": "Why is the release being modified in a change that isn\u0027t about cutting a release?",
+      "revId": "85c7e3037db7ae2eaf5d8bfced9fb250c9b5eda7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8c8340d_34ad6ff6",
         "filename": "arouterd/arouterd.go",
         "patchSetId": 2
