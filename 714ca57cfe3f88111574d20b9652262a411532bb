@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f13de98_d3b173bb",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-01T18:07:22Z",
+      "side": 1,
+      "message": "are we hardcoding these sleep timeouts in rw-core as well. or is there a setting that we should allow? for this it really isn\u0027t much of an issue, but constants in code catch my eye.",
+      "range": {
+        "startLine": 307,
+        "startChar": 20,
+        "endLine": 307,
+        "endChar": 21
+      },
+      "revId": "714ca57cfe3f88111574d20b9652262a411532bb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
