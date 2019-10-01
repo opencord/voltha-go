@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "df815349_711885fc",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-10-01T17:22:48Z",
+      "side": 1,
+      "message": "It takes about 30 seconds to connect in my testing. I can change that if required to avoid first time delay.",
+      "parentUuid": "5e83907c_b126c35f",
+      "revId": "0c59f1dfa5a872f71d7ff058b44cb5101f40933d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a59fb745_b5dddd35",
         "filename": "arouterd/arouterd.go",
         "patchSetId": 3
@@ -65,6 +83,24 @@
       "writtenOn": "2019-10-01T17:13:12Z",
       "side": 1,
       "message": "Is calling kc.Start() multiple times valid?",
+      "revId": "0c59f1dfa5a872f71d7ff058b44cb5101f40933d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "279aff8b_9d3157b4",
+        "filename": "arouterd/arouterd.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-10-01T17:22:48Z",
+      "side": 1,
+      "message": "Yes. If it fails. As sarama start seems to be safe w.r.t restarting on errors.",
+      "parentUuid": "a59fb745_b5dddd35",
       "revId": "0c59f1dfa5a872f71d7ff058b44cb5101f40933d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
