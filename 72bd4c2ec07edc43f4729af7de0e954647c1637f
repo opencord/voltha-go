@@ -69,6 +69,24 @@
       "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26d927f1_65cad679",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2019-10-01T09:54:54Z",
+      "side": 1,
+      "message": "Yes, as David also suggested, if ofagent is not able to service requests because of some dependencies (like the connection) it should set it\u0027s readiness to False.\n\nI don\u0027t see the is_alive being really useful in it\u0027s current form. It gets set to True once and never again becomes False. The Liveness should be able to catch situations where a restart of the container is required.",
+      "parentUuid": "4188cb9c_0474f7f7",
+      "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
