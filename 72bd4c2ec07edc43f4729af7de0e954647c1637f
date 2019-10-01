@@ -51,6 +51,24 @@
       "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4188cb9c_0474f7f7",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-01T04:22:25Z",
+      "side": 1,
+      "message": "Thank you Amit and David for the comments. Currently both Liveness and Readiness probes implement the same probing logic of 4 check conditions. Can we split the 4 check conditions into two sets. \nConnectionManager.channel and ConnectionManager.is_alive for Liveness Probe (If it fails the pod will be restarted)\nConnectionManager.subscription and ConnectionManager.grpc_client for Readiness Probe (If it fails the pod will be isolated from traffic)",
+      "parentUuid": "3c391e1a_647fb493",
+      "revId": "72bd4c2ec07edc43f4729af7de0e954647c1637f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
