@@ -116,6 +116,18 @@ func (p *Probe) RegisterService(names ...string) {
 			log.Debugw("probe-service-registered", log.Fields{"service-name": name})
 		}
 	}
+
+	if p.readyFunc != nil {
+		p.isReady = p.readyFunc(p.status)
+	} else {
+		p.isReady = defaultReadyFunc(p.status)
+	}
+
+	if p.healthFunc != nil {
+		p.isHealthy = p.healthFunc(p.status)
+	} else {
+		p.isHealthy = defaultHealthFunc(p.status)
+	}
 }
 
 // UpdateStatus utility function to send a service update to the probe

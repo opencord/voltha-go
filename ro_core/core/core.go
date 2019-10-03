@@ -86,11 +86,19 @@ func (core *Core) Start(ctx context.Context) {
 
 func (core *Core) Stop(ctx context.Context) {
 	log.Info("stopping-adaptercore")
-	core.exitChannel <- 1
+	if core.exitChannel != nil {
+		core.exitChannel <- 1
+	}
 	// Stop all the started services
-	core.grpcServer.Stop()
-	core.logicalDeviceMgr.stop(ctx)
-	core.deviceMgr.stop(ctx)
+	if core.grpcServer != nil {
+		core.grpcServer.Stop()
+	}
+	if core.logicalDeviceMgr != nil {
+		core.logicalDeviceMgr.stop(ctx)
+	}
+	if core.deviceMgr != nil {
+		core.deviceMgr.stop(ctx)
+	}
 	log.Info("adaptercore-stopped")
 }
 
