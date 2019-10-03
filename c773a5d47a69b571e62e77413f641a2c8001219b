@@ -16,6 +16,24 @@
       "revId": "c773a5d47a69b571e62e77413f641a2c8001219b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "741ef7da_1710b594",
+        "filename": "common/grpc/server.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-03T23:46:46Z",
+      "side": 1,
+      "message": "testing new version with checks higher up. agree it is a little odd here (but works)",
+      "parentUuid": "36f158d4_ebfb8d18",
+      "revId": "c773a5d47a69b571e62e77413f641a2c8001219b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
