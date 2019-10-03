@@ -180,7 +180,7 @@ endif
 
 lint-sanity:
 	@echo "Running sanity check..."
-	@go vet ./...
+	@go vet -v ./...
 	@echo "Sanity check OK"
 
 lint-dep:
