@@ -202,7 +202,7 @@ func TestReadzNoServices(t *testing.T) {
 	assert.Equal(t, http.StatusTeapot, resp.StatusCode, "invalid status code for no services")
 }
 
-func TestReadzWithServices(t *testing.T) {
+func TestReadzWithServicesWithTrue(t *testing.T) {
 	p := (&Probe{}).WithReadyFunc(AlwaysTrue).WithHealthFunc(AlwaysTrue)
 	p.RegisterService("one", "two")
 
@@ -210,7 +210,18 @@ func TestReadzWithServices(t *testing.T) {
 	w := httptest.NewRecorder()
 	p.readzFunc(w, req)
 	resp := w.Result()
-	assert.Equal(t, http.StatusTeapot, resp.StatusCode, "invalid status code for no services")
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "invalid status code for registered only services")
+}
+
+func TestReadzWithServicesWithDefault(t *testing.T) {
+	p := &Probe{}
+	p.RegisterService("one", "two")
+
+	req := httptest.NewRequest("GET", "http://example.com/readz", nil)
+	w := httptest.NewRecorder()
+	p.readzFunc(w, req)
+	resp := w.Result()
+	assert.Equal(t, http.StatusTeapot, resp.StatusCode, "invalid status code for registered only services")
 }
 
 func TestReadzNpServicesDefault(t *testing.T) {
@@ -258,7 +269,7 @@ func TestHealthzNoServices(t *testing.T) {
 	assert.Equal(t, http.StatusTeapot, resp.StatusCode, "invalid status code for no services")
 }
 
-func TestHealthzWithServices(t *testing.T) {
+func TestHealthzWithServicesWithTrue(t *testing.T) {
 	p := (&Probe{}).WithReadyFunc(AlwaysTrue).WithHealthFunc(AlwaysTrue)
 	p.RegisterService("one", "two")
 
@@ -266,7 +277,18 @@ func TestHealthzWithServices(t *testing.T) {
 	w := httptest.NewRecorder()
 	p.healthzFunc(w, req)
 	resp := w.Result()
-	assert.Equal(t, http.StatusTeapot, resp.StatusCode, "invalid status code for no services")
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "invalid status code for registered only services")
+}
+
+func TestHealthzWithServicesWithDefault(t *testing.T) {
+	p := &Probe{}
+	p.RegisterService("one", "two")
+
+	req := httptest.NewRequest("GET", "http://example.com/healthz", nil)
+	w := httptest.NewRecorder()
+	p.healthzFunc(w, req)
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "invalid status code for registered only services")
 }
 
 func TestHealthzNoServicesDefault(t *testing.T) {
