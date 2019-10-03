@@ -118,7 +118,7 @@ func (s *GrpcServer) Start(ctx context.Context) {
 Stop servicing GRPC requests
 */
 func (s *GrpcServer) Stop() {
-	if s.gs != nil {
+	if s != nil && s.gs != nil {
 		s.gs.Stop()
 	}
 }
