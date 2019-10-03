@@ -247,6 +247,7 @@ func (c *KVTransaction) Watch(duration int64) int {
 	var res int
 
 	events := ctx.kvClient.Watch(c.txnKey)
+	defer ctx.kvClient.CloseWatch(c.txnKey, events)
 
 	for {
 		select {
