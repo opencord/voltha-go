@@ -393,7 +393,6 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 			if err := t.Close(); err != nil {
 				log.Errorw("watcher-cannot-be-closed", log.Fields{"key": key, "error": err})
 			}
-			close(ch)
 			pos = i
 			break
 		}
@@ -410,6 +409,7 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *Event, cancel context.CancelFunc) {
 	log.Debug("start-listening-on-channel ...")
 	defer cancel()
+	defer close(ch)
 	for resp := range channel {
 		for _, ev := range resp.Events {
 			//log.Debugf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
