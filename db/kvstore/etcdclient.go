@@ -308,7 +308,8 @@ func (c *EtcdClient) RenewReservation(key string) error {
 // listen to receive Events.
 func (c *EtcdClient) Watch(key string) chan *Event {
 	w := v3Client.NewWatcher(c.ectdAPI)
-	channel := w.Watch(context.Background(), key, v3Client.WithPrefix())
+	ctx, cancel := context.WithCancel(context.Background())
+	channel := w.Watch(ctx, key, v3Client.WithPrefix())
 
 	// Create a new channel
 	ch := make(chan *Event, maxClientChannelBufferSize)
@@ -325,7 +326,7 @@ func (c *EtcdClient) Watch(key string) chan *Event {
 	// json format.
 	log.Debugw("watched-channels", log.Fields{"len": len(channelMaps)})
 	// Launch a go routine to listen for updates
-	go c.listenForKeyChange(channel, ch)
+	go c.listenForKeyChange(channel, ch, cancel)
 
 	return ch
 
@@ -406,8 +407,9 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 	log.Infow("watcher-channel-exiting", log.Fields{"key": key, "channel": channelMaps})
 }
 
-func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *Event) {
+func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *Event, cancel context.CancelFunc) {
 	log.Debug("start-listening-on-channel ...")
+	defer cancel()
 	for resp := range channel {
 		for _, ev := range resp.Events {
 			//log.Debugf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
