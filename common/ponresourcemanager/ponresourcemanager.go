@@ -125,7 +125,7 @@ type PONResourceManager struct {
 	Port           int    // port number for the KV store
 	OLTModel       string
 	KVStore        *model.Backend
-	TechProfileMgr *tp.TechProfileMgr
+	TechProfileMgr tp.TechProfileIf // create object of *tp.TechProfileMgr
 
 	// Below attribute, pon_resource_ranges, should be initialized
 	// by reading from KV store.
