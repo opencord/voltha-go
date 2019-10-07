@@ -207,7 +207,7 @@ func (p *Probe) detailzFunc(w http.ResponseWriter, req *http.Request) {
 }
 
 // ListenAndServe implements 3 HTTP endpoints on the given port for healthz, readz, and detailz. Returns only on error
-func (p *Probe) ListenAndServe(port int) {
+func (p *Probe) ListenAndServe(address string) {
 	mux := http.NewServeMux()
 
 	// Returns the result of the readyFunc calculation
@@ -219,7 +219,7 @@ func (p *Probe) ListenAndServe(port int) {
 	// Returns the details of the services and their status as JSON
 	mux.HandleFunc("/detailz", p.detailzFunc)
 	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    address,
 		Handler: mux,
 	}
 	log.Fatal(s.ListenAndServe())
