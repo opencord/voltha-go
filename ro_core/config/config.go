@@ -43,6 +43,7 @@ const (
 	default_ROCoreCert            = "pki/voltha.crt"
 	default_ROCoreCA              = "pki/voltha-CA.pem"
 	default_Affinity_Router_Topic = "affinityRouter"
+	default_ProbeHost             = ""
 	default_ProbePort             = 8080
 )
 
@@ -66,6 +67,7 @@ type ROCoreFlags struct {
 	ROCoreCert          string
 	ROCoreCA            string
 	AffinityRouterTopic string
+	ProbeHost           string
 	ProbePort           int
 }
 
@@ -93,6 +95,7 @@ func NewROCoreFlags() *ROCoreFlags {
 		ROCoreCert:          default_ROCoreCert,
 		ROCoreCA:            default_ROCoreCA,
 		AffinityRouterTopic: default_Affinity_Router_Topic,
+		ProbeHost:           default_ProbeHost,
 		ProbePort:           default_ProbePort,
 	}
 	return &roCoreFlag
@@ -141,6 +144,9 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Show version information and exit")
 	flag.BoolVar(&cf.DisplayVersionOnly, "version", default_DisplayVersionOnly, help)
+
+	help = fmt.Sprintf("The address on which to listen to answer liveness and readiness probe queries over HTTP.")
+	flag.StringVar(&(cf.ProbeHost), "probe_host", default_ProbeHost, help)
 
 	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
