@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67072e29_fa11f61b",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-10-07T16:46:53Z",
+      "side": 1,
+      "message": "In a k8s environment, this ip cannot be deterministic and should default to blank(inaddr_any). \nIt seems this special option is for an environment where core can be started straight on the host?",
+      "revId": "68551b263fba7745f9dcd11f919eb543780488ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
