@@ -54,6 +54,7 @@ const (
 	default_CorePairTopic             = "rwcore_1"
 	default_MaxConnectionRetries      = -1 // retries forever
 	default_ConnectionRetryInterval   = 2  // in seconds
+	default_ProbeHost                 = ""
 	default_ProbePort                 = 8080
 )
 
@@ -89,6 +90,7 @@ type RWCoreFlags struct {
 	CorePairTopic             string
 	MaxConnectionRetries      int
 	ConnectionRetryInterval   int
+	ProbeHost                 string
 	ProbePort                 int
 }
 
@@ -128,6 +130,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		CorePairTopic:             default_CorePairTopic,
 		MaxConnectionRetries:      default_MaxConnectionRetries,
 		ConnectionRetryInterval:   default_ConnectionRetryInterval,
+		ProbeHost:                 default_ProbeHost,
 		ProbePort:                 default_ProbePort,
 	}
 	return &rwCoreFlag
@@ -215,6 +218,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The number of seconds between each connection retry attempt ")
 	flag.IntVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
+
+	help = fmt.Sprintf("The host on which to listen to answer liveness and readiness probe queries over HTTP.")
+	flag.StringVar(&(cf.ProbeHost), "probe_host", default_ProbeHost, help)
 
 	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
