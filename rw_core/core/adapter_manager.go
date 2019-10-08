@@ -174,10 +174,15 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() {
 
 //updateAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
 func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha.Adapter) {
-	if aMgr.getAdapter(adapter.Id) != nil {
-		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
-		go aMgr.deviceMgr.adapterRestarted(adapter)
-		return
+	aMgr.lockAdaptersMap.Lock()
+	defer aMgr.lockAdaptersMap.Unlock()
+
+	if adapterAgent, ok := aMgr.adapterAgents[adapter.Id]; ok {
+		if adapterAgent.getAdapter() != nil {
+			// Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
+			go aMgr.deviceMgr.adapterRestarted(adapter)
+			return
+		}
 	}
 
 	// Update the adapters
@@ -185,17 +190,19 @@ func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha
 		for _, adapterIf := range adaptersIf.([]interface{}) {
 			if adapter, ok := adapterIf.(*voltha.Adapter); ok {
 				log.Debugw("found-existing-adapter", log.Fields{"adapterId": adapter.Id})
-				aMgr.updateAdapter(adapter)
+				aMgr.updateAdapterWithoutLock(adapter)
 			}
 		}
 	}
+	aMgr.lockdDeviceTypeToAdapterMap.Lock()
+	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 	// Update the device types
 	if deviceTypesIf := aMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); deviceTypesIf != nil {
 		dTypes := &voltha.DeviceTypes{Items: []*voltha.DeviceType{}}
 		for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
 			if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
 				log.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
-				aMgr.updateDeviceType(dType)
+				aMgr.updateDeviceTypeWithoutLock(dType)
 			}
 		}
 	}
@@ -290,6 +297,10 @@ func (aMgr *AdapterManager) getAdapter(adapterId string) *voltha.Adapter {
 func (aMgr *AdapterManager) updateAdapter(adapter *voltha.Adapter) {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
+	aMgr.updateAdapterWithoutLock(adapter)
+}
+
+func (aMgr *AdapterManager) updateAdapterWithoutLock(adapter *voltha.Adapter) {
 	if adapterAgent, ok := aMgr.adapterAgents[adapter.Id]; ok {
 		adapterAgent.updateAdapter(adapter)
 	} else {
@@ -303,6 +314,10 @@ func (aMgr *AdapterManager) updateDeviceType(deviceType *voltha.DeviceType) {
 	defer aMgr.lockAdaptersMap.Unlock()
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
+	aMgr.updateDeviceTypeWithoutLock(deviceType)
+}
+
+func (aMgr *AdapterManager) updateDeviceTypeWithoutLock(deviceType *voltha.DeviceType) {
 	if adapterAgent, exist := aMgr.adapterAgents[deviceType.Adapter]; exist {
 		adapterAgent.updateDeviceType(deviceType)
 	} else {
