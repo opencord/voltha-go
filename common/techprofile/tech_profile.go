@@ -142,7 +142,7 @@ type DiscardConfig struct {
 
 // default scheduler contants
 const (
-	defaultAddtionalBw      = AdditionalBW_AdditionalBW_Auto
+	defaultAdditionalBw     = AdditionalBW_AdditionalBW_BestEffort
 	defaultPriority         = 0
 	defaultWeight           = 0
 	defaultQueueSchedPolicy = SchedulingPolicy_Hybrid
@@ -481,13 +481,13 @@ func (t *TechProfileMgr) getDefaultTechProfile() *DefaultTechProfile {
 			MaxGemPayloadSize: defaultGemPayloadSize},
 		UsScheduler: Scheduler{
 			Direction:    Direction_name[Direction_UPSTREAM],
-			AdditionalBw: AdditionalBW_name[defaultAddtionalBw],
+			AdditionalBw: AdditionalBW_name[defaultAdditionalBw],
 			Priority:     defaultPriority,
 			Weight:       defaultWeight,
 			QSchedPolicy: SchedulingPolicy_name[defaultQueueSchedPolicy]},
 		DsScheduler: Scheduler{
 			Direction:    Direction_name[Direction_DOWNSTREAM],
-			AdditionalBw: AdditionalBW_name[defaultAddtionalBw],
+			AdditionalBw: AdditionalBW_name[defaultAdditionalBw],
 			Priority:     defaultPriority,
 			Weight:       defaultWeight,
 			QSchedPolicy: SchedulingPolicy_name[defaultQueueSchedPolicy]},
