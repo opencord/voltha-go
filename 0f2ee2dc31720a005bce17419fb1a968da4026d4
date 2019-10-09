@@ -34,6 +34,24 @@
       "revId": "0f2ee2dc31720a005bce17419fb1a968da4026d4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58a265ff_07a40513",
+        "filename": "common/techprofile/tech_profile.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-10-09T14:52:42Z",
+      "side": 1,
+      "message": "Ok. I fixed typo.",
+      "parentUuid": "81d6c316_3054ecf2",
+      "revId": "0f2ee2dc31720a005bce17419fb1a968da4026d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
