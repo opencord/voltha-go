@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc5a9e0e_7697667e",
+        "filename": "common/techprofile/tech_profile.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-09T14:43:56Z",
+      "side": 1,
+      "message": "typo?",
+      "revId": "0f2ee2dc31720a005bce17419fb1a968da4026d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
