@@ -142,7 +142,7 @@ type DiscardConfig struct {
 
 // default scheduler contants
 const (
-	defaultAddtionalBw      = AdditionalBW_AdditionalBW_Auto
+	defaultAddtionalBw      = AdditionalBW_AdditionalBW_BestEffort
 	defaultPriority         = 0
 	defaultWeight           = 0
 	defaultQueueSchedPolicy = SchedulingPolicy_Hybrid
