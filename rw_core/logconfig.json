@@ -1,0 +1,5 @@
+{
+  "github.com/opencord/voltha-go/rw_core/core" : 3,
+  "github.com/opencord/voltha-go/common/probe" : 3,
+  "github.com/opencord/voltha-go/db/model" : 3
+}

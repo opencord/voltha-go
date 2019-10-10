@@ -19,6 +19,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
+	"time"
+
 	grpcserver "github.com/opencord/voltha-go/common/grpc"
 	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/common/probe"
@@ -29,11 +35,6 @@ import (
 	c "github.com/opencord/voltha-go/rw_core/core"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
-	"os"
-	"os/signal"
-	"strconv"
-	"syscall"
-	"time"
 )
 
 type rwCore struct {
@@ -244,7 +245,7 @@ func main() {
 	// Update all loggers to log level specified as input parameter
 	log.SetAllLogLevel(cf.LogLevel)
 
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
+	config.LoadLogConfig(cf.LogConfigFile)
 
 	defer log.CleanUp()
 

@@ -16,8 +16,11 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/opencord/voltha-go/common/log"
 )
 
@@ -56,6 +59,7 @@ const (
 	default_ConnectionRetryInterval   = 2  // in seconds
 	default_ProbeHost                 = ""
 	default_ProbePort                 = 8080
+	default_LogConfigFile             = "logconfig.json"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -92,6 +96,7 @@ type RWCoreFlags struct {
 	ConnectionRetryInterval   int
 	ProbeHost                 string
 	ProbePort                 int
+	LogConfigFile             string
 }
 
 func init() {
@@ -132,6 +137,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		ConnectionRetryInterval:   default_ConnectionRetryInterval,
 		ProbeHost:                 default_ProbeHost,
 		ProbePort:                 default_ProbePort,
+		LogConfigFile:             default_LogConfigFile,
 	}
 	return &rwCoreFlag
 }
@@ -225,5 +231,32 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
 
+	help = fmt.Sprintf("Log config file")
+	flag.StringVar(&(cf.LogConfigFile), "logconfig_file", default_LogConfigFile, help)
+
 	flag.Parse()
+}
+
+func LoadLogConfig(configFile string) error {
+
+	configF, err := os.Open(configFile)
+	log.Info("Loading log configuration from: ", configFile)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	defer configF.Close()
+	var m map[string]interface{}
+	decoder := json.NewDecoder(configF)
+	err = decoder.Decode(&m)
+	if err != nil {
+		log.Error("Error decoding log configuration file")
+		return err
+	}
+	for k, v := range m {
+		log.Debug("Log configuration: ", log.Fields{"Package": k, "LogLevel": v})
+		log.SetPackageLogLevel(k, int(v.(float64)))
+	}
+	return nil
 }
