@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f824e528_67d4ea56",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-10T22:39:09Z",
+      "side": 1,
+      "message": "if we are using `go mod` then `$GOPATH/{src,okg,bin}` shouldn\u0027t be needed",
+      "parentUuid": "cf5a68f0_7d300266",
+      "range": {
+        "startLine": 31,
+        "startChar": 20,
+        "endLine": 31,
+        "endChar": 21
+      },
+      "revId": "f8700cd90c3fe947e3b52fb51f3707d428e8fe1c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f2ff5e79_23e0dee6",
         "filename": "go.mod",
         "patchSetId": 2
