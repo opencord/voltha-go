@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2ff5e79_23e0dee6",
+        "filename": "go.mod",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-10T22:03:23Z",
+      "side": 1,
+      "message": "This should probably be set to v1.0.3",
+      "range": {
+        "startLine": 30,
+        "startChar": 1,
+        "endLine": 30,
+        "endChar": 69
+      },
+      "revId": "f8700cd90c3fe947e3b52fb51f3707d428e8fe1c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
