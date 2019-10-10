@@ -129,7 +129,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.RLock()
 	defer agent.lockDevice.RUnlock()
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, true, ""); device != nil {
+	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
