@@ -27,12 +27,10 @@ RUN apk add --no-cache \
         protobuf-dev=3.6.1-r1
 
 # Prepare directory structure
-RUN mkdir -p /build \
-        "$GOPATH/src/" "$GOPATH/pkg" "$GOPATH/bin" \
-        "$GOPATH/src/github.com/opencord" \
-        "$GOPATH/src/github.com/opencord/voltha-go"
+RUN mkdir -p /build/src \
+        "$GOPATH/src/" "$GOPATH/pkg" "$GOPATH/bin"
 
-WORKDIR $GOPATH/src/github.com/opencord/voltha-go
+WORKDIR /build/src
 
 # Copy common files.
 COPY common ./common
@@ -42,6 +40,8 @@ COPY vendor ./vendor
 
 # Copy files.
 COPY ro_core ./ro_core
+COPY go.mod ./
+COPY go.sum ./
 
 ARG org_label_schema_version=unknown
 ARG org_label_schema_vcs_url=unknown
@@ -51,9 +51,9 @@ ARG org_opencord_vcs_commit_date=unknown
 ARG org_opencord_vcs_dirty=unknown
 
 # Build
-WORKDIR $GOPATH/src/github.com/opencord/voltha-go/ro_core
+WORKDIR /build/src/ro_core
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
-RUN go build -o /build/ro_core \
+RUN go build -mod=vendor -o /build/ro_core \
 	-ldflags \
 	"-X github.com/opencord/voltha-go/common/version.version=$org_label_schema_version \
 	 -X github.com/opencord/voltha-go/common/version.vcsRef=$org_label_schema_vcs_ref  \
