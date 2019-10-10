@@ -1,5 +1,0 @@
-[gerrit]
-host=gerrit.opencord.org
-port=29418
-project=voltha-protos.git
-defaultremote=origin
