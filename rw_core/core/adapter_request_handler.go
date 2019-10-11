@@ -60,22 +60,6 @@ func NewAdapterRequestHandlerProxy(core *Core, coreInstanceId string, dMgr *Devi
 	return &proxy
 }
 
-func (rhp *AdapterRequestHandlerProxy) acquireRequest(transactionId string, maxTimeout ...int64) (*KVTransaction, error) {
-	timeout := rhp.defaultRequestTimeout
-	if len(maxTimeout) > 0 {
-		timeout = maxTimeout[0]
-	}
-	txn := NewKVTransaction(transactionId)
-	if txn == nil {
-		return nil, errors.New("fail-to-create-transaction")
-	} else if txn.Acquired(timeout) {
-		log.Debugw("acquired-request", log.Fields{"xtrnsId": transactionId})
-		return txn, nil
-	} else {
-		return nil, errorTransactionNotAcquired
-	}
-}
-
 // This is a helper function that attempts to acquire the request by using the device ownership model
 func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string, devId string, maxTimeout ...int64) (*KVTransaction, error) {
 	timeout := rhp.defaultRequestTimeout
@@ -87,22 +71,24 @@ func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionId string
 		return nil, errors.New("fail-to-create-transaction")
 	}
 
-	if rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: devId}) {
-		log.Debugw("owned-by-me", log.Fields{"Id": devId})
-		if txn.Acquired(timeout) {
-			log.Debugw("processing-request", log.Fields{"Id": devId})
-			return txn, nil
-		} else {
-			return nil, errorTransactionNotAcquired
+	var acquired bool
+	var err error
+	if devId != "" {
+		var ownedByMe bool
+		if ownedByMe, err = rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: devId}); err != nil {
+			log.Warnw("getting-ownership-failed", log.Fields{"deviceId": devId, "error": err})
+			return nil, kafka.ErrorTransactionInvalidId
 		}
+		acquired, err = txn.Acquired(timeout, ownedByMe)
 	} else {
-		log.Debugw("not-owned-by-me", log.Fields{"Id": devId})
-		if txn.Monitor(timeout) {
-			log.Debugw("timeout-processing-request", log.Fields{"Id": devId})
-			return txn, nil
-		} else {
-			return nil, errorTransactionNotAcquired
-		}
+		acquired, err = txn.Acquired(timeout)
+	}
+	if err == nil && acquired {
+		log.Debugw("transaction-acquired", log.Fields{"transactionId": txn.txnId})
+		return txn, nil
+	} else {
+		log.Debugw("transaction-not-acquired", log.Fields{"transactionId": txn.txnId, "error": err})
+		return nil, kafka.ErrorTransactionNotAcquired
 	}
 }
 
@@ -120,7 +106,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 	}
 	adapter := &voltha.Adapter{}
 	deviceTypes := &voltha.DeviceTypes{}
-	transactionID := &ic.StrType{}
+	transactionId := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "adapter":
@@ -134,22 +120,23 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 				return nil, err
 			}
 		case kafka.TransactionKey:
-			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+			if err := ptypes.UnmarshalAny(arg.Value, transactionId); err != nil {
 				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
 				return nil, err
 			}
 		}
 	}
-	log.Debugw("Register", log.Fields{"Adapter": *adapter, "DeviceTypes": deviceTypes, "transactionID": transactionID.Val, "coreId": rhp.coreInstanceId})
+	log.Debugw("Register", log.Fields{"Adapter": *adapter, "DeviceTypes": deviceTypes, "transactionId": transactionId.Val, "coreId": rhp.coreInstanceId})
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		if txn, err := rhp.acquireRequest(transactionID.Val); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// Update our adapters in memory
-			go rhp.adapterMgr.updateAdaptersAndDevicetypesInMemory(adapter)
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+		if txn, err := rhp.takeRequestOwnership(transactionId.Val, ""); err != nil {
+			if err.Error() == kafka.ErrorTransactionNotAcquired.Error() {
+				log.Debugw("Another core handled the request", log.Fields{"transactionId": transactionId})
+				// Update our adapters in memory
+				go rhp.adapterMgr.updateAdaptersAndDevicetypesInMemory(adapter)
+			}
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -189,9 +176,8 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -238,9 +224,8 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, device.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -300,9 +285,8 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -342,8 +326,8 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, proxyAddress.DeviceId); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -390,6 +374,16 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Po
 		allPorts.Items = append(allPorts.Items, aPort)
 		return allPorts, nil
 	}
+	// Try to grab the transaction as this core may be competing with another Core
+	if rhp.competeForTransaction() {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
+		} else {
+			defer txn.Close()
+		}
+	}
+
 	return rhp.deviceMgr.getPorts(nil, deviceId.Id, voltha.Port_PortType(pt.Val))
 }
 
@@ -421,9 +415,8 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -505,9 +498,8 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -565,9 +557,8 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -580,10 +571,6 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 	go rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
 		voltha.ConnectStatus_ConnectStatus(connStatus.Val))
 
-	//if err := rhp.deviceMgr.updateDeviceStatus(deviceId.Id, voltha.OperStatus_OperStatus(operStatus.Val),
-	//	voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
-	//	return nil, err
-	//}
 	return new(empty.Empty), nil
 }
 
@@ -627,9 +614,8 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -683,9 +669,8 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*e
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -746,9 +731,8 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -795,9 +779,8 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(args []*ic.Argument) (*emp
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -839,9 +822,8 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(args []*ic.Argument) (*e
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, parentDeviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -883,9 +865,8 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(args []*ic.Argument)
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, parentDeviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -936,9 +917,8 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -980,9 +960,8 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, pmConfigs.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -1039,8 +1018,8 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 	// duplicates.
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -1087,9 +1066,8 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
@@ -1132,9 +1110,8 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		if txn, err := rhp.takeRequestOwnership(transactionID.Val, parentDeviceId.Id); err != nil {
-			log.Debugw("Another core handled the request", log.Fields{"transactionID": transactionID})
-			// returning nil, nil instructs the callee to ignore this request
-			return nil, nil
+			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
 		} else {
 			defer txn.Close()
 		}
