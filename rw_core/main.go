@@ -131,9 +131,7 @@ func (rw *rwCore) start(ctx context.Context, instanceId string) {
 		if err = c.SetTransactionContext(instanceId,
 			txnPrefix,
 			rw.kvClient,
-			rw.config.KVStoreTimeout,
-			rw.config.KVTxnKeyDelTime,
-			1); err != nil {
+			rw.config.KVStoreTimeout); err != nil {
 			log.Fatal("creating-transaction-context-failed")
 		}
 	}
