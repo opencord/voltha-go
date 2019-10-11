@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcccb08c_f545f7e3",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-11T19:41:02Z",
+      "side": 1,
+      "message": "Just to verify, if the key does not exist etcd does not return an error, correct?",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 54
+      },
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d27bf29c_bf4f952a",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-11T19:41:02Z",
+      "side": 1,
+      "message": "not consistently using field name `transactionID` v. `transactionId`. I think we use `instanceId` elsewhere so mayne use `Id`",
+      "range": {
+        "startLine": 129,
+        "startChar": 85,
+        "endLine": 129,
+        "endChar": 98
+      },
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80f7632b_c0e84665",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-11T19:41:02Z",
+      "side": 1,
+      "message": "see below",
+      "range": {
+        "startLine": 171,
+        "startChar": 16,
+        "endLine": 171,
+        "endChar": 19
+      },
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46e8548c_961a37a2",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-11T19:41:02Z",
+      "side": 1,
+      "message": "called `transactionId` elsewhere",
+      "range": {
+        "startLine": 183,
+        "startChar": 54,
+        "endLine": 183,
+        "endChar": 57
+      },
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
