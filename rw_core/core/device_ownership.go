@@ -110,7 +110,7 @@ func (da *DeviceOwnership) renewReservation(id string) bool {
 	return true
 }
 
-func (da *DeviceOwnership) MonitorOwnership(id string, chnl chan int) {
+func (da *DeviceOwnership) monitorOwnership(id string, chnl chan int) {
 	log.Debugw("start-device-monitoring", log.Fields{"id": id})
 	op := "starting"
 	exit := false
@@ -186,9 +186,9 @@ func (da *DeviceOwnership) GetAllDeviceIdsOwnedByMe() []string {
 	return deviceIds
 }
 
-// OwnedByMe returns where this Core instance active owns this device.   This function will automatically
+// OwnedByMe returns whether this Core instance active owns this device.   This function will automatically
 // trigger the process to monitor the device and update the device ownership regularly.
-func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
+func (da *DeviceOwnership) OwnedByMe(id interface{}) (bool, error) {
 	// Retrieve the ownership key based on the id
 	var ownershipKey string
 	var err error
@@ -196,7 +196,7 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 	var cache bool
 	if ownershipKey, idStr, cache, err = da.getOwnershipKey(id); err != nil {
 		log.Warnw("no-ownershipkey", log.Fields{"error": err})
-		return false
+		return false, err
 	}
 
 	// Update the deviceToKey map, if not from cache
@@ -215,7 +215,7 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 	deviceOwned, ownedByMe := da.getOwnership(ownershipKey)
 	if deviceOwned {
 		log.Debugw("ownership", log.Fields{"Id": ownershipKey, "owned": ownedByMe})
-		return ownedByMe
+		return ownedByMe, nil
 	}
 	// Not owned by me or maybe nobody else.  Try to reserve it
 	reservedByMe := da.tryToReserveKey(ownershipKey)
@@ -229,8 +229,8 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) bool {
 	da.deviceMapLock.Unlock()
 
 	log.Debugw("set-new-ownership", log.Fields{"Id": ownershipKey, "owned": reservedByMe})
-	go da.MonitorOwnership(ownershipKey, myChnl)
-	return reservedByMe
+	go da.monitorOwnership(ownershipKey, myChnl)
+	return reservedByMe, nil
 }
 
 //AbandonDevice must be invoked whenever a device is deleted from the Core

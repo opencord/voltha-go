@@ -46,6 +46,9 @@ const (
 	FromTopic      = "fromTopic"
 )
 
+var ErrorTransactionNotAcquired = errors.New("transaction-not-acquired")
+var ErrorTransactionInvalidId = errors.New("transaction-invalid-id")
+
 // requestHandlerChannel represents an interface associated with a channel.  Whenever, an event is
 // obtained from that channel, this interface is invoked.   This is used to handle
 // async requests into the Core via the kafka messaging bus
@@ -674,15 +677,20 @@ func (kp *InterContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 				// Check for errors first
 				lastIndex := len(out) - 1
 				if out[lastIndex].Interface() != nil { // Error
-					if goError, ok := out[lastIndex].Interface().(error); ok {
-						returnError = &ic.Error{Reason: goError.Error()}
+					if retError, ok := out[lastIndex].Interface().(error); ok {
+						if retError.Error() == ErrorTransactionNotAcquired.Error() {
+							log.Debugw("Ignoring request", log.Fields{"error": retError, "txId": msg.Header.Id})
+							return // Ignore - process is in competing mode and ignored transaction
+						}
+						returnError = &ic.Error{Reason: retError.Error()}
 						returnedValues = append(returnedValues, returnError)
 					} else { // Should never happen
 						returnError = &ic.Error{Reason: "incorrect-error-returns"}
 						returnedValues = append(returnedValues, returnError)
 					}
 				} else if len(out) == 2 && reflect.ValueOf(out[0].Interface()).IsValid() && reflect.ValueOf(out[0].Interface()).IsNil() {
-					return // Ignore case - when core is in competing mode
+					log.Warnw("Unexpected response of (nil,nil)", log.Fields{"txId": msg.Header.Id})
+					return // Ignore - should not happen
 				} else { // Non-error case
 					success = true
 					for idx, val := range out {
