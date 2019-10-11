@@ -474,6 +474,18 @@ func GetMeterId(flow *ofp.OfpFlowStats) uint32 {
 	return 0
 }
 
+func GetVlanVid(flow *ofp.OfpFlowStats) uint32 {
+	if flow == nil {
+		return 0
+	}
+	for _, field := range GetOfbFields(flow) {
+		if field.Type == VLAN_VID {
+			return field.GetVlanVid()
+		}
+	}
+	return 0
+}
+
 func GetTunnelId(flow *ofp.OfpFlowStats) uint64 {
 	if flow == nil {
 		return 0

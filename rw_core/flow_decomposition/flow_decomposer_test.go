@@ -494,6 +494,7 @@ func TestEapolReRouteRuleDecomposition(t *testing.T) {
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
+			fu.VlanVid(50),
 			fu.EthType(0x888e),
 		},
 		Actions: []*ofp.OfpAction{
@@ -509,15 +510,17 @@ func TestEapolReRouteRuleDecomposition(t *testing.T) {
 	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
-	assert.Nil(t, onu1FlowAndGroup)
+	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
 
-	fa = &fu.FlowArgs{
+	var faParent *fu.FlowArgs
+	faParent = &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
 			fu.TunnelId(uint64(1)),
+			fu.VlanVid(50),
 			fu.EthType(0x888e),
 		},
 		Actions: []*ofp.OfpAction{
@@ -526,9 +529,27 @@ func TestEapolReRouteRuleDecomposition(t *testing.T) {
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(fa)
+	expectedOltFlow := fu.MkFlowStat(faParent)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
+
+	var faChild *fu.FlowArgs
+	faChild = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(2),
+			fu.TunnelId(uint64(1)),
+			fu.EthType(0x888e),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.PushVlan(0x8100),
+			fu.SetField(fu.VlanVid(50)),
+			fu.Output(1),
+		},
+	}
+	expectedOnuFlow := fu.MkFlowStat(faChild)
+	derivedFlow = onu1FlowAndGroup.GetFlow(0)
+	assert.Equal(t, expectedOnuFlow.String(), derivedFlow.String())
 }
 
 func TestDhcpReRouteRuleDecomposition(t *testing.T) {
@@ -556,11 +577,13 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
-	assert.Nil(t, onu1FlowAndGroup)
+	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
 
-	fa = &fu.FlowArgs{
+	var faParent *fu.FlowArgs
+	faParent = &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -577,9 +600,29 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(fa)
+	expectedOltFlow := fu.MkFlowStat(faParent)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
+
+	var faChild *fu.FlowArgs
+	faChild = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(2),
+			fu.TunnelId(uint64(1)),
+			fu.EthType(0x0800),
+			fu.Ipv4Dst(0xffffffff),
+			fu.IpProto(17),
+			fu.UdpSrc(68),
+			fu.UdpDst(67),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.Output(1),
+		},
+	}
+	expectedOnuFlow := fu.MkFlowStat(faChild)
+	derivedFlow = onu1FlowAndGroup.GetFlow(0)
+	assert.Equal(t, expectedOnuFlow.String(), derivedFlow.String())
 }
 
 func TestLldpReRouteRuleDecomposition(t *testing.T) {
