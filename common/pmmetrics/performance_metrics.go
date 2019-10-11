@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package common
+package pmmetrics
 
 import (
 	"github.com/opencord/voltha-protos/go/voltha"
 )
 
+// PmMetrics structure holds metric and device info
 type PmMetrics struct {
-	deviceId          string
+	deviceID          string
 	frequency         uint32
 	grouped           bool
 	frequencyOverride bool
@@ -30,6 +31,7 @@ type PmMetrics struct {
 
 type PmMetricsOption func(*PmMetrics)
 
+// Frequency is to poll stats at this interval
 func Frequency(frequency uint32) PmMetricsOption {
 	return func(args *PmMetrics) {
 		args.frequency = frequency
@@ -48,6 +50,7 @@ func FrequencyOverride(frequencyOverride bool) PmMetricsOption {
 	}
 }
 
+// Metrics will store the PMMetric params
 func Metrics(pmNames []string) PmMetricsOption {
 	return func(args *PmMetrics) {
 		args.metrics = make(map[string]*voltha.PmConfig)
@@ -61,17 +64,19 @@ func Metrics(pmNames []string) PmMetricsOption {
 	}
 }
 
-func NewPmMetrics(deviceId string, opts ...PmMetricsOption) *PmMetrics {
-	pm := &PmMetrics{deviceId: deviceId}
+// NewPmMetrics will return the pmmetric object
+func NewPmMetrics(deviceID string, opts ...PmMetricsOption) *PmMetrics {
+	pm := &PmMetrics{}
+	pm.deviceID = deviceID
 	for _, option := range opts {
 		option(pm)
 	}
 	return pm
 }
 
+// ToPmConfigs will enable the defined pmmetric
 func (pm *PmMetrics) ToPmConfigs() *voltha.PmConfigs {
 	pmConfigs := &voltha.PmConfigs{
-		Id:           pm.deviceId,
 		DefaultFreq:  pm.frequency,
 		Grouped:      pm.grouped,
 		FreqOverride: pm.frequencyOverride,
