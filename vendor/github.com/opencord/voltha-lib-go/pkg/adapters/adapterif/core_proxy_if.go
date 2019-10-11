@@ -37,6 +37,7 @@ type CoreProxy interface {
 	DeviceStateUpdate(ctx context.Context, deviceID string,
 		connStatus voltha.ConnectStatus_ConnectStatus, operStatus voltha.OperStatus_OperStatus) error
 
+	DevicePMConfigUpdate(ctx context.Context, pmConfigs *voltha.PmConfigs) error
 	ChildDeviceDetected(ctx context.Context, parentDeviceID string, parentPortNo int,
 		childDeviceType string, channelID int, vendorID string, serialNumber string, onuID int64) (*voltha.Device, error)
 
