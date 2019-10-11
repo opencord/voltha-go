@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "dbc81ea6_40ba937d",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-10-11T21:32:14Z",
+      "side": 1,
+      "message": "WithLease means that the key will be deleted if the lease expires.  Is this what you want?",
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcccb08c_f545f7e3",
         "filename": "db/kvstore/etcdclient.go",
         "patchSetId": 1
@@ -90,6 +107,57 @@
         "endLine": 129,
         "endChar": 98
       },
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cd23b17_c0fc0186",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-10-11T21:32:14Z",
+      "side": 1,
+      "message": "Just remove the code, don\u0027t leave it commented out.",
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe902b2a_71b82696",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-10-11T21:32:14Z",
+      "side": 1,
+      "message": "Remove commented code.",
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e60380c_38477ed1",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-10-11T21:32:14Z",
+      "side": 1,
+      "message": "How does this work now?\nConsider re-adding the long-form comment.",
       "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
