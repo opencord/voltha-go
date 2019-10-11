@@ -108,9 +108,8 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 	meterId := fu.GetMeterIdFromFlow(flow)
 	metadataFromwriteMetadata := fu.GetMetadataFromWriteMetadataAction(flow)
 
+	ingressHop := route[0]
 	egressHop := route[1]
-
-	fg := fu.NewFlowsAndGroups()
 
 	//case of packet_in from NNI port rule
 	if agent.GetDeviceGraph().IsRootPort(inPortNo) {
@@ -126,8 +125,10 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 			Actions: fu.GetActions(flow),
 		}
 		// Augment the matchfields with the ofpfields from the flow
+		fg := fu.NewFlowsAndGroups()
 		fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
 		fg.AddFlow(fu.MkFlowStat(fa))
+		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 	} else {
 		// Trap flow for UNI port
 		log.Debug("trap-uni")
@@ -140,9 +141,9 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 			inPorts = []uint32{inPortNo}
 		}
 		for _, inputPort := range inPorts {
-			var fa *fu.FlowArgs
-			// Upstream flow
-			fa = &fu.FlowArgs{
+			// Upstream flow on parent (olt) device
+			var faParent *fu.FlowArgs
+			faParent = &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					fu.InPort(egressHop.Ingress),
@@ -155,11 +156,51 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 				},
 			}
 			// Augment the matchfields with the ofpfields from the flow
-			fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
-			fg.AddFlow(fu.MkFlowStat(fa))
+			faParent.MatchFields = append(faParent.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
+			fgParent := fu.NewFlowsAndGroups()
+			fgParent.AddFlow(fu.MkFlowStat(faParent))
+			deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fgParent)
+			log.Debugw("parent-trap-flow-set", log.Fields{"flow": faParent})
+
+			// Upstream flow on child (onu) device
+			var actions []*ofp.OfpAction
+			setvid := fu.GetVlanVid(flow)
+			if setvid != nil {
+				// have this child push the vlan the parent is matching/trapping on above
+				actions = []*ofp.OfpAction{
+					fu.PushVlan(0x8100),
+					fu.SetField(fu.VlanVid(*setvid)),
+					fu.Output(ingressHop.Egress),
+				}
+			} else {
+				// otherwise just set the egress port
+				actions = []*ofp.OfpAction{
+					fu.Output(ingressHop.Egress),
+				}
+			}
+			var faChild *fu.FlowArgs
+			faChild = &fu.FlowArgs{
+				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+				MatchFields: []*ofp.OfpOxmOfbField{
+					fu.InPort(ingressHop.Ingress),
+					fu.TunnelId(uint64(inputPort)),
+				},
+				Actions: actions,
+			}
+			// Augment the matchfields with the ofpfields from the flow.
+			// If the parent has a match vid and the child is setting that match vid exclude the the match vlan
+			// for the child given it will be setting that vlan and the parent will be matching on it
+			if setvid != nil {
+				faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.VLAN_VID)...)
+			} else {
+				faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
+			}
+			fgChild := fu.NewFlowsAndGroups()
+			fgChild.AddFlow(fu.MkFlowStat(faChild))
+			deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fgChild)
+			log.Debugw("child-trap-flow-set", log.Fields{"flow": faChild})
 		}
 	}
-	deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 
 	return deviceRules
 }
