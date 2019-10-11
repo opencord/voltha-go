@@ -922,6 +922,10 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	dMgr.addDeviceAgentToMap(agent)
 	agent.start(nil, false)
 
+	// Since this Core has handled this request then it therefore owns this child device.  Set the
+	// ownership of this device to this Core
+	dMgr.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: agent.deviceId})
+
 	// Activate the child device
 	if agent := dMgr.getDeviceAgent(agent.deviceId); agent != nil {
 		go agent.enableDevice(nil)

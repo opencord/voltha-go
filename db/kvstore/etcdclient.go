@@ -127,7 +127,15 @@ func (c *EtcdClient) Put(key string, value interface{}, timeout int, lock ...boo
 
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
-	_, err := c.ectdAPI.Put(ctx, key, val)
+
+	var err error
+	// Check if there is already a lease for this key - if there is then use it, otherwise a PUT will make
+	// that KV key permanent instead of automatically removing it after a lease expiration
+	if leaseID, ok := c.keyReservations[key]; ok {
+		_, err = c.ectdAPI.Put(ctx, key, val, v3Client.WithLease(*leaseID))
+	} else {
+		_, err = c.ectdAPI.Put(ctx, key, val)
+	}
 	cancel()
 	if err != nil {
 		switch err {
@@ -158,8 +166,8 @@ func (c *EtcdClient) Delete(key string, timeout int, lock ...bool) error {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 
-	// delete the keys
-	if _, err := c.ectdAPI.Delete(ctx, key, v3Client.WithPrefix()); err != nil {
+	// delete the key
+	if _, err := c.ectdAPI.Delete(ctx, key); err != nil {
 		log.Errorw("failed-to-delete-key", log.Fields{"key": key, "error": err})
 		return err
 	}
@@ -309,7 +317,7 @@ func (c *EtcdClient) RenewReservation(key string) error {
 func (c *EtcdClient) Watch(key string) chan *Event {
 	w := v3Client.NewWatcher(c.ectdAPI)
 	ctx, cancel := context.WithCancel(context.Background())
-	channel := w.Watch(ctx, key, v3Client.WithPrefix())
+	channel := w.Watch(ctx, key)
 
 	// Create a new channel
 	ch := make(chan *Event, maxClientChannelBufferSize)
@@ -317,8 +325,6 @@ func (c *EtcdClient) Watch(key string) chan *Event {
 	// Keep track of the created channels so they can be closed when required
 	channelMap := make(map[chan *Event]v3Client.Watcher)
 	channelMap[ch] = w
-	//c.writeLock.Lock()
-	//defer c.writeLock.Unlock()
 
 	channelMaps := c.addChannelMap(key, channelMap)
 
@@ -412,7 +418,6 @@ func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *E
 	defer close(ch)
 	for resp := range channel {
 		for _, ev := range resp.Events {
-			//log.Debugf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
 			ch <- NewEvent(getEventType(ev), ev.Kv.Key, ev.Kv.Value, ev.Kv.Version)
 		}
 	}
