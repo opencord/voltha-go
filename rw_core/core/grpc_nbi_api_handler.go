@@ -448,6 +448,15 @@ func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *volth
 
 // CreateDevice creates a new parent device in the data model
 func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
+	deviceList, _ := handler.deviceMgr.ListDevices()
+	devices := deviceList.GetItems()
+	for _, dev := range devices {
+		log.Debugw("Device Details", log.Fields{"Host and Port": dev.GetHostAndPort()})
+		if device.GetHostAndPort() == dev.GetHostAndPort() {
+			log.Debugf("Device Already PreProvisioned")
+			return nil, errors.New("Device Already Preprovisioned")
+		}
+	}
 	log.Debugw("createdevice", log.Fields{"device": *device})
 	if isTestMode(ctx) {
 		return &voltha.Device{Id: device.Id}, nil
