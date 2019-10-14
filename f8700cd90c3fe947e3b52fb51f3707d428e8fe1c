@@ -49,6 +49,54 @@
     },
     {
       "key": {
+        "uuid": "c00cd44c_928f0dcf",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-10-14T14:08:23Z",
+      "side": 1,
+      "message": "Removed GOPATH folders altogether",
+      "parentUuid": "cf5a68f0_7d300266",
+      "range": {
+        "startLine": 31,
+        "startChar": 20,
+        "endLine": 31,
+        "endChar": 21
+      },
+      "revId": "f8700cd90c3fe947e3b52fb51f3707d428e8fe1c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e61a536_637363cd",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-10-14T14:08:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f824e528_67d4ea56",
+      "range": {
+        "startLine": 31,
+        "startChar": 20,
+        "endLine": 31,
+        "endChar": 21
+      },
+      "revId": "f8700cd90c3fe947e3b52fb51f3707d428e8fe1c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f2ff5e79_23e0dee6",
         "filename": "go.mod",
         "patchSetId": 2
@@ -60,6 +108,30 @@
       "writtenOn": "2019-10-10T22:03:23Z",
       "side": 1,
       "message": "This should probably be set to v1.0.3",
+      "range": {
+        "startLine": 30,
+        "startChar": 1,
+        "endLine": 30,
+        "endChar": 69
+      },
+      "revId": "f8700cd90c3fe947e3b52fb51f3707d428e8fe1c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4e9c2a1_fffeccfe",
+        "filename": "go.mod",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-10-14T14:08:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2ff5e79_23e0dee6",
       "range": {
         "startLine": 30,
         "startChar": 1,
