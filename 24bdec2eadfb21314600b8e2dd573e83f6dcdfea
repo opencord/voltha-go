@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c375b44_fcc3778b",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T23:18:41Z",
+      "side": 1,
+      "message": "the golang images already have an expected work area. see `https://hub.docker.com/_/golang` for expected usage.",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 18
+      },
+      "revId": "24bdec2eadfb21314600b8e2dd573e83f6dcdfea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87867931_4e9a574c",
+        "filename": "docker/Dockerfile.rw_core",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T23:18:41Z",
+      "side": 1,
+      "message": "the golang images already have an expected work area. see `https://hub.docker.com/_/golang` for expected usage.",
+      "range": {
+        "startLine": 30,
+        "startChar": 1,
+        "endLine": 32,
+        "endChar": 18
+      },
+      "revId": "24bdec2eadfb21314600b8e2dd573e83f6dcdfea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
