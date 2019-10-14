@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c483e1ad_d73e39b2",
+        "filename": "common/techprofile/tech_profile_if.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000564
+      },
+      "writtenOn": "2019-10-14T12:30:07Z",
+      "side": 1,
+      "message": "Is this file Go fmted?",
+      "range": {
+        "startLine": 34,
+        "startChar": 2,
+        "endLine": 34,
+        "endChar": 12
+      },
+      "revId": "8f33555d7a989ad833557451cc4ae5b1c9039e31",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
