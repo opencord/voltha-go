@@ -22,6 +22,30 @@
       "revId": "8f33555d7a989ad833557451cc4ae5b1c9039e31",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7c705d1_2a53dff1",
+        "filename": "common/techprofile/tech_profile_if.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000529
+      },
+      "writtenOn": "2019-10-14T12:33:32Z",
+      "side": 1,
+      "message": "Yes Dev, This file is formatted with gofmt.",
+      "parentUuid": "c483e1ad_d73e39b2",
+      "range": {
+        "startLine": 34,
+        "startChar": 2,
+        "endLine": 34,
+        "endChar": 12
+      },
+      "revId": "8f33555d7a989ad833557451cc4ae5b1c9039e31",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
