@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cad8043d_0c9051c3",
+        "filename": "k8s/ofagent.yml",
+        "patchSetId": 17
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T14:40:27Z",
+      "side": 1,
+      "message": "What is the rationale for these values, as they are different from what we are using for the cores. That is OK, just curious. The cores use 10 for the initial delay, 5 for the period, and the default (3) for the threshold.",
+      "range": {
+        "startLine": 55,
+        "startChar": 10,
+        "endLine": 57,
+        "endChar": 27
+      },
+      "revId": "9077a6b12de0f364e098cfa9459cd8fb9193fff8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "049863aa_6c6909c5",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T14:40:27Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "range": {
+        "startLine": 100,
+        "startChar": 52,
+        "endLine": 100,
+        "endChar": 53
+      },
+      "revId": "9077a6b12de0f364e098cfa9459cd8fb9193fff8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42cbeb82_f9a85a31",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T14:40:27Z",
+      "side": 1,
+      "message": "couldn\u0027t this just be return ConnectionManager.running?",
+      "range": {
+        "startLine": 101,
+        "startChar": 8,
+        "endLine": 104,
+        "endChar": 24
+      },
+      "revId": "9077a6b12de0f364e098cfa9459cd8fb9193fff8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13d2216d_193e9b8b",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T14:40:27Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "range": {
+        "startLine": 108,
+        "startChar": 56,
+        "endLine": 108,
+        "endChar": 57
+      },
+      "revId": "9077a6b12de0f364e098cfa9459cd8fb9193fff8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cc0346e_77f9e032",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T14:40:27Z",
+      "side": 1,
+      "message": "there was a patch to the cores to make the IP/host on which the probe listens configurable. This should be replicated here.",
+      "range": {
+        "startLine": 293,
+        "startChar": 41,
+        "endLine": 293,
+        "endChar": 43
+      },
+      "revId": "9077a6b12de0f364e098cfa9459cd8fb9193fff8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
