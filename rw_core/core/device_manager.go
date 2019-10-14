@@ -147,6 +147,11 @@ func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
 }
 
 func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Device, ch chan interface{}) {
+	if dMgr.isParentDeviceExist(device) {
+		log.Errorf("Device is Pre-provisioned already with same IP-Port or MAC Address")
+		sendResponse(ctx, ch, errors.New("Device is already pre-provisioned"))
+		return
+	}
 	log.Debugw("createDevice", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
 
 	// Ensure this device is set as root
@@ -383,6 +388,25 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	}
 	log.Debugw("ListDevices-end", log.Fields{"len": len(result.Items)})
 	return result, nil
+}
+
+//isParentDeviceExist checks whether device is already preprovisioned.
+func (dMgr *DeviceManager) isParentDeviceExist(newDevice *voltha.Device) bool {
+	hostPort := newDevice.GetHostAndPort()
+	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
+		for _, device := range devices.([]interface{}) {
+			if !device.(*voltha.Device).Root {
+				continue
+			}
+			if hostPort != "" && hostPort == device.(*voltha.Device).GetHostAndPort() {
+				return true
+			}
+			if newDevice.MacAddress != "" && newDevice.MacAddress == device.(*voltha.Device).MacAddress {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 //getDeviceFromModelretrieves the device data from the model.
