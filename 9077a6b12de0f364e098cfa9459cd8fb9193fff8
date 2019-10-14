@@ -94,6 +94,29 @@
     },
     {
       "key": {
+        "uuid": "bbcd1675_bfac6e70",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-14T15:40:24Z",
+      "side": 1,
+      "message": "what about \n\nreturn bool(ConnectionManager.channel and ...)",
+      "range": {
+        "startLine": 110,
+        "startChar": 8,
+        "endLine": 113,
+        "endChar": 24
+      },
+      "revId": "9077a6b12de0f364e098cfa9459cd8fb9193fff8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cc0346e_77f9e032",
         "filename": "python/ofagent/main.py",
         "patchSetId": 17
