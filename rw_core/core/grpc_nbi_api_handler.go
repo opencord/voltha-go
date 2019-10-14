@@ -426,7 +426,7 @@ func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *volth
 
 // CreateDevice creates a new parent device in the data model
 func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
-	log.Debugw("createdevice", log.Fields{"device": *device})
+	log.Debugw("create-device", log.Fields{"device": *device})
 	if isTestMode(ctx) {
 		return &voltha.Device{Id: device.Id}, nil
 	}
