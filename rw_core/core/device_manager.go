@@ -385,6 +385,20 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	return result, nil
 }
 
+//checkDevice checks whether device is already preprovisioned.
+func (dMgr *DeviceManager) CheckDevice(newDevice *voltha.Device) (bool, error) {
+	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
+		for _, device := range devices.([]interface{}) {
+			if newDevice.GetHostAndPort() == device.(*voltha.Device).GetHostAndPort() {
+				//	if newDevice.GetHostAndPort() == device.(*voltha.Device).GetHostAndPort() || newDevice.MacAddress == device.(*voltha.Device).MacAddress {
+				return true, errors.New("Device Already Preprovisioned")
+			}
+		}
+		return false, nil
+	}
+	return false, nil
+}
+
 //getDeviceFromModelretrieves the device data from the model.
 func (dMgr *DeviceManager) getDeviceFromModel(deviceId string) (*voltha.Device, error) {
 	if device := dMgr.clusterDataProxy.Get(context.Background(), "/devices/"+deviceId, 0, false, ""); device != nil {
