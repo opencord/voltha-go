@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8eb4d8f5_82601420",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-15T18:17:37Z",
+      "side": 1,
+      "message": "There is a lock on the entire operation.   We can\u0027t do a put without checking whether he had a lease on the key.   If we don\u0027t use the lease then the key becomes permanent (an odd ectd behavior) instead of it to disappear after the lease.\n\nAlso, if somehow the key reservation was gone in the KV store but it still appears in the process memory then a put will result in an error condition which gets handled below.",
+      "parentUuid": "89972c24_733c4d00",
+      "range": {
+        "startLine": 134,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 2
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a31b6f2_b37d7609",
         "filename": "db/kvstore/etcdclient.go",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-15T16:40:34Z",
       "side": 1,
       "message": "what is the consequence of an error when deleting a key? What is the consequence of a key not being deleted? When would it happen (etcd disconnect). Do we need a cleanup/purge that keeps retrying?",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 54
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "615b8f14_e528f39e",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-15T18:17:37Z",
+      "side": 1,
+      "message": "If the key if based on a lease then it will go away by itself.  If not then the key will be permanent and requires a cleanup/purge.",
+      "parentUuid": "2a31b6f2_b37d7609",
       "range": {
         "startLine": 170,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c773d8ce_d819f7ff",
+        "filename": "kafka/kafka_inter_container_library.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-15T18:17:37Z",
+      "side": 1,
+      "message": "We can argue either way.   This code is run as part of an API response.  The responses are already predetermined, in the sense that the response will either be \u003cnil, error\u003e or \u003creturnVal, nil\u003e.  Since we had a \u003cnil, nil\u003e scenario before to address \"don\u0027t response as it was address by another Core\" I left it here in case some adapters (since this is library code) is returning incorrect response. More regression than anything else.",
+      "parentUuid": "2e7626b2_00e0122d",
+      "range": {
+        "startLine": 693,
+        "startChar": 23,
+        "endLine": 693,
+        "endChar": 24
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7efef81_2fef32a5",
         "filename": "rw_core/core/adapter_request_handler.go",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2019-10-15T16:40:34Z",
       "side": 1,
       "message": "do we want to handle the \"someone\" else has it error separately from the \"some lower level\" error. i.e. if someone else has it then fine, but if there is a lower level error then something bad really happened?",
+      "range": {
+        "startLine": 178,
+        "startChar": 70,
+        "endLine": 178,
+        "endChar": 80
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ceca030f_50b31f69",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-15T18:17:37Z",
+      "side": 1,
+      "message": "The bottomline is that the Core did not process the request.  If the err is \"transaction-not-acquired\" then it will be ignored by the kafka library.  Anything else will be sent to the client.  The only other possible error here is an invalid Id, i.e. a request to act on an ID that does not exist.",
+      "parentUuid": "c7efef81_2fef32a5",
       "range": {
         "startLine": 178,
         "startChar": 70,
