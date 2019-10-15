@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3a76ae58_95a02ae4",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-15T13:43:43Z",
+      "side": 1,
+      "message": "Yes, that\u0027s the intent.",
+      "parentUuid": "dbc81ea6_40ba937d",
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcccb08c_f545f7e3",
         "filename": "db/kvstore/etcdclient.go",
         "patchSetId": 1
@@ -147,6 +165,24 @@
     },
     {
       "key": {
+        "uuid": "7c52f0fc_ffbccf4d",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-15T13:43:43Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "fe902b2a_71b82696",
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e60380c_38477ed1",
         "filename": "rw_core/core/transaction.go",
         "patchSetId": 1
@@ -158,6 +194,24 @@
       "writtenOn": "2019-10-11T21:32:14Z",
       "side": 1,
       "message": "How does this work now?\nConsider re-adding the long-form comment.",
+      "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca211876_7eec582b",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-15T13:43:43Z",
+      "side": 1,
+      "message": "Comments has been moved higher in the file.  Will move it here for clarity.",
+      "parentUuid": "7e60380c_38477ed1",
       "revId": "faf5ff6a35884c9552f1a12187079471fc3b5f75",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
