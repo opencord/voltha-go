@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "714b2aec_7a302cef",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-10-15T17:27:16Z",
+      "side": 1,
+      "message": "Alright. Added GO111MODULES\u003don and using /go/src/ro_core as the build path",
+      "parentUuid": "4b9eca7e_32912fc5",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 18
+      },
+      "revId": "24bdec2eadfb21314600b8e2dd573e83f6dcdfea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87867931_4e9a574c",
         "filename": "docker/Dockerfile.rw_core",
         "patchSetId": 3
