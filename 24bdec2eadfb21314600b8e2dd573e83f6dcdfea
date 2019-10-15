@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3cc8260f_b09bb647",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-10-15T07:59:47Z",
+      "side": 1,
+      "message": "Yeah, the recommended work area indicated in article is /go/src/app folder. That is because the GOPATH is set to /go in default environment of golang:1.8 image. That is correct in context of go 1.8 version but not necessary for go 1.12 images used in voltha-go.\n\nIn fact, when I use /go/src/ro_core as the WORKDIR in this file, I am getting error \"build flag -mod\u003dvendor only valid when using modules\" because this folder is under GOPATH and hence go modules get disabled. In order to use /go/src/ro_core as the WORKDIR, I would have add another docker instruction \"ENV GO111MODULE\u003don\" in this file to enable go modules.\n\nPlease let me know if it would be fine to keep it this way or use \"ENV GO111MODULE\u003don\" instruction",
+      "parentUuid": "0c375b44_fcc3778b",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 18
+      },
+      "revId": "24bdec2eadfb21314600b8e2dd573e83f6dcdfea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87867931_4e9a574c",
         "filename": "docker/Dockerfile.rw_core",
         "patchSetId": 3
