@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89972c24_733c4d00",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-15T16:40:34Z",
+      "side": 1,
+      "message": "Is there a [very tight] race condition here, i.e. between the check and the put call someone else could gran the key? would that be eliminated if we always did a put and then handle the error condition that meant we already had it?",
+      "range": {
+        "startLine": 134,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 2
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a31b6f2_b37d7609",
+        "filename": "db/kvstore/etcdclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-15T16:40:34Z",
+      "side": 1,
+      "message": "what is the consequence of an error when deleting a key? What is the consequence of a key not being deleted? When would it happen (etcd disconnect). Do we need a cleanup/purge that keeps retrying?",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 54
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e7626b2_00e0122d",
+        "filename": "kafka/kafka_inter_container_library.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-15T16:40:34Z",
+      "side": 1,
+      "message": "If it \"should not happen\" is this an error or a warning?",
+      "range": {
+        "startLine": 693,
+        "startChar": 23,
+        "endLine": 693,
+        "endChar": 24
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7efef81_2fef32a5",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-15T16:40:34Z",
+      "side": 1,
+      "message": "do we want to handle the \"someone\" else has it error separately from the \"some lower level\" error. i.e. if someone else has it then fine, but if there is a lower level error then something bad really happened?",
+      "range": {
+        "startLine": 178,
+        "startChar": 70,
+        "endLine": 178,
+        "endChar": 80
+      },
+      "revId": "9cb38cb99749f41b7620d3d20b934b015fa22602",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
