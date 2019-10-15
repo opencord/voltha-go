@@ -33,8 +33,6 @@ RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-co
 ROCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-core
 OFAGENT_IMAGENAME          := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent
 CLI_IMAGENAME              := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli
-PONSIMOLT_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-olt
-PONSIMONU_IMAGENAME        := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-adapter-ponsim-onu
 
 ## Docker labels. Only set ref and commit date if committed
 DOCKER_LABEL_VCS_URL       ?= $(shell git remote get-url $(shell git remote))
@@ -68,8 +66,6 @@ help:
 	@echo "ro_core              : Build the ro_core docker image"
 	@echo "ofagent              : Build the openflow agent docker image"
 	@echo "cli                  : Build the voltha CLI docker image"
-	@echo "adapter_ponsim_olt   : Build the ponsim olt adapter docker image"
-	@echo "adapter_ponsim_onu   : Build the ponsim onu adapter docker image"
 	@echo "venv                 : Build local Python virtualenv"
 	@echo "clean                : Remove files created by the build and tests"
 	@echo "distclean            : Remove venv directory"
@@ -123,7 +119,7 @@ endif
 
 build: docker-build
 
-docker-build: rw_core ro_core ofagent cli adapter_ponsim_olt adapter_ponsim_onu
+docker-build: rw_core ro_core ofagent cli
 
 rw_core: local-protos
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -t ${RWCORE_IMAGENAME}:latest -f docker/Dockerfile.rw_core .
@@ -137,19 +133,11 @@ ofagent: local-protos local-pyvoltha
 cli: local-protos local-pyvoltha
 	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${CLI_IMAGENAME}:${DOCKER_TAG} -t ${CLI_IMAGENAME}:latest -f python/docker/Dockerfile.cli python
 
-adapter_ponsim_olt: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${PONSIMOLT_IMAGENAME}:${DOCKER_TAG} -t ${PONSIMOLT_IMAGENAME}:latest -f python/docker/Dockerfile.adapter_ponsim_olt python
-
-adapter_ponsim_onu: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${PONSIMONU_IMAGENAME}:${DOCKER_TAG} -t ${PONSIMONU_IMAGENAME}:latest -f python/docker/Dockerfile.adapter_ponsim_onu python
-
 docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 	docker push ${ROCORE_IMAGENAME}:${DOCKER_TAG}
 	docker push ${OFAGENT_IMAGENAME}:${DOCKER_TAG}
 	docker push ${CLI_IMAGENAME}:${DOCKER_TAG}
-	docker push ${PONSIMOLT_IMAGENAME}:${DOCKER_TAG}
-	docker push ${PONSIMONU_IMAGENAME}:${DOCKER_TAG}
 
 ## lint and unit tests
 
