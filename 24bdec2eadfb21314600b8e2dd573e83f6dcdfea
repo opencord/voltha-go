@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "4b9eca7e_32912fc5",
+        "filename": "docker/Dockerfile.ro_core",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-15T16:50:27Z",
+      "side": 1,
+      "message": "I think we should use the standard area and set `GO11MODULES\u003don`. As we continue to disagregate then I think we will also get to the point where all the specific copies will be replaced with a single COPY as well.",
+      "parentUuid": "3cc8260f_b09bb647",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 18
+      },
+      "revId": "24bdec2eadfb21314600b8e2dd573e83f6dcdfea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87867931_4e9a574c",
         "filename": "docker/Dockerfile.rw_core",
         "patchSetId": 3
