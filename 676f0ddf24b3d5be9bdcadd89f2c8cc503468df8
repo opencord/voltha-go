@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a529152b_0324af69",
+        "filename": "common/pmmetrics/performance_metrics.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-10-16T06:14:10Z",
+      "side": 0,
+      "message": "Is there a proto change where \u0027Id\u0027 is removed? I do not see that. Is that not needed anymore?\nIs the intention that we want to have PmConfig for voltha in general and not configurable per device?",
+      "revId": "676f0ddf24b3d5be9bdcadd89f2c8cc503468df8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
