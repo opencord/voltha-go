@@ -16,15 +16,17 @@
 package mocks
 
 import (
+	"fmt"
 	"go.etcd.io/etcd/embed"
 	"log"
+	"net/url"
 	"os"
 	"time"
 )
 
 const (
-	serverStartUpTimeout   = 10 * time.Second // Maximum time allowed to wait for the Etcd server to be ready
-	localPersistentStorage = "voltha.embed.etcd"
+	serverStartUpTimeout          = 10 * time.Second // Maximum time allowed to wait for the Etcd server to be ready
+	defaultLocalPersistentStorage = "voltha.test.embed.etcd"
 )
 
 //EtcdServer represents an embedded Etcd server.  It is used for testing only.
@@ -32,10 +34,57 @@ type EtcdServer struct {
 	server *embed.Etcd
 }
 
+func islogLevelValid(logLevel string) bool {
+	valid := []string{"debug", "info", "warn", "error", "panic", "fatal"}
+	for _, l := range valid {
+		if l == logLevel {
+			return true
+		}
+	}
+	return false
+}
+
+/*
+* MKConfig creates an embedded Etcd config
+* :param configName: A name for this config
+* :param clientPort:  The port the etcd client will connect to (do not use 2379 for unit test)
+* :param peerPort:  The port the etcd server will listen for its peers (do not use 2380 for unit test)
+* :param localPersistentStorageDir: The name of a local directory which will hold the Etcd server data
+* :param logLevel: One of debug, info, warn, error, panic, or fatal. Default 'info'.
+ */
+func MKConfig(configName string, clientPort, peerPort int, localPersistentStorageDir string, logLevel string) *embed.Config {
+	cfg := embed.NewConfig()
+	cfg.Name = configName
+	cfg.Dir = localPersistentStorageDir
+	cfg.Logger = "zap"
+	if !islogLevelValid(logLevel) {
+		log.Fatalf("Invalid log level -%s", logLevel)
+	}
+	cfg.LogLevel = logLevel
+	acurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", clientPort))
+	if err != nil {
+		log.Fatalf("Invalid client port -%d", clientPort)
+	}
+	cfg.ACUrls = []url.URL{*acurl}
+	cfg.LCUrls = []url.URL{*acurl}
+
+	apurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", peerPort))
+	if err != nil {
+		log.Fatalf("Invalid peer port -%d", peerPort)
+	}
+	cfg.LPUrls = []url.URL{*apurl}
+	cfg.APUrls = []url.URL{*apurl}
+
+	cfg.ClusterState = embed.ClusterStateFlagNew
+	cfg.InitialCluster = cfg.Name + "=" + apurl.String()
+
+	return cfg
+}
+
 //getDefaultCfg specifies the default config
 func getDefaultCfg() *embed.Config {
 	cfg := embed.NewConfig()
-	cfg.Dir = localPersistentStorage
+	cfg.Dir = defaultLocalPersistentStorage
 	cfg.Logger = "zap"
 	cfg.LogLevel = "error"
 	return cfg
@@ -50,8 +99,8 @@ func StartEtcdServer(cfg *embed.Config) *EtcdServer {
 	}
 	// Remove the local directory as
 	// a safeguard for the case where a prior test failed
-	if err := os.RemoveAll(localPersistentStorage); err != nil {
-		log.Fatalf("Failure removing local directory %s", localPersistentStorage)
+	if err := os.RemoveAll(cfg.Dir); err != nil {
+		log.Fatalf("Failure removing local directory %s", cfg.Dir)
 	}
 	e, err := embed.StartEtcd(cfg)
 	if err != nil {
@@ -75,9 +124,10 @@ func StartEtcdServer(cfg *embed.Config) *EtcdServer {
 //Stop closes the embedded Etcd server and removes the local data directory as well
 func (es *EtcdServer) Stop() {
 	if es != nil {
+		storage := es.server.Config().Dir
 		es.server.Server.HardStop()
 		es.server.Close()
-		if err := os.RemoveAll(localPersistentStorage); err != nil {
+		if err := os.RemoveAll(storage); err != nil {
 			log.Fatalf("Failure removing local directory %s", es.server.Config().Dir)
 		}
 	}
