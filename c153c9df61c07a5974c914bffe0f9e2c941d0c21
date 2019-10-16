@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74711626_60d40853",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-10-16T19:54:17Z",
+      "side": 1,
+      "message": "this is not defined anywhere.  above its still:\n\nVENVDIR :\u003d python/venv-volthago\n\nso that would still need to be cleared out.",
+      "range": {
+        "startLine": 238,
+        "startChar": 32,
+        "endLine": 238,
+        "endChar": 43
+      },
+      "revId": "c153c9df61c07a5974c914bffe0f9e2c941d0c21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
