@@ -96,20 +96,6 @@ func toString(value interface{}) (string, error) {
 func (ro *roCore) start(ctx context.Context) {
 	log.Info("Starting RW Core components")
 
-	// If the context has a probe then fetch it and register our services
-	var p *probe.Probe
-	if value := ctx.Value(probe.ProbeContextKey); value != nil {
-		if _, ok := value.(*probe.Probe); ok {
-			p = value.(*probe.Probe)
-			p.RegisterService(
-				"kv-store",
-				"device-manager",
-				"logical-device-manager",
-				"grpc-service",
-			)
-		}
-	}
-
 	// Setup KV Client
 	log.Debugw("create-kv-client", log.Fields{"kvstore": ro.config.KVStoreType})
 
@@ -120,10 +106,6 @@ func (ro *roCore) start(ctx context.Context) {
 
 	// Create the core service
 	ro.core = c.NewCore(ro.config.InstanceID, ro.config, ro.kvClient)
-
-	if p != nil {
-		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
-	}
 
 	// start the core
 	ro.core.Start(ctx)
