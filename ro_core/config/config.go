@@ -25,55 +25,61 @@ import (
 
 // RO Core service default constants
 const (
-	ConsulStoreName               = "consul"
-	EtcdStoreName                 = "etcd"
-	default_InstanceID            = "rocore001"
-	default_GrpcPort              = 50057
-	default_GrpcHost              = ""
-	default_KVStoreType           = EtcdStoreName
-	default_KVStoreTimeout        = 5 //in seconds
-	default_KVStoreHost           = "127.0.0.1"
-	default_KVStorePort           = 2379 // Consul = 8500; Etcd = 2379
-	default_KVTxnKeyDelTime       = 60
-	default_LogLevel              = 0
-	default_Banner                = false
-	default_DisplayVersionOnly    = false
-	default_CoreTopic             = "rocore"
-	default_ROCoreEndpoint        = "rocore"
-	default_ROCoreKey             = "pki/voltha.key"
-	default_ROCoreCert            = "pki/voltha.crt"
-	default_ROCoreCA              = "pki/voltha-CA.pem"
-	default_Affinity_Router_Topic = "affinityRouter"
-	default_ProbeHost             = ""
-	default_ProbePort             = 8080
-	default_LiveProbeInterval     = 60 * time.Second
-	default_NotLiveProbeInterval  = 5 * time.Second // Probe more frequently to detect Recovery early
+	ConsulStoreName                 = "consul"
+	EtcdStoreName                   = "etcd"
+	default_InstanceID              = "rocore001"
+	default_GrpcPort                = 50057
+	default_GrpcHost                = ""
+	default_KVStoreType             = EtcdStoreName
+	default_KVStoreTimeout          = 5 //in seconds
+	default_KVStoreHost             = "127.0.0.1"
+	default_KVStorePort             = 2379 // Consul = 8500; Etcd = 2379
+	default_KVTxnKeyDelTime         = 60
+	default_LogLevel                = 0
+	default_Banner                  = false
+	default_DisplayVersionOnly      = false
+	default_CoreTopic               = "rocore"
+	default_ROCoreEndpoint          = "rocore"
+	default_ROCoreKey               = "pki/voltha.key"
+	default_ROCoreCert              = "pki/voltha.crt"
+	default_ROCoreCA                = "pki/voltha-CA.pem"
+	default_Affinity_Router_Topic   = "affinityRouter"
+	default_ProbeHost               = ""
+	default_ProbePort               = 8080
+	default_LiveProbeInterval       = 60 * time.Second
+	default_NotLiveProbeInterval    = 5 * time.Second // Probe more frequently to detect Recovery early
+	default_CoreTimeout             = 59 * time.Second
+	default_MaxConnectionRetries    = -1              // retries forever
+	default_ConnectionRetryInterval = 2 * time.Second // in seconds
 )
 
 // ROCoreFlags represents the set of configurations used by the read-only core service
 type ROCoreFlags struct {
 	// Command line parameters
-	InstanceID           string
-	ROCoreEndpoint       string
-	GrpcHost             string
-	GrpcPort             int
-	KVStoreType          string
-	KVStoreTimeout       int // in seconds
-	KVStoreHost          string
-	KVStorePort          int
-	KVTxnKeyDelTime      int
-	CoreTopic            string
-	LogLevel             int
-	Banner               bool
-	DisplayVersionOnly   bool
-	ROCoreKey            string
-	ROCoreCert           string
-	ROCoreCA             string
-	AffinityRouterTopic  string
-	ProbeHost            string
-	ProbePort            int
-	LiveProbeInterval    time.Duration
-	NotLiveProbeInterval time.Duration
+	InstanceID              string
+	ROCoreEndpoint          string
+	GrpcHost                string
+	GrpcPort                int
+	KVStoreType             string
+	KVStoreTimeout          int // in seconds
+	KVStoreHost             string
+	KVStorePort             int
+	KVTxnKeyDelTime         int
+	CoreTopic               string
+	LogLevel                int
+	Banner                  bool
+	DisplayVersionOnly      bool
+	ROCoreKey               string
+	ROCoreCert              string
+	ROCoreCA                string
+	AffinityRouterTopic     string
+	ProbeHost               string
+	ProbePort               int
+	LiveProbeInterval       time.Duration
+	NotLiveProbeInterval    time.Duration
+	CoreTimeout             time.Duration
+	MaxConnectionRetries    int
+	ConnectionRetryInterval time.Duration
 }
 
 func init() {
@@ -83,27 +89,30 @@ func init() {
 // NewROCoreFlags returns a new ROCore config
 func NewROCoreFlags() *ROCoreFlags {
 	var roCoreFlag = ROCoreFlags{ // Default values
-		InstanceID:           default_InstanceID,
-		ROCoreEndpoint:       default_ROCoreEndpoint,
-		GrpcHost:             default_GrpcHost,
-		GrpcPort:             default_GrpcPort,
-		KVStoreType:          default_KVStoreType,
-		KVStoreTimeout:       default_KVStoreTimeout,
-		KVStoreHost:          default_KVStoreHost,
-		KVStorePort:          default_KVStorePort,
-		KVTxnKeyDelTime:      default_KVTxnKeyDelTime,
-		CoreTopic:            default_CoreTopic,
-		LogLevel:             default_LogLevel,
-		Banner:               default_Banner,
-		DisplayVersionOnly:   default_DisplayVersionOnly,
-		ROCoreKey:            default_ROCoreKey,
-		ROCoreCert:           default_ROCoreCert,
-		ROCoreCA:             default_ROCoreCA,
-		AffinityRouterTopic:  default_Affinity_Router_Topic,
-		ProbeHost:            default_ProbeHost,
-		ProbePort:            default_ProbePort,
-		LiveProbeInterval:    default_LiveProbeInterval,
-		NotLiveProbeInterval: default_NotLiveProbeInterval,
+		InstanceID:              default_InstanceID,
+		ROCoreEndpoint:          default_ROCoreEndpoint,
+		GrpcHost:                default_GrpcHost,
+		GrpcPort:                default_GrpcPort,
+		KVStoreType:             default_KVStoreType,
+		KVStoreTimeout:          default_KVStoreTimeout,
+		KVStoreHost:             default_KVStoreHost,
+		KVStorePort:             default_KVStorePort,
+		KVTxnKeyDelTime:         default_KVTxnKeyDelTime,
+		CoreTopic:               default_CoreTopic,
+		LogLevel:                default_LogLevel,
+		Banner:                  default_Banner,
+		DisplayVersionOnly:      default_DisplayVersionOnly,
+		ROCoreKey:               default_ROCoreKey,
+		ROCoreCert:              default_ROCoreCert,
+		ROCoreCA:                default_ROCoreCA,
+		AffinityRouterTopic:     default_Affinity_Router_Topic,
+		ProbeHost:               default_ProbeHost,
+		ProbePort:               default_ProbePort,
+		LiveProbeInterval:       default_LiveProbeInterval,
+		NotLiveProbeInterval:    default_NotLiveProbeInterval,
+		CoreTimeout:             default_CoreTimeout,
+		MaxConnectionRetries:    default_MaxConnectionRetries,
+		ConnectionRetryInterval: default_ConnectionRetryInterval,
 	}
 	return &roCoreFlag
 }
@@ -163,6 +172,15 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Time interval between liveness probes while in a not live state")
 	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", default_NotLiveProbeInterval, help)
+
+	help = fmt.Sprintf("The maximum time the core will wait while attempting to connect to a dependent component duration")
+	flag.DurationVar(&(cf.CoreTimeout), "core_timeout", default_CoreTimeout, help)
+
+	help = fmt.Sprintf("The number of retries to connect to a dependent component")
+	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", default_MaxConnectionRetries, help)
+
+	help = fmt.Sprintf("The duration between each connection retry attempt ")
+	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
 
 	flag.Parse()
 
