@@ -235,7 +235,6 @@ clean:
 	find python -name '*.pyc' | xargs rm -f
 
 distclean: clean
-	rm -rf ${VENVDIR}
-	rm -rf ./sca_report
+	rm -rf ${VENVDIR} ./sca_report venv_protos
 
 # end file

@@ -55,3 +55,5 @@ python/local_imports/**/*
 
 # test output
 tests/results
+sca-report
+venv_protos
