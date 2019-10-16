@@ -1328,3 +1328,19 @@ func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(device *voltha.Device, 
 
 	return nil
 }
+
+func (agent *DeviceAgent) updateDeviceReason(reason string) error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	// Work only on latest data
+	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// clone the device
+		cloned := proto.Clone(storeDevice).(*voltha.Device)
+		cloned.Reason = reason
+		log.Debugw("updateDeviceReason", log.Fields{"deviceId": cloned.Id, "reason": cloned.Reason})
+		// Store the device
+		return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
+	}
+}

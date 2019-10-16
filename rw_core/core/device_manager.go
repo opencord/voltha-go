@@ -1413,3 +1413,11 @@ func (dMgr *DeviceManager) simulateAlarm(ctx context.Context, simulatereq *volth
 	//TODO CLI always get successful response
 	sendResponse(ctx, ch, res)
 }
+
+func (dMgr *DeviceManager) updateDeviceReason(deviceId string, reason string) error {
+	log.Debugw("updateDeviceReason", log.Fields{"deviceid": deviceId, "reason": reason})
+	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
+		return agent.updateDeviceReason(reason)
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceId)
+}
