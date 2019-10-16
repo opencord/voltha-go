@@ -20,55 +20,62 @@ import (
 	"fmt"
 	"github.com/opencord/voltha-go/common/log"
 	"os"
+	"time"
 )
 
 // RO Core service default constants
 const (
-	ConsulStoreName               = "consul"
-	EtcdStoreName                 = "etcd"
-	default_InstanceID            = "rocore001"
-	default_GrpcPort              = 50057
-	default_GrpcHost              = ""
-	default_KVStoreType           = EtcdStoreName
-	default_KVStoreTimeout        = 5 //in seconds
-	default_KVStoreHost           = "127.0.0.1"
-	default_KVStorePort           = 2379 // Consul = 8500; Etcd = 2379
-	default_KVTxnKeyDelTime       = 60
-	default_LogLevel              = 0
-	default_Banner                = false
-	default_DisplayVersionOnly    = false
-	default_CoreTopic             = "rocore"
-	default_ROCoreEndpoint        = "rocore"
-	default_ROCoreKey             = "pki/voltha.key"
-	default_ROCoreCert            = "pki/voltha.crt"
-	default_ROCoreCA              = "pki/voltha-CA.pem"
-	default_Affinity_Router_Topic = "affinityRouter"
-	default_ProbeHost             = ""
-	default_ProbePort             = 8080
+	ConsulStoreName                 = "consul"
+	EtcdStoreName                   = "etcd"
+	default_InstanceID              = "rocore001"
+	default_GrpcPort                = 50057
+	default_GrpcHost                = ""
+	default_KVStoreType             = EtcdStoreName
+	default_KVStoreTimeout          = 5 //in seconds
+	default_KVStoreHost             = "127.0.0.1"
+	default_KVStorePort             = 2379 // Consul = 8500; Etcd = 2379
+	default_KVTxnKeyDelTime         = 60
+	default_LogLevel                = 0
+	default_Banner                  = false
+	default_DisplayVersionOnly      = false
+	default_CoreTopic               = "rocore"
+	default_ROCoreEndpoint          = "rocore"
+	default_ROCoreKey               = "pki/voltha.key"
+	default_ROCoreCert              = "pki/voltha.crt"
+	default_ROCoreCA                = "pki/voltha-CA.pem"
+	default_Affinity_Router_Topic   = "affinityRouter"
+	default_ProbeHost               = ""
+	default_ProbePort               = 8080
+	default_CoreTimeout             = int64(500)
+	default_MaxConnectionRetries    = -1              // retries forever
+	default_ConnectionRetryInterval = 2 * time.Second // in seconds
 )
 
 // ROCoreFlags represents the set of configurations used by the read-only core service
 type ROCoreFlags struct {
 	// Command line parameters
-	InstanceID          string
-	ROCoreEndpoint      string
-	GrpcHost            string
-	GrpcPort            int
-	KVStoreType         string
-	KVStoreTimeout      int // in seconds
-	KVStoreHost         string
-	KVStorePort         int
-	KVTxnKeyDelTime     int
-	CoreTopic           string
-	LogLevel            int
-	Banner              bool
-	DisplayVersionOnly  bool
-	ROCoreKey           string
-	ROCoreCert          string
-	ROCoreCA            string
-	AffinityRouterTopic string
-	ProbeHost           string
-	ProbePort           int
+	InstanceID              string
+	ROCoreEndpoint          string
+	GrpcHost                string
+	GrpcPort                int
+	KVStoreType             string
+	KVStoreTimeout          int // in seconds
+	KVStoreHost             string
+	KVStorePort             int
+	KVTxnKeyDelTime         int
+	CoreTopic               string
+	LogLevel                int
+	Banner                  bool
+	DisplayVersionOnly      bool
+	ROCoreKey               string
+	ROCoreCert              string
+	ROCoreCA                string
+	AffinityRouterTopic     string
+	ProbeHost               string
+	ProbePort               int
+	DefaultCoreTimeout      int64
+	MaxConnectionRetries    int
+	ConnectionRetryInterval time.Duration
 }
 
 func init() {
@@ -78,25 +85,28 @@ func init() {
 // NewROCoreFlags returns a new ROCore config
 func NewROCoreFlags() *ROCoreFlags {
 	var roCoreFlag = ROCoreFlags{ // Default values
-		InstanceID:          default_InstanceID,
-		ROCoreEndpoint:      default_ROCoreEndpoint,
-		GrpcHost:            default_GrpcHost,
-		GrpcPort:            default_GrpcPort,
-		KVStoreType:         default_KVStoreType,
-		KVStoreTimeout:      default_KVStoreTimeout,
-		KVStoreHost:         default_KVStoreHost,
-		KVStorePort:         default_KVStorePort,
-		KVTxnKeyDelTime:     default_KVTxnKeyDelTime,
-		CoreTopic:           default_CoreTopic,
-		LogLevel:            default_LogLevel,
-		Banner:              default_Banner,
-		DisplayVersionOnly:  default_DisplayVersionOnly,
-		ROCoreKey:           default_ROCoreKey,
-		ROCoreCert:          default_ROCoreCert,
-		ROCoreCA:            default_ROCoreCA,
-		AffinityRouterTopic: default_Affinity_Router_Topic,
-		ProbeHost:           default_ProbeHost,
-		ProbePort:           default_ProbePort,
+		InstanceID:              default_InstanceID,
+		ROCoreEndpoint:          default_ROCoreEndpoint,
+		GrpcHost:                default_GrpcHost,
+		GrpcPort:                default_GrpcPort,
+		KVStoreType:             default_KVStoreType,
+		KVStoreTimeout:          default_KVStoreTimeout,
+		KVStoreHost:             default_KVStoreHost,
+		KVStorePort:             default_KVStorePort,
+		KVTxnKeyDelTime:         default_KVTxnKeyDelTime,
+		CoreTopic:               default_CoreTopic,
+		LogLevel:                default_LogLevel,
+		Banner:                  default_Banner,
+		DisplayVersionOnly:      default_DisplayVersionOnly,
+		ROCoreKey:               default_ROCoreKey,
+		ROCoreCert:              default_ROCoreCert,
+		ROCoreCA:                default_ROCoreCA,
+		AffinityRouterTopic:     default_Affinity_Router_Topic,
+		ProbeHost:               default_ProbeHost,
+		ProbePort:               default_ProbePort,
+		DefaultCoreTimeout:      default_CoreTimeout,
+		MaxConnectionRetries:    default_MaxConnectionRetries,
+		ConnectionRetryInterval: default_ConnectionRetryInterval,
 	}
 	return &roCoreFlag
 }
@@ -150,6 +160,15 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
+
+	help = fmt.Sprintf("Default Core timeout")
+	flag.Int64Var(&(cf.DefaultCoreTimeout), "core_timeout", default_CoreTimeout, help)
+
+	help = fmt.Sprintf("The number of retries to connect to a dependent component")
+	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", default_MaxConnectionRetries, help)
+
+	help = fmt.Sprintf("The number of seconds between each connection retry attempt ")
+	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
 
 	flag.Parse()
 
