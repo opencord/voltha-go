@@ -44,6 +44,9 @@ func newROCore(cf *config.ROCoreFlags) *roCore {
 	var roCoreV roCore
 	roCoreV.config = cf
 	roCoreV.halted = false
+	roCoreV.config.CoreTimeout = 1
+	roCoreV.config.MaxConnectionRetries = 0 
+	roCoreV.config.ConnectionRetryInterval = 0
 	roCoreV.exitChannel = make(chan int, 1)
 	roCoreV.receiverChannels = make([]<-chan *ic.InterContainerMessage, 0)
 	return &roCoreV
