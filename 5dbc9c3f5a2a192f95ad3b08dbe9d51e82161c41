@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "98b61c0c_9a2d27e3",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-16T15:57:18Z",
+      "side": 1,
+      "message": "will change to 8080",
+      "parentUuid": "7ecac64e_9fb22188",
+      "range": {
+        "startLine": 36,
+        "startChar": 35,
+        "endLine": 36,
+        "endChar": 49
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5af238b_a7beb366",
         "filename": "python/ofagent/main.py",
         "patchSetId": 19
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ad182e2c_daf7f7a8",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-16T15:57:18Z",
+      "side": 1,
+      "message": "Unable to connect SocketServer.TCPServer on the container with 127.0.0.1. Hence changed to 0.0.0.0.",
+      "parentUuid": "f5af238b_a7beb366",
+      "range": {
+        "startLine": 302,
+        "startChar": 8,
+        "endLine": 303,
+        "endChar": 28
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90ca5629_c1b6d0c9",
         "filename": "python/ofagent/probe.py",
         "patchSetId": 19
@@ -59,6 +107,30 @@
       "writtenOn": "2019-10-16T14:25:21Z",
       "side": 1,
       "message": "we are using `readz` i think in the other probes, should we be consistent here.",
+      "range": {
+        "startLine": 28,
+        "startChar": 28,
+        "endLine": 28,
+        "endChar": 33
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c7aff46_ebbaaa67",
+        "filename": "python/ofagent/probe.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-16T15:57:18Z",
+      "side": 1,
+      "message": "Sure. will change",
+      "parentUuid": "90ca5629_c1b6d0c9",
       "range": {
         "startLine": 28,
         "startChar": 28,
