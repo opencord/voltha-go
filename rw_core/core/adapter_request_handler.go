@@ -1126,3 +1126,54 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument
 
 	return new(empty.Empty), nil
 }
+
+func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(args []*ic.Argument) (*empty.Empty, error) {
+	if len(args) < 2 {
+		log.Warn("DeviceReasonUpdate: invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("DeviceReasonUpdate: invalid-number-of-args")
+		return nil, err
+	}
+	deviceId := &voltha.ID{}
+	reason := &ic.StrType{}
+	transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				log.Warnw("cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "device_reason":
+			if err := ptypes.UnmarshalAny(arg.Value, reason); err != nil {
+				log.Warnw("cannot-unmarshal-reason", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				log.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	log.Debugw("DeviceReasonUpdate", log.Fields{"deviceId": deviceId.Id, "reason": reason.Val,
+		"transactionID": transactionID.Val})
+
+	// Try to grab the transaction as this core may be competing with another Core
+	if rhp.competeForTransaction() {
+		if txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceId.Id); err != nil {
+			log.Debugw("DeviceReasonUpdate: Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
+			return nil, err
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	if rhp.TestMode { // Execute only for test cases
+		return nil, nil
+	}
+
+	// Run it in its own routine
+	go rhp.deviceMgr.updateDeviceReason(deviceId.Id, reason.Val)
+
+	return new(empty.Empty), nil
+}
