@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fab79ea2_2b4ac4ce",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T17:03:54Z",
+      "side": 1,
+      "message": "should be a time.Duration value set by something like 2 * time.Second",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 51
+      },
+      "revId": "5eb387348d48e33365555000f60ff7b629e1d070",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb3274cc_2e0e11c2",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T17:03:54Z",
+      "side": 1,
+      "message": "this should be using a `time.Duration`",
+      "range": {
+        "startLine": 77,
+        "startChar": 25,
+        "endLine": 77,
+        "endChar": 28
+      },
+      "revId": "5eb387348d48e33365555000f60ff7b629e1d070",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93f3d610_56acd6e7",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T17:03:54Z",
+      "side": 1,
+      "message": "doesn\u0027t really describe the parameter",
+      "range": {
+        "startLine": 163,
+        "startChar": 21,
+        "endLine": 163,
+        "endChar": 41
+      },
+      "revId": "5eb387348d48e33365555000f60ff7b629e1d070",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3326577_51b76034",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T17:03:54Z",
+      "side": 1,
+      "message": "duration",
+      "range": {
+        "startLine": 169,
+        "startChar": 25,
+        "endLine": 169,
+        "endChar": 42
+      },
+      "revId": "5eb387348d48e33365555000f60ff7b629e1d070",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53a8a40a_722d6661",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T17:03:54Z",
+      "side": 1,
+      "message": "Why was this moved from main? The probe is application specific not component specific, where the ro core is a component of the app.",
+      "range": {
+        "startLine": 112,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 2
+      },
+      "revId": "5eb387348d48e33365555000f60ff7b629e1d070",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
