@@ -18,14 +18,15 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	grpcserver "github.com/opencord/voltha-lib-go/v2/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/mocks"
 	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
-	"strconv"
 	"testing"
 )
 
@@ -63,19 +64,31 @@ func newKVClient(storeType string, address string, timeout int) (kvstore.Client,
 
 func MakeTestNewCore() (*config.ROCoreFlags, *roCore) {
 
-	freePort, errP := freeport.GetFreePort()
-	if errP == nil {
-		freePortStr := strconv.Itoa(freePort)
+	clientPort, err := freeport.GetFreePort()
+	if err == nil {
+		peerPort, err := freeport.GetFreePort()
+		if err != nil {
+			log.Fatal(err)
+		}
+		etcdServer := mocks.StartEtcdServer(mocks.MKConfig("voltha.mock.test", clientPort, peerPort, "voltha.lib.mocks.etcd", "error"))
+		if etcdServer == nil {
+			log.Fatal("Embedded server failed to start")
+		}
+		clientAddr := fmt.Sprintf("localhost:%d", clientPort)
 
 		roCoreFlgs := config.NewROCoreFlags()
 		roC := newROCore(roCoreFlgs)
 		if (roC != nil) && (roCoreFlgs != nil) {
-			addr := "127.0.0.1" + ":" + freePortStr
-			cli, err := newKVClient("etcd", addr, 5)
+			cli, err := newKVClient("etcd", clientAddr, 5)
 			if err == nil {
 				roC.kvClient = cli
 				return roCoreFlgs, roC
 			}
+			if err != nil {
+				etcdServer.Stop()
+				log.Fatal("Failed to create an Etcd client")
+			}
+
 		}
 	}
 	return nil, nil
