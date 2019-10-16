@@ -37,7 +37,6 @@
 //3. To dynamically change the log level, you can use 1)SetLogLevel from inside your package or 2) SetPackageLogLevel
 // from anywhere or 3)  SetAllLogLevel from anywhere.
 //
-
 package log
 
 import (
@@ -64,6 +63,8 @@ const (
 	// FatalLevel logs a message, then calls os.Exit(1).
 	FatalLevel
 )
+
+// A meaningless change
 
 // CONSOLE formats the log for the console, mostly used during development
 const CONSOLE = "console"
