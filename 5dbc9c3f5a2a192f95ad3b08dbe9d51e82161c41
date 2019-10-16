@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ecac64e_9fb22188",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T14:25:21Z",
+      "side": 1,
+      "message": "for consistency with other probes should this default to \":8080\"?",
+      "range": {
+        "startLine": 36,
+        "startChar": 35,
+        "endLine": 36,
+        "endChar": 49
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5af238b_a7beb366",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T14:25:21Z",
+      "side": 1,
+      "message": "localhost is different from 0.0.0.0. localhost maps to 127.0.0.1, where 0.0.0.0 maps to all interfaces. typically if no host or IP is specified it maps to 0.0.0.0",
+      "range": {
+        "startLine": 302,
+        "startChar": 8,
+        "endLine": 303,
+        "endChar": 28
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90ca5629_c1b6d0c9",
+        "filename": "python/ofagent/probe.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-16T14:25:21Z",
+      "side": 1,
+      "message": "we are using `readz` i think in the other probes, should we be consistent here.",
+      "range": {
+        "startLine": 28,
+        "startChar": 28,
+        "endLine": 28,
+        "endChar": 33
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
