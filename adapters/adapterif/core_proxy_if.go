@@ -46,4 +46,5 @@ type CoreProxy interface {
 	GetChildDevice(ctx context.Context, parentDeviceID string, kwargs map[string]interface{}) (*voltha.Device, error)
 	GetChildDevices(ctx context.Context, parentDeviceID string) (*voltha.Devices, error)
 	SendPacketIn(ctx context.Context, deviceID string, port uint32, pktPayload []byte) error
+	DeviceReasonUpdate(ctx context.Context, deviceID string, deviceReason string) error
 }
