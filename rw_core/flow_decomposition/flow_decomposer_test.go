@@ -17,7 +17,7 @@ package flow_decomposition
 
 import (
 	"errors"
-	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/common/log"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	fu "github.com/opencord/voltha-go/rw_core/utils"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
