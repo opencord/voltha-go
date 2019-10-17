@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15a54e9c_037e222c",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:04:25Z",
+      "side": 1,
+      "message": "i thought this was going to default to \":8080\", i.e. empty string for host.",
+      "range": {
+        "startLine": 36,
+        "startChar": 35,
+        "endLine": 36,
+        "endChar": 44
+      },
+      "revId": "b8d7b23b7b49620a4ac08757c5bfbe3bac23803e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb107648_391ba1a8",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:04:25Z",
+      "side": 1,
+      "message": "i would just leave this out for now, after all it is really pointless setting this to localhost.",
+      "range": {
+        "startLine": 302,
+        "startChar": 8,
+        "endLine": 303,
+        "endChar": 28
+      },
+      "revId": "b8d7b23b7b49620a4ac08757c5bfbe3bac23803e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6e2cba3_b799ae86",
+        "filename": "python/ofagent/probe.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:04:25Z",
+      "side": 1,
+      "message": "it is not really an internal server error, the other components are using 418 (I AM A TEAPOT)",
+      "range": {
+        "startLine": 37,
+        "startChar": 31,
+        "endLine": 37,
+        "endChar": 34
+      },
+      "revId": "b8d7b23b7b49620a4ac08757c5bfbe3bac23803e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5eea1f6b_038bd9d4",
+        "filename": "python/ofagent/probe.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:04:25Z",
+      "side": 1,
+      "message": "418",
+      "range": {
+        "startLine": 46,
+        "startChar": 31,
+        "endLine": 46,
+        "endChar": 34
+      },
+      "revId": "b8d7b23b7b49620a4ac08757c5bfbe3bac23803e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
