@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/opencord/voltha-go/adapters/adapterif"
-	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/kafka"
+	"github.com/opencord/voltha-lib-go/pkg/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/kafka"
 	"github.com/opencord/voltha-protos/go/voltha"
 )
 

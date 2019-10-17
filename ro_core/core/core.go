@@ -17,12 +17,12 @@ package core
 
 import (
 	"context"
-	grpcserver "github.com/opencord/voltha-go/common/grpc"
-	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/common/probe"
-	"github.com/opencord/voltha-go/db/kvstore"
-	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
+	grpcserver "github.com/opencord/voltha-lib-go/pkg/common/grpc"
+	"github.com/opencord/voltha-lib-go/pkg/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/common/probe"
+	"github.com/opencord/voltha-lib-go/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/pkg/db/model"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc"
 )
