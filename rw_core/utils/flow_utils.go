@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"github.com/cevaris/ordered_map"
 	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/log"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
 	"math/big"
 	"strings"

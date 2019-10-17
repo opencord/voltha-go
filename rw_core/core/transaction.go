@@ -29,8 +29,8 @@
 package core
 
 import (
-	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/db/kvstore"
+	"github.com/opencord/voltha-lib-go/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/pkg/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"time"
