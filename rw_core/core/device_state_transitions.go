@@ -16,8 +16,8 @@
 package core
 
 import (
-	"github.com/opencord/voltha-go/common/log"
 	"github.com/opencord/voltha-go/rw_core/coreIf"
+	"github.com/opencord/voltha-lib-go/pkg/common/log"
 	"github.com/opencord/voltha-protos/go/voltha"
 )
 

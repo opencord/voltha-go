@@ -18,9 +18,9 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/voltha-go/common/log"
-	"github.com/opencord/voltha-go/db/kvstore"
 	"github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-lib-go/pkg/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/db/kvstore"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
