@@ -36,8 +36,6 @@ WORKDIR /go/src
 
 # Copy common files.
 COPY common ./common
-COPY db ./db
-COPY kafka ./kafka
 COPY vendor ./vendor
 
 # Copy files.

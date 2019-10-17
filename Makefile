@@ -96,6 +96,13 @@ ifdef LOCAL_PROTOS
 	cp ../voltha-protos/dist/*.tar.gz python/local_imports/voltha-protos/dist/
 endif
 
+## Local Development Helpers
+local-lib-go:
+ifdef LOCAL_LIB_GO
+	mkdir -p vendor/github.com/opencord/voltha-lib-go/pkg
+	cp -r ${GOPATH}/src/github.com/opencord/voltha-lib-go/pkg/* vendor/github.com/opencord/voltha-lib-go/pkg/
+endif
+
 local-pyvoltha:
 	@mkdir -p python/local_imports
 ifdef LOCAL_PYVOLTHA
@@ -128,10 +135,10 @@ build: docker-build
 
 docker-build: rw_core ro_core ofagent cli
 
-rw_core: local-protos
+rw_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -t ${RWCORE_IMAGENAME}:latest -f docker/Dockerfile.rw_core .
 
-ro_core: local-protos
+ro_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${ROCORE_IMAGENAME}:${DOCKER_TAG} -t ${ROCORE_IMAGENAME}:latest -f docker/Dockerfile.ro_core .
 
 ofagent: local-protos local-pyvoltha
@@ -222,7 +229,7 @@ sca: golangci_lint_tool_install
 	@mkdir -p ./sca-report
 	$(GOLANGCI_LINT_TOOL) run --out-format junit-xml ./... 2>&1 | tee ./sca-report/sca-report.xml
 
-test: go_junit_install gocover_cobertura_install
+test: go_junit_install gocover_cobertura_install local-lib-go
 	@mkdir -p ./tests/results
 	@go test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
 	RETURN=$$? ;\
