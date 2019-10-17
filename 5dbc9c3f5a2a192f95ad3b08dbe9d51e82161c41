@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "922c0419_1fa0907d",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-17T03:11:53Z",
+      "side": 1,
+      "message": "We should be able to do that.\nTCPServer(\"\",port) works fine as you mentioned earlier.",
+      "parentUuid": "699de977_039bdc43",
+      "range": {
+        "startLine": 36,
+        "startChar": 35,
+        "endLine": 36,
+        "endChar": 49
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5af238b_a7beb366",
         "filename": "python/ofagent/main.py",
         "patchSetId": 19
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "unable to resolve localhost to 127.0.0.1 or unable to open a port on 127.0.0.1? This is very strange.",
       "parentUuid": "ad182e2c_daf7f7a8",
+      "range": {
+        "startLine": 302,
+        "startChar": 8,
+        "endLine": 303,
+        "endChar": 28
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a282dede_a8fd9476",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-17T03:11:53Z",
+      "side": 1,
+      "message": "when we do a tcpdump inside the container, the tcp syn message arrives at \u003ccontainerid\u003e.\u003cport\u003e rather than \u003clocalhost\u003e.\u003cport\u003e",
+      "parentUuid": "cca56495_c68fd355",
       "range": {
         "startLine": 302,
         "startChar": 8,
