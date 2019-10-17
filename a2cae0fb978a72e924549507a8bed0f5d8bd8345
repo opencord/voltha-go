@@ -34,6 +34,24 @@
       "revId": "a2cae0fb978a72e924549507a8bed0f5d8bd8345",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89484a31_b8626535",
+        "filename": "rw_core/flow_decomposition/flow_decomposer_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-10-17T21:53:38Z",
+      "side": 1,
+      "message": "i realized having GetVid return 0 for not found was bogus since you can legitimately set vlan id 0.  so had to rework it a bit to return nil if the flow truly did not contain a match rule for a vid",
+      "parentUuid": "0276e907_15f09cd4",
+      "revId": "a2cae0fb978a72e924549507a8bed0f5d8bd8345",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
