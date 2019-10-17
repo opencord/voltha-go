@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac69e82e_0db36ad7",
+        "filename": "k8s/ofagent.yml",
+        "patchSetId": 23
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:32:38Z",
+      "side": 1,
+      "message": "you might need to rebase, we removed the k8s files from voltha-go this afternoon (US time) as they are not meant to be used anymore, only helm.",
+      "revId": "704d6cd3b4b24e0b671d1b61ba7598a5e501ea61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d35bc384_f05a28ef",
+        "filename": "k8s/single-node/ofagent.yml",
+        "patchSetId": 23
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:32:38Z",
+      "side": 1,
+      "message": "you might need to rebase, we removed the k8s files from voltha-go this afternoon (US time) as they are not meant to be used anymore, only helm.",
+      "revId": "704d6cd3b4b24e0b671d1b61ba7598a5e501ea61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6e75576_72e398f6",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:32:38Z",
+      "side": 1,
+      "message": "i would remove this. if they set localhost i would rather have the error than invisibly change it for them.",
+      "range": {
+        "startLine": 302,
+        "startChar": 8,
+        "endLine": 303,
+        "endChar": 28
+      },
+      "revId": "704d6cd3b4b24e0b671d1b61ba7598a5e501ea61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fac1f82_8ca89ae5",
+        "filename": "python/ofagent/probe.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:32:38Z",
+      "side": 1,
+      "message": "418 - it is what the other components are using, or do you prefer 500",
+      "range": {
+        "startLine": 37,
+        "startChar": 31,
+        "endLine": 37,
+        "endChar": 34
+      },
+      "revId": "704d6cd3b4b24e0b671d1b61ba7598a5e501ea61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab8c71cb_da88ab86",
+        "filename": "python/ofagent/probe.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T05:32:38Z",
+      "side": 1,
+      "message": "418 - it is what the other components are using, or do you prefer 500",
+      "range": {
+        "startLine": 46,
+        "startChar": 31,
+        "endLine": 46,
+        "endChar": 34
+      },
+      "revId": "704d6cd3b4b24e0b671d1b61ba7598a5e501ea61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
