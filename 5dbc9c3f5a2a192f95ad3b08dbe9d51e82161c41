@@ -192,6 +192,30 @@
     },
     {
       "key": {
+        "uuid": "fc4e2c65_f33ee000",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-17T03:21:13Z",
+      "side": 1,
+      "message": "what if you mapped localhost to 127.0.0.1? does it still go to containerid, or only localhost goes to containerid. if 127.0.0.1 works, i think it would be better to map localhost to that than 0.0.0.0",
+      "parentUuid": "a282dede_a8fd9476",
+      "range": {
+        "startLine": 302,
+        "startChar": 8,
+        "endLine": 303,
+        "endChar": 28
+      },
+      "revId": "5dbc9c3f5a2a192f95ad3b08dbe9d51e82161c41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90ca5629_c1b6d0c9",
         "filename": "python/ofagent/probe.py",
         "patchSetId": 19
