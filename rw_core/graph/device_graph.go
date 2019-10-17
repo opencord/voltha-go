@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gyuho/goraph"
-	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/log"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"strconv"
 	"strings"

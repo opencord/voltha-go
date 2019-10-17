@@ -18,7 +18,7 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/log"
 	"os"
 )
 
