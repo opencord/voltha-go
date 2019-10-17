@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "47d606b4_818df6c3",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-17T05:08:51Z",
+      "side": 1,
+      "message": "Sorry. Checked the empty value and it worked. During merge conflict resolution missed to add the new code. Will repush the changes",
+      "parentUuid": "15a54e9c_037e222c",
+      "range": {
+        "startLine": 36,
+        "startChar": 35,
+        "endLine": 36,
+        "endChar": 44
+      },
+      "revId": "b8d7b23b7b49620a4ac08757c5bfbe3bac23803e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb107648_391ba1a8",
         "filename": "python/ofagent/main.py",
         "patchSetId": 22
