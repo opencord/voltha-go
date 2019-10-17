@@ -16,7 +16,7 @@
 package utils
 
 import (
-	"github.com/opencord/voltha-go/common/log"
+	"github.com/opencord/voltha-lib-go/pkg/common/log"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
