@@ -46,6 +46,30 @@
       "revId": "ae5530fce0be68f58b60a273740d789ee7c67a98",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9715864_8c407f6b",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-18T13:18:17Z",
+      "side": 1,
+      "message": "It was used as a default VLAN for all controller bound flows.   I don\u0027t know if any adapters are still using it. If it\u0027s no longer used then make sense to remove it - not this update though.",
+      "parentUuid": "361c15bf_42551e16",
+      "range": {
+        "startLine": 154,
+        "startChar": 67,
+        "endLine": 154,
+        "endChar": 71
+      },
+      "revId": "ae5530fce0be68f58b60a273740d789ee7c67a98",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
