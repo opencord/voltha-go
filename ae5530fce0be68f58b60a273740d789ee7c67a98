@@ -22,6 +22,30 @@
       "revId": "ae5530fce0be68f58b60a273740d789ee7c67a98",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "361c15bf_42551e16",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-10-18T11:02:50Z",
+      "side": 1,
+      "message": "Its a great question, I have no idea.  Its been like that since the first days of voltha.  I don\u0027t think any of the onos apps or onos itself even looks for it.",
+      "parentUuid": "1c2473d1_3ed9b375",
+      "range": {
+        "startLine": 154,
+        "startChar": 67,
+        "endLine": 154,
+        "endChar": 71
+      },
+      "revId": "ae5530fce0be68f58b60a273740d789ee7c67a98",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
