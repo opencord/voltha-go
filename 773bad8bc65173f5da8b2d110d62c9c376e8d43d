@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "0784a68a_ba979d75",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-18T13:30:42Z",
+      "side": 1,
+      "message": "While on the surface this looks ok, there is a performance problem with this.  A ListDevices() will trigger all devices in the cluster to be loaded in memory with all their relevant data structures.\n\nI suggest it\u0027s better to create a new API in device manager to list only the devices without creating device agents for each of them.  This API could have a filter or a filter function where it will return devices based on your filter only.",
+      "revId": "773bad8bc65173f5da8b2d110d62c9c376e8d43d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "825756d1_f6e85afe",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-18T13:30:42Z",
+      "side": 1,
+      "message": "There are also different params that can be passed on during a device creation (e.g. mac address, ip address, etc).  All these should be checked as well.",
+      "revId": "773bad8bc65173f5da8b2d110d62c9c376e8d43d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae800628_981545d2",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 6
