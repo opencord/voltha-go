@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b12eef54_41403deb",
+        "filename": "common/pmmetrics/performance_metrics.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-18T13:36:46Z",
+      "side": 1,
+      "message": "Since you are changing the package name why not creating it\u0027s own directory as well?",
+      "revId": "34415ff5da779aea48847ff4eadf83bba32c527e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
