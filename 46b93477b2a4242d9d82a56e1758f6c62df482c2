@@ -22,6 +22,30 @@
       "revId": "46b93477b2a4242d9d82a56e1758f6c62df482c2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa7153da_e52b514f",
+        "filename": "vendor/github.com/opencord/voltha-lib-go/pkg/adapters/adapterif/core_proxy_if.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2019-10-18T18:47:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7be74e8e_d1cec817",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 19
+      },
+      "revId": "46b93477b2a4242d9d82a56e1758f6c62df482c2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
