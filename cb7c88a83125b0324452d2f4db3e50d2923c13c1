@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e2937cd_829138d2",
+        "filename": "go.mod",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-18T17:10:34Z",
+      "side": 1,
+      "message": "Still looking into why `go mod` changes `v2.2.2` to a hash-based version. May be because we don\u0027t have `v2` on all of our endpoints.",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 69
+      },
+      "revId": "cb7c88a83125b0324452d2f4db3e50d2923c13c1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
