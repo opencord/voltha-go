@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c2473d1_3ed9b375",
+        "filename": "rw_core/flow_decomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-10-18T08:47:31Z",
+      "side": 1,
+      "message": "Stupid question. Why was this vlan 4000 being set?",
+      "range": {
+        "startLine": 154,
+        "startChar": 67,
+        "endLine": 154,
+        "endChar": 71
+      },
+      "revId": "ae5530fce0be68f58b60a273740d789ee7c67a98",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
