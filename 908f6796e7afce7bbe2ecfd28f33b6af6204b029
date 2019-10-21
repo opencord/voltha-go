@@ -22,6 +22,30 @@
       "revId": "908f6796e7afce7bbe2ecfd28f33b6af6204b029",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd119ef3_38ad631b",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1120,
+      "author": {
+        "id": 1000405
+      },
+      "writtenOn": "2019-10-21T18:09:08Z",
+      "side": 1,
+      "message": "they have different information. I fixed it.",
+      "parentUuid": "2b51473b_b28b8594",
+      "range": {
+        "startLine": 1120,
+        "startChar": 70,
+        "endLine": 1120,
+        "endChar": 73
+      },
+      "revId": "908f6796e7afce7bbe2ecfd28f33b6af6204b029",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
