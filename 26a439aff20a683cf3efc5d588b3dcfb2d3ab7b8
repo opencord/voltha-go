@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9539d672_d03b1538",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-21T19:04:01Z",
+      "side": 1,
+      "message": "It would be clearer to name the method \"isParentDeviceExist(...)\"  since you are explicitly checking existence  a parent device.  Calling it directly from dMgr.createDevice(..) is also preferable.",
+      "revId": "26a439aff20a683cf3efc5d588b3dcfb2d3ab7b8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b9c5716_3d3a6231",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-21T19:04:01Z",
+      "side": 1,
+      "message": "A parent device can also be created using mac address (see the cli help for any other options).  This method should therefore check for these options as well.",
+      "revId": "26a439aff20a683cf3efc5d588b3dcfb2d3ab7b8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a13011a_2e8b0758",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-21T19:04:01Z",
+      "side": 1,
+      "message": "It\u0027s preferable to move the above code within the createdevice method itself as it is more explicit and this API interface does not really need to know the details of createdevice check.",
+      "revId": "26a439aff20a683cf3efc5d588b3dcfb2d3ab7b8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
