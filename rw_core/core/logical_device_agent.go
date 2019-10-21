@@ -215,6 +215,9 @@ func (agent *LogicalDeviceAgent) ListLogicalDeviceMeters() (*ofp.Meters, error) 
 	defer agent.lockLogicalDevice.RUnlock()
 	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+		if lDevice.Meters == nil {
+			return &ofp.Meters{}, nil
+		}
 		cMeters := (proto.Clone(lDevice.Meters)).(*ofp.Meters)
 		return cMeters, nil
 	}
@@ -1115,7 +1118,7 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	idx := fu.FindFlows(flows, flow)
 	if idx >= 0 {
-		changedMeter = agent.updateFlowCountOfMeterStats(mod, meters, flow)
+		changedMeter = agent.updateFlowCountOfMeterStats(mod, meters, flows[idx])
 		flowsToDelete = append(flowsToDelete, flows[idx])
 		flows = append(flows[:idx], flows[idx+1:]...)
 		changedFlow = true
