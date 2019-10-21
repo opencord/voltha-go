@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "39dffe47_e8359c69",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-21T14:59:28Z",
+      "side": 1,
+      "message": "Thank you for the suggestion. Will change the code accordingly and submit for review",
+      "parentUuid": "0784a68a_ba979d75",
+      "revId": "773bad8bc65173f5da8b2d110d62c9c376e8d43d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "825756d1_f6e85afe",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e7f0f60d_bff35641",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-21T14:59:28Z",
+      "side": 1,
+      "message": "Thank you for the suggestion.\nWhile testing with multiple scenarios of provisioning we came across one interesting phenomenon that while the cli accepts MAC, IP and HOST+PORT, the MAC info is lost during preprovisioning. We have raised a bug VOL-2121 as well. Therefore can we stick on with the current logic of only checking HOST+PORT for the time being.",
+      "parentUuid": "825756d1_f6e85afe",
+      "revId": "773bad8bc65173f5da8b2d110d62c9c376e8d43d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae800628_981545d2",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 6
@@ -47,6 +83,30 @@
       "writtenOn": "2019-10-17T20:02:40Z",
       "side": 1,
       "message": "probably should be Errorf",
+      "range": {
+        "startLine": 438,
+        "startChar": 6,
+        "endLine": 438,
+        "endChar": 12
+      },
+      "revId": "773bad8bc65173f5da8b2d110d62c9c376e8d43d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1a59e36_3404340d",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-21T14:59:28Z",
+      "side": 1,
+      "message": "Thank you for the suggestion. Will change accordingly.",
+      "parentUuid": "ae800628_981545d2",
       "range": {
         "startLine": 438,
         "startChar": 6,
