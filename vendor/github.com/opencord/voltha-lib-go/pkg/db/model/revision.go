@@ -28,6 +28,7 @@ type Revision interface {
 	Drop(txid string, includeConfig bool)
 	StorageDrop(txid string, includeConfig bool)
 	ChildDrop(childType string, childHash string)
+	ChildDropByName(childName string)
 	SetChildren(name string, children []Revision)
 	GetChildren(name string) []Revision
 	SetAllChildren(children map[string][]Revision)
