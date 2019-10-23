@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89693263_78129a17",
+        "filename": "go.mod",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-10-23T17:33:06Z",
+      "side": 1,
+      "message": "I think this should be just v2.2.4, not v0.0.0-20191023163617-c5f1c5308bb6",
+      "revId": "e0808f99d0fde504a0acb6d8d800afd6b861e5f7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
