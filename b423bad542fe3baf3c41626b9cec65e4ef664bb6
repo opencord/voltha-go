@@ -16,6 +16,24 @@
       "revId": "b423bad542fe3baf3c41626b9cec65e4ef664bb6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d8b88f3_5bc3936a",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1000472
+      },
+      "writtenOn": "2019-10-23T06:40:01Z",
+      "side": 0,
+      "message": "This API is to add flows. Also while testing I observed that while adding eapol flow both flowadd and flowdelete request lands in adapter for the same flow, which was causing eapol flow addition and deletion immediately.",
+      "parentUuid": "8efe4ded_0eeb7c3a",
+      "revId": "b423bad542fe3baf3c41626b9cec65e4ef664bb6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
