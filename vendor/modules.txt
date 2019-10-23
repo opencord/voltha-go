@@ -62,7 +62,7 @@ github.com/jcmturner/gofork/x/crypto/pbkdf2
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
-# github.com/opencord/voltha-lib-go v0.0.0-20191018190138-62f0709e8232
+# github.com/opencord/voltha-lib-go v0.0.0-20191023185531-80258b36a64b
 github.com/opencord/voltha-lib-go/pkg/log
 github.com/opencord/voltha-lib-go/pkg/db/kvstore
 github.com/opencord/voltha-lib-go/pkg/grpc

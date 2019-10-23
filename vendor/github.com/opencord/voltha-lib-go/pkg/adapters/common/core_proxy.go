@@ -500,6 +500,30 @@ func (ap *CoreProxy) SendPacketIn(ctx context.Context, deviceId string, port uin
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
+func (ap *CoreProxy) DeviceReasonUpdate(ctx context.Context, deviceId string, deviceReason string) error {
+	log.Debugw("DeviceReasonUpdate", log.Fields{"deviceId": deviceId, "deviceReason": deviceReason})
+	rpc := "DeviceReasonUpdate"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(deviceId)
+	replyToTopic := ap.getAdapterTopic()
+
+	args := make([]*kafka.KVArg, 2)
+	id := &voltha.ID{Id: deviceId}
+	args[0] = &kafka.KVArg{
+		Key:   "device_id",
+		Value: id,
+	}
+	reason := &ic.StrType{Val: deviceReason}
+	args[1] = &kafka.KVArg{
+		Key:   "device_reason",
+		Value: reason,
+	}
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
+	log.Debugw("DeviceReason-response", log.Fields{"pDeviceId": deviceId, "success": success})
+	return unPackResponse(rpc, deviceId, success, result)
+}
+
 func (ap *CoreProxy) DevicePMConfigUpdate(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
 	log.Debugw("DevicePMConfigUpdate", log.Fields{"pmConfigs": pmConfigs})
 	rpc := "DevicePMConfigUpdate"
