@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8efe4ded_0eeb7c3a",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-10-23T06:33:53Z",
+      "side": 0,
+      "message": "Why was this removed?",
+      "revId": "b423bad542fe3baf3c41626b9cec65e4ef664bb6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
