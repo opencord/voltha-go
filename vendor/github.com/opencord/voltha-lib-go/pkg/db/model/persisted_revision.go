@@ -162,7 +162,14 @@ StopWatchLoop:
 			switch event.EventType {
 			case kvstore.DELETE:
 				log.Debugw("delete-from-memory", log.Fields{"key": latestRev.GetHash(), "watch": latestRev.GetName()})
-				pr.Revision.Drop("", true)
+
+				// Remove reference from cache
+				GetRevCache().Delete(latestRev.GetName())
+
+				// Remove reference from parent
+				parent := pr.GetBranch().Node.GetRoot()
+				parent.GetBranch(NONE).Latest.ChildDropByName(latestRev.GetName())
+
 				break StopWatchLoop
 
 			case kvstore.PUT:
@@ -382,10 +389,11 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 		// Also check if we are treating a newer revision of the data or not
 		if childRev.GetData().(proto.Message).String() != data.(proto.Message).String() && childRev.getVersion() < version {
 			log.Debugw("revision-data-is-different", log.Fields{
-				"key":     childRev.GetHash(),
-				"name":    childRev.GetName(),
-				"data":    childRev.GetData(),
-				"version": childRev.getVersion(),
+				"key":               childRev.GetHash(),
+				"name":              childRev.GetName(),
+				"data":              childRev.GetData(),
+				"in-memory-version": childRev.getVersion(),
+				"persisted-version": version,
 			})
 
 			//
@@ -436,9 +444,11 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 		} else {
 			if childRev != nil {
 				log.Debugw("keeping-revision-data", log.Fields{
-					"key":  childRev.GetHash(),
-					"name": childRev.GetName(),
-					"data": childRev.GetData(),
+					"key":                 childRev.GetHash(),
+					"name":                childRev.GetName(),
+					"data":                childRev.GetData(),
+					"in-memory-version":   childRev.getVersion(),
+					"persistence-version": version,
 				})
 
 				// Update timestamp to reflect when it was last read and to reset tracked timeout
@@ -455,9 +465,10 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 		// There is no available child with that key value.
 		// Create a new child and update the parent revision.
 		log.Debugw("no-such-revision-entry", log.Fields{
-			"key":  keyValue,
-			"name": typeName,
-			"data": data,
+			"key":     keyValue,
+			"name":    typeName,
+			"data":    data,
+			"version": version,
 		})
 
 		// BEGIN child lock
