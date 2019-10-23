@@ -16,6 +16,24 @@
       "revId": "e0808f99d0fde504a0acb6d8d800afd6b861e5f7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "323e78af_67da9e89",
+        "filename": "go.mod",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-23T17:46:03Z",
+      "side": 1,
+      "message": "you would think, but no. turns out that how `go mod` expects repo (or something) structured is odd. so if you set this to `v2.2.4` and then do a `go mod tidy` you get this. it is a pain and there is a JIRA open to figure out what we need to do to make it not a pain.",
+      "parentUuid": "89693263_78129a17",
+      "revId": "e0808f99d0fde504a0acb6d8d800afd6b861e5f7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
