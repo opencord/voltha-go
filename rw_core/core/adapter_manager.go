@@ -90,7 +90,7 @@ func (aa *AdapterAgent) updateDeviceType(deviceType *voltha.DeviceType) {
 
 type AdapterManager struct {
 	adapterAgents               map[string]*AdapterAgent
-	deviceTypeToAdapterMap      map[string]string
+	deviceTypeToAdapterMap      map[string]*string
 	clusterDataProxy            *model.Proxy
 	adapterProxy                *model.Proxy
 	deviceTypeProxy             *model.Proxy
@@ -107,7 +107,7 @@ func newAdapterManager(cdProxy *model.Proxy, coreInstanceId string, deviceMgr *D
 	adapterMgr.coreInstanceId = coreInstanceId
 	adapterMgr.clusterDataProxy = cdProxy
 	adapterMgr.adapterAgents = make(map[string]*AdapterAgent)
-	adapterMgr.deviceTypeToAdapterMap = make(map[string]string)
+	adapterMgr.deviceTypeToAdapterMap = make(map[string]*string)
 	adapterMgr.lockAdaptersMap = sync.RWMutex{}
 	adapterMgr.lockdDeviceTypeToAdapterMap = sync.RWMutex{}
 	adapterMgr.deviceMgr = deviceMgr
@@ -246,7 +246,7 @@ func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, save
 			log.Debugw("adapter-not-exist", log.Fields{"deviceTypes": deviceTypes, "adapterId": clonedDType.Adapter})
 			aMgr.adapterAgents[clonedDType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: clonedDType.Adapter}, deviceTypes)
 		}
-		aMgr.deviceTypeToAdapterMap[clonedDType.Id] = clonedDType.Adapter
+		aMgr.deviceTypeToAdapterMap[clonedDType.Id] = &clonedDType.Adapter
 	}
 	if saveToDb {
 		// Save the device types to the KV store as well
@@ -324,7 +324,7 @@ func (aMgr *AdapterManager) updateDeviceTypeWithoutLock(deviceType *voltha.Devic
 		aMgr.adapterAgents[deviceType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: deviceType.Adapter},
 			&voltha.DeviceTypes{Items: []*voltha.DeviceType{deviceType}})
 	}
-	aMgr.deviceTypeToAdapterMap[deviceType.Id] = deviceType.Adapter
+	aMgr.deviceTypeToAdapterMap[deviceType.Id] = &deviceType.Adapter
 }
 
 func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *voltha.CoreInstance {
@@ -345,13 +345,13 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 }
 
 //getAdapterName returns the name of the device adapter that service this device type
-func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
+func (aMgr *AdapterManager) getAdapterName(deviceType string) (*string, error) {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 	if adapterId, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
 		return adapterId, nil
 	}
-	return "", errors.New(fmt.Sprintf("Adapter-not-registered-for-device-type %s", deviceType))
+	return nil, errors.New(fmt.Sprintf("Adapter-not-registered-for-device-type %s", deviceType))
 }
 
 // getDeviceType returns the device type proto definition given the name of the device type
@@ -359,7 +359,7 @@ func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType 
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 	if adapterId, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
-		if adapterAgent, _ := aMgr.adapterAgents[adapterId]; adapterAgent != nil {
+		if adapterAgent, _ := aMgr.adapterAgents[*adapterId]; adapterAgent != nil {
 			return adapterAgent.getDeviceType(deviceType)
 		}
 	}

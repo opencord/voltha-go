@@ -166,7 +166,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 			log.Warnw("no-adapter-registered-for-device-type", log.Fields{"deviceType": device.Type, "deviceAdapter": device.Adapter})
 			return err
 		} else {
-			device.Adapter = adapterName
+			device.Adapter = *adapterName
 		}
 
 		if device.AdminState == voltha.AdminState_ENABLED {
