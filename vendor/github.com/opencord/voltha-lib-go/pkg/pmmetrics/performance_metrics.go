@@ -38,6 +38,14 @@ func Frequency(frequency uint32) PmMetricsOption {
 	}
 }
 
+// GetSubscriberMetrics will return the metrics subscribed for the device
+func (pm *PmMetrics) GetSubscriberMetrics() map[string]*voltha.PmConfig {
+	if pm == nil {
+		return nil
+	}
+	return pm.metrics
+}
+
 func Grouped(grouped bool) PmMetricsOption {
 	return func(args *PmMetrics) {
 		args.grouped = grouped
