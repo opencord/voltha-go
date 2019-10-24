@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63d5ea3e_7a611fc7",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-10-24T19:53:15Z",
+      "side": 1,
+      "message": "this can be removed now. Not needed. Last one should not be in the map during next create if id re-used.",
+      "revId": "f9a0e7eb0ecb4f700413ccee009155395f338740",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
