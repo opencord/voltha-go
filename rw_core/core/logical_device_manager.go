@@ -550,15 +550,9 @@ func (ldMgr *LogicalDeviceManager) updateGroupTable(ctx context.Context, id stri
 func (ldMgr *LogicalDeviceManager) enableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{}) {
 	log.Debugw("enableLogicalPort", log.Fields{"logicalDeviceId": id})
 	var res interface{}
-	// Get logical port
-	var logicalPort *voltha.LogicalPort
-	var err error
-	if logicalPort, err = ldMgr.getLogicalPort(id); err != nil {
-		log.Debugw("no-logical-device-port-present", log.Fields{"logicalPortId": id.PortId})
-		res = err
-	}
+
 	if agent := ldMgr.getLogicalDeviceAgent(id.Id); agent != nil {
-		res = agent.enableLogicalPort(logicalPort)
+		res = agent.enableLogicalPort(id.PortId)
 		log.Debugw("enableLogicalPort-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", id.Id)
@@ -569,15 +563,9 @@ func (ldMgr *LogicalDeviceManager) enableLogicalPort(ctx context.Context, id *vo
 func (ldMgr *LogicalDeviceManager) disableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{}) {
 	log.Debugw("disableLogicalPort", log.Fields{"logicalDeviceId": id})
 	var res interface{}
-	// Get logical port
-	var logicalPort *voltha.LogicalPort
-	var err error
-	if logicalPort, err = ldMgr.getLogicalPort(id); err != nil {
-		log.Debugw("no-logical-device-port-present", log.Fields{"logicalPortId": id.PortId})
-		res = err
-	}
+
 	if agent := ldMgr.getLogicalDeviceAgent(id.Id); agent != nil {
-		res = agent.disableLogicalPort(logicalPort)
+		res = agent.disableLogicalPort(id.PortId)
 		log.Debugw("disableLogicalPort-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", id.Id)

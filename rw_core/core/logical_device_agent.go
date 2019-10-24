@@ -1368,19 +1368,19 @@ func (agent *LogicalDeviceAgent) deleteLogicalPorts(deviceId string) error {
 }
 
 // enableLogicalPort enables the logical port
-func (agent *LogicalDeviceAgent) enableLogicalPort(lPort *voltha.LogicalPort) error {
+func (agent *LogicalDeviceAgent) enableLogicalPort(lPortId string) error {
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
 	// Get the most up to date logical device
 	var logicaldevice *voltha.LogicalDevice
 	if logicaldevice, _ = agent.getLogicalDeviceWithoutLock(); logicaldevice == nil {
-		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "logicalPortId": lPort.Id})
+		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "logicalPortId": lPortId})
 		return nil
 	}
 	index := -1
 	for i, logicalPort := range logicaldevice.Ports {
-		if logicalPort.Id == lPort.Id {
+		if logicalPort.Id == lPortId {
 			index = i
 			break
 		}
@@ -1388,25 +1388,25 @@ func (agent *LogicalDeviceAgent) enableLogicalPort(lPort *voltha.LogicalPort) er
 	if index >= 0 {
 		logicaldevice.Ports[index].OfpPort.Config = logicaldevice.Ports[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		return agent.updateLogicalDeviceWithoutLock(logicaldevice)
+	} else {
+		return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortId, agent.logicalDeviceId)
 	}
-	//TODO:  Trigger subsequent actions on the device
-	return nil
 }
 
 // disableLogicalPort disabled the logical port
-func (agent *LogicalDeviceAgent) disableLogicalPort(lPort *voltha.LogicalPort) error {
+func (agent *LogicalDeviceAgent) disableLogicalPort(lPortId string) error {
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
 	// Get the most up to date logical device
 	var logicaldevice *voltha.LogicalDevice
 	if logicaldevice, _ = agent.getLogicalDeviceWithoutLock(); logicaldevice == nil {
-		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "logicalPortId": lPort.Id})
+		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "logicalPortId": lPortId})
 		return nil
 	}
 	index := -1
 	for i, logicalPort := range logicaldevice.Ports {
-		if logicalPort.Id == lPort.Id {
+		if logicalPort.Id == lPortId {
 			index = i
 			break
 		}
@@ -1414,9 +1414,9 @@ func (agent *LogicalDeviceAgent) disableLogicalPort(lPort *voltha.LogicalPort) e
 	if index >= 0 {
 		logicaldevice.Ports[index].OfpPort.Config = (logicaldevice.Ports[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)) | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		return agent.updateLogicalDeviceWithoutLock(logicaldevice)
+	} else {
+		return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortId, agent.logicalDeviceId)
 	}
-	//TODO:  Trigger subsequent actions on the device
-	return nil
 }
 
 func (agent *LogicalDeviceAgent) getPreCalculatedRoute(ingress, egress uint32) []graph.RouteHop {
