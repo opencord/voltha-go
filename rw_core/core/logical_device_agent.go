@@ -22,8 +22,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	fd "github.com/opencord/voltha-go/rw_core/flow_decomposition"
 	"github.com/opencord/voltha-go/rw_core/graph"
-	fu "github.com/opencord/voltha-go/rw_core/utils"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/pkg/db/model"
+	fu "github.com/opencord/voltha-lib-go/pkg/flows"
 	"github.com/opencord/voltha-lib-go/pkg/log"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
@@ -406,7 +407,7 @@ func (agent *LogicalDeviceAgent) setupLogicalPorts(ctx context.Context) error {
 			}(child, ch)
 		}
 		// Wait for completion
-		if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
+		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
 			return status.Errorf(codes.Aborted, "errors-%s", res)
 		}
 	}
@@ -1034,7 +1035,7 @@ func (agent *LogicalDeviceAgent) addDeviceFlowsAndGroups(deviceRules *fu.DeviceR
 		}(deviceId, value.ListFlows(), value.ListGroups())
 	}
 	// Wait for completion
-	if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -1056,7 +1057,7 @@ func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.Devi
 		}(deviceId, value.ListFlows(), value.ListGroups())
 	}
 	// Wait for completion
-	if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -1078,7 +1079,7 @@ func (agent *LogicalDeviceAgent) updateDeviceFlowsAndGroups(deviceRules *fu.Devi
 		}(deviceId, value.ListFlows(), value.ListGroups())
 	}
 	// Wait for completion
-	if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, chnlsList...); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil

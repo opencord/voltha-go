@@ -19,8 +19,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogo/protobuf/proto"
-	fu "github.com/opencord/voltha-go/rw_core/utils"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/pkg/db/model"
+	fu "github.com/opencord/voltha-lib-go/pkg/flows"
 	"github.com/opencord/voltha-lib-go/pkg/log"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
@@ -323,7 +324,7 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 	device.FlowGroups = &voltha.FlowGroups{Items: updatedGroups}
 	go agent.updateDeviceWithoutLockAsync(device, chdB)
 
-	if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chAdapters, chdB); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, chAdapters, chdB); res != nil {
 		log.Debugw("Failed to get response from adapter[or] DB", log.Fields{"result": res})
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
@@ -414,7 +415,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroups(flowsToDel []*ofp.OfpFlowStats, g
 	device.FlowGroups = &voltha.FlowGroups{Items: groupsToKeep}
 	go agent.updateDeviceWithoutLockAsync(device, chdB)
 
-	if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chAdapters, chdB); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, chAdapters, chdB); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -522,7 +523,7 @@ func (agent *DeviceAgent) updateFlowsAndGroups(updatedFlows []*ofp.OfpFlowStats,
 	device.FlowGroups = &voltha.FlowGroups{Items: updatedGroups}
 	go agent.updateDeviceWithoutLockAsync(device, chdB)
 
-	if res := fu.WaitForNilOrErrorResponses(agent.defaultTimeout, chAdapters, chdB); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, chAdapters, chdB); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil

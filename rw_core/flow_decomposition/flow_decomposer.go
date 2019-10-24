@@ -20,7 +20,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/coreIf"
 	"github.com/opencord/voltha-go/rw_core/graph"
-	fu "github.com/opencord/voltha-go/rw_core/utils"
+	fu "github.com/opencord/voltha-lib-go/pkg/flows"
 	"github.com/opencord/voltha-lib-go/pkg/log"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
