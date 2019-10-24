@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "046ce69f_11c2b9a2",
+        "filename": "ro_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-10-24T19:54:02Z",
+      "side": 1,
+      "message": "not sure change in ro-core is required with your model fixes. ro-core can be left alone I think.",
+      "revId": "f9a0e7eb0ecb4f700413ccee009155395f338740",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63d5ea3e_7a611fc7",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 1
