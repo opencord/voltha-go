@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9afc4d5f_e705fc0a",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-24T18:21:59Z",
+      "side": 1,
+      "message": "While you are making the change, it would be useful to check whether the minimum required content of the new device is present (e.g. does it has a macaddress or a port and ip?",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f5393a7_f4273409",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-24T18:21:59Z",
+      "side": 1,
+      "message": "Since the method is either returning \u003ctrue, error\u003e or \u003cfalse, nil\u003e and the error is always the same then it makes sense for it to only return a bool and let the calling method return \"device already preprov..\" back if needed.",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f199f723_11db2133",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-24T18:21:59Z",
+      "side": 1,
+      "message": "I don\u0027t think I understand the logic.  If a request has both host and macaddress then if the macaddress is the same but the host has a different IP we will accept it.  However, if we only have Macaddress then we will eject the request if the macaddress is the same. Is that correct?",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84b0ebfa_8ce5d746",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-24T18:21:59Z",
+      "side": 1,
+      "message": "There is no need to go over all the devices.  Only parent devices are required, hence if the device is not a root device from the returned list it should be skipped.",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb69e3be_bd8aaec5",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-24T18:21:59Z",
+      "side": 1,
+      "message": "The for loop should be outside all the if.  In other words it should be something like:\n\nhostPort :\u003d newdevice.GetHostAndPort()\nfor _device :\u003d range devices.([]interface{}) {\n   if !device.Root {\n       continue\n   }\n   if hostPort !\u003d \"\" \u0026\u0026 device.(*voltha.Device).GetHostPort() {\n       return true\n   }\n   if newdevice.MacAddress !\u003d \"\" \u0026\u0026 device.(*voltha.Device).MacAddress {\n       return true\n   }\n}\nreturn false",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
