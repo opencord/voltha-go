@@ -172,6 +172,8 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	}
 	log.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
+	// delete any loaded agents for this device id in case its getting re-used
+	ldMgr.deleteLogicalDeviceAgent(id)
 	agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 	go agent.start(ctx, false)
@@ -192,8 +194,8 @@ func (ldMgr *LogicalDeviceManager) stopManagingLogicalDeviceWithDeviceId(id stri
 		if ldAgent.rootDeviceId == id {
 			log.Infow("stopping-logical-device-agent", log.Fields{"lDeviceId": key})
 			ldAgent.stop(nil)
-			ldMgr.logicalDeviceAgents.Delete(ldId)
 			ldId = key.(string)
+			ldMgr.logicalDeviceAgents.Delete(ldId)
 		}
 		return true
 	})
