@@ -19,7 +19,7 @@ import (
 	"context"
 	"errors"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/opencord/voltha-lib-go/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/go/common"
 	"github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"

@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	tu "github.com/opencord/voltha-go/tests/utils"
-	"github.com/opencord/voltha-lib-go/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/go/common"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"github.com/stretchr/testify/assert"

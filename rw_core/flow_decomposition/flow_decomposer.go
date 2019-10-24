@@ -20,8 +20,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/coreIf"
 	"github.com/opencord/voltha-go/rw_core/graph"
+<<<<<<< eb3360540656dba72b2b38bbe772056a16e1890a
 	fu "github.com/opencord/voltha-lib-go/pkg/flows"
 	"github.com/opencord/voltha-lib-go/pkg/log"
+=======
+	fu "github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+>>>>>>> VOL-2138 Use v2 import paths for voltha-lib-go
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
 )
