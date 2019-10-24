@@ -31,7 +31,7 @@ import (
 	//"encoding/json"
 	"text/template"
 	//"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	//pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 

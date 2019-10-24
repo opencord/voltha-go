@@ -18,9 +18,9 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"github.com/opencord/voltha-lib-go/pkg/db/model"
-	"github.com/opencord/voltha-lib-go/pkg/log"
-	"github.com/opencord/voltha-lib-go/pkg/version"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/version"
 	"github.com/opencord/voltha-protos/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

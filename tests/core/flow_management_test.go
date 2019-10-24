@@ -23,7 +23,7 @@ import (
 	"github.com/google/uuid"
 	fu "github.com/opencord/voltha-go/rw_core/utils"
 	tu "github.com/opencord/voltha-go/tests/utils"
-	"github.com/opencord/voltha-lib-go/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/go/common"
 	ofp "github.com/opencord/voltha-protos/go/openflow_13"
 	"github.com/opencord/voltha-protos/go/voltha"
