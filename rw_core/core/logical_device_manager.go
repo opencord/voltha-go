@@ -192,8 +192,8 @@ func (ldMgr *LogicalDeviceManager) stopManagingLogicalDeviceWithDeviceId(id stri
 		if ldAgent.rootDeviceId == id {
 			log.Infow("stopping-logical-device-agent", log.Fields{"lDeviceId": key})
 			ldAgent.stop(nil)
-			ldMgr.logicalDeviceAgents.Delete(ldId)
 			ldId = key.(string)
+			ldMgr.logicalDeviceAgents.Delete(ldId)
 		}
 		return true
 	})
