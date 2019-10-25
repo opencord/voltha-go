@@ -46,6 +46,30 @@
       "revId": "00bb38b68f02cb6a47d9287e4e20e13931457e9d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab4a8562_8e817df2",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-25T17:38:44Z",
+      "side": 1,
+      "message": "Understood, but the command line arguments represent an interface to the user and as such should be user focused. It is better to use a time.Duration here and convert it when sent to the other API. It isn\u0027t a type cast so much as a conversion in this case.",
+      "parentUuid": "5367c81e_39c663a5",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 30
+      },
+      "revId": "00bb38b68f02cb6a47d9287e4e20e13931457e9d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
