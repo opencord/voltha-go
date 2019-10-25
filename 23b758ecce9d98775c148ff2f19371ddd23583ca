@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a2547cf3_7328f6fa",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-25T05:27:20Z",
+      "side": 1,
+      "message": "Have addressed this suggestion. Thank you.",
+      "parentUuid": "9afc4d5f_e705fc0a",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f5393a7_f4273409",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-24T18:21:59Z",
       "side": 1,
       "message": "Since the method is either returning \u003ctrue, error\u003e or \u003cfalse, nil\u003e and the error is always the same then it makes sense for it to only return a bool and let the calling method return \"device already preprov..\" back if needed.",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31dbf3c1_cda68f36",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-25T05:27:20Z",
+      "side": 1,
+      "message": "Have addressed this suggestion. Thank you",
+      "parentUuid": "8f5393a7_f4273409",
       "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "71f5f83e_26cddcd8",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-25T05:27:20Z",
+      "side": 1,
+      "message": "Avoided this logic. Thank you",
+      "parentUuid": "f199f723_11db2133",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "84b0ebfa_8ce5d746",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 18
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "d90b80ca_53f0d5eb",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-25T05:27:20Z",
+      "side": 1,
+      "message": "Incorporated the suggestion. Thank you",
+      "parentUuid": "84b0ebfa_8ce5d746",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb69e3be_bd8aaec5",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 18
@@ -81,6 +153,24 @@
       "writtenOn": "2019-10-24T18:21:59Z",
       "side": 1,
       "message": "The for loop should be outside all the if.  In other words it should be something like:\n\nhostPort :\u003d newdevice.GetHostAndPort()\nfor _device :\u003d range devices.([]interface{}) {\n   if !device.Root {\n       continue\n   }\n   if hostPort !\u003d \"\" \u0026\u0026 device.(*voltha.Device).GetHostPort() {\n       return true\n   }\n   if newdevice.MacAddress !\u003d \"\" \u0026\u0026 device.(*voltha.Device).MacAddress {\n       return true\n   }\n}\nreturn false",
+      "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a92f7da8_870326cf",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-10-25T05:27:20Z",
+      "side": 1,
+      "message": "Thanks for the pseudo code. Implemented it.",
+      "parentUuid": "cb69e3be_bd8aaec5",
       "revId": "23b758ecce9d98775c148ff2f19371ddd23583ca",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
