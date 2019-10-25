@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d181b071_95aac3a0",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-25T15:21:23Z",
+      "side": 1,
+      "message": "These methods does not seem to have been tested properly.   I would actually change the logic of both methods.  Instead of getting the  logicalPort first I would pass the port id to the agent.enableLogicalPort and let that function deal with it.",
+      "revId": "20dca0035e3f0f26b225db599b1a765bc99c7b47",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
