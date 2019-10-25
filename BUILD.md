@@ -111,7 +111,7 @@ LOCAL\_LIB\_GO=$HOME/src/voltha-lib-go
 
 When these environment variables are set the vendored versions of these packages
 will be removed from the `vendor` directory and replaced by coping the files from
-the specificed locattions to the `vendor` directory. *NOTE:* _this means that
+the specified locations to the `vendor` directory. *NOTE:* _this means that
 the files in the `vendor` directory are no longer what is in the `git` repository
 and it will take manual `git` intervention to put the original files back._
 
