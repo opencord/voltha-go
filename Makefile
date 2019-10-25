@@ -99,8 +99,8 @@ endif
 ## Local Development Helpers
 local-lib-go:
 ifdef LOCAL_LIB_GO
-	mkdir -p vendor/github.com/opencord/voltha-lib-go/pkg
-	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/pkg/
+	mkdir -p vendor/github.com/opencord/voltha-lib-go/v2/pkg
+	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v2/pkg/
 endif
 
 local-pyvoltha:
@@ -108,7 +108,7 @@ local-pyvoltha:
 ifdef LOCAL_PYVOLTHA
 	rm -rf python/local_imports/pyvoltha
 	mkdir -p python/local_imports/pyvoltha/dist
-	cp ../pyvoltha/dist/*.tar.gz python/local_imports/pyvoltha/dist/
+	cp ${LOCAL_PYVOLTHA}/dist/*.tar.gz python/local_imports/pyvoltha/dist/
 endif
 
 ## Python venv dev environment
