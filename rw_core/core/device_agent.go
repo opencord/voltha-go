@@ -649,6 +649,24 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 	return nil
 }
 
+func (agent *DeviceAgent) setParentId(device *voltha.Device, parentId string) error {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("setParentId", log.Fields{"deviceId": device.Id, "parentId": parentId})
+	if storeDevice, err := agent.getDeviceWithoutLock(); err != nil {
+		return status.Errorf(codes.NotFound, "%s", agent.deviceId)
+	} else {
+		// clone the device
+		cloned := proto.Clone(storeDevice).(*voltha.Device)
+		cloned.ParentId = parentId
+		// Store the device
+		if err := agent.updateDeviceInStoreWithoutLock(cloned, false, ""); err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 func (agent *DeviceAgent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()

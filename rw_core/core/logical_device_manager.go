@@ -174,6 +174,13 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 
 	agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
+
+	// Update the root device with the logical device Id reference
+	if err := ldMgr.deviceMgr.setParentId(device, id); err != nil {
+		log.Errorw("failed-setting-parent-id", log.Fields{"logicalDeviceId": id, "deviceId": device.Id})
+		return nil, err
+	}
+
 	go agent.start(ctx, false)
 
 	log.Debug("creating-logical-device-ends")
