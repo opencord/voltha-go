@@ -1007,6 +1007,14 @@ func (dMgr *DeviceManager) PacketIn(deviceId string, port uint32, transactionId 
 	return nil
 }
 
+func (dMgr *DeviceManager) setParentId(device *voltha.Device, parentId string) error {
+	log.Debugw("setParentId", log.Fields{"deviceId": device.Id, "parentId": parentId})
+	if agent := dMgr.getDeviceAgent(device.Id); agent != nil {
+		return agent.setParentId(device, parentId)
+	}
+	return status.Errorf(codes.NotFound, "%s", device.Id)
+}
+
 func (dMgr *DeviceManager) CreateLogicalDevice(cDevice *voltha.Device) error {
 	log.Info("CreateLogicalDevice")
 	// Verify whether the logical device has already been created
@@ -1014,14 +1022,11 @@ func (dMgr *DeviceManager) CreateLogicalDevice(cDevice *voltha.Device) error {
 		log.Debugw("Parent device already exist.", log.Fields{"deviceId": cDevice.Id, "logicalDeviceId": cDevice.Id})
 		return nil
 	}
-	var logicalId *string
 	var err error
-	if logicalId, err = dMgr.logicalDeviceMgr.createLogicalDevice(nil, cDevice); err != nil {
+	if _, err = dMgr.logicalDeviceMgr.createLogicalDevice(nil, cDevice); err != nil {
 		log.Warnw("createlogical-device-error", log.Fields{"device": cDevice})
 		return err
 	}
-	// Update the parent device with the logical id
-	dMgr.UpdateDeviceAttribute(cDevice.Id, "ParentId", *logicalId)
 	return nil
 }
 
