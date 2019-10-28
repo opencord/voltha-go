@@ -46,14 +46,14 @@ const (
 )
 
 var errorTransactionNotAcquired = status.Error(codes.Canceled, "transaction-not-acquired")
-var errorTransactionInvalidId = status.Error(codes.Canceled, "transaction-invalid-id")
 
 const (
 	TRANSACTION_COMPLETE = "TRANSACTION-COMPLETE"
 )
 
 // Transaction constants used to guarantee the Core processing a request hold on to the transaction until
-// it either completes it (either successfully or times out) or the Core itself crashes (e.g. a server failure).
+// it either completes it (either successfully or times out) or the Core itself crashes (
+// e.g. a server failure).
 // If a request has a timeout of x seconds then the Core processing the request will renew the transaction lease
 // every x/NUM_TXN_RENEWAL_PER_REQUEST seconds. After the Core completes the request it stops renewing the
 // transaction and sets the transaction value to TRANSACTION_COMPLETE. If the processing Core crashes then it

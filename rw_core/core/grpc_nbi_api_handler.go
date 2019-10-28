@@ -33,6 +33,8 @@ import (
 	"sync"
 )
 
+var errorIdNotFound = status.Error(codes.NotFound, "id-not-found")
+
 const (
 	IMAGE_DOWNLOAD        = iota
 	CANCEL_IMAGE_DOWNLOAD = iota
@@ -142,7 +144,7 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 		var ownedByMe bool
 		if ownedByMe, err = handler.core.deviceOwnership.OwnedByMe(id); err != nil {
 			log.Warnw("getting-ownership-failed", log.Fields{"deviceId": id, "error": err})
-			return nil, errorTransactionInvalidId
+			return nil, errorIdNotFound
 		}
 		acquired, err = txn.Acquired(timeout, ownedByMe)
 	} else {
