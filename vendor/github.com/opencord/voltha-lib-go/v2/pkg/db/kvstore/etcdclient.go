@@ -38,6 +38,9 @@ type EtcdClient struct {
 	lockToMutexLock  sync.Mutex
 }
 
+// Connection Timeout in Seconds
+var connTimeout int = 2
+
 // NewEtcdClient returns a new client for the Etcd KV store
 func NewEtcdClient(addr string, timeout int) (*EtcdClient, error) {
 	duration := GetDuration(timeout)
@@ -188,8 +191,13 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 		return nil, fmt.Errorf("unexpected-type%T", value)
 	}
 
+	duration := GetDuration(connTimeout)
+
 	// Create a lease
-	resp, err := c.ectdAPI.Grant(context.Background(), ttl)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
+	resp, err := c.ectdAPI.Grant(ctx, ttl)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -255,8 +263,12 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 func (c *EtcdClient) ReleaseAllReservations() error {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
+	duration := GetDuration(connTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
 	for key, leaseID := range c.keyReservations {
-		_, err := c.ectdAPI.Revoke(context.Background(), *leaseID)
+		_, err := c.ectdAPI.Revoke(ctx, *leaseID)
 		if err != nil {
 			log.Errorw("cannot-release-reservation", log.Fields{"key": key, "error": err})
 			return err
@@ -277,8 +289,12 @@ func (c *EtcdClient) ReleaseReservation(key string) error {
 	if leaseID, ok = c.keyReservations[key]; !ok {
 		return nil
 	}
+	duration := GetDuration(connTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
 	if leaseID != nil {
-		_, err := c.ectdAPI.Revoke(context.Background(), *leaseID)
+		_, err := c.ectdAPI.Revoke(ctx, *leaseID)
 		if err != nil {
 			log.Error(err)
 			return err
@@ -299,9 +315,12 @@ func (c *EtcdClient) RenewReservation(key string) error {
 	if leaseID, ok = c.keyReservations[key]; !ok {
 		return errors.New("key-not-reserved")
 	}
+	duration := GetDuration(connTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
 
 	if leaseID != nil {
-		_, err := c.ectdAPI.KeepAliveOnce(context.Background(), *leaseID)
+		_, err := c.ectdAPI.KeepAliveOnce(ctx, *leaseID)
 		if err != nil {
 			log.Errorw("lease-may-have-expired", log.Fields{"error": err})
 			return err

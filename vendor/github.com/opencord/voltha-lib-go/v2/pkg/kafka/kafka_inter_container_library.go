@@ -764,6 +764,14 @@ func (kp *InterContainerProxy) unSubscribeForResponse(trnsId string) error {
 	return nil
 }
 
+func (kp *InterContainerProxy) EnableLivenessChannel(enable bool) chan bool {
+	return kp.kafkaClient.EnableLivenessChannel(enable)
+}
+
+func (kp *InterContainerProxy) SendLiveness() error {
+	return kp.kafkaClient.SendLiveness()
+}
+
 //formatRequest formats a request to send over kafka and returns an InterContainerMessage message on success
 //or an error on failure
 func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kvArgs ...*KVArg) (*ic.InterContainerMessage, error) {
