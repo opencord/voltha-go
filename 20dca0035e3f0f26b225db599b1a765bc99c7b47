@@ -34,6 +34,24 @@
       "revId": "20dca0035e3f0f26b225db599b1a765bc99c7b47",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0db5cd9d_e57e9395",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-29T14:39:01Z",
+      "side": 1,
+      "message": "1) The validations you saw are mostly to convert from a deviceId into a logicalDeviceId which is required to get a logical device agent.  That said, it may not be consistent everywhere but that\u0027s the intent.\n\n2) In this scenario, both the getLogicalPort in ldMgr and enableLogicalPort in ldAgent go over the logical device twice.   Since the likelihood of a enableLogicalPort being called without a logical port is quite low then I would think going straight to a RW lock in this case would be better.",
+      "parentUuid": "e99abc95_c13b0dea",
+      "revId": "20dca0035e3f0f26b225db599b1a765bc99c7b47",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
