@@ -229,7 +229,8 @@ class VolthaCli(Cmd):
             'flows',
             'pm_configs',
             'proxy_address',
-            'ports'
+            'ports',
+            'vlan'
         }
         print_pb_list_as_table('Devices:', devices, omit_fields, self.poutput)
 
