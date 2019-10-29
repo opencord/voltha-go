@@ -97,6 +97,9 @@ func (core *Core) Start(ctx context.Context) {
 
 	log.Info("starting-core-services", log.Fields{"coreId": core.instanceId})
 
+	go KafkaMonitorThread(ctx, core.config.ConnectionRetryInterval)
+
+/*
 	// Wait until connection to KV Store is up
 	if err := core.waitUntilKVStoreReachableOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
 		log.Fatal("Unable-to-connect-to-KV-store")
@@ -104,6 +107,7 @@ func (core *Core) Start(ctx context.Context) {
 	if p != nil {
 		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
 	}
+*/
 
 	if err := core.waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
 		log.Fatal("Failure-starting-kafkaMessagingProxy")
@@ -192,9 +196,19 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
 }
 
-func (core *Core) waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx context.Context, maxRetries int, retryInterval int) error {
-	log.Infow("starting-kafka-messaging-proxy", log.Fields{"host": core.config.KafkaAdapterHost,
-		"port": core.config.KafkaAdapterPort, "topic": core.config.CoreTopic})
+// KafkaMonitorThread
+// Repsonsible for starting the Kafka Interadapter Proxy and monitoring its liveness
+// state. Any producer that fails to send will set kmp.alive to false. When that happens
+// we will start trrying to produce a message on a _liveness topic. When that producer
+// succeeds we will declare ourselves live again.
+func KafkaMonitorThread(ctx Context, core *Core, interval in)
+{
+	log.Infow("starting-kafka-monitor-thread", log.Fields{"host": core.config.KafkaAdapterHost,
+	"port": core.config.KafkaAdapterPort, "topic": core.config.CoreTopic})
+
+	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPreparing)
+
+	// create the proxy
 	var err error
 	if core.kmp, err = kafka.NewInterContainerProxy(
 		kafka.InterContainerHost(core.config.KafkaAdapterHost),
@@ -205,25 +219,37 @@ func (core *Core) waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx context.Context
 		log.Errorw("fail-to-create-kafka-proxy", log.Fields{"error": err})
 		return err
 	}
-	count := 0
-	for {
-		if err = core.kmp.Start(); err != nil {
-			log.Infow("error-starting-kafka-messaging-proxy", log.Fields{"error": err})
-			if maxRetries != -1 {
-				if count >= maxRetries {
-					return err
-				}
+
+	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPrepared)
+
+	started := false
+    while (1) {
+		// If we haven't started, then try to start
+		if !started {
+			log.Infow("starting-kafka-proxy", log.Fields{})
+			if err = core.kmp.Start(); err != nil {
+				probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusFailed)
+				log.Infow("error-starting-kafka-messaging-proxy", log.Fields{"error": err})
+				time.Sleep(time.Duration(retryInterval) * time.Second)
+				continue
+			} else {
+				log.Infow("started-kafka-proxy", log.Fields{})
+				started = true
 			}
-			count += 1
-			log.Infow("retry-starting-kafka-messaging-proxy", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
-			//	Take a nap before retrying
-			time.Sleep(time.Duration(retryInterval) * time.Second)
-		} else {
-			break
 		}
+		
+		// If we're not alive then send liveness probe
+		if !core.kmp.IsAlive() {
+			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusFailed)
+			log.Infow("kafka-proxy-liveness-recheck", log.Fields{})
+			core.kmp.SendLiveness()
+		} else {
+			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusRunning)
+		}
+
+		// Go to sleep and try again later
+		time.Sleep(time.Duration(retryInterval) * time.Second)
 	}
-	log.Info("kafka-messaging-proxy-created")
-	return nil
 }
 
 // waitUntilKVStoreReachableOrMaxTries will wait until it can connect to a KV store or until maxtries has been reached
