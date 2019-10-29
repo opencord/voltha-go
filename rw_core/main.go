@@ -65,7 +65,7 @@ func newKVClient(storeType string, address string, timeout int) (kvstore.Client,
 	return nil, errors.New("unsupported-kv-store")
 }
 
-func newKafkaClient(clientType string, host string, port int, instanceID string) (kafka.Client, error) {
+func newKafkaClient(clientType string, host string, port int, instanceID string, livenessChannelInterval time.Duration) (kafka.Client, error) {
 
 	log.Infow("kafka-client-type", log.Fields{"client": clientType})
 	switch clientType {
@@ -82,7 +82,9 @@ func newKafkaClient(clientType string, host string, port int, instanceID string)
 			kafka.ConsumerGroupPrefix(instanceID),
 			kafka.AutoCreateTopic(true),
 			kafka.ProducerFlushFrequency(5),
-			kafka.ProducerRetryBackoff(time.Millisecond*30)), nil
+			kafka.ProducerRetryBackoff(time.Millisecond*30),
+			kafka.LivenessChannelInterval(livenessChannelInterval),
+		), nil
 	}
 	return nil, errors.New("unsupported-client-type")
 }
@@ -137,7 +139,11 @@ func (rw *rwCore) start(ctx context.Context, instanceId string) {
 	}
 
 	// Setup Kafka Client
-	if rw.kafkaClient, err = newKafkaClient("sarama", rw.config.KafkaAdapterHost, rw.config.KafkaAdapterPort, instanceId); err != nil {
+	if rw.kafkaClient, err = newKafkaClient("sarama",
+		rw.config.KafkaAdapterHost,
+		rw.config.KafkaAdapterPort,
+		instanceId,
+		time.Duration(rw.config.LiveProbeInterval)*time.Second/2); err != nil {
 		log.Fatal("Unsupported-kafka-client")
 	}
 
