@@ -54,6 +54,8 @@ const (
 	default_CorePairTopic             = "rwcore_1"
 	default_MaxConnectionRetries      = -1 // retries forever
 	default_ConnectionRetryInterval   = 2  // in seconds
+	default_LiveProbeInterval         = 60 // in seconds
+	default_NotLiveProbeInterval      = 5  // in seconds
 	default_ProbeHost                 = ""
 	default_ProbePort                 = 8080
 )
@@ -90,6 +92,8 @@ type RWCoreFlags struct {
 	CorePairTopic             string
 	MaxConnectionRetries      int
 	ConnectionRetryInterval   int
+	LiveProbeInterval         int
+	NotLiveProbeInterval      int
 	ProbeHost                 string
 	ProbePort                 int
 }
@@ -130,6 +134,8 @@ func NewRWCoreFlags() *RWCoreFlags {
 		CorePairTopic:             default_CorePairTopic,
 		MaxConnectionRetries:      default_MaxConnectionRetries,
 		ConnectionRetryInterval:   default_ConnectionRetryInterval,
+		LiveProbeInterval:         default_LiveProbeInterval,
+		NotLiveProbeInterval:      default_NotLiveProbeInterval,
 		ProbeHost:                 default_ProbeHost,
 		ProbePort:                 default_ProbePort,
 	}
@@ -216,8 +222,14 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	help = fmt.Sprintf("The number of retries to connect to a dependent component")
 	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", default_MaxConnectionRetries, help)
 
-	help = fmt.Sprintf("The number of seconds between each connection retry attempt ")
+	help = fmt.Sprintf("The number of seconds between each connection retry attempt")
 	flag.IntVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
+
+	help = fmt.Sprintf("The number of seconds between liveness probes while in a live state")
+	flag.IntVar(&(cf.LiveProbeInterval), "live_probe_interval", default_LiveProbeInterval, help)
+
+	help = fmt.Sprintf("The number of seconds between liveness probes while in a not live state")
+	flag.IntVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", default_NotLiveProbeInterval, help)
 
 	help = fmt.Sprintf("The host on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.StringVar(&(cf.ProbeHost), "probe_host", default_ProbeHost, help)
