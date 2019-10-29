@@ -16,6 +16,24 @@
       "revId": "20dca0035e3f0f26b225db599b1a765bc99c7b47",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e99abc95_c13b0dea",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-10-29T09:56:34Z",
+      "side": 1,
+      "message": "I looked at the approach suggested but found some minor concerns with it.\n\nFirstly, I noticed that most of the validations on valid device/port etc are being done in LogicalDeviceManager itself and LogicalDeviceAgent is invoked to perform the change thereafter. So, this validation of port is inline with other functions in LogicalDeviceManager.\n\nAlso, most of the LogicalDeviceAgent functions perform Locking (R for lookup operations and RW for change operations) as the first step. So, if we delegate check of Port # to LogicalDeviceAgent methods that would unnecessary perform RW locking of LogicalDevice even for invalid port which is non-optimal. With current approach, such a RW lock is avoided; only R Lock is performed while trying to lookup LogicalDevice through getLogicalDevice function which further invokes agent.GetLogicalDevice()\n\nKindly let me know if I am missing something.",
+      "parentUuid": "d181b071_95aac3a0",
+      "revId": "20dca0035e3f0f26b225db599b1a765bc99c7b47",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
