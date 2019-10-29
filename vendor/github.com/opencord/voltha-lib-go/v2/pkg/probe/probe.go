@@ -47,6 +47,9 @@ const (
 
 	// ServiceStatusFailed service has stopped because of an error
 	ServiceStatusFailed
+
+	// ServiceStatusNotReady service has started but is unable to accept requests
+	ServiceStatusNotReady
 )
 
 const (
@@ -71,6 +74,8 @@ func (s ServiceStatus) String() string {
 		return "Stopped"
 	case ServiceStatusFailed:
 		return "Failed"
+	case ServiceStatusNotReady:
+		return "NotReady"
 	}
 }
 
@@ -137,6 +142,13 @@ func (p *Probe) UpdateStatus(name string, status ServiceStatus) {
 	if p.status == nil {
 		p.status = make(map[string]ServiceStatus)
 	}
+
+	// if status hasn't changed, avoid doing useless work
+	existingStatus, ok := p.status[name]
+	if ok && (existingStatus == status) {
+		return
+	}
+
 	p.status[name] = status
 	if p.readyFunc != nil {
 		p.isReady = p.readyFunc(p.status)
@@ -158,17 +170,41 @@ func (p *Probe) UpdateStatus(name string, status ServiceStatus) {
 		})
 }
 
+func (p *Probe) GetStatus(name string) ServiceStatus {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.status == nil {
+		p.status = make(map[string]ServiceStatus)
+	}
+
+	currentStatus, ok := p.status[name]
+	if ok {
+		return currentStatus
+	}
+
+	return ServiceStatusUnknown
+}
+
+func GetProbeFromContext(ctx context.Context) *Probe {
+	if ctx != nil {
+		if value := ctx.Value(ProbeContextKey); value != nil {
+			if p, ok := value.(*Probe); ok {
+				return p
+			}
+		}
+	}
+	return nil
+}
+
 // UpdateStatusFromContext a convenience function to pull the Probe reference from the
 // Context, if it exists, and then calling UpdateStatus on that Probe reference. If Context
 // is nil or if a Probe reference is not associated with the ProbeContextKey then nothing
 // happens
 func UpdateStatusFromContext(ctx context.Context, name string, status ServiceStatus) {
-	if ctx != nil {
-		if value := ctx.Value(ProbeContextKey); value != nil {
-			if p, ok := value.(*Probe); ok {
-				p.UpdateStatus(name, status)
-			}
-		}
+	p := GetProbeFromContext(ctx)
+	if p != nil {
+		p.UpdateStatus(name, status)
 	}
 }
 
@@ -223,6 +259,10 @@ func (p *Probe) ListenAndServe(address string) {
 		Handler: mux,
 	}
 	log.Fatal(s.ListenAndServe())
+}
+
+func (p *Probe) IsReady() bool {
+	return p.isReady
 }
 
 // defaultReadyFunc if all services are running then ready, else not
