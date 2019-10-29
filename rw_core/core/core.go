@@ -105,12 +105,12 @@ func (core *Core) Start(ctx context.Context) {
 		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
 	}
 
-	if err := core.waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
-		log.Fatal("Failure-starting-kafkaMessagingProxy")
-	}
-	if p != nil {
-		p.UpdateStatus("message-bus", probe.ServiceStatusRunning)
-	}
+	/*	if err := core.waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
+			log.Fatal("Failure-starting-kafkaMessagingProxy")
+		}
+		if p != nil {
+			p.UpdateStatus("message-bus", probe.ServiceStatusRunning)
+		}*/
 
 	log.Debugw("values", log.Fields{"kmp": core.kmp})
 	core.deviceMgr = newDeviceManager(core)
@@ -118,9 +118,7 @@ func (core *Core) Start(ctx context.Context) {
 	core.deviceMgr.adapterMgr = core.adapterMgr
 	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy, core.config.DefaultCoreTimeout)
 
-	if err := core.registerAdapterRequestHandlers(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
-		log.Fatal("Failure-registering-adapterRequestHandler")
-	}
+	go KafkaMonitorThread(ctx, core, core.config.ConnectionRetryInterval)
 
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
@@ -192,9 +190,18 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
 }
 
-func (core *Core) waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx context.Context, maxRetries int, retryInterval int) error {
-	log.Infow("starting-kafka-messaging-proxy", log.Fields{"host": core.config.KafkaAdapterHost,
+// KafkaMonitorThread
+// Repsonsible for starting the Kafka Interadapter Proxy and monitoring its liveness
+// state. Any producer that fails to send will set kmp.alive to false. When that happens
+// we will start trrying to produce a message on a _liveness topic. When that producer
+// succeeds we will declare ourselves live again.
+func KafkaMonitorThread(ctx context.Context, core *Core, interval int) {
+	log.Infow("starting-kafka-monitor-thread", log.Fields{"host": core.config.KafkaAdapterHost,
 		"port": core.config.KafkaAdapterPort, "topic": core.config.CoreTopic})
+
+	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPreparing)
+
+	// create the proxy
 	var err error
 	if core.kmp, err = kafka.NewInterContainerProxy(
 		kafka.InterContainerHost(core.config.KafkaAdapterHost),
@@ -203,27 +210,45 @@ func (core *Core) waitUntilKafkaMessagingProxyIsUpOrMaxTries(ctx context.Context
 		kafka.DefaultTopic(&kafka.Topic{Name: core.config.CoreTopic}),
 		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: core.config.AffinityRouterTopic})); err != nil {
 		log.Errorw("fail-to-create-kafka-proxy", log.Fields{"error": err})
-		return err
+		panic("Oh No!") //return err
 	}
-	count := 0
+
+	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPrepared)
+
+	started := false
 	for {
-		if err = core.kmp.Start(); err != nil {
-			log.Infow("error-starting-kafka-messaging-proxy", log.Fields{"error": err})
-			if maxRetries != -1 {
-				if count >= maxRetries {
-					return err
+		// If we haven't started, then try to start
+		if !started {
+			log.Infow("starting-kafka-proxy", log.Fields{})
+			if err = core.kmp.Start(); err != nil {
+				probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusFailed)
+				log.Infow("error-starting-kafka-messaging-proxy", log.Fields{"error": err})
+				time.Sleep(time.Duration(interval) * time.Second)
+				continue
+			} else {
+				log.Infow("started-kafka-proxy", log.Fields{})
+
+				// cannot do this until after the kmp is started
+				if err := core.registerAdapterRequestHandlers(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
+					log.Fatal("Failure-registering-adapterRequestHandler")
 				}
+
+				started = true
 			}
-			count += 1
-			log.Infow("retry-starting-kafka-messaging-proxy", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
-			//	Take a nap before retrying
-			time.Sleep(time.Duration(retryInterval) * time.Second)
-		} else {
-			break
 		}
+
+		// If we're not alive then send liveness probe
+		if !core.kmp.IsAlive() {
+			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusFailed)
+			log.Infow("kafka-proxy-liveness-recheck", log.Fields{})
+			core.kmp.SendLiveness()
+		} else {
+			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusRunning)
+		}
+
+		// Go to sleep and try again later
+		time.Sleep(time.Duration(interval) * time.Second)
 	}
-	log.Info("kafka-messaging-proxy-created")
-	return nil
 }
 
 // waitUntilKVStoreReachableOrMaxTries will wait until it can connect to a KV store or until maxtries has been reached
