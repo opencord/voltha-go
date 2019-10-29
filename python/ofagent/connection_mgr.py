@@ -38,6 +38,7 @@ log = get_logger()
 
 class ConnectionManager(object):
     running = False
+    core_ready = False
     channel = None
     subscription = None
     grpc_client = None
@@ -83,6 +84,7 @@ class ConnectionManager(object):
         log.debug('starting')
 
         self.running = True
+        ConnectionManager.core_ready = True  # Assume core is ready until proven otherwise
         ConnectionManager.running = True
 
         # Get a subscription to vcore
@@ -103,7 +105,7 @@ class ConnectionManager(object):
     @classmethod
     def readiness_probe(cls):
         # Pod is isolated when readiness condition fails
-        return bool(ConnectionManager.channel and ConnectionManager.subscription and ConnectionManager.grpc_client)
+        return bool(ConnectionManager.core_ready and ConnectionManager.channel and ConnectionManager.subscription and ConnectionManager.grpc_client)
 
     def stop(self):
         log.debug('stopping')
@@ -228,12 +230,13 @@ class ConnectionManager(object):
 
     @inlineCallbacks
     def get_list_of_logical_devices_from_voltha(self):
-
         while self.running:
             log.info('retrieve-logical-device-list')
             try:
                 devices = yield \
                     self.grpc_client.list_logical_devices()
+
+                ConnectionManager.core_ready = True  # We've successfully talked to the core
 
                 for device in devices:
                     log.info("logical-device-entry", id=device.id,
@@ -244,11 +247,11 @@ class ConnectionManager(object):
             except _Rendezvous, e:
                 status = e.code()
                 log.error('vcore-communication-failure', exception=e, status=status)
-                if status == StatusCode.UNAVAILABLE or status == StatusCode.DEADLINE_EXCEEDED:
-                    os.system("kill -15 {}".format(os.getpid()))
+                ConnectionManager.core_ready = False  # Will be reflected in readiness probe
 
             except Exception as e:
                 log.exception('logical-devices-retrieval-failure', exception=e)
+                ConnectionManager.core_ready = False  # will be reflected in readiness probe
 
             log.info('reconnect', after_delay=self.vcore_retry_interval)
             yield asleep(self.vcore_retry_interval)
