@@ -20,7 +20,9 @@ import (
 	"fmt"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"net"
 )
 
@@ -52,12 +54,19 @@ To add a GRPC server to your existing component simply follow these steps:
 	s.server.Start(ctx)
 */
 
+// Interface allows probes to be attached to server
+// A probe must support the IsReady() method
+type ReadyProbe interface {
+	IsReady() bool
+}
+
 type GrpcServer struct {
 	gs       *grpc.Server
 	address  string
 	port     int
 	secure   bool
 	services []func(*grpc.Server)
+	probe    ReadyProbe // optional
 
 	*GrpcSecurity
 }
@@ -97,11 +106,12 @@ func (s *GrpcServer) Start(ctx context.Context) {
 		if err != nil {
 			log.Fatalf("could not load TLS keys: %s", err)
 		}
-		s.gs = grpc.NewServer(grpc.Creds(creds))
+		s.gs = grpc.NewServer(grpc.Creds(creds),
+			withServerUnaryInterceptor(s))
 
 	} else {
 		log.Info("starting-insecure-grpc-server")
-		s.gs = grpc.NewServer()
+		s.gs = grpc.NewServer(withServerUnaryInterceptor(s))
 	}
 
 	// Register all required services
@@ -111,6 +121,42 @@ func (s *GrpcServer) Start(ctx context.Context) {
 
 	if err := s.gs.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v\n", err)
+	}
+}
+
+// Attach a readiness probe to the server.
+// If the probe returns NotReady, the server will return UNAVAILABLE
+func (s *GrpcServer) AttachReadyProbe(p ReadyProbe) {
+	s.probe = p
+}
+
+func withServerUnaryInterceptor(s *GrpcServer) grpc.ServerOption {
+	return grpc.UnaryInterceptor(mkServerInterceptor(s))
+}
+
+// Make a serverInterceptor for the given GrpcServer
+// This interceptor will check whether there is an attached probe,
+// and if that probe indicates NotReady, then an UNAVAILABLE
+// response will be returned.
+func mkServerInterceptor(s *GrpcServer) func(ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler) (interface{}, error) {
+
+	return func(ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler) (interface{}, error) {
+
+		if (s.probe != nil) && (!s.probe.IsReady()) {
+			log.Warnf("Grpc request received while not ready %v", req)
+			return nil, status.Error(codes.Unavailable, "system is not ready")
+		}
+
+		// Calls the handler
+		h, err := handler(ctx, req)
+
+		return h, err
 	}
 }
 

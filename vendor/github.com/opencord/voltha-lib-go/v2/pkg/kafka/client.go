@@ -55,6 +55,7 @@ const (
 	DefaultNumberReplicas           = 1
 	DefaultAutoCreateTopic          = false
 	DefaultMetadataMaxRetry         = 3
+	DefaultLivenessChannelInterval  = time.Second * 30
 )
 
 // MsgClient represents the set of APIs  a Kafka MsgClient must implement
@@ -66,4 +67,6 @@ type Client interface {
 	Subscribe(topic *Topic, kvArgs ...*KVArg) (<-chan *ca.InterContainerMessage, error)
 	UnSubscribe(topic *Topic, ch <-chan *ca.InterContainerMessage) error
 	Send(msg interface{}, topic *Topic, keys ...string) error
+	SendLiveness() error
+	EnableLivenessChannel(enable bool) chan bool
 }
