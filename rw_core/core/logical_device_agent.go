@@ -855,7 +855,7 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 			//	TODO:  should this error be notified other than being logged?
 			log.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 		} else {
-			// Add new flow
+			//	Add flow
 			flow = fu.FlowStatsEntryFromFlowModMessage(mod)
 			flows = append(flows, flow)
 			updatedFlows = append(updatedFlows, flow)
@@ -870,12 +870,13 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 				flow.ByteCount = oldFlow.ByteCount
 				flow.PacketCount = oldFlow.PacketCount
 			}
-			// OF-1.3.1: If a flow entry with identical match fields and priority already resides , clear old flow and add new flow
-			flows[idx] = flow
-			updatedFlows = append(updatedFlows, flow)
-			changed = true
-			updated = true
-		} else { // Add new flow
+			if !reflect.DeepEqual(oldFlow, flow) {
+				flows[idx] = flow
+				updatedFlows = append(updatedFlows, flow)
+				changed = true
+				updated = true
+			}
+		} else {
 			flows = append(flows, flow)
 			updatedFlows = append(updatedFlows, flow)
 			changed = true
@@ -902,7 +903,7 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 			log.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
 			return err
 		}
-		if !updated { // Newly added
+		if !updated {
 			changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, flow)
 			metersToUpdate := &ofp.Meters{}
 			if lDevice.Meters != nil {
