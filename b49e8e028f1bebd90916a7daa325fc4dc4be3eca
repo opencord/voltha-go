@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c45da66_16d8b73e",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-10-29T13:05:50Z",
+      "side": 1,
+      "message": "This comment was added when the condition was removed.  It is still applicable?",
+      "revId": "b49e8e028f1bebd90916a7daa325fc4dc4be3eca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
