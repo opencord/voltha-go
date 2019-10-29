@@ -871,10 +871,12 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 				flow.PacketCount = oldFlow.PacketCount
 			}
 			// OF-1.3.1: If a flow entry with identical match fields and priority already resides , clear old flow and add new flow
-			flows[idx] = flow
-			updatedFlows = append(updatedFlows, flow)
-			changed = true
-			updated = true
+			if !reflect.DeepEqual(oldFlow, flow) {
+				flows[idx] = flow
+				updatedFlows = append(updatedFlows, flow)
+				changed = true
+				updated = true
+			}
 		} else { // Add new flow
 			flows = append(flows, flow)
 			updatedFlows = append(updatedFlows, flow)
