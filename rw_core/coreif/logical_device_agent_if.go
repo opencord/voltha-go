@@ -17,14 +17,15 @@
   Defines a logicalDeviceAgent Interface - Used for unit testing of the flow decomposer only at this
  time.
 */
-package coreIf
+
+package coreif
 
 import (
 	"github.com/opencord/voltha-go/rw_core/graph"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 )
 
-// LogicalAgent represents a generic agent
+// LogicalDeviceAgent represents a generic agent
 type LogicalDeviceAgent interface {
 	GetLogicalDevice() (*voltha.LogicalDevice, error)
 	GetDeviceGraph() *graph.DeviceGraph
