@@ -23,15 +23,22 @@ import (
 	"os/exec"
 
 	"github.com/opencord/voltha-go/cli/menu/mainmenu"
+	l "github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"google.golang.org/grpc"
 )
 
 func main() {
 
 	// disable input buffering
-	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+	err := exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+	if err != nil {
+		l.Errorw("failed", l.Fields{"error": err})
+	}
 	// do not display entered characters on the screen
-	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	err = exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	if err != nil {
+		l.Errorw("failed", l.Fields{"error": err})
+	}
 	printHeader()
 
 	volthaAddress := flag.String("voltha_address", "localhost:6161", "IP/Hostname:Port for Voltha Core")
