@@ -214,7 +214,7 @@ func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled
 
 // List will retrieve information from the data model at the specified path location
 // A list operation will force access to persistence storage
-func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) interface{} {
+func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
 	var effectivePath string
 	if path == "/" {
 		effectivePath = p.getFullPath()
@@ -234,14 +234,11 @@ func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txi
 		"controlled": controlled,
 		"operation":  p.GetOperation(),
 	})
-
-	rv := p.GetRoot().List(ctx, path, "", depth, deep, txid)
-
-	return rv
+	return p.GetRoot().List(ctx, path, "", depth, deep, txid)
 }
 
 // Get will retrieve information from the data model at the specified path location
-func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid string) interface{} {
+func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
 	var effectivePath string
 	if path == "/" {
 		effectivePath = p.getFullPath()
@@ -262,9 +259,7 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 		"operation":  p.GetOperation(),
 	})
 
-	rv := p.GetRoot().Get(ctx, path, "", depth, deep, txid)
-
-	return rv
+	return p.GetRoot().Get(ctx, path, "", depth, deep, txid)
 }
 
 // Update will modify information in the data model at the specified location with the provided data
@@ -314,10 +309,10 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 // AddWithID will insert new data at specified location.
 // This method also allows the user to specify the ID of the data entry to ensure
 // that access control is active while inserting the information.
-func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data interface{}, txid string) interface{} {
+func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data interface{}, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
-		return nil
+		return nil, nil
 	}
 	var fullPath string
 	var effectivePath string
@@ -343,6 +338,10 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 		"operation":  p.GetOperation(),
 	})
 
+	// Check Etcd State
+	if _, err := p.GetRoot().KvStore.Client.Get("False Key", 1); err != nil {
+		return nil, err
+	}
 	if p.GetRoot().KvStore != nil {
 		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
 		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
@@ -351,10 +350,10 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
 
 	if result != nil {
-		return result.GetData()
+		return result.GetData(), nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // Add will insert new data at specified location.
