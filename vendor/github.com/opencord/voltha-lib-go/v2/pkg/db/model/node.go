@@ -41,8 +41,8 @@ type Node interface {
 
 	// CRUD functions
 	Add(ctx context.Context, path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision
-	Get(ctx context.Context, path string, hash string, depth int, deep bool, txid string) interface{}
-	List(ctx context.Context, path string, hash string, depth int, deep bool, txid string) interface{}
+	Get(ctx context.Context, path string, hash string, depth int, deep bool, txid string) (interface{}, error)
+	List(ctx context.Context, path string, hash string, depth int, deep bool, txid string) (interface{}, error)
 	Update(ctx context.Context, path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision
 	Remove(ctx context.Context, path string, txid string, makeBranch MakeBranchFunction) Revision
 	CreateProxy(ctx context.Context, path string, exclusive bool) *Proxy
@@ -250,7 +250,7 @@ func (n *node) findRevByKey(revs []Revision, keyName string, value interface{}) 
 }
 
 // Get retrieves the data from a node tree that resides at the specified path
-func (n *node) List(ctx context.Context, path string, hash string, depth int, deep bool, txid string) interface{} {
+func (n *node) List(ctx context.Context, path string, hash string, depth int, deep bool, txid string) (interface{}, error) {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
@@ -278,18 +278,21 @@ func (n *node) List(ctx context.Context, path string, hash string, depth int, de
 
 	var result interface{}
 	var prList []interface{}
-	if pr := rev.LoadFromPersistence(ctx, path, txid, nil); pr != nil {
+
+	pr, err := rev.LoadFromPersistence(ctx, path, txid, nil)
+	if err != nil {
+		return nil, err
+	} else if pr != nil {
 		for _, revEntry := range pr {
 			prList = append(prList, revEntry.GetData())
 		}
 		result = prList
 	}
-
-	return result
+	return result, nil
 }
 
 // Get retrieves the data from a node tree that resides at the specified path
-func (n *node) Get(ctx context.Context, path string, hash string, depth int, reconcile bool, txid string) interface{} {
+func (n *node) Get(ctx context.Context, path string, hash string, depth int, reconcile bool, txid string) (interface{}, error) {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
@@ -328,13 +331,13 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 					"hash": hash,
 					"age":  entryAge,
 				})
-				return proto.Clone(entry.(Revision).GetData().(proto.Message))
+				return proto.Clone(entry.(Revision).GetData().(proto.Message)), nil
 			} else {
 				log.Debugw("cache-entry-expired", log.Fields{"path": path, "hash": hash, "age": entryAge})
 			}
 		} else if result = n.getPath(ctx, rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
 			log.Debugw("using-rev-tree-entry", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
-			return result
+			return result, nil
 		} else {
 			log.Debugw("not-using-cache-entry", log.Fields{
 				"path": path,
@@ -354,7 +357,9 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 	// If we got to this point, we are either trying to reconcile with the db
 	// or we simply failed at getting information from memory
 	if n.Root.KvStore != nil {
-		if pr := rev.LoadFromPersistence(ctx, path, txid, nil); pr != nil && len(pr) > 0 {
+		if pr, err := rev.LoadFromPersistence(ctx, path, txid, nil); err != nil {
+			return nil, err
+		} else if len(pr) > 0 {
 			// Did we receive a single or multiple revisions?
 			if len(pr) > 1 {
 				var revs []interface{}
@@ -367,8 +372,7 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 			}
 		}
 	}
-
-	return result
+	return result, nil
 }
 
 //getPath traverses the specified path and retrieves the data associated to it
@@ -1026,7 +1030,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 						"fullPath":         fullPath,
 						"name":             name,
 					})
-				} else if revs := n.GetBranch(NONE).GetLatest().LoadFromPersistence(ctx, fullPath, "", nil); revs != nil && len(revs) > 0 {
+				} else if revs, _ := n.GetBranch(NONE).GetLatest().LoadFromPersistence(ctx, fullPath, "", nil); revs != nil && len(revs) > 0 {
 					log.Debugw("found-revision-matching-key-in-db", log.Fields{
 						"node-type":        reflect.ValueOf(n.Type).Type(),
 						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),

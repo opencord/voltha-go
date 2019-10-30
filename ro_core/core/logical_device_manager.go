@@ -98,7 +98,7 @@ func (ldMgr *LogicalDeviceManager) IsLogicalDeviceInCache(id string) bool {
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false,
+	if logicalDevices, _ := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false,
 		""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
 			// If device is not in memory then set it up

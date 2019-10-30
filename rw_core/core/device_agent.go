@@ -87,7 +87,9 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("starting-device-agent", log.Fields{"deviceId": agent.deviceId})
 	if loadFromdB {
-		if device := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceId, 1, false, ""); device != nil {
+		if device, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceId, 1, false, ""); err != nil {
+			return err
+		} else if device != nil {
 			if d, ok := device.(*voltha.Device); ok {
 				agent.lastData = proto.Clone(d).(*voltha.Device)
 				agent.deviceType = agent.lastData.Adapter
@@ -99,7 +101,7 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 		log.Debugw("device-loaded-from-dB", log.Fields{"deviceId": agent.deviceId})
 	} else {
 		// Add the initial device to the local model
-		if added := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceId, agent.lastData, ""); added == nil {
+		if added, _ := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceId, agent.lastData, ""); added == nil {
 			log.Errorw("failed-to-add-device", log.Fields{"deviceId": agent.deviceId})
 			return status.Errorf(codes.Aborted, "failed-adding-device-%s", agent.deviceId)
 		}
@@ -130,7 +132,9 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.RLock()
 	defer agent.lockDevice.RUnlock()
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, true, ""); err != nil {
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
@@ -142,7 +146,7 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
+	if device, _ := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
