@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2706ec80_820324d1",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-30T23:57:18Z",
+      "side": 1,
+      "message": "Can we pass this in as a time.Duration as opposed to an opaque int",
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9875463_e80cfc92",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-30T23:57:18Z",
+      "side": 1,
+      "message": "If I am interpreting this correctly on each loop iteration you are calling probe.UpdateStatusFromContext even if the status has not changed. i.e. if the last iteration it was Running and this iteration it is running Update to Running again. Not sure where to short cut this, but it might be needed somewhere else we are doing a mutex lock on each iteration to update the value.",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 67
+      },
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e4ea083_dea88a9f",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-30T23:57:18Z",
+      "side": 1,
+      "message": "Does this just check a variable, or is this an active message?",
+      "range": {
+        "startLine": 267,
+        "startChar": 15,
+        "endLine": 267,
+        "endChar": 22
+      },
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c2148ea_21fd1b92",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-30T23:57:18Z",
+      "side": 1,
+      "message": "is this a keep a live?",
+      "range": {
+        "startLine": 270,
+        "startChar": 19,
+        "endLine": 270,
+        "endChar": 31
+      },
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
