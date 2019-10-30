@@ -43,7 +43,6 @@ type DeviceAgent struct {
 	adapterMgr       *AdapterManager
 	deviceMgr        *DeviceManager
 	clusterDataProxy *model.Proxy
-	deviceProxy      *model.Proxy
 	exitChannel      chan int
 	lockDevice       sync.RWMutex
 	defaultTimeout   int64
@@ -104,9 +103,6 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 			return status.Errorf(codes.Aborted, "failed-adding-device-%s", agent.deviceId)
 		}
 	}
-
-	agent.deviceProxy = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceId, false)
-	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
 
 	log.Debugw("device-agent-started", log.Fields{"deviceId": agent.deviceId})
 	return nil
@@ -696,12 +692,7 @@ func (agent *DeviceAgent) initPmConfigs(pmConfigs *voltha.PmConfigs) error {
 		cloned := proto.Clone(storeDevice).(*voltha.Device)
 		cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 		// Store the device
-		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
-		if afterUpdate == nil {
-			return status.Errorf(codes.Internal, "%s", agent.deviceId)
-		}
-		return nil
+		return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
 	}
 }
 
@@ -1010,37 +1001,6 @@ func (agent *DeviceAgent) packetOut(outPort uint32, packet *ofp.OfpPacketOut) er
 	return nil
 }
 
-// processUpdate is a callback invoked whenever there is a change on the device manages by this device agent
-func (agent *DeviceAgent) processUpdate(args ...interface{}) interface{} {
-	//// Run this callback in its own go routine
-	go func(args ...interface{}) interface{} {
-		var previous *voltha.Device
-		var current *voltha.Device
-		var ok bool
-		if len(args) == 2 {
-			if previous, ok = args[0].(*voltha.Device); !ok {
-				log.Errorw("invalid-callback-type", log.Fields{"data": args[0]})
-				return nil
-			}
-			if current, ok = args[1].(*voltha.Device); !ok {
-				log.Errorw("invalid-callback-type", log.Fields{"data": args[1]})
-				return nil
-			}
-		} else {
-			log.Errorw("too-many-args-in-callback", log.Fields{"len": len(args)})
-			return nil
-		}
-		// Perform the state transition in it's own go routine
-		if err := agent.deviceMgr.processTransition(previous, current); err != nil {
-			log.Errorw("failed-process-transition", log.Fields{"deviceId": previous.Id,
-				"previousAdminState": previous.AdminState, "currentAdminState": current.AdminState})
-		}
-		return nil
-	}(args...)
-
-	return nil
-}
-
 // updatePartialDeviceData updates a subset of a device that an Adapter can update.
 // TODO:  May need a specific proto to handle only a subset of a device that can be changed by an adapter
 func (agent *DeviceAgent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
@@ -1340,11 +1300,23 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 // It is an internal helper function.
 func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(device *voltha.Device, strict bool, txid string) error {
 	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, device, strict, txid); afterUpdate == nil {
+	beforeUpdate := agent.clusterDataProxy.Get(updateCtx, "/devices/"+agent.deviceId, 0, false, "")
+	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, device, strict, txid)
+	if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
 	}
 	log.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceId})
 
+	// since every change to /devices/{id} locks agent.deviceLock, get-then-put will provide a valid previous->current transition, without unexpected reordering
+	if previous, ok := beforeUpdate.(*voltha.Device); ok {
+		// process state transition in its own thread
+		go func() {
+			// TODO: this only really needs to be called when device states change, not on every device update
+			if err := agent.deviceMgr.processTransition(previous, device); err != nil {
+				log.Errorw("failed-process-transition", log.Fields{"deviceId": previous.Id, "previousAdminState": previous.AdminState, "currentAdminState": device.AdminState})
+			}
+		}()
+	}
 	return nil
 }
 
