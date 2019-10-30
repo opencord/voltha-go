@@ -21,6 +21,7 @@ import (
 	"strings"
 )
 
+// BuildTable populates input data in tabular format
 func BuildTable(keys []string, rows []map[string]string) (string, error) {
 	var returnString string
 	fieldSizes := make(map[string]int)

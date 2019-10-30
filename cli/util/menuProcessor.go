@@ -19,6 +19,8 @@ package util
 import (
 	"fmt"
 	"os"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 /*
@@ -33,7 +35,10 @@ func ProcessTable(functionTable map[string]func(bool), inputPrompt string) {
 	input := ""
 	fmt.Print(inputPrompt)
 	for {
-		os.Stdin.Read(b)
+		_, err := os.Stdin.Read(b)
+		if err != nil {
+			log.Errorw("unable-to-read-from-stdin-file", log.Fields{"error": err})
+		}
 		char := string(b)
 		if char == "\t" || char == "\n" || char == "?" {
 			fmt.Println("")
