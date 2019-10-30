@@ -21,6 +21,7 @@ import (
 	"strings"
 )
 
+// Test makes a bunch on new commands available
 func Test(chars string, values []string) ([]string, string) {
 
 	var ret []string
@@ -56,12 +57,14 @@ func Test(chars string, values []string) ([]string, string) {
 	return ret, chars
 }
 
+// Route will fetch information with respect to table fields
 func Route(command string, table map[string]func(bool), enterPressed bool) {
 	cmd := table[command]
 	cmd(enterPressed)
 
 }
 
+// Exit will come out of connected session
 func Exit(notUsed bool) {
 	os.Exit(0)
 }
