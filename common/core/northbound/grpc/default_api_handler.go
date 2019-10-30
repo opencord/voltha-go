@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package grpc
 
 import (
 	"context"
 	"errors"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/go/common"
@@ -25,113 +27,138 @@ import (
 	"github.com/opencord/voltha-protos/go/voltha"
 )
 
+// DefaultAPIHandler - TODO
 type DefaultAPIHandler struct {
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	if err != nil {
+		log.Errorw("failed", log.Fields{"error": err})
+	}
 }
 
+// NewDefaultAPIHandler - TODO
 func NewDefaultAPIHandler() *DefaultAPIHandler {
 	handler := &DefaultAPIHandler{}
 	return handler
 }
 
+// UpdateLogLevel - TODO
 func (handler *DefaultAPIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
 	log.Debugw("UpdateLogLevel-request", log.Fields{"newloglevel": logging.Level, "intval": int(logging.Level)})
 	return nil, errors.New("UnImplemented")
 }
 
+// GetMembership - TODO
 func (handler *DefaultAPIHandler) GetMembership(ctx context.Context, empty *empty.Empty) (*voltha.Membership, error) {
 	log.Debug("GetMembership-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// UpdateMembership - TODO
 func (handler *DefaultAPIHandler) UpdateMembership(ctx context.Context, membership *voltha.Membership) (*empty.Empty, error) {
 	log.Debugw("UpdateMembership-request", log.Fields{"membership": membership})
 	return nil, errors.New("UnImplemented")
 }
 
+// GetVoltha - TODO
 func (handler *DefaultAPIHandler) GetVoltha(ctx context.Context, empty *empty.Empty) (*voltha.Voltha, error) {
 	log.Debug("GetVoltha-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// ListCoreInstances - TODO
 func (handler *DefaultAPIHandler) ListCoreInstances(ctx context.Context, empty *empty.Empty) (*voltha.CoreInstances, error) {
 	log.Debug("ListCoreInstances-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// GetCoreInstance - TODO
 func (handler *DefaultAPIHandler) GetCoreInstance(ctx context.Context, id *voltha.ID) (*voltha.CoreInstance, error) {
 	log.Debugw("GetCoreInstance-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListAdapters - TODO
 func (handler *DefaultAPIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
 	log.Debug("ListAdapters-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// ListLogicalDevices - TODO
 func (handler *DefaultAPIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
 	log.Debug("ListLogicalDevices-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// GetLogicalDevice - TODO
 func (handler *DefaultAPIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	log.Debugw("GetLogicalDevice-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListLogicalDevicePorts - TODO
 func (handler *DefaultAPIHandler) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// GetLogicalDevicePort - TODO
 func (handler *DefaultAPIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
 	log.Debugw("GetLogicalDevicePort-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// EnableLogicalDevicePort - TODO
 func (handler *DefaultAPIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
 	log.Debugw("EnableLogicalDevicePort-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// DisableLogicalDevicePort - TODO
 func (handler *DefaultAPIHandler) DisableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
 	log.Debugw("DisableLogicalDevicePort-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListLogicalDeviceFlows - TODO
 func (handler *DefaultAPIHandler) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
 	log.Debugw("ListLogicalDeviceFlows-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// UpdateLogicalDeviceFlowTable - TODO
 func (handler *DefaultAPIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flow *openflow_13.FlowTableUpdate) (*empty.Empty, error) {
 	log.Debugw("UpdateLogicalDeviceFlowTable-request", log.Fields{"flow": *flow})
 	return nil, errors.New("UnImplemented")
 }
 
+// UpdateLogicalDeviceFlowGroupTable - TODO
 func (handler *DefaultAPIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context, flow *openflow_13.FlowGroupTableUpdate) (*empty.Empty, error) {
 	log.Debugw("UpdateLogicalDeviceFlowGroupTable-request", log.Fields{"flow": *flow})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListLogicalDeviceFlowGroups - TODO
 func (handler *DefaultAPIHandler) ListLogicalDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*openflow_13.FlowGroups, error) {
 	log.Debugw("ListLogicalDeviceFlowGroups-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListDevices - TODO
 func (handler *DefaultAPIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
 	log.Debug("ListDevices-request")
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *DefaultAPIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty) (*voltha.IDs, error) {
+// ListDeviceIDs - TODO
+func (handler *DefaultAPIHandler) ListDeviceIDs(ctx context.Context, empty *empty.Empty) (*voltha.IDs, error) {
 	log.Debug("ListDeviceIDs-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// ReconcileDevices - TODO
 func (handler *DefaultAPIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
 	if ids != nil {
 		log.Debugw("ReconcileDevices-request", log.Fields{"length": len(ids.Items)})
@@ -140,156 +167,187 @@ func (handler *DefaultAPIHandler) ReconcileDevices(ctx context.Context, ids *vol
 	return nil, errors.New("ids-null")
 }
 
+// GetDevice - TODO
 func (handler *DefaultAPIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
 	log.Debugw("GetDevice-request", log.Fields{"id": id})
 	return nil, errors.New("UnImplemented")
 }
 
+// CreateDevice - TODO
 func (handler *DefaultAPIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
 	log.Debugw("CreateDevice-request", log.Fields{"device": *device})
 	return nil, errors.New("UnImplemented")
 }
 
+// EnableDevice - TODO
 func (handler *DefaultAPIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("EnableDevice-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// DisableDevice - TODO
 func (handler *DefaultAPIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("DisableDevice-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// RebootDevice - TODO
 func (handler *DefaultAPIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("RebootDevice-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// DeleteDevice - TODO
 func (handler *DefaultAPIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("DeleteDevice-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// DownloadImage - TODO
 func (handler *DefaultAPIHandler) DownloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	log.Debugw("DownloadImage-request", log.Fields{"img": *img})
 	return nil, errors.New("UnImplemented")
 }
 
+// GetImageDownloadStatus - TODO
 func (handler *DefaultAPIHandler) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("GetImageDownloadStatus-request", log.Fields{"img": *img})
 	return nil, errors.New("UnImplemented")
 }
 
+// GetImageDownload - TODO
 func (handler *DefaultAPIHandler) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("getdevice-request", log.Fields{"img": *img})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListImageDownloads - TODO
 func (handler *DefaultAPIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
 	log.Debugw("ListImageDownloads-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// CancelImageDownload - TODO
 func (handler *DefaultAPIHandler) CancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	log.Debugw("CancelImageDownload-request", log.Fields{"img": *img})
 	return nil, errors.New("UnImplemented")
 }
 
+// ActivateImageUpdate - TODO
 func (handler *DefaultAPIHandler) ActivateImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	log.Debugw("ActivateImageUpdate-request", log.Fields{"img": *img})
 	return nil, errors.New("UnImplemented")
 }
 
+// RevertImageUpdate - TODO
 func (handler *DefaultAPIHandler) RevertImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	log.Debugw("RevertImageUpdate-request", log.Fields{"img": *img})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListDevicePorts - TODO
 func (handler *DefaultAPIHandler) ListDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.Ports, error) {
 	log.Debugw("ListDevicePorts-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListDevicePmConfigs - TODO
 func (handler *DefaultAPIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*voltha.PmConfigs, error) {
 	log.Debugw("ListDevicePmConfigs-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// UpdateDevicePmConfigs - TODO
 func (handler *DefaultAPIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
 	log.Debugw("UpdateDevicePmConfigs-request", log.Fields{"configs": *configs})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListDeviceFlows - TODO
 func (handler *DefaultAPIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
 	log.Debugw("ListDeviceFlows-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListDeviceFlowGroups - TODO
 func (handler *DefaultAPIHandler) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*openflow_13.FlowGroups, error) {
 	log.Debugw("ListDeviceFlowGroups-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListDeviceTypes - TODO
 func (handler *DefaultAPIHandler) ListDeviceTypes(ctx context.Context, empty *empty.Empty) (*voltha.DeviceTypes, error) {
 	log.Debug("ListDeviceTypes-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// GetDeviceType - TODO
 func (handler *DefaultAPIHandler) GetDeviceType(ctx context.Context, id *voltha.ID) (*voltha.DeviceType, error) {
 	log.Debugw("GetDeviceType-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListDeviceGroups - TODO
 func (handler *DefaultAPIHandler) ListDeviceGroups(ctx context.Context, empty *empty.Empty) (*voltha.DeviceGroups, error) {
 	log.Debug("ListDeviceGroups-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// GetDeviceGroup - TODO
 func (handler *DefaultAPIHandler) GetDeviceGroup(ctx context.Context, id *voltha.ID) (*voltha.DeviceGroup, error) {
 	log.Debugw("GetDeviceGroup-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// CreateAlarmFilter - TODO
 func (handler *DefaultAPIHandler) CreateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {
 	log.Debugw("CreateAlarmFilter-request", log.Fields{"filter": *filter})
 	return nil, errors.New("UnImplemented")
 }
 
+// GetAlarmFilter - TODO
 func (handler *DefaultAPIHandler) GetAlarmFilter(ctx context.Context, id *voltha.ID) (*voltha.AlarmFilter, error) {
 	log.Debugw("GetAlarmFilter-request", log.Fields{"id": id})
 	return nil, errors.New("UnImplemented")
 }
 
+// UpdateAlarmFilter - TODO
 func (handler *DefaultAPIHandler) UpdateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {
 	log.Debugw("UpdateAlarmFilter-request", log.Fields{"filter": *filter})
 	return nil, errors.New("UnImplemented")
 }
 
+// DeleteAlarmFilter - TODO
 func (handler *DefaultAPIHandler) DeleteAlarmFilter(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.Debugw("DeleteAlarmFilter-request", log.Fields{"id": *id})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListAlarmFilters - TODO
 func (handler *DefaultAPIHandler) ListAlarmFilters(ctx context.Context, empty *empty.Empty) (*voltha.AlarmFilters, error) {
 	log.Debug("ListAlarmFilters-request")
 	return nil, errors.New("UnImplemented")
 }
 
+// GetImages - TODO
 func (handler *DefaultAPIHandler) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
 	log.Debugw("GetImages-request", log.Fields{"id": id})
 	return nil, errors.New("UnImplemented")
 }
 
+// SelfTest - TODO
 func (handler *DefaultAPIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
 	log.Debugw("SelfTest-request", log.Fields{"id": id})
 	return nil, errors.New("UnImplemented")
 }
 
+// StreamPacketsOut - TODO
 func (handler *DefaultAPIHandler) StreamPacketsOut(packetsOut voltha.VolthaService_StreamPacketsOutServer) error {
 	log.Debugw("StreamPacketsOut-request", log.Fields{"packetsOut": packetsOut})
 	return errors.New("UnImplemented")
 }
 
+// ReceivePacketsIn - TODO
 func (handler *DefaultAPIHandler) ReceivePacketsIn(
 	empty *empty.Empty,
 	packetsIn voltha.VolthaService_ReceivePacketsInServer,
@@ -298,6 +356,7 @@ func (handler *DefaultAPIHandler) ReceivePacketsIn(
 	return errors.New("UnImplemented")
 }
 
+// ReceiveChangeEvents - TODO
 func (handler *DefaultAPIHandler) ReceiveChangeEvents(
 	empty *empty.Empty,
 	changeEvents voltha.VolthaService_ReceiveChangeEventsServer,
@@ -306,6 +365,7 @@ func (handler *DefaultAPIHandler) ReceiveChangeEvents(
 	return errors.New("UnImplemented")
 }
 
+// Subscribe - TODO
 func (handler *DefaultAPIHandler) Subscribe(
 	ctx context.Context,
 	ofAgent *voltha.OfAgentSubscriber,
@@ -314,11 +374,13 @@ func (handler *DefaultAPIHandler) Subscribe(
 	return nil, errors.New("UnImplemented")
 }
 
+// UpdateLogicalDeviceMeterTable - TODO
 func (handler *DefaultAPIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, mod *openflow_13.MeterModUpdate) (*empty.Empty, error) {
 	log.Debugw("UpdateLogicalDeviceMeterTable-request", log.Fields{"meter": mod})
 	return nil, errors.New("UnImplemented")
 }
 
+// ListLogicalDeviceMeters - TODO
 func (handler *DefaultAPIHandler) ListLogicalDeviceMeters(ctx context.Context, id *voltha.ID) (*openflow_13.Meters, error) {
 	log.Debugw("ListLogicalDeviceMeters-unimplemented", log.Fields{"id": id})
 	return nil, nil

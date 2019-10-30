@@ -28,8 +28,8 @@ import (
 
 func doShow(enterPressed bool) {
 	client := voltha.NewVolthaServiceClient(Conn)
-	fmt.Println(*DeviceId)
-	device, err := client.GetDevice(context.Background(), &common.ID{Id: *DeviceId})
+	fmt.Println(*DeviceID)
+	device, err := client.GetDevice(context.Background(), &common.ID{Id: *DeviceID})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -46,10 +46,10 @@ func doShow(enterPressed bool) {
 	Type["value"] = device.Type
 	rows = append(rows, Type)
 
-	parentId := make(map[string]string)
-	parentId["field"] = "parent_id"
-	parentId["value"] = device.ParentId
-	rows = append(rows, parentId)
+	parentID := make(map[string]string)
+	parentID["field"] = "parent_id"
+	parentID["value"] = device.ParentId
+	rows = append(rows, parentID)
 
 	vlan := make(map[string]string)
 	vlan["field"] = "vlan"
@@ -62,20 +62,20 @@ func doShow(enterPressed bool) {
 	rows = append(rows, adminState)
 
 	proxyAddress := device.GetProxyAddress()
-	proxyDeviceId := make(map[string]string)
-	proxyDeviceId["field"] = "proxy_address.device_id"
-	proxyDeviceId["value"] = proxyAddress.DeviceId
-	rows = append(rows, proxyDeviceId)
+	proxyDeviceID := make(map[string]string)
+	proxyDeviceID["field"] = "proxy_address.device_id"
+	proxyDeviceID["value"] = proxyAddress.DeviceId
+	rows = append(rows, proxyDeviceID)
 
 	proxyDeviceType := make(map[string]string)
 	proxyDeviceType["field"] = "proxy_address.device_type"
 	proxyDeviceType["value"] = proxyAddress.DeviceType
 	rows = append(rows, proxyDeviceType)
 
-	proxyChannelId := make(map[string]string)
-	proxyChannelId["field"] = "proxy_address.channel_id"
-	proxyChannelId["value"] = strconv.FormatUint(uint64(proxyAddress.ChannelId), 10)
-	rows = append(rows, proxyChannelId)
+	proxyChannelID := make(map[string]string)
+	proxyChannelID["field"] = "proxy_address.channel_id"
+	proxyChannelID["value"] = strconv.FormatUint(uint64(proxyAddress.ChannelId), 10)
+	rows = append(rows, proxyChannelID)
 
 	parentPortNumber := make(map[string]string)
 	parentPortNumber["field"] = "parent_port_no"

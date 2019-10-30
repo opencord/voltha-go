@@ -21,6 +21,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+	"testing"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
@@ -30,10 +35,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"os"
-	"os/exec"
-	"strings"
-	"testing"
 )
 
 var conns []*grpc.ClientConn
