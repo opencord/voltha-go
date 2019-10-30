@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/cli/menu/devicemenu"
 	"github.com/opencord/voltha-go/cli/util"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 func doDevice(enterPressed bool) {
@@ -36,19 +37,22 @@ func doDevice(enterPressed bool) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	deviceIds := []string{"exit", "quit"}
+	deviceIDs := []string{"exit", "quit"}
 	for i := 0; i < len(items); i++ {
-		deviceIds = append(deviceIds, items[i].Id)
+		deviceIDs = append(deviceIDs, items[i].Id)
 	}
 	var b = make([]byte, 1)
 	input := ""
 
 	for {
-		os.Stdin.Read(b)
+		_, err := os.Stdin.Read(b)
+		if err != nil {
+			log.Errorw("failed", log.Fields{"error": err})
+		}
 		char := string(b)
 		if char == "\t" || char == "\n" || char == "?" {
 			fmt.Println("")
-			ret, prompt := util.Test(input, deviceIds)
+			ret, prompt := util.Test(input, deviceIDs)
 			if len(ret) == 1 {
 				input = ret[0]
 				if input == "quit" {

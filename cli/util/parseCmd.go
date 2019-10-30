@@ -21,6 +21,7 @@ import (
 	"strings"
 )
 
+// Test - TODO
 func Test(chars string, values []string) ([]string, string) {
 
 	var ret []string
@@ -56,12 +57,14 @@ func Test(chars string, values []string) ([]string, string) {
 	return ret, chars
 }
 
+// Route - TODO
 func Route(command string, table map[string]func(bool), enterPressed bool) {
 	cmd := table[command]
 	cmd(enterPressed)
 
 }
 
+// Exit - TODO
 func Exit(notUsed bool) {
 	os.Exit(0)
 }

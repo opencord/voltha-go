@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
+
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
@@ -27,8 +29,9 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Core - TODO
 type Core struct {
-	instanceId        string
+	instanceID        string
 	genericMgr        *ModelProxyManager
 	deviceMgr         *DeviceManager
 	logicalDeviceMgr  *LogicalDeviceManager
@@ -44,12 +47,16 @@ type Core struct {
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.DebugLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.DebugLevel, nil)
+	if err != nil {
+		log.Errorw("failed", log.Fields{"error": err})
+	}
 }
 
+// NewCore - TODO
 func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	var core Core
-	core.instanceId = id
+	core.instanceID = id
 	core.exitChannel = make(chan int, 1)
 	core.config = cf
 	core.kvClient = kvClient
@@ -72,10 +79,11 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	return &core
 }
 
+// Start - TODO
 func (core *Core) Start(ctx context.Context) {
-	log.Info("starting-adaptercore", log.Fields{"coreId": core.instanceId})
+	log.Info("starting-adaptercore", log.Fields{"coreID": core.instanceID})
 	core.genericMgr = newModelProxyManager(core.clusterDataProxy)
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.clusterDataProxy)
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
@@ -84,6 +92,7 @@ func (core *Core) Start(ctx context.Context) {
 	log.Info("adaptercore-started")
 }
 
+// Stop - TODO
 func (core *Core) Stop(ctx context.Context) {
 	log.Info("stopping-adaptercore")
 	if core.exitChannel != nil {

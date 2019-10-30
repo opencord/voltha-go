@@ -16,16 +16,17 @@
 package core
 
 import (
-	"github.com/opencord/voltha-go/rw_core/coreIf"
+	"reflect"
+	"testing"
+
+	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 var transitionMap *TransitionMap
-var tdm coreIf.DeviceManager
+var tdm coreif.DeviceManager
 
 type testDeviceManager struct {
 }
@@ -83,7 +84,10 @@ func (tdm *testDeviceManager) MarkChildDevicesAsUnReachable(to *voltha.Device) e
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	if err != nil {
+		log.Errorw("failed", log.Fields{"error": err})
+	}
 	//log.UpdateAllLoggers(log.Fields{"instanceId": "device-state-transition"})
 	//log.SetAllLogLevel(log.DebugLevel)
 	tdm = newTestDeviceManager()
