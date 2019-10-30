@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
@@ -27,17 +28,20 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	ofp "github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
+// constants -
 const (
-	VOLTHA_SERIAL_NUMBER_KEY = "voltha_serial_number"
+	VolthaSerialNumberKey = "voltha_serial_number"
 )
 
 func startKafka(composePath string) error {
@@ -128,24 +132,15 @@ func stopSimulatedOLTAndONUAdapters(composePath string) error {
 	return nil
 }
 
+// ListLogicalDevices -
 func ListLogicalDevices(stub voltha.VolthaServiceClient) (*voltha.LogicalDevices, error) {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
-	if response, err := stub.ListLogicalDevices(ctx, &empty.Empty{}); err != nil {
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
+	response, err := stub.ListLogicalDevices(ctx, &empty.Empty{})
+	if err != nil {
 		return nil, err
-	} else {
-		return response, nil
 	}
-}
-
-func getNumUniPort(ld *voltha.LogicalDevice) int {
-	num := 0
-	for _, port := range ld.Ports {
-		if !port.RootPort {
-			num += 1
-		}
-	}
-	return num
+	return response, nil
 }
 
 func sendCreateDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, device *voltha.Device, ch chan interface{}) {
@@ -164,24 +159,8 @@ func sendListAdapters(ctx context.Context, stub voltha.VolthaServiceClient, ch c
 	}
 }
 
-func sendEnableDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, deviceId string, ch chan interface{}) {
-	if response, err := stub.EnableDevice(ctx, &common.ID{Id: deviceId}); err != nil {
-		ch <- err
-	} else {
-		ch <- response
-	}
-}
-
-func sendDisableDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, deviceId string, ch chan interface{}) {
-	if response, err := stub.DisableDevice(ctx, &common.ID{Id: deviceId}); err != nil {
-		ch <- err
-	} else {
-		ch <- response
-	}
-}
-
-func sendDeleteDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, deviceId string, ch chan interface{}) {
-	if response, err := stub.DeleteDevice(ctx, &common.ID{Id: deviceId}); err != nil {
+func sendEnableDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClient, deviceID string, ch chan interface{}) {
+	if response, err := stub.EnableDevice(ctx, &common.ID{Id: deviceID}); err != nil {
 		ch <- err
 	} else {
 		ch <- response
@@ -189,21 +168,22 @@ func sendDeleteDeviceRequest(ctx context.Context, stub voltha.VolthaServiceClien
 }
 
 func getDevices(ctx context.Context, stub voltha.VolthaServiceClient) (*voltha.Devices, error) {
-	if response, err := stub.ListDevices(ctx, &empty.Empty{}); err != nil {
+	response, err := stub.ListDevices(ctx, &empty.Empty{})
+	if err != nil {
 		return nil, err
-	} else {
-		return response, nil
 	}
+	return response, nil
 }
 
 func getLogicalDevices(ctx context.Context, stub voltha.VolthaServiceClient) (*voltha.LogicalDevices, error) {
-	if response, err := stub.ListLogicalDevices(ctx, &empty.Empty{}); err != nil {
+	response, err := stub.ListLogicalDevices(ctx, &empty.Empty{})
+	if err != nil {
 		return nil, err
-	} else {
-		return response, nil
 	}
+	return response, nil
 }
 
+// IsFlowPresent -
 func IsFlowPresent(lookingFor *voltha.OfpFlowStats, flows []*voltha.OfpFlowStats) bool {
 	for _, f := range flows {
 		if f.String() == lookingFor.String() {
@@ -213,14 +193,15 @@ func IsFlowPresent(lookingFor *voltha.OfpFlowStats, flows []*voltha.OfpFlowStats
 	return false
 }
 
+// ListDevices -
 func ListDevices(stub voltha.VolthaServiceClient) (*voltha.Devices, error) {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
-	if devices, err := getDevices(ctx, stub); err == nil {
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
+	devices, err := getDevices(ctx, stub)
+	if err == nil {
 		return devices, nil
-	} else {
-		return nil, err
 	}
+	return nil, err
 }
 
 func sendFlow(ctx context.Context, stub voltha.VolthaServiceClient, flow *ofp.FlowTableUpdate, ch chan interface{}) {
@@ -231,20 +212,23 @@ func sendFlow(ctx context.Context, stub voltha.VolthaServiceClient, flow *ofp.Fl
 	}
 }
 
+// SetLogLevel -
 func SetLogLevel(stub voltha.VolthaServiceClient, l voltha.Logging) error {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 	_, err := stub.UpdateLogLevel(ctx, &l)
 	return err
 }
 
+// SetAllLogLevel -
 func SetAllLogLevel(stub voltha.VolthaServiceClient, l voltha.Logging) error {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 	_, err := stub.UpdateLogLevel(ctx, &l)
 	return err
 }
 
+// SetupGrpcConnectionToCore -
 func SetupGrpcConnectionToCore(grpcHostIP string, grpcPort int) (voltha.VolthaServiceClient, error) {
 	grpcHost := fmt.Sprintf("%s:%d", grpcHostIP, grpcPort)
 	fmt.Println("Connecting to voltha using:", grpcHost)
@@ -255,9 +239,10 @@ func SetupGrpcConnectionToCore(grpcHostIP string, grpcPort int) (voltha.VolthaSe
 	return voltha.NewVolthaServiceClient(conn), nil
 }
 
+// VerifyLogicalDevices -
 func VerifyLogicalDevices(stub voltha.VolthaServiceClient, parentDevice *voltha.Device, numONUsPerOLT int) (*voltha.LogicalDevices, error) {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 	retrievedLogicalDevices, err := getLogicalDevices(ctx, stub)
 	if err != nil {
 		return nil, err
@@ -300,9 +285,10 @@ func VerifyLogicalDevices(stub voltha.VolthaServiceClient, parentDevice *voltha.
 	return retrievedLogicalDevices, nil
 }
 
+// VerifyDevices -
 func VerifyDevices(stub voltha.VolthaServiceClient, numONUsPerOLT int) error {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 	retrievedDevices, err := getDevices(ctx, stub)
 	if err != nil {
 		return err
@@ -381,10 +367,11 @@ func areAdaptersPresent(requiredAdapterNames []string, retrievedAdapters *voltha
 	return true
 }
 
+// WaitForAdapterRegistration -
 func WaitForAdapterRegistration(stub voltha.VolthaServiceClient, requiredAdapterNames []string, timeout int) (*voltha.Adapters, error) {
 	fmt.Println("Waiting for adapter registration ...")
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 	ch := make(chan interface{})
 	defer close(ch)
 	for {
@@ -408,9 +395,10 @@ func WaitForAdapterRegistration(stub voltha.VolthaServiceClient, requiredAdapter
 	}
 }
 
+// PreProvisionDevice -
 func PreProvisionDevice(stub voltha.VolthaServiceClient) (*voltha.Device, error) {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 	randomMacAddress := strings.ToUpper(com.GetRandomMacAddress())
 	device := &voltha.Device{Type: "simulated_olt", MacAddress: randomMacAddress}
 	ch := make(chan interface{})
@@ -427,10 +415,11 @@ func PreProvisionDevice(stub voltha.VolthaServiceClient) (*voltha.Device, error)
 	return nil, status.Errorf(codes.Unknown, "cannot provision device:{%v}", device)
 }
 
+// EnableDevice -
 func EnableDevice(stub voltha.VolthaServiceClient, device *voltha.Device, numONUs int) error {
 	if device.AdminState == voltha.AdminState_PREPROVISIONED {
 		ui := uuid.New()
-		ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+		ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 		ch := make(chan interface{})
 		defer close(ch)
 		go sendEnableDeviceRequest(ctx, stub, device.Id, ch)
@@ -446,9 +435,10 @@ func EnableDevice(stub voltha.VolthaServiceClient, device *voltha.Device, numONU
 	return status.Errorf(codes.Unknown, "cannot enable device:{%s}", device.Id)
 }
 
+// UpdateFlow -
 func UpdateFlow(stub voltha.VolthaServiceClient, flow *ofp.FlowTableUpdate) error {
 	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VOLTHA_SERIAL_NUMBER_KEY, ui.String()))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
 	ch := make(chan interface{})
 	defer close(ch)
 	go sendFlow(ctx, stub, flow, ch)
@@ -463,6 +453,7 @@ func UpdateFlow(stub voltha.VolthaServiceClient, flow *ofp.FlowTableUpdate) erro
 	return status.Errorf(codes.Unknown, "cannot add flow:{%v}", flow)
 }
 
+// StartSimulatedEnv -
 func StartSimulatedEnv(composePath string) error {
 	fmt.Println("Starting simulated environment ...")
 	// Start kafka and Etcd
@@ -490,10 +481,23 @@ func StartSimulatedEnv(composePath string) error {
 	return nil
 }
 
+// StopSimulatedEnv -
 func StopSimulatedEnv(composePath string) error {
-	stopSimulatedOLTAndONUAdapters(composePath)
-	stopCore(composePath)
-	stopKafka(composePath)
-	stopEtcd(composePath)
+	err := stopSimulatedOLTAndONUAdapters(composePath)
+	if err != nil {
+		log.Errorw("failed", log.Fields{"error": err})
+	}
+	err = stopCore(composePath)
+	if err != nil {
+		log.Errorw("failed", log.Fields{"error": err})
+	}
+	err = stopKafka(composePath)
+	if err != nil {
+		log.Errorw("failed", log.Fields{"error": err})
+	}
+	err = stopEtcd(composePath)
+	if err != nil {
+		log.Errorw("failed", log.Fields{"error": err})
+	}
 	return nil
 }

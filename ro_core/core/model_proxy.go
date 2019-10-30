@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
+	"strings"
+	"sync"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
-	"sync"
 )
 
 // ModelProxy controls requests made to the data model

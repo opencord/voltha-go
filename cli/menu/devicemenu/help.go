@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/opencord/voltha-go/cli/util"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 func doHelp(enterPressed bool) {
@@ -29,7 +30,10 @@ func doHelp(enterPressed bool) {
 	var b = make([]byte, 1)
 	inputPrompt := *InputPrompt + "help "
 	for {
-		os.Stdin.Read(b)
+		_, err := os.Stdin.Read(b)
+		if err != nil {
+			log.Errorw("failed", log.Fields{"error": err})
+		}
 		char := string(b)
 		if char == "\t" || char == "\n" || char == "?" {
 			if enterPressed {
