@@ -29,7 +29,7 @@ Conn - the grpc connection to use for making calls to voltha core
 */
 var (
 	Conn        *grpc.ClientConn
-	DeviceId    *string
+	DeviceID    *string
 	InputPrompt *string
 	Commands    *[]string
 )
@@ -37,10 +37,10 @@ var (
 /*
 MainLoop - the loop which processes commands at the main level
 */
-func MainLoop(conn *grpc.ClientConn, deviceId string) {
+func MainLoop(conn *grpc.ClientConn, deviceID string) {
 
-	DeviceId = &deviceId
-	inputPrompt := fmt.Sprint("(" + color.LightRed("device "+deviceId) + ") ")
+	DeviceID = &deviceID
+	inputPrompt := fmt.Sprint("(" + color.LightRed("device "+deviceID) + ") ")
 	InputPrompt = &inputPrompt
 	funcTable := make(map[string]func(bool))
 	//	inputPromptSize := len(inputPrompt)
@@ -52,7 +52,7 @@ func MainLoop(conn *grpc.ClientConn, deviceId string) {
 	funcTable["img_dnld_request"] = doImgDnldRequest
 	funcTable["perf_config"] = doPerfConfig
 	funcTable["save"] = doSave
-	funcTable["eof"] = doEof
+	funcTable["eof"] = doEOF
 	funcTable["images"] = doImages
 	funcTable["img_dnld_status"] = doImgDnldStatus
 	funcTable["ports"] = doPorts
@@ -73,7 +73,7 @@ func MainLoop(conn *grpc.ClientConn, deviceId string) {
 
 	commands := make([]string, len(funcTable))
 	i := 0
-	for key, _ := range funcTable {
+	for key := range funcTable {
 		commands[i] = key
 		i++
 	}

@@ -18,6 +18,6 @@ package devicemenu
 
 import "fmt"
 
-func doEof(enterPressed bool) {
-	fmt.Println("doEof")
+func doEOF(enterPressed bool) {
+	fmt.Println("doEOF")
 }
