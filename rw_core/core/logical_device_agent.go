@@ -441,6 +441,38 @@ func (agent *LogicalDeviceAgent) setupNNILogicalPorts(ctx context.Context, devic
 	return err
 }
 
+// updatePortState updates the port state of the device
+func (agent *LogicalDeviceAgent) updatePortState(deviceId string, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
+	log.Infow("updatePortState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "portNo": portNo, "state": operStatus})
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	// Get the latest logical device info
+	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
+		log.Warnw("logical-device-unknown", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+		return err
+	} else {
+		for idx, lPort := range ld.Ports {
+			if lPort.DeviceId == deviceId && lPort.DevicePortNo == portNo {
+				cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
+				if operStatus == voltha.OperStatus_ACTIVE {
+					cloned.Ports[idx].OfpPort.Config = cloned.Ports[idx].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+					cloned.Ports[idx].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
+				} else {
+					cloned.Ports[idx].OfpPort.Config = cloned.Ports[idx].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+					cloned.Ports[idx].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+				}
+				// Update the logical device
+				if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
+					log.Errorw("error-updating-logical-device", log.Fields{"error": err})
+					return err
+				}
+				return nil
+			}
+		}
+		return status.Errorf(codes.NotFound, "port-%d-not-exist", portNo)
+	}
+}
+
 // updatePortsState updates the ports state related to the device
 func (agent *LogicalDeviceAgent) updatePortsState(device *voltha.Device, state voltha.AdminState_AdminState) error {
 	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
