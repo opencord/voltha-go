@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "02d2325b_96c596e2",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-31T00:18:53Z",
+      "side": 1,
+      "message": "Sure, will do.",
+      "parentUuid": "2706ec80_820324d1",
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9875463_e80cfc92",
         "filename": "rw_core/core/core.go",
         "patchSetId": 7
@@ -30,6 +48,30 @@
       "writtenOn": "2019-10-30T23:57:18Z",
       "side": 1,
       "message": "If I am interpreting this correctly on each loop iteration you are calling probe.UpdateStatusFromContext even if the status has not changed. i.e. if the last iteration it was Running and this iteration it is running Update to Running again. Not sure where to short cut this, but it might be needed somewhere else we are doing a mutex lock on each iteration to update the value.",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 67
+      },
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2563ffb_9f4b126c",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-31T00:18:53Z",
+      "side": 1,
+      "message": "I\u0027ve also modified UpdateStatus to be a no-op if the status hasn\u0027t changed. https://gerrit.opencord.org/#/c/16026/4/pkg/probe/probe.go@145",
+      "parentUuid": "b9875463_e80cfc92",
       "range": {
         "startLine": 266,
         "startChar": 0,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "b170848b_5c73aeeb",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-31T00:18:53Z",
+      "side": 1,
+      "message": "kmp.IsAlive() calls its embedded Kafka client\u0027s IsAlive() which in turn returns the value of a member in the struct. Nothing active here.",
+      "parentUuid": "5e4ea083_dea88a9f",
+      "range": {
+        "startLine": 267,
+        "startChar": 15,
+        "endLine": 267,
+        "endChar": 22
+      },
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c2148ea_21fd1b92",
         "filename": "rw_core/core/core.go",
         "patchSetId": 7
@@ -76,6 +142,30 @@
       "writtenOn": "2019-10-30T23:57:18Z",
       "side": 1,
       "message": "is this a keep a live?",
+      "range": {
+        "startLine": 270,
+        "startChar": 19,
+        "endLine": 270,
+        "endChar": 31
+      },
+      "revId": "d425a2211763a203844522745838f026846d3111",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9908e0ea_5f797346",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-31T00:18:53Z",
+      "side": 1,
+      "message": "It attempts to Publish an empty message on a channel called \"_liveness\". I haven\u0027t yet found any better way to determine if the connection has returned than to try to publish a message on it. If unsuccessful, nothing happens and we keep looping. If successful, then one useless message goes out, the client automatically returns to live status, and we don\u0027t publish anymore of these (unless it goes down again).\n\nSee https://gerrit.opencord.org/#/c/16026/4/pkg/kafka/sarama_client.go for the various changes to sarama_client.go. We can detect the lost connection on any Publish, but as soon as that happens we\u0027ll go into NotReady state, and regular Publishes will stop.",
+      "parentUuid": "1c2148ea_21fd1b92",
       "range": {
         "startLine": 270,
         "startChar": 19,
