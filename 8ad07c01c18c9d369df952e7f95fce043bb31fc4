@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47d4200d_45b32b71",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-31T22:05:33Z",
+      "side": 1,
+      "message": "one thing to think about is how many of these events we expect to get and at what frequency. i say this because if your chan buf is 100 then the 101st call is blocked until one is processed.",
+      "range": {
+        "startLine": 285,
+        "startChar": 21,
+        "endLine": 285,
+        "endChar": 36
+      },
+      "revId": "8ad07c01c18c9d369df952e7f95fce043bb31fc4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
