@@ -830,7 +830,12 @@ func (dMgr *DeviceManager) updateChildrenStatus(deviceId string, operStatus volt
 func (dMgr *DeviceManager) updatePortState(deviceId string, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
 	log.Debugw("updatePortState", log.Fields{"deviceid": deviceId, "portType": portType, "portNo": portNo, "operStatus": operStatus})
 	if agent := dMgr.getDeviceAgent(deviceId); agent != nil {
-		return agent.updatePortState(portType, portNo, operStatus)
+		if err := agent.updatePortState(portType, portNo, operStatus); err != nil {
+			log.Errorw("updating-port-state-failed", log.Fields{"deviceid": deviceId, "portNo": portNo, "error": err})
+			return err
+		}
+		// Notify the logical device manager to change the port state
+		go dMgr.logicalDeviceMgr.updatePortState(deviceId, portNo, operStatus)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceId)
 }

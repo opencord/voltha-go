@@ -485,6 +485,23 @@ func (ldMgr *LogicalDeviceManager) deleteAllLogicalPorts(device *voltha.Device) 
 	}
 	return nil
 }
+func (ldMgr *LogicalDeviceManager) updatePortState(deviceId string, portNo uint32, state voltha.OperStatus_OperStatus) error {
+	log.Debugw("updatePortState", log.Fields{"deviceId": deviceId, "state": state, "portNo": portNo})
+
+	var ldId *string
+	var err error
+	//Get the logical device Id for this device
+	if ldId, err = ldMgr.getLogicalDeviceIdFromDeviceId(deviceId); err != nil {
+		log.Warnw("no-logical-device-found", log.Fields{"deviceId": deviceId, "error": err})
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(*ldId); agent != nil {
+		if err := agent.updatePortState(deviceId, portNo, state); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (ldMgr *LogicalDeviceManager) updatePortsState(device *voltha.Device, state voltha.AdminState_AdminState) error {
 	log.Debugw("updatePortsState", log.Fields{"deviceId": device.Id, "state": state, "current-data": device})
