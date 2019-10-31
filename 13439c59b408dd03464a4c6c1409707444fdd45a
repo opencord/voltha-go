@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6f4ac78_72a1539e",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-31T05:14:52Z",
+      "side": 1,
+      "message": "The maximum time the core will wait while attempting to connect to a dependent component",
+      "range": {
+        "startLine": 164,
+        "startChar": 21,
+        "endLine": 164,
+        "endChar": 41
+      },
+      "revId": "13439c59b408dd03464a4c6c1409707444fdd45a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1ce7373_2be6b58f",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-31T05:14:52Z",
+      "side": 1,
+      "message": "duration, as this is no longer just the number of seconds",
+      "range": {
+        "startLine": 170,
+        "startChar": 25,
+        "endLine": 170,
+        "endChar": 42
+      },
+      "revId": "13439c59b408dd03464a4c6c1409707444fdd45a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b50c00a6_0b29e1ed",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-31T05:14:52Z",
+      "side": 1,
+      "message": "I am not sure this is correct now that the DefaultCoreTimeout is a duration.\n\nhttps://golang.org/pkg/time/#Duration.Seconds",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 61
+      },
+      "revId": "13439c59b408dd03464a4c6c1409707444fdd45a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "672a753d_e3765cff",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-31T05:14:52Z",
+      "side": 1,
+      "message": "might 0s mean never timeout? Is that allowed?",
+      "range": {
+        "startLine": 84,
+        "startChar": 1,
+        "endLine": 86,
+        "endChar": 2
+      },
+      "revId": "13439c59b408dd03464a4c6c1409707444fdd45a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
