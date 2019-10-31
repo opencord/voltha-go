@@ -22,6 +22,30 @@
       "revId": "8ad07c01c18c9d369df952e7f95fce043bb31fc4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b80c940_f5909e63",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-31T22:28:20Z",
+      "side": 1,
+      "message": "I don\u0027t think much should be happening in this loop, the SendLiveness() is forked off into a goroutine so it won\u0027t block. So I  don\u0027t think we\u0027ll be building up a backlog of kafka producers waiting on this. Any thoughts on a reasonable channel buffer size? 100 sounds like a nice round number, though 10 would probably do.",
+      "parentUuid": "47d4200d_45b32b71",
+      "range": {
+        "startLine": 285,
+        "startChar": 21,
+        "endLine": 285,
+        "endChar": 36
+      },
+      "revId": "8ad07c01c18c9d369df952e7f95fce043bb31fc4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
