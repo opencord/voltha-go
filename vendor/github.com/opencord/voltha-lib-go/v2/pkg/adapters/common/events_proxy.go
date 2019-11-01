@@ -102,6 +102,29 @@ func (ep *EventProxy) SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category 
 
 }
 
+// SendKpiEvent is to send kpi events to voltha.event topic
+func (ep *EventProxy) SendKpiEvent(id string, kpiEvent *voltha.KpiEvent2, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
+	if kpiEvent == nil {
+		log.Error("Recieved empty kpi event")
+		return errors.New("KPI event nil")
+	}
+	var event voltha.Event
+	var de voltha.Event_KpiEvent2
+	de.KpiEvent2 = kpiEvent
+	event.Header = ep.getEventHeader(id, category, subCategory, voltha.EventType_KPI_EVENT2, raisedTs)
+	event.EventType = &de
+	if err := ep.sendEvent(&event); err != nil {
+		log.Errorw("Failed to send kpi event to KAFKA bus", log.Fields{"device-event": kpiEvent})
+		return err
+	}
+	log.Infow("Successfully sent kpi event to KAFKA", log.Fields{"Id": event.Header.Id, "Category": event.Header.Category,
+		"SubCategory": event.Header.SubCategory, "Type": event.Header.Type, "TypeVersion": event.Header.TypeVersion,
+		"ReportedTs": event.Header.ReportedTs, "KpiEventName": "STATS_EVENT"})
+
+	return nil
+
+}
+
 /* TODO: Send out KPI events*/
 
 func (ep *EventProxy) sendEvent(event *voltha.Event) error {
