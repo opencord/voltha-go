@@ -24,6 +24,8 @@ import (
 type EventProxy interface {
 	SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category EventCategory,
 		subCategory EventSubCategory, raisedTs int64) error
+	SendKpiEvent(id string, deviceEvent *voltha.KpiEvent2, category EventCategory,
+		subCategory EventSubCategory, raisedTs int64) error
 }
 
 const (
