@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "201c6693_6974ceea",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-04T16:13:46Z",
+      "side": 1,
+      "message": "Thanks for this very informative description of the liveness monitoring feature. Just last statement of this paragraph is not clear",
+      "revId": "a1991e2292e5606298d880a0f78ca6d5ede40b90",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34e2ee76_97d34fd4",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-04T16:13:46Z",
+      "side": 1,
+      "message": "This if statement seems to be redundant. Outer for loop has exactly same condition",
+      "revId": "a1991e2292e5606298d880a0f78ca6d5ede40b90",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
