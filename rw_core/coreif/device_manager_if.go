@@ -29,16 +29,16 @@ import (
 type DeviceManager interface {
 	GetDevice(context.Context, string) (*voltha.Device, error)
 	IsRootDevice(string) (bool, error)
-	NotifyInvalidTransition(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	CreateLogicalDevice(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	SetupUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	DisableAllChildDevices(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	DeleteLogicalDevice(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	DeleteLogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	DeleteAllChildDevices(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	RunPostDeviceDelete(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	ChildDeviceLost(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	DeleteAllLogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
-	DeleteAllDeviceFlows(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	NotifyInvalidTransition(ctx context.Context, curr *voltha.Device) error
+	CreateLogicalDevice(ctx context.Context, curr *voltha.Device) error
+	SetupUNILogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DisableAllChildDevices(ctx context.Context, curr *voltha.Device) error
+	DeleteLogicalDevice(ctx context.Context, curr *voltha.Device) error
+	DeleteLogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DeleteAllChildDevices(ctx context.Context, curr *voltha.Device) error
+	RunPostDeviceDelete(ctx context.Context, curr *voltha.Device) error
+	ChildDeviceLost(ctx context.Context, curr *voltha.Device) error
+	DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DeleteAllLogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DeleteAllDeviceFlows(ctx context.Context, curr *voltha.Device) error
 }
