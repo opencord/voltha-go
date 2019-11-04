@@ -68,7 +68,7 @@ type DeviceState struct {
 }
 
 // TransitionHandler function type which takes the current and previous device info as input parameter
-type TransitionHandler func(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+type TransitionHandler func(context.Context, *voltha.Device) error
 
 // Transition represent transition related attributes
 type Transition struct {
@@ -161,67 +161,67 @@ func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
 			currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    parent,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
 			currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    child,
 			previousState: DeviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
 			previousState: DeviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      nil})
 
 	return &transitionMap
 }
@@ -231,11 +231,11 @@ func getDeviceStates(device *voltha.Device) *DeviceState {
 }
 
 // isMatched matches a state transition.  It returns whether there is a match and if there is whether it is an exact match
-func getHandler(previous *DeviceState, current *DeviceState, transition *Transition) ([]TransitionHandler, *match) {
+func getHandler(previous *DeviceState, current *DeviceState, transition Transition) (*Transition, *match) {
 	m := &match{}
 	// Do we have an exact match?
 	if *previous == transition.previousState && *current == transition.currentState {
-		return transition.handlers, &match{admin: currPrevStateMatch, oper: currPrevStateMatch, conn: currPrevStateMatch}
+		return &transition, &match{admin: currPrevStateMatch, oper: currPrevStateMatch, conn: currPrevStateMatch}
 	}
 
 	// Do we have Admin state match?
@@ -281,47 +281,47 @@ func getHandler(previous *DeviceState, current *DeviceState, transition *Transit
 		}
 	}
 
-	return transition.handlers, m
+	return &transition, m
 }
 
-// GetTransitionHandler returns transition handler
-func (tMap *TransitionMap) GetTransitionHandler(pDevice *voltha.Device, cDevice *voltha.Device) []TransitionHandler {
+// GetTransitionHandler returns transition handler & a flag that's set if the transition is invalid
+func (tMap *TransitionMap) GetTransitionHandler(device *voltha.Device, pState *DeviceState) ([]TransitionHandler, bool) {
 	//1. Get the previous and current set of states
-	pState := getDeviceStates(pDevice)
-	cState := getDeviceStates(cDevice)
+	cState := getDeviceStates(device)
 
 	// Do nothing is there are no states change
 	if *pState == *cState {
-		return nil
+		return nil, false
 	}
 
 	//logger.Infow("DeviceType", log.Fields{"device": pDevice})
 	deviceType := parent
-	if !pDevice.Root {
+	if !device.Root {
 		logger.Info("device is child")
 		deviceType = child
 	}
-	logger.Infof("deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, pDevice.Id, pState, cState)
+	logger.Infof("deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, device.Id, pState, cState)
 
 	//2. Go over transition array to get the right transition
-	var currentMatch []TransitionHandler
-	var tempHandler []TransitionHandler
-	var m *match
+	var currentMatch *Transition
 	bestMatch := &match{}
 	for _, aTransition := range tMap.transitions {
 		// consider transition only if it matches deviceType or is a wild card - any
 		if aTransition.deviceType != deviceType && aTransition.deviceType != any {
 			continue
 		}
-		tempHandler, m = getHandler(pState, cState, &aTransition)
-		if tempHandler != nil {
+		temp, m := getHandler(pState, cState, aTransition)
+		if temp != nil {
 			if m.isExactMatch() && aTransition.deviceType == deviceType {
-				return tempHandler
+				return temp.handlers, temp.handlers == nil
 			} else if m.isExactMatch() || m.isBetterMatch(bestMatch) {
-				currentMatch = tempHandler
+				currentMatch = temp
 				bestMatch = m
 			}
 		}
 	}
-	return currentMatch
+	if currentMatch == nil {
+		return nil, false
+	}
+	return currentMatch.handlers, currentMatch.handlers == nil
 }
