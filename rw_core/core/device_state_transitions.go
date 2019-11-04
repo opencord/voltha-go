@@ -69,7 +69,7 @@ type DeviceState struct {
 }
 
 // TransitionHandler function type which takes the current and previous device info as input parameter
-type TransitionHandler func(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+type TransitionHandler func(context.Context, *voltha.Device) error
 
 // Transition represent transition related attributes
 type Transition struct {
@@ -286,10 +286,9 @@ func getHandler(previous *DeviceState, current *DeviceState, transition *Transit
 }
 
 // GetTransitionHandler returns transition handler
-func (tMap *TransitionMap) GetTransitionHandler(pDevice *voltha.Device, cDevice *voltha.Device) []TransitionHandler {
+func (tMap *TransitionMap) GetTransitionHandler(device *voltha.Device, pState *DeviceState) []TransitionHandler {
 	//1. Get the previous and current set of states
-	pState := getDeviceStates(pDevice)
-	cState := getDeviceStates(cDevice)
+	cState := getDeviceStates(device)
 
 	// Do nothing is there are no states change
 	if *pState == *cState {
@@ -298,11 +297,11 @@ func (tMap *TransitionMap) GetTransitionHandler(pDevice *voltha.Device, cDevice 
 
 	//log.Infow("DeviceType", log.Fields{"device": pDevice})
 	deviceType := parent
-	if !pDevice.Root {
+	if !device.Root {
 		log.Info("device is child")
 		deviceType = child
 	}
-	log.Infof("deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, pDevice.Id, pState, cState)
+	log.Infof("deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, device.Id, pState, cState)
 
 	//2. Go over transition array to get the right transition
 	var currentMatch []TransitionHandler
