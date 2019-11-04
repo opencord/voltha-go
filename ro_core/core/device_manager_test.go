@@ -18,7 +18,7 @@ package core
 import (
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
-	"github.com/opencord/voltha-protos/go/voltha"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

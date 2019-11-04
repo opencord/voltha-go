@@ -21,7 +21,7 @@ package coreIf
 
 import (
 	"github.com/opencord/voltha-go/rw_core/graph"
-	"github.com/opencord/voltha-protos/go/voltha"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
 )
 
 // LogicalAgent represents a generic agent

@@ -19,7 +19,7 @@ time.
 */
 package coreIf
 
-import "github.com/opencord/voltha-protos/go/voltha"
+import "github.com/opencord/voltha-protos/v2/go/voltha"
 
 // DeviceManager represents a generic device manager
 type DeviceManager interface {

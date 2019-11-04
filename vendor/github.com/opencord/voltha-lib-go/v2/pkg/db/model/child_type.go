@@ -21,7 +21,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/go/common"
+	"github.com/opencord/voltha-protos/v2/go/common"
 	"reflect"
 	"strconv"
 	"sync"
