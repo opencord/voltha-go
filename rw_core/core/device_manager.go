@@ -247,7 +247,7 @@ func (dMgr *DeviceManager) stopManagingDevice(ctx context.Context, id string) {
 }
 
 // RunPostDeviceDelete removes any reference of this device
-func (dMgr *DeviceManager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
+func (dMgr *DeviceManager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Infow("RunPostDeviceDelete", log.Fields{"deviceId": cDevice.Id})
 	dMgr.stopManagingDevice(ctx, cDevice.Id)
 	return nil
@@ -1027,17 +1027,29 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 	return childDevice, nil
 }
 
-func (dMgr *DeviceManager) processTransition(ctx context.Context, previous *voltha.Device, current *voltha.Device) error {
+func (dMgr *DeviceManager) processTransition(ctx context.Context, device *voltha.Device, previousState *DeviceState) error {
 	// This will be triggered on every update to the device.
-	handlers := dMgr.stateTransitions.GetTransitionHandler(previous, current)
-	if handlers == nil {
-		logger.Debugw("no-op-transition", log.Fields{"deviceId": current.Id})
+	handlers, invalidTransition := dMgr.stateTransitions.GetTransitionHandler(device, previousState)
+	if invalidTransition {
+		logger.Errorw("NotifyInvalidTransition", log.Fields{
+			"device":           device.Id,
+			"prev-admin-state": previousState.Admin,
+			"prev-oper-state":  previousState.Operational,
+			"prev-conn-state":  previousState.Connection,
+			"curr-admin-state": device.AdminState,
+			"curr-oper-state":  device.OperStatus,
+			"curr-conn-state":  device.ConnectStatus,
+		})
 		return nil
 	}
-	logger.Debugw("handler-found", log.Fields{"num-expectedHandlers": len(handlers), "isParent": current.Root, "current-data": current})
+	if handlers == nil {
+		logger.Debugw("no-op-transition", log.Fields{"deviceId": device.Id})
+		return nil
+	}
+	logger.Debugw("handler-found", log.Fields{"num-expectedHandlers": len(handlers), "isParent": device.Root, "current-data": device, "previous-state": previousState})
 	for _, handler := range handlers {
 		logger.Debugw("running-handler", log.Fields{"handler": funcName(handler)})
-		if err := handler(ctx, current, previous); err != nil {
+		if err := handler(ctx, device); err != nil {
 			logger.Warnw("handler-failed", log.Fields{"handler": funcName(handler), "error": err})
 			return err
 		}
@@ -1083,7 +1095,7 @@ func (dMgr *DeviceManager) setParentID(ctx context.Context, device *voltha.Devic
 }
 
 // CreateLogicalDevice creates logical device in core
-func (dMgr *DeviceManager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
+func (dMgr *DeviceManager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info("CreateLogicalDevice")
 	// Verify whether the logical device has already been created
 	if cDevice.ParentId != "" {
@@ -1099,7 +1111,7 @@ func (dMgr *DeviceManager) CreateLogicalDevice(ctx context.Context, cDevice *vol
 }
 
 // DeleteLogicalDevice deletes logical device from core
-func (dMgr *DeviceManager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
+func (dMgr *DeviceManager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info("DeleteLogicalDevice")
 	var err error
 	if err = dMgr.logicalDeviceMgr.deleteLogicalDevice(ctx, cDevice); err != nil {
@@ -1130,7 +1142,7 @@ func (dMgr *DeviceManager) DeleteLogicalPort(ctx context.Context, device *voltha
 }
 
 // DeleteLogicalPorts removes the logical ports associated with that deviceId
-func (dMgr *DeviceManager) DeleteLogicalPorts(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
+func (dMgr *DeviceManager) DeleteLogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Debugw("delete-all-logical-ports", log.Fields{"device-id": cDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteLogicalPorts(ctx, cDevice.Id); err != nil {
 		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
@@ -1159,7 +1171,7 @@ func (dMgr *DeviceManager) childDevicesLost(ctx context.Context, parentDeviceID 
 		logger.Warnw("failed-getting-device", log.Fields{"deviceId": parentDeviceID, "error": err})
 		return err
 	}
-	return dMgr.DisableAllChildDevices(ctx, parentDevice, nil)
+	return dMgr.DisableAllChildDevices(ctx, parentDevice)
 }
 
 //childDevicesDetected is invoked by an adapter when child devices are found, typically after after a
@@ -1209,7 +1221,7 @@ therefore use the data as is without trying to get the latest from the model.
 */
 
 //DisableAllChildDevices is invoked as a callback when the parent device is disabled
-func (dMgr *DeviceManager) DisableAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device, parentPrevDevice *voltha.Device) error {
+func (dMgr *DeviceManager) DisableAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device) error {
 	logger.Debug("DisableAllChildDevices")
 	var childDeviceIds []string
 	var err error
@@ -1231,7 +1243,7 @@ func (dMgr *DeviceManager) DisableAllChildDevices(ctx context.Context, parentCur
 }
 
 //DeleteAllChildDevices is invoked as a callback when the parent device is deleted
-func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device, parentPrevDevice *voltha.Device) error {
+func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device) error {
 	logger.Debug("DeleteAllChildDevices")
 	var childDeviceIds []string
 	var err error
@@ -1254,7 +1266,7 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentCurr
 }
 
 //DeleteAllUNILogicalPorts is invoked as a callback when the parent device is deleted
-func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error {
+func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device) error {
 	logger.Debugw("delete-all-uni-logical-ports", log.Fields{"parent-device-id": curr.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllUNILogicalPorts(ctx, curr); err != nil {
 		// Just log the error and let the remaining pipeline proceed - ports may already have been deleted
@@ -1264,7 +1276,7 @@ func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, curr *v
 }
 
 //DeleteAllLogicalPorts is invoked as a callback when the parent device's connection status moves to UNREACHABLE
-func (dMgr *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *voltha.Device, prev *voltha.Device) error {
+func (dMgr *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
 	logger.Debugw("delete-all-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(ctx, parentDevice); err != nil {
 		// Just log error as logical device may already have been deleted
@@ -1274,7 +1286,7 @@ func (dMgr *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, parentDevi
 }
 
 //DeleteAllDeviceFlows is invoked as a callback when the parent device's connection status moves to UNREACHABLE
-func (dMgr *DeviceManager) DeleteAllDeviceFlows(ctx context.Context, parentDevice *voltha.Device, prev *voltha.Device) error {
+func (dMgr *DeviceManager) DeleteAllDeviceFlows(ctx context.Context, parentDevice *voltha.Device) error {
 	logger.Debugw("delete-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
 	if agent := dMgr.getDeviceAgent(ctx, parentDevice.Id); agent != nil {
 		if err := agent.deleteAllFlows(ctx); err != nil {
@@ -1319,7 +1331,7 @@ func (dMgr *DeviceManager) getAllChildDevices(ctx context.Context, parentDeviceI
 }
 
 // SetupUNILogicalPorts creates UNI ports on the logical device that represents a child UNI interface
-func (dMgr *DeviceManager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
+func (dMgr *DeviceManager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info("addUNILogicalPort")
 	if err := dMgr.logicalDeviceMgr.setupUNILogicalPorts(ctx, cDevice); err != nil {
 		logger.Warnw("addUNILogicalPort-error", log.Fields{"device": cDevice, "err": err})
@@ -1432,20 +1444,6 @@ func (dMgr *DeviceManager) listImageDownloads(ctx context.Context, deviceID stri
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) NotifyInvalidTransition(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
-	logger.Errorw("NotifyInvalidTransition", log.Fields{
-		"device":           cDevice.Id,
-		"prev-admin-state": pDevice.AdminState,
-		"prev-oper-state":  pDevice.OperStatus,
-		"prev-conn-state":  pDevice.ConnectStatus,
-		"curr-admin-state": cDevice.AdminState,
-		"curr-oper-state":  cDevice.OperStatus,
-		"curr-conn-state":  cDevice.ConnectStatus,
-	})
-	//TODO: notify over kafka?
-	return nil
-}
-
 func funcName(f interface{}) string {
 	p := reflect.ValueOf(f).Pointer()
 	rf := runtime.FuncForPC(p)
@@ -1516,7 +1514,7 @@ func (dMgr *DeviceManager) disablePort(ctx context.Context, port *voltha.Port, c
 }
 
 // childDeviceLost  calls parent adapter to delete child device and all its references
-func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error {
+func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, curr *voltha.Device) error {
 	logger.Debugw("childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
 	if parentAgent := dMgr.getDeviceAgent(ctx, curr.ParentId); parentAgent != nil {
 		if err := parentAgent.ChildDeviceLost(ctx, curr); err != nil {
