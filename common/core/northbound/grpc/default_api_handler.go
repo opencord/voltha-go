@@ -20,9 +20,9 @@ import (
 	"errors"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/go/common"
-	"github.com/opencord/voltha-protos/go/openflow_13"
-	"github.com/opencord/voltha-protos/go/voltha"
+	"github.com/opencord/voltha-protos/v2/go/common"
+	"github.com/opencord/voltha-protos/v2/go/openflow_13"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
 )
 
 type DefaultAPIHandler struct {

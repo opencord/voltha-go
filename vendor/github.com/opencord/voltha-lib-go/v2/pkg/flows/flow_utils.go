@@ -22,7 +22,7 @@ import (
 	"github.com/cevaris/ordered_map"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	ofp "github.com/opencord/voltha-protos/go/openflow_13"
+	ofp "github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"math/big"
 	"strings"
 )
