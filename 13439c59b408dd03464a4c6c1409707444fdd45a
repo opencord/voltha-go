@@ -91,6 +91,30 @@
       "revId": "13439c59b408dd03464a4c6c1409707444fdd45a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d0c5df4_eb40d9bd",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000627
+      },
+      "writtenOn": "2019-11-04T07:45:50Z",
+      "side": 1,
+      "message": "Here timeout is being set to 1 in case if it is 0.",
+      "parentUuid": "672a753d_e3765cff",
+      "range": {
+        "startLine": 84,
+        "startChar": 1,
+        "endLine": 86,
+        "endChar": 2
+      },
+      "revId": "13439c59b408dd03464a4c6c1409707444fdd45a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
