@@ -23,7 +23,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	ic "github.com/opencord/voltha-protos/go/inter_container"
+	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	"strings"
 	"sync"
 	"time"

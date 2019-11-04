@@ -23,7 +23,7 @@ import (
 	grpcserver "github.com/opencord/voltha-lib-go/v2/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
-	"github.com/opencord/voltha-protos/go/voltha"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc"
 )
 

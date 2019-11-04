@@ -26,7 +26,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
 	"github.com/opencord/voltha-lib-go/v2/pkg/version"
-	ic "github.com/opencord/voltha-protos/go/inter_container"
+	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	"os"
 	"os/signal"
 	"strconv"
