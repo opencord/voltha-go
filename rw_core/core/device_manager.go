@@ -1048,17 +1048,17 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 	return childDevice, nil
 }
 
-func (dMgr *DeviceManager) processTransition(ctx context.Context, previous *voltha.Device, current *voltha.Device) error {
+func (dMgr *DeviceManager) processTransition(ctx context.Context, device *voltha.Device, previousState *DeviceState) error {
 	// This will be triggered on every update to the device.
-	handlers := dMgr.stateTransitions.GetTransitionHandler(previous, current)
+	handlers := dMgr.stateTransitions.GetTransitionHandler(device, previousState)
 	if handlers == nil {
-		log.Debugw("no-op-transition", log.Fields{"deviceId": current.Id})
+		log.Debugw("no-op-transition", log.Fields{"deviceId": device.Id})
 		return nil
 	}
-	log.Debugw("handler-found", log.Fields{"num-handlers": len(handlers), "isParent": current.Root, "current-data": current})
+	log.Debugw("handler-found", log.Fields{"num-handlers": len(handlers), "isParent": device.Root, "current-data": device})
 	for _, handler := range handlers {
 		log.Debugw("running-handler", log.Fields{"handler": funcName(handler)})
-		if err := handler(ctx, current); err != nil {
+		if err := handler(ctx, device); err != nil {
 			log.Warnw("handler-failed", log.Fields{"handler": funcName(handler), "error": err})
 			return err
 		}
