@@ -1,0 +1,550 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87e97334_31b1a26b",
+        "filename": "cli/main.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "needs to be more descriptive, i.e. \"Unable to configure terminal session parameters cbreak and min\". The message needs to be unique enough to identify where in the code for the developer as well as be informative to the user.",
+      "range": {
+        "startLine": 34,
+        "startChar": 14,
+        "endLine": 34,
+        "endChar": 20
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "235f2eaf_4ec8fc5a",
+        "filename": "cli/main.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "needs to be more descriptive, i.e. \"Unable to configure terminal session parameter echo\". The message needs to be unique enough to identify where in the code for the developer as well as be informative to the user.",
+      "range": {
+        "startLine": 39,
+        "startChar": 14,
+        "endLine": 39,
+        "endChar": 20
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1770229_8e27fb30",
+        "filename": "cli/main.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "As you correctly changed to the proper logging library, you should update this usage as well.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 40
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1af8378e_3151ed87",
+        "filename": "cli/menu/devicemenu/help.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "Please make log message more descriptive, i.e. Unable to read input from stdin",
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f0930c7_d1ee2dd6",
+        "filename": "cli/menu/mainmenu/device.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "please make messager more descriptive",
+      "range": {
+        "startLine": 50,
+        "startChar": 15,
+        "endLine": 50,
+        "endChar": 21
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fcdc42c_33fc3831",
+        "filename": "cli/util/menuProcessor.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "please make the message more descriptive",
+      "range": {
+        "startLine": 40,
+        "startChar": 15,
+        "endLine": 40,
+        "endChar": 21
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c16ac0cb_655dd16f",
+        "filename": "cli/util/parseCmd.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 24,
+        "startChar": 10,
+        "endLine": 24,
+        "endChar": 14
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20f17de2_fa223a05",
+        "filename": "cli/util/parseCmd.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 60,
+        "startChar": 11,
+        "endLine": 60,
+        "endChar": 15
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "404c1ba9_1b340ef4",
+        "filename": "cli/util/parseCmd.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 67,
+        "startChar": 10,
+        "endLine": 67,
+        "endChar": 14
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d5bb3b2_9714c5ff",
+        "filename": "cli/util/tableGen.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 24,
+        "startChar": 16,
+        "endLine": 24,
+        "endChar": 20
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ceb786c_cdd318a1",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 30,
+        "startChar": 23,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8edd302_e856e8bf",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 41,
+        "startChar": 26,
+        "endLine": 41,
+        "endChar": 30
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c234f0f3_8b6a73a9",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 47,
+        "startChar": 20,
+        "endLine": 47,
+        "endChar": 24
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "435a5302_289d3a07",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 53,
+        "startChar": 19,
+        "endLine": 53,
+        "endChar": 23
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bcb14a4_23741959",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 59,
+        "startChar": 22,
+        "endLine": 59,
+        "endChar": 26
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b67d8b5_ccf1d3e3",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 65,
+        "startChar": 15,
+        "endLine": 65,
+        "endChar": 19
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c2b8e69_8329cbf6",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 71,
+        "startChar": 23,
+        "endLine": 71,
+        "endChar": 27
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1894aab_c09ce8aa",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 77,
+        "startChar": 21,
+        "endLine": 77,
+        "endChar": 25
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9324a8d7_fc1a5314",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 83,
+        "startChar": 18,
+        "endLine": 83,
+        "endChar": 22
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "401105ff_18c00c85",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 89,
+        "startChar": 24,
+        "endLine": 89,
+        "endChar": 28
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d3e7e6e_405962a2",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 95,
+        "startChar": 22,
+        "endLine": 95,
+        "endChar": 26
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da0d7aa6_e33b36d8",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 101,
+        "startChar": 28,
+        "endLine": 101,
+        "endChar": 32
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bac00fae_85e05f3a",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 107,
+        "startChar": 26,
+        "endLine": 107,
+        "endChar": 30
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc093b83_9afad391",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-05T15:15:10Z",
+      "side": 1,
+      "message": "need to properly describe function",
+      "range": {
+        "startLine": 113,
+        "startChar": 29,
+        "endLine": 113,
+        "endChar": 33
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
