@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5fd1b890_721aeb20",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-05T01:11:51Z",
+      "side": 1,
+      "message": "Will rewrite to clarify.",
+      "parentUuid": "201c6693_6974ceea",
+      "revId": "a1991e2292e5606298d880a0f78ca6d5ede40b90",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34e2ee76_97d34fd4",
         "filename": "rw_core/core/core.go",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-04T16:13:46Z",
       "side": 1,
       "message": "This if statement seems to be redundant. Outer for loop has exactly same condition",
+      "revId": "a1991e2292e5606298d880a0f78ca6d5ede40b90",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c7cb42e_17e15175",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-05T01:11:51Z",
+      "side": 1,
+      "message": "will fix",
+      "parentUuid": "34e2ee76_97d34fd4",
       "revId": "a1991e2292e5606298d880a0f78ca6d5ede40b90",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
