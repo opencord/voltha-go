@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"reflect"
 	"sync"
@@ -44,7 +45,7 @@ type root struct {
 	NotificationCallbacks []CallbackTuple
 
 	DirtyNodes    map[string][]*node
-	KvStore       *Backend
+	KvStore       *db.Backend
 	Loading       bool
 	RevisionClass interface{}
 
@@ -52,7 +53,7 @@ type root struct {
 }
 
 // NewRoot creates an new instance of a root object
-func NewRoot(initialData interface{}, kvStore *Backend) *root {
+func NewRoot(initialData interface{}, kvStore *db.Backend) *root {
 	root := &root{}
 
 	root.KvStore = kvStore
