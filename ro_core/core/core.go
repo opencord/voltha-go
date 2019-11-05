@@ -17,9 +17,10 @@ package core
 
 import (
 	"context"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
 	grpcserver "github.com/opencord/voltha-lib-go/v2/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
@@ -58,7 +59,7 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	// Do not call NewBackend constructor; it creates its own KV client
 	// Commented the backend for now until the issue between the model and the KV store
 	// is resolved.
-	backend := model.Backend{
+	backend := db.Backend{
 		Client:     kvClient,
 		StoreType:  cf.KVStoreType,
 		Host:       cf.KVStoreHost,

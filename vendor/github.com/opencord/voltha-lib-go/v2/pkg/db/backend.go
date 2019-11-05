@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package model
+package db
 
 import (
 	"errors"
@@ -23,12 +23,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"strconv"
 	"sync"
-	"time"
 )
-
-//TODO: missing cache stuff
-//TODO: missing retry stuff
-//TODO: missing proper logging
 
 // Backend structure holds details for accessing the kv store
 type Backend struct {
@@ -82,53 +77,47 @@ func (b *Backend) makePath(key string) string {
 }
 
 // List retrieves one or more items that match the specified key
-func (b *Backend) List(key string, lock ...bool) (map[string]*kvstore.KVPair, error) {
+func (b *Backend) List(key string) (map[string]*kvstore.KVPair, error) {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugw("listing-key", log.Fields{"key": key, "path": formattedPath, "lock": lock})
+	log.Debugw("listing-key", log.Fields{"key": key, "path": formattedPath})
 
-	return b.Client.List(formattedPath, b.Timeout, lock...)
+	return b.Client.List(formattedPath, b.Timeout)
 }
 
 // Get retrieves an item that matches the specified key
-func (b *Backend) Get(key string, lock ...bool) (*kvstore.KVPair, error) {
+func (b *Backend) Get(key string) (*kvstore.KVPair, error) {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugw("getting-key", log.Fields{"key": key, "path": formattedPath, "lock": lock})
+	log.Debugw("getting-key", log.Fields{"key": key, "path": formattedPath})
 
-	start := time.Now()
-	err, pair := b.Client.Get(formattedPath, b.Timeout, lock...)
-	stop := time.Now()
-
-	GetProfiling().AddToDatabaseRetrieveTime(stop.Sub(start).Seconds())
-
-	return err, pair
+	return b.Client.Get(formattedPath, b.Timeout)
 }
 
 // Put stores an item value under the specifed key
-func (b *Backend) Put(key string, value interface{}, lock ...bool) error {
+func (b *Backend) Put(key string, value interface{}) error {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugw("putting-key", log.Fields{"key": key, "value": string(value.([]byte)), "path": formattedPath, "lock": lock})
+	log.Debugw("putting-key", log.Fields{"key": key, "value": string(value.([]byte)), "path": formattedPath})
 
-	return b.Client.Put(formattedPath, value, b.Timeout, lock...)
+	return b.Client.Put(formattedPath, value, b.Timeout)
 }
 
 // Delete removes an item under the specified key
-func (b *Backend) Delete(key string, lock ...bool) error {
+func (b *Backend) Delete(key string) error {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	log.Debugw("deleting-key", log.Fields{"key": key, "path": formattedPath, "lock": lock})
+	log.Debugw("deleting-key", log.Fields{"key": key, "path": formattedPath})
 
-	return b.Client.Delete(formattedPath, b.Timeout, lock...)
+	return b.Client.Delete(formattedPath, b.Timeout)
 }
 
 // CreateWatch starts watching events for the specified key

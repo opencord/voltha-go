@@ -36,6 +36,7 @@ WORKDIR /go/src
 
 # Copy common files.
 COPY common ./common
+COPY db ./db
 COPY vendor ./vendor
 
 # Copy files

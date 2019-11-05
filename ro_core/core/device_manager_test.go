@@ -16,8 +16,9 @@
 package core
 
 import (
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -27,7 +28,7 @@ func MakeTestDevManagerConfig() (*Core, error) {
 	var core Core
 	core.instanceId = "ro_core"
 	core.config = config.NewROCoreFlags()
-	backend := model.Backend{
+	backend := db.Backend{
 		Client:     core.kvClient,
 		StoreType:  core.config.KVStoreType,
 		Host:       core.config.KVStoreHost,
