@@ -79,10 +79,10 @@ func NewEvent(eventType int, key interface{}, value interface{}, version int64) 
 
 // Client represents the set of APIs a KV Client must implement
 type Client interface {
-	List(key string, timeout int, lock ...bool) (map[string]*KVPair, error)
-	Get(key string, timeout int, lock ...bool) (*KVPair, error)
-	Put(key string, value interface{}, timeout int, lock ...bool) error
-	Delete(key string, timeout int, lock ...bool) error
+	List(key string, timeout int) (map[string]*KVPair, error)
+	Get(key string, timeout int) (*KVPair, error)
+	Put(key string, value interface{}, timeout int) error
+	Delete(key string, timeout int) error
 	Reserve(key string, value interface{}, ttl int64) (interface{}, error)
 	ReleaseReservation(key string) error
 	ReleaseAllReservations() error

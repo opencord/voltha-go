@@ -71,7 +71,7 @@ func (c *EtcdClient) IsConnectionUp(timeout int) bool {
 
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KVPair, error) {
+func (c *EtcdClient) List(key string, timeout int) (map[string]*KVPair, error) {
 	duration := GetDuration(timeout)
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -91,7 +91,7 @@ func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KV
 
 // Get returns a key-value pair for a given key. Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) Get(key string, timeout int, lock ...bool) (*KVPair, error) {
+func (c *EtcdClient) Get(key string, timeout int) (*KVPair, error) {
 	duration := GetDuration(timeout)
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -112,7 +112,7 @@ func (c *EtcdClient) Get(key string, timeout int, lock ...bool) (*KVPair, error)
 // Put writes a key-value pair to the KV store.  Value can only be a string or []byte since the etcd API
 // accepts only a string as a value for a put operation. Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) Put(key string, value interface{}, timeout int, lock ...bool) error {
+func (c *EtcdClient) Put(key string, value interface{}, timeout int) error {
 
 	// Validate that we can convert value to a string as etcd API expects a string
 	var val string
@@ -155,7 +155,7 @@ func (c *EtcdClient) Put(key string, value interface{}, timeout int, lock ...boo
 
 // Delete removes a key from the KV store. Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) Delete(key string, timeout int, lock ...bool) error {
+func (c *EtcdClient) Delete(key string, timeout int) error {
 
 	duration := GetDuration(timeout)
 
@@ -233,7 +233,7 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 		}
 	} else {
 		// Read the Key to ensure this is our Key
-		m, err := c.Get(key, defaultKVGetTimeout, false)
+		m, err := c.Get(key, defaultKVGetTimeout)
 		if err != nil {
 			return nil, err
 		}

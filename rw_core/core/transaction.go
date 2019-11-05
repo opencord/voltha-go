@@ -296,14 +296,14 @@ func (c *KVTransaction) Close() error {
 	// Stop monitoring the key (applies only when there has been no transaction switch over)
 	if c.monitorCh != nil {
 		close(c.monitorCh)
-		ctx.kvClient.Put(c.txnKey, TRANSACTION_COMPLETE, ctx.kvOperationTimeout, false)
+		ctx.kvClient.Put(c.txnKey, TRANSACTION_COMPLETE, ctx.kvOperationTimeout)
 	}
 	return nil
 }
 
 func (c *KVTransaction) Delete() error {
 	log.Debugw("delete", log.Fields{"txn": c.txnId})
-	return ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout, false)
+	return ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
 }
 
 // holdOnToTxnUntilProcessingCompleted renews the transaction lease until the transaction is complete.  durationInSecs
