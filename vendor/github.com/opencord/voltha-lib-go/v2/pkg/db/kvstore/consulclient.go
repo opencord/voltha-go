@@ -71,7 +71,7 @@ func (c *ConsulClient) IsConnectionUp(timeout int) bool {
 
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) List(key string, timeout int, lock ...bool) (map[string]*KVPair, error) {
+func (c *ConsulClient) List(key string, timeout int) (map[string]*KVPair, error) {
 	duration := GetDuration(timeout)
 
 	kv := c.consul.KV()
@@ -92,7 +92,7 @@ func (c *ConsulClient) List(key string, timeout int, lock ...bool) (map[string]*
 
 // Get returns a key-value pair for a given key. Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) Get(key string, timeout int, lock ...bool) (*KVPair, error) {
+func (c *ConsulClient) Get(key string, timeout int) (*KVPair, error) {
 
 	duration := GetDuration(timeout)
 
@@ -115,7 +115,7 @@ func (c *ConsulClient) Get(key string, timeout int, lock ...bool) (*KVPair, erro
 // Put writes a key-value pair to the KV store.  Value can only be a string or []byte since the consul API
 // accepts only a []byte as a value for a put operation. Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) Put(key string, value interface{}, timeout int, lock ...bool) error {
+func (c *ConsulClient) Put(key string, value interface{}, timeout int) error {
 
 	// Validate that we can create a byte array from the value as consul API expects a byte array
 	var val []byte
@@ -141,7 +141,7 @@ func (c *ConsulClient) Put(key string, value interface{}, timeout int, lock ...b
 
 // Delete removes a key from the KV store. Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) Delete(key string, timeout int, lock ...bool) error {
+func (c *ConsulClient) Delete(key string, timeout int) error {
 	kv := c.consul.KV()
 	var writeOptions consulapi.WriteOptions
 	c.writeLock.Lock()

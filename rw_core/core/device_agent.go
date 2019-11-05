@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/opencord/voltha-go/db/model"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
 	fu "github.com/opencord/voltha-lib-go/v2/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
