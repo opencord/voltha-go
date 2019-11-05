@@ -22,6 +22,7 @@ import (
 	"context"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"reflect"
@@ -35,7 +36,7 @@ type PersistedRevision struct {
 	Compress bool
 
 	events       chan *kvstore.Event
-	kvStore      *Backend
+	kvStore      *db.Backend
 	mutex        sync.RWMutex
 	versionMutex sync.RWMutex
 	Version      int64
