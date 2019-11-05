@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9bb3b6d_ccbaec6b",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-11-05T09:34:38Z",
+      "side": 1,
+      "message": "This will throw a \u0027go fmt\u0027 error I think. Please remove these blanks.",
+      "revId": "0432bbb67f41366ee176711dec00137d7f523d77",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
