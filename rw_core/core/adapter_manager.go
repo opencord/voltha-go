@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
 	"github.com/opencord/voltha-protos/v2/go/voltha"

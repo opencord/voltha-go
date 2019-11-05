@@ -17,9 +17,10 @@ package core
 
 import (
 	"context"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/model"
 	grpcserver "github.com/opencord/voltha-lib-go/v2/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -63,7 +64,7 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 	core.kafkaClient = kafkaClient
 
 	// Setup the KV store
-	backend := model.Backend{
+	backend := db.Backend{
 		Client:     kvClient,
 		StoreType:  cf.KVStoreType,
 		Host:       cf.KVStoreHost,
