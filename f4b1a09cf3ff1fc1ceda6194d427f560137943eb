@@ -16,6 +16,24 @@
       "revId": "f4b1a09cf3ff1fc1ceda6194d427f560137943eb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "820f8cf0_11d8cab6",
+        "filename": "ro_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-05T16:55:10Z",
+      "side": 1,
+      "message": "Let me remove it and see.",
+      "parentUuid": "fa9e34a0_16c45368",
+      "revId": "f4b1a09cf3ff1fc1ceda6194d427f560137943eb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
