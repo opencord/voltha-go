@@ -39,8 +39,8 @@ type IAdapter interface {
 	Update_flows_incrementally(device *voltha.Device, flows *openflow_13.FlowChanges, groups *openflow_13.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error
 	Update_pm_config(device *voltha.Device, pm_configs *voltha.PmConfigs) error
 	Receive_packet_out(deviceId string, egress_port_no int, msg *openflow_13.OfpPacketOut) error
-	Suppress_alarm(filter *voltha.AlarmFilter) error
-	Unsuppress_alarm(filter *voltha.AlarmFilter) error
+	Suppress_event(filter *voltha.EventFilter) error
+	Unsuppress_event(filter *voltha.EventFilter) error
 	Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapability, error)
 	Get_ofp_port_info(device *voltha.Device, port_no int64) (*ic.PortCapability, error)
 	Process_inter_adapter_message(msg *ic.InterAdapterMessage) error
