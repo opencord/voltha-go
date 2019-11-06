@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "a9250602_4d400772",
+        "filename": "cli/main.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-06T06:48:32Z",
+      "side": 1,
+      "message": "I will do this change in the next patch.",
+      "parentUuid": "d1770229_8e27fb30",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 40
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1af8378e_3151ed87",
         "filename": "cli/menu/devicemenu/help.go",
         "patchSetId": 4
@@ -536,6 +560,30 @@
       "writtenOn": "2019-11-05T15:15:10Z",
       "side": 1,
       "message": "need to properly describe function",
+      "range": {
+        "startLine": 113,
+        "startChar": 29,
+        "endLine": 113,
+        "endChar": 33
+      },
+      "revId": "20aa7a7a43b0354aba5f8f43342133beb2dc2c8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0835fa9c_ddaddeb6",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-06T06:48:32Z",
+      "side": 1,
+      "message": "I am not much aware about most of the APIs, I will try to give the description based on the knowledge what I have, Please correct me if something is wrong.",
+      "parentUuid": "bc093b83_9afad391",
       "range": {
         "startLine": 113,
         "startChar": 29,
