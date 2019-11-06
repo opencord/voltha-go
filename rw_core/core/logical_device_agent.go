@@ -17,6 +17,7 @@ package core
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/gogo/protobuf/proto"
@@ -1882,7 +1883,10 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(childDevice *voltha.Device, p
 }
 
 func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
-	log.Debugw("packet-out", log.Fields{"packet": packet.GetInPort()})
+	log.Debugw("packet-out", log.Fields{
+		"packet": hex.EncodeToString(packet.Data),
+		"inPort": packet.GetInPort(),
+	})
 	outPort := fu.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
@@ -1892,10 +1896,14 @@ func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 }
 
 func (agent *LogicalDeviceAgent) packetIn(port uint32, transactionId string, packet []byte) {
-	log.Debugw("packet-in", log.Fields{"port": port, "packet": packet, "transactionId": transactionId})
+	log.Debugw("packet-in", log.Fields{
+		"port":          port,
+		"packet":        hex.EncodeToString(packet),
+		"transactionId": transactionId,
+	})
 	packetIn := fu.MkPacketIn(port, packet)
 	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, transactionId, packetIn)
-	log.Debugw("sending-packet-in", log.Fields{"packet-in": packetIn})
+	log.Debugw("sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
 }
 
 func (agent *LogicalDeviceAgent) addLogicalPortToMap(portNo uint32, nniPort bool) {
