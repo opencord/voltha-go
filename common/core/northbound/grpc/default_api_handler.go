@@ -250,28 +250,28 @@ func (handler *DefaultAPIHandler) GetDeviceGroup(ctx context.Context, id *voltha
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *DefaultAPIHandler) CreateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {
-	log.Debugw("CreateAlarmFilter-request", log.Fields{"filter": *filter})
+func (handler *DefaultAPIHandler) CreateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
+	log.Debugw("CreateEventFilter-request", log.Fields{"filter": *filter})
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *DefaultAPIHandler) GetAlarmFilter(ctx context.Context, id *voltha.ID) (*voltha.AlarmFilter, error) {
-	log.Debugw("GetAlarmFilter-request", log.Fields{"id": id})
+func (handler *DefaultAPIHandler) GetEventFilter(ctx context.Context, id *voltha.ID) (*voltha.EventFilter, error) {
+	log.Debugw("GetEventFilter-request", log.Fields{"id": id})
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *DefaultAPIHandler) UpdateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {
-	log.Debugw("UpdateAlarmFilter-request", log.Fields{"filter": *filter})
+func (handler *DefaultAPIHandler) UpdateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
+	log.Debugw("UpdateEventFilter-request", log.Fields{"filter": *filter})
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *DefaultAPIHandler) DeleteAlarmFilter(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
-	log.Debugw("DeleteAlarmFilter-request", log.Fields{"id": *id})
+func (handler *DefaultAPIHandler) DeleteEventFilter(ctx context.Context, filterInfo *voltha.EventFilter) (*empty.Empty, error) {
+	log.Debugw("DeleteEventFilter-request", log.Fields{"filter-details": *filterInfo})
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *DefaultAPIHandler) ListAlarmFilters(ctx context.Context, empty *empty.Empty) (*voltha.AlarmFilters, error) {
-	log.Debug("ListAlarmFilters-request")
+func (handler *DefaultAPIHandler) ListEventFilters(ctx context.Context, empty *empty.Empty) (*voltha.EventFilters, error) {
+	log.Debug("ListEventFilters-request")
 	return nil, errors.New("UnImplemented")
 }
 
