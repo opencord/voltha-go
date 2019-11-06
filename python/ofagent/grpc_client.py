@@ -33,6 +33,7 @@ from voltha_protos.voltha_pb2 import ID, FlowTableUpdate, MeterModUpdate, \
     FlowGroupTableUpdate, PacketOut
 from voltha_protos.logical_device_pb2 import LogicalPortId
 from google.protobuf import empty_pb2
+from binascii import hexlify
 
 
 log = get_logger()
@@ -126,7 +127,8 @@ class GrpcClient(object):
                                            packet_in)
                     log.debug('enqueued-packet-in',
                               packet_in=packet_in,
-                              queue_len=len(self.packet_in_queue.pending))
+                              queue_len=len(self.packet_in_queue.pending),
+                              packet=hexlify(packet_in.packet_in.data))
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
@@ -172,13 +174,13 @@ class GrpcClient(object):
             packet_in = yield self.packet_in_queue.get()
             device_id = packet_in.id
             ofp_packet_in = packet_in.packet_in
-            log.debug('grpc client to send packet-in')
+            log.debug('grpc client to send packet-in', packet=hexlify(packet_in.packet_in.data))
             self.connection_manager.forward_packet_in(device_id, ofp_packet_in)
             if self.stopped:
                 break
 
     def send_packet_out(self, device_id, packet_out):
-        log.debug('grpc client to send packet-out')
+        log.debug('grpc client to send packet-out', packet=hexlify(packet_out.data))
         packet_out = PacketOut(id=device_id, packet_out=packet_out)
         self.packet_out_queue.put(packet_out)
 
