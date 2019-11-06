@@ -905,48 +905,33 @@ func (handler *APIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.I
 	return handler.deviceMgr.listPmConfigs(ctx, id.Id)
 }
 
-// CreateAlarmFilter creates alarm filter
-func (handler *APIHandler) CreateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {
-	log.Debugw("CreateAlarmFilter-request", log.Fields{"filter": *filter})
-	if isTestMode(ctx) {
-		f := &voltha.AlarmFilter{Id: filter.Id}
-		return f, nil
-	}
-	return &voltha.AlarmFilter{}, errors.New("UnImplemented")
+func (handler *APIHandler) CreateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
+	log.Debugw("CreateEventFilter-request", log.Fields{"filter": *filter})
+	return nil, errors.New("UnImplemented")
 }
 
-// UpdateAlarmFilter updates alarm filter
-func (handler *APIHandler) UpdateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {
-	log.Debugw("UpdateAlarmFilter-request", log.Fields{"filter": *filter})
-	if isTestMode(ctx) {
-		f := &voltha.AlarmFilter{Id: filter.Id}
-		return f, nil
-	}
-	return &voltha.AlarmFilter{}, errors.New("UnImplemented")
+func (handler *APIHandler) UpdateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
+	log.Debugw("UpdateEventFilter-request", log.Fields{"filter": *filter})
+	return nil, errors.New("UnImplemented")
 }
 
-// DeleteAlarmFilter deletes alarm filter
-func (handler *APIHandler) DeleteAlarmFilter(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
-	log.Debugw("DeleteAlarmFilter-request", log.Fields{"id": *id})
-	if isTestMode(ctx) {
-		return &empty.Empty{}, nil
-	}
-	return &empty.Empty{}, errors.New("UnImplemented")
+func (handler *APIHandler) DeleteEventFilter(ctx context.Context, filterInfo *voltha.EventFilter) (*empty.Empty, error) {
+	log.Debugw("DeleteEventFilter-request", log.Fields{"device-id": filterInfo.DeviceId, "filter-id": filterInfo.Id})
+	return nil, errors.New("UnImplemented")
 }
 
-// ListAlarmFilters returns alarm filters
-func (handler *APIHandler) ListAlarmFilters(ctx context.Context, empty *empty.Empty) (*voltha.AlarmFilters, error) {
-	log.Debug("ListAlarmFilters")
-	return &voltha.AlarmFilters{}, errors.New("UnImplemented")
+// GetEventFilter returns all the filters present for a device
+func (handler *APIHandler) GetEventFilter(ctx context.Context, id *voltha.ID) (*voltha.EventFilters, error) {
+	log.Debugw("GetEventFilter-request", log.Fields{"device-id": id})
+	return nil, errors.New("UnImplemented")
 }
 
-// GetAlarmFilter returns alarm filter
-func (handler *APIHandler) GetAlarmFilter(ctx context.Context, id *voltha.ID) (*voltha.AlarmFilter, error) {
-	log.Debug("GetAlarmFilter")
-	return &voltha.AlarmFilter{}, errors.New("UnImplemented")
+// ListEventFilters returns all the filters known to the system
+func (handler *APIHandler) ListEventFilters(ctx context.Context, empty *empty.Empty) (*voltha.EventFilters, error) {
+	log.Debug("ListEventFilter-request")
+	return nil, errors.New("UnImplemented")
 }
 
-// SelfTest executes self test
 func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
 	log.Debugw("SelfTest-request", log.Fields{"id": id})
 	if isTestMode(ctx) {

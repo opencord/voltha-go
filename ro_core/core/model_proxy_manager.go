@@ -34,7 +34,7 @@ type DataModelType int
 // Enumerated list of data path agents
 const (
 	Adapters DataModelType = 1 + iota
-	AlarmFilters
+	EventFilters
 	CoreInstances
 	DeviceTypes
 	DeviceGroups
@@ -47,7 +47,7 @@ const SentinelAdapterID = "adapter_sentinel"
 // String equivalent for data path agents
 var commonTypes = []string{
 	"Adapters",
-	"AlarmFilters",
+	"EventFilters",
 	"CoreInstances",
 	"DeviceTypes",
 	"DeviceGroups",
@@ -260,19 +260,19 @@ func (mpMgr *ModelProxyManager) GetDeviceGroup(ctx context.Context, id string) (
 	return &voltha.DeviceGroup{}, status.Errorf(codes.NotFound, "device-group-%s", id)
 }
 
-// ListAlarmFilters returns all the alarm filters known to the system
-func (mpMgr *ModelProxyManager) ListAlarmFilters(ctx context.Context) (*voltha.AlarmFilters, error) {
-	log.Debug("ListAlarmFilters")
+// ListEventFilters returns all the event filters known to the system
+func (mpMgr *ModelProxyManager) ListEventFilters(ctx context.Context) (*voltha.EventFilters, error) {
+	log.Debug("ListEventFilters")
 
 	var agent *ModelProxy
 	var exists bool
 
-	if agent, exists = mpMgr.modelProxy[AlarmFilters.String()]; !exists {
-		agent = newModelProxy("alarm_filters", mpMgr.clusterDataProxy)
-		mpMgr.modelProxy[AlarmFilters.String()] = agent
+	if agent, exists = mpMgr.modelProxy[EventFilters.String()]; !exists {
+		agent = newModelProxy("event_filters", mpMgr.clusterDataProxy)
+		mpMgr.modelProxy[EventFilters.String()] = agent
 	}
 
-	alarmFilters := &voltha.AlarmFilters{}
+	eventFilters := &voltha.EventFilters{}
 	if items, err := agent.Get(); err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	} else if items != nil {
@@ -281,35 +281,30 @@ func (mpMgr *ModelProxyManager) ListAlarmFilters(ctx context.Context) (*voltha.A
 			list = []interface{}{items}
 		}
 		for _, item := range list {
-			alarmFilters.Filters = append(alarmFilters.Filters, item.(*voltha.AlarmFilter))
+			eventFilters.Filters = append(eventFilters.Filters, item.(*voltha.EventFilter))
 		}
-		return alarmFilters, nil
+		return eventFilters, nil
 	}
 
-	return alarmFilters, status.Errorf(codes.NotFound, "no-alarm-filters")
+	return eventFilters, status.Errorf(codes.NotFound, "no-event-filters")
 }
 
-// GetAlarmFilter returns the alarm filter associated to the provided id
-func (mpMgr *ModelProxyManager) GetAlarmFilter(ctx context.Context, id string) (*voltha.AlarmFilter, error) {
-	log.Debugw("GetAlarmFilter", log.Fields{"id": id})
+// GetEventFilter returns the event filter associated to the provided device id
+func (mpMgr *ModelProxyManager) GetEventFilter(ctx context.Context, id string) (*voltha.EventFilters, error) {
+	log.Debugw("GetEventFilter", log.Fields{"id": id})
 
 	var agent *ModelProxy
 	var exists bool
 
-	if agent, exists = mpMgr.modelProxy[AlarmFilters.String()]; !exists {
-		agent = newModelProxy("alarm_filters", mpMgr.clusterDataProxy)
-		mpMgr.modelProxy[AlarmFilters.String()] = agent
+	if agent, exists = mpMgr.modelProxy[EventFilters.String()]; !exists {
+		agent = newModelProxy("event_filters", mpMgr.clusterDataProxy)
+		mpMgr.modelProxy[EventFilters.String()] = agent
 	}
 
-	if alarmFilter, err := agent.Get(id); err != nil {
+	if _, err := agent.Get(id); err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
-	} else if alarmFilter != nil {
-		_, ok := alarmFilter.(*voltha.AlarmFilter)
-		if !ok {
-			return nil, status.Errorf(codes.Internal, MultipleValuesMsg,
-				id, AlarmFilters.String())
-		}
-		return alarmFilter.(*voltha.AlarmFilter), nil
 	}
-	return &voltha.AlarmFilter{}, status.Errorf(codes.NotFound, "alarm-filter-%s", id)
+	//TODO: VOL-2305 Code to get filters for a particular device once Event filtering mechanism is implemented
+
+	return &voltha.EventFilters{}, status.Errorf(codes.NotFound, "event-filter-%s", id)
 }

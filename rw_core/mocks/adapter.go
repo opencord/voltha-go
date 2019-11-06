@@ -160,13 +160,13 @@ func (ta *Adapter) Receive_packet_out(deviceID string, egressPortNo int, msg *of
 	return nil
 }
 
-// Suppress_alarm -
-func (ta *Adapter) Suppress_alarm(filter *voltha.AlarmFilter) error { // nolint
+// Suppress_event -
+func (ta *Adapter) Suppress_event(filter *voltha.EventFilter) error { // nolint
 	return nil
 }
 
-// Unsuppress_alarm -
-func (ta *Adapter) Unsuppress_alarm(filter *voltha.AlarmFilter) error { // nolint
+// Unsuppress_event -
+func (ta *Adapter) Unsuppress_event(filter *voltha.EventFilter) error { // nolint
 	return nil
 }
 
