@@ -532,15 +532,13 @@ func (ap *AdapterProxy) ReceivePacketOut(deviceID voltha.ID, egressPortNo int, m
 	return nil
 }
 
-// SuppressAlarm - TODO
-func (ap *AdapterProxy) SuppressAlarm(filter voltha.AlarmFilter) error {
-	log.Debug("SuppressAlarm")
+func (ap *AdapterProxy) SuppressEvent(filter voltha.EventFilter) error {
+	log.Debug("SuppressEvent")
 	return nil
 }
 
-// UnSuppressAlarm - TODO
-func (ap *AdapterProxy) UnSuppressAlarm(filter voltha.AlarmFilter) error {
-	log.Debug("UnSuppressAlarm")
+func (ap *AdapterProxy) UnSuppressEvent(filter voltha.EventFilter) error {
+	log.Debug("UnSuppressEvent")
 	return nil
 }
 

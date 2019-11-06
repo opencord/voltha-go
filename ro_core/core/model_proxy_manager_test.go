@@ -229,9 +229,9 @@ func TestGetDeviceGroup(t *testing.T) {
 	assert.Equal(t, "id", result1.Id)
 }
 
-func TestListAlarmFilters(t *testing.T) {
-	wantResult := &voltha.AlarmFilters{
-		Filters: []*voltha.AlarmFilter{
+func TestListEventFilters(t *testing.T) {
+	wantResult := &voltha.EventFilters{
+		Filters: []*voltha.EventFilter{
 			{
 				Id: "id",
 			},
@@ -241,47 +241,54 @@ func TestListAlarmFilters(t *testing.T) {
 	mpMgr := makeModelProxyManagerObj()
 
 	// Case 1: Not Found
-	result0, err0 := mpMgr.ListAlarmFilters(context.Background())
+	result0, err0 := mpMgr.ListEventFilters(context.Background())
 	if reflect.TypeOf(result0) != reflect.TypeOf(wantResult) {
-		t.Errorf("ListAlarmFilters() = %v, want %v", result0, wantResult)
+		t.Errorf("ListEventFilters() = %v, want %v", result0, wantResult)
 	}
 	assert.Nil(t, result0.Filters)
 	assert.Nil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/alarm_filters", &voltha.AlarmFilter{Id: "id"}, ""); added == nil {
-		t.Error("Failed to add alarm filter")
+	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/event_filters", &voltha.EventFilter{Id: "id"}, ""); added == nil {
+		t.Error("Failed to add event filter")
 	}
-	result1, err1 := mpMgr.ListAlarmFilters(context.Background())
+	result1, err1 := mpMgr.ListEventFilters(context.Background())
 	if reflect.TypeOf(result1) != reflect.TypeOf(wantResult) {
-		t.Errorf("ListAlarmFilters() = %v, want %v", result1, wantResult)
+		t.Errorf("ListEventFilters() = %v, want %v", result1, wantResult)
 	}
 	assert.NotNil(t, result1.Filters)
 	assert.Nil(t, err1)
 	assert.Equal(t, wantResult, result1)
 }
 
-func TestGetAlarmFilter(t *testing.T) {
-	wantResult := &voltha.AlarmFilter{}
+func TestGetEventFilter(t *testing.T) {
+	wantResult := &voltha.EventFilters{
+		Filters: []*voltha.EventFilter{
+			{
+				Id: "id",
+			},
+		},
+	}
+
 	mpMgr := makeModelProxyManagerObj()
 
 	// Case 1: Not Found
-	result0, err0 := mpMgr.GetAlarmFilter(context.Background(), "id")
+	result0, err0 := mpMgr.GetEventFilter(context.Background(), "id")
 	if reflect.TypeOf(result0) != reflect.TypeOf(wantResult) {
-		t.Errorf("GetAlarmFilter() = %v, want %v", result0, wantResult)
+		t.Errorf("GetEventFilters() = %v, want %v", result0, wantResult)
 	}
 	assert.Nil(t, result0)
-	assert.NotNil(t, err0)
-
+	assert.Nil(t, err0)
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/alarm_filters", &voltha.AlarmFilter{Id: "id"}, ""); added == nil {
-		t.Error("Failed to add alarm filter")
+	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/event_filters", &voltha.EventFilter{Id: "id"}, ""); added == nil {
+		t.Error("Failed to add event filter")
 	}
-	result1, err1 := mpMgr.GetAlarmFilter(context.Background(), "id")
+	result1, err1 := mpMgr.ListEventFilters(context.Background())
 	if reflect.TypeOf(result1) != reflect.TypeOf(wantResult) {
-		t.Errorf("GetAlarmFilter() = %v, want %v", result1, wantResult)
+		t.Errorf("GetEventFilters() = %v, want %v", result1, wantResult)
 	}
 	assert.NotNil(t, result1)
 	assert.Nil(t, err1)
-	assert.Equal(t, "id", result1.Id)
+	assert.Equal(t, wantResult, result1)
+
 }
