@@ -238,16 +238,16 @@ func (handler *APIHandler) GetImages(ctx context.Context, id *voltha.ID) (*volth
 	return handler.deviceMgr.GetImages(ctx, id.Id)
 }
 
-// ListAlarmFilters return all alarm filters known to the system
-func (handler *APIHandler) ListAlarmFilters(ctx context.Context, empty *empty.Empty) (*voltha.AlarmFilters, error) {
-	log.Debug("ListAlarmFilters")
-	return handler.commonMgr.ListAlarmFilters(ctx)
+// ListEventFilters return all event filters known to the system
+func (handler *APIHandler) ListEventFilters(ctx context.Context, empty *empty.Empty) (*voltha.EventFilters, error) {
+	log.Debug("ListEventFilters")
+	return handler.commonMgr.ListEventFilters(ctx)
 }
 
-// GetAlarmFilter returns a specific alarm filter entry
-func (handler *APIHandler) GetAlarmFilter(ctx context.Context, id *voltha.ID) (*voltha.AlarmFilter, error) {
-	log.Debugw("GetAlarmFilter", log.Fields{"alarmid": id})
-	return handler.commonMgr.GetAlarmFilter(ctx, id.Id)
+// GetEventFilter returns a  filter for a specific device
+func (handler *APIHandler) GetEventFilter(ctx context.Context, id *voltha.ID) (*voltha.EventFilters, error) {
+	log.Debugw("GetEventFilter", log.Fields{"deviceid": id})
+	return handler.commonMgr.GetEventFilter(ctx, id.Id)
 }
 
 //ReconcileDevices is a request to a voltha core to managed a list of devices  based on their IDs
