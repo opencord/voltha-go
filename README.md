@@ -2,7 +2,7 @@
 
 ## What is Voltha?
 
-Voltha aims to provide a layer of abstraction on top of legacy and next generation access network equipment for the purpose of control and management. Its initial focus is on PON (GPON, EPON, NG PON 2), but it aims to go beyond to eventually cover other access technologies (xDSL, Docsis, G.FAST, dedicated Ethernet, fixed wireless).
+Voltha aims to provide a layer of abstraction on top of legacy and next generation access network equipment for the purpose of control and management. Its initial focus is on PON (GPON, EPON, NG PON 2), but it aims to eventually cover other access technologies (xDSL, Docsis, G.FAST, dedicated Ethernet, fixed wireless).
 
 Key concepts of Voltha:
 
