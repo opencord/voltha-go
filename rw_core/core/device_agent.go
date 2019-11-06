@@ -17,6 +17,7 @@ package core
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"sync"
@@ -1005,7 +1006,11 @@ func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) 
 func (agent *DeviceAgent) packetOut(outPort uint32, packet *ofp.OfpPacketOut) error {
 	//	Send packet to adapter
 	if err := agent.adapterProxy.packetOut(agent.deviceType, agent.deviceId, outPort, packet); err != nil {
-		log.Debugw("packet-out-error", log.Fields{"id": agent.lastData.Id, "error": err})
+		log.Debugw("packet-out-error", log.Fields{
+			"id":     agent.lastData.Id,
+			"error":  err,
+			"packet": hex.EncodeToString(packet.Data),
+		})
 		return err
 	}
 	return nil

@@ -18,6 +18,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 import loxi.of13 as ofp
 from converter import to_loxi, pb2dict, to_grpc
+from binascii import hexlify
 
 log = structlog.get_logger()
 
@@ -348,7 +349,7 @@ class OpenFlowProtocolHandler(object):
 
     def forward_packet_in(self, ofp_packet_in):
         if self.role == ofp.OFPCR_ROLE_MASTER or self.role == ofp.OFPCR_ROLE_EQUAL:
-           log.info('sending-packet-in', ofp_packet_in=ofp_packet_in)
+           log.info('sending-packet-in', ofp_packet_in=ofp_packet_in, packet=hexlify(ofp_packet_in.data))
            self.cxn.send(to_loxi(ofp_packet_in))
 
     def forward_port_status(self, ofp_port_status):
