@@ -200,16 +200,16 @@ var roMethods []test = []test{
 		Expect: `{Id:\"group-ABC123XYZ\", LogicalDevices: []*voltha.LogicalDevice{&voltha.LogicalDevice{Id:\"LDevId\", DatapathId:64, RootDeviceId:\"Root\"}}, Devices: []*voltha.Device{&voltha.Device{Id:\"ABC123XYZ\", Type:\"SomeDeviceType\", Root:false, ParentId:\"ZYX321CBA\"},&voltha.Device{Id:\"ZYX321CBA\", Type:\"SomeDeviceType\", Root:true, ParentId:\"ROOT\"}}}`,
 	},
 	{
-		Name:   "Test ListAlarmFilters",
-		Method: "ListAlarmFilters", // rpc ListAlarmFilters(google.protobuf.Empty) returns(AlarmFilters)
+		Name:   "Test ListEventFilters",
+		Method: "ListEventFilters", // rpc ListEventFilters(google.protobuf.Empty) returns(EventFilters)
 		Param:  `{}`,
-		Expect: `{Filters:[]*voltha.AlarmFilter{&voltha.AlarmFilter{Id:\"ABC123XYZ\", Rules: []*voltha.AlarmFilterRule{&voltha.AlarmFilterRule{Value:\"Rule Value\"}}}}}`,
+		Expect: `{Filters:[]*voltha.EventFilter{&voltha.EventFilter{Id:\"ABC123XYZ\", DeviceId: \"Device123\", Enable: \"True\", EventType: \"DeviceEvent\", Rules: []*voltha.EventFilterRule{&voltha.EventFilterRule{Value:\"Rule Value\"}}}}}`,
 	},
 	{
-		Name:   "Test GetAlarmFilter",
-		Method: "GetAlarmFilter", // rpc GetAlarmFilter(ID) returns(AlarmFilter)
+		Name:   "Test GetEventFilter",
+		Method: "GetEventFilter", // rpc GetEventFilter(ID) returns(EventFilters)
 		Param:  `{Id:\"ABC123XYZ\"}`,
-		Expect: `{Id:\"ABC123XYZ\", Rules: []*voltha.AlarmFilterRule{&voltha.AlarmFilterRule{Value:\"Rule Value\"}}}`,
+		Expect: `{Filters:[]*voltha.EventFilter{&voltha.EventFilter{Id:\"ABC123XYZ\", DeviceId: \"Device123\", Enable: \"True\", EventType: \"DeviceEvent\", Rules: []*voltha.EventFilterRule{&voltha.EventFilterRule{Value:\"Rule Value\"}}}}}`,
 	},
 	{
 		Name:   "Test GetImages",
@@ -315,20 +315,21 @@ var rwMethods []test = []test{
 		Expect: `{}`,
 	},
 	{
-		Name:   "Test CreateAlarmFilter",
-		Method: "CreateAlarmFilter", // rpc CreateAlarmFilter(AlarmFilter) returns(AlarmFilter)
-		Param:  `{Id:\"abc123xyz\", Rules:[]*voltha.AlarmFilterRule{&voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_type, Value:\"Type man, it's the type!\"}, &voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_category, Value:\"Category yeah!\"}}}`,
-		Expect: `{Id:\"abc123xyz\", Rules: []*voltha.AlarmFilterRule{&voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_type, Value:\"Type man, it's the type!\"}, &voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_category, Value:\"Category yeah!\"}}}`,
+		Name:   "Test CreateEventFilter",
+		Method: "CreateEventFilter", // rpc CreateEventFilter(EventFilter) returns(EventFilter)
+		//		Param:  `{Id:\"abc123xyz\", Rules:[]*voltha.EventFilterRule{&voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_type, Value:\"Type man, it's the type!\"}, &voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_category, Value:\"Category yeah!\"}}}`,
+		Param:  `{Id:\"abc123xyz\", DeviceId: \"Device123\", Enable: True, EventType: \"device_event\", Rules:[]*voltha.EventFilterRule{&voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_category, Value:\"Equipment\"}, &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_sub_category, Value:\"ONU\"}, &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_device_event_type, Value:\"dying_gasp_event\"}}}`,
+		Expect: `{Id:\"abc123xyz\", DeviceId: \"Device123\", Enable: True, EventType: \"device_event\", Rules:[]*voltha.EventFilterRule{&voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_category, Value:\"Equipment\"},     &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_sub_category, Value:\"ONU\"}, &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_device_event_type, Value:\"dying_gasp_event\"}}}`,
 	},
 	{
-		Name:   "Test UpdateAlarmFilter",
-		Method: "UpdateAlarmFilter", // rpc UpdateAlarmFilter(AlarmFilter) returns(AlarmFilter)
-		Param:  `{Id:\"ABC321XYZ\", Rules:[]*voltha.AlarmFilterRule{&voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_type, Value:\"Type man, it's the type!\"}, &voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_category, Value:\"Category yeah!\"}}}`,
-		Expect: `{Id:\"ABC321XYZ\", Rules: []*voltha.AlarmFilterRule{&voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_type, Value:\"Type man, it's the type!\"}, &voltha.AlarmFilterRule{Key:voltha.AlarmFilterRuleKey_category, Value:\"Category yeah!\"}}}`,
+		Name:   "Test UpdateEventFilter",
+		Method: "UpdateEventFilter", // rpc UpdateEventFilter(EventFilter) returns(EventFilter)
+		Param:  `{Id:\"abc123xyz\", DeviceId: \"Device123\", Enable: True, EventType: \"device_event\", Rules:[]*voltha.EventFilterRule{&voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_category, Value:\"Equipment\"}, &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_sub_category, Value:\"ONU\"}, &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_device_event_type, Value:\"dying_gasp_event\"}}}`,
+		Expect: `{Id:\"abc123xyz\", DeviceId: \"Device123\", Enable: True, EventType: \"device_event\", Rules:[]*voltha.EventFilterRule{&voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_category, Value:\"Equipment\"}, &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_sub_category, Value:\"ONU\"}, &voltha.EventFilterRule{Key:voltha.EventFilterRuleKey_device_event_type, Value:\"dying_gasp_event\"}}}`,
 	},
 	{
-		Name:   "Test DeleteAlarmFilter",
-		Method: "DeleteAlarmFilter", // rpc DeleteAlarmFilter(ID) returns(google.protobuf.Empty)
+		Name:   "Test DeleteEventFilter",
+		Method: "DeleteEventFilter", // rpc DeleteEventFilter(EventFilter) returns(google.protobuf.Empty)
 		Param:  `{Id:\"acb123xyz\"}`,
 		Expect: `{}`,
 	},
