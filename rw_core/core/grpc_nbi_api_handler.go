@@ -17,6 +17,7 @@ package core
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -959,7 +960,9 @@ loop:
 	for {
 		select {
 		case packet := <-handler.packetInQueue:
-			log.Debugw("sending-packet-in", log.Fields{"packet": packet})
+			log.Debugw("sending-packet-in", log.Fields{
+				"packet": hex.EncodeToString(packet.PacketIn.Data),
+			})
 			if err := packetsIn.Send(&packet); err != nil {
 				log.Errorw("failed-to-send-packet", log.Fields{"error": err})
 				// save the last failed packet in
