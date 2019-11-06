@@ -16,6 +16,24 @@
       "revId": "555307d3c0ab73ab15d62f633ff87a20c132eb40",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bd749e6_b33b106b",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-06T06:51:05Z",
+      "side": 0,
+      "message": "The \"unused\" linter in golangci-lint gives warning that, this function is not being used or called.",
+      "parentUuid": "4820369b_1dda99b6",
+      "revId": "555307d3c0ab73ab15d62f633ff87a20c132eb40",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
