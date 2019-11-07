@@ -52,6 +52,7 @@ func init() {
 
 func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	var core Core
+	var err error
 	core.instanceId = id
 	core.exitChannel = make(chan int, 1)
 	core.config = cf
@@ -65,18 +66,23 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	// Do not call NewBackend constructor; it creates its own KV client
 	// Commented the backend for now until the issue between the model and the KV store
 	// is resolved.
-	core.backend = db.Backend{
-		Client:                  kvClient,
-		StoreType:               cf.KVStoreType,
-		Host:                    cf.KVStoreHost,
-		Port:                    cf.KVStorePort,
-		Timeout:                 cf.KVStoreTimeout,
-		LivenessChannelInterval: livenessChannelInterval,
-		PathPrefix:              "service/voltha"}
-	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &core.backend)
-	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &core.backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	backend := db.Backend{
+		Client:     kvClient,
+		StoreType:  cf.KVStoreType,
+		Host:       cf.KVStoreHost,
+		Port:       cf.KVStorePort,
+		Timeout:    cf.KVStoreTimeout,
+		PathPrefix: "service/voltha"}
+	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
+	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
+	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
+	core.localDataProxy, err = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
 	return &core
 }
 
