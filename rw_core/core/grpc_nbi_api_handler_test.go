@@ -103,7 +103,10 @@ func (nb *NBTest) createAndregisterAdapters() {
 	}
 	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
-	nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes)
+	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+		log.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		return
+	}
 
 	// Setup the mock ONU adapter
 	if _, err := createMockAdapter(OnuAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.onuAdapterName); err != nil {
@@ -117,7 +120,10 @@ func (nb *NBTest) createAndregisterAdapters() {
 	}
 	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes = &voltha.DeviceTypes{Items: types}
-	nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes)
+	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+		log.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		return
+	}
 }
 
 func (nb *NBTest) stopAll() {
