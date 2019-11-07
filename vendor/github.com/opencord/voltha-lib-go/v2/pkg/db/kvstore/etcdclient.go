@@ -197,6 +197,7 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
 
+	ctx, _ := context.WithTimeout(context.Background(), duration)
 	resp, err := c.ectdAPI.Grant(ctx, ttl)
 	if err != nil {
 		log.Error(err)
@@ -268,6 +269,9 @@ func (c *EtcdClient) ReleaseAllReservations() error {
 	defer cancel()
 
 	for key, leaseID := range c.keyReservations {
+	ctx, _ := context.WithTimeout(context.Background(), duration)
+	for key, leaseID := range c.keyReservations {
+		//_, err := c.ectdAPI.Revoke(context.Background(), *leaseID)
 		_, err := c.ectdAPI.Revoke(ctx, *leaseID)
 		if err != nil {
 			log.Errorw("cannot-release-reservation", log.Fields{"key": key, "error": err})
@@ -286,6 +290,8 @@ func (c *EtcdClient) ReleaseReservation(key string) error {
 	var leaseID *v3Client.LeaseID
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
+	duration := GetDuration(connTimeout)
+	ctx, _ := context.WithTimeout(context.Background(), duration)
 	if leaseID, ok = c.keyReservations[key]; !ok {
 		return nil
 	}
@@ -318,7 +324,8 @@ func (c *EtcdClient) RenewReservation(key string) error {
 	duration := GetDuration(connTimeout)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-
+	if leaseID != nil {
+	ctx, _ := context.WithTimeout(context.Background(), duration)
 	if leaseID != nil {
 		_, err := c.ectdAPI.KeepAliveOnce(ctx, *leaseID)
 		if err != nil {
