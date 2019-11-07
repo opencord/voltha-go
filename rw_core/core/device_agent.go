@@ -88,7 +88,12 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 	log.Debugw("starting-device-agent", log.Fields{"deviceId": agent.deviceID})
 	if deviceToCreate == nil {
 		// Load the existing device
-		if loadedDevice := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 1, true, ""); loadedDevice != nil {
+		loadedDevice, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 1, true, "")
+		if err != nil {
+			log.Errorw("failed-to-get-from-cluster-data-proxy", log.Fields{"error": err})
+			return nil, err
+		}
+		if loadedDevice != nil {
 			var ok bool
 			if device, ok = loadedDevice.(*voltha.Device); ok {
 				agent.deviceType = device.Adapter
@@ -119,14 +124,22 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 		}
 
 		// Add the initial device to the local model
-		if added := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceID, device, ""); added == nil {
+		added, err := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceID, device, "")
+		if err != nil {
+			log.Errorw("failed-to-save-devices-to-cluster-proxy", log.Fields{"error": err})
+			return nil, err
+		}
+		if added == nil {
 			log.Errorw("failed-to-add-device", log.Fields{"deviceId": agent.deviceID})
 			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s", agent.deviceID)
 		}
 		agent.device = proto.Clone(device).(*voltha.Device)
 	}
-
-	agent.deviceProxy = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceID, false)
+	var err error
+	if agent.deviceProxy, err = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceID, false); err != nil {
+		log.Errorw("failed-to-add-devices-to-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	}
 	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
 
 	log.Debugw("device-agent-started", log.Fields{"deviceId": agent.deviceID})
@@ -143,7 +156,12 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 	agent.deviceProxy.UnregisterCallback(model.POST_UPDATE, agent.processUpdate)
 
 	//	Remove the device from the KV store
-	if removed := agent.clusterDataProxy.Remove(ctx, "/devices/"+agent.deviceID, ""); removed == nil {
+	removed, err := agent.clusterDataProxy.Remove(ctx, "/devices/"+agent.deviceID, "")
+	if err != nil {
+		log.Errorw("Failed-to-remove-device-from-cluster-data-proxy", log.Fields{"error": err})
+		return
+	}
+	if removed == nil {
 		log.Debugw("device-already-removed", log.Fields{"id": agent.deviceID})
 	}
 	agent.exitChannel <- 1
@@ -157,7 +175,12 @@ func (agent *DeviceAgent) reconcileWithKVStore() {
 	defer agent.lockDevice.Unlock()
 	log.Debug("reconciling-device-agent-devicetype")
 	// TODO: context timeout
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 1, true, ""); device != nil {
+	device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 1, true, "")
+	if err != nil {
+		log.Errorw("Failed to get device info from cluster data proxy", log.Fields{"error": err})
+		return
+	}
+	if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			agent.deviceType = d.Adapter
 			agent.device = proto.Clone(d).(*voltha.Device)
@@ -174,8 +197,20 @@ func (agent *DeviceAgent) getDevice() *voltha.Device {
 }
 
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
-func (agent *DeviceAgent) getDeviceWithoutLock() *voltha.Device {
-	return proto.Clone(agent.device).(*voltha.Device)
+// This function is meant so that we do not have duplicate code all over the device agent functions
+func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
+	device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, "")
+	if err != nil {
+		log.Errorw("failed-to-get-devices-info-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	}
+	if device != nil {
+		if d, ok := device.(*voltha.Device); ok {
+			cloned := proto.Clone(d).(*voltha.Device)
+			return cloned, nil
+		}
+	}
+	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
 }
 
 // enableDevice activates a preprovisioned or a disable device
@@ -184,7 +219,11 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("enableDevice", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		log.Warnw("failed-to-get-device", log.Fields{"error": err})
+		return err
+	}
 
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 	// pre-provisionned with the required adapter not registered.   At this stage, since we need to communicate
@@ -261,8 +300,10 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(newFlows []*ofp.OfpFlowStat
 
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-
-	device := agent.getDeviceWithoutLock()
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
 	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
 
@@ -360,7 +401,10 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(flowsToDel []*ofp.OfpF
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 
-	device := agent.getDeviceWithoutLock()
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
 	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
@@ -454,7 +498,10 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(updatedFlows []*ofp.OfpF
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 
-	device := agent.getDeviceWithoutLock()
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
 	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
@@ -563,7 +610,10 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("disableDevice", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	if cloned.AdminState == voltha.AdminState_DISABLED {
 		log.Debugw("device-already-disabled", log.Fields{"id": agent.deviceID})
@@ -593,7 +643,10 @@ func (agent *DeviceAgent) updateAdminState(adminState voltha.AdminState_AdminSta
 	defer agent.lockDevice.Unlock()
 	log.Debugw("updateAdminState", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	if cloned.AdminState == adminState {
 		log.Debugw("no-change-needed", log.Fields{"id": agent.deviceID, "state": adminState})
@@ -612,7 +665,10 @@ func (agent *DeviceAgent) rebootDevice(ctx context.Context) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("rebootDevice", log.Fields{"id": agent.deviceID})
 
-	device := agent.getDeviceWithoutLock()
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	if err := agent.adapterProxy.RebootDevice(ctx, device); err != nil {
 		log.Debugw("rebootDevice-error", log.Fields{"id": agent.deviceID, "error": err})
 		return err
@@ -625,7 +681,10 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("deleteDevice", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	if cloned.AdminState == voltha.AdminState_DELETED {
 		log.Debugw("device-already-in-deleted-state", log.Fields{"id": agent.deviceID})
 		return nil
@@ -666,7 +725,10 @@ func (agent *DeviceAgent) setParentID(device *voltha.Device, parentID string) er
 	defer agent.lockDevice.Unlock()
 	log.Debugw("setParentId", log.Fields{"deviceId": device.Id, "parentId": parentID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	cloned.ParentId = parentID
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(cloned, false, ""); err != nil {
@@ -680,7 +742,10 @@ func (agent *DeviceAgent) updatePmConfigs(ctx context.Context, pmConfigs *voltha
 	defer agent.lockDevice.Unlock()
 	log.Debugw("updatePmConfigs", log.Fields{"id": pmConfigs.Id})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(cloned, false, ""); err != nil {
@@ -699,11 +764,18 @@ func (agent *DeviceAgent) initPmConfigs(pmConfigs *voltha.PmConfigs) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("initPmConfigs", log.Fields{"id": pmConfigs.Id})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 	// Store the device
 	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceID, cloned, false, "")
+	afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceID, cloned, false, "")
+	if err != nil {
+		log.Errorw("failed-to-update-cluster-proxy", log.Fields{"error": err})
+		return err
+	}
 	if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "%s", agent.deviceID)
 	}
@@ -714,8 +786,11 @@ func (agent *DeviceAgent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs,
 	agent.lockDevice.RLock()
 	defer agent.lockDevice.RUnlock()
 	log.Debugw("listPmConfigs", log.Fields{"id": agent.deviceID})
-
-	return agent.getDeviceWithoutLock().PmConfigs, nil
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
+	return device.PmConfigs, nil
 }
 
 func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
@@ -723,7 +798,10 @@ func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDo
 	defer agent.lockDevice.Unlock()
 	log.Debugw("downloadImage", log.Fields{"id": agent.deviceID})
 
-	device := agent.getDeviceWithoutLock()
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	if device.AdminState != voltha.AdminState_ENABLED {
 		log.Debugw("device-not-enabled", log.Fields{"id": agent.deviceID})
@@ -777,8 +855,10 @@ func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.I
 	defer agent.lockDevice.Unlock()
 	log.Debugw("cancelImageDownload", log.Fields{"id": agent.deviceID})
 
-	device := agent.getDeviceWithoutLock()
-
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	// Verify whether the Image is in the list of image being downloaded
 	if !isImageRegistered(img, device) {
 		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, image-not-registered:%s", agent.deviceID, img.Name)
@@ -811,8 +891,10 @@ func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDo
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	log.Debugw("activateImage", log.Fields{"id": agent.deviceID})
-	cloned := agent.getDeviceWithoutLock()
-
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_FAILURE}, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	// Verify whether the Image is in the list of image being downloaded
 	if !isImageRegistered(img, cloned) {
 		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, image-not-registered:%s", agent.deviceID, img.Name)
@@ -847,8 +929,10 @@ func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDown
 	defer agent.lockDevice.Unlock()
 	log.Debugw("revertImage", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
-
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_FAILURE}, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	// Verify whether the Image is in the list of image being downloaded
 	if !isImageRegistered(img, cloned) {
 		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, image-not-registered:%s", agent.deviceID, img.Name)
@@ -880,7 +964,10 @@ func (agent *DeviceAgent) getImageDownloadStatus(ctx context.Context, img *volth
 	defer agent.lockDevice.Unlock()
 	log.Debugw("getImageDownloadStatus", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	resp, err := agent.adapterProxy.GetImageDownloadStatus(ctx, cloned, img)
 	if err != nil {
 		log.Debugw("getImageDownloadStatus-error", log.Fields{"id": agent.deviceID, "error": err, "image": img.Name})
@@ -894,8 +981,10 @@ func (agent *DeviceAgent) updateImageDownload(img *voltha.ImageDownload) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("updateImageDownload", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
-
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	// Update the image as well as remove it if the download was cancelled
 	clonedImages := make([]*voltha.ImageDownload, len(cloned.ImageDownloads))
 	for _, image := range cloned.ImageDownloads {
@@ -924,7 +1013,10 @@ func (agent *DeviceAgent) getImageDownload(ctx context.Context, img *voltha.Imag
 	defer agent.lockDevice.RUnlock()
 	log.Debugw("getImageDownload", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	for _, image := range cloned.ImageDownloads {
 		if image.Id == img.Id && image.Name == img.Name {
 			return image, nil
@@ -937,8 +1029,11 @@ func (agent *DeviceAgent) listImageDownloads(ctx context.Context, deviceID strin
 	agent.lockDevice.RLock()
 	defer agent.lockDevice.RUnlock()
 	log.Debugw("listImageDownloads", log.Fields{"id": agent.deviceID})
-
-	return &voltha.ImageDownloads{Items: agent.getDeviceWithoutLock().ImageDownloads}, nil
+	device, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
+	return &voltha.ImageDownloads{Items: device.ImageDownloads}, nil
 }
 
 // getPorts retrieves the ports information of the device based on the port type.
@@ -1039,7 +1134,10 @@ func (agent *DeviceAgent) processUpdate(args ...interface{}) interface{} {
 // updatePartialDeviceData updates a subset of a device that an Adapter can update.
 // TODO:  May need a specific proto to handle only a subset of a device that can be changed by an adapter
 func (agent *DeviceAgent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	cloned.Root = device.Root
 	cloned.Vendor = device.Vendor
 	cloned.Model = device.Model
@@ -1072,8 +1170,10 @@ func (agent *DeviceAgent) updateDeviceStatus(operStatus voltha.OperStatus_OperSt
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 
-	cloned := agent.getDeviceWithoutLock()
-
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
 	if s, ok := voltha.ConnectStatus_ConnectStatus_value[connStatus.String()]; ok {
 		log.Debugw("updateDeviceStatus-conn", log.Fields{"ok": ok, "val": s})
@@ -1092,8 +1192,10 @@ func (agent *DeviceAgent) enablePorts() error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 
-	cloned := agent.getDeviceWithoutLock()
-
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	for _, port := range cloned.Ports {
 		port.AdminState = voltha.AdminState_ENABLED
 		port.OperStatus = voltha.OperStatus_ACTIVE
@@ -1106,7 +1208,10 @@ func (agent *DeviceAgent) disablePorts() error {
 	log.Debugw("disablePorts", log.Fields{"deviceid": agent.deviceID})
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	for _, port := range cloned.Ports {
 		port.AdminState = voltha.AdminState_DISABLED
 		port.OperStatus = voltha.OperStatus_UNKNOWN
@@ -1120,7 +1225,10 @@ func (agent *DeviceAgent) updatePortState(portType voltha.Port_PortType, portNo 
 	defer agent.lockDevice.Unlock()
 	// Work only on latest data
 	// TODO: Get list of ports from device directly instead of the entire device
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
 	if _, ok := voltha.Port_PortType_value[portType.String()]; !ok {
@@ -1147,7 +1255,10 @@ func (agent *DeviceAgent) deleteAllPorts() error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	if cloned.AdminState != voltha.AdminState_DISABLED && cloned.AdminState != voltha.AdminState_DELETED {
 		err := status.Error(codes.FailedPrecondition, fmt.Sprintf("invalid-state-%v", cloned.AdminState))
@@ -1170,7 +1281,10 @@ func (agent *DeviceAgent) addPort(port *voltha.Port) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("addPort", log.Fields{"deviceId": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	if cloned.Ports == nil {
 		//	First port
 		log.Debugw("addPort-first-port-to-add", log.Fields{"deviceId": agent.deviceID})
@@ -1199,7 +1313,10 @@ func (agent *DeviceAgent) addPeerPort(port *voltha.Port_PeerPort) error {
 	defer agent.lockDevice.Unlock()
 	log.Debug("addPeerPort")
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	// Get the peer port on the device based on the port no
 	for _, peerPort := range cloned.Ports {
@@ -1219,8 +1336,10 @@ func (agent *DeviceAgent) deletePeerPorts(deviceID string) error {
 	defer agent.lockDevice.Unlock()
 	log.Debug("deletePeerPorts")
 
-	cloned := agent.getDeviceWithoutLock()
-
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	var updatedPeers []*voltha.Port_PeerPort
 	for _, port := range cloned.Ports {
 		updatedPeers = make([]*voltha.Port_PeerPort, 0)
@@ -1244,7 +1363,10 @@ func (agent *DeviceAgent) updateDeviceAttribute(name string, value interface{}) 
 		return
 	}
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		log.Warn("failed-to-get-device", log.Fields{"error": err})
+	}
 	updated := false
 	s := reflect.ValueOf(cloned).Elem()
 	if s.Kind() == reflect.Struct {
@@ -1277,7 +1399,10 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 	defer agent.lockDevice.Unlock()
 	log.Debugw("simulateAlarm", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 
 	// First send the request to an Adapter and wait for a response
 	if err := agent.adapterProxy.SimulateAlarm(ctx, cloned, simulatereq); err != nil {
@@ -1291,7 +1416,10 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 // It is an internal helper function.
 func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(device *voltha.Device, strict bool, txid string) error {
 	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceID, device, strict, txid); afterUpdate == nil {
+	if afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceID, device, strict, txid); err != nil {
+		log.Errorw("failed-to-update-to-cluster-proxy", log.Fields{"error": err})
+		return err
+	} else if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceID)
 	}
 	log.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
@@ -1305,7 +1433,10 @@ func (agent *DeviceAgent) updateDeviceReason(reason string) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned, err := agent.getDeviceWithoutLock()
+	if err != nil {
+		return status.Errorf(codes.Internal, "failure-to-get-device-%s", agent.deviceID)
+	}
 	cloned.Reason = reason
 	log.Debugw("updateDeviceReason", log.Fields{"deviceId": cloned.Id, "reason": cloned.Reason})
 	// Store the device
