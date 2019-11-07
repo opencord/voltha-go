@@ -155,7 +155,13 @@ func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
 }
 
 func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Device, ch chan interface{}) {
-	if dMgr.isParentDeviceExist(device) {
+	deviceExist, err := dMgr.isParentDeviceExist(device)
+	if err != nil {
+		log.Errorf("Failed to start parent device")
+		sendResponse(ctx, ch, err)
+		return
+	}
+	if deviceExist {
 		log.Errorf("Device is Pre-provisioned already with same IP-Port or MAC Address")
 		sendResponse(ctx, ch, errors.New("Device is already pre-provisioned"))
 		return
@@ -167,10 +173,10 @@ func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Devi
 	// Create and start a device agent for that device
 	agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 	dMgr.addDeviceAgentToMap(agent)
-	device, err := agent.start(ctx, device)
+	device, err = agent.start(ctx, device)
 	if err != nil {
 		log.Errorf("Failed to start device")
-		sendResponse(ctx, ch, errors.New("Failed to start device"))
+		sendResponse(ctx, ch, err)
 		return
 	}
 
@@ -394,7 +400,12 @@ func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
 func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	log.Debug("ListDevices")
 	result := &voltha.Devices{}
-	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
+	devices, err := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, "")
+	if err != nil {
+		log.Errorw("failed-to-list-devices-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	}
+	if devices != nil {
 		for _, device := range devices.([]interface{}) {
 			// If device is not in memory then set it up
 			if !dMgr.IsDeviceInCache(device.(*voltha.Device).Id) {
@@ -415,27 +426,37 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 }
 
 //isParentDeviceExist checks whether device is already preprovisioned.
-func (dMgr *DeviceManager) isParentDeviceExist(newDevice *voltha.Device) bool {
+func (dMgr *DeviceManager) isParentDeviceExist(newDevice *voltha.Device) (bool, error) {
 	hostPort := newDevice.GetHostAndPort()
-	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
+	devices, err := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, "")
+	if err != nil {
+		log.Errorw("Failed to list devices from cluster data proxy", log.Fields{"error": err})
+		return false, err
+	}
+	if devices != nil {
 		for _, device := range devices.([]interface{}) {
 			if !device.(*voltha.Device).Root {
 				continue
 			}
 			if hostPort != "" && hostPort == device.(*voltha.Device).GetHostAndPort() {
-				return true
+				return true, nil
 			}
 			if newDevice.MacAddress != "" && newDevice.MacAddress == device.(*voltha.Device).MacAddress {
-				return true
+				return true, nil
 			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 //getDeviceFromModelretrieves the device data from the model.
 func (dMgr *DeviceManager) getDeviceFromModel(deviceID string) (*voltha.Device, error) {
-	if device := dMgr.clusterDataProxy.Get(context.Background(), "/devices/"+deviceID, 0, false, ""); device != nil {
+	device, err := dMgr.clusterDataProxy.Get(context.Background(), "/devices/"+deviceID, 0, false, "")
+	if err != nil {
+		log.Errorw("failed-to-get-device-info-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	}
+	if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			return d, nil
 		}
@@ -938,7 +959,12 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceID string, parentPort
 
 	if deviceType == "" && vendorID != "" {
 		log.Debug("device-type-is-nil-fetching-device-type")
-		if deviceTypesIf := dMgr.adapterMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); deviceTypesIf != nil {
+		deviceTypesIf, err := dMgr.adapterMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, "")
+		if err != nil {
+			log.Errorw("failed-to-get-device-type-info", log.Fields{"error": err})
+			return nil, err
+		}
+		if deviceTypesIf != nil {
 		OLoop:
 			for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
 				if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
