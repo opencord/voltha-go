@@ -394,7 +394,10 @@ func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
 func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	log.Debug("ListDevices")
 	result := &voltha.Devices{}
-	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
+	if devices, err := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); err != nil {
+		log.Errorw("failed-to-list-devices-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	} else if devices != nil {
 		for _, device := range devices.([]interface{}) {
 			// If device is not in memory then set it up
 			if !dMgr.IsDeviceInCache(device.(*voltha.Device).Id) {
@@ -417,7 +420,10 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 //isParentDeviceExist checks whether device is already preprovisioned.
 func (dMgr *DeviceManager) isParentDeviceExist(newDevice *voltha.Device) bool {
 	hostPort := newDevice.GetHostAndPort()
-	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
+	if devices, err := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); err != nil {
+		log.Errorw("Failed to list devices from cluster data proxy", log.Fields{"error": err})
+		return false
+	} else if devices != nil {
 		for _, device := range devices.([]interface{}) {
 			if !device.(*voltha.Device).Root {
 				continue
@@ -434,13 +440,16 @@ func (dMgr *DeviceManager) isParentDeviceExist(newDevice *voltha.Device) bool {
 }
 
 //getDeviceFromModelretrieves the device data from the model.
-func (dMgr *DeviceManager) getDeviceFromModel(deviceID string) (*voltha.Device, error) {
-	if device := dMgr.clusterDataProxy.Get(context.Background(), "/devices/"+deviceID, 0, false, ""); device != nil {
+func (dMgr *DeviceManager) getDeviceFromModel(deviceId string) (*voltha.Device, error) {
+	if device, err := dMgr.clusterDataProxy.Get(context.Background(), "/devices/"+deviceId, 0, false, ""); err != nil {
+		log.Errorw("failed-to-get-device-info-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			return d, nil
 		}
 	}
-	return nil, status.Error(codes.NotFound, deviceID)
+	return nil, status.Error(codes.NotFound, deviceId)
 }
 
 // loadDevice loads the deviceID in memory, if not present
@@ -941,7 +950,9 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceID string, parentPort
 
 	if deviceType == "" && vendorID != "" {
 		log.Debug("device-type-is-nil-fetching-device-type")
-		if deviceTypesIf := dMgr.adapterMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); deviceTypesIf != nil {
+		if deviceTypesIf, err := dMgr.adapterMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); err != nil {
+			return nil, err
+		} else if deviceTypesIf != nil {
 		OLoop:
 			for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
 				if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
