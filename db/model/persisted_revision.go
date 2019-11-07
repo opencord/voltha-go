@@ -518,13 +518,14 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 
 // LoadFromPersistence retrieves data from kv store at the specified location and refreshes the memory
 // by adding missing entries, updating changed entries and ignoring unchanged ones
-func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) []Revision {
+func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) ([]Revision, error) {
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 
 	log.Debugw("loading-from-persistence", log.Fields{"path": path, "txid": txid})
 
 	var response []Revision
+	var err error
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -533,7 +534,10 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 	if pr.kvStore != nil && path != "" {
 		if blobs == nil || len(blobs) == 0 {
 			log.Debugw("retrieve-from-kv", log.Fields{"path": path, "txid": txid})
-			blobs, _ = pr.kvStore.List(path)
+
+			if blobs, err = pr.kvStore.List(path); err != nil {
+				return nil, err
+			}
 		}
 
 		partition := strings.SplitN(path, "/", 2)
@@ -622,5 +626,5 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 		}
 	}
 
-	return response
+	return response, nil
 }
