@@ -17,6 +17,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
@@ -32,32 +33,32 @@ func NewTransaction(proxy *Proxy, txid string) *Transaction {
 	}
 	return tx
 }
-func (t *Transaction) Get(ctx context.Context, path string, depth int, deep bool) interface{} {
+func (t *Transaction) Get(ctx context.Context, path string, depth int, deep bool) (interface{}, error) {
 	if t.txid == "" {
 		log.Errorf("closed transaction")
-		return nil
+		return nil, errors.New("closed transaction")
 	}
 	// TODO: need to review the return values at the different layers!!!!!
 	return t.proxy.Get(ctx, path, depth, deep, t.txid)
 }
-func (t *Transaction) Update(ctx context.Context, path string, data interface{}, strict bool) interface{} {
+func (t *Transaction) Update(ctx context.Context, path string, data interface{}, strict bool) (interface{}, error) {
 	if t.txid == "" {
 		log.Errorf("closed transaction")
-		return nil
+		return nil, errors.New("closed transaction")
 	}
 	return t.proxy.Update(ctx, path, data, strict, t.txid)
 }
-func (t *Transaction) Add(ctx context.Context, path string, data interface{}) interface{} {
+func (t *Transaction) Add(ctx context.Context, path string, data interface{}) (interface{}, error) {
 	if t.txid == "" {
 		log.Errorf("closed transaction")
-		return nil
+		return nil, errors.New("closed transaction")
 	}
 	return t.proxy.Add(ctx, path, data, t.txid)
 }
-func (t *Transaction) Remove(ctx context.Context, path string) interface{} {
+func (t *Transaction) Remove(ctx context.Context, path string) (interface{}, error) {
 	if t.txid == "" {
 		log.Errorf("closed transaction")
-		return nil
+		return nil, errors.New("closed transaction")
 	}
 	return t.proxy.Remove(ctx, path, t.txid)
 }
