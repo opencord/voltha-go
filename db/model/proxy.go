@@ -214,7 +214,7 @@ func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled
 
 // List will retrieve information from the data model at the specified path location
 // A list operation will force access to persistence storage
-func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) interface{} {
+func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
 	var effectivePath string
 	if path == "/" {
 		effectivePath = p.getFullPath()
@@ -234,14 +234,11 @@ func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txi
 		"controlled": controlled,
 		"operation":  p.GetOperation(),
 	})
-
-	rv := p.GetRoot().List(ctx, path, "", depth, deep, txid)
-
-	return rv
+	return p.GetRoot().List(ctx, path, "", depth, deep, txid)
 }
 
 // Get will retrieve information from the data model at the specified path location
-func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid string) interface{} {
+func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
 	var effectivePath string
 	if path == "/" {
 		effectivePath = p.getFullPath()
@@ -262,16 +259,14 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 		"operation":  p.GetOperation(),
 	})
 
-	rv := p.GetRoot().Get(ctx, path, "", depth, deep, txid)
-
-	return rv
+	return p.GetRoot().Get(ctx, path, "", depth, deep, txid)
 }
 
 // Update will modify information in the data model at the specified location with the provided data
-func (p *Proxy) Update(ctx context.Context, path string, data interface{}, strict bool, txid string) interface{} {
+func (p *Proxy) Update(ctx context.Context, path string, data interface{}, strict bool, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
-		return nil
+		return nil, errors.New("Invalid Path " + path)
 	}
 	var fullPath string
 	var effectivePath string
@@ -298,26 +293,29 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		_, err := p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		if err != nil {
+			return nil, err
+		}
 		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
 	}
 
 	result := p.GetRoot().Update(ctx, fullPath, data, strict, txid, nil)
 
 	if result != nil {
-		return result.GetData()
+		return result.GetData(), nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // AddWithID will insert new data at specified location.
 // This method also allows the user to specify the ID of the data entry to ensure
 // that access control is active while inserting the information.
-func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data interface{}, txid string) interface{} {
+func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data interface{}, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
-		return nil
+		return nil, nil
 	}
 	var fullPath string
 	var effectivePath string
@@ -344,24 +342,27 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		_, err := p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		if err != nil {
+			return nil, err
+		}
 		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
 	}
 
 	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
 
 	if result != nil {
-		return result.GetData()
+		return result.GetData(), nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // Add will insert new data at specified location.
-func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid string) interface{} {
+func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
-		return nil
+		return nil, errors.New("invalid path " + path)
 	}
 	var fullPath string
 	var effectivePath string
@@ -388,24 +389,28 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		//p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		_, err := p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		if err != nil {
+			return nil, err
+		}
 		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
 	}
 
 	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
 
 	if result != nil {
-		return result.GetData()
+		return result.GetData(), nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // Remove will delete an entry at the specified location
-func (p *Proxy) Remove(ctx context.Context, path string, txid string) interface{} {
+func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
-		return nil
+		return nil, errors.New("invalid path " + path)
 	}
 	var fullPath string
 	var effectivePath string
@@ -432,24 +437,28 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) interface{
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		//p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		_, err := p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		if err != nil {
+			return nil, err
+		}
 		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
 	}
 
 	result := p.GetRoot().Remove(ctx, fullPath, txid, nil)
 
 	if result != nil {
-		return result.GetData()
+		return result.GetData(), nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // CreateProxy to interact with specific path directly
-func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) *Proxy {
+func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) (*Proxy, error) {
 	if !strings.HasPrefix(path, "/") {
 		log.Errorf("invalid path: %s", path)
-		return nil
+		return nil, errors.New("invalid path " + path)
 	}
 
 	var fullPath string
@@ -477,10 +486,13 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) *P
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		//p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		_, err := p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
+		if err != nil {
+			return nil, err
+		}
 		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
 	}
-
 	return p.GetRoot().CreateProxy(ctx, fullPath, exclusive)
 }
 

@@ -56,7 +56,9 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromDb bool) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("starting-device-agent", log.Fields{"device": agent.lastData})
 	if loadFromDb {
-		if device := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceId, 0, false, ""); device != nil {
+		if device, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceId, 0, false, ""); err != nil {
+			return err
+		} else if device != nil {
 			if d, ok := device.(*voltha.Device); ok {
 				agent.lastData = proto.Clone(d).(*voltha.Device)
 			}
@@ -83,7 +85,9 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); err != nil {
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
@@ -95,7 +99,9 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); err != nil {
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil

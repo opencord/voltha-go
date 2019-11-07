@@ -84,10 +84,10 @@ func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDevice
 func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId, "loadFromdB": loadFromdB})
 	var ld *voltha.LogicalDevice
+	var err error
 	if !loadFromdB {
 		//Build the logical device based on information retrieved from the device adapter
 		var switchCap *ic.SwitchCapability
-		var err error
 		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceId); err != nil {
 			log.Errorw("error-creating-logical-device", log.Fields{"error": err})
 			return err
@@ -109,7 +109,10 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 
 		agent.lockLogicalDevice.Lock()
 		// Save the logical device
-		if added := agent.clusterDataProxy.AddWithID(ctx, "/logical_devices", ld.Id, ld, ""); added == nil {
+		if added, err := agent.clusterDataProxy.AddWithID(ctx, "/logical_devices", ld.Id, ld, ""); err != nil {
+			agent.lockLogicalDevice.Unlock()
+			return err
+		} else if added == nil {
 			log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 		} else {
 			log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
@@ -122,7 +125,6 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 	} else {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
-		var err error
 		if ld, err = agent.GetLogicalDevice(); err != nil {
 			log.Warnw("failed-to-load-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 			return err
@@ -138,23 +140,34 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
-	agent.flowProxy = agent.clusterDataProxy.CreateProxy(
+	agent.flowProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceId),
 		false)
-	agent.meterProxy = agent.clusterDataProxy.CreateProxy(
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
+	agent.meterProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/meters", agent.logicalDeviceId),
 		false)
-	agent.groupProxy = agent.clusterDataProxy.CreateProxy(
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
+	agent.groupProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/flow_groups", agent.logicalDeviceId),
 		false)
-	agent.ldProxy = agent.clusterDataProxy.CreateProxy(
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
+	agent.ldProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s", agent.logicalDeviceId),
 		false)
-
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
 	// TODO:  Use a port proxy once the POST_ADD is fixed
 	if agent.ldProxy != nil {
 		agent.ldProxy.RegisterCallback(model.POST_UPDATE, agent.portUpdated)
@@ -177,7 +190,9 @@ func (agent *LogicalDeviceAgent) stop(ctx context.Context) {
 	defer agent.lockLogicalDevice.Unlock()
 
 	//Remove the logical device from the model
-	if removed := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceId, ""); removed == nil {
+	if removed, err := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceId, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if removed == nil {
 		log.Errorw("failed-to-remove-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
 	} else {
 		log.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
@@ -191,7 +206,10 @@ func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, erro
 	log.Debug("GetLogicalDevice")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		return nil, err
+	}
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		return lDevice, nil
 	}
@@ -202,8 +220,10 @@ func (agent *LogicalDeviceAgent) ListLogicalDeviceFlows() (*ofp.Flows, error) {
 	log.Debug("ListLogicalDeviceFlows")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		return nil, err
+	} else if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		cFlows := (proto.Clone(lDevice.Flows)).(*ofp.Flows)
 		return cFlows, nil
 	}
@@ -214,8 +234,10 @@ func (agent *LogicalDeviceAgent) ListLogicalDeviceMeters() (*ofp.Meters, error) 
 	log.Debug("ListLogicalDeviceMeters")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		return nil, err
+	} else if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		if lDevice.Meters == nil {
 			return &ofp.Meters{}, nil
 		}
@@ -229,8 +251,10 @@ func (agent *LogicalDeviceAgent) ListLogicalDeviceFlowGroups() (*ofp.FlowGroups,
 	log.Debug("ListLogicalDeviceFlowGroups")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		return nil, err
+	} else if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		cFlowGroups := (proto.Clone(lDevice.FlowGroups)).(*ofp.FlowGroups)
 		return cFlowGroups, nil
 	}
@@ -241,8 +265,10 @@ func (agent *LogicalDeviceAgent) ListLogicalDevicePorts() (*voltha.LogicalPorts,
 	log.Debug("ListLogicalDevicePorts")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		return nil, err
+	} else if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		lPorts := make([]*voltha.LogicalPort, 0)
 		for _, port := range lDevice.Ports {
 			lPorts = append(lPorts, port)
@@ -257,8 +283,11 @@ func (agent *LogicalDeviceAgent) listFlows() []*ofp.OfpFlowStats {
 	log.Debug("listFlows")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		log.Errorf("error %v", err)
+		return nil
+	} else if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		return lDevice.Flows.Items
 	}
 	return nil
@@ -269,8 +298,11 @@ func (agent *LogicalDeviceAgent) listFlowGroups() []*ofp.OfpGroupEntry {
 	log.Debug("listFlowGroups")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		log.Errorf("error %v", err)
+		return nil
+	} else if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		return lDevice.FlowGroups.Items
 	}
 	return nil
@@ -331,8 +363,10 @@ func (agent *LogicalDeviceAgent) updateLogicalDeviceFlowGroupsWithoutLock(flowGr
 // functions that have already acquired the logical device lock to the model
 func (agent *LogicalDeviceAgent) getLogicalDeviceWithoutLock() (*voltha.LogicalDevice, error) {
 	log.Debug("getLogicalDeviceWithoutLock")
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
+	logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	if err != nil {
+		return nil, err
+	} else if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		//log.Debug("getLogicalDeviceWithoutLock", log.Fields{"ldevice": lDevice})
 		return lDevice, nil
 	}
@@ -562,8 +596,10 @@ func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(device *voltha.Device) er
 //updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
 func (agent *LogicalDeviceAgent) updateLogicalDeviceWithoutLock(logicalDevice *voltha.LogicalDevice) error {
 	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceId, logicalDevice, false, "")
-	if afterUpdate == nil {
+	afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceId, logicalDevice, false, "")
+	if err != nil {
+		return err
+	} else if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "failed-updating-logical-device:%s", agent.logicalDeviceId)
 	}
 	return nil
@@ -1612,7 +1648,7 @@ func (agent *LogicalDeviceAgent) portAdded(args ...interface{}) interface{} {
 	log.Debugw("portAdded-callback", log.Fields{"argsLen": len(args)})
 
 	var port *voltha.LogicalPort
-
+	var err error
 	// Sanity check
 	if args[0] != nil {
 		log.Warnw("previous-data-not-nil", log.Fields{"args0": args[0]})
@@ -1625,10 +1661,14 @@ func (agent *LogicalDeviceAgent) portAdded(args ...interface{}) interface{} {
 
 	// Set the proxy and callback for that port
 	agent.portProxiesLock.Lock()
-	agent.portProxies[port.Id] = agent.clusterDataProxy.CreateProxy(
+
+	agent.portProxies[port.Id], err = agent.clusterDataProxy.CreateProxy(
 		context.Background(),
 		fmt.Sprintf("/logical_devices/%s/ports/%s", agent.logicalDeviceId, port.Id),
 		false)
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
 	agent.portProxies[port.Id].RegisterCallback(model.POST_UPDATE, agent.portUpdated)
 	agent.portProxiesLock.Unlock()
 

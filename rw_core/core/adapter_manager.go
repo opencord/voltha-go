@@ -114,22 +114,32 @@ func newAdapterManager(cdProxy *model.Proxy, coreInstanceId string, deviceMgr *D
 	return &adapterMgr
 }
 
-func (aMgr *AdapterManager) start(ctx context.Context) {
+func (aMgr *AdapterManager) start(ctx context.Context) error {
 	log.Info("starting-adapter-manager")
 
 	// Load the existing adapterAgents and device types - this will also ensure the correct paths have been
 	// created if there are no data in the dB to start
-	aMgr.loadAdaptersAndDevicetypesInMemory()
+	err := aMgr.loadAdaptersAndDevicetypesInMemory()
+	if err != nil {
+		return err
+	}
 
 	//// Create the proxies
-	aMgr.adapterProxy = aMgr.clusterDataProxy.CreateProxy(context.Background(), "/adapters", false)
-	aMgr.deviceTypeProxy = aMgr.clusterDataProxy.CreateProxy(context.Background(), "/device_types", false)
+	aMgr.adapterProxy, err = aMgr.clusterDataProxy.CreateProxy(context.Background(), "/adapters", false)
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
+	aMgr.deviceTypeProxy, err = aMgr.clusterDataProxy.CreateProxy(context.Background(), "/device_types", false)
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
 
 	// Register the callbacks
 	aMgr.adapterProxy.RegisterCallback(model.POST_UPDATE, aMgr.adapterUpdated)
 	aMgr.deviceTypeProxy.RegisterCallback(model.POST_UPDATE, aMgr.deviceTypesUpdated)
 	probe.UpdateStatusFromContext(ctx, "adapter-manager", probe.ServiceStatusRunning)
 	log.Info("adapter-manager-started")
+	return nil
 }
 
 func (aMgr *AdapterManager) stop(ctx context.Context) {
@@ -140,9 +150,11 @@ func (aMgr *AdapterManager) stop(ctx context.Context) {
 }
 
 //loadAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
-func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() {
+func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() error {
 	// Load the adapters
-	if adaptersIf := aMgr.clusterDataProxy.List(context.Background(), "/adapters", 0, false, ""); adaptersIf != nil {
+	if adaptersIf, err := aMgr.clusterDataProxy.List(context.Background(), "/adapters", 0, false, ""); err != nil {
+		return err
+	} else if adaptersIf != nil {
 		for _, adapterIf := range adaptersIf.([]interface{}) {
 			if adapter, ok := adapterIf.(*voltha.Adapter); ok {
 				log.Debugw("found-existing-adapter", log.Fields{"adapterId": adapter.Id})
@@ -156,20 +168,23 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() {
 	}
 
 	// Load the device types
-	if deviceTypesIf := aMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); deviceTypesIf != nil {
+	if deviceTypesIf, err := aMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); err != nil {
+		return err
+	} else if deviceTypesIf != nil {
 		dTypes := &voltha.DeviceTypes{Items: []*voltha.DeviceType{}}
 		for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
 			if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
 				log.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
 				dTypes.Items = append(dTypes.Items, dType)
 			}
+			aMgr.addDeviceTypes(dTypes, false)
 		}
-		aMgr.addDeviceTypes(dTypes, false)
 	} else {
 		log.Debug("no-existing-device-type-found")
 		//	No device types data.   In order to have a proxy setup for that path let's create a fake device type
 		aMgr.addDeviceTypes(&voltha.DeviceTypes{Items: []*voltha.DeviceType{{Id: SENTINEL_DEVICETYPE_ID, Adapter: SENTINEL_ADAPTER_ID}}}, true)
 	}
+	return nil
 }
 
 //updateAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
@@ -186,7 +201,7 @@ func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha
 	}
 
 	// Update the adapters
-	if adaptersIf := aMgr.clusterDataProxy.List(context.Background(), "/adapters", 0, false, ""); adaptersIf != nil {
+	if adaptersIf, _ := aMgr.clusterDataProxy.List(context.Background(), "/adapters", 0, false, ""); adaptersIf != nil {
 		for _, adapterIf := range adaptersIf.([]interface{}) {
 			if adapter, ok := adapterIf.(*voltha.Adapter); ok {
 				log.Debugw("found-existing-adapter", log.Fields{"adapterId": adapter.Id})
@@ -197,7 +212,9 @@ func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 	// Update the device types
-	if deviceTypesIf := aMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); deviceTypesIf != nil {
+	if deviceTypesIf, err := aMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if deviceTypesIf != nil {
 		dTypes := &voltha.DeviceTypes{Items: []*voltha.DeviceType{}}
 		for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
 			if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
@@ -208,7 +225,7 @@ func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha
 	}
 }
 
-func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) {
+func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
 	log.Debugw("adding-adapter", log.Fields{"adapter": adapter})
@@ -217,8 +234,12 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) {
 		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(clonedAdapter, nil)
 		if saveToDb {
 			// Save the adapter to the KV store - first check if it already exist
-			if kvAdapter := aMgr.clusterDataProxy.Get(context.Background(), "/adapters/"+adapter.Id, 0, false, ""); kvAdapter == nil {
-				if added := aMgr.clusterDataProxy.AddWithID(context.Background(), "/adapters", adapter.Id, clonedAdapter, ""); added == nil {
+			if kvAdapter, err := aMgr.clusterDataProxy.Get(context.Background(), "/adapters/"+adapter.Id, 0, false, ""); err != nil {
+				return err
+			} else if kvAdapter == nil {
+				if added, err := aMgr.clusterDataProxy.AddWithID(context.Background(), "/adapters", adapter.Id, clonedAdapter, ""); err != nil {
+					return err
+				} else if added == nil {
 					//TODO:  Errors when saving to KV would require a separate go routine to be launched and try the saving again
 					log.Errorw("failed-to-save-adapter", log.Fields{"adapter": adapter})
 				} else {
@@ -227,6 +248,7 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) {
 			}
 		}
 	}
+	return nil
 }
 
 func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bool) {
@@ -251,10 +273,14 @@ func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, save
 	if saveToDb {
 		// Save the device types to the KV store as well
 		for _, deviceType := range deviceTypes.Items {
-			if dType := aMgr.clusterDataProxy.Get(context.Background(), "/device_types/"+deviceType.Id, 0, false, ""); dType == nil {
+			if dType, err := aMgr.clusterDataProxy.Get(context.Background(), "/device_types/"+deviceType.Id, 0, false, ""); err != nil {
+				log.Errorf("error %v", err)
+			} else if dType == nil {
 				//	Does not exist - save it
 				clonedDType := (proto.Clone(deviceType)).(*voltha.DeviceType)
-				if added := aMgr.clusterDataProxy.AddWithID(context.Background(), "/device_types", deviceType.Id, clonedDType, ""); added == nil {
+				if added, err := aMgr.clusterDataProxy.AddWithID(context.Background(), "/device_types", deviceType.Id, clonedDType, ""); err != nil {
+					log.Errorf("error %v", err)
+				} else if added == nil {
 					log.Errorw("failed-to-save-deviceType", log.Fields{"deviceType": deviceType})
 				} else {
 					log.Debugw("device-type-saved-to-KV-Store", log.Fields{"deviceType": deviceType})

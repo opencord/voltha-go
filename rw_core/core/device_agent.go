@@ -84,7 +84,9 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 	log.Debugw("starting-device-agent", log.Fields{"deviceId": agent.deviceId})
 	if deviceToCreate == nil {
 		// Load the existing device
-		if loadedDevice := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceId, 1, true, ""); loadedDevice != nil {
+		if loadedDevice, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceId, 1, true, ""); err != nil {
+			return nil, err
+		} else if loadedDevice != nil {
 			var ok bool
 			if device, ok = loadedDevice.(*voltha.Device); ok {
 				agent.deviceType = device.Adapter
@@ -114,13 +116,18 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 		}
 
 		// Add the initial device to the local model
-		if added := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceId, device, ""); added == nil {
+		if added, err := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceId, device, ""); err != nil {
+			return nil, err
+		} else if added == nil {
 			log.Errorw("failed-to-add-device", log.Fields{"deviceId": agent.deviceId})
 			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s", agent.deviceId)
 		}
 	}
-
-	agent.deviceProxy = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceId, false)
+	var err error
+	agent.deviceProxy, err = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceId, false)
+	if err != nil {
+		return nil, err
+	}
 	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
 
 	log.Debugw("device-agent-started", log.Fields{"deviceId": agent.deviceId})
@@ -133,7 +140,9 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 	defer agent.lockDevice.Unlock()
 	log.Debug("stopping-device-agent")
 	//	Remove the device from the KV store
-	if removed := agent.clusterDataProxy.Remove(ctx, "/devices/"+agent.deviceId, ""); removed == nil {
+	if removed, err := agent.clusterDataProxy.Remove(ctx, "/devices/"+agent.deviceId, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if removed == nil {
 		log.Debugw("device-already-removed", log.Fields{"id": agent.deviceId})
 	}
 	agent.exitChannel <- 1
@@ -147,7 +156,9 @@ func (agent *DeviceAgent) reconcileWithKVStore() {
 	defer agent.lockDevice.Unlock()
 	log.Debug("reconciling-device-agent-devicetype")
 	// TODO: context timeout
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 1, true, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 1, true, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			agent.deviceType = d.Adapter
 			log.Debugw("reconciled-device-agent-devicetype", log.Fields{"Id": agent.deviceId, "type": agent.deviceType})
@@ -159,7 +170,9 @@ func (agent *DeviceAgent) reconcileWithKVStore() {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.RLock()
 	defer agent.lockDevice.RUnlock()
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, true, ""); err != nil {
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
@@ -171,7 +184,9 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 0, false, ""); err != nil {
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
@@ -722,8 +737,10 @@ func (agent *DeviceAgent) initPmConfigs(pmConfigs *voltha.PmConfigs) error {
 		cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 		// Store the device
 		updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-		afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
-		if afterUpdate == nil {
+		afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, cloned, false, "")
+		if err != nil {
+			return err
+		} else if afterUpdate == nil {
 			return status.Errorf(codes.Internal, "%s", agent.deviceId)
 		}
 		return nil
@@ -1374,7 +1391,9 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 // It is an internal helper function.
 func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(device *voltha.Device, strict bool, txid string) error {
 	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	if afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, device, strict, txid); afterUpdate == nil {
+	if afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceId, device, strict, txid); err != nil {
+		return err
+	} else if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceId)
 	}
 	log.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceId})

@@ -147,7 +147,12 @@ func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*volth
 // ListDevices returns the contents of all devices known to the system
 func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
 	log.Debug("ListDevices")
-	return handler.deviceMgr.ListDevices()
+	if devices, err := handler.deviceMgr.ListDevices(); err != nil {
+		log.Errorf("Etcd Error")
+		return nil, err
+	} else {
+		return devices, nil
+	}
 }
 
 // ListDeviceIds returns the list of device ids managed by a voltha core

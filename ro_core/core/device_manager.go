@@ -128,7 +128,9 @@ func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
 func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 	log.Debug("ListDevices")
 	result := &voltha.Devices{}
-	if devices := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); devices != nil {
+	if devices, err := dMgr.clusterDataProxy.List(context.Background(), "/devices", 0, false, ""); err != nil {
+		return nil, err
+	} else if devices != nil {
 		for _, device := range devices.([]interface{}) {
 			// If device is not in memory then set it up
 			if !dMgr.IsDeviceInCache(device.(*voltha.Device).Id) {

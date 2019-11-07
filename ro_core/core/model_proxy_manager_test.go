@@ -18,6 +18,7 @@ package core
 import (
 	"context"
 	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
 	"reflect"
@@ -26,7 +27,10 @@ import (
 
 func makeModelProxyManagerObj() *ModelProxyManager {
 	cdRoot := model.NewRoot(&voltha.Voltha{}, nil)
-	cdProxy := cdRoot.CreateProxy(context.Background(), "/", false)
+	cdProxy, err := cdRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
 	mpMgr := newModelProxyManager(cdProxy)
 	return mpMgr
 }
@@ -103,7 +107,9 @@ func TestListAdapters(t *testing.T) {
 	assert.Nil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/adapters", &voltha.Adapter{Id: "id"}, ""); added == nil {
+	if added, err := mpMgr.clusterDataProxy.Add(context.Background(), "/adapters", &voltha.Adapter{Id: "id"}, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if added == nil {
 		t.Error("Failed to add adapter")
 	}
 	result1, err1 := mpMgr.ListAdapters(context.Background())
@@ -135,7 +141,9 @@ func TestListDeviceTypes(t *testing.T) {
 	assert.Nil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/device_types", &voltha.DeviceType{Id: "id"}, ""); added == nil {
+	if added, err := mpMgr.clusterDataProxy.Add(context.Background(), "/device_types", &voltha.DeviceType{Id: "id"}, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if added == nil {
 		t.Error("Failed to add device type")
 	}
 	result1, err1 := mpMgr.ListDeviceTypes(context.Background())
@@ -160,7 +168,9 @@ func TestGetDeviceType(t *testing.T) {
 	assert.NotNil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/device_types", &voltha.DeviceType{Id: "id"}, ""); added == nil {
+	if added, err := mpMgr.clusterDataProxy.Add(context.Background(), "/device_types", &voltha.DeviceType{Id: "id"}, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if added == nil {
 		t.Error("Failed to add device type")
 	}
 	result1, err1 := mpMgr.GetDeviceType(context.Background(), "id")
@@ -192,7 +202,9 @@ func TestListDeviceGroups(t *testing.T) {
 	assert.Nil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/device_groups", &voltha.DeviceGroup{Id: "id"}, ""); added == nil {
+	if added, err := mpMgr.clusterDataProxy.Add(context.Background(), "/device_groups", &voltha.DeviceGroup{Id: "id"}, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if added == nil {
 		t.Error("Failed to add device group")
 	}
 	result1, err1 := mpMgr.ListDeviceGroups(context.Background())
@@ -217,7 +229,9 @@ func TestGetDeviceGroup(t *testing.T) {
 	assert.NotNil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/device_groups", &voltha.DeviceGroup{Id: "id"}, ""); added == nil {
+	if added, err := mpMgr.clusterDataProxy.Add(context.Background(), "/device_groups", &voltha.DeviceGroup{Id: "id"}, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if added == nil {
 		t.Error("Failed to add device group")
 	}
 	result1, err1 := mpMgr.GetDeviceGroup(context.Background(), "id")
@@ -249,7 +263,9 @@ func TestListAlarmFilters(t *testing.T) {
 	assert.Nil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/alarm_filters", &voltha.AlarmFilter{Id: "id"}, ""); added == nil {
+	if added, err := mpMgr.clusterDataProxy.Add(context.Background(), "/alarm_filters", &voltha.AlarmFilter{Id: "id"}, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if added == nil {
 		t.Error("Failed to add alarm filter")
 	}
 	result1, err1 := mpMgr.ListAlarmFilters(context.Background())
@@ -274,7 +290,9 @@ func TestGetAlarmFilter(t *testing.T) {
 	assert.NotNil(t, err0)
 
 	// Case 2: Found
-	if added := mpMgr.clusterDataProxy.Add(context.Background(), "/alarm_filters", &voltha.AlarmFilter{Id: "id"}, ""); added == nil {
+	if added, err := mpMgr.clusterDataProxy.Add(context.Background(), "/alarm_filters", &voltha.AlarmFilter{Id: "id"}, ""); err != nil {
+		log.Errorf("error %v", err)
+	} else if added == nil {
 		t.Error("Failed to add alarm filter")
 	}
 	result1, err1 := mpMgr.GetAlarmFilter(context.Background(), "id")
