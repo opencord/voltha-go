@@ -1,0 +1,146 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83cf4b94_80c14163",
+        "filename": "db/model/node.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "If statement can remain as before and just add the extra err parameter.  The for loop can be moved out of the else block.  The else can then be dropped",
+      "range": {
+        "startLine": 282,
+        "startChar": 0,
+        "endLine": 285,
+        "endChar": 22
+      },
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f9f13f8_7b645606",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "Is there a reason why you are not applying the error check here as well?",
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7501965c_988d967f",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "Same comment as above",
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50ef06ac_6bda622e",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "Same comment as above",
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e7e1040_26a8b2b4",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "Same comment as above",
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de4e27c7_2fad7649",
+        "filename": "ro_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "Why aren\u0027t you propagating the error at this level?  You could just make use the error msg of the else block when an error occurs.",
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acb9f23c_5e70f8a9",
+        "filename": "ro_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "error propagation?",
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3eda284f_bb147ee9",
+        "filename": "ro_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-07T16:13:30Z",
+      "side": 1,
+      "message": "Same comment as above",
+      "revId": "710a263fc9099e76f4bc50afd073bf9daa270690",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
