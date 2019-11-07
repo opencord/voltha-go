@@ -63,7 +63,7 @@ func init() {
 }
 
 // NewCore creates instance of rw core
-func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaClient kafka.Client) *Core {
+func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaClient kafka.Client) *Core {
 	var core Core
 	core.instanceID = id
 	core.exitChannel = make(chan int, 1)
@@ -86,8 +86,17 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 		PathPrefix:              cf.KVStoreDataPrefix}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &core.backend)
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &core.backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	var err error
+	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
+		log.Errorw("Failed to create cluster data proxy", log.Fields{"error": err})
+	}
+	core.localDataProxy, err = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
+		log.Errorw("Failed to create cluster data proxy", log.Fields{"error": err})
+	}
 	return &core
 }
 
@@ -415,7 +424,10 @@ func (core *Core) startLogicalDeviceManager(ctx context.Context) {
 
 func (core *Core) startAdapterManager(ctx context.Context) {
 	log.Info("Adapter-Manager-Starting...")
-	core.adapterMgr.start(ctx)
+	err := core.adapterMgr.start(ctx)
+	if err != nil {
+		log.Fatalf("failed-to-start-adapter-manager: error %v ", err)
+	}
 	log.Info("Adapter-Manager-Started")
 }
 
