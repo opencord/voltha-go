@@ -62,6 +62,7 @@ func init() {
 // NewCore instantiates core service parameters
 func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	var core Core
+	var err error
 	core.instanceID = id
 	core.exitChannel = make(chan int, 1)
 	core.config = cf
@@ -85,8 +86,14 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 		PathPrefix:              "service/voltha"}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &core.backend)
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &core.backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("Failed to create cluster data proxy due to error: %v", err)
+	}
+	core.localDataProxy, err = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("Failed to create local data proxy due to error: %v", err)
+	}
 	return &core
 }
 
