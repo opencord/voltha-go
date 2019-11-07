@@ -32,10 +32,10 @@ func NewTransaction(proxy *Proxy, txid string) *Transaction {
 	}
 	return tx
 }
-func (t *Transaction) Get(ctx context.Context, path string, depth int, deep bool) interface{} {
+func (t *Transaction) Get(ctx context.Context, path string, depth int, deep bool) (interface{}, error) {
 	if t.txid == "" {
 		log.Errorf("closed transaction")
-		return nil
+		return nil, nil
 	}
 	// TODO: need to review the return values at the different layers!!!!!
 	return t.proxy.Get(ctx, path, depth, deep, t.txid)
