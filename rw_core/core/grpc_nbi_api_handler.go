@@ -352,7 +352,12 @@ func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*volth
 // ListDevices retrieves the latest devices from the data model
 func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
 	log.Debug("ListDevices")
-	return handler.deviceMgr.ListDevices()
+	devices, err := handler.deviceMgr.ListDevices()
+	if err != nil {
+		log.Errorw("Failed to list devices", log.Fields{"error": err})
+		return nil, err
+	}
+	return devices, nil
 }
 
 // ListDeviceIds returns the list of device ids managed by a voltha core
@@ -482,6 +487,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 	case res := <-ch:
 		if res != nil {
 			if err, ok := res.(error); ok {
+				log.Errorw("Create Device Failed", log.Fields{"error": err})
 				return &voltha.Device{}, err
 			}
 			if d, ok := res.(*voltha.Device); ok {

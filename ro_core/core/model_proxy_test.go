@@ -18,6 +18,7 @@ package core
 import (
 	"context"
 	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,7 +35,10 @@ func getModelProxyPathNotFound() *fields {
 	var modelProxy fields
 
 	TestProxy_Root := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxy_Root_Proxy := TestProxy_Root.CreateProxy(context.Background(), "/", false)
+	TestProxy_Root_Proxy, err := TestProxy_Root.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
 	modelProxy.rootProxy = TestProxy_Root_Proxy
 	modelProxy.basePath = "base_path"
 
@@ -45,7 +49,10 @@ func getModelProxyPathFound() *fields {
 	var modelProxy fields
 
 	TestProxy_Root := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxy_Root_Proxy := TestProxy_Root.CreateProxy(context.Background(), "/", false)
+	TestProxy_Root_Proxy, err := TestProxy_Root.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Errorf("error %v", err)
+	}
 	modelProxy.rootProxy = TestProxy_Root_Proxy
 	modelProxy.basePath = "devices"
 
