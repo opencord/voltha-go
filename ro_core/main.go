@@ -111,7 +111,7 @@ func (ro *roCore) start(ctx context.Context) {
 	}
 
 	// Create the core service
-	ro.core = c.NewCore(ro.config.InstanceID, ro.config, ro.kvClient)
+	ro.core = c.NewCore(ctx, ro.config.InstanceID, ro.config, ro.kvClient)
 
 	if p != nil {
 		p.UpdateStatus("kv-store", probe.ServiceStatusPrepared)

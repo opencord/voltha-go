@@ -103,7 +103,11 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalD
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false, ""); logicalDevices != nil {
+	if logicalDevices, err := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false,
+		""); err != nil {
+		log.Errorw("failed-to-list-devices", log.Fields{"error": err})
+		return nil, err
+	} else if logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}

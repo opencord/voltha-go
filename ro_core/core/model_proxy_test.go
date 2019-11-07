@@ -17,6 +17,8 @@ package core
 
 import (
 	"context"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 
@@ -31,22 +33,30 @@ type fields struct {
 	basePath  string
 }
 
-func getModelProxyPathNotFound() *fields {
+func getModelProxyPathNotFound(t *testing.T) *fields {
 	var modelProxy fields
 
 	TestProxyRoot := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxyRootProxy := TestProxyRoot.CreateProxy(context.Background(), "/", false)
+	TestProxyRootProxy, err := TestProxyRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Errorw("failed-to-create-test-proxy", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
 	modelProxy.rootProxy = TestProxyRootProxy
 	modelProxy.basePath = "base_path"
 
 	return &modelProxy
 }
 
-func getModelProxyPathFound() *fields {
+func getModelProxyPathFound(t *testing.T) *fields {
 	var modelProxy fields
 
 	TestProxyRoot := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxyRootProxy := TestProxyRoot.CreateProxy(context.Background(), "/", false)
+	TestProxyRootProxy, err := TestProxyRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Errorw("failed-to-create-test-proxy", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
 	modelProxy.rootProxy = TestProxyRootProxy
 	modelProxy.basePath = "devices"
 
@@ -88,8 +98,8 @@ func TestModelProxy_Get(t *testing.T) {
 		fields  *fields
 		wantErr error
 	}{
-		{"Get-PathNotFound", getModelProxyPathNotFound(), status.Errorf(codes.NotFound, "data-path: base_path")},
-		{"Get-PathFound", getModelProxyPathFound(), nil},
+		{"Get-PathNotFound", getModelProxyPathNotFound(t), status.Errorf(codes.NotFound, "data-path: base_path")},
+		{"Get-PathFound", getModelProxyPathFound(t), nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
