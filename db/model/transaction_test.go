@@ -20,8 +20,10 @@ import (
 	"context"
 	"encoding/hex"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 )
@@ -34,25 +36,12 @@ var (
 )
 
 func init() {
+	var err error
 	TestTransaction_Root = NewRoot(&voltha.Voltha{}, nil)
-	TestTransaction_RootProxy = TestTransaction_Root.node.CreateProxy(context.Background(), "/", false)
+	if TestTransaction_RootProxy, err = TestTransaction_Root.node.CreateProxy(context.Background(), "/", false); err != nil {
+		log.With(log.Fields{"error": err}).Fatal("Cannot create proxy")
+	}
 }
-
-//func TestTransaction_1_GetDevices(t *testing.T) {
-//	getTx := TestTransaction_RootProxy.OpenTransaction()
-//
-//	devices := getTx.Get("/devices", 1, false)
-//
-//	if len(devices.([]interface{})) == 0 {
-//		t.Error("there are no available devices to retrieve")
-//	} else {
-//		// Save the target device id for later tests
-//		TestTransaction_TargetDeviceId = devices.([]interface{})[0].(*voltha.Device).Id
-//		t.Logf("retrieved devices: %+v", devices)
-//	}
-//
-//	getTx.Commit()
-//}
 
 func TestTransaction_2_AddDevice(t *testing.T) {
 	devIDBin, _ := uuid.New().MarshalBinary()
@@ -80,7 +69,12 @@ func TestTransaction_2_AddDevice(t *testing.T) {
 
 	addTx := TestTransaction_RootProxy.OpenTransaction()
 
-	if added := addTx.Add(context.Background(), "/devices", device); added == nil {
+	added, err := addTx.Add(context.Background(), "/devices", device)
+	if err != nil {
+		log.Errorf("Failed to add device due to error %v", err)
+		assert.NotNil(t, err)
+	}
+	if added == nil {
 		t.Error("Failed to add device")
 	} else {
 		TestTransaction_TargetDeviceId = added.(*voltha.Device).Id
@@ -94,12 +88,20 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 	basePath := "/devices/" + TestTransaction_DeviceId
 
 	getDevWithPortsTx := TestTransaction_RootProxy.OpenTransaction()
-	device1 := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
+	device1, err := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
+	if err != nil {
+		log.Errorf("Failed to get device with ports due to error %v", err)
+		assert.NotNil(t, err)
+	}
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
 	getDevTx := TestTransaction_RootProxy.OpenTransaction()
-	device2 := getDevTx.Get(context.Background(), basePath, 0, false)
+	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
+	if err != nil {
+		log.Errorf("Failed to open transaction due to error %v", err)
+		assert.NotNil(t, err)
+	}
 	t.Logf("retrieved device: %+v", device2)
 
 	getDevTx.Commit()
@@ -107,7 +109,10 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 
 func TestTransaction_4_UpdateDevice(t *testing.T) {
 	updateTx := TestTransaction_RootProxy.OpenTransaction()
-	if retrieved := updateTx.Get(context.Background(), "/devices/"+TestTransaction_TargetDeviceId, 1, false); retrieved == nil {
+	if retrieved, err := updateTx.Get(context.Background(), "/devices/"+TestTransaction_TargetDeviceId, 1, false); err != nil {
+		log.Errorf("Failed to retrieve device info due to error %v", err)
+		assert.NotNil(t, err)
+	} else if retrieved == nil {
 		t.Error("Failed to get device")
 	} else {
 		var fwVersion int
@@ -123,7 +128,12 @@ func TestTransaction_4_UpdateDevice(t *testing.T) {
 		t.Logf("Before update : %+v", retrieved)
 
 		// FIXME: The makeBranch passed in function is nil or not being executed properly!!!!!
-		if afterUpdate := updateTx.Update(context.Background(), "/devices/"+TestTransaction_TargetDeviceId, retrieved, false); afterUpdate == nil {
+		afterUpdate, err := updateTx.Update(context.Background(), "/devices/"+TestTransaction_TargetDeviceId, retrieved, false)
+		if err != nil {
+			log.Errorf("Failed to update device info due to error %v", err)
+			assert.NotNil(t, err)
+		}
+		if afterUpdate == nil {
 			t.Error("Failed to update device")
 		} else {
 			t.Logf("Updated device : %+v", afterUpdate)
@@ -137,12 +147,20 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 	basePath := "/devices/" + TestTransaction_DeviceId
 
 	getDevWithPortsTx := TestTransaction_RootProxy.OpenTransaction()
-	device1 := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
+	device1, err := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
+	if err != nil {
+		log.Errorf("Failed to device with ports info due to error %v", err)
+		assert.NotNil(t, err)
+	}
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
 	getDevTx := TestTransaction_RootProxy.OpenTransaction()
-	device2 := getDevTx.Get(context.Background(), basePath, 0, false)
+	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
+	if err != nil {
+		log.Errorf("Failed to  get device info due to error %v", err)
+		assert.NotNil(t, err)
+	}
 	t.Logf("retrieved device: %+v", device2)
 
 	getDevTx.Commit()
@@ -150,7 +168,12 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 
 func TestTransaction_6_RemoveDevice(t *testing.T) {
 	removeTx := TestTransaction_RootProxy.OpenTransaction()
-	if removed := removeTx.Remove(context.Background(), "/devices/"+TestTransaction_DeviceId); removed == nil {
+	removed, err := removeTx.Remove(context.Background(), "/devices/"+TestTransaction_DeviceId)
+	if err != nil {
+		log.Errorf("Failed to remove device due to error %v", err)
+		assert.NotNil(t, err)
+	}
+	if removed == nil {
 		t.Error("Failed to remove device")
 	} else {
 		t.Logf("Removed device : %+v", removed)
@@ -163,7 +186,11 @@ func TestTransaction_7_GetDevice_PostRemove(t *testing.T) {
 	basePath := "/devices/" + TestTransaction_DeviceId
 
 	getDevTx := TestTransaction_RootProxy.OpenTransaction()
-	device := TestTransaction_RootProxy.Get(context.Background(), basePath, 0, false, "")
+	device, err := TestTransaction_RootProxy.Get(context.Background(), basePath, 0, false, "")
+	if err != nil {
+		log.Errorf("Failed to get device info post remove due to error %v", err)
+		assert.NotNil(t, err)
+	}
 	t.Logf("retrieved device: %+v", device)
 
 	getDevTx.Commit()

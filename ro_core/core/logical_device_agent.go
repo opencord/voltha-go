@@ -60,7 +60,10 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDb bool) err
 	if loadFromDb {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
-		if logicalDevice := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); logicalDevice != nil {
+		if logicalDevice, err := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); err != nil {
+			log.Errorw("failed-to-get-logical-device", log.Fields{"error": err})
+			return err
+		} else if logicalDevice != nil {
 			if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 				agent.lastData = proto.Clone(lDevice).(*voltha.LogicalDevice)
 			}
@@ -88,7 +91,10 @@ func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, erro
 	log.Debug("GetLogicalDevice")
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
-	if logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); logicalDevice != nil {
+	if logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); err != nil {
+		log.Errorw("failed-to-get-logical-device", log.Fields{"error": err})
+		return nil, err
+	} else if logicalDevice != nil {
 		if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 			return lDevice, nil
 		}
