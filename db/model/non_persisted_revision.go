@@ -496,9 +496,9 @@ func (npr *NonPersistedRevision) GetLastUpdate() time.Time {
 	return npr.lastUpdate
 }
 
-func (npr *NonPersistedRevision) LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) []Revision {
+func (npr *NonPersistedRevision) LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) ([]Revision, error) {
 	// stub... required by interface
-	return nil
+	return nil, nil
 }
 
 func (npr *NonPersistedRevision) SetupWatch(key string) {
