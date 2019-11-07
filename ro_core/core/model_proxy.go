@@ -58,7 +58,10 @@ func (mp *ModelProxy) Get(parts ...string) (interface{}, error) {
 
 	log.Debugw("get-data", log.Fields{"path": path})
 
-	if data := mp.rootProxy.Get(context.Background(), path, 1, false, ""); data != nil {
+	if data, err := mp.rootProxy.Get(context.Background(), path, 1, false, ""); err != nil {
+		log.Errorw("failed-to-retrieve-data-from-model-proxy", log.Fields{"error": err})
+		return nil, err
+	} else if data != nil {
 		return data, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "data-path: %s", path)

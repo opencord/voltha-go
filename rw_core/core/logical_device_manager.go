@@ -142,7 +142,10 @@ func (ldMgr *LogicalDeviceManager) listManagedLogicalDevices() (*voltha.LogicalD
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, true, ""); logicalDevices != nil {
+	if logicalDevices, err := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, true, ""); err != nil {
+		log.Errorw("failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	} else if logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
@@ -200,7 +203,10 @@ func (ldMgr *LogicalDeviceManager) stopManagingLogicalDeviceWithDeviceID(id stri
 		ldAgent := value.(*LogicalDeviceAgent)
 		if ldAgent.rootDeviceID == id {
 			log.Infow("stopping-logical-device-agent", log.Fields{"lDeviceId": key})
-			ldAgent.stop(context.TODO())
+			if err := ldAgent.stop(context.TODO()); err != nil {
+				log.Errorw("failed-to-stop-LDAgent", log.Fields{"error": err})
+				return false
+			}
 			ldID = key.(string)
 			ldMgr.logicalDeviceAgents.Delete(ldID)
 		}
@@ -211,7 +217,10 @@ func (ldMgr *LogicalDeviceManager) stopManagingLogicalDeviceWithDeviceID(id stri
 
 //getLogicalDeviceFromModel retrieves the logical device data from the model.
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceFromModel(lDeviceID string) (*voltha.LogicalDevice, error) {
-	if logicalDevice := ldMgr.clusterDataProxy.Get(context.Background(), "/logical_devices/"+lDeviceID, 0, false, ""); logicalDevice != nil {
+	if logicalDevice, err := ldMgr.clusterDataProxy.Get(context.Background(), "/logical_devices/"+lDeviceID, 0, false, ""); err != nil {
+		log.Errorw("failed-to-get-logical-devices-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	} else if logicalDevice != nil {
 		if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 			return lDevice, nil
 		}
@@ -234,7 +243,10 @@ func (ldMgr *LogicalDeviceManager) load(lDeviceID string) error {
 				log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceID})
 				agent := newLogicalDeviceAgent(lDeviceID, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
 				if err := agent.start(context.TODO(), true); err != nil {
-					agent.stop(context.TODO())
+					if err := agent.stop(context.TODO()); err != nil {
+						log.Errorw("failed-to-stop-agent", log.Fields{"error": err})
+						return err
+					}
 				} else {
 					ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceID, agent)
 				}
@@ -275,7 +287,10 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, devi
 	logDeviceID := device.ParentId
 	if agent := ldMgr.getLogicalDeviceAgent(logDeviceID); agent != nil {
 		// Stop the logical device agent
-		agent.stop(ctx)
+		if err := agent.stop(ctx); err != nil {
+			log.Errorw("failed-to-stop-agent", log.Fields{"error": err})
+			return err
+		}
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
 		err := ldMgr.core.deviceOwnership.AbandonDevice(logDeviceID)

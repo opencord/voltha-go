@@ -59,7 +59,10 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromDb bool) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("starting-device-agent", log.Fields{"device": agent.lastData})
 	if loadFromDb {
-		if device := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 0, false, ""); device != nil {
+		if device, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 0, false, ""); err != nil {
+			log.Errorw("failed-to-get-device", log.Fields{"error": err})
+			return err
+		} else if device != nil {
 			if d, ok := device.(*voltha.Device); ok {
 				agent.lastData = proto.Clone(d).(*voltha.Device)
 			}
@@ -86,7 +89,10 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, ""); err != nil {
+		log.Errorw("failed-to-get-device", log.Fields{"error": err})
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
@@ -94,6 +100,35 @@ func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	}
 	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
 }
+
+// getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
+// This function is meant so that we do not have duplicate code all over the device agent functions
+//func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
+//	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, ""); err != nil {
+//		log.Errorw("failed-to-get-device", log.Fields{"error": err})
+//		return nil, err
+//	} else if device != nil {
+//		if d, ok := device.(*voltha.Device); ok {
+//			cloned := proto.Clone(d).(*voltha.Device)
+//			return cloned, nil
+//		}
+//	}
+//	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
+//}
+//
+// getPorts retrieves the ports information of the device based on the port type.
+//func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
+//	log.Debugw("getPorts", log.Fields{"id": agent.deviceID, "portType": portType})
+//	ports := &voltha.Ports{}
+//	if device, _ := agent.deviceMgr.GetDevice(agent.deviceID); device != nil {
+//		for _, port := range device.Ports {
+//			if port.Type == portType {
+//				ports.Items = append(ports.Items, port)
+//			}
+//		}
+//	}
+//	return ports
+//}
 
 // ListDevicePorts retrieves the ports information for a particular device.
 func (agent *DeviceAgent) ListDevicePorts(ctx context.Context) (*voltha.Ports, error) {
