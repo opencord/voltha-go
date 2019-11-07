@@ -47,7 +47,7 @@ type Revision interface {
 	GetNode() *node
 	SetLastUpdate(ts ...time.Time)
 	GetLastUpdate() time.Time
-	LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) []Revision
+	LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) ([]Revision, error)
 	UpdateData(ctx context.Context, data interface{}, branch *Branch) Revision
 	UpdateChildren(ctx context.Context, name string, children []Revision, branch *Branch) Revision
 	UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision
