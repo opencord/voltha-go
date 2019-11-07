@@ -150,7 +150,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 	if rhp.TestMode { // Execute only for test cases
 		return &voltha.CoreInstance{InstanceId: "CoreInstance"}, nil
 	}
-	return rhp.adapterMgr.registerAdapter(adapter, deviceTypes), nil
+	return rhp.adapterMgr.registerAdapter(adapter, deviceTypes)
 }
 
 // GetDevice returns device info

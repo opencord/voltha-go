@@ -69,6 +69,8 @@ func newNBTest() *NBTest {
 }
 
 func (nb *NBTest) startCore(inCompeteMode bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
 	cfg.DefaultRequestTimeout = nb.defaultTimeout.Nanoseconds() / 1000000 //TODO: change when Core changes to Duration
@@ -82,11 +84,11 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.GrpcHost = "127.0.0.1"
 	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, nb.coreInstanceID)
-	nb.core = NewCore(nb.coreInstanceID, cfg, client, nb.kClient)
+	nb.core = NewCore(ctx, nb.coreInstanceID, cfg, client, nb.kClient)
 	nb.core.Start(context.Background())
 }
 
-func (nb *NBTest) createAndregisterAdapters() {
+func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	// Setup the mock OLT adapter
 	oltAdapter, err := createMockAdapter(OltAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.oltAdapterName)
 	if err != nil {
@@ -103,7 +105,10 @@ func (nb *NBTest) createAndregisterAdapters() {
 	}
 	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
-	nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes)
+	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+		log.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
 
 	// Setup the mock ONU adapter
 	if _, err := createMockAdapter(OnuAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.onuAdapterName); err != nil {
@@ -117,7 +122,10 @@ func (nb *NBTest) createAndregisterAdapters() {
 	}
 	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes = &voltha.DeviceTypes{Items: types}
-	nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes)
+	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+		log.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
 }
 
 func (nb *NBTest) stopAll() {
@@ -190,12 +198,13 @@ func (nb *NBTest) verifyDevices(t *testing.T, nbi *APIHandler) {
 	// Get the latest device updates as they may have changed since last list devices
 	updatedDevices, err := nbi.ListDevices(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
-	assert.NotNil(t, devices)
+	assert.NotNil(t, updatedDevices)
 	for _, d := range updatedDevices.Items {
 		assert.Equal(t, voltha.AdminState_ENABLED, d.AdminState)
 		assert.Equal(t, voltha.ConnectStatus_REACHABLE, d.ConnectStatus)
 		assert.Equal(t, voltha.OperStatus_ACTIVE, d.OperStatus)
 		assert.Equal(t, d.Type, d.Adapter)
+		log.Debug("Lee: ", d.MacAddress, d.SerialNumber)
 		assert.NotEqual(t, "", d.MacAddress)
 		assert.NotEqual(t, "", d.SerialNumber)
 
@@ -314,7 +323,7 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *APIHandler) {
 	// Try to create a device with invalid data
 	_, err = nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName})
 	assert.NotNil(t, err)
-	assert.Equal(t, "No Device Info Present; MAC or HOSTIP&PORT", err.Error())
+	assert.Equal(t, "no-device-info-present; MAC or HOSTIP&PORT", err.Error())
 
 	// Ensure we only have 1 device in the Core
 	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
@@ -477,7 +486,7 @@ func TestSuite1(t *testing.T) {
 	nb.testCoreWithoutData(t, nbi)
 
 	// Create/register the adapters
-	nb.createAndregisterAdapters()
+	nb.createAndregisterAdapters(t)
 
 	// 2. Test adapter registration
 	nb.testAdapterRegistration(t, nbi)

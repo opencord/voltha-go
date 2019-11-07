@@ -59,7 +59,10 @@ func (agent *DeviceAgent) start(ctx context.Context, loadFromDb bool) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("starting-device-agent", log.Fields{"device": agent.lastData})
 	if loadFromDb {
-		if device := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 0, false, ""); device != nil {
+		if device, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 0, false, ""); err != nil {
+			log.Errorw("failed-to-get-device", log.Fields{"error": err})
+			return err
+		} else if device != nil {
 			if d, ok := device.(*voltha.Device); ok {
 				agent.lastData = proto.Clone(d).(*voltha.Device)
 			}
@@ -86,7 +89,10 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, ""); device != nil {
+	if device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, ""); err != nil {
+		log.Errorw("failed-to-get-device", log.Fields{"error": err})
+		return nil, err
+	} else if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			cloned := proto.Clone(d).(*voltha.Device)
 			return cloned, nil
