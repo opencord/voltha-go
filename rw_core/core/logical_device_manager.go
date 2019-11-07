@@ -142,7 +142,10 @@ func (ldMgr *LogicalDeviceManager) listManagedLogicalDevices() (*voltha.LogicalD
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, true, ""); logicalDevices != nil {
+	if logicalDevices, err := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, true, ""); err != nil {
+		log.Errorw("failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	} else if logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
@@ -210,13 +213,16 @@ func (ldMgr *LogicalDeviceManager) stopManagingLogicalDeviceWithDeviceID(id stri
 }
 
 //getLogicalDeviceFromModel retrieves the logical device data from the model.
-func (ldMgr *LogicalDeviceManager) getLogicalDeviceFromModel(lDeviceID string) (*voltha.LogicalDevice, error) {
-	if logicalDevice := ldMgr.clusterDataProxy.Get(context.Background(), "/logical_devices/"+lDeviceID, 0, false, ""); logicalDevice != nil {
+func (ldMgr *LogicalDeviceManager) getLogicalDeviceFromModel(lDeviceId string) (*voltha.LogicalDevice, error) {
+	if logicalDevice, err := ldMgr.clusterDataProxy.Get(context.Background(), "/logical_devices/"+lDeviceId, 0, false, ""); err != nil {
+		log.Errorw("failed-to-get-logical-devices-from-cluster-proxy", log.Fields{"error": err})
+		return nil, err
+	} else if logicalDevice != nil {
 		if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 			return lDevice, nil
 		}
 	}
-	return nil, status.Error(codes.NotFound, lDeviceID)
+	return nil, status.Error(codes.NotFound, lDeviceId)
 }
 
 // load loads a logical device manager in memory
