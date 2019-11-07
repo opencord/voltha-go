@@ -352,7 +352,12 @@ func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*volth
 // ListDevices retrieves the latest devices from the data model
 func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
 	log.Debug("ListDevices")
-	return handler.deviceMgr.ListDevices()
+	devices, err := handler.deviceMgr.ListDevices()
+	if err != nil {
+		log.Errorw("Failed to list devices", log.Fields{"error": err})
+		return nil, err
+	}
+	return devices, nil
 }
 
 // ListDeviceIds returns the list of device ids managed by a voltha core
@@ -459,7 +464,7 @@ func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *volth
 func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
 	if device.MacAddress == "" && device.GetHostAndPort() == "" {
 		log.Errorf("No Device Info Present")
-		return &voltha.Device{}, errors.New("No Device Info Present; MAC or HOSTIP&PORT")
+		return &voltha.Device{}, errors.New("no-device-info-present; MAC or HOSTIP&PORT")
 	}
 	log.Debugw("create-device", log.Fields{"device": *device})
 	if isTestMode(ctx) {
@@ -482,7 +487,8 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 	case res := <-ch:
 		if res != nil {
 			if err, ok := res.(error); ok {
-				return &voltha.Device{}, err
+				log.Errorw("create-device-failed", log.Fields{"error": err})
+				return nil, err
 			}
 			if d, ok := res.(*voltha.Device); ok {
 				_, err := handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{ID: d.Id})
