@@ -34,7 +34,7 @@ func getModelProxyPathNotFound() *fields {
 	var modelProxy fields
 
 	TestProxy_Root := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxy_Root_Proxy := TestProxy_Root.CreateProxy(context.Background(), "/", false)
+	TestProxy_Root_Proxy, _ := TestProxy_Root.CreateProxy(context.Background(), "/", false)
 	modelProxy.rootProxy = TestProxy_Root_Proxy
 	modelProxy.basePath = "base_path"
 
@@ -45,7 +45,7 @@ func getModelProxyPathFound() *fields {
 	var modelProxy fields
 
 	TestProxy_Root := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxy_Root_Proxy := TestProxy_Root.CreateProxy(context.Background(), "/", false)
+	TestProxy_Root_Proxy, _ := TestProxy_Root.CreateProxy(context.Background(), "/", false)
 	modelProxy.rootProxy = TestProxy_Root_Proxy
 	modelProxy.basePath = "devices"
 
