@@ -68,8 +68,15 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 		PathPrefix: "service/voltha"}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	var err error
+	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
+	core.localDataProxy, err = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
 	return &core
 }
 
@@ -140,7 +147,7 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	log.Info("grpc-server-started")
 	core.grpcServer.Start(context.Background())
 
-	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
+	//probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
 }
 
 func (core *Core) startDeviceManager(ctx context.Context) {
