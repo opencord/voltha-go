@@ -96,7 +96,7 @@ func init() {
 	}
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
 
-	BenchmarkProxy_DeviceProxy = BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/", false)
+	BenchmarkProxy_DeviceProxy, _ = BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/", false)
 	// Register ADD instructions callbacks
 	BenchmarkProxy_PLT = &proxyLoadTest{}
 
@@ -150,7 +150,7 @@ func BenchmarkProxy_AddDevice(b *testing.B) {
 
 			var added interface{}
 			// Add the device
-			if added = BenchmarkProxy_DeviceProxy.AddWithID(context.Background(), "/devices", ltDevID, ltDevice, ""); added == nil {
+			if added, _ = BenchmarkProxy_DeviceProxy.AddWithID(context.Background(), "/devices", ltDevID, ltDevice, ""); added == nil {
 				BenchmarkProxy_Logger.Errorf("Failed to add device: %+v", ltDevice)
 				continue
 			} else {
@@ -174,8 +174,8 @@ func BenchmarkProxy_UpdateFirmware(b *testing.B) {
 			if len(BenchmarkProxy_PLT.addedDevices) > 0 {
 				var target interface{}
 				randomID := BenchmarkProxy_PLT.addedDevices[rand.Intn(len(BenchmarkProxy_PLT.addedDevices))]
-				firmProxy := BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/", false)
-				if target = firmProxy.Get(context.Background(), "/devices/"+randomID, 0, false,
+				firmProxy, _ := BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/", false)
+				if target, _ = firmProxy.Get(context.Background(), "/devices/"+randomID, 0, false,
 					""); !reflect.ValueOf(target).IsValid() {
 					BenchmarkProxy_Logger.Errorf("Failed to find device: %s %+v", randomID, target)
 					continue
@@ -200,7 +200,7 @@ func BenchmarkProxy_UpdateFirmware(b *testing.B) {
 				after := target.(*voltha.Device).FirmwareVersion
 
 				var updated interface{}
-				if updated = firmProxy.Update(context.Background(), "/devices/"+randomID, target.(*voltha.Device), false,
+				if updated, _ = firmProxy.Update(context.Background(), "/devices/"+randomID, target.(*voltha.Device), false,
 					""); updated == nil {
 					BenchmarkProxy_Logger.Errorf("Failed to update device: %+v", target)
 					continue
@@ -209,7 +209,7 @@ func BenchmarkProxy_UpdateFirmware(b *testing.B) {
 
 				}
 
-				if d := firmProxy.Get(context.Background(), "/devices/"+randomID, 0, false,
+				if d, _ := firmProxy.Get(context.Background(), "/devices/"+randomID, 0, false,
 					""); !reflect.ValueOf(d).IsValid() {
 					BenchmarkProxy_Logger.Errorf("Failed to get device: %s", randomID)
 					continue
@@ -264,8 +264,8 @@ func BenchmarkProxy_UpdateFlows(b *testing.B) {
 			if len(BenchmarkProxy_PLT.addedDevices) > 0 {
 				randomID := BenchmarkProxy_PLT.addedDevices[rand.Intn(len(BenchmarkProxy_PLT.addedDevices))]
 
-				flowsProxy := BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/devices/"+randomID+"/flows", false)
-				flows := flowsProxy.Get(context.Background(), "/", 0, false, "")
+				flowsProxy, _ := BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/devices/"+randomID+"/flows", false)
+				flows, _ := flowsProxy.Get(context.Background(), "/", 0, false, "")
 
 				before := flows.(*openflow_13.Flows).Items[0].TableId
 				flows.(*openflow_13.Flows).Items[0].TableId = uint32(rand.Intn(3000))
@@ -281,7 +281,7 @@ func BenchmarkProxy_UpdateFlows(b *testing.B) {
 				)
 
 				var updated interface{}
-				if updated = flowsProxy.Update(context.Background(), "/", flows.(*openflow_13.Flows), false, ""); updated == nil {
+				if updated, _ = flowsProxy.Update(context.Background(), "/", flows.(*openflow_13.Flows), false, ""); updated == nil {
 					b.Errorf("Failed to update flows for device: %+v", flows)
 				} else {
 					BenchmarkProxy_Logger.Infof("Flows were updated : %+v", updated)
@@ -303,7 +303,7 @@ func BenchmarkProxy_GetDevices(b *testing.B) {
 	for i := 0; i < len(BenchmarkProxy_PLT.addedDevices); i++ {
 		devToGet := BenchmarkProxy_PLT.addedDevices[i]
 		// Verify that the added device can now be retrieved
-		if d := BenchmarkProxy_DeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
+		if d, _ := BenchmarkProxy_DeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
 			""); !reflect.ValueOf(d).IsValid() {
 			BenchmarkProxy_Logger.Errorf("Failed to get device: %s", devToGet)
 			continue
@@ -317,7 +317,7 @@ func BenchmarkProxy_GetUpdatedFirmware(b *testing.B) {
 	for i := 0; i < len(BenchmarkProxy_PLT.updatedFirmwares); i++ {
 		devToGet := BenchmarkProxy_PLT.updatedFirmwares[i].ID
 		// Verify that the updated device can be retrieved and that the updates were actually applied
-		if d := BenchmarkProxy_DeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
+		if d, _ := BenchmarkProxy_DeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
 			""); !reflect.ValueOf(d).IsValid() {
 			BenchmarkProxy_Logger.Errorf("Failed to get device: %s", devToGet)
 			continue
