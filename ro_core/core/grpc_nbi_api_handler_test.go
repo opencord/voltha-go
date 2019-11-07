@@ -29,6 +29,7 @@ import (
 )
 
 func MakeTestGrpcNbiConfig() *Core {
+	var ctx context.Context
 	var core *Core
 	var roCoreFlgs *config.ROCoreFlags
 	var roC *roCore
@@ -44,7 +45,7 @@ func MakeTestGrpcNbiConfig() *Core {
 			cli, err := newKVClient("etcd", addr, 5)
 			if err == nil {
 				roC.kvClient = cli
-				core = NewCore("ro_core", roCoreFlgs, roC.kvClient)
+				core = NewCore(ctx, "ro_core", roCoreFlgs, roC.kvClient)
 			}
 		}
 	}

@@ -22,6 +22,7 @@ import (
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
@@ -30,9 +31,13 @@ import (
 func MakeTestNewCoreConfig() *Core {
 	var core Core
 	core.instanceID = "ro_core"
+	var err error
 	core.config = config.NewROCoreFlags()
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, nil)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.With(log.Fields{"error": err}).Fatal("Cannot create cluster data proxy")
+	}
 	core.genericMgr = newModelProxyManager(core.clusterDataProxy)
 	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 
@@ -127,13 +132,18 @@ func TestLdMgrGetLogicalDevice(t *testing.T) {
 
 	/*** Case: getLogicalDevice() is Success ***/
 	// Add Data
-	if added := core.clusterDataProxy.Add(
+	added, err := core.clusterDataProxy.Add(
 		context.Background(),
 		"/logical_devices",
 		&voltha.LogicalDevice{
 			Id: "id",
 		},
-		""); added == nil {
+		"")
+	if err != nil {
+		log.Errorw("failed-to-add-logical-device", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
+	if added == nil {
 		t.Error("Failed to add logical device")
 	}
 	ldAgent := newLogicalDeviceAgent("id", "device_id", ldMgr, core.deviceMgr, core.clusterDataProxy)
@@ -219,7 +229,7 @@ func TestGetLogicalPortId(t *testing.T) {
 	device := &voltha.Device{Id: "id", Root: true, ParentId: "parent_id"}
 
 	// Add Data
-	if added := core.clusterDataProxy.Add(
+	added, err := core.clusterDataProxy.Add(
 		context.Background(),
 		"/logical_devices",
 		&voltha.LogicalDevice{
@@ -231,7 +241,12 @@ func TestGetLogicalPortId(t *testing.T) {
 				},
 			},
 		},
-		""); added == nil {
+		"")
+	if err != nil {
+		log.Errorw("failed-to-add-logical-device", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
+	if added == nil {
 		t.Error("Failed to add logical device")
 	}
 	ldAgent := newLogicalDeviceAgent("parent_id", "device_id", ldMgr, core.deviceMgr, core.clusterDataProxy)
@@ -273,7 +288,7 @@ func TestListLogicalDevicePorts(t *testing.T) {
 	}
 
 	// Add Data
-	if added := core.clusterDataProxy.Add(
+	added, err := core.clusterDataProxy.Add(
 		context.Background(),
 		"/logical_devices",
 		&voltha.LogicalDevice{
@@ -284,7 +299,12 @@ func TestListLogicalDevicePorts(t *testing.T) {
 				},
 			},
 		},
-		""); added == nil {
+		"")
+	if err != nil {
+		log.Errorw("failed-to-add-logical-device", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
+	if added == nil {
 		t.Error("Failed to add logical device")
 	}
 	ldAgent := newLogicalDeviceAgent("id", "", ldMgr, core.deviceMgr, core.clusterDataProxy)
@@ -319,7 +339,7 @@ func TestListLogicalDeviceFlows(t *testing.T) {
 	wantResult := &voltha.Flows{}
 
 	// Add Data
-	if added := core.clusterDataProxy.Add(
+	added, err := core.clusterDataProxy.Add(
 		context.Background(),
 		"/logical_devices",
 		&voltha.LogicalDevice{
@@ -332,7 +352,12 @@ func TestListLogicalDeviceFlows(t *testing.T) {
 				},
 			},
 		},
-		""); added == nil {
+		"")
+	if err != nil {
+		log.Errorw("failed-to-add-logical-device", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
+	if added == nil {
 		t.Error("Failed to add logical device")
 	}
 	ldAgent := newLogicalDeviceAgent("id", "", ldMgr, core.deviceMgr, core.clusterDataProxy)
@@ -367,7 +392,7 @@ func TestListLogicalDeviceFlowGroups(t *testing.T) {
 	wantResult := &voltha.FlowGroups{}
 
 	// Add Data
-	if added := core.clusterDataProxy.Add(
+	added, err := core.clusterDataProxy.Add(
 		context.Background(),
 		"/logical_devices",
 		&voltha.LogicalDevice{
@@ -382,7 +407,12 @@ func TestListLogicalDeviceFlowGroups(t *testing.T) {
 				},
 			},
 		},
-		""); added == nil {
+		"")
+	if err != nil {
+		log.Errorw("failed-to-add-logical-device", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
+	if added == nil {
 		t.Error("Failed to add logical device")
 	}
 	ldAgent := newLogicalDeviceAgent("id", "", ldMgr, core.deviceMgr, core.clusterDataProxy)
@@ -417,7 +447,7 @@ func TestGetLogicalPort(t *testing.T) {
 	wantResult := &voltha.LogicalPort{Id: "123"}
 
 	// Add Data
-	if added := core.clusterDataProxy.Add(
+	added, err := core.clusterDataProxy.Add(
 		context.Background(),
 		"/logical_devices",
 		&voltha.LogicalDevice{
@@ -428,7 +458,12 @@ func TestGetLogicalPort(t *testing.T) {
 				},
 			},
 		},
-		""); added == nil {
+		"")
+	if err != nil {
+		log.Errorw("failed-to-add-logical-device", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
+	if added == nil {
 		t.Error("Failed to add logical device")
 	}
 	ldAgent := newLogicalDeviceAgent("id", "", ldMgr, core.deviceMgr, core.clusterDataProxy)
