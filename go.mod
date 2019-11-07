@@ -11,6 +11,7 @@ require (
 	github.com/opencord/voltha-lib-go/v2 v2.2.17
 	github.com/opencord/voltha-protos/v2 v2.0.1
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
+	github.com/prometheus/common v0.4.1
 	github.com/stretchr/testify v1.4.0
 	google.golang.org/grpc v1.24.0
 )
