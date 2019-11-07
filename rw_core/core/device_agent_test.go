@@ -112,7 +112,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg.GrpcHost = "127.0.0.1"
 	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, dat.coreInstanceID)
-	dat.core = NewCore(dat.coreInstanceID, cfg, client, dat.kClient)
+	dat.core = NewCore(context.Background(), dat.coreInstanceID, cfg, client, dat.kClient)
 	dat.core.Start(context.Background())
 }
 
