@@ -88,6 +88,7 @@ func newLogicalDeviceAgent(id string, deviceID string, ldeviceMgr *LogicalDevice
 func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) error {
 	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceID, "loadFromdB": loadFromdB})
 	var ld *voltha.LogicalDevice
+	var err error
 	if !loadFromdB {
 		//Build the logical device based on information retrieved from the device adapter
 		var switchCap *ic.SwitchCapability
@@ -113,7 +114,13 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 
 		agent.lockLogicalDevice.Lock()
 		// Save the logical device
-		if added := agent.clusterDataProxy.AddWithID(ctx, "/logical_devices", ld.Id, ld, ""); added == nil {
+		added, err := agent.clusterDataProxy.AddWithID(ctx, "/logical_devices", ld.Id, ld, "")
+		if err != nil {
+			log.Errorw("failed-to-save-logical-devices-to-cluster-proxy", log.Fields{"error": err})
+			agent.lockLogicalDevice.Unlock()
+			return err
+		}
+		if added == nil {
 			log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		} else {
 			log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
@@ -134,7 +141,10 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
 		agent.lockLogicalDevice.Lock()
-		logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, true, "")
+		logicalDevice, err1 := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, true, "")
+		if err1 != nil {
+			return status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
+		}
 		ld, ok := logicalDevice.(*voltha.LogicalDevice)
 		if !ok {
 			agent.lockLogicalDevice.Unlock()
@@ -154,23 +164,38 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
-	agent.flowProxy = agent.clusterDataProxy.CreateProxy(
+	agent.flowProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceID),
 		false)
-	agent.meterProxy = agent.clusterDataProxy.CreateProxy(
+	if err != nil {
+		log.Errorw("failed-to-create-flow-proxy", log.Fields{"error": err})
+		return err
+	}
+	agent.meterProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/meters", agent.logicalDeviceID),
 		false)
-	agent.groupProxy = agent.clusterDataProxy.CreateProxy(
+	if err != nil {
+		log.Errorw("failed-to-create-meter-proxy", log.Fields{"error": err})
+		return err
+	}
+	agent.groupProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s/flow_groups", agent.logicalDeviceID),
 		false)
-	agent.ldProxy = agent.clusterDataProxy.CreateProxy(
+	if err != nil {
+		log.Errorw("failed-to-create-group-proxy", log.Fields{"error": err})
+		return err
+	}
+	agent.ldProxy, err = agent.clusterDataProxy.CreateProxy(
 		ctx,
 		fmt.Sprintf("/logical_devices/%s", agent.logicalDeviceID),
 		false)
-
+	if err != nil {
+		log.Errorw("failed-to-create-logical-device-proxy", log.Fields{"error": err})
+		return err
+	}
 	// TODO:  Use a port proxy once the POST_ADD is fixed
 	if agent.ldProxy != nil {
 		agent.ldProxy.RegisterCallback(model.POST_UPDATE, agent.portUpdated)
@@ -187,19 +212,23 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 }
 
 // stop stops the logical devuce agent.  This removes the logical device from the data model.
-func (agent *LogicalDeviceAgent) stop(ctx context.Context) {
+func (agent *LogicalDeviceAgent) stop(ctx context.Context) error {
 	log.Info("stopping-logical_device-agent")
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
 	//Remove the logical device from the model
-	if removed := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceID, ""); removed == nil {
+	if removed, err := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceID, ""); err != nil {
+		log.Errorw("failed-to-remove-device", log.Fields{"error": err})
+		return err
+	} else if removed == nil {
 		log.Errorw("failed-to-remove-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 	} else {
 		log.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 	}
 	agent.exitChannel <- 1
 	log.Info("logical_device-agent-stopped")
+	return nil
 }
 
 // GetLogicalDevice returns the latest logical device data
@@ -491,7 +520,11 @@ func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(device *voltha.Device) er
 //updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
 func (agent *LogicalDeviceAgent) updateLogicalDeviceWithoutLock(logicalDevice *voltha.LogicalDevice) error {
 	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceID, logicalDevice, false, "")
+	afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceID, logicalDevice, false, "")
+	if err != nil {
+		log.Errorw("failed-to-update-logical-devices-to-cluster-proxy", log.Fields{"error": err})
+		return err
+	}
 	if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "failed-updating-logical-device:%s", agent.logicalDeviceID)
 	}

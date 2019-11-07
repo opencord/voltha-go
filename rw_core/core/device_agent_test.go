@@ -97,6 +97,7 @@ func newDATest() *DATest {
 }
 
 func (dat *DATest) startCore(inCompeteMode bool) {
+	ctx := context.Background()
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout.Nanoseconds() / 1000000 //TODO: change when Core changes to Duration
@@ -110,7 +111,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg.GrpcHost = "127.0.0.1"
 	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, dat.coreInstanceID)
-	dat.core = NewCore(dat.coreInstanceID, cfg, client, dat.kClient)
+	dat.core = NewCore(ctx, dat.coreInstanceID, cfg, client, dat.kClient)
 	dat.core.Start(context.Background())
 }
 
