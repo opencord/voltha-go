@@ -446,6 +446,7 @@ func newLDATest() *LDATest {
 }
 
 func (lda *LDATest) startCore(inCompeteMode bool) {
+	ctx := context.Background()
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
 	cfg.DefaultRequestTimeout = lda.defaultTimeout.Nanoseconds() / 1000000 //TODO: change when Core changes to Duration
@@ -459,8 +460,11 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	cfg.GrpcHost = "127.0.0.1"
 	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, lda.coreInstanceID)
-	lda.core = NewCore(lda.coreInstanceID, cfg, client, lda.kClient)
-	lda.core.Start(context.Background())
+	lda.core = NewCore(ctx, lda.coreInstanceID, cfg, client, lda.kClient)
+	err = lda.core.Start(ctx)
+	if err != nil {
+		log.Fatal("Cannot start core")
+	}
 }
 
 func (lda *LDATest) stopAll() {
@@ -483,7 +487,8 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalDeviceAgent {
 	clonedLD.DatapathId = rand.Uint64()
 	lDeviceAgent := newLogicalDeviceAgent(clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.clusterDataProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
-	added := lDeviceAgent.clusterDataProxy.AddWithID(context.Background(), "/logical_devices", clonedLD.Id, clonedLD, "")
+	added, err := lDeviceAgent.clusterDataProxy.AddWithID(context.Background(), "/logical_devices", clonedLD.Id, clonedLD, "")
+	assert.Nil(t, err)
 	assert.NotNil(t, added)
 	lDeviceMgr.addLogicalDeviceAgentToMap(lDeviceAgent)
 	return lDeviceAgent

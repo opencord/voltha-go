@@ -140,10 +140,13 @@ func (rw *rwCore) start(ctx context.Context, instanceID string) {
 	}
 
 	// Create the core service
-	rw.core = c.NewCore(instanceID, rw.config, rw.kvClient, rw.kafkaClient)
+	rw.core = c.NewCore(ctx, instanceID, rw.config, rw.kvClient, rw.kafkaClient)
 
 	// start the core
-	rw.core.Start(ctx)
+	err = rw.core.Start(ctx)
+	if err != nil {
+		log.Fatalf("failed-to-start-rwcore", log.Fields{"error": err})
+	}
 }
 
 func (rw *rwCore) stop(ctx context.Context) {

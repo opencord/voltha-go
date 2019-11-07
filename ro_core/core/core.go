@@ -18,6 +18,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"time"
 
@@ -60,7 +61,7 @@ func init() {
 }
 
 // NewCore instantiates core service parameters
-func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
+func NewCore(ctx context.Context, id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	var core Core
 	core.instanceID = id
 	core.exitChannel = make(chan int, 1)
@@ -85,8 +86,7 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 		PathPrefix:              "service/voltha"}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &core.backend)
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &core.backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+
 	return &core
 }
 
@@ -123,7 +123,8 @@ func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRe
 }
 
 // Start will start core adapter services
-func (core *Core) Start(ctx context.Context) {
+func (core *Core) Start(ctx context.Context) error {
+	var err error
 	log.Info("starting-adaptercore", log.Fields{"coreId": core.instanceID})
 
 	// Wait until connection to KV Store is up
@@ -133,6 +134,16 @@ func (core *Core) Start(ctx context.Context) {
 
 	probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusRunning)
 
+	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
+		return fmt.Errorf("Failed to create cluster data proxy")
+	}
+	core.localDataProxy, err = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
+		return fmt.Errorf("Failed to create local cluster data proxy")
+	}
 	core.genericMgr = newModelProxyManager(core.clusterDataProxy)
 	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.clusterDataProxy)
@@ -142,6 +153,7 @@ func (core *Core) Start(ctx context.Context) {
 	go core.monitorKvstoreLiveness(ctx)
 
 	log.Info("adaptercore-started")
+	return nil
 }
 
 // Stop will stop core services

@@ -111,14 +111,16 @@ func (ro *roCore) start(ctx context.Context) {
 	}
 
 	// Create the core service
-	ro.core = c.NewCore(ro.config.InstanceID, ro.config, ro.kvClient)
+	ro.core = c.NewCore(ctx, ro.config.InstanceID, ro.config, ro.kvClient)
 
 	if p != nil {
 		p.UpdateStatus("kv-store", probe.ServiceStatusPrepared)
 	}
 
 	// start the core
-	ro.core.Start(ctx)
+	if err := ro.core.Start(ctx); err != nil {
+		log.Fatalf("failed-to-start-rocore", log.Fields{"error": err})
+	}
 }
 
 func (ro *roCore) stop(ctx context.Context) {
