@@ -16,7 +16,9 @@
 package core
 
 import (
+	"context"
 	"github.com/opencord/voltha-go/ro_core/config"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	"strconv"
@@ -24,6 +26,7 @@ import (
 )
 
 func MakeTestLogDevAgConfig() (*Core, error) {
+	var ctx context.Context
 	var core *Core
 	var roCoreFlgs *config.ROCoreFlags
 	var roC *roCore
@@ -34,6 +37,7 @@ func MakeTestLogDevAgConfig() (*Core, error) {
 
 		roCoreFlgs = config.NewROCoreFlags()
 		roC = newROCore(roCoreFlgs)
+
 		if (roC != nil) && (roCoreFlgs != nil) {
 			addr := "127.0.0.1" + ":" + freePortStr
 			cli, err := newKVClient("etcd", addr, 5)
@@ -44,8 +48,7 @@ func MakeTestLogDevAgConfig() (*Core, error) {
 		}
 	}
 
-	core = NewCore("ro_core", roCoreFlgs, roC.kvClient)
-
+	core = NewCore(ctx, "ro_core", roCoreFlgs, roC.kvClient)
 	return core, nil
 }
 
@@ -61,6 +64,12 @@ func TestNewLogicalDeviceAgent(t *testing.T) {
 func TestGetLogicalDevice(t *testing.T) {
 	core, _ := MakeTestLogDevAgConfig()
 	assert.NotNil(t, core)
+
+	var err1 error
+	if core.clusterDataProxy, err1 = core.localDataRoot.CreateProxy(context.Background(), "/", false); err1 != nil {
+		log.Errorw("failed-to-create-cluster-proxy", log.Fields{"error": err1})
+		assert.NotNil(t, err1)
+	}
 
 	logDevMgr := newLogicalDeviceManager(core.deviceMgr, core.clusterDataProxy)
 	assert.NotNil(t, logDevMgr)
