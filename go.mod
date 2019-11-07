@@ -8,7 +8,10 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1
 	github.com/gyuho/goraph v0.0.0-20160328020532-d460590d53a9
+<<<<<<< HEAD
 	github.com/mdlayher/ethernet v0.0.0-20190606142754-0394541c37b7 // indirect
+=======
+>>>>>>> ea9e720... VOL-1774 Etcd Crash Handling
 	github.com/opencord/voltha-lib-go/v2 v2.2.13
 	github.com/opencord/voltha-protos/v2 v2.0.1
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
