@@ -16,6 +16,7 @@
 package core
 
 import (
+	"context"
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
@@ -24,6 +25,7 @@ import (
 )
 
 func MakeTestLogDevAgConfig() (*Core, error) {
+	var ctx context.Context
 	var core *Core
 	var roCoreFlgs *config.ROCoreFlags
 	var roC *roCore
@@ -44,7 +46,7 @@ func MakeTestLogDevAgConfig() (*Core, error) {
 		}
 	}
 
-	core = NewCore("ro_core", roCoreFlgs, roC.kvClient)
+	core = NewCore(ctx, "ro_core", roCoreFlgs, roC.kvClient)
 
 	return core, nil
 }

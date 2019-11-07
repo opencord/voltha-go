@@ -91,10 +91,12 @@ func makeTestNewCore() (*config.ROCoreFlags, *roCore) {
 
 func TestNewCore(t *testing.T) {
 
+	var ctx context.Context
+
 	roCoreFlgs, roC := makeTestNewCore()
 	assert.NotNil(t, roCoreFlgs)
 	assert.NotNil(t, roC)
-	core := NewCore("ro_core", roCoreFlgs, roC.kvClient)
+	core := NewCore(ctx, "ro_core", roCoreFlgs, roC.kvClient)
 	assert.NotNil(t, core)
 }
 
@@ -105,7 +107,7 @@ func TestNewCoreStartStop(t *testing.T) {
 	roCoreFlgs, roC := makeTestNewCore()
 	assert.NotNil(t, roCoreFlgs)
 	assert.NotNil(t, roC)
-	core := NewCore("ro_core", roCoreFlgs, roC.kvClient)
+	core := NewCore(ctx, "ro_core", roCoreFlgs, roC.kvClient)
 	assert.NotNil(t, core)
 
 	core.Start(ctx)
