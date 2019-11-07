@@ -73,8 +73,15 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 		PathPrefix: cf.KVStoreDataPrefix}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
 	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
-	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
-	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	var err error
+	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
+	core.localDataProxy, err = core.localDataRoot.CreateProxy(context.Background(), "/", false)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
 	return &core
 }
 
@@ -399,6 +406,9 @@ func (core *Core) startLogicalDeviceManager(ctx context.Context) {
 
 func (core *Core) startAdapterManager(ctx context.Context) {
 	log.Info("Adapter-Manager-Starting...")
-	core.adapterMgr.start(ctx)
+	err := core.adapterMgr.start(ctx)
+	if err != nil {
+		log.Fatalf("KVStore Connection Error %v ", err)
+	}
 	log.Info("Adapter-Manager-Started")
 }
