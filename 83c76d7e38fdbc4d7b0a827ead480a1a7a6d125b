@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db1d6fd9_ab68b8c7",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-08T15:56:55Z",
+      "side": 1,
+      "message": "Should add probe argument to grpcserver.NewGrpcServer() instead of adding an attachReadyProbe method.  \n(All interface types can be nil.)",
+      "revId": "83c76d7e38fdbc4d7b0a827ead480a1a7a6d125b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eac032e_1b16e217",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-08T15:56:55Z",
+      "side": 1,
+      "message": "Use time.NewTimer() with `if !timer.Stop() { \u003c-timer.C }` instead of time.After() to avoid a memory leak.\nhttps://golang.org/pkg/time/#After\nhttps://golang.org/pkg/time/#Timer.Stop",
+      "revId": "83c76d7e38fdbc4d7b0a827ead480a1a7a6d125b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9240522a_7677ae90",
+        "filename": "rw_core/main.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-08T15:56:55Z",
+      "side": 1,
+      "message": "Is the whole config object really needed?  \nIf so, remove rw.config.xxx arguments.",
+      "revId": "83c76d7e38fdbc4d7b0a827ead480a1a7a6d125b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
