@@ -34,6 +34,23 @@
       "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3804288c_53aa4c3d",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-08T17:46:14Z",
+      "side": 1,
+      "message": "After testing the liveness check added for ro_core today, I feel default Not Live Interval of 60 seconds is too high; should be around 5-10 seconds. Currently, k8s liveness probe for rw_core checks for POD health every 3 seconds and considers it down after 3 failures; and thus restarts the PoD. So, PoD has only around 10-12 seconds to recover from a failed kafka/kvstore connection before it will be bounced by k8s probe mechanism. PoD does not stand a chance to recover back with the current default NotLiveProbeInterval of 60 seconds.\n\nAlso, we should finetune the interval \u0026 max failures configured for Liveness and Readiness probes across the containers. Probably something to look at after implementing Probe logic across all the voltha modules.",
+      "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
