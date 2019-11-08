@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "86f48fb4_ddb6f57a",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-08T17:22:54Z",
+      "side": 1,
+      "message": "I was concerned about proliferation of arguments, but it sounds reasonable. I\u0027ll do this.",
+      "parentUuid": "db1d6fd9_ab68b8c7",
+      "revId": "83c76d7e38fdbc4d7b0a827ead480a1a7a6d125b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4eac032e_1b16e217",
         "filename": "rw_core/core/core.go",
         "patchSetId": 21
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6069b420_9eb5bf49",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-08T17:22:54Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "4eac032e_1b16e217",
+      "revId": "83c76d7e38fdbc4d7b0a827ead480a1a7a6d125b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9240522a_7677ae90",
         "filename": "rw_core/main.go",
         "patchSetId": 21
@@ -47,6 +83,24 @@
       "writtenOn": "2019-11-08T15:56:55Z",
       "side": 1,
       "message": "Is the whole config object really needed?  \nIf so, remove rw.config.xxx arguments.",
+      "revId": "83c76d7e38fdbc4d7b0a827ead480a1a7a6d125b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a766aa52_9e1e4192",
+        "filename": "rw_core/main.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-08T17:22:54Z",
+      "side": 1,
+      "message": "I\u0027ll switch to just passing the interval.",
+      "parentUuid": "9240522a_7677ae90",
       "revId": "83c76d7e38fdbc4d7b0a827ead480a1a7a6d125b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
