@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"os"
+	"time"
 )
 
 // RO Core service default constants
@@ -45,30 +46,34 @@ const (
 	default_Affinity_Router_Topic = "affinityRouter"
 	default_ProbeHost             = ""
 	default_ProbePort             = 8080
+	default_LiveProbeInterval     = time.Duration(60) * time.Second
+	default_NotLiveProbeInterval  = time.Duration(5) * time.Second // Probe more frequently to detect Recovery early
 )
 
 // ROCoreFlags represents the set of configurations used by the read-only core service
 type ROCoreFlags struct {
 	// Command line parameters
-	InstanceID          string
-	ROCoreEndpoint      string
-	GrpcHost            string
-	GrpcPort            int
-	KVStoreType         string
-	KVStoreTimeout      int // in seconds
-	KVStoreHost         string
-	KVStorePort         int
-	KVTxnKeyDelTime     int
-	CoreTopic           string
-	LogLevel            int
-	Banner              bool
-	DisplayVersionOnly  bool
-	ROCoreKey           string
-	ROCoreCert          string
-	ROCoreCA            string
-	AffinityRouterTopic string
-	ProbeHost           string
-	ProbePort           int
+	InstanceID           string
+	ROCoreEndpoint       string
+	GrpcHost             string
+	GrpcPort             int
+	KVStoreType          string
+	KVStoreTimeout       int // in seconds
+	KVStoreHost          string
+	KVStorePort          int
+	KVTxnKeyDelTime      int
+	CoreTopic            string
+	LogLevel             int
+	Banner               bool
+	DisplayVersionOnly   bool
+	ROCoreKey            string
+	ROCoreCert           string
+	ROCoreCA             string
+	AffinityRouterTopic  string
+	ProbeHost            string
+	ProbePort            int
+	LiveProbeInterval    time.Duration
+	NotLiveProbeInterval time.Duration
 }
 
 func init() {
@@ -78,25 +83,27 @@ func init() {
 // NewROCoreFlags returns a new ROCore config
 func NewROCoreFlags() *ROCoreFlags {
 	var roCoreFlag = ROCoreFlags{ // Default values
-		InstanceID:          default_InstanceID,
-		ROCoreEndpoint:      default_ROCoreEndpoint,
-		GrpcHost:            default_GrpcHost,
-		GrpcPort:            default_GrpcPort,
-		KVStoreType:         default_KVStoreType,
-		KVStoreTimeout:      default_KVStoreTimeout,
-		KVStoreHost:         default_KVStoreHost,
-		KVStorePort:         default_KVStorePort,
-		KVTxnKeyDelTime:     default_KVTxnKeyDelTime,
-		CoreTopic:           default_CoreTopic,
-		LogLevel:            default_LogLevel,
-		Banner:              default_Banner,
-		DisplayVersionOnly:  default_DisplayVersionOnly,
-		ROCoreKey:           default_ROCoreKey,
-		ROCoreCert:          default_ROCoreCert,
-		ROCoreCA:            default_ROCoreCA,
-		AffinityRouterTopic: default_Affinity_Router_Topic,
-		ProbeHost:           default_ProbeHost,
-		ProbePort:           default_ProbePort,
+		InstanceID:           default_InstanceID,
+		ROCoreEndpoint:       default_ROCoreEndpoint,
+		GrpcHost:             default_GrpcHost,
+		GrpcPort:             default_GrpcPort,
+		KVStoreType:          default_KVStoreType,
+		KVStoreTimeout:       default_KVStoreTimeout,
+		KVStoreHost:          default_KVStoreHost,
+		KVStorePort:          default_KVStorePort,
+		KVTxnKeyDelTime:      default_KVTxnKeyDelTime,
+		CoreTopic:            default_CoreTopic,
+		LogLevel:             default_LogLevel,
+		Banner:               default_Banner,
+		DisplayVersionOnly:   default_DisplayVersionOnly,
+		ROCoreKey:            default_ROCoreKey,
+		ROCoreCert:           default_ROCoreCert,
+		ROCoreCA:             default_ROCoreCA,
+		AffinityRouterTopic:  default_Affinity_Router_Topic,
+		ProbeHost:            default_ProbeHost,
+		ProbePort:            default_ProbePort,
+		LiveProbeInterval:    default_LiveProbeInterval,
+		NotLiveProbeInterval: default_NotLiveProbeInterval,
 	}
 	return &roCoreFlag
 }
@@ -151,6 +158,12 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
 
+	help = fmt.Sprintf("Time interval between liveness probes while in a live state")
+	flag.Var(&TimeDurationValue{&(cf.LiveProbeInterval)}, "live_probe_interval", help)
+
+	help = fmt.Sprintf("Time interval between liveness probes while in a not live state")
+	flag.Var(&TimeDurationValue{&(cf.NotLiveProbeInterval)}, "not_live_probe_interval", help)
+
 	flag.Parse()
 
 	containerName := getContainerInfo()
@@ -162,4 +175,24 @@ func (cf *ROCoreFlags) ParseCommandArguments() {
 
 func getContainerInfo() string {
 	return os.Getenv("HOSTNAME")
+}
+
+type TimeDurationValue struct {
+	duration *time.Duration
+}
+
+func (tdv TimeDurationValue) String() string {
+	if tdv.duration != nil {
+		return tdv.duration.String()
+	}
+	return ""
+}
+
+func (tdv TimeDurationValue) Set(s string) error {
+	if d, err := time.ParseDuration(s); err != nil {
+		return err
+	} else {
+		*(tdv.duration) = d
+		return nil
+	}
 }
