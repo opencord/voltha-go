@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4361de1_a7e82ea0",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-08T16:23:36Z",
+      "side": 1,
+      "message": "If I recall correctly the reason the ofagent was committing suicide was that there were situations where grpc goes into transient failure and never recuperate even after the far end comes back.  This was when ofagent was communicating to the cores directly instead via the afrouter.   I have not played with it for a while, I don\u0027t know if this is still the case.",
+      "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
