@@ -1330,3 +1330,35 @@ func ToOfpOxmField(from []*ofp.OfpOxmOfbField) []*ofp.OfpOxmField {
 	}
 	return matchFields
 }
+
+//IsMulticastIp returns true if the ip starts with the byte sequence of 1110;
+//false otherwise.
+func IsMulticastIp(ip uint32) bool {
+	return ip>>28 == 14
+}
+
+//ConvertToMulticastMacInt returns equivalent mac address of the given multicast ip address
+func ConvertToMulticastMacInt(ip uint32) uint64 {
+	//get last 23 bits of ip address by ip & 00000000011111111111111111111111
+	theLast23BitsOfIp := ip & 8388607
+	// perform OR with 0x1005E000000 to build mcast mac address
+	return 1101088686080 | uint64(theLast23BitsOfIp)
+}
+
+//ConvertToMulticastMacBytes returns equivalent mac address of the given multicast ip address
+func ConvertToMulticastMacBytes(ip uint32) []byte {
+	mac := ConvertToMulticastMacInt(ip)
+	var b bytes.Buffer
+	// catalyze (48 bits) in binary:111111110000000000000000000000000000000000000000
+	catalyze := uint64(280375465082880)
+	//convert each octet to decimal
+	for i := 0; i < 6; i++ {
+		if i != 0 {
+			catalyze = catalyze >> 8
+		}
+		octet := mac & catalyze
+		octetDecimal := octet >> uint8(40-i*8)
+		b.WriteByte(byte(octetDecimal))
+	}
+	return b.Bytes()
+}
