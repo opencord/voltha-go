@@ -51,6 +51,24 @@
       "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99c3451e_55dd0de7",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-08T18:27:48Z",
+      "side": 1,
+      "message": "A pod should not be restarted if a dependency service is having issues.  (Not sure about this current implementation.  If you have observed such an issue, it needs to be adressed.)  \n\nThe ready probe should never trigger pod restart, and a dependency service\u0027s failure should only affect readiness, not liveness.\n\n(Can anyone confirm or deny these assumptions?)",
+      "parentUuid": "3804288c_53aa4c3d",
+      "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
