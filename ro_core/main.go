@@ -122,7 +122,7 @@ func (ro *roCore) start(ctx context.Context) {
 	ro.core = c.NewCore(ro.config.InstanceID, ro.config, ro.kvClient)
 
 	if p != nil {
-		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
+		p.UpdateStatus("kv-store", probe.ServiceStatusPrepared)
 	}
 
 	// start the core
