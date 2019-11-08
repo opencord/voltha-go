@@ -69,6 +69,24 @@
       "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d11b4d89_50cdb93a",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-08T19:56:55Z",
+      "side": 1,
+      "message": "Kent, you are correct.",
+      "parentUuid": "99c3451e_55dd0de7",
+      "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
