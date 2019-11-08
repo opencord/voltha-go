@@ -16,6 +16,24 @@
       "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cebc6ed2_f6671cbd",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-08T17:02:35Z",
+      "side": 1,
+      "message": "Hmm, we\u0027re going to have to come up with a way to test for that scenario. I didn\u0027t observe any issues when I tried cycling the Kafka on and off to cause the core to go in and out of UNAVAILABLE state. We did fix some gRPC reliability issues a year or two back by upgrading to a newer version. Perhaps that resolved the issue here.\n\nRegardless, the suicide is broken. Ofagent would receive the signal and attempt to self-terminate, but it actually hangs, probably with some python thread left running keeping the process alive.\n\nNow that we have readiness and health probes, we should address restart via K8s, and let K8s restart the process if it is not healthy.",
+      "parentUuid": "d4361de1_a7e82ea0",
+      "revId": "4fb11f6ff57094d524a2cd629e85748a3974d907",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
