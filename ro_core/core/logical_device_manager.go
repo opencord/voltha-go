@@ -95,28 +95,47 @@ func (ldMgr *LogicalDeviceManager) IsLogicalDeviceInCache(id string) bool {
 	return exist
 }
 
+func (ldMgr *LogicalDeviceManager) StartLogicalDeviceAgent(logicalDevice *LogicalDevice) {
+	// If device is not in memory then set it up
+	agent := newLogicalDeviceAgent(
+		logicalDevice.Id,
+		logicalDevice.RootDeviceId,
+		ldMgr,
+		ldMgr.deviceMgr,
+		ldMgr.clusterDataProxy,
+	)
+	if err := agent.start(nil, true); err != nil {
+		log.Warnw("failure-starting-agent", log.Fields{"logicalDeviceId": logicalDevice.Id})
+		agent.stop(nil)
+	} else {
+		ldMgr.addLogicalDeviceAgentToMap(agent)
+	}
+}
+
+func (ldMgr *LogicalDeviceManager) EnsureLogicalDeviceInCache(id string, logicalDevice interface{}) bool {
+	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+
+	// If the agent is already loaded, we are done.
+	_, exist := ldMgr.logicalDeviceAgents.Load(id)
+	if exist {
+		return true
+	}
+
+	if logicalDevice == nil {
+
+	}
+
+	StartLogicalDeviceAgent(logicalDevice.(*voltha.LogicalDevice))
+}
+
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
 	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false,
 		""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
-			// If device is not in memory then set it up
-			if !ldMgr.IsLogicalDeviceInCache(logicalDevice.(*voltha.LogicalDevice).Id) {
-				agent := newLogicalDeviceAgent(
-					logicalDevice.(*voltha.LogicalDevice).Id,
-					logicalDevice.(*voltha.LogicalDevice).RootDeviceId,
-					ldMgr,
-					ldMgr.deviceMgr,
-					ldMgr.clusterDataProxy,
-				)
-				if err := agent.start(nil, true); err != nil {
-					log.Warnw("failure-starting-agent", log.Fields{"logicalDeviceId": logicalDevice.(*voltha.LogicalDevice).Id})
-					agent.stop(nil)
-				} else {
-					ldMgr.addLogicalDeviceAgentToMap(agent)
-				}
-			}
+			ldMgr.ensureLogicalDeviceInCache(logicalDevice.(*voltha.LogicalDevice))
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
 	}
