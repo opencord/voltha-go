@@ -95,28 +95,58 @@ func (ldMgr *LogicalDeviceManager) IsLogicalDeviceInCache(id string) bool {
 	return exist
 }
 
+// Start a new logical device agent
+func (ldMgr *LogicalDeviceManager) StartLogicalDeviceAgent(logicalDevice *LogicalDevice) (*LogicalDeviceAgent, error) {
+	agent := newLogicalDeviceAgent(
+		logicalDevice.Id,
+		logicalDevice.RootDeviceId,
+		ldMgr,
+		ldMgr.deviceMgr,
+		ldMgr.clusterDataProxy,
+	)
+	if err := agent.start(nil, true); err != nil {
+		log.Warnw("failure-starting-agent", log.Fields{"logicalDeviceId": logicalDevice.Id})
+		agent.stop(nil)
+		return nil, fmt.Errorf("Failed to start logical device agent for id %s", logicalDevice.Id)
+	} else {
+		ldMgr.addLogicalDeviceAgentToMap(agent)
+	}
+
+	return agent, nil
+}
+
+// Ensure that a logical device agent is in the map.
+// Loads and starts the agent as necessary.
+func (ldMgr *LogicalDeviceManager) EnsureLogicalDeviceInCache(id string, logicalDevice interface{}) (*LogicalDeviceAgent, error) {
+	ldMgr.lockLogicalDeviceAgentsMap.Lock()
+	defer ldMgr.lockLogicalDeviceAgentsMap.Unlock()
+
+	// If the agent is already in the map, we are done.
+	agentInterface, exist := ldMgr.logicalDeviceAgents.Load(id)
+	if exist {
+		return agentInterface.(*LogicalDeviceAgent), nil
+	}
+
+	// If we were called from ListLogicalDevices then we already have the logicalDevice from etcd
+	// If not, then fetch it now
+	if logicalDevice == nil {
+		logicalDevice := ldMgr.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+		if logicalDevice == nil {
+			return nil, fmt.Errorf("Unable to load logical device %s", id)
+		}
+	}
+
+	agent, err := StartLogicalDeviceAgent(logicalDevice.(*voltha.LogicalDevice))
+	return agent, err
+}
+
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
 	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false,
 		""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
-			// If device is not in memory then set it up
-			if !ldMgr.IsLogicalDeviceInCache(logicalDevice.(*voltha.LogicalDevice).Id) {
-				agent := newLogicalDeviceAgent(
-					logicalDevice.(*voltha.LogicalDevice).Id,
-					logicalDevice.(*voltha.LogicalDevice).RootDeviceId,
-					ldMgr,
-					ldMgr.deviceMgr,
-					ldMgr.clusterDataProxy,
-				)
-				if err := agent.start(nil, true); err != nil {
-					log.Warnw("failure-starting-agent", log.Fields{"logicalDeviceId": logicalDevice.(*voltha.LogicalDevice).Id})
-					agent.stop(nil)
-				} else {
-					ldMgr.addLogicalDeviceAgentToMap(agent)
-				}
-			}
+			_ = ldMgr.ensureLogicalDeviceInCache(logicalDevice.(*voltha.LogicalDevice)) != nil
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
 	}
