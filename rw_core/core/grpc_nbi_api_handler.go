@@ -328,7 +328,7 @@ func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) 
 	log.Debug("ListDevices")
 	devices, err := handler.deviceMgr.ListDevices()
 	if err != nil {
-		log.Errorf("Etcd Error")
+		log.Errorf("Etcd Accessing Error")
 		return nil, err
 	}
 	return devices, nil
