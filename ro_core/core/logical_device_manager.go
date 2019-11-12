@@ -67,10 +67,18 @@ func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDevi
 	}
 }
 
+// getLogicalDeviceAgent returns the logical device agent.  If the device is not in memory then the device will
+// be loaded from dB and a logical device agent created to managed it.
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string) *LogicalDeviceAgent {
 	if agent, ok := ldMgr.logicalDeviceAgents.Load(logicalDeviceId); ok {
-		//return agent
 		return agent.(*LogicalDeviceAgent)
+	} else {
+		//	Try to load into memory - loading will also create the logical device agent
+		if err := ldMgr.load(logicalDeviceId); err == nil {
+			if agent, ok = ldMgr.logicalDeviceAgents.Load(logicalDeviceId); ok {
+				return agent.(*LogicalDeviceAgent)
+			}
+		}
 	}
 	return nil
 }
@@ -95,28 +103,12 @@ func (ldMgr *LogicalDeviceManager) IsLogicalDeviceInCache(id string) bool {
 	return exist
 }
 
+//listLogicalDevices returns the list of all logical devices
 func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices, error) {
 	log.Debug("ListAllLogicalDevices")
 	result := &voltha.LogicalDevices{}
-	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false,
-		""); logicalDevices != nil {
+	if logicalDevices := ldMgr.clusterDataProxy.List(context.Background(), "/logical_devices", 0, false, ""); logicalDevices != nil {
 		for _, logicalDevice := range logicalDevices.([]interface{}) {
-			// If device is not in memory then set it up
-			if !ldMgr.IsLogicalDeviceInCache(logicalDevice.(*voltha.LogicalDevice).Id) {
-				agent := newLogicalDeviceAgent(
-					logicalDevice.(*voltha.LogicalDevice).Id,
-					logicalDevice.(*voltha.LogicalDevice).RootDeviceId,
-					ldMgr,
-					ldMgr.deviceMgr,
-					ldMgr.clusterDataProxy,
-				)
-				if err := agent.start(nil, true); err != nil {
-					log.Warnw("failure-starting-agent", log.Fields{"logicalDeviceId": logicalDevice.(*voltha.LogicalDevice).Id})
-					agent.stop(nil)
-				} else {
-					ldMgr.addLogicalDeviceAgentToMap(agent)
-				}
-			}
 			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
 		}
 	}
