@@ -17,12 +17,13 @@ package core
 
 import (
 	"context"
+	"reflect"
+	"testing"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
-	"testing"
 )
 
 type fields struct {
@@ -33,9 +34,9 @@ type fields struct {
 func getModelProxyPathNotFound() *fields {
 	var modelProxy fields
 
-	TestProxy_Root := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxy_Root_Proxy := TestProxy_Root.CreateProxy(context.Background(), "/", false)
-	modelProxy.rootProxy = TestProxy_Root_Proxy
+	TestProxyRoot := model.NewRoot(&voltha.Voltha{}, nil)
+	TestProxyRootProxy := TestProxyRoot.CreateProxy(context.Background(), "/", false)
+	modelProxy.rootProxy = TestProxyRootProxy
 	modelProxy.basePath = "base_path"
 
 	return &modelProxy
@@ -44,9 +45,9 @@ func getModelProxyPathNotFound() *fields {
 func getModelProxyPathFound() *fields {
 	var modelProxy fields
 
-	TestProxy_Root := model.NewRoot(&voltha.Voltha{}, nil)
-	TestProxy_Root_Proxy := TestProxy_Root.CreateProxy(context.Background(), "/", false)
-	modelProxy.rootProxy = TestProxy_Root_Proxy
+	TestProxyRoot := model.NewRoot(&voltha.Voltha{}, nil)
+	TestProxyRootProxy := TestProxyRoot.CreateProxy(context.Background(), "/", false)
+	modelProxy.rootProxy = TestProxyRootProxy
 	modelProxy.basePath = "devices"
 
 	return &modelProxy
