@@ -17,23 +17,24 @@ package core
 
 import (
 	"context"
+	"reflect"
+	"testing"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 func MakeTestNewCoreConfig() *Core {
 	var core Core
-	core.instanceId = "ro_core"
+	core.instanceID = "ro_core"
 	core.config = config.NewROCoreFlags()
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, nil)
 	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
 	core.genericMgr = newModelProxyManager(core.clusterDataProxy)
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 
 	return &core
 }
@@ -62,7 +63,7 @@ func TestAddLogicalDeviceAgentToMap(t *testing.T) {
 	// Verify ADD is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 }
 
 func TestGetLogicalDeviceAgent(t *testing.T) {
@@ -80,7 +81,7 @@ func TestGetLogicalDeviceAgent(t *testing.T) {
 	ldMgr.addLogicalDeviceAgentToMap(ldAgent)
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 }
 
 func TestDeleteLogicalDeviceAgent(t *testing.T) {
@@ -102,7 +103,7 @@ func TestDeleteLogicalDeviceAgent(t *testing.T) {
 	// Verify ADD is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Method under Test
 	ldMgr.deleteLogicalDeviceAgent("id")
@@ -142,7 +143,7 @@ func TestLdMgrGetLogicalDevice(t *testing.T) {
 	// Verify Add is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify getLogicalDevice() is NOT NIL
 	logicalDevNotNil, errNil := ldMgr.getLogicalDevice("id")
@@ -187,12 +188,12 @@ func TestGetLogicalDeviceId(t *testing.T) {
 	assert.NotNil(t, ldMgr)
 
 	/*** Case: Logical Device Id Found ***/
-	result0, error0 := ldMgr.getLogicalDeviceId(&voltha.Device{Id: "id", Root: true, ParentId: "parent_id"})
+	result0, error0 := ldMgr.getLogicalDeviceID(&voltha.Device{Id: "id", Root: true, ParentId: "parent_id"})
 	assert.NotNil(t, result0)
 	assert.Nil(t, error0)
 
 	/*** Case: Logical Device Id Not Found ***/
-	result1, error1 := ldMgr.getLogicalDeviceId(&voltha.Device{Id: "id", ParentId: "parent_id"})
+	result1, error1 := ldMgr.getLogicalDeviceID(&voltha.Device{Id: "id", ParentId: "parent_id"})
 	assert.Nil(t, result1)
 	assert.NotNil(t, error1)
 }
@@ -205,12 +206,12 @@ func TestGetLogicalPortId(t *testing.T) {
 	assert.NotNil(t, ldMgr)
 
 	/*** Case: Logical Port Id Not Found: getLogicalDeviceId() Error ***/
-	result0, error0 := ldMgr.getLogicalPortId(&voltha.Device{Id: "id", ParentId: "parent_id"})
+	result0, error0 := ldMgr.getLogicalPortID(&voltha.Device{Id: "id", ParentId: "parent_id"})
 	assert.Nil(t, result0)
 	assert.NotNil(t, error0)
 
 	/*** Case: Logical Port Id Not Found: getLogicalDevice() Error ***/
-	result1, error1 := ldMgr.getLogicalPortId(&voltha.Device{Id: "id", Root: true, ParentId: "parent_id"})
+	result1, error1 := ldMgr.getLogicalPortID(&voltha.Device{Id: "id", Root: true, ParentId: "parent_id"})
 	assert.Nil(t, result1)
 	assert.NotNil(t, error1)
 
@@ -240,10 +241,10 @@ func TestGetLogicalPortId(t *testing.T) {
 	// Verify Add is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("parent_id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "parent_id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "parent_id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify getLogicalPortId() is Success
-	result2, error2 := ldMgr.getLogicalPortId(device)
+	result2, error2 := ldMgr.getLogicalPortID(device)
 	assert.NotNil(t, result2)
 	assert.Nil(t, error2)
 	if reflect.TypeOf(result2) != reflect.TypeOf(wantResult) {
@@ -292,7 +293,7 @@ func TestListLogicalDevicePorts(t *testing.T) {
 	// Verify Add is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify ListLogicalDevicePorts() is Success
 	result1, error1 := ldMgr.ListLogicalDevicePorts(context.Background(), "id")
@@ -340,7 +341,7 @@ func TestListLogicalDeviceFlows(t *testing.T) {
 	// Verify Add is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify ListLogicalDeviceFlows() is Success
 	result1, error1 := ldMgr.ListLogicalDeviceFlows(context.Background(), "id")
@@ -390,7 +391,7 @@ func TestListLogicalDeviceFlowGroups(t *testing.T) {
 	// Verify Add is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify ListLogicalDeviceFlowGroups() is Success
 	result1, error1 := ldMgr.ListLogicalDeviceFlowGroups(context.Background(), "id")
@@ -436,7 +437,7 @@ func TestGetLogicalPort(t *testing.T) {
 	// Verify Add is successful
 	ldAgentNotNil := ldMgr.getLogicalDeviceAgent("id")
 	assert.NotNil(t, ldAgentNotNil)
-	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceId)
+	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify getLogicalPort() is Success
 	result1, error1 := ldMgr.getLogicalPort(&voltha.LogicalPortId{Id: "id", PortId: "123"})

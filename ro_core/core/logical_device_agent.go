@@ -13,23 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
+	"sync"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 )
 
+// LogicalDeviceAgent represents logical device agent related information
 type LogicalDeviceAgent struct {
-	logicalDeviceId   string
+	logicalDeviceID   string
 	lastData          *voltha.LogicalDevice
-	rootDeviceId      string
+	rootDeviceID      string
 	deviceMgr         *DeviceManager
 	ldeviceMgr        *LogicalDeviceManager
 	clusterDataProxy  *model.Proxy
@@ -37,11 +40,11 @@ type LogicalDeviceAgent struct {
 	lockLogicalDevice sync.RWMutex
 }
 
-func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDeviceManager, deviceMgr *DeviceManager, cdProxy *model.Proxy) *LogicalDeviceAgent {
+func newLogicalDeviceAgent(id string, deviceID string, ldeviceMgr *LogicalDeviceManager, deviceMgr *DeviceManager, cdProxy *model.Proxy) *LogicalDeviceAgent {
 	var agent LogicalDeviceAgent
 	agent.exitChannel = make(chan int, 1)
-	agent.logicalDeviceId = id
-	agent.rootDeviceId = deviceId
+	agent.logicalDeviceID = id
+	agent.rootDeviceID = deviceID
 	agent.deviceMgr = deviceMgr
 	agent.clusterDataProxy = cdProxy
 	agent.ldeviceMgr = ldeviceMgr
@@ -51,19 +54,19 @@ func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDevice
 
 // start creates the logical device and add it to the data model
 func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDb bool) error {
-	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId, "loadFromdB": loadFromDb})
+	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceID": agent.logicalDeviceID, "loadFromdB": loadFromDb})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	if loadFromDb {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
-		if logicalDevice := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceId, 0, false, ""); logicalDevice != nil {
+		if logicalDevice := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); logicalDevice != nil {
 			if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 				agent.lastData = proto.Clone(lDevice).(*voltha.LogicalDevice)
 			}
 		} else {
-			log.Errorw("failed-to-load-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
-			return status.Errorf(codes.NotFound, "logicaldeviceId-%s", agent.logicalDeviceId)
+			log.Errorw("failed-to-load-device", log.Fields{"logicaldeviceID": agent.logicalDeviceID})
+			return status.Errorf(codes.NotFound, "logicaldeviceID-%s", agent.logicalDeviceID)
 		}
 	}
 	log.Info("logical_device-agent-started")
@@ -85,40 +88,39 @@ func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, erro
 	log.Debug("GetLogicalDevice")
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
-	if logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, ""); logicalDevice != nil {
+	if logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); logicalDevice != nil {
 		if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 			return lDevice, nil
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
+// ListLogicalDevicePorts returns all logical device ports details
 func (agent *LogicalDeviceAgent) ListLogicalDevicePorts() (*voltha.LogicalPorts, error) {
 	log.Debug("ListLogicalDevicePorts")
-	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceId); logicalDevice != nil {
+	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceID); logicalDevice != nil {
 		lPorts := make([]*voltha.LogicalPort, 0)
-		for _, port := range logicalDevice.Ports {
-			lPorts = append(lPorts, port)
-		}
+		lPorts = append(lPorts, logicalDevice.Ports...)
 		return &voltha.LogicalPorts{Items: lPorts}, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
-// listFlows locks the logical device model and then retrieves the latest flow information
+// ListLogicalDeviceFlows - listFlows locks the logical device model and then retrieves the latest flow information
 func (agent *LogicalDeviceAgent) ListLogicalDeviceFlows() (*voltha.Flows, error) {
 	log.Debug("ListLogicalDeviceFlows")
-	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceId); logicalDevice != nil {
+	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceID); logicalDevice != nil {
 		return logicalDevice.GetFlows(), nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
-// listFlowGroups locks the logical device model and then retrieves the latest flow groups information
+// ListLogicalDeviceFlowGroups - listFlowGroups locks the logical device model and then retrieves the latest flow groups information
 func (agent *LogicalDeviceAgent) ListLogicalDeviceFlowGroups() (*voltha.FlowGroups, error) {
 	log.Debug("ListLogicalDeviceFlowGroups")
-	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceId); logicalDevice != nil {
+	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceID); logicalDevice != nil {
 		return logicalDevice.GetFlowGroups(), nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
