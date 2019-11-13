@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11312533_a983dfa9",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-13T18:48:08Z",
+      "side": 1,
+      "message": "Looked through the code to make sure we don\u0027t need a mutex on this, in case some other gRPC request is modifying the device. Looks safe to me (GetDevice plumbs through the etcd client and retrieves a copy from the db). Leaving a note in case @khenaidoo wants to verify as well.",
+      "range": {
+        "startLine": 580,
+        "startChar": 1,
+        "endLine": 580,
+        "endChar": 36
+      },
+      "revId": "4087cc5be0f6cbe282531f5232f560cba50463ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
