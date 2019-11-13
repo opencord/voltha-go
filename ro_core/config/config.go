@@ -13,44 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package config
 
 import (
 	"flag"
 	"fmt"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"os"
 	"time"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 // RO Core service default constants
 const (
-	ConsulStoreName                 = "consul"
-	EtcdStoreName                   = "etcd"
-	default_InstanceID              = "rocore001"
-	default_GrpcPort                = 50057
-	default_GrpcHost                = ""
-	default_KVStoreType             = EtcdStoreName
-	default_KVStoreTimeout          = 5 //in seconds
-	default_KVStoreHost             = "127.0.0.1"
-	default_KVStorePort             = 2379 // Consul = 8500; Etcd = 2379
-	default_KVTxnKeyDelTime         = 60
-	default_LogLevel                = 0
-	default_Banner                  = false
-	default_DisplayVersionOnly      = false
-	default_CoreTopic               = "rocore"
-	default_ROCoreEndpoint          = "rocore"
-	default_ROCoreKey               = "pki/voltha.key"
-	default_ROCoreCert              = "pki/voltha.crt"
-	default_ROCoreCA                = "pki/voltha-CA.pem"
-	default_Affinity_Router_Topic   = "affinityRouter"
-	default_ProbeHost               = ""
-	default_ProbePort               = 8080
-	default_LiveProbeInterval       = 60 * time.Second
-	default_NotLiveProbeInterval    = 5 * time.Second // Probe more frequently to detect Recovery early
-	default_CoreTimeout             = 59 * time.Second
-	default_MaxConnectionRetries    = -1              // retries forever
-	default_ConnectionRetryInterval = 2 * time.Second // in seconds
+	ConsulStoreName                = "consul"
+	EtcdStoreName                  = "etcd"
+	defaultInstanceID              = "rocore001"
+	defaultGrpcPort                = 50057
+	defaultGrpcHost                = ""
+	defaultKVStoreType             = EtcdStoreName
+	defaultKVStoreTimeout          = 5 //in seconds
+	defaultKVStoreHost             = "127.0.0.1"
+	defaultKVStorePort             = 2379 // Consul = 8500; Etcd = 2379
+	defaultKVTxnKeyDelTime         = 60
+	defaultLogLevel                = 0
+	defaultBanner                  = false
+	defaultDisplayVersionOnly      = false
+	defaultCoreTopic               = "rocore"
+	defaultROCoreEndpoint          = "rocore"
+	defaultROCoreKey               = "pki/voltha.key"
+	defaultROCoreCert              = "pki/voltha.crt"
+	defaultROCoreCA                = "pki/voltha-CA.pem"
+	defaultAffinityRouterTopic     = "affinityRouter"
+	defaultProbeHost               = ""
+	defaultProbePort               = 8080
+	defaultLiveProbeInterval       = 60 * time.Second
+	defaultNotLiveProbeInterval    = 5 * time.Second // Probe more frequently to detect Recovery early
+	defaultCoreTimeout             = 59 * time.Second
+	defaultMaxConnectionRetries    = -1              // retries forever
+	defaultConnectionRetryInterval = 2 * time.Second // in seconds
 )
 
 // ROCoreFlags represents the set of configurations used by the read-only core service
@@ -83,36 +85,39 @@ type ROCoreFlags struct {
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 }
 
 // NewROCoreFlags returns a new ROCore config
 func NewROCoreFlags() *ROCoreFlags {
 	var roCoreFlag = ROCoreFlags{ // Default values
-		InstanceID:              default_InstanceID,
-		ROCoreEndpoint:          default_ROCoreEndpoint,
-		GrpcHost:                default_GrpcHost,
-		GrpcPort:                default_GrpcPort,
-		KVStoreType:             default_KVStoreType,
-		KVStoreTimeout:          default_KVStoreTimeout,
-		KVStoreHost:             default_KVStoreHost,
-		KVStorePort:             default_KVStorePort,
-		KVTxnKeyDelTime:         default_KVTxnKeyDelTime,
-		CoreTopic:               default_CoreTopic,
-		LogLevel:                default_LogLevel,
-		Banner:                  default_Banner,
-		DisplayVersionOnly:      default_DisplayVersionOnly,
-		ROCoreKey:               default_ROCoreKey,
-		ROCoreCert:              default_ROCoreCert,
-		ROCoreCA:                default_ROCoreCA,
-		AffinityRouterTopic:     default_Affinity_Router_Topic,
-		ProbeHost:               default_ProbeHost,
-		ProbePort:               default_ProbePort,
-		LiveProbeInterval:       default_LiveProbeInterval,
-		NotLiveProbeInterval:    default_NotLiveProbeInterval,
-		CoreTimeout:             default_CoreTimeout,
-		MaxConnectionRetries:    default_MaxConnectionRetries,
-		ConnectionRetryInterval: default_ConnectionRetryInterval,
+		InstanceID:              defaultInstanceID,
+		ROCoreEndpoint:          defaultROCoreEndpoint,
+		GrpcHost:                defaultGrpcHost,
+		GrpcPort:                defaultGrpcPort,
+		KVStoreType:             defaultKVStoreType,
+		KVStoreTimeout:          defaultKVStoreTimeout,
+		KVStoreHost:             defaultKVStoreHost,
+		KVStorePort:             defaultKVStorePort,
+		KVTxnKeyDelTime:         defaultKVTxnKeyDelTime,
+		CoreTopic:               defaultCoreTopic,
+		LogLevel:                defaultLogLevel,
+		Banner:                  defaultBanner,
+		DisplayVersionOnly:      defaultDisplayVersionOnly,
+		ROCoreKey:               defaultROCoreKey,
+		ROCoreCert:              defaultROCoreCert,
+		ROCoreCA:                defaultROCoreCA,
+		AffinityRouterTopic:     defaultAffinityRouterTopic,
+		ProbeHost:               defaultProbeHost,
+		ProbePort:               defaultProbePort,
+		LiveProbeInterval:       defaultLiveProbeInterval,
+		NotLiveProbeInterval:    defaultNotLiveProbeInterval,
+		CoreTimeout:             defaultCoreTimeout,
+		MaxConnectionRetries:    defaultMaxConnectionRetries,
+		ConnectionRetryInterval: defaultConnectionRetryInterval,
 	}
 	return &roCoreFlag
 }
@@ -120,67 +125,65 @@ func NewROCoreFlags() *ROCoreFlags {
 // ParseCommandArguments parses the arguments when running read-only core service
 func (cf *ROCoreFlags) ParseCommandArguments() {
 
-	var help string
-
-	help = fmt.Sprintf("RO core endpoint address")
-	flag.StringVar(&(cf.ROCoreEndpoint), "vcore-endpoint", default_ROCoreEndpoint, help)
+	help := fmt.Sprintf("RO core endpoint address")
+	flag.StringVar(&(cf.ROCoreEndpoint), "vcore-endpoint", defaultROCoreEndpoint, help)
 
 	help = fmt.Sprintf("GRPC server - host")
-	flag.StringVar(&(cf.GrpcHost), "grpc_host", default_GrpcHost, help)
+	flag.StringVar(&(cf.GrpcHost), "grpc_host", defaultGrpcHost, help)
 
 	help = fmt.Sprintf("GRPC server - port")
-	flag.IntVar(&(cf.GrpcPort), "grpc_port", default_GrpcPort, help)
+	flag.IntVar(&(cf.GrpcPort), "grpc_port", defaultGrpcPort, help)
 
 	help = fmt.Sprintf("RO Core topic")
-	flag.StringVar(&(cf.CoreTopic), "ro_core_topic", default_CoreTopic, help)
+	flag.StringVar(&(cf.CoreTopic), "ro_core_topic", defaultCoreTopic, help)
 
 	help = fmt.Sprintf("Affinity Router topic")
-	flag.StringVar(&(cf.AffinityRouterTopic), "affinity_router_topic", default_Affinity_Router_Topic, help)
+	flag.StringVar(&(cf.AffinityRouterTopic), "affinity_router_topic", defaultAffinityRouterTopic, help)
 
 	help = fmt.Sprintf("KV store type")
-	flag.StringVar(&(cf.KVStoreType), "kv_store_type", default_KVStoreType, help)
+	flag.StringVar(&(cf.KVStoreType), "kv_store_type", defaultKVStoreType, help)
 
 	help = fmt.Sprintf("The default timeout when making a kv store request")
-	flag.IntVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", default_KVStoreTimeout, help)
+	flag.IntVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", defaultKVStoreTimeout, help)
 
 	help = fmt.Sprintf("KV store host")
-	flag.StringVar(&(cf.KVStoreHost), "kv_store_host", default_KVStoreHost, help)
+	flag.StringVar(&(cf.KVStoreHost), "kv_store_host", defaultKVStoreHost, help)
 
 	help = fmt.Sprintf("KV store port")
-	flag.IntVar(&(cf.KVStorePort), "kv_store_port", default_KVStorePort, help)
+	flag.IntVar(&(cf.KVStorePort), "kv_store_port", defaultKVStorePort, help)
 
 	help = fmt.Sprintf("The time to wait before deleting a completed transaction key")
-	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", default_KVTxnKeyDelTime, help)
+	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", defaultKVTxnKeyDelTime, help)
 
 	help = fmt.Sprintf("Log level")
-	flag.IntVar(&(cf.LogLevel), "log_level", default_LogLevel, help)
+	flag.IntVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
 
 	help = fmt.Sprintf("Show startup banner log lines")
-	flag.BoolVar(&cf.Banner, "banner", default_Banner, help)
+	flag.BoolVar(&cf.Banner, "banner", defaultBanner, help)
 
 	help = fmt.Sprintf("Show version information and exit")
-	flag.BoolVar(&cf.DisplayVersionOnly, "version", default_DisplayVersionOnly, help)
+	flag.BoolVar(&cf.DisplayVersionOnly, "version", defaultDisplayVersionOnly, help)
 
 	help = fmt.Sprintf("The address on which to listen to answer liveness and readiness probe queries over HTTP.")
-	flag.StringVar(&(cf.ProbeHost), "probe_host", default_ProbeHost, help)
+	flag.StringVar(&(cf.ProbeHost), "probe_host", defaultProbeHost, help)
 
 	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
-	flag.IntVar(&(cf.ProbePort), "probe_port", default_ProbePort, help)
+	flag.IntVar(&(cf.ProbePort), "probe_port", defaultProbePort, help)
 
 	help = fmt.Sprintf("Time interval between liveness probes while in a live state")
-	flag.DurationVar(&(cf.LiveProbeInterval), "live_probe_interval", default_LiveProbeInterval, help)
+	flag.DurationVar(&(cf.LiveProbeInterval), "live_probe_interval", defaultLiveProbeInterval, help)
 
 	help = fmt.Sprintf("Time interval between liveness probes while in a not live state")
-	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", default_NotLiveProbeInterval, help)
+	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", defaultNotLiveProbeInterval, help)
 
 	help = fmt.Sprintf("The maximum time the core will wait while attempting to connect to a dependent component duration")
-	flag.DurationVar(&(cf.CoreTimeout), "core_timeout", default_CoreTimeout, help)
+	flag.DurationVar(&(cf.CoreTimeout), "core_timeout", defaultCoreTimeout, help)
 
 	help = fmt.Sprintf("The number of retries to connect to a dependent component")
-	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", default_MaxConnectionRetries, help)
+	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", defaultMaxConnectionRetries, help)
 
 	help = fmt.Sprintf("The duration between each connection retry attempt ")
-	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
+	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", defaultConnectionRetryInterval, help)
 
 	flag.Parse()
 
