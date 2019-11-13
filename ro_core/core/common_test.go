@@ -30,14 +30,14 @@ const (
 	 * useful.
 	 */
 
-	VOLTHA_LOGLEVEL = log.FatalLevel
+	VolthaLogLevel = log.FatalLevel
 )
 
 // Unit test initialization. This init() function handles all unit tests in
 // the current directory.
 func init() {
 	// Logger must be configured or bad things happen
-	_, err := log.SetDefaultLogger(log.JSON, VOLTHA_LOGLEVEL, log.Fields{"instanceId": 1})
+	_, err := log.SetDefaultLogger(log.JSON, VolthaLogLevel, log.Fields{"instanceID": 1})
 	if err != nil {
 		panic(err)
 	}
