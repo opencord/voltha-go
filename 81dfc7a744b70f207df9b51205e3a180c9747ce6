@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d7a1b52_c22555bb",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-13T06:55:23Z",
+      "side": 1,
+      "message": "Is there a way to check this method call worked, i.e. should a `get` be done to make sure it is there? I know TestLdMgrGetLogicalDevice tests this, but I am wondering if every test that does an add should also test the get response.",
+      "range": {
+        "startLine": 79,
+        "startChar": 7,
+        "endLine": 79,
+        "endChar": 33
+      },
+      "revId": "81dfc7a744b70f207df9b51205e3a180c9747ce6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a4852d0_5f8fc08e",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-13T06:55:23Z",
+      "side": 1,
+      "message": "What about a test to delete a logical device agent that doesn\u0027t exists, i.e. negative tests?",
+      "range": {
+        "startLine": 80,
+        "startChar": 7,
+        "endLine": 80,
+        "endChar": 31
+      },
+      "revId": "81dfc7a744b70f207df9b51205e3a180c9747ce6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0d6c072_b25ea2fd",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-13T06:55:23Z",
+      "side": 1,
+      "message": "what about testing the count returned as well as the content to make sure the list contains what you think it should not just that it is non-nil",
+      "range": {
+        "startLine": 124,
+        "startChar": 18,
+        "endLine": 124,
+        "endChar": 24
+      },
+      "revId": "81dfc7a744b70f207df9b51205e3a180c9747ce6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7293bdd4_e6c231ef",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-13T06:55:23Z",
+      "side": 1,
+      "message": "should also check contents of loaded item",
+      "range": {
+        "startLine": 134,
+        "startChar": 1,
+        "endLine": 134,
+        "endChar": 7
+      },
+      "revId": "81dfc7a744b70f207df9b51205e3a180c9747ce6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7594dd27_ef004c7a",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-13T06:55:23Z",
+      "side": 1,
+      "message": "check contents where possible not just existance",
+      "range": {
+        "startLine": 144,
+        "startChar": 18,
+        "endLine": 144,
+        "endChar": 25
+      },
+      "revId": "81dfc7a744b70f207df9b51205e3a180c9747ce6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcac6e8f_6a84ec97",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-13T06:55:23Z",
+      "side": 1,
+      "message": "check contents not just existance",
+      "range": {
+        "startLine": 149,
+        "startChar": 15,
+        "endLine": 149,
+        "endChar": 22
+      },
+      "revId": "81dfc7a744b70f207df9b51205e3a180c9747ce6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e71e523_e88c4115",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-13T06:55:23Z",
+      "side": 1,
+      "message": "check contents not just existence.",
+      "range": {
+        "startLine": 189,
+        "startChar": 18,
+        "endLine": 189,
+        "endChar": 25
+      },
+      "revId": "81dfc7a744b70f207df9b51205e3a180c9747ce6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
