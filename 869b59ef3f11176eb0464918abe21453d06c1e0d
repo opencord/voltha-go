@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a24c6ab2_858da8c9",
+        "filename": "ro_core/core/core_test.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-13T17:04:12Z",
+      "side": 1,
+      "message": "should this be `1 * time.Second`?",
+      "revId": "869b59ef3f11176eb0464918abe21453d06c1e0d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
