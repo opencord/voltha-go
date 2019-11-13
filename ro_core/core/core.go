@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
@@ -28,8 +30,9 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Core holds all information of read only core service
 type Core struct {
-	instanceId        string
+	instanceID        string
 	genericMgr        *ModelProxyManager
 	deviceMgr         *DeviceManager
 	logicalDeviceMgr  *LogicalDeviceManager
@@ -45,12 +48,16 @@ type Core struct {
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.DebugLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.DebugLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 }
 
+// NewCore instantiates core service parameters
 func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	var core Core
-	core.instanceId = id
+	core.instanceID = id
 	core.exitChannel = make(chan int, 1)
 	core.config = cf
 	core.kvClient = kvClient
@@ -73,10 +80,11 @@ func NewCore(id string, cf *config.ROCoreFlags, kvClient kvstore.Client) *Core {
 	return &core
 }
 
+// Start will start core services
 func (core *Core) Start(ctx context.Context) {
-	log.Info("starting-adaptercore", log.Fields{"coreId": core.instanceId})
+	log.Info("starting-adaptercore", log.Fields{"coreID": core.instanceID})
 	core.genericMgr = newModelProxyManager(core.clusterDataProxy)
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	core.logicalDeviceMgr = newLogicalDeviceManager(core.deviceMgr, core.clusterDataProxy)
 	go core.startDeviceManager(ctx)
 	go core.startLogicalDeviceManager(ctx)
@@ -85,6 +93,7 @@ func (core *Core) Start(ctx context.Context) {
 	log.Info("adaptercore-started")
 }
 
+// Stop will stop core services
 func (core *Core) Stop(ctx context.Context) {
 	log.Info("stopping-adaptercore")
 	if core.exitChannel != nil {
