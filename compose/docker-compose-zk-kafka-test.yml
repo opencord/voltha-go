@@ -15,30 +15,31 @@
 
 version: '2'
 services:
-  #
-  # Single-node zookeeper service
-  #
   zookeeper:
     image: "wurstmeister/zookeeper:latest"
-    ports:
-    - 2181:2181
     environment:
       SERVICE_2181_NAME: "zookeeper"
-  #
-  # Single-node kafka service
-  #
-  kafka:
-#    image: "wurstmeister/kafka:1.1.0"
-    image: "wurstmeister/kafka:2.11-2.0.1"
     ports:
-     - 9092:9092
+    - 2181:2181
+    networks:
+    - default
+    restart: unless-stopped
+
+  kafka:
+    image: "wurstmeister/kafka:2.11-2.0.1"
     environment:
-#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.100.198.220:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${DOCKER_HOST_IP}:9092
       KAFKA_LISTENERS: PLAINTEXT://:9092
-#      KAFKA_ADVERTISED_HOST_NAME: 10.100.198.220
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       SERVICE_9092_NAME: "kafka"
+      KAFKA_CREATE_TOPICS: "brcm_openomci_onu:4:1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+     - 9092:9092
+    networks:
+    - default
+    restart: unless-stopped
+
+

@@ -49,7 +49,8 @@ func (ap *AdapterProxy) SendInterAdapterMessage(ctx context.Context,
 	toAdapter string,
 	toDeviceId string,
 	proxyDeviceId string,
-	messageId string) error {
+	messageId string,
+    partition string) error {
 	log.Debugw("sending-inter-adapter-message", log.Fields{"type": msgType, "from": fromAdapter,
 		"to": toAdapter, "toDevice": toDeviceId, "proxyDevice": proxyDeviceId})
 
@@ -90,7 +91,7 @@ func (ap *AdapterProxy) SendInterAdapterMessage(ctx context.Context,
 	replyToTopic := kafka.Topic{Name: fromAdapter}
 	rpc := "process_inter_adapter_message"
 
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &topic, &replyToTopic, true, proxyDeviceId, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &topic, &replyToTopic, true, proxyDeviceId, partition, args...)
 	log.Debugw("inter-adapter-msg-response", log.Fields{"replyTopic": replyToTopic, "success": success})
 	return unPackResponse(rpc, "", success, result)
 }

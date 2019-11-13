@@ -25,6 +25,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	"strings"
+    "strconv"
 	"sync"
 	"time"
 )
@@ -483,7 +484,7 @@ func (sc *SaramaClient) updateLiveness(alive bool) {
 }
 
 // send formats and sends the request onto the kafka messaging bus.
-func (sc *SaramaClient) Send(msg interface{}, topic *Topic, keys ...string) error {
+func (sc *SaramaClient) Send(msg interface{}, topic *Topic, manualPartition string, keys ...string) error {
 
 	// Assert message is a proto message
 	var protoMsg proto.Message
@@ -510,6 +511,13 @@ func (sc *SaramaClient) Send(msg interface{}, topic *Topic, keys ...string) erro
 		Key:   sarama.StringEncoder(key),
 		Value: sarama.ByteEncoder(marshalled),
 	}
+    if manualPartition != "" {
+        part, err := strconv.ParseInt(manualPartition, 10, 32)
+        if err != nil {
+            return errors.New(fmt.Sprintf("can't convert partition"))
+        }
+        kafkaMsg.Partition = int32(part)
+    }
 
 	// Send message to kafka
 	sc.producer.Input() <- kafkaMsg
@@ -769,7 +777,7 @@ func (sc *SaramaClient) clearConsumerChannelMap() error {
 func (sc *SaramaClient) createPublisher() error {
 	// This Creates the publisher
 	config := sarama.NewConfig()
-	config.Producer.Partitioner = sarama.NewRandomPartitioner
+	config.Producer.Partitioner = sarama.NewManualPartitioner
 	config.Producer.Flush.Frequency = time.Duration(sc.producerFlushFrequency)
 	config.Producer.Flush.Messages = sc.producerFlushMessages
 	config.Producer.Flush.MaxMessages = sc.producerFlushMaxmessages

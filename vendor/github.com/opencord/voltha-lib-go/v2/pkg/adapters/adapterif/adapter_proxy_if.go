@@ -32,5 +32,6 @@ type AdapterProxy interface {
 		toAdapter string,
 		toDeviceID string,
 		proxyDeviceID string,
-		messageID string) error
+		messageID string,
+        partition string) error
 }

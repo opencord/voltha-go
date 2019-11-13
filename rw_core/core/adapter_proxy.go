@@ -18,7 +18,7 @@ package core
 
 import (
 	"context"
-
+    "strconv"
 	"github.com/golang/protobuf/ptypes"
 	a "github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
@@ -70,6 +70,17 @@ func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic {
 	return kafka.Topic{Name: adapterName}
 }
 
+func (ap *AdapterProxy) calcSerialHashPartition(device *voltha.Device) string {
+    serial_num := device.SerialNumber[9:12]
+    log.Debugw("AdoptDevice-calcpartition", log.Fields{"Serial": serial_num})
+    pon,_ := strconv.ParseInt(string(serial_num[0]),16,64)
+    onuId,_ := strconv.ParseInt(serial_num[1:3],16,64)
+    num := pon*64 + onuId
+    ret := strconv.Itoa(int(num % 4))
+    log.Debugw("AdoptDevice-calpartition",log.Fields{"pon": pon, "onu": onuId, "num": num, "ret": ret})
+    return ret
+}
+
 // AdoptDevice invokes adopt device rpc
 func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("AdoptDevice", log.Fields{"device": device})
@@ -81,10 +92,14 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 		Key:   "device",
 		Value: device,
 	}
+    partition := "0"
+    if device.Type == "brcm_openomci_onu" {
+        partition = ap.calcSerialHashPartition(device)
+    }
 	// Use a device topic for the response as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	ap.deviceTopicRegistered = true
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, partition, args...)
 	log.Debugw("AdoptDevice-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
@@ -106,8 +121,9 @@ func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device
 	// Use a device specific topic as we are the only core handling requests for this device
 	//replyToTopic := kafka.CreateSubTopic(ap.kafkaICProxy.DefaultTopic.Name, device.Id)
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
-	log.Debugw("DisableDevice-response", log.Fields{"deviceId": device.Id, "success": success})
+
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, device.Id , "0", args...)
+    log.Debugw("DisableDevice-response", log.Fields{"deviceId": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
@@ -123,7 +139,7 @@ func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Devic
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, "0",  args...)
 	log.Debugw("ReEnableDevice-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
@@ -140,7 +156,7 @@ func (ap *AdapterProxy) RebootDevice(ctx context.Context, device *voltha.Device)
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id,"0", args...)
 	log.Debugw("RebootDevice-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
@@ -157,7 +173,7 @@ func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device)
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id , "0", args...)
 	log.Debugw("DeleteDevice-response", log.Fields{"deviceid": device.Id, "success": success})
 
 	return unPackResponse(rpc, device.Id, success, result)
@@ -172,9 +188,13 @@ func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Dev
 		Key:   "device",
 		Value: device,
 	}
+    partition := "0"
+    if device.Type == "brcm_openomci_adapter" {
+        partition = ap.calcSerialHashPartition(device)
+    }
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_device_info", &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_device_info", &toTopic, &replyToTopic, true, device.Id, partition, args...)
 	log.Debugw("GetOfpDeviceInfo-response", log.Fields{"deviceId": device.Id, "success": success, "result": result})
 	if success {
 		unpackResult := &ic.SwitchCapability{}
@@ -208,9 +228,13 @@ func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Devic
 		Key:   "port_no",
 		Value: pNo,
 	}
+    partition := "0"
+    if device.Type == "brcm_openomci_adapter" {
+        partition = ap.calcSerialHashPartition(device)
+    }
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_port_info", &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_port_info", &toTopic, &replyToTopic, true, device.Id,partition, args...)
 	log.Debugw("GetOfpPortInfo-response", log.Fields{"deviceid": device.Id, "success": success})
 	if success {
 		unpackResult := &ic.PortCapability{}
@@ -260,7 +284,7 @@ func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Devi
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id,"0", args...)
 	log.Debugw("ReconcileDevice-response", log.Fields{"deviceid": device.Id, "success": success})
 
 	return unPackResponse(rpc, device.Id, success, result)
@@ -294,7 +318,7 @@ func (ap *AdapterProxy) DownloadImage(ctx context.Context, device *voltha.Device
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id,"0", args...)
 	log.Debugw("DownloadImage-response", log.Fields{"deviceId": device.Id, "success": success})
 
 	return unPackResponse(rpc, device.Id, success, result)
@@ -316,7 +340,7 @@ func (ap *AdapterProxy) GetImageDownloadStatus(ctx context.Context, device *volt
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id,"0", args...)
 	log.Debugw("GetImageDownloadStatus-response", log.Fields{"deviceId": device.Id, "success": success})
 
 	if success {
@@ -353,7 +377,7 @@ func (ap *AdapterProxy) CancelImageDownload(ctx context.Context, device *voltha.
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, "0", args...)
 	log.Debugw("CancelImageDownload-response", log.Fields{"deviceId": device.Id, "success": success})
 
 	return unPackResponse(rpc, device.Id, success, result)
@@ -375,7 +399,7 @@ func (ap *AdapterProxy) ActivateImageUpdate(ctx context.Context, device *voltha.
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, "0",args...)
 	log.Debugw("ActivateImageUpdate-response", log.Fields{"deviceId": device.Id, "success": success})
 
 	return unPackResponse(rpc, device.Id, success, result)
@@ -397,7 +421,7 @@ func (ap *AdapterProxy) RevertImageUpdate(ctx context.Context, device *voltha.De
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id,"0", args...)
 	log.Debugw("RevertImageUpdate-response", log.Fields{"deviceId": device.Id, "success": success})
 
 	return unPackResponse(rpc, device.Id, success, result)
@@ -429,10 +453,15 @@ func (ap *AdapterProxy) packetOut(deviceType string, deviceID string, outPort ui
 		Value: packet,
 	}
 
+    partition := "0"
+    if device.Type == "brcm_openomci_adapter" {
+        partition = ap.calcSerialHashPartition(device)
+    }
+
 	// TODO:  Do we need to wait for an ACK on a packet Out?
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, deviceID, args...)
+    success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, deviceID, partition, args...)
 	log.Debugw("packetOut", log.Fields{"deviceid": deviceID, "success": success})
 	return unPackResponse(rpc, deviceID, success, result)
 }
@@ -459,10 +488,13 @@ func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flo
 		Key:   "flow_metadata",
 		Value: flowMetadata,
 	}
-
+    partition := "0"
+    if device.Type == "brcm_openomci_adapter" {
+        partition = ap.calcSerialHashPartition(device)
+    }
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, partition, args...)
 	log.Debugw("UpdateFlowsBulk-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
@@ -498,9 +530,13 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChange
 		Key:   "flow_metadata",
 		Value: flowMetadata,
 	}
+    partition := "0"
+    if device.Type == "brcm_openomci_adapter" {
+        partition = ap.calcSerialHashPartition(device)
+    }
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, partition, args...)
 	log.Debugw("UpdateFlowsIncremental-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
@@ -519,9 +555,12 @@ func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Devi
 		Key:   "pm_configs",
 		Value: pmConfigs,
 	}
-
+    partition := "0"
+    if device.Type == "brcm_openomci_adapter" {
+        partition = ap.calcSerialHashPartition(device)
+    }
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, partition, args...)
 	log.Debugw("UpdatePmConfigs-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
@@ -558,11 +597,14 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 		Key:   "request",
 		Value: simulatereq,
 	}
-
+    partition := "0"
+    if device.Type == "brcm_openomci_adapter" {
+        partition = ap.calcSerialHashPartition(device)
+    }
 	// Use a device topic for the response as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	ap.deviceTopicRegistered = true
-	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, partition,args...)
 	log.Debugw("SimulateAlarm-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }

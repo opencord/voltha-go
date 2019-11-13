@@ -196,6 +196,10 @@ func (npr *NonPersistedRevision) hashContent() string {
 
 	if npr.Config != nil {
 		buffer.WriteString(npr.Config.Hash)
+
+		if npr.Config.Data != nil {
+			buffer.WriteString(npr.Config.Data.(proto.Message).String())
+		}
 	}
 
 	if npr.Name != "" {

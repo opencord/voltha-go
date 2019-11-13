@@ -128,7 +128,7 @@ func (ep *EventProxy) SendKpiEvent(id string, kpiEvent *voltha.KpiEvent2, catego
 /* TODO: Send out KPI events*/
 
 func (ep *EventProxy) sendEvent(event *voltha.Event) error {
-	if err := ep.kafkaClient.Send(event, &ep.eventTopic); err != nil {
+	if err := ep.kafkaClient.Send(event, &ep.eventTopic, "0"); err != nil {
 		return err
 	}
 	log.Debugw("Sent event to kafka", log.Fields{"event": event})
