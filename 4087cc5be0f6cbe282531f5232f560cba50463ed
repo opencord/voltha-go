@@ -22,6 +22,30 @@
       "revId": "4087cc5be0f6cbe282531f5232f560cba50463ed",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8576c869_37a13c5e",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-13T19:49:24Z",
+      "side": 1,
+      "message": "There is a read lock on getdevice already.   No need for additional lock in this case.",
+      "parentUuid": "11312533_a983dfa9",
+      "range": {
+        "startLine": 580,
+        "startChar": 1,
+        "endLine": 580,
+        "endChar": 36
+      },
+      "revId": "4087cc5be0f6cbe282531f5232f560cba50463ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
