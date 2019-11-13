@@ -89,11 +89,11 @@ help:
 local-protos:
 	@mkdir -p python/local_imports
 ifdef LOCAL_PROTOS
-	mkdir -p vendor/github.com/opencord/voltha-protos/go
-	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/go
+	mkdir -p vendor/github.com/opencord/voltha-protos/v2/go
+	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v2/go
 	rm -rf python/local_imports/voltha-protos
 	mkdir -p python/local_imports/voltha-protos/dist
-	cp ../voltha-protos/dist/*.tar.gz python/local_imports/voltha-protos/dist/
+	cp ${LOCAL_PROTOS}/dist/*.tar.gz python/local_imports/voltha-protos/dist/
 endif
 
 ## Local Development Helpers
