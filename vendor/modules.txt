@@ -104,9 +104,9 @@ github.com/modern-go/reflect2
 github.com/opencord/voltha-lib-go/v2/pkg/log
 github.com/opencord/voltha-lib-go/v2/pkg/db
 github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore
-github.com/opencord/voltha-lib-go/v2/pkg/grpc
 github.com/opencord/voltha-lib-go/v2/pkg/probe
 github.com/opencord/voltha-lib-go/v2/pkg/version
+github.com/opencord/voltha-lib-go/v2/pkg/grpc
 github.com/opencord/voltha-lib-go/v2/pkg/kafka
 github.com/opencord/voltha-lib-go/v2/pkg/flows
 github.com/opencord/voltha-lib-go/v2/pkg/adapters/adapterif
