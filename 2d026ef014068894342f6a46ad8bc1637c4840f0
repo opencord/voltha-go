@@ -16,6 +16,24 @@
       "revId": "2d026ef014068894342f6a46ad8bc1637c4840f0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a9e4912_9542e041",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-13T18:45:59Z",
+      "side": 1,
+      "message": "Fixed in updated patchset 2",
+      "parentUuid": "bc926616_7d4c6602",
+      "revId": "2d026ef014068894342f6a46ad8bc1637c4840f0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
