@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2bccd58c_167ee395",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-13T14:22:44Z",
+      "side": 1,
+      "message": "Do you need to run it only for ro_core until the other packages are fixed?",
+      "revId": "d0ff7e0eaae85d4a6677fe08bbf04562ac4e5d08",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
