@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package main
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-go/ro_core/config"
-	c "github.com/opencord/voltha-go/ro_core/core"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	grpcserver "github.com/opencord/voltha-lib-go/v2/pkg/grpc"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
-	"github.com/opencord/voltha-lib-go/v2/pkg/version"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"time"
+
+	"github.com/opencord/voltha-go/ro_core/config"
+	c "github.com/opencord/voltha-go/ro_core/core"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v2/pkg/version"
+	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 )
 
 type roCore struct {
@@ -39,14 +40,16 @@ type roCore struct {
 	config      *config.ROCoreFlags
 	halted      bool
 	exitChannel chan int
-	grpcServer  *grpcserver.GrpcServer
 	core        *c.Core
 	//For test
 	receiverChannels []<-chan *ic.InterContainerMessage
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.DebugLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.DebugLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 }
 
 func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
@@ -80,17 +83,6 @@ func (ro *roCore) setKVClient() error {
 	}
 	ro.kvClient = client
 	return nil
-}
-
-func toString(value interface{}) (string, error) {
-	switch t := value.(type) {
-	case []byte:
-		return string(value.([]byte)), nil
-	case string:
-		return value.(string), nil
-	default:
-		return "", fmt.Errorf("unexpected-type-%T", t)
-	}
 }
 
 func (ro *roCore) start(ctx context.Context) {
@@ -203,18 +195,23 @@ func main() {
 	//// Setup logging
 
 	//Setup default logger - applies for packages that do not have specific logger set
-	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
+	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceID": cf.InstanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
 	// Update all loggers (provisionned via init) with a common field
-	if err := log.UpdateAllLoggers(log.Fields{"instanceId": cf.InstanceID}); err != nil {
+	if err := log.UpdateAllLoggers(log.Fields{"instanceID": cf.InstanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/ro_core/core", log.DebugLevel)
 
-	defer log.CleanUp()
+	defer func() {
+		err := log.CleanUp()
+		if err != nil {
+			log.Errorw("unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
+		}
+	}()
 
 	// Print verison / build information and exit
 	if cf.DisplayVersionOnly {
