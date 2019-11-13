@@ -17,14 +17,15 @@ package core
 
 import (
 	"context"
+	"strconv"
+	"testing"
+
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"testing"
 )
 
 func MakeTestGrpcNbiConfig() *Core {
@@ -77,7 +78,7 @@ func TestUpdateLogLevel_grpc(t *testing.T) {
 		ComponentName: "testing",
 		PackageName:   "testing",
 		Level:         voltha.LogLevel_LogLevel(log.GetDefaultLogLevel())}
-	testLog_3 := &voltha.Logging{
+	testLog3 := &voltha.Logging{
 		ComponentName: "testing",
 		PackageName:   "github.com/opencord/voltha-go/ro_core/core",
 		Level:         3 /*voltha.LogLevel_LogLevel(log.GetDefaultLogLevel())*/}
@@ -97,7 +98,7 @@ func TestUpdateLogLevel_grpc(t *testing.T) {
 		{"TestUpdateLogLevel-1", ahndl, args{testCtx, testLogDef}, 0, nil},
 		{"TestUpdateLogLevel-2", ahndl, args{testCtx, testLogEmpty}, 5, nil},
 		{"TestUpdateLogLevel-3", ahndl, args{testCtx, testLog}, 5, nil},
-		{"TestUpdateLogLevel-4", ahndl, args{testCtx, testLog_3}, 3, nil},
+		{"TestUpdateLogLevel-4", ahndl, args{testCtx, testLog3}, 3, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

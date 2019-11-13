@@ -19,15 +19,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	grpcserver "github.com/opencord/voltha-lib-go/v2/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/mocks"
 	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type roCore struct {
@@ -35,8 +35,6 @@ type roCore struct {
 	config      *config.ROCoreFlags
 	halted      bool
 	exitChannel chan int
-	grpcServer  *grpcserver.GrpcServer
-	core        *Core
 	//For test
 	receiverChannels []<-chan *ic.InterContainerMessage
 }
@@ -62,7 +60,7 @@ func newKVClient(storeType string, address string, timeout int) (kvstore.Client,
 	return nil, errors.New("unsupported-kv-store")
 }
 
-func MakeTestNewCore() (*config.ROCoreFlags, *roCore) {
+func makeTestNewCore() (*config.ROCoreFlags, *roCore) {
 
 	clientPort, err := freeport.GetFreePort()
 	if err == nil {
@@ -84,11 +82,8 @@ func MakeTestNewCore() (*config.ROCoreFlags, *roCore) {
 				roC.kvClient = cli
 				return roCoreFlgs, roC
 			}
-			if err != nil {
-				etcdServer.Stop()
-				log.Fatal("Failed to create an Etcd client")
-			}
-
+			etcdServer.Stop()
+			log.Fatal("Failed to create an Etcd client")
 		}
 	}
 	return nil, nil
@@ -96,7 +91,7 @@ func MakeTestNewCore() (*config.ROCoreFlags, *roCore) {
 
 func TestNewCore(t *testing.T) {
 
-	roCoreFlgs, roC := MakeTestNewCore()
+	roCoreFlgs, roC := makeTestNewCore()
 	assert.NotNil(t, roCoreFlgs)
 	assert.NotNil(t, roC)
 	core := NewCore("ro_core", roCoreFlgs, roC.kvClient)
@@ -107,7 +102,7 @@ func TestNewCoreStartStop(t *testing.T) {
 
 	var ctx context.Context
 
-	roCoreFlgs, roC := MakeTestNewCore()
+	roCoreFlgs, roC := makeTestNewCore()
 	assert.NotNil(t, roCoreFlgs)
 	assert.NotNil(t, roC)
 	core := NewCore("ro_core", roCoreFlgs, roC.kvClient)

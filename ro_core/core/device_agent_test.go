@@ -16,18 +16,19 @@
 package core
 
 import (
+	"testing"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewDeviceAgent(t *testing.T) {
 
 	var core Core
-	core.instanceId = "ro_core"
+	core.instanceID = "ro_core"
 	core.config = config.NewROCoreFlags()
 	backend := db.Backend{
 		Client:     core.kvClient,
@@ -38,7 +39,7 @@ func TestNewDeviceAgent(t *testing.T) {
 		PathPrefix: "service/voltha"}
 	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
 	core.genericMgr = newModelProxyManager(core.clusterDataProxy)
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 
 	devAgent := newDeviceAgent(&voltha.Device{Id: "new_device"}, core.deviceMgr, core.clusterDataProxy)
 	assert.NotNil(t, devAgent)
