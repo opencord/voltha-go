@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
 	"errors"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -30,6 +32,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// APIHandler represents API handler related information
 type APIHandler struct {
 	commonMgr        *ModelProxyManager
 	deviceMgr        *DeviceManager
@@ -37,6 +40,7 @@ type APIHandler struct {
 	da.DefaultAPIHandler
 }
 
+// NewAPIHandler creates API handler
 func NewAPIHandler(generalMgr *ModelProxyManager, deviceMgr *DeviceManager, lDeviceMgr *LogicalDeviceManager) *APIHandler {
 	handler := &APIHandler{
 		commonMgr:        generalMgr,
@@ -73,7 +77,8 @@ func waitForNilResponseOnSuccess(ctx context.Context, ch chan interface{}) (*emp
 	}
 }
 
-func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
+// UpdateLogLevel updates log level to the requested level in specific packaged if mentioned
+func (*APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
 	log.Debugw("UpdateLogLevel-request", log.Fields{"package": logging.PackageName, "intval": int(logging.Level)})
 	out := new(empty.Empty)
 	if logging.PackageName == "" {
@@ -88,7 +93,8 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	return out, nil
 }
 
-func (aa APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingComponent) (*voltha.Loggings, error) {
+// GetLogLevels returns log levels for requested packages
+func (APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingComponent) (*voltha.Loggings, error) {
 	logLevels := &voltha.Loggings{}
 
 	// do the per-package log levels
@@ -157,7 +163,7 @@ func (handler *APIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty
 		out := &voltha.IDs{Items: make([]*voltha.ID, 0)}
 		return out, nil
 	}
-	return handler.deviceMgr.ListDeviceIds()
+	return handler.deviceMgr.ListDeviceIDs()
 }
 
 // ListDevicePorts returns the ports details for a specific device entry
@@ -287,6 +293,7 @@ func (handler *APIHandler) ListLogicalDeviceFlowGroups(ctx context.Context, id *
 	return handler.logicalDeviceMgr.ListLogicalDeviceFlowGroups(ctx, id.Id)
 }
 
+// SelfTest - TODO
 func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
 	log.Debugw("SelfTest-request", log.Fields{"id": id})
 	if isTestMode(ctx) {
@@ -296,7 +303,7 @@ func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha
 	return nil, errors.New("UnImplemented")
 }
 
-//@TODO useless stub, what should this actually do?
+// GetAlarmDeviceData - @TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetAlarmDeviceData(
 	ctx context.Context,
 	in *common.ID,
@@ -305,7 +312,7 @@ func (handler *APIHandler) GetAlarmDeviceData(
 	return nil, nil
 }
 
-//@TODO useless stub, what should this actually do?
+// GetMeterStatsOfLogicalDevice - @TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
 	ctx context.Context,
 	in *common.ID,
@@ -314,7 +321,7 @@ func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
 	return nil, nil
 }
 
-//@TODO useless stub, what should this actually do?
+// GetMibDeviceData - @TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetMibDeviceData(
 	ctx context.Context,
 	in *common.ID,
@@ -323,7 +330,7 @@ func (handler *APIHandler) GetMibDeviceData(
 	return nil, nil
 }
 
-//@TODO useless stub, what should this actually do?
+// SimulateAlarm - @TODO useless stub, what should this actually do?
 func (handler *APIHandler) SimulateAlarm(
 	ctx context.Context,
 	in *voltha.SimulateAlarmRequest,

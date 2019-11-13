@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/version"
@@ -26,7 +28,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Enumerated type to keep track of miscellaneous data path agents
+// DataModelType - Enumerated type to keep track of miscellaneous data path agents
 type DataModelType int
 
 // Enumerated list of data path agents
@@ -39,7 +41,8 @@ const (
 	Voltha
 )
 
-const SENTINEL_ADAPTER_ID = "adapter_sentinel"
+// SentinelAdapterID is used to watch adapters in kv
+const SentinelAdapterID = "adapter_sentinel"
 
 // String equivalent for data path agents
 var commonTypes = []string{
@@ -56,6 +59,7 @@ func (t DataModelType) String() string {
 	return commonTypes[t-1]
 }
 
+// MultipleValuesMsg represents multiple values message
 const MultipleValuesMsg = "Expected a single value for KV query for an instance (%s) of type '%s', but received multiple values"
 
 // ModelProxyManager controls requests made to the miscellaneous data path agents
@@ -71,7 +75,7 @@ func newModelProxyManager(cdProxy *model.Proxy) *ModelProxyManager {
 	return &mgr
 }
 
-// GetDeviceType returns the device type associated to the provided id
+// GetVoltha - GetDeviceType returns the device type associated to the provided id
 func (mpMgr *ModelProxyManager) GetVoltha(ctx context.Context) (*voltha.Voltha, error) {
 	log.Debug("GetVoltha")
 
@@ -135,7 +139,7 @@ func (mpMgr *ModelProxyManager) ListAdapters(ctx context.Context) (*voltha.Adapt
 		}
 		for _, item := range list {
 			adapter = item.(*voltha.Adapter)
-			if adapter.Id != SENTINEL_ADAPTER_ID { // don't report the sentinel
+			if adapter.Id != SentinelAdapterID { // don't report the sentinel
 				adapters.Items = append(adapters.Items, adapter)
 			}
 		}

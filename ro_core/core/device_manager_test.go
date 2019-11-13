@@ -16,17 +16,18 @@
 package core
 
 import (
+	"testing"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func MakeTestDevManagerConfig() (*Core, error) {
 	var core Core
-	core.instanceId = "ro_core"
+	core.instanceID = "ro_core"
 	core.config = config.NewROCoreFlags()
 	backend := db.Backend{
 		Client:     core.kvClient,
@@ -44,7 +45,7 @@ func TestNewDeviceManager(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 }
 
@@ -52,10 +53,10 @@ func TestListDeviceIds(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 
-	myIds, _ := core.deviceMgr.ListDeviceIds()
+	myIds, _ := core.deviceMgr.ListDeviceIDs()
 	assert.NotNil(t, myIds)
 }
 
@@ -67,7 +68,7 @@ func TestGetDeviceAgent(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 
 	devAgent := newDeviceAgent(&voltha.Device{Id: "new_device"}, core.deviceMgr, core.clusterDataProxy)
@@ -77,11 +78,11 @@ func TestGetDeviceAgent(t *testing.T) {
 	core.deviceMgr.addDeviceAgentToMap(devAgent)
 
 	// listDeviceIdsFromMap
-	myIDs := core.deviceMgr.listDeviceIdsFromMap()
+	myIDs := core.deviceMgr.listDeviceIDsFromMap()
 	assert.NotNil(t, myIDs)
 
 	// getDeviceAgent
-	myDevAgent := core.deviceMgr.getDeviceAgent(devAgent.deviceId)
+	myDevAgent := core.deviceMgr.getDeviceAgent(devAgent.deviceID)
 	assert.NotNil(t, myDevAgent)
 
 	// deleteDeviceAgentToMap
@@ -92,7 +93,7 @@ func TestLoadDevice(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 
 	devAgent := newDeviceAgent(&voltha.Device{Id: "new_device"}, core.deviceMgr, core.clusterDataProxy)
@@ -114,7 +115,7 @@ func TestIsDeviceInCache(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 
 	devAgent := newDeviceAgent(&voltha.Device{Id: "new_device"}, core.deviceMgr, core.clusterDataProxy)
@@ -123,13 +124,13 @@ func TestIsDeviceInCache(t *testing.T) {
 	// addDeviceAgentToMap
 	core.deviceMgr.addDeviceAgentToMap(devAgent)
 
-	isInCache := core.deviceMgr.IsDeviceInCache(devAgent.deviceId)
+	isInCache := core.deviceMgr.IsDeviceInCache(devAgent.deviceID)
 	assert.True(t, isInCache)
 
 	// deleteDeviceAgentToMap
 	core.deviceMgr.deleteDeviceAgentToMap(devAgent)
 
-	isInCacheDel := core.deviceMgr.IsDeviceInCache(devAgent.deviceId)
+	isInCacheDel := core.deviceMgr.IsDeviceInCache(devAgent.deviceID)
 	assert.False(t, isInCacheDel)
 }
 
@@ -137,7 +138,7 @@ func TestLoadRootDeviceParentAndChildren(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 
 	devAgent := newDeviceAgent(&voltha.Device{Id: "new_device"}, core.deviceMgr, core.clusterDataProxy)
@@ -154,7 +155,7 @@ func TestGetParentDevice(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 
 	devAgent := newDeviceAgent(&voltha.Device{Id: "new_device"}, core.deviceMgr, core.clusterDataProxy)
@@ -171,7 +172,7 @@ func TestGetAllChildDeviceIds(t *testing.T) {
 
 	core, _ := MakeTestDevManagerConfig()
 
-	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceId)
+	core.deviceMgr = newDeviceManager(core.clusterDataProxy, core.instanceID)
 	assert.NotNil(t, core.deviceMgr)
 
 	devAgent := newDeviceAgent(&voltha.Device{Id: "new_device"}, core.deviceMgr, core.clusterDataProxy)
@@ -180,7 +181,7 @@ func TestGetAllChildDeviceIds(t *testing.T) {
 	// addDeviceAgentToMap
 	core.deviceMgr.addDeviceAgentToMap(devAgent)
 
-	myIds, err := core.deviceMgr.getAllChildDeviceIds(devAgent.lastData)
+	myIds, err := core.deviceMgr.getAllChildDeviceIDs(devAgent.lastData)
 	assert.NotNil(t, myIds)
 	assert.Nil(t, err)
 }
