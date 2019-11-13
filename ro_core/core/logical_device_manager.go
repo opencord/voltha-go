@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
+	"sync"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 )
 
+// LogicalDeviceManager represents logical device manager related information
 type LogicalDeviceManager struct {
 	logicalDeviceAgents        sync.Map
 	deviceMgr                  *DeviceManager
@@ -62,29 +65,29 @@ func (ldMgr *LogicalDeviceManager) stop(ctx context.Context) {
 }
 
 func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDeviceAgent) {
-	if _, exist := ldMgr.logicalDeviceAgents.Load(agent.logicalDeviceId); !exist {
-		ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceId, agent)
+	if _, exist := ldMgr.logicalDeviceAgents.Load(agent.logicalDeviceID); !exist {
+		ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceID, agent)
 	}
 }
 
 // getLogicalDeviceAgent returns the logical device agent.  If the device is not in memory then the device will
 // be loaded from dB and a logical device agent created to managed it.
-func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceId string) *LogicalDeviceAgent {
-	if agent, ok := ldMgr.logicalDeviceAgents.Load(logicalDeviceId); ok {
+func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceID string) *LogicalDeviceAgent {
+	agent, ok := ldMgr.logicalDeviceAgents.Load(logicalDeviceID)
+	if ok {
 		return agent.(*LogicalDeviceAgent)
-	} else {
-		//	Try to load into memory - loading will also create the logical device agent
-		if err := ldMgr.load(logicalDeviceId); err == nil {
-			if agent, ok = ldMgr.logicalDeviceAgents.Load(logicalDeviceId); ok {
-				return agent.(*LogicalDeviceAgent)
-			}
+	}
+	//	Try to load into memory - loading will also create the logical device agent
+	if err := ldMgr.load(logicalDeviceID); err == nil {
+		if agent, ok = ldMgr.logicalDeviceAgents.Load(logicalDeviceID); ok {
+			return agent.(*LogicalDeviceAgent)
 		}
 	}
 	return nil
 }
 
-func (ldMgr *LogicalDeviceManager) deleteLogicalDeviceAgent(logicalDeviceId string) {
-	ldMgr.logicalDeviceAgents.Delete(logicalDeviceId)
+func (ldMgr *LogicalDeviceManager) deleteLogicalDeviceAgent(logicalDeviceID string) {
+	ldMgr.logicalDeviceAgents.Delete(logicalDeviceID)
 }
 
 // GetLogicalDevice provides a cloned most up to date logical device
@@ -109,24 +112,24 @@ func (ldMgr *LogicalDeviceManager) listLogicalDevices() (*voltha.LogicalDevices,
 }
 
 // load loads a logical device manager in memory
-func (ldMgr *LogicalDeviceManager) load(lDeviceId string) error {
-	log.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceId})
+func (ldMgr *LogicalDeviceManager) load(lDeviceID string) error {
+	log.Debugw("loading-logical-device", log.Fields{"lDeviceID": lDeviceID})
 	// To prevent a race condition, let's hold the logical device agent map lock.  This will prevent a loading and
 	// a create logical device callback from occurring at the same time.
-	if ldAgent, _ := ldMgr.logicalDeviceAgents.Load(lDeviceId); ldAgent == nil {
+	if ldAgent, _ := ldMgr.logicalDeviceAgents.Load(lDeviceID); ldAgent == nil {
 		// Logical device not in memory - create a temp logical device Agent and let it load from memory
-		agent := newLogicalDeviceAgent(lDeviceId, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
-		if err := agent.start(nil, true); err != nil {
-			agent.stop(nil)
+		agent := newLogicalDeviceAgent(lDeviceID, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy)
+		if err := agent.start(context.TODO(), true); err != nil {
+			agent.stop(context.TODO())
 			return err
 		}
-		ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceId, agent)
+		ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceID, agent)
 	}
 	// TODO: load the child device
 	return nil
 }
 
-func (ldMgr *LogicalDeviceManager) getLogicalDeviceId(device *voltha.Device) (*string, error) {
+func (ldMgr *LogicalDeviceManager) getLogicalDeviceID(device *voltha.Device) (*string, error) {
 	// Device can either be a parent or a child device
 	if device.Root {
 		// Parent device.  The ID of a parent device is the logical device ID
@@ -140,26 +143,27 @@ func (ldMgr *LogicalDeviceManager) getLogicalDeviceId(device *voltha.Device) (*s
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
-func (ldMgr *LogicalDeviceManager) getLogicalPortId(device *voltha.Device) (*voltha.LogicalPortId, error) {
+func (ldMgr *LogicalDeviceManager) getLogicalPortID(device *voltha.Device) (*voltha.LogicalPortId, error) {
 	// Get the logical device where this device is attached
-	var lDeviceId *string
+	var lDeviceID *string
 	var err error
-	if lDeviceId, err = ldMgr.getLogicalDeviceId(device); err != nil {
+	if lDeviceID, err = ldMgr.getLogicalDeviceID(device); err != nil {
 		return nil, err
 	}
 	var lDevice *voltha.LogicalDevice
-	if lDevice, err = ldMgr.getLogicalDevice(*lDeviceId); err != nil {
+	if lDevice, err = ldMgr.getLogicalDevice(*lDeviceID); err != nil {
 		return nil, err
 	}
 	// Go over list of ports
 	for _, port := range lDevice.Ports {
 		if port.DeviceId == device.Id {
-			return &voltha.LogicalPortId{Id: *lDeviceId, PortId: port.Id}, nil
+			return &voltha.LogicalPortId{Id: *lDeviceID, PortId: port.Id}, nil
 		}
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
+// ListLogicalDevicePorts returns port details for a specific logical device entry
 func (ldMgr *LogicalDeviceManager) ListLogicalDevicePorts(ctx context.Context, id string) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
@@ -169,6 +173,7 @@ func (ldMgr *LogicalDeviceManager) ListLogicalDevicePorts(ctx context.Context, i
 
 }
 
+// ListLogicalDeviceFlows returns flow details for a specific logical device entry
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, id string) (*voltha.Flows, error) {
 	log.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
@@ -178,6 +183,7 @@ func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, i
 
 }
 
+// ListLogicalDeviceFlowGroups returns flow group details for a specific logical device entry
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlowGroups(ctx context.Context, id string) (*voltha.FlowGroups, error) {
 	log.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
@@ -187,18 +193,18 @@ func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlowGroups(ctx context.Conte
 
 }
 
-func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortId *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
+func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortID *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
 	// Get the logical device where this device is attached
 	var err error
 	var lDevice *voltha.LogicalDevice
-	if lDevice, err = ldMgr.getLogicalDevice(lPortId.Id); err != nil {
+	if lDevice, err = ldMgr.getLogicalDevice(lPortID.Id); err != nil {
 		return nil, err
 	}
 	// Go over list of ports
 	for _, port := range lDevice.Ports {
-		if port.Id == lPortId.PortId {
+		if port.Id == lPortID.PortId {
 			return port, nil
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "%s-%s", lPortId.Id, lPortId.PortId)
+	return nil, status.Errorf(codes.NotFound, "%s-%s", lPortID.Id, lPortID.PortId)
 }
