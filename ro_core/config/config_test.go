@@ -33,13 +33,13 @@ const (
 	 * useful.
 	 */
 
-	VOLTHA_LOGLEVEL = log.FatalLevel
+	VOLTHALogLevel = log.FatalLevel
 )
 
 func localInit() {
 
 	// Logger must be configured or bad things happen
-	_, err := log.SetDefaultLogger(log.JSON, VOLTHA_LOGLEVEL, log.Fields{"instanceId": 1})
+	_, err := log.SetDefaultLogger(log.JSON, VOLTHALogLevel, log.Fields{"instanceId": 1})
 	if err != nil {
 		panic(err)
 	}
@@ -47,59 +47,59 @@ func localInit() {
 
 func checkConfigFlags(t *testing.T, cf *ROCoreFlags) {
 
-	if cf.ROCoreEndpoint != default_ROCoreEndpoint {
-		t.Errorf("ROCoreEndpoint want %s, got %s", default_ROCoreEndpoint, cf.ROCoreEndpoint)
+	if cf.ROCoreEndpoint != defaultROCoreEndpoint {
+		t.Errorf("ROCoreEndpoint want %s, got %s", defaultROCoreEndpoint, cf.ROCoreEndpoint)
 	}
-	if cf.GrpcHost != default_GrpcHost {
-		t.Errorf("GrpcHost want %s, got %s", default_GrpcHost, cf.GrpcHost)
+	if cf.GrpcHost != defaultGrpcHost {
+		t.Errorf("GrpcHost want %s, got %s", defaultGrpcHost, cf.GrpcHost)
 	}
-	if cf.GrpcPort != default_GrpcPort {
-		t.Errorf("GrpcPort want %d, got %d", default_GrpcPort, cf.GrpcPort)
+	if cf.GrpcPort != defaultGrpcPort {
+		t.Errorf("GrpcPort want %d, got %d", defaultGrpcPort, cf.GrpcPort)
 	}
-	if cf.KVStoreType != default_KVStoreType {
-		t.Errorf("KVStoreType want %s, got %s", default_KVStoreType, cf.KVStoreType)
+	if cf.KVStoreType != defaultKVStoreType {
+		t.Errorf("KVStoreType want %s, got %s", defaultKVStoreType, cf.KVStoreType)
 	}
-	if cf.KVStoreTimeout != default_KVStoreTimeout {
-		t.Errorf("KVStoreTimeout want %d, got %d", default_KVStoreTimeout, cf.KVStoreTimeout)
+	if cf.KVStoreTimeout != defaultKVStoreTimeout {
+		t.Errorf("KVStoreTimeout want %d, got %d", defaultKVStoreTimeout, cf.KVStoreTimeout)
 	}
-	if cf.KVStoreHost != default_KVStoreHost {
-		t.Errorf("KVStoreHost want %s, got %s", default_KVStoreHost, cf.KVStoreHost)
+	if cf.KVStoreHost != defaultKVStoreHost {
+		t.Errorf("KVStoreHost want %s, got %s", defaultKVStoreHost, cf.KVStoreHost)
 	}
-	if cf.KVStorePort != default_KVStorePort {
-		t.Errorf("KVStorePort want %d, got %d", default_KVStorePort, cf.KVStorePort)
+	if cf.KVStorePort != defaultKVStorePort {
+		t.Errorf("KVStorePort want %d, got %d", defaultKVStorePort, cf.KVStorePort)
 	}
-	if cf.KVTxnKeyDelTime != default_KVTxnKeyDelTime {
-		t.Errorf("KVTxnKeyDelTime want %d, got %d", default_KVTxnKeyDelTime, cf.KVTxnKeyDelTime)
+	if cf.KVTxnKeyDelTime != defaultKVTxnKeyDelTime {
+		t.Errorf("KVTxnKeyDelTime want %d, got %d", defaultKVTxnKeyDelTime, cf.KVTxnKeyDelTime)
 	}
-	if cf.CoreTopic != default_CoreTopic {
-		t.Errorf("CoreTopic want %s, got %s", default_CoreTopic, cf.CoreTopic)
+	if cf.CoreTopic != defaultCoreTopic {
+		t.Errorf("CoreTopic want %s, got %s", defaultCoreTopic, cf.CoreTopic)
 	}
-	if cf.LogLevel != default_LogLevel {
-		t.Errorf("LogLevel want %d, got %d", default_LogLevel, cf.LogLevel)
+	if cf.LogLevel != defaultLogLevel {
+		t.Errorf("LogLevel want %d, got %d", defaultLogLevel, cf.LogLevel)
 	}
-	if cf.Banner != default_Banner {
-		t.Errorf("Banner want %v, got %v", default_Banner, cf.Banner)
+	if cf.Banner != defaultBanner {
+		t.Errorf("Banner want %v, got %v", defaultBanner, cf.Banner)
 	}
-	if cf.DisplayVersionOnly != default_DisplayVersionOnly {
-		t.Errorf("DisplayVersionOnly want %v, got %v", default_DisplayVersionOnly, cf.DisplayVersionOnly)
+	if cf.DisplayVersionOnly != defaultDisplayVersionOnly {
+		t.Errorf("DisplayVersionOnly want %v, got %v", defaultDisplayVersionOnly, cf.DisplayVersionOnly)
 	}
-	if cf.ROCoreKey != default_ROCoreKey {
-		t.Errorf("ROCoreKey want %s, got %s", default_ROCoreKey, cf.ROCoreKey)
+	if cf.ROCoreKey != defaultROCoreKey {
+		t.Errorf("ROCoreKey want %s, got %s", defaultROCoreKey, cf.ROCoreKey)
 	}
-	if cf.ROCoreCert != default_ROCoreCert {
-		t.Errorf("ROCoreCert want %s, got %s", default_ROCoreCert, cf.ROCoreCert)
+	if cf.ROCoreCert != defaultROCoreCert {
+		t.Errorf("ROCoreCert want %s, got %s", defaultROCoreCert, cf.ROCoreCert)
 	}
-	if cf.ROCoreCA != default_ROCoreCA {
-		t.Errorf("ROCoreCA want %s, got %s", default_ROCoreCA, cf.ROCoreCA)
+	if cf.ROCoreCA != defaultROCoreCA {
+		t.Errorf("ROCoreCA want %s, got %s", defaultROCoreCA, cf.ROCoreCA)
 	}
-	if cf.AffinityRouterTopic != default_Affinity_Router_Topic {
-		t.Errorf("AffinityRouterTopic want %s, got %s", default_Affinity_Router_Topic, cf.AffinityRouterTopic)
+	if cf.AffinityRouterTopic != defaultAffinityRouterTopic {
+		t.Errorf("AffinityRouterTopic want %s, got %s", defaultAffinityRouterTopic, cf.AffinityRouterTopic)
 	}
-	if cf.ProbeHost != default_ProbeHost {
-		t.Errorf("ProbeHost want %s, got %s", default_ProbeHost, cf.ProbeHost)
+	if cf.ProbeHost != defaultProbeHost {
+		t.Errorf("ProbeHost want %s, got %s", defaultProbeHost, cf.ProbeHost)
 	}
-	if cf.ProbePort != default_ProbePort {
-		t.Errorf("ProbePort want %d, got %d", default_ProbePort, cf.ProbePort)
+	if cf.ProbePort != defaultProbePort {
+		t.Errorf("ProbePort want %d, got %d", defaultProbePort, cf.ProbePort)
 	}
 }
 

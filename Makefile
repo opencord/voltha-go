@@ -82,6 +82,7 @@ help:
 	@echo "lint-sanity          : Verify that 'go vet' doesn't report any issues"
 	@echo "lint-mod             : Verify the integrity of the 'mod' files"
 	@echo "lint                 : Shorthand for lint-style & lint-sanity"
+	@echo "sca                  : Runs various SCA through golangci-lint tool"
 	@echo "test                 : Generate reports for all go tests"
 	@echo
 
@@ -237,7 +238,7 @@ endif
 sca: golangci_lint_tool_install
 	rm -rf ./sca-report
 	@mkdir -p ./sca-report
-	$(GOLANGCI_LINT_TOOL) run -E golint -D structcheck --out-format junit-xml ./cli/... ./rw_core/...  2>&1 | tee ./sca-report/sca-report.xml
+	$(GOLANGCI_LINT_TOOL) run -E golint -D structcheck --out-format junit-xml ./cli/... ./rw_core/... ./ro_core/...  2>&1 | tee ./sca-report/sca-report.xml
 
 test: go_junit_install gocover_cobertura_install local-lib-go
 	@mkdir -p ./tests/results
