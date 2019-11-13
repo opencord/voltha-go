@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc725b2b_bfa930c1",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-13T14:19:58Z",
+      "side": 1,
+      "message": "Can you also handle the error?",
+      "revId": "c0484805339595ee42173b634cf9db7a4477e082",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
