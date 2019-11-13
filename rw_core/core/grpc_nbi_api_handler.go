@@ -17,11 +17,13 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/version"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/omci"
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
@@ -557,6 +559,73 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 	defer close(ch)
 	go handler.deviceMgr.deleteDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
+}
+
+// ListDevicePorts returns the ports details for a specific device entry
+func (handler *APIHandler) ListDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.Ports, error) {
+	log.Debugw("listdeviceports-request", log.Fields{"id": id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}); err != nil {
+			return &voltha.Ports{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	device, err := handler.deviceMgr.GetDevice(id.Id)
+	if err != nil {
+		return nil, err
+	}
+	ports := &voltha.Ports{}
+	for _, port := range device.Ports {
+		ports.Items = append(ports.Items, port)
+	}
+	return ports, nil
+}
+
+// ListDeviceFlows returns the flow details for a specific device entry
+func (handler *APIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
+	log.Debugw("listdeviceflows-request", log.Fields{"id": id})
+	if handler.competeForTransaction() {
+		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}); err != nil {
+			return &openflow_13.Flows{}, err
+		} else {
+			defer txn.Close()
+		}
+	}
+
+	device, err := handler.deviceMgr.GetDevice(id.Id)
+	if err != nil {
+		return nil, err
+	}
+	flows := &openflow_13.Flows{}
+	for _, flow := range device.Flows.Items {
+		flows.Items = append(flows.Items, flow)
+	}
+	return flows, nil
+}
+
+// GetVoltha returns the contents of all components (i.e. devices, logical_devices, ...)
+func (handler *APIHandler) GetVoltha(ctx context.Context, empty *empty.Empty) (*voltha.Voltha, error) {
+
+	log.Debug("GetVoltha")
+	/*
+	 * For now, encode all the version information into a JSON object and
+	 * pass that back as "version" so the client can get all the
+	 * information associated with the version. Long term the API should
+	 * better accomidate this, but for now this will work.
+	 */
+	data, err := json.Marshal(&version.VersionInfo)
+	info := version.VersionInfo.Version
+	if err != nil {
+		log.Warnf("Unable to encode version information as JSON: %s", err.Error())
+	} else {
+		info = string(data)
+	}
+
+	return &voltha.Voltha{
+		Version: info,
+	}, nil
 }
 
 // processImageRequest is a helper method to execute an image download request
