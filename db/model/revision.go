@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
 	"context"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"time"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 )
 
+// Revision -
 type Revision interface {
 	Finalize(bool)
 	SetConfig(revision *DataRevision)
@@ -44,7 +47,7 @@ type Revision interface {
 	GetBranch() *Branch
 	Get(int) interface{}
 	GetData() interface{}
-	GetNode() *node
+	getNode() *node
 	SetLastUpdate(ts ...time.Time)
 	GetLastUpdate() time.Time
 	LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) ([]Revision, error)

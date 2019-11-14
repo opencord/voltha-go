@@ -21,9 +21,10 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"reflect"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"reflect"
 )
 
 // DataRevision stores the data associated to a revision along with its calculated checksum hash value
@@ -33,7 +34,7 @@ type DataRevision struct {
 }
 
 // NewDataRevision creates a new instance of a DataRevision structure
-func NewDataRevision(root *root, data interface{}) *DataRevision {
+func NewDataRevision(root *PRoot, data interface{}) *DataRevision {
 	dr := DataRevision{}
 	dr.Data = data
 	dr.Hash = dr.hashData(root, data)
@@ -41,7 +42,7 @@ func NewDataRevision(root *root, data interface{}) *DataRevision {
 	return &dr
 }
 
-func (dr *DataRevision) hashData(root *root, data interface{}) string {
+func (dr *DataRevision) hashData(root *PRoot, data interface{}) string {
 	var buffer bytes.Buffer
 
 	if IsProtoMessage(data) {

@@ -16,14 +16,15 @@
 package model
 
 import (
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProfiling(t *testing.T) {
-	want := &profiling{}
+	want := &Profiling{}
 	result := GetProfiling()
 	if reflect.TypeOf(result) != reflect.TypeOf(want) {
 		t.Errorf("GetProfiling() = result: %v, want: %v", result, want)
