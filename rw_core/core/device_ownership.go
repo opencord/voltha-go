@@ -13,23 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
-	"time"
 )
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 }
 
 type ownership struct {
@@ -38,8 +43,9 @@ type ownership struct {
 	chnl  chan int
 }
 
+// DeviceOwnership represent device ownership attributes
 type DeviceOwnership struct {
-	instanceId         string
+	instanceID         string
 	exitChannel        chan int
 	kvClient           kvstore.Client
 	reservationTimeout int64 // Duration in seconds
@@ -53,9 +59,10 @@ type DeviceOwnership struct {
 	ownershipLock      sync.RWMutex
 }
 
+// NewDeviceOwnership creates device ownership instance
 func NewDeviceOwnership(id string, kvClient kvstore.Client, deviceMgr *DeviceManager, logicalDeviceMgr *LogicalDeviceManager, ownershipPrefix string, reservationTimeout int64) *DeviceOwnership {
 	var deviceOwnership DeviceOwnership
-	deviceOwnership.instanceId = id
+	deviceOwnership.instanceID = id
 	deviceOwnership.exitChannel = make(chan int, 1)
 	deviceOwnership.kvClient = kvClient
 	deviceOwnership.deviceMgr = deviceMgr
@@ -70,11 +77,13 @@ func NewDeviceOwnership(id string, kvClient kvstore.Client, deviceMgr *DeviceMan
 	return &deviceOwnership
 }
 
+// Start starts device device ownership
 func (da *DeviceOwnership) Start(ctx context.Context) {
-	log.Info("starting-deviceOwnership", log.Fields{"instanceId": da.instanceId})
+	log.Info("starting-deviceOwnership", log.Fields{"instanceId": da.instanceID})
 	log.Info("deviceOwnership-started")
 }
 
+// Stop stops device ownership
 func (da *DeviceOwnership) Stop(ctx context.Context) {
 	log.Info("stopping-deviceOwnership")
 	da.exitChannel <- 1
@@ -87,15 +96,15 @@ func (da *DeviceOwnership) tryToReserveKey(id string) bool {
 	var currOwner string
 	//Try to reserve the key
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
-	value, err := da.kvClient.Reserve(kvKey, da.instanceId, da.reservationTimeout)
+	value, err := da.kvClient.Reserve(kvKey, da.instanceID, da.reservationTimeout)
 	if err != nil {
-		log.Errorw("error", log.Fields{"error": err, "id": id, "instanceId": da.instanceId})
+		log.Errorw("error", log.Fields{"error": err, "id": id, "instanceId": da.instanceID})
 	}
 	if value != nil {
 		if currOwner, err = kvstore.ToString(value); err != nil {
 			log.Error("unexpected-owner-type")
 		}
-		return currOwner == da.instanceId
+		return currOwner == da.instanceID
 	}
 	return false
 }
@@ -104,7 +113,7 @@ func (da *DeviceOwnership) renewReservation(id string) bool {
 	// Try to reserve the key
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
 	if err := da.kvClient.RenewReservation(kvKey); err != nil {
-		log.Errorw("reservation-renewal-error", log.Fields{"error": err, "instance": da.instanceId})
+		log.Errorw("reservation-renewal-error", log.Fields{"error": err, "instance": da.instanceID})
 		return false
 	}
 	return true
@@ -136,9 +145,9 @@ func (da *DeviceOwnership) monitorOwnership(id string, chnl chan int) {
 			// Device owned; renew reservation
 			op = "renew"
 			if da.renewReservation(id) {
-				log.Debugw("reservation-renewed", log.Fields{"id": id, "instanceId": da.instanceId})
+				log.Debugw("reservation-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
 			} else {
-				log.Debugw("reservation-not-renewed", log.Fields{"id": id, "instanceId": da.instanceId})
+				log.Debugw("reservation-not-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
 			}
 		} else {
 			// Device not owned or not owned by me; try to seize ownership
@@ -173,7 +182,7 @@ func (da *DeviceOwnership) setOwnership(id string, owner bool) error {
 	return status.Error(codes.NotFound, fmt.Sprintf("id-inexistent-%s", id))
 }
 
-// getAllDeviceIdsOwnedByMe returns all the deviceIds (root device Ids) that is managed by this Core
+// GetAllDeviceIdsOwnedByMe returns all the deviceIds (root device Ids) that is managed by this Core
 func (da *DeviceOwnership) GetAllDeviceIdsOwnedByMe() []string {
 	deviceIds := []string{}
 	da.deviceMapLock.Lock()
@@ -240,7 +249,8 @@ func (da *DeviceOwnership) AbandonDevice(id string) error {
 	}
 	da.deviceMapLock.Lock()
 	defer da.deviceMapLock.Unlock()
-	if o, exist := da.deviceMap[id]; exist { // id is ownership key
+	o, exist := da.deviceMap[id]
+	if exist { // id is ownership key
 		// Need to clean up all deviceToKeyMap entries using this device as key
 		da.deviceToKeyMapLock.Lock()
 		defer da.deviceToKeyMapLock.Unlock()
@@ -257,9 +267,9 @@ func (da *DeviceOwnership) AbandonDevice(id string) error {
 		delete(da.deviceMap, id)
 		log.Debugw("abandoning-device", log.Fields{"Id": id})
 		return nil
-	} else { // id is not ownership key
-		da.deleteDeviceKey(id)
 	}
+	// id is not ownership key
+	da.deleteDeviceKey(id)
 	return nil
 }
 
@@ -269,31 +279,12 @@ func (da *DeviceOwnership) abandonAllDevices() {
 	defer da.deviceMapLock.Unlock()
 	da.deviceToKeyMapLock.Lock()
 	defer da.deviceToKeyMapLock.Unlock()
-	for k, _ := range da.deviceToKeyMap {
+	for k := range da.deviceToKeyMap {
 		delete(da.deviceToKeyMap, k)
 	}
 	for _, val := range da.deviceMap {
 		close(val.chnl)
 	}
-}
-
-func (da *DeviceOwnership) getDeviceKey(id string) (string, error) {
-	da.deviceToKeyMapLock.RLock()
-	defer da.deviceToKeyMapLock.RUnlock()
-	if val, exist := da.deviceToKeyMap[id]; exist {
-		return val, nil
-	}
-	return "", status.Error(codes.NotFound, fmt.Sprintf("not-present-%s", id))
-}
-
-func (da *DeviceOwnership) updateDeviceKey(id string, key string) error {
-	da.deviceToKeyMapLock.Lock()
-	defer da.deviceToKeyMapLock.Unlock()
-	if _, exist := da.deviceToKeyMap[id]; exist {
-		return status.Error(codes.AlreadyExists, fmt.Sprintf("already-present-%s", id))
-	}
-	da.deviceToKeyMap[id] = key
-	return nil
 }
 
 func (da *DeviceOwnership) deleteDeviceKey(id string) {
@@ -317,28 +308,27 @@ func (da *DeviceOwnership) getOwnershipKey(id interface{}) (ownershipKey string,
 	var device *voltha.Device
 	var lDevice *voltha.LogicalDevice
 	// The id can either be a device Id or a logical device id.
-	if dId, ok := id.(*utils.DeviceID); ok {
+	if dID, ok := id.(*utils.DeviceID); ok {
 		// Use cache if present
-		if val, exist := da.deviceToKeyMap[dId.Id]; exist {
-			return val, dId.Id, true, nil
+		if val, exist := da.deviceToKeyMap[dID.ID]; exist {
+			return val, dID.ID, true, nil
 		}
-		if device, _ = da.deviceMgr.GetDevice(dId.Id); device == nil {
-			return "", dId.Id, false, status.Errorf(codes.NotFound, "id-absent-%s", dId)
+		if device, _ = da.deviceMgr.GetDevice(dID.ID); device == nil {
+			return "", dID.ID, false, status.Errorf(codes.NotFound, "id-absent-%s", dID)
 		}
 		if device.Root {
-			return device.Id, dId.Id, false, nil
-		} else {
-			return device.ParentId, dId.Id, false, nil
+			return device.Id, dID.ID, false, nil
 		}
-	} else if ldId, ok := id.(*utils.LogicalDeviceID); ok {
+		return device.ParentId, dID.ID, false, nil
+	} else if ldID, ok := id.(*utils.LogicalDeviceID); ok {
 		// Use cache if present
-		if val, exist := da.deviceToKeyMap[ldId.Id]; exist {
-			return val, ldId.Id, true, nil
+		if val, exist := da.deviceToKeyMap[ldID.ID]; exist {
+			return val, ldID.ID, true, nil
 		}
-		if lDevice, _ = da.logicalDeviceMgr.getLogicalDevice(ldId.Id); lDevice == nil {
-			return "", ldId.Id, false, status.Errorf(codes.NotFound, "id-absent-%s", dId)
+		if lDevice, _ = da.logicalDeviceMgr.getLogicalDevice(ldID.ID); lDevice == nil {
+			return "", ldID.ID, false, status.Errorf(codes.NotFound, "id-absent-%s", dID)
 		}
-		return lDevice.RootDeviceId, ldId.Id, false, nil
+		return lDevice.RootDeviceId, ldID.ID, false, nil
 	}
 	return "", "", false, status.Error(codes.NotFound, fmt.Sprintf("id-%v", id))
 }

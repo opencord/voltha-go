@@ -17,26 +17,31 @@
 package graph
 
 import (
-	"errors"
 	"fmt"
-	"github.com/gyuho/goraph"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/gyuho/goraph"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
 )
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 }
 
+// RouteHop represent route hop attributes
 type RouteHop struct {
 	DeviceID string
 	Ingress  uint32
 	Egress   uint32
 }
 
+// OFPortLink represent of port link attributes
 type OFPortLink struct {
 	Ingress uint32
 	Egress  uint32
@@ -47,10 +52,12 @@ type ofPortLinkToPath struct {
 	path []RouteHop
 }
 
+// GetDeviceFunc returns device function
 type GetDeviceFunc func(id string) (*voltha.Device, error)
 
+// DeviceGraph represent device graph attributes
 type DeviceGraph struct {
-	logicalDeviceId    string
+	logicalDeviceID    string
 	GGraph             goraph.Graph
 	getDeviceFromModel GetDeviceFunc
 	logicalPorts       []*voltha.LogicalPort
@@ -68,9 +75,10 @@ type DeviceGraph struct {
 	portsAdded         map[string]string
 }
 
-func NewDeviceGraph(logicalDeviceId string, getDevice GetDeviceFunc) *DeviceGraph {
+// NewDeviceGraph creates device graph instance
+func NewDeviceGraph(logicalDeviceID string, getDevice GetDeviceFunc) *DeviceGraph {
 	var dg DeviceGraph
-	dg.logicalDeviceId = logicalDeviceId
+	dg.logicalDeviceID = logicalDeviceID
 	dg.GGraph = goraph.NewGraph()
 	dg.getDeviceFromModel = getDevice
 	dg.graphBuildLock = sync.RWMutex{}
@@ -126,14 +134,14 @@ func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
 
 	// Set the root, non-root ports and boundary ports
 	for _, lp := range lps {
-		portId := concatDeviceIdPortId(lp.DeviceId, lp.DevicePortNo)
+		portID := concatDeviceIDPortID(lp.DeviceId, lp.DevicePortNo)
 		if lp.RootPort {
-			dg.rootPortsString[portId] = lp.OfpPort.PortNo
+			dg.rootPortsString[portID] = lp.OfpPort.PortNo
 			dg.RootPorts[lp.OfpPort.PortNo] = lp.OfpPort.PortNo
 		} else {
-			dg.nonRootPortsString[portId] = lp.OfpPort.PortNo
+			dg.nonRootPortsString[portID] = lp.OfpPort.PortNo
 		}
-		dg.boundaryPorts[portId] = lp.OfpPort.PortNo
+		dg.boundaryPorts[portID] = lp.OfpPort.PortNo
 	}
 
 	// Build the graph
@@ -158,14 +166,14 @@ func (dg *DeviceGraph) AddPort(lp *voltha.LogicalPort) {
 	dg.graphBuildLock.Lock()
 	defer dg.graphBuildLock.Unlock()
 
-	portId := concatDeviceIdPortId(lp.DeviceId, lp.DevicePortNo)
+	portID := concatDeviceIDPortID(lp.DeviceId, lp.DevicePortNo)
 
 	//	If the port is already part of the boundary ports, do nothing
-	if dg.portExist(portId) {
+	if dg.portExist(portID) {
 		return
 	}
 	// Add the port to the set of boundary ports
-	dg.boundaryPorts[portId] = lp.OfpPort.PortNo
+	dg.boundaryPorts[portID] = lp.OfpPort.PortNo
 
 	// Add the device where this port is located to the device graph. If the device is already added then
 	// only the missing port will be added
@@ -174,20 +182,21 @@ func (dg *DeviceGraph) AddPort(lp *voltha.LogicalPort) {
 
 	if lp.RootPort {
 		// Compute the route from this root port to all non-root ports
-		dg.rootPortsString[portId] = lp.OfpPort.PortNo
+		dg.rootPortsString[portID] = lp.OfpPort.PortNo
 		dg.RootPorts[lp.OfpPort.PortNo] = lp.OfpPort.PortNo
 		dg.Routes = dg.buildPathsToAllNonRootPorts(lp)
 	} else {
 		// Compute the route from this port to all root ports
-		dg.nonRootPortsString[portId] = lp.OfpPort.PortNo
+		dg.nonRootPortsString[portID] = lp.OfpPort.PortNo
 		dg.Routes = dg.buildPathsToAllRootPorts(lp)
 	}
 
 	dg.Print()
 }
 
+// Print prints routes
 func (dg *DeviceGraph) Print() error {
-	log.Debugw("Print", log.Fields{"graph": dg.logicalDeviceId, "boundaryPorts": dg.boundaryPorts})
+	log.Debugw("Print", log.Fields{"graph": dg.logicalDeviceID, "boundaryPorts": dg.boundaryPorts})
 	if level, err := log.GetPackageLogLevel(); err == nil && level == log.DebugLevel {
 		output := ""
 		routeNumber := 1
@@ -199,28 +208,29 @@ func (dg *DeviceGraph) Print() error {
 			}
 			val = val[:len(val)-1]
 			output += fmt.Sprintf("%d:{%s=>%s}   ", routeNumber, key, fmt.Sprintf("[%s]", val))
-			routeNumber += 1
+			routeNumber++
 		}
 		if len(dg.Routes) == 0 {
-			log.Debugw("no-routes-found", log.Fields{"lDeviceId": dg.logicalDeviceId, "Graph": dg.GGraph.String()})
+			log.Debugw("no-routes-found", log.Fields{"lDeviceId": dg.logicalDeviceID, "Graph": dg.GGraph.String()})
 		} else {
-			log.Debugw("graph_routes", log.Fields{"lDeviceId": dg.logicalDeviceId, "Routes": output})
+			log.Debugw("graph_routes", log.Fields{"lDeviceId": dg.logicalDeviceID, "Routes": output})
 		}
 	}
 	return nil
 }
 
+// IsUpToDate returns true if device is up to date
 func (dg *DeviceGraph) IsUpToDate(ld *voltha.LogicalDevice) bool {
 	if ld != nil {
 		if len(dg.boundaryPorts) != len(ld.Ports) {
 			return false
 		}
-		var portId string
+		var portID string
 		var val uint32
 		var exist bool
 		for _, lp := range ld.Ports {
-			portId = concatDeviceIdPortId(lp.DeviceId, lp.DevicePortNo)
-			if val, exist = dg.boundaryPorts[portId]; !exist || val != lp.OfpPort.PortNo {
+			portID = concatDeviceIDPortID(lp.DeviceId, lp.DevicePortNo)
+			if val, exist = dg.boundaryPorts[portID]; !exist || val != lp.OfpPort.PortNo {
 				return false
 			}
 		}
@@ -243,16 +253,17 @@ func (dg *DeviceGraph) getDevice(id string, useCache bool) (*voltha.Device, erro
 		dg.cachedDevicesLock.RUnlock()
 	}
 	//	Not cached
-	if d, err := dg.getDeviceFromModel(id); err != nil {
+	d, err := dg.getDeviceFromModel(id)
+	if err != nil {
 		log.Errorw("device-not-found", log.Fields{"deviceId": id, "error": err})
 		return nil, err
-	} else { // cache it
-		dg.cachedDevicesLock.Lock()
-		dg.cachedDevices[id] = d
-		dg.cachedDevicesLock.Unlock()
-		//log.Debugw("getDevice - returned from model", log.Fields{"deviceId": id})
-		return d, nil
 	}
+	// cache it
+	dg.cachedDevicesLock.Lock()
+	dg.cachedDevices[id] = d
+	dg.cachedDevicesLock.Unlock()
+	//log.Debugw("getDevice - returned from model", log.Fields{"deviceId": id})
+	return d, nil
 }
 
 // addDevice adds a device to a device graph and setup edges that represent the device connections to its peers
@@ -270,25 +281,36 @@ func (dg *DeviceGraph) addDevice(device *voltha.Device, g goraph.Graph, devicesA
 		(*devicesAdded)[device.Id] = device.Id
 	}
 
-	var portId string
-	var peerPortId string
+	var portID string
+	var peerPortID string
 	for _, port := range device.Ports {
-		portId = concatDeviceIdPortId(device.Id, port.PortNo)
-		if _, exist := (*portsAdded)[portId]; !exist {
-			(*portsAdded)[portId] = portId
-			g.AddNode(goraph.NewNode(portId))
-			g.AddEdge(goraph.StringID(device.Id), goraph.StringID(portId), 1)
-			g.AddEdge(goraph.StringID(portId), goraph.StringID(device.Id), 1)
+		portID = concatDeviceIDPortID(device.Id, port.PortNo)
+		if _, exist := (*portsAdded)[portID]; !exist {
+			(*portsAdded)[portID] = portID
+			g.AddNode(goraph.NewNode(portID))
+			err := g.AddEdge(goraph.StringID(device.Id), goraph.StringID(portID), 1)
+			if err != nil {
+				log.Errorw("unable-to-add-edge", log.Fields{"error": err})
+			}
+			err = g.AddEdge(goraph.StringID(portID), goraph.StringID(device.Id), 1)
+			if err != nil {
+				log.Errorw("unable-to-add-edge", log.Fields{"error": err})
+			}
 		}
 		for _, peer := range port.Peers {
 			if _, exist := (*devicesAdded)[peer.DeviceId]; !exist {
 				d, _ := dg.getDevice(peer.DeviceId, true)
 				g = dg.addDevice(d, g, devicesAdded, portsAdded, boundaryPorts)
 			}
-			peerPortId = concatDeviceIdPortId(peer.DeviceId, peer.PortNo)
-			g.AddEdge(goraph.StringID(portId), goraph.StringID(peerPortId), 1)
-			g.AddEdge(goraph.StringID(peerPortId), goraph.StringID(portId), 1)
-
+			peerPortID = concatDeviceIDPortID(peer.DeviceId, peer.PortNo)
+			err := g.AddEdge(goraph.StringID(portID), goraph.StringID(peerPortID), 1)
+			if err != nil {
+				log.Errorw("unable-to-add-edge", log.Fields{"error": err})
+			}
+			err = g.AddEdge(goraph.StringID(peerPortID), goraph.StringID(portID), 1)
+			if err != nil {
+				log.Errorw("unable-to-add-edge", log.Fields{"error": err})
+			}
 		}
 	}
 	return g
@@ -306,13 +328,13 @@ func (dg *DeviceGraph) portExist(id string) bool {
 // on the logical device
 func (dg *DeviceGraph) buildPathsToAllRootPorts(lp *voltha.LogicalPort) map[OFPortLink][]RouteHop {
 	paths := dg.Routes
-	source := concatDeviceIdPortId(lp.DeviceId, lp.DevicePortNo)
+	source := concatDeviceIDPortID(lp.DeviceId, lp.DevicePortNo)
 	sourcePort := lp.OfpPort.PortNo
 	ch := make(chan *ofPortLinkToPath)
 	numBuildRequest := 0
 	for target, targetPort := range dg.rootPortsString {
 		go dg.buildRoute(source, target, sourcePort, targetPort, ch)
-		numBuildRequest += 1
+		numBuildRequest++
 	}
 	responseReceived := 0
 forloop:
@@ -320,18 +342,16 @@ forloop:
 		if responseReceived == numBuildRequest {
 			break
 		}
-		select {
-		case res, ok := <-ch:
-			if !ok {
-				log.Debug("channel closed")
-				break forloop
-			}
-			if res != nil && len(res.path) > 0 {
-				paths[res.link] = res.path
-				paths[OFPortLink{Ingress: res.link.Egress, Egress: res.link.Ingress}] = getReverseRoute(res.path)
-			}
+		res, ok := <-ch
+		if !ok {
+			log.Debug("channel closed")
+			break forloop
 		}
-		responseReceived += 1
+		if res != nil && len(res.path) > 0 {
+			paths[res.link] = res.path
+			paths[OFPortLink{Ingress: res.link.Egress, Egress: res.link.Ingress}] = getReverseRoute(res.path)
+		}
+		responseReceived++
 	}
 	return paths
 }
@@ -340,13 +360,13 @@ forloop:
 // on the logical device
 func (dg *DeviceGraph) buildPathsToAllNonRootPorts(lp *voltha.LogicalPort) map[OFPortLink][]RouteHop {
 	paths := dg.Routes
-	source := concatDeviceIdPortId(lp.DeviceId, lp.DevicePortNo)
+	source := concatDeviceIDPortID(lp.DeviceId, lp.DevicePortNo)
 	sourcePort := lp.OfpPort.PortNo
 	ch := make(chan *ofPortLinkToPath)
 	numBuildRequest := 0
 	for target, targetPort := range dg.nonRootPortsString {
 		go dg.buildRoute(source, target, sourcePort, targetPort, ch)
-		numBuildRequest += 1
+		numBuildRequest++
 	}
 	responseReceived := 0
 forloop:
@@ -354,31 +374,29 @@ forloop:
 		if responseReceived == numBuildRequest {
 			break
 		}
-		select {
-		case res, ok := <-ch:
-			if !ok {
-				log.Debug("channel closed")
-				break forloop
-			}
-			if res != nil && len(res.path) > 0 {
-				paths[res.link] = res.path
-				paths[OFPortLink{Ingress: res.link.Egress, Egress: res.link.Ingress}] = getReverseRoute(res.path)
-			}
+		res, ok := <-ch
+		if !ok {
+			log.Debug("channel closed")
+			break forloop
 		}
-		responseReceived += 1
+		if res != nil && len(res.path) > 0 {
+			paths[res.link] = res.path
+			paths[OFPortLink{Ingress: res.link.Egress, Egress: res.link.Ingress}] = getReverseRoute(res.path)
+		}
+		responseReceived++
 	}
 	return paths
 }
 
 //buildRoute builds a route between a source and a target logical port
-func (dg *DeviceGraph) buildRoute(sourceId, targetId string, sourcePort, targetPort uint32, ch chan *ofPortLinkToPath) {
+func (dg *DeviceGraph) buildRoute(sourceID, targetID string, sourcePort, targetPort uint32, ch chan *ofPortLinkToPath) {
 	var pathIds []goraph.ID
 	path := make([]RouteHop, 0)
 	var err error
 	var hop RouteHop
 	var result *ofPortLinkToPath
 
-	if sourceId == targetId {
+	if sourceID == targetID {
 		ch <- result
 		return
 	}
@@ -394,8 +412,8 @@ func (dg *DeviceGraph) buildRoute(sourceId, targetId string, sourcePort, targetP
 		return
 	}
 
-	if pathIds, _, err = goraph.Dijkstra(dg.GGraph, goraph.StringID(sourceId), goraph.StringID(targetId)); err != nil {
-		log.Errorw("no-path", log.Fields{"sourceId": sourceId, "targetId": targetId, "error": err})
+	if pathIds, _, err = goraph.Dijkstra(dg.GGraph, goraph.StringID(sourceID), goraph.StringID(targetID)); err != nil {
+		log.Errorw("no-path", log.Fields{"sourceId": sourceID, "targetId": targetID, "error": err})
 		ch <- result
 		return
 	}
@@ -403,19 +421,19 @@ func (dg *DeviceGraph) buildRoute(sourceId, targetId string, sourcePort, targetP
 		ch <- result
 		return
 	}
-	var deviceId string
+	var deviceID string
 	var ingressPort uint32
 	var egressPort uint32
 	for i := 0; i < len(pathIds); i = i + 3 {
-		if deviceId, ingressPort, err = splitIntoDeviceIdPortId(pathIds[i].String()); err != nil {
-			log.Errorw("id-error", log.Fields{"sourceId": sourceId, "targetId": targetId, "error": err})
+		if deviceID, ingressPort, err = splitIntoDeviceIDPortID(pathIds[i].String()); err != nil {
+			log.Errorw("id-error", log.Fields{"sourceId": sourceID, "targetId": targetID, "error": err})
 			break
 		}
-		if _, egressPort, err = splitIntoDeviceIdPortId(pathIds[i+2].String()); err != nil {
-			log.Errorw("id-error", log.Fields{"sourceId": sourceId, "targetId": targetId, "error": err})
+		if _, egressPort, err = splitIntoDeviceIDPortID(pathIds[i+2].String()); err != nil {
+			log.Errorw("id-error", log.Fields{"sourceId": sourceID, "targetId": targetID, "error": err})
 			break
 		}
-		hop = RouteHop{Ingress: ingressPort, DeviceID: deviceId, Egress: egressPort}
+		hop = RouteHop{Ingress: ingressPort, DeviceID: deviceID, Egress: egressPort}
 		path = append(path, hop)
 	}
 	result = &ofPortLinkToPath{link: OFPortLink{Ingress: sourcePort, Egress: targetPort}, path: path}
@@ -430,7 +448,7 @@ func (dg *DeviceGraph) buildRoutes() map[OFPortLink][]RouteHop {
 	for source, sourcePort := range dg.boundaryPorts {
 		for target, targetPort := range dg.boundaryPorts {
 			go dg.buildRoute(source, target, sourcePort, targetPort, ch)
-			numBuildRequest += 1
+			numBuildRequest++
 		}
 	}
 	responseReceived := 0
@@ -439,17 +457,15 @@ forloop:
 		if responseReceived == numBuildRequest {
 			break
 		}
-		select {
-		case res, ok := <-ch:
-			if !ok {
-				log.Debug("channel closed")
-				break forloop
-			}
-			if res != nil && len(res.path) > 0 {
-				paths[res.link] = res.path
-			}
+		res, ok := <-ch
+		if !ok {
+			log.Debug("channel closed")
+			break forloop
 		}
-		responseReceived += 1
+		if res != nil && len(res.path) > 0 {
+			paths[res.link] = res.path
+		}
+		responseReceived++
 	}
 	return paths
 }
@@ -467,21 +483,21 @@ func (dg *DeviceGraph) reset() {
 }
 
 //concatDeviceIdPortId formats a portid using the device id and the port number
-func concatDeviceIdPortId(deviceId string, portNo uint32) string {
-	return fmt.Sprintf("%s:%d", deviceId, portNo)
+func concatDeviceIDPortID(deviceID string, portNo uint32) string {
+	return fmt.Sprintf("%s:%d", deviceID, portNo)
 }
 
 // splitIntoDeviceIdPortId extracts the device id and port number from the portId
-func splitIntoDeviceIdPortId(id string) (string, uint32, error) {
+func splitIntoDeviceIDPortID(id string) (string, uint32, error) {
 	result := strings.Split(id, ":")
 	if len(result) != 2 {
-		return "", 0, errors.New(fmt.Sprintf("invalid-id-%s", id))
+		return "", 0, fmt.Errorf("invalid-id-%s", id)
 	}
-	if temp, err := strconv.ParseInt(result[1], 10, 32); err != nil {
-		return "", 0, errors.New(fmt.Sprintf("invalid-id-%s-%s", id, err.Error()))
-	} else {
-		return result[0], uint32(temp), nil
+	temp, err := strconv.ParseInt(result[1], 10, 32)
+	if err != nil {
+		return "", 0, fmt.Errorf("invalid-id-%s-%s", id, err.Error())
 	}
+	return result[0], uint32(temp), nil
 }
 
 //getReverseRoute returns the reverse of the route

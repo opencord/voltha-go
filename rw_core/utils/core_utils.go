@@ -13,24 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package utils
 
 import (
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"os"
 	"reflect"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
+// DeviceID represent device id attribute
 type DeviceID struct {
-	Id string
+	ID string
 }
 
+// LogicalDeviceID rpresent logical device id attribute
 type LogicalDeviceID struct {
-	Id string
+	ID string
 }
 
+// GetHostName returns host name
 func GetHostName() string {
 	return os.Getenv("HOSTNAME")
 }
@@ -87,7 +92,7 @@ func WaitForNilOrErrorResponses(timeout int64, chnls ...chan interface{}) []erro
 			errorsReceived = true
 		}
 		resultsReceived[index] = true
-		remaining -= 1
+		remaining--
 	}
 
 	if errorsReceived {
