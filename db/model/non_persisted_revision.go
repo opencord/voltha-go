@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -20,14 +21,15 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"reflect"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 // TODO: Cache logic will have to be revisited to cleanup unused entries in memory (disabled for now)
@@ -50,6 +52,7 @@ func (s *revCacheSingleton) Delete(path string) {
 var revCacheInstance *revCacheSingleton
 var revCacheOnce sync.Once
 
+// GetRevCache -
 func GetRevCache() *revCacheSingleton {
 	revCacheOnce.Do(func() {
 		revCacheInstance = &revCacheSingleton{Cache: sync.Map{}}
@@ -57,6 +60,7 @@ func GetRevCache() *revCacheSingleton {
 	return revCacheInstance
 }
 
+// NonPersistedRevision -
 type NonPersistedRevision struct {
 	mutex        sync.RWMutex
 	Root         *root
@@ -70,6 +74,7 @@ type NonPersistedRevision struct {
 	lastUpdate   time.Time
 }
 
+// NewNonPersistedRevision -
 func NewNonPersistedRevision(root *root, branch *Branch, data interface{}, children map[string][]Revision) Revision {
 	r := &NonPersistedRevision{}
 	r.Root = root
@@ -80,18 +85,21 @@ func NewNonPersistedRevision(root *root, branch *Branch, data interface{}, child
 	return r
 }
 
+// SetConfig -
 func (npr *NonPersistedRevision) SetConfig(config *DataRevision) {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	npr.Config = config
 }
 
+// GetConfig -
 func (npr *NonPersistedRevision) GetConfig() *DataRevision {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	return npr.Config
 }
 
+// SetAllChildren -
 func (npr *NonPersistedRevision) SetAllChildren(children map[string][]Revision) {
 	npr.childrenLock.Lock()
 	defer npr.childrenLock.Unlock()
@@ -103,6 +111,7 @@ func (npr *NonPersistedRevision) SetAllChildren(children map[string][]Revision) 
 	}
 }
 
+// SetChildren -
 func (npr *NonPersistedRevision) SetChildren(name string, children []Revision) {
 	npr.childrenLock.Lock()
 	defer npr.childrenLock.Unlock()
@@ -111,6 +120,7 @@ func (npr *NonPersistedRevision) SetChildren(name string, children []Revision) {
 	copy(npr.Children[name], children)
 }
 
+// GetAllChildren -
 func (npr *NonPersistedRevision) GetAllChildren() map[string][]Revision {
 	npr.childrenLock.Lock()
 	defer npr.childrenLock.Unlock()
@@ -118,6 +128,7 @@ func (npr *NonPersistedRevision) GetAllChildren() map[string][]Revision {
 	return npr.Children
 }
 
+// GetChildren -
 func (npr *NonPersistedRevision) GetChildren(name string) []Revision {
 	npr.childrenLock.Lock()
 	defer npr.childrenLock.Unlock()
@@ -128,47 +139,56 @@ func (npr *NonPersistedRevision) GetChildren(name string) []Revision {
 	return nil
 }
 
+// SetHash -
 func (npr *NonPersistedRevision) SetHash(hash string) {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	npr.Hash = hash
 }
 
+// GetHash -
 func (npr *NonPersistedRevision) GetHash() string {
 	//npr.mutex.Lock()
 	//defer npr.mutex.Unlock()
 	return npr.Hash
 }
 
+// ClearHash -
 func (npr *NonPersistedRevision) ClearHash() {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	npr.Hash = ""
 }
 
+// GetName -
 func (npr *NonPersistedRevision) GetName() string {
 	//npr.mutex.Lock()
 	//defer npr.mutex.Unlock()
 	return npr.Name
 }
 
+// SetName -
 func (npr *NonPersistedRevision) SetName(name string) {
 	//npr.mutex.Lock()
 	//defer npr.mutex.Unlock()
 	npr.Name = name
 }
+
+// SetBranch -
 func (npr *NonPersistedRevision) SetBranch(branch *Branch) {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	npr.Branch = branch
 }
 
+// GetBranch -
 func (npr *NonPersistedRevision) GetBranch() *Branch {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	return npr.Branch
 }
 
+// GetData -
 func (npr *NonPersistedRevision) GetData() interface{} {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
@@ -178,12 +198,14 @@ func (npr *NonPersistedRevision) GetData() interface{} {
 	return npr.Config.Data
 }
 
+// GetNode -
 func (npr *NonPersistedRevision) GetNode() *node {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 	return npr.Branch.Node
 }
 
+// Finalize -
 func (npr *NonPersistedRevision) Finalize(skipOnExist bool) {
 	npr.Hash = npr.hashContent()
 }
@@ -243,8 +265,8 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 					childData := rev.Get(depth - 1)
 					foundEntry := false
 					for i := 0; i < childDataHolder.Len(); i++ {
-						cdh_if := childDataHolder.Index(i).Interface()
-						if cdh_if.(proto.Message).String() == childData.(proto.Message).String() {
+						cdhIf := childDataHolder.Index(i).Interface()
+						if cdhIf.(proto.Message).String() == childData.(proto.Message).String() {
 							foundEntry = true
 							break
 						}
@@ -255,7 +277,7 @@ func (npr *NonPersistedRevision) Get(depth int) interface{} {
 					}
 				}
 			} else {
-				if revs := npr.GetBranch().GetLatest().GetChildren(fieldName); revs != nil && len(revs) > 0 {
+				if revs := npr.GetBranch().GetLatest().GetChildren(fieldName); revs != nil {
 					rev := revs[0]
 					if rev != nil {
 						childData := rev.Get(depth - 1)
@@ -459,7 +481,7 @@ func (npr *NonPersistedRevision) ChildDrop(childType string, childHash string) {
 	}
 }
 
-/// ChildDropByName will remove a child entry matching the type and name
+// ChildDropByName will remove a child entry matching the type and name
 func (npr *NonPersistedRevision) ChildDropByName(childName string) {
 	// Extract device type
 	parts := strings.SplitN(childName, "/", 2)
@@ -478,17 +500,19 @@ func (npr *NonPersistedRevision) ChildDropByName(childName string) {
 	}
 }
 
+// SetLastUpdate -
 func (npr *NonPersistedRevision) SetLastUpdate(ts ...time.Time) {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 
-	if ts != nil && len(ts) > 0 {
+	if ts != nil {
 		npr.lastUpdate = ts[0]
 	} else {
 		npr.lastUpdate = time.Now()
 	}
 }
 
+// GetLastUpdate -
 func (npr *NonPersistedRevision) GetLastUpdate() time.Time {
 	npr.mutex.RLock()
 	defer npr.mutex.RUnlock()
@@ -496,15 +520,18 @@ func (npr *NonPersistedRevision) GetLastUpdate() time.Time {
 	return npr.lastUpdate
 }
 
+// LoadFromPersistence -
 func (npr *NonPersistedRevision) LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) []Revision {
 	// stub... required by interface
 	return nil
 }
 
+// SetupWatch -
 func (npr *NonPersistedRevision) SetupWatch(key string) {
 	// stub ... required by interface
 }
 
+// StorageDrop -
 func (npr *NonPersistedRevision) StorageDrop(txid string, includeConfig bool) {
 	// stub ... required by interface
 }
