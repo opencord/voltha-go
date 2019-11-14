@@ -123,7 +123,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 	}
 
 	agent.deviceProxy = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceID, false)
-	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
+	agent.deviceProxy.RegisterCallback(model.PostUpdate, agent.processUpdate)
 
 	log.Debugw("device-agent-started", log.Fields{"deviceId": agent.deviceID})
 	return device, nil
