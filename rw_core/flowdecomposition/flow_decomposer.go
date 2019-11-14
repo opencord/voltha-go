@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package flow_decomposition
+package flowdecomposition
 
 import (
 	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-go/rw_core/coreIf"
+	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	fu "github.com/opencord/voltha-lib-go/v2/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -27,21 +27,26 @@ import (
 )
 
 func init() {
-	log.AddPackage(log.JSON, log.DebugLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.DebugLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 }
 
+// FlowDecomposer represent flow decomposer attribute
 type FlowDecomposer struct {
-	deviceMgr coreIf.DeviceManager
+	deviceMgr coreif.DeviceManager
 }
 
-func NewFlowDecomposer(deviceMgr coreIf.DeviceManager) *FlowDecomposer {
+// NewFlowDecomposer creates flow decomposer instance
+func NewFlowDecomposer(deviceMgr coreif.DeviceManager) *FlowDecomposer {
 	var decomposer FlowDecomposer
 	decomposer.deviceMgr = deviceMgr
 	return &decomposer
 }
 
 //DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
-func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) *fu.DeviceRules {
+func (fd *FlowDecomposer) DecomposeRules(agent coreif.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) *fu.DeviceRules {
 	deviceRules := *fu.NewDeviceRules()
 	devicesToUpdate := make(map[string]string)
 
@@ -53,10 +58,10 @@ func (fd *FlowDecomposer) DecomposeRules(agent coreIf.LogicalDeviceAgent, flows 
 	var decomposedRules *fu.DeviceRules
 	for _, flow := range flows.Items {
 		decomposedRules = fd.decomposeFlow(agent, flow, groupMap)
-		for deviceId, flowAndGroups := range decomposedRules.Rules {
-			deviceRules.CreateEntryIfNotExist(deviceId)
-			deviceRules.Rules[deviceId].AddFrom(flowAndGroups)
-			devicesToUpdate[deviceId] = deviceId
+		for deviceID, flowAndGroups := range decomposedRules.Rules {
+			deviceRules.CreateEntryIfNotExist(deviceID)
+			deviceRules.Rules[deviceID].AddFrom(flowAndGroups)
+			devicesToUpdate[deviceID] = deviceID
 		}
 	}
 	return deviceRules.FilterRules(devicesToUpdate)
@@ -71,9 +76,9 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 
 	newDeviceRules := dr.Copy()
 	//	Check whether we are dealing with a parent device
-	for deviceId, fg := range dr.GetRules() {
-		if root, _ := fd.deviceMgr.IsRootDevice(deviceId); root {
-			newDeviceRules.ClearFlows(deviceId)
+	for deviceID, fg := range dr.GetRules() {
+		if root, _ := fd.deviceMgr.IsRootDevice(deviceID); root {
+			newDeviceRules.ClearFlows(deviceID)
 			for i := 0; i < fg.Flows.Len(); i++ {
 				f := fg.GetFlow(i)
 				UpdateOutPortNo := false
@@ -91,7 +96,7 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 				}
 				// Update flow Id as a change in the instruction field will result in a new flow ID
 				f.Id = fu.HashFlowStats(f)
-				newDeviceRules.AddFlow(deviceId, (proto.Clone(f)).(*ofp.OfpFlowStats))
+				newDeviceRules.AddFlow(deviceID, (proto.Clone(f)).(*ofp.OfpFlowStats))
 			}
 		}
 	}
@@ -100,12 +105,12 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 }
 
 //processControllerBoundFlow decomposes trap flows
-func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
+func (fd *FlowDecomposer) processControllerBoundFlow(agent coreif.LogicalDeviceAgent, route []graph.RouteHop,
 	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
 
 	log.Debugw("trap-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "flow": flow})
 	deviceRules := fu.NewDeviceRules()
-	meterId := fu.GetMeterIdFromFlow(flow)
+	meterID := fu.GetMeterIdFromFlow(flow)
 	metadataFromwriteMetadata := fu.GetMetadataFromWriteMetadataAction(flow)
 
 	ingressHop := route[0]
@@ -116,8 +121,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 		// Trap flow for NNI port
 		log.Debug("trap-nni")
 
-		var fa *fu.FlowArgs
-		fa = &fu.FlowArgs{
+		fa := &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(egressHop.Egress),
@@ -142,9 +146,8 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 		}
 		for _, inputPort := range inPorts {
 			// Upstream flow on parent (olt) device
-			var faParent *fu.FlowArgs
-			faParent = &fu.FlowArgs{
-				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+			faParent := &fu.FlowArgs{
+				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					fu.InPort(egressHop.Ingress),
 					fu.TunnelId(uint64(inputPort)),
@@ -178,9 +181,8 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 					fu.Output(ingressHop.Egress),
 				}
 			}
-			var faChild *fu.FlowArgs
-			faChild = &fu.FlowArgs{
-				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+			faChild := &fu.FlowArgs{
+				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					fu.InPort(ingressHop.Ingress),
 					fu.TunnelId(uint64(inputPort)),
@@ -209,13 +211,13 @@ func (fd *FlowDecomposer) processControllerBoundFlow(agent coreIf.LogicalDeviceA
 // upstream needs to get Q-in-Q treatment and that this is expressed via two flow rules, the first using the
 // goto-statement. We also assume that the inner tag is applied at the ONU, while the outer tag is
 // applied at the OLT
-func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.LogicalDeviceAgent,
+func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreif.LogicalDeviceAgent,
 	route []graph.RouteHop, inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
 
 	log.Debugw("upstream-non-controller-bound-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
 	deviceRules := fu.NewDeviceRules()
 
-	meterId := fu.GetMeterIdFromFlow(flow)
+	meterID := fu.GetMeterIdFromFlow(flow)
 	metadataFromwriteMetadata := fu.GetMetadataFromWriteMetadataAction(flow)
 
 	ingressHop := route[0]
@@ -227,9 +229,8 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 			log.Warnw("outPort-should-not-be-specified", log.Fields{"outPortNo": outPortNo})
 			return deviceRules
 		}
-		var fa *fu.FlowArgs
-		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+		fa := &fu.FlowArgs{
+			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(ingressHop.Ingress),
 				fu.TunnelId(uint64(inPortNo)),
@@ -247,9 +248,8 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 	} else if flow.TableId == 1 && outPortNo != 0 {
 		log.Debugw("decomposing-olt-flow-in-upstream-has-next-table", log.Fields{"table_id": flow.TableId})
-		var fa *fu.FlowArgs
-		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+		fa := &fu.FlowArgs{
+			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(egressHop.Ingress),
 				fu.TunnelId(uint64(inPortNo)),
@@ -271,11 +271,11 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(agent coreIf.Log
 }
 
 // processDownstreamFlowWithNextTable decomposes downstream flows containing next table ID instructions
-func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
+func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreif.LogicalDeviceAgent, route []graph.RouteHop,
 	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
 	log.Debugw("decomposing-olt-flow-in-downstream-flow-with-next-table", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
 	deviceRules := fu.NewDeviceRules()
-	meterId := fu.GetMeterIdFromFlow(flow)
+	meterID := fu.GetMeterIdFromFlow(flow)
 	metadataFromwriteMetadata := fu.GetMetadataFromWriteMetadataAction(flow)
 
 	if outPortNo != 0 {
@@ -302,7 +302,6 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 				return deviceRules
 			case 2:
 				log.Debugw("route-found", log.Fields{"ingressHop": ingressHop, "egressHop": egressHop})
-				break
 			default:
 				log.Errorw("invalid-route-length", log.Fields{"routeLen": len(route)})
 				return deviceRules
@@ -315,9 +314,8 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 			//TODO: Delete flow
 			return deviceRules
 		}
-		var fa *fu.FlowArgs
-		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+		fa := &fu.FlowArgs{
+			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(ingressHop.Ingress),
 				fu.Metadata_ofp(uint64(innerTag)),
@@ -336,9 +334,8 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 	} else { // Create standard flow
 		log.Debugw("creating-standard-flow", log.Fields{"flow": flow})
-		var fa *fu.FlowArgs
-		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+		fa := &fu.FlowArgs{
+			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(ingressHop.Ingress),
 				fu.TunnelId(uint64(inPortNo)),
@@ -360,7 +357,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(agent coreIf.Logica
 }
 
 // processUnicastFlow decomposes unicast flows
-func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
+func (fd *FlowDecomposer) processUnicastFlow(agent coreif.LogicalDeviceAgent, route []graph.RouteHop,
 	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) *fu.DeviceRules {
 
 	log.Debugw("decomposing-onu-flow-in-downstream-unicast-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
@@ -368,11 +365,10 @@ func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, ro
 
 	egressHop := route[1]
 
-	meterId := fu.GetMeterIdFromFlow(flow)
+	meterID := fu.GetMeterIdFromFlow(flow)
 	metadataFromwriteMetadata := fu.GetMetadataFromWriteMetadataAction(flow)
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterId), "write_metadata": metadataFromwriteMetadata},
+	fa := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(egressHop.Ingress),
 		},
@@ -392,8 +388,8 @@ func (fd *FlowDecomposer) processUnicastFlow(agent coreIf.LogicalDeviceAgent, ro
 }
 
 // processMulticastFlow decompose multicast flows
-func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, route []graph.RouteHop,
-	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, grpId uint32,
+func (fd *FlowDecomposer) processMulticastFlow(agent coreif.LogicalDeviceAgent, route []graph.RouteHop,
+	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats, grpID uint32,
 	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
 
 	log.Debugw("multicast-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
@@ -402,12 +398,12 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, 
 	//having no Group yet is the same as having a Group with no buckets
 	var grp *ofp.OfpGroupEntry
 	var ok bool
-	if grp, ok = groupMap[grpId]; !ok {
-		log.Warnw("Group-id-not-present-in-map", log.Fields{"grpId": grpId, "groupMap": groupMap})
+	if grp, ok = groupMap[grpID]; !ok {
+		log.Warnw("Group-id-not-present-in-map", log.Fields{"grpId": grpID, "groupMap": groupMap})
 		return deviceRules
 	}
 	if grp == nil || grp.Desc == nil {
-		log.Warnw("Group-or-desc-nil", log.Fields{"grpId": grpId, "grp": grp})
+		log.Warnw("Group-or-desc-nil", log.Fields{"grpId": grpID, "grp": grp})
 		return deviceRules
 	}
 	for _, bucket := range grp.Desc.Buckets {
@@ -428,7 +424,6 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, 
 			return deviceRules
 		case 2:
 			log.Debugw("route-found", log.Fields{"ingressHop": route2[0], "egressHop": route2[1]})
-			break
 		default:
 			log.Errorw("invalid-route-length", log.Fields{"routeLen": len(route)})
 			return deviceRules
@@ -443,8 +438,7 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, 
 			return deviceRules
 		}
 		// Set the parent device flow
-		var fa *fu.FlowArgs
-		fa = &fu.FlowArgs{
+		fa := &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(ingressHop.Ingress),
@@ -485,7 +479,7 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreIf.LogicalDeviceAgent, 
 }
 
 // decomposeFlow decomposes a flow for a logical device into flows for each physical device
-func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *ofp.OfpFlowStats,
+func (fd *FlowDecomposer) decomposeFlow(agent coreif.LogicalDeviceAgent, flow *ofp.OfpFlowStats,
 	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
 
 	inPortNo := fu.GetInPort(flow)
@@ -500,7 +494,6 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 		return deviceRules
 	case 2:
 		log.Debugw("route-found", log.Fields{"ingressHop": route[0], "egressHop": route[1]})
-		break
 	default:
 		log.Errorw("invalid-route-length", log.Fields{"routeLen": len(route)})
 		return deviceRules
@@ -526,9 +519,9 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 		} else if flow.TableId == 1 && outPortNo != 0 { // Unicast ONU flow DL
 			log.Debugw("processOnuDownstreamUnicastFlow", log.Fields{"flows": flow})
 			deviceRules = fd.processUnicastFlow(agent, route, inPortNo, outPortNo, flow)
-		} else if grpId := fu.GetGroup(flow); grpId != 0 && flow.TableId == 0 { //Multicast
+		} else if grpID := fu.GetGroup(flow); grpID != 0 && flow.TableId == 0 { //Multicast
 			log.Debugw("processMulticastFlow", log.Fields{"flows": flow})
-			deviceRules = fd.processMulticastFlow(agent, route, inPortNo, outPortNo, flow, grpId, groupMap)
+			deviceRules = fd.processMulticastFlow(agent, route, inPortNo, outPortNo, flow, grpID, groupMap)
 		} else {
 			log.Errorw("unknown-downstream-flow", log.Fields{"flow": *flow})
 		}

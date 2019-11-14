@@ -16,13 +16,14 @@
 package utils
 
 import (
+	"math/rand"
+	"testing"
+	"time"
+
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math/rand"
-	"testing"
-	"time"
 )
 
 var (
@@ -31,7 +32,10 @@ var (
 )
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 	timeoutError = status.Errorf(codes.Aborted, "timeout")
 	taskFailureError = status.Error(codes.Internal, "test failure task")
 }
@@ -56,7 +60,7 @@ func runMultipleTasks(timeout, numTasks, taskDurationRange, numSuccessfulTask, n
 		responses[i] = NewResponse()
 		if numSuccessfulTaskCreated < numSuccessfulTask {
 			go runSuccessfulTask(responses[i], taskDurationRange)
-			numSuccessfulTaskCreated += 1
+			numSuccessfulTaskCreated++
 			continue
 		}
 		go runFailureTask(responses[i], taskDurationRange)
@@ -71,11 +75,11 @@ func getNumSuccessFailure(inputs []error) (numSuccess, numFailure, numTimeout in
 	for _, input := range inputs {
 		if input != nil {
 			if input.Error() == timeoutError.Error() {
-				numTimeout += 1
+				numTimeout++
 			}
-			numFailure += 1
+			numFailure++
 		} else {
-			numSuccess += 1
+			numSuccess++
 		}
 	}
 	return

@@ -13,27 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package utils
 
 import (
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"os"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
+// DeviceID represent device id attribute
 type DeviceID struct {
-	Id string
+	ID string
 }
 
+// LogicalDeviceID rpresent logical device id attribute
 type LogicalDeviceID struct {
-	Id string
+	ID string
 }
 
+// GetHostName returns host name
 func GetHostName() string {
 	return os.Getenv("HOSTNAME")
 }
 
+// Response -
 type Response struct {
 	*response
 }
@@ -43,6 +49,7 @@ type response struct {
 	done bool
 }
 
+// NewResponse -
 func NewResponse() Response {
 	return Response{
 		&response{
