@@ -16,15 +16,16 @@
 package model
 
 import (
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProfiling(t *testing.T) {
 	want := &profiling{}
-	result := GetProfiling()
+	result := getProfiling()
 	if reflect.TypeOf(result) != reflect.TypeOf(want) {
 		t.Errorf("GetProfiling() = result: %v, want: %v", result, want)
 	}
@@ -40,39 +41,39 @@ func TestProfiling(t *testing.T) {
 	log.Info("/***** Unit Test Begin: Profiling Report: *****/")
 	result.Report()
 
-	GetProfiling().AddToDatabaseRetrieveTime(2.0)
+	getProfiling().AddToDatabaseRetrieveTime(2.0)
 	assert.Equal(t, 2.0, result.DatabaseRetrieveTime)
 	assert.Equal(t, 1, result.DatabaseRetrieveCount)
 	result.AddToDatabaseRetrieveTime(3.0)
-	assert.Equal(t, 5.0, GetProfiling().DatabaseRetrieveTime)
-	assert.Equal(t, 2, GetProfiling().DatabaseRetrieveCount)
+	assert.Equal(t, 5.0, getProfiling().DatabaseRetrieveTime)
+	assert.Equal(t, 2, getProfiling().DatabaseRetrieveCount)
 
-	GetProfiling().AddToInMemoryModelTime(2.0)
+	getProfiling().AddToInMemoryModelTime(2.0)
 	assert.Equal(t, 2.0, result.InMemoryModelTime)
 	assert.Equal(t, 1, result.InMemoryModelCount)
 	result.AddToInMemoryModelTime(3.0)
-	assert.Equal(t, 5.0, GetProfiling().InMemoryModelTime)
-	assert.Equal(t, 2, GetProfiling().InMemoryModelCount)
+	assert.Equal(t, 5.0, getProfiling().InMemoryModelTime)
+	assert.Equal(t, 2, getProfiling().InMemoryModelCount)
 
-	GetProfiling().AddToInMemoryProcessTime(2.0)
+	getProfiling().AddToInMemoryProcessTime(2.0)
 	assert.Equal(t, 2.0, result.InMemoryProcessTime)
 	result.AddToInMemoryProcessTime(3.0)
-	assert.Equal(t, 5.0, GetProfiling().InMemoryProcessTime)
+	assert.Equal(t, 5.0, getProfiling().InMemoryProcessTime)
 
-	GetProfiling().AddToDatabaseStoreTime(2.0)
+	getProfiling().AddToDatabaseStoreTime(2.0)
 	assert.Equal(t, 2.0, result.DatabaseStoreTime)
 	result.AddToDatabaseStoreTime(3.0)
-	assert.Equal(t, 5.0, GetProfiling().DatabaseStoreTime)
+	assert.Equal(t, 5.0, getProfiling().DatabaseStoreTime)
 
-	GetProfiling().AddToInMemoryLockTime(2.0)
+	getProfiling().AddToInMemoryLockTime(2.0)
 	assert.Equal(t, 2.0, result.InMemoryLockTime)
 	assert.Equal(t, 1, result.InMemoryLockCount)
 	result.AddToInMemoryLockTime(3.0)
-	assert.Equal(t, 5.0, GetProfiling().InMemoryLockTime)
-	assert.Equal(t, 2, GetProfiling().InMemoryLockCount)
+	assert.Equal(t, 5.0, getProfiling().InMemoryLockTime)
+	assert.Equal(t, 2, getProfiling().InMemoryLockCount)
 
 	log.Info("/***** Unit Test End: Profiling Report: *****/")
-	GetProfiling().Report()
+	getProfiling().Report()
 
 	result.Reset()
 }
