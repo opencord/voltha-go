@@ -17,6 +17,7 @@ package core
 
 import (
 	"github.com/opencord/voltha-go/rw_core/coreIf"
+	"github.com/opencord/voltha-go/rw_core/mocks"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
@@ -28,60 +29,17 @@ var transitionMap *TransitionMap
 var tdm coreIf.DeviceManager
 
 type testDeviceManager struct {
+	mocks.DeviceManager
 }
 
 func newTestDeviceManager() *testDeviceManager {
 	return &testDeviceManager{}
 }
 
-func (tdm *testDeviceManager) GetDevice(string) (*voltha.Device, error) {
-	return nil, nil
-}
-
-func (tdm *testDeviceManager) IsRootDevice(string) (bool, error) {
-	return false, nil
-}
-
-func (tdm *testDeviceManager) NotifyInvalidTransition(pto *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) SetAdminStateToEnable(to *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) CreateLogicalDevice(to *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) SetupUNILogicalPorts(to *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DisableAllChildDevices(to *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DeleteLogicalDevice(to *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DeleteLogicalPorts(to *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DeleteAllChildDevices(to *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) RunPostDeviceDelete(to *voltha.Device) error {
-	return nil
-}
-
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
-	//log.UpdateAllLoggers(log.Fields{"instanceId": "device-state-transition"})
-	//log.SetAllLogLevel(log.DebugLevel)
+	if _, err := log.AddPackage(log.JSON, log.WarnLevel, nil); err != nil {
+		log.Fatal("failure-adding-package-core")
+	}
 	tdm = newTestDeviceManager()
 	transitionMap = NewTransitionMap(tdm)
 }

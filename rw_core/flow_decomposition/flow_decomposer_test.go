@@ -18,6 +18,7 @@ package flow_decomposition
 import (
 	"errors"
 	"github.com/opencord/voltha-go/rw_core/graph"
+	"github.com/opencord/voltha-go/rw_core/mocks"
 	fu "github.com/opencord/voltha-lib-go/v2/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v2/go/openflow_13"
@@ -43,6 +44,7 @@ func init() {
 }
 
 type testDeviceManager struct {
+	mocks.DeviceManager
 	devices map[string]*voltha.Device
 }
 
@@ -108,42 +110,6 @@ func (tdm *testDeviceManager) IsRootDevice(deviceId string) (bool, error) {
 		return d.Root, nil
 	}
 	return false, errors.New("ABSENT.")
-}
-
-func (tdm *testDeviceManager) NotifyInvalidTransition(pcDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) SetAdminStateToEnable(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) CreateLogicalDevice(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) SetupUNILogicalPorts(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DisableAllChildDevices(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DeleteLogicalDevice(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DeleteLogicalPorts(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) DeleteAllChildDevices(cDevice *voltha.Device) error {
-	return nil
-}
-
-func (tdm *testDeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
-	return nil
 }
 
 type testFlowDecomposer struct {
