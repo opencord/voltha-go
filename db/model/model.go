@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -20,18 +21,19 @@ import (
 )
 
 func init() {
-	log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"})
-	defer log.CleanUp()
+	if _, err := log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"}); err != nil {
+		log.Errorw("Unable to register package to the log map", log.Fields{"error": err})
+	}
 }
 
 const (
-	// period to determine when data requires a refresh (in milliseconds)
+	// DataRefreshPeriod is period to determine when data requires a refresh (in milliseconds)
 	// TODO: make this configurable?
 	DataRefreshPeriod int64 = 5000
 
-	// Attribute used to store a timestamp in the context object
+	// RequestTimestamp attribute used to store a timestamp in the context object
 	RequestTimestamp = "request-timestamp"
 
-	// Time limit for a KV path reservation (in seconds)
+	// ReservationTTL is time limit for a KV path reservation (in seconds)
 	ReservationTTL int64 = 180
 )

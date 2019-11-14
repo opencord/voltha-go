@@ -21,9 +21,10 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"reflect"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"reflect"
 )
 
 // DataRevision stores the data associated to a revision along with its calculated checksum hash value
