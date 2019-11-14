@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -20,10 +21,19 @@ import (
 )
 
 func init() {
-	log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"})
-	defer log.CleanUp()
+	_, err := log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"})
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
+	defer func() {
+		err = log.CleanUp()
+		if err != nil {
+			log.Errorw("unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
+		}
+	}()
 }
 
+// constants -
 const (
 	// period to determine when data requires a refresh (in milliseconds)
 	// TODO: make this configurable?
