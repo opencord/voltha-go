@@ -18,6 +18,9 @@ package core
 import (
 	"context"
 	"crypto/rand"
+	"testing"
+	"time"
+
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
 	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
@@ -28,14 +31,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"testing"
-	"time"
 )
 
 const (
 	coreName       = "rw_core"
 	adapterName    = "adapter_mock"
-	coreInstanceId = "1000"
+	coreInstanceID = "1000"
 )
 
 var (
@@ -47,7 +48,7 @@ var (
 )
 
 func init() {
-	if _, err := log.SetDefaultLogger(log.JSON, 0, log.Fields{"instanceId": coreInstanceId}); err != nil {
+	if _, err := log.SetDefaultLogger(log.JSON, 0, log.Fields{"instanceId": coreInstanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	// Set the log level to Warning
@@ -65,17 +66,17 @@ func init() {
 		log.Fatalw("Failure-creating-core-intercontainerProxy", log.Fields{"error": err})
 
 	}
-	if err := coreKafkaICProxy.Start(); err != nil {
+	if err = coreKafkaICProxy.Start(); err != nil {
 		log.Fatalw("Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
-	if err := coreKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: coreName}, 0); err != nil {
+	if err = coreKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: coreName}, 0); err != nil {
 		log.Fatalw("Failure-subscribing-core-request-handler", log.Fields{"error": err})
 	}
 
 	// Setup adapter inter-container proxy and adapter request handler
 	adapterCoreProxy := com.NewCoreProxy(nil, adapterName, coreName)
 	adapter = cm.NewAdapter(adapterCoreProxy)
-	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceId, adapter, adapterCoreProxy)
+	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
 	if adapterKafkaICProxy, err = kafka.NewInterContainerProxy(
 		kafka.MsgClient(kc),
 		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}),

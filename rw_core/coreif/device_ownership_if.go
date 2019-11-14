@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package coreIf
+
+package coreif
 
 import (
 	"context"
 )
 
+// DeviceOwnership represent device ownership related methods
 type DeviceOwnership interface {
 	Start(ctx context.Context)
 	Stop(ctx context.Context)
