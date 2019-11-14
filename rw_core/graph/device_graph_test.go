@@ -33,24 +33,24 @@ var (
 	ld              voltha.LogicalDevice
 	olt             voltha.Device
 	onus            map[int][]voltha.Device
-	logicalDeviceId string
-	oltDeviceId     string
+	logicalDeviceID string
+	oltDeviceID     string
 	numCalled       int
 	lock            sync.RWMutex
 )
 
 func init() {
-	logicalDeviceId = "ld"
-	oltDeviceId = "olt"
+	logicalDeviceID = "ld"
+	oltDeviceID = "olt"
 	lock = sync.RWMutex{}
 }
 
 func setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu int) {
 	// Create the OLT and add the NNI ports
-	olt = voltha.Device{Id: oltDeviceId, ParentId: logicalDeviceId}
+	olt = voltha.Device{Id: oltDeviceID, ParentId: logicalDeviceID}
 	olt.Ports = make([]*voltha.Port, 0)
 	for nniPort := 1; nniPort < numNNIPort+1; nniPort++ {
-		p := voltha.Port{PortNo: uint32(nniPort), DeviceId: oltDeviceId, Type: voltha.Port_ETHERNET_NNI}
+		p := voltha.Port{PortNo: uint32(nniPort), DeviceId: oltDeviceID, Type: voltha.Port_ETHERNET_NNI}
 		olt.Ports = append(olt.Ports, &p)
 	}
 
@@ -60,14 +60,14 @@ func setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu
 		onusOnPon := make([]voltha.Device, 0)
 		var onu voltha.Device
 		oltPeerPort := uint32(pPortNo)
-		oltPonPort := voltha.Port{PortNo: uint32(pPortNo), DeviceId: oltDeviceId, Type: voltha.Port_PON_OLT}
+		oltPonPort := voltha.Port{PortNo: uint32(pPortNo), DeviceId: oltDeviceID, Type: voltha.Port_PON_OLT}
 		oltPonPort.Peers = make([]*voltha.Port_PeerPort, 0)
 		for i := 0; i < numOnuPerOltPonPort; i++ {
 			id := fmt.Sprintf("%d-onu-%d", pPortNo, i)
-			onu = voltha.Device{Id: id, ParentId: oltDeviceId, ParentPortNo: uint32(pPortNo)}
+			onu = voltha.Device{Id: id, ParentId: oltDeviceID, ParentPortNo: uint32(pPortNo)}
 			ponPort := voltha.Port{PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
 			ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
-			peerPort := voltha.Port_PeerPort{DeviceId: oltDeviceId, PortNo: oltPeerPort}
+			peerPort := voltha.Port_PeerPort{DeviceId: oltDeviceID, PortNo: oltPeerPort}
 			ponPort.Peers = append(ponPort.Peers, &peerPort)
 			onu.Ports = make([]*voltha.Port, 0)
 			onu.Ports = append(onu.Ports, &ponPort)
@@ -84,7 +84,7 @@ func setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu
 	}
 
 	// Create the logical device
-	ld = voltha.LogicalDevice{Id: logicalDeviceId}
+	ld = voltha.LogicalDevice{Id: logicalDeviceID}
 	ld.Ports = make([]*voltha.LogicalPort, 0)
 	ofpPortNo := 1
 	var id string
@@ -114,7 +114,7 @@ func setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu
 
 func GetDeviceHelper(id string) (*voltha.Device, error) {
 	lock.Lock()
-	numCalled += 1
+	numCalled++
 	lock.Unlock()
 	if id == "olt" {
 		return &olt, nil
@@ -146,7 +146,7 @@ func TestGetRoutesOneShot(t *testing.T) {
 	fmt.Println(fmt.Sprintf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d", len(ld.Ports), numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
 	// Create a device graph and computes Routes
 	start := time.Now()
-	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	dg := NewDeviceGraph(logicalDeviceID, getDevice)
 	dg.ComputeRoutes(ld.Ports)
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms  Total Routes:%d", time.Since(start)/time.Millisecond, len(dg.Routes)))
@@ -167,7 +167,7 @@ func TestGetRoutesPerPort(t *testing.T) {
 	// Create a device graph and computes Routes
 	start := time.Now()
 	var pt time.Time
-	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	dg := NewDeviceGraph(logicalDeviceID, getDevice)
 	for k, lp := range ld.Ports {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
@@ -193,7 +193,7 @@ func TestGetRoutesPerPortMultipleUNIs(t *testing.T) {
 	// Create a device graph and computes Routes
 	start := time.Now()
 	var pt time.Time
-	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	dg := NewDeviceGraph(logicalDeviceID, getDevice)
 	for k, lp := range ld.Ports {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
@@ -220,7 +220,7 @@ func TestGetRoutesPerPortNoUNI(t *testing.T) {
 	// Create a device graph and computes Routes
 	start := time.Now()
 	var pt time.Time
-	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	dg := NewDeviceGraph(logicalDeviceID, getDevice)
 	for k, lp := range ld.Ports {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
@@ -247,7 +247,7 @@ func TestGetRoutesPerPortNoONU(t *testing.T) {
 	// Create a device graph and computes Routes
 	start := time.Now()
 	var pt time.Time
-	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	dg := NewDeviceGraph(logicalDeviceID, getDevice)
 	for k, lp := range ld.Ports {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
@@ -274,7 +274,7 @@ func TestGetRoutesPerPortNoNNI(t *testing.T) {
 	// Create a device graph and computes Routes
 	start := time.Now()
 	var pt time.Time
-	dg := NewDeviceGraph(logicalDeviceId, getDevice)
+	dg := NewDeviceGraph(logicalDeviceID, getDevice)
 	for k, lp := range ld.Ports {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
@@ -20,9 +21,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
-	fd "github.com/opencord/voltha-go/rw_core/flow_decomposition"
+	fd "github.com/opencord/voltha-go/rw_core/flowdecomposition"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v2/pkg/flows"
@@ -32,14 +37,12 @@ import (
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
-	"sync"
-	"time"
 )
 
+// LogicalDeviceAgent represent attributes of logical device agent
 type LogicalDeviceAgent struct {
-	logicalDeviceId    string
-	rootDeviceId       string
+	logicalDeviceID    string
+	rootDeviceID       string
 	deviceMgr          *DeviceManager
 	ldeviceMgr         *LogicalDeviceManager
 	clusterDataProxy   *model.Proxy
@@ -59,13 +62,13 @@ type LogicalDeviceAgent struct {
 	defaultTimeout     int64
 }
 
-func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDeviceManager,
+func newLogicalDeviceAgent(id string, deviceID string, ldeviceMgr *LogicalDeviceManager,
 	deviceMgr *DeviceManager,
 	cdProxy *model.Proxy, timeout int64) *LogicalDeviceAgent {
 	var agent LogicalDeviceAgent
 	agent.exitChannel = make(chan int, 1)
-	agent.logicalDeviceId = id
-	agent.rootDeviceId = deviceId
+	agent.logicalDeviceID = id
+	agent.rootDeviceID = deviceID
 	agent.deviceMgr = deviceMgr
 	agent.clusterDataProxy = cdProxy
 	agent.ldeviceMgr = ldeviceMgr
@@ -82,21 +85,21 @@ func newLogicalDeviceAgent(id string, deviceId string, ldeviceMgr *LogicalDevice
 
 // start creates the logical device and add it to the data model
 func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) error {
-	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceId, "loadFromdB": loadFromdB})
+	log.Infow("starting-logical_device-agent", log.Fields{"logicaldeviceId": agent.logicalDeviceID, "loadFromdB": loadFromdB})
 	var ld *voltha.LogicalDevice
 	if !loadFromdB {
 		//Build the logical device based on information retrieved from the device adapter
 		var switchCap *ic.SwitchCapability
 		var err error
-		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceId); err != nil {
+		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceID); err != nil {
 			log.Errorw("error-creating-logical-device", log.Fields{"error": err})
 			return err
 		}
-		ld = &voltha.LogicalDevice{Id: agent.logicalDeviceId, RootDeviceId: agent.rootDeviceId}
+		ld = &voltha.LogicalDevice{Id: agent.logicalDeviceID, RootDeviceId: agent.rootDeviceID}
 
 		// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
 		var datapathID uint64
-		if datapathID, err = CreateDataPathId(agent.logicalDeviceId); err != nil {
+		if datapathID, err = CreateDataPathID(agent.logicalDeviceID); err != nil {
 			log.Errorw("error-creating-datapath-id", log.Fields{"error": err})
 			return err
 		}
@@ -110,26 +113,31 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		agent.lockLogicalDevice.Lock()
 		// Save the logical device
 		if added := agent.clusterDataProxy.AddWithID(ctx, "/logical_devices", ld.Id, ld, ""); added == nil {
-			log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+			log.Errorw("failed-to-add-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		} else {
-			log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+			log.Debugw("logicaldevice-created", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		}
 		agent.lockLogicalDevice.Unlock()
 
 		// TODO:  Set the logical ports in a separate call once the port update issue is fixed.
-		go agent.setupLogicalPorts(ctx)
+		go func() {
+			err := agent.setupLogicalPorts(ctx)
+			if err != nil {
+				log.Errorw("unable-to-setup-logical-ports", log.Fields{"error": err})
+			}
+		}()
 
 	} else {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
 		var err error
 		if ld, err = agent.GetLogicalDevice(); err != nil {
-			log.Warnw("failed-to-load-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+			log.Warnw("failed-to-load-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 			return err
 		}
 
 		// Update the root device Id
-		agent.rootDeviceId = ld.RootDeviceId
+		agent.rootDeviceID = ld.RootDeviceId
 
 		// Setup the local list of logical ports
 		agent.addLogicalPortsToMap(ld.Ports)
@@ -140,26 +148,26 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 
 	agent.flowProxy = agent.clusterDataProxy.CreateProxy(
 		ctx,
-		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceId),
+		fmt.Sprintf("/logical_devices/%s/flows", agent.logicalDeviceID),
 		false)
 	agent.meterProxy = agent.clusterDataProxy.CreateProxy(
 		ctx,
-		fmt.Sprintf("/logical_devices/%s/meters", agent.logicalDeviceId),
+		fmt.Sprintf("/logical_devices/%s/meters", agent.logicalDeviceID),
 		false)
 	agent.groupProxy = agent.clusterDataProxy.CreateProxy(
 		ctx,
-		fmt.Sprintf("/logical_devices/%s/flow_groups", agent.logicalDeviceId),
+		fmt.Sprintf("/logical_devices/%s/flow_groups", agent.logicalDeviceID),
 		false)
 	agent.ldProxy = agent.clusterDataProxy.CreateProxy(
 		ctx,
-		fmt.Sprintf("/logical_devices/%s", agent.logicalDeviceId),
+		fmt.Sprintf("/logical_devices/%s", agent.logicalDeviceID),
 		false)
 
 	// TODO:  Use a port proxy once the POST_ADD is fixed
 	if agent.ldProxy != nil {
 		agent.ldProxy.RegisterCallback(model.POST_UPDATE, agent.portUpdated)
 	} else {
-		log.Errorw("logical-device-proxy-null", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		log.Errorw("logical-device-proxy-null", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		return status.Error(codes.Internal, "logical-device-proxy-null")
 	}
 
@@ -177,10 +185,10 @@ func (agent *LogicalDeviceAgent) stop(ctx context.Context) {
 	defer agent.lockLogicalDevice.Unlock()
 
 	//Remove the logical device from the model
-	if removed := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceId, ""); removed == nil {
-		log.Errorw("failed-to-remove-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+	if removed := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceID, ""); removed == nil {
+		log.Errorw("failed-to-remove-logical-device", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 	} else {
-		log.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+		log.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 	}
 	agent.exitChannel <- 1
 	log.Info("logical_device-agent-stopped")
@@ -191,30 +199,32 @@ func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, erro
 	log.Debug("GetLogicalDevice")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, "")
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		return lDevice, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
+// ListLogicalDeviceFlows returns logical device flows
 func (agent *LogicalDeviceAgent) ListLogicalDeviceFlows() (*ofp.Flows, error) {
 	log.Debug("ListLogicalDeviceFlows")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, "")
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		cFlows := (proto.Clone(lDevice.Flows)).(*ofp.Flows)
 		return cFlows, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
+// ListLogicalDeviceMeters returns logical device meters
 func (agent *LogicalDeviceAgent) ListLogicalDeviceMeters() (*ofp.Meters, error) {
 	log.Debug("ListLogicalDeviceMeters")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, "")
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		if lDevice.Meters == nil {
 			return &ofp.Meters{}, nil
@@ -222,65 +232,41 @@ func (agent *LogicalDeviceAgent) ListLogicalDeviceMeters() (*ofp.Meters, error) 
 		cMeters := (proto.Clone(lDevice.Meters)).(*ofp.Meters)
 		return cMeters, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
+// ListLogicalDeviceFlowGroups returns logical device flow groups
 func (agent *LogicalDeviceAgent) ListLogicalDeviceFlowGroups() (*ofp.FlowGroups, error) {
 	log.Debug("ListLogicalDeviceFlowGroups")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, "")
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		cFlowGroups := (proto.Clone(lDevice.FlowGroups)).(*ofp.FlowGroups)
 		return cFlowGroups, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
+// ListLogicalDevicePorts returns logical device ports
 func (agent *LogicalDeviceAgent) ListLogicalDevicePorts() (*voltha.LogicalPorts, error) {
 	log.Debug("ListLogicalDevicePorts")
 	agent.lockLogicalDevice.RLock()
 	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, "")
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		lPorts := make([]*voltha.LogicalPort, 0)
-		for _, port := range lDevice.Ports {
-			lPorts = append(lPorts, port)
-		}
+		lPorts = append(lPorts, lDevice.Ports...)
 		return &voltha.LogicalPorts{Items: lPorts}, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
-}
-
-// listFlows locks the logical device model and then retrieves the latest flow information
-func (agent *LogicalDeviceAgent) listFlows() []*ofp.OfpFlowStats {
-	log.Debug("listFlows")
-	agent.lockLogicalDevice.RLock()
-	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
-		return lDevice.Flows.Items
-	}
-	return nil
-}
-
-// listFlowGroups locks the logical device model and then retrieves the latest flow groups information
-func (agent *LogicalDeviceAgent) listFlowGroups() []*ofp.OfpGroupEntry {
-	log.Debug("listFlowGroups")
-	agent.lockLogicalDevice.RLock()
-	defer agent.lockLogicalDevice.RUnlock()
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
-	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
-		return lDevice.FlowGroups.Items
-	}
-	return nil
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
 //updateLogicalDeviceFlowsWithoutLock updates the logical device with the latest flows in the model.
 func (agent *LogicalDeviceAgent) updateLogicalDeviceFlowsWithoutLock(flows *ofp.Flows) error {
 	ld, err := agent.getLogicalDeviceWithoutLock()
 	if err != nil {
-		return status.Errorf(codes.Internal, "logical-device-absent:%s", agent.logicalDeviceId)
+		return status.Errorf(codes.Internal, "logical-device-absent:%s", agent.logicalDeviceID)
 	}
 	log.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
 	cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
@@ -297,7 +283,7 @@ func (agent *LogicalDeviceAgent) updateLogicalDeviceFlowsWithoutLock(flows *ofp.
 func (agent *LogicalDeviceAgent) updateLogicalDeviceMetersWithoutLock(meters *ofp.Meters) error {
 	ld, err := agent.getLogicalDeviceWithoutLock()
 	if err != nil {
-		return status.Errorf(codes.Internal, "logical-device-absent:%s", agent.logicalDeviceId)
+		return status.Errorf(codes.Internal, "logical-device-absent:%s", agent.logicalDeviceID)
 	}
 	log.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
 	cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
@@ -314,7 +300,7 @@ func (agent *LogicalDeviceAgent) updateLogicalDeviceMetersWithoutLock(meters *of
 func (agent *LogicalDeviceAgent) updateLogicalDeviceFlowGroupsWithoutLock(flowGroups *ofp.FlowGroups) error {
 	ld, err := agent.getLogicalDeviceWithoutLock()
 	if err != nil {
-		return status.Errorf(codes.Internal, "logical-device-absent:%s", agent.logicalDeviceId)
+		return status.Errorf(codes.Internal, "logical-device-absent:%s", agent.logicalDeviceID)
 	}
 	log.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
 	cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
@@ -331,12 +317,12 @@ func (agent *LogicalDeviceAgent) updateLogicalDeviceFlowGroupsWithoutLock(flowGr
 // functions that have already acquired the logical device lock to the model
 func (agent *LogicalDeviceAgent) getLogicalDeviceWithoutLock() (*voltha.LogicalDevice, error) {
 	log.Debug("getLogicalDeviceWithoutLock")
-	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceId, 0, false, "")
+	logicalDevice := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, "")
 	if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
 		//log.Debug("getLogicalDeviceWithoutLock", log.Fields{"ldevice": lDevice})
 		return lDevice, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceId)
+	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
 func (agent *LogicalDeviceAgent) updateLogicalPort(device *voltha.Device, port *voltha.Port) error {
@@ -362,71 +348,51 @@ func (agent *LogicalDeviceAgent) updateLogicalPort(device *voltha.Device, port *
 	return nil
 }
 
-func (agent *LogicalDeviceAgent) addLogicalPort(device *voltha.Device, port *voltha.Port) error {
-	log.Debugw("addLogicalPort", log.Fields{"deviceId": device.Id, "port": port})
-	var err error
-	if port.Type == voltha.Port_ETHERNET_NNI {
-		if _, err = agent.addNNILogicalPort(device, port); err != nil {
-			return err
-		}
-		agent.addLogicalPortToMap(port.PortNo, true)
-	} else if port.Type == voltha.Port_ETHERNET_UNI {
-		if _, err = agent.addUNILogicalPort(device, port); err != nil {
-			return err
-		}
-		agent.addLogicalPortToMap(port.PortNo, false)
-	} else {
-		log.Debugw("invalid-port-type", log.Fields{"deviceId": device.Id, "port": port})
-		return nil
-	}
-	return nil
-}
-
 // setupLogicalPorts is invoked once the logical device has been created and is ready to get ports
 // added to it.  While the logical device was being created we could have received requests to add
 // NNI and UNI ports which were discarded.  Now is the time to add them if needed
 func (agent *LogicalDeviceAgent) setupLogicalPorts(ctx context.Context) error {
-	log.Infow("setupLogicalPorts", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	log.Infow("setupLogicalPorts", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	// First add any NNI ports which could have been missing
-	if err := agent.setupNNILogicalPorts(nil, agent.rootDeviceId); err != nil {
-		log.Errorw("error-setting-up-NNI-ports", log.Fields{"error": err, "deviceId": agent.rootDeviceId})
+	if err := agent.setupNNILogicalPorts(context.TODO(), agent.rootDeviceID); err != nil {
+		log.Errorw("error-setting-up-NNI-ports", log.Fields{"error": err, "deviceId": agent.rootDeviceID})
 		return err
 	}
 
 	// Now, set up the UNI ports if needed.
-	if children, err := agent.deviceMgr.getAllChildDevices(agent.rootDeviceId); err != nil {
-		log.Errorw("error-getting-child-devices", log.Fields{"error": err, "deviceId": agent.rootDeviceId})
+	children, err := agent.deviceMgr.getAllChildDevices(agent.rootDeviceID)
+	if err != nil {
+		log.Errorw("error-getting-child-devices", log.Fields{"error": err, "deviceId": agent.rootDeviceID})
 		return err
-	} else {
-		responses := make([]coreutils.Response, 0)
-		for _, child := range children.Items {
-			response := coreutils.NewResponse()
-			responses = append(responses, response)
-			go func(child *voltha.Device) {
-				if err = agent.setupUNILogicalPorts(nil, child); err != nil {
-					log.Error("setting-up-UNI-ports-failed", log.Fields{"deviceID": child.Id})
-					response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
-				}
-				response.Done()
-			}(child)
-		}
-		// Wait for completion
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
-			return status.Errorf(codes.Aborted, "errors-%s", res)
-		}
+	}
+	responses := make([]coreutils.Response, 0)
+	for _, child := range children.Items {
+		response := coreutils.NewResponse()
+		responses = append(responses, response)
+		go func(child *voltha.Device) {
+			if err = agent.setupUNILogicalPorts(context.TODO(), child); err != nil {
+				log.Error("setting-up-UNI-ports-failed", log.Fields{"deviceID": child.Id})
+				response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
+			}
+			response.Done()
+		}(child)
+	}
+	// Wait for completion
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
+		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
 }
 
 // setupNNILogicalPorts creates an NNI port on the logical device that represents an NNI interface on a root device
-func (agent *LogicalDeviceAgent) setupNNILogicalPorts(ctx context.Context, deviceId string) error {
-	log.Infow("setupNNILogicalPorts-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+func (agent *LogicalDeviceAgent) setupNNILogicalPorts(ctx context.Context, deviceID string) error {
+	log.Infow("setupNNILogicalPorts-start", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	// Build the logical device based on information retrieved from the device adapter
 	var err error
 
 	var device *voltha.Device
-	if device, err = agent.deviceMgr.GetDevice(deviceId); err != nil {
-		log.Errorw("error-retrieving-device", log.Fields{"error": err, "deviceId": deviceId})
+	if device, err = agent.deviceMgr.GetDevice(deviceID); err != nil {
+		log.Errorw("error-retrieving-device", log.Fields{"error": err, "deviceId": deviceID})
 		return err
 	}
 
@@ -443,74 +409,74 @@ func (agent *LogicalDeviceAgent) setupNNILogicalPorts(ctx context.Context, devic
 }
 
 // updatePortState updates the port state of the device
-func (agent *LogicalDeviceAgent) updatePortState(deviceId string, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
-	log.Infow("updatePortState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "portNo": portNo, "state": operStatus})
+func (agent *LogicalDeviceAgent) updatePortState(deviceID string, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
+	log.Infow("updatePortState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "portNo": portNo, "state": operStatus})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	// Get the latest logical device info
-	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Warnw("logical-device-unknown", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+	ld, err := agent.getLogicalDeviceWithoutLock()
+	if err != nil {
+		log.Warnw("logical-device-unknown", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 		return err
-	} else {
-		for idx, lPort := range ld.Ports {
-			if lPort.DeviceId == deviceId && lPort.DevicePortNo == portNo {
-				cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
-				if operStatus == voltha.OperStatus_ACTIVE {
-					cloned.Ports[idx].OfpPort.Config = cloned.Ports[idx].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-					cloned.Ports[idx].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
-				} else {
-					cloned.Ports[idx].OfpPort.Config = cloned.Ports[idx].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-					cloned.Ports[idx].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
-				}
-				// Update the logical device
-				if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
-					log.Errorw("error-updating-logical-device", log.Fields{"error": err})
-					return err
-				}
-				return nil
-			}
-		}
-		return status.Errorf(codes.NotFound, "port-%d-not-exist", portNo)
 	}
+	for idx, lPort := range ld.Ports {
+		if lPort.DeviceId == deviceID && lPort.DevicePortNo == portNo {
+			cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
+			if operStatus == voltha.OperStatus_ACTIVE {
+				cloned.Ports[idx].OfpPort.Config = cloned.Ports[idx].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+				cloned.Ports[idx].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
+			} else {
+				cloned.Ports[idx].OfpPort.Config = cloned.Ports[idx].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+				cloned.Ports[idx].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+			}
+			// Update the logical device
+			if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
+				log.Errorw("error-updating-logical-device", log.Fields{"error": err})
+				return err
+			}
+			return nil
+		}
+	}
+	return status.Errorf(codes.NotFound, "port-%d-not-exist", portNo)
 }
 
 // updatePortsState updates the ports state related to the device
 func (agent *LogicalDeviceAgent) updatePortsState(device *voltha.Device, state voltha.AdminState_AdminState) error {
-	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	// Get the latest logical device info
-	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Warnw("logical-device-unknown", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
+	ld, err := agent.getLogicalDeviceWithoutLock()
+	if err != nil {
+		log.Warnw("logical-device-unknown", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
 		return err
-	} else {
-		cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
-		for _, lport := range cloned.Ports {
-			if lport.DeviceId == device.Id {
-				switch state {
-				case voltha.AdminState_ENABLED:
-					lport.OfpPort.Config = lport.OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-					lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
-				case voltha.AdminState_DISABLED:
-					lport.OfpPort.Config = lport.OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-					lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
-				default:
-					log.Warnw("unsupported-state-change", log.Fields{"deviceId": device.Id, "state": state})
-				}
+	}
+	cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
+	for _, lport := range cloned.Ports {
+		if lport.DeviceId == device.Id {
+			switch state {
+			case voltha.AdminState_ENABLED:
+				lport.OfpPort.Config = lport.OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+				lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
+			case voltha.AdminState_DISABLED:
+				lport.OfpPort.Config = lport.OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+				lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+			default:
+				log.Warnw("unsupported-state-change", log.Fields{"deviceId": device.Id, "state": state})
 			}
 		}
-		// Updating the logical device will trigger the poprt change events to be populated to the controller
-		if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
-			log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
-			return err
-		}
+	}
+	// Updating the logical device will trigger the poprt change events to be populated to the controller
+	if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
+		log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
+		return err
 	}
 	return nil
 }
 
 // setupUNILogicalPorts creates a UNI port on the logical device that represents a child UNI interface
 func (agent *LogicalDeviceAgent) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device) error {
-	log.Infow("setupUNILogicalPort", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	log.Infow("setupUNILogicalPort", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	// Build the logical device based on information retrieved from the device adapter
 	var err error
 	var added bool
@@ -530,31 +496,31 @@ func (agent *LogicalDeviceAgent) setupUNILogicalPorts(ctx context.Context, child
 
 // deleteAllLogicalPorts deletes all logical ports associated with this device
 func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(device *voltha.Device) error {
-	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	// Get the latest logical device info
-	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Warnw("logical-device-unknown", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
+	ld, err := agent.getLogicalDeviceWithoutLock()
+	if err != nil {
+		log.Warnw("logical-device-unknown", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
 		return err
+	}
+	cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
+	updateLogicalPorts := []*voltha.LogicalPort{}
+	for _, lport := range cloned.Ports {
+		if lport.DeviceId != device.Id {
+			updateLogicalPorts = append(updateLogicalPorts, lport)
+		}
+	}
+	if len(updateLogicalPorts) < len(cloned.Ports) {
+		cloned.Ports = updateLogicalPorts
+		// Updating the logical device will trigger the poprt change events to be populated to the controller
+		if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
+			log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
+			return err
+		}
 	} else {
-		cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
-		updateLogicalPorts := []*voltha.LogicalPort{}
-		for _, lport := range cloned.Ports {
-			if lport.DeviceId != device.Id {
-				updateLogicalPorts = append(updateLogicalPorts, lport)
-			}
-		}
-		if len(updateLogicalPorts) < len(cloned.Ports) {
-			cloned.Ports = updateLogicalPorts
-			// Updating the logical device will trigger the poprt change events to be populated to the controller
-			if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
-				log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceId, "error": err})
-				return err
-			}
-		} else {
-			log.Debugw("no-change-required", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		}
+		log.Debugw("no-change-required", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	}
 	return nil
 }
@@ -562,9 +528,9 @@ func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(device *voltha.Device) er
 //updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
 func (agent *LogicalDeviceAgent) updateLogicalDeviceWithoutLock(logicalDevice *voltha.LogicalDevice) error {
 	updateCtx := context.WithValue(context.Background(), model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceId, logicalDevice, false, "")
+	afterUpdate := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceID, logicalDevice, false, "")
 	if afterUpdate == nil {
-		return status.Errorf(codes.Internal, "failed-updating-logical-device:%s", agent.logicalDeviceId)
+		return status.Errorf(codes.Internal, "failed-updating-logical-device:%s", agent.logicalDeviceID)
 	}
 	return nil
 }
@@ -572,18 +538,18 @@ func (agent *LogicalDeviceAgent) updateLogicalDeviceWithoutLock(logicalDevice *v
 //generateDeviceGraphIfNeeded generates the device graph if the logical device has been updated since the last time
 //that device graph was generated.
 func (agent *LogicalDeviceAgent) generateDeviceGraphIfNeeded() error {
-	if ld, err := agent.GetLogicalDevice(); err != nil {
+	ld, err := agent.GetLogicalDevice()
+	if err != nil {
 		log.Errorw("get-logical-device-error", log.Fields{"error": err})
 		return err
-	} else {
-		agent.lockDeviceGraph.Lock()
-		defer agent.lockDeviceGraph.Unlock()
-		if agent.deviceGraph != nil && agent.deviceGraph.IsUpToDate(ld) {
-			return nil
-		}
-		log.Debug("Generation of device graph required")
-		agent.generateDeviceGraph()
 	}
+	agent.lockDeviceGraph.Lock()
+	defer agent.lockDeviceGraph.Unlock()
+	if agent.deviceGraph != nil && agent.deviceGraph.IsUpToDate(ld) {
+		return nil
+	}
+	log.Debug("Generation of device graph required")
+	agent.generateDeviceGraph()
 	return nil
 }
 
@@ -609,7 +575,7 @@ func (agent *LogicalDeviceAgent) updateFlowTable(ctx context.Context, flow *ofp.
 		return agent.flowModifyStrict(flow)
 	}
 	return status.Errorf(codes.Internal,
-		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, flow.GetCommand())
+		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, flow.GetCommand())
 }
 
 //updateGroupTable updates the group table of that logical device
@@ -630,7 +596,7 @@ func (agent *LogicalDeviceAgent) updateGroupTable(ctx context.Context, groupMod 
 		return agent.groupModify(groupMod)
 	}
 	return status.Errorf(codes.Internal,
-		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, groupMod.GetCommand())
+		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, groupMod.GetCommand())
 }
 
 // updateMeterTable updates the meter table of that logical device
@@ -651,7 +617,7 @@ func (agent *LogicalDeviceAgent) updateMeterTable(ctx context.Context, meterMod 
 		return agent.meterModify(meterMod)
 	}
 	return status.Errorf(codes.Internal,
-		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, meterMod.GetCommand())
+		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, meterMod.GetCommand())
 
 }
 
@@ -667,8 +633,8 @@ func (agent *LogicalDeviceAgent) meterAdd(meterMod *ofp.OfpMeterMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 
 	var meters []*ofp.OfpMeterEntry
@@ -688,7 +654,7 @@ func (agent *LogicalDeviceAgent) meterAdd(meterMod *ofp.OfpMeterMod) error {
 	meters = append(meters, meterEntry)
 	//Update model
 	if err := agent.updateLogicalDeviceMetersWithoutLock(&ofp.Meters{Items: meters}); err != nil {
-		log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		return err
 	}
 	log.Debugw("Meter-added-successfully", log.Fields{"Added-meter": meterEntry, "updated-meters": lDevice.Meters})
@@ -706,8 +672,8 @@ func (agent *LogicalDeviceAgent) meterDelete(meterMod *ofp.OfpMeterMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 
 	var meters []*ofp.OfpMeterEntry
@@ -716,9 +682,6 @@ func (agent *LogicalDeviceAgent) meterDelete(meterMod *ofp.OfpMeterMod) error {
 	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
 		meters = lDevice.Meters.Items
 	}
-	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
-		flows = lDevice.Flows.Items
-	}
 
 	changedMeter := false
 	changedFow := false
@@ -726,7 +689,7 @@ func (agent *LogicalDeviceAgent) meterDelete(meterMod *ofp.OfpMeterMod) error {
 	for index, meter := range meters {
 		if meterMod.MeterId == meter.Config.MeterId {
 			flows = lDevice.Flows.Items
-			changedFow, updatedFlows = agent.getUpdatedFlowsAfterDeletebyMeterId(flows, meterMod.MeterId)
+			changedFow, updatedFlows = agent.getUpdatedFlowsAfterDeletebyMeterID(flows, meterMod.MeterId)
 			meters = append(meters[:index], meters[index+1:]...)
 			log.Debugw("Meter has been deleted", log.Fields{"meter": meter, "index": index})
 			changedMeter = true
@@ -740,7 +703,7 @@ func (agent *LogicalDeviceAgent) meterDelete(meterMod *ofp.OfpMeterMod) error {
 			metersToUpdate = &ofp.Meters{Items: meters}
 		}
 		if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
-			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 		log.Debug("Meter-deleted-from-DB-successfully", log.Fields{"updatedMeters": metersToUpdate, "no-of-meter": len(metersToUpdate.Items)})
@@ -749,7 +712,7 @@ func (agent *LogicalDeviceAgent) meterDelete(meterMod *ofp.OfpMeterMod) error {
 	if changedFow {
 		//Update model
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(&ofp.Flows{Items: updatedFlows}); err != nil {
-			log.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 		log.Debug("Flows-associated-with-meter-deleted-from-DB-successfully",
@@ -770,8 +733,8 @@ func (agent *LogicalDeviceAgent) meterModify(meterMod *ofp.OfpMeterMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 
 	var meters []*ofp.OfpMeterEntry
@@ -796,7 +759,7 @@ func (agent *LogicalDeviceAgent) meterModify(meterMod *ofp.OfpMeterMod) error {
 			metersToUpdate = &ofp.Meters{Items: meters}
 		}
 		if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
-			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 		log.Debugw("meter-updated-in-DB-successfully", log.Fields{"updated_meters": meters})
@@ -804,16 +767,16 @@ func (agent *LogicalDeviceAgent) meterModify(meterMod *ofp.OfpMeterMod) error {
 	}
 
 	log.Errorw("Meter not found ", log.Fields{"meter": meterMod})
-	return errors.New(fmt.Sprintf("no-logical-device-present:%d", meterMod.MeterId))
+	return fmt.Errorf("no-logical-device-present:%d", meterMod.MeterId)
 
 }
 
-func (agent *LogicalDeviceAgent) getUpdatedFlowsAfterDeletebyMeterId(flows []*ofp.OfpFlowStats, meterId uint32) (bool, []*ofp.OfpFlowStats) {
-	log.Infow("Delete flows matching meter", log.Fields{"meter": meterId})
+func (agent *LogicalDeviceAgent) getUpdatedFlowsAfterDeletebyMeterID(flows []*ofp.OfpFlowStats, meterID uint32) (bool, []*ofp.OfpFlowStats) {
+	log.Infow("Delete flows matching meter", log.Fields{"meter": meterID})
 	changed := false
 	//updatedFlows := make([]*ofp.OfpFlowStats, 0)
 	for index := len(flows) - 1; index >= 0; index-- {
-		if mId := fu.GetMeterIdFromFlow(flows[index]); mId != 0 && mId == meterId {
+		if mID := fu.GetMeterIdFromFlow(flows[index]); mID != 0 && mID == meterID {
 			log.Debugw("Flow to be deleted", log.Fields{"flow": flows[index], "index": index})
 			flows = append(flows[:index], flows[index+1:]...)
 			changed = true
@@ -825,9 +788,9 @@ func (agent *LogicalDeviceAgent) getUpdatedFlowsAfterDeletebyMeterId(flows []*of
 func (agent *LogicalDeviceAgent) updateFlowCountOfMeterStats(modCommand *ofp.OfpFlowMod, meters []*ofp.OfpMeterEntry, flow *ofp.OfpFlowStats) bool {
 
 	flowCommand := modCommand.GetCommand()
-	meterId := fu.GetMeterIdFromFlow(flow)
-	log.Debugw("Meter-id-in-flow-mod", log.Fields{"meterId": meterId})
-	if meterId == 0 {
+	meterID := fu.GetMeterIdFromFlow(flow)
+	log.Debugw("Meter-id-in-flow-mod", log.Fields{"meterId": meterID})
+	if meterID == 0 {
 		log.Debugw("No meter present in the flow", log.Fields{"flow": *flow})
 		return false
 	}
@@ -837,15 +800,15 @@ func (agent *LogicalDeviceAgent) updateFlowCountOfMeterStats(modCommand *ofp.Ofp
 	}
 	changedMeter := false
 	for _, meter := range meters {
-		if meterId == meter.Config.MeterId { // Found meter in Logicaldevice
+		if meterID == meter.Config.MeterId { // Found meter in Logicaldevice
 			if flowCommand == ofp.OfpFlowModCommand_OFPFC_ADD {
-				meter.Stats.FlowCount += 1
+				meter.Stats.FlowCount++
 				changedMeter = true
 			} else if flowCommand == ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
-				meter.Stats.FlowCount -= 1
+				meter.Stats.FlowCount--
 				changedMeter = true
 			}
-			log.Debugw("Found meter, updated meter flow stats", log.Fields{" meterId": meterId})
+			log.Debugw("Found meter, updated meter flow stats", log.Fields{" meterId": meterID})
 			break
 		}
 	}
@@ -864,8 +827,8 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 
 	var flows []*ofp.OfpFlowStats
@@ -886,7 +849,7 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	if checkOverlap {
 		if overlapped := fu.FindOverlappingFlows(flows, mod); len(overlapped) != 0 {
 			//	TODO:  should this error be notified other than being logged?
-			log.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceId})
+			log.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		} else {
 			//	Add flow
 			flow = fu.FlowStatsEntryFromFlowModMessage(mod)
@@ -927,13 +890,13 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if err := agent.addDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
-			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
 
 		//	Update model
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(&ofp.Flows{Items: flows}); err != nil {
-			log.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 		if !updated {
@@ -945,7 +908,7 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 			if changedMeterStats {
 				//Update model
 				if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
-					log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+					log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 					return err
 				}
 				log.Debugw("meter-stats-updated-in-DB-successfully", log.Fields{"updated_meters": meters})
@@ -957,10 +920,11 @@ func (agent *LogicalDeviceAgent) flowAdd(mod *ofp.OfpFlowMod) error {
 	return nil
 }
 
+// GetMeterConfig returns meter config
 func (agent *LogicalDeviceAgent) GetMeterConfig(flows []*ofp.OfpFlowStats, meters []*ofp.OfpMeterEntry, metadata *voltha.FlowMetadata) error {
 	m := make(map[uint32]bool)
 	for _, flow := range flows {
-		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 && m[flowMeterID] == false {
+		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 && !m[flowMeterID] {
 			foundMeter := false
 			// Meter is present in the flow , Get from logical device
 			for _, meter := range meters {
@@ -975,7 +939,7 @@ func (agent *LogicalDeviceAgent) GetMeterConfig(flows []*ofp.OfpFlowStats, meter
 			}
 			if !foundMeter {
 				log.Errorw("Meter-referred-by-flow-is-not-found-in-logicaldevice",
-					log.Fields{"meterID": flowMeterID, "Avaliable-meters": meters, "flow": *flow})
+					log.Fields{"meterID": flowMeterID, "Available-meters": meters, "flow": *flow})
 				return errors.New("Meter-referred-by-flow-is-not-found-in-logicaldevice")
 			}
 		}
@@ -997,8 +961,8 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 
 	var meters []*ofp.OfpMeterEntry
@@ -1028,7 +992,7 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 		}
 	}
 
-	log.Debugw("flowDelete", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "toKeep": len(toKeep), "toDelete": toDelete})
+	log.Debugw("flowDelete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "toKeep": len(toKeep), "toDelete": toDelete})
 
 	//Update flows
 	if len(toDelete) > 0 {
@@ -1041,12 +1005,12 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if err := agent.deleteDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
-			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
 
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(&ofp.Flows{Items: toKeep}); err != nil {
-			log.Errorw("Cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("Cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 	}
@@ -1056,10 +1020,10 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 }
 
 func (agent *LogicalDeviceAgent) addDeviceFlowsAndGroups(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) error {
-	log.Debugw("addDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceId, "deviceRules": deviceRules, "flowMetadata": flowMetadata})
+	log.Debugw("addDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceID, "deviceRules": deviceRules, "flowMetadata": flowMetadata})
 
 	responses := make([]coreutils.Response, 0)
-	for deviceId, value := range deviceRules.GetRules() {
+	for deviceID, value := range deviceRules.GetRules() {
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
@@ -1068,7 +1032,7 @@ func (agent *LogicalDeviceAgent) addDeviceFlowsAndGroups(deviceRules *fu.DeviceR
 				response.Error(status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
 			}
 			response.Done()
-		}(deviceId, value)
+		}(deviceID, value)
 	}
 	// Wait for completion
 	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
@@ -1078,10 +1042,10 @@ func (agent *LogicalDeviceAgent) addDeviceFlowsAndGroups(deviceRules *fu.DeviceR
 }
 
 func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) error {
-	log.Debugw("deleteDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceId})
+	log.Debugw("deleteDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
-	for deviceId, value := range deviceRules.GetRules() {
+	for deviceID, value := range deviceRules.GetRules() {
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
@@ -1090,7 +1054,7 @@ func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.Devi
 				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s", deviceId))
 			}
 			response.Done()
-		}(deviceId, value)
+		}(deviceID, value)
 	}
 	// Wait for completion
 	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
@@ -1100,10 +1064,10 @@ func (agent *LogicalDeviceAgent) deleteDeviceFlowsAndGroups(deviceRules *fu.Devi
 }
 
 func (agent *LogicalDeviceAgent) updateDeviceFlowsAndGroups(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) error {
-	log.Debugw("updateDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceId})
+	log.Debugw("updateDeviceFlowsAndGroups", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
-	for deviceId, value := range deviceRules.GetRules() {
+	for deviceID, value := range deviceRules.GetRules() {
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
@@ -1112,7 +1076,7 @@ func (agent *LogicalDeviceAgent) updateDeviceFlowsAndGroups(deviceRules *fu.Devi
 				response.Error(status.Errorf(codes.Internal, "flow-update-failed: %s", deviceId))
 			}
 			response.Done()
-		}(deviceId, value)
+		}(deviceID, value)
 	}
 	// Wait for completion
 	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
@@ -1133,8 +1097,8 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 	var meters []*ofp.OfpMeterEntry
 	var flows []*ofp.OfpFlowStats
@@ -1156,7 +1120,7 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 		flows = append(flows[:idx], flows[idx+1:]...)
 		changedFlow = true
 	} else {
-		return errors.New(fmt.Sprintf("Cannot delete flow - %s", flow))
+		return fmt.Errorf("Cannot delete flow - %s", flow)
 	}
 	if changedMeter {
 		//Update model
@@ -1165,7 +1129,7 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 			metersToUpdate = &ofp.Meters{Items: meters}
 		}
 		if err := agent.updateLogicalDeviceMetersWithoutLock(metersToUpdate); err != nil {
-			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 
@@ -1180,12 +1144,12 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if err := agent.deleteDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
-			log.Errorw("failure-deleting-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+			log.Errorw("failure-deleting-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
 
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(&ofp.Flows{Items: flows}); err != nil {
-			log.Errorw("Cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("Cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 	}
@@ -1213,8 +1177,8 @@ func (agent *LogicalDeviceAgent) groupAdd(groupMod *ofp.OfpGroupMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 	groups := lDevice.FlowGroups.Items
 	if fu.FindGroup(groups, groupMod.GroupId) == -1 {
@@ -1223,16 +1187,16 @@ func (agent *LogicalDeviceAgent) groupAdd(groupMod *ofp.OfpGroupMod) error {
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, *lDevice.Flows, ofp.FlowGroups{Items: groups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 		if err := agent.addDeviceFlowsAndGroups(deviceRules, nil); err != nil {
-			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
 
 		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(&ofp.FlowGroups{Items: groups}); err != nil {
-			log.Errorw("Cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("Cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 	} else {
-		return errors.New(fmt.Sprintf("Groups %d already present", groupMod.GroupId))
+		return fmt.Errorf("Groups %d already present", groupMod.GroupId)
 	}
 	return nil
 }
@@ -1248,47 +1212,47 @@ func (agent *LogicalDeviceAgent) groupDelete(groupMod *ofp.OfpGroupMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 	groups := lDevice.FlowGroups.Items
 	flows := lDevice.Flows.Items
-	groupsChanged := false
+	var groupsChanged bool
 	flowsChanged := false
-	groupId := groupMod.GroupId
-	if groupId == uint32(ofp.OfpGroup_OFPG_ALL) {
+	groupID := groupMod.GroupId
+	if groupID == uint32(ofp.OfpGroup_OFPG_ALL) {
 		//TODO we must delete all flows that point to this group and
 		//signal controller as requested by flow's flag
 		groups = []*ofp.OfpGroupEntry{}
 		groupsChanged = true
 	} else {
-		if idx := fu.FindGroup(groups, groupId); idx == -1 {
+		idx := fu.FindGroup(groups, groupID)
+		if idx == -1 {
 			return nil // Valid case
-		} else {
-			flowsChanged, flows = fu.FlowsDeleteByGroupId(flows, groupId)
-			groups = append(groups[:idx], groups[idx+1:]...)
-			groupsChanged = true
 		}
+		flowsChanged, flows = fu.FlowsDeleteByGroupId(flows, groupID)
+		groups = append(groups[:idx], groups[idx+1:]...)
+		groupsChanged = true
 	}
 	if flowsChanged || groupsChanged {
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: flows}, ofp.FlowGroups{Items: groups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if err := agent.updateDeviceFlowsAndGroups(deviceRules, nil); err != nil {
-			log.Errorw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+			log.Errorw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
 	}
 
 	if groupsChanged {
 		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(&ofp.FlowGroups{Items: groups}); err != nil {
-			log.Errorw("Cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("Cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 	}
 	if flowsChanged {
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(&ofp.Flows{Items: flows}); err != nil {
-			log.Errorw("Cannot-update-flow", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("Cannot-update-flow", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 	}
@@ -1306,32 +1270,32 @@ func (agent *LogicalDeviceAgent) groupModify(groupMod *ofp.OfpGroupMod) error {
 	var lDevice *voltha.LogicalDevice
 	var err error
 	if lDevice, err = agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
-		return errors.New(fmt.Sprintf("no-logical-device-present:%s", agent.logicalDeviceId))
+		log.Errorw("no-logical-device-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		return fmt.Errorf("no-logical-device-present:%s", agent.logicalDeviceID)
 	}
 	groups := lDevice.FlowGroups.Items
-	groupsChanged := false
-	groupId := groupMod.GroupId
-	if idx := fu.FindGroup(groups, groupId); idx == -1 {
-		return errors.New(fmt.Sprintf("group-absent:%d", groupId))
-	} else {
-		//replace existing group entry with new group definition
-		groupEntry := fu.GroupEntryFromGroupMod(groupMod)
-		groups[idx] = groupEntry
-		groupsChanged = true
+	var groupsChanged bool
+	groupID := groupMod.GroupId
+	idx := fu.FindGroup(groups, groupID)
+	if idx == -1 {
+		return fmt.Errorf("group-absent:%d", groupID)
 	}
+	//replace existing group entry with new group definition
+	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
+	groups[idx] = groupEntry
+	groupsChanged = true
 	if groupsChanged {
 		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: lDevice.Flows.Items}, ofp.FlowGroups{Items: groups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if err := agent.updateDeviceFlowsAndGroups(deviceRules, nil); err != nil {
-			log.Errorw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+			log.Errorw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
 
 		//lDevice.FlowGroups.Items = groups
 		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(&ofp.FlowGroups{Items: groups}); err != nil {
-			log.Errorw("Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 	}
@@ -1346,7 +1310,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(lPort *voltha.LogicalPort) er
 	// Get the most up to date logical device
 	var logicaldevice *voltha.LogicalDevice
 	if logicaldevice, _ = agent.getLogicalDeviceWithoutLock(); logicaldevice == nil {
-		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "logicalPortId": lPort.Id})
+		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "logicalPortId": lPort.Id})
 		return nil
 	}
 	index := -1
@@ -1360,9 +1324,9 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(lPort *voltha.LogicalPort) er
 		copy(logicaldevice.Ports[index:], logicaldevice.Ports[index+1:])
 		logicaldevice.Ports[len(logicaldevice.Ports)-1] = nil
 		logicaldevice.Ports = logicaldevice.Ports[:len(logicaldevice.Ports)-1]
-		log.Debugw("logical-port-deleted", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		log.Debugw("logical-port-deleted", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		if err := agent.updateLogicalDeviceWithoutLock(logicaldevice); err != nil {
-			log.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+			log.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 		// Reset the logical device graph
@@ -1372,26 +1336,26 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(lPort *voltha.LogicalPort) er
 }
 
 // deleteLogicalPorts removes the logical ports associated with that deviceId
-func (agent *LogicalDeviceAgent) deleteLogicalPorts(deviceId string) error {
+func (agent *LogicalDeviceAgent) deleteLogicalPorts(deviceID string) error {
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
 	// Get the most up to date logical device
 	var logicaldevice *voltha.LogicalDevice
 	if logicaldevice, _ = agent.getLogicalDeviceWithoutLock(); logicaldevice == nil {
-		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		return nil
 	}
 	updatedLPorts := []*voltha.LogicalPort{}
 	for _, logicalPort := range logicaldevice.Ports {
-		if logicalPort.DeviceId != deviceId {
+		if logicalPort.DeviceId != deviceID {
 			updatedLPorts = append(updatedLPorts, logicalPort)
 		}
 	}
 	logicaldevice.Ports = updatedLPorts
 	log.Debugw("updated-logical-ports", log.Fields{"ports": updatedLPorts})
 	if err := agent.updateLogicalDeviceWithoutLock(logicaldevice); err != nil {
-		log.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+		log.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		return err
 	}
 	// Reset the logical device graph
@@ -1401,19 +1365,19 @@ func (agent *LogicalDeviceAgent) deleteLogicalPorts(deviceId string) error {
 }
 
 // enableLogicalPort enables the logical port
-func (agent *LogicalDeviceAgent) enableLogicalPort(lPortId string) error {
+func (agent *LogicalDeviceAgent) enableLogicalPort(lPortID string) error {
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
 	// Get the most up to date logical device
 	var logicaldevice *voltha.LogicalDevice
 	if logicaldevice, _ = agent.getLogicalDeviceWithoutLock(); logicaldevice == nil {
-		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "logicalPortId": lPortId})
+		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "logicalPortId": lPortID})
 		return nil
 	}
 	index := -1
 	for i, logicalPort := range logicaldevice.Ports {
-		if logicalPort.Id == lPortId {
+		if logicalPort.Id == lPortID {
 			index = i
 			break
 		}
@@ -1421,25 +1385,24 @@ func (agent *LogicalDeviceAgent) enableLogicalPort(lPortId string) error {
 	if index >= 0 {
 		logicaldevice.Ports[index].OfpPort.Config = logicaldevice.Ports[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		return agent.updateLogicalDeviceWithoutLock(logicaldevice)
-	} else {
-		return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortId, agent.logicalDeviceId)
 	}
+	return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortID, agent.logicalDeviceID)
 }
 
 // disableLogicalPort disabled the logical port
-func (agent *LogicalDeviceAgent) disableLogicalPort(lPortId string) error {
+func (agent *LogicalDeviceAgent) disableLogicalPort(lPortID string) error {
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 
 	// Get the most up to date logical device
 	var logicaldevice *voltha.LogicalDevice
 	if logicaldevice, _ = agent.getLogicalDeviceWithoutLock(); logicaldevice == nil {
-		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "logicalPortId": lPortId})
+		log.Debugw("no-logical-device", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "logicalPortId": lPortID})
 		return nil
 	}
 	index := -1
 	for i, logicalPort := range logicaldevice.Ports {
-		if logicalPort.Id == lPortId {
+		if logicalPort.Id == lPortID {
 			index = i
 			break
 		}
@@ -1447,9 +1410,8 @@ func (agent *LogicalDeviceAgent) disableLogicalPort(lPortId string) error {
 	if index >= 0 {
 		logicaldevice.Ports[index].OfpPort.Config = (logicaldevice.Ports[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)) | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		return agent.updateLogicalDeviceWithoutLock(logicaldevice)
-	} else {
-		return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortId, agent.logicalDeviceId)
 	}
+	return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortID, agent.logicalDeviceID)
 }
 
 func (agent *LogicalDeviceAgent) getPreCalculatedRoute(ingress, egress uint32) []graph.RouteHop {
@@ -1460,10 +1422,11 @@ func (agent *LogicalDeviceAgent) getPreCalculatedRoute(ingress, egress uint32) [
 			return route
 		}
 	}
-	log.Warnw("no-route", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "ingress": ingress, "egress": egress})
+	log.Warnw("no-route", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "ingress": ingress, "egress": egress})
 	return nil
 }
 
+// GetRoute returns route
 func (agent *LogicalDeviceAgent) GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop {
 	log.Debugw("getting-route", log.Fields{"ingress-port": ingressPortNo, "egress-port": egressPortNo})
 	routes := make([]graph.RouteHop, 0)
@@ -1478,7 +1441,7 @@ func (agent *LogicalDeviceAgent) GetRoute(ingressPortNo uint32, egressPortNo uin
 			if len(agent.deviceGraph.Routes) == 0 {
 				// If there are no routes set (usually when the logical device has only NNI port(s), then just return an
 				// route with same IngressHop and EgressHop
-				hop := graph.RouteHop{DeviceID: agent.rootDeviceId, Ingress: ingressPortNo, Egress: ingressPortNo}
+				hop := graph.RouteHop{DeviceID: agent.rootDeviceID, Ingress: ingressPortNo, Egress: ingressPortNo}
 				routes = append(routes, hop)
 				routes = append(routes, hop)
 				return routes
@@ -1552,37 +1515,38 @@ func (agent *LogicalDeviceAgent) GetWildcardInputPorts(excludePort ...uint32) []
 	return lPorts
 }
 
+// GetDeviceGraph returns device graph
 func (agent *LogicalDeviceAgent) GetDeviceGraph() *graph.DeviceGraph {
 	return agent.deviceGraph
 }
 
 //updateRoutes rebuilds the device graph if not done already
 func (agent *LogicalDeviceAgent) updateRoutes(device *voltha.Device, port *voltha.Port) error {
-	log.Debugf("updateRoutes", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "device": device.Id, "port": port})
+	log.Debugf("updateRoutes", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "device": device.Id, "port": port})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	if agent.deviceGraph == nil {
-		agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceId, agent.deviceMgr.GetDevice)
+		agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceID, agent.deviceMgr.GetDevice)
 	}
 	// Get all the logical ports on that logical device
-	if lDevice, err := agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("unknown-logical-device", log.Fields{"error": err, "logicalDeviceId": agent.logicalDeviceId})
+	lDevice, err := agent.getLogicalDeviceWithoutLock()
+	if err != nil {
+		log.Errorw("unknown-logical-device", log.Fields{"error": err, "logicalDeviceId": agent.logicalDeviceID})
 		return err
-	} else {
-		//TODO:  Find a better way to refresh only missing routes
-		agent.deviceGraph.ComputeRoutes(lDevice.Ports)
 	}
+	//TODO:  Find a better way to refresh only missing routes
+	agent.deviceGraph.ComputeRoutes(lDevice.Ports)
 	agent.deviceGraph.Print()
 	return nil
 }
 
 //updateDeviceGraph updates the device graph if not done already and setup the default rules as well
 func (agent *LogicalDeviceAgent) updateDeviceGraph(lp *voltha.LogicalPort) {
-	log.Debugf("updateDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	log.Debugf("updateDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	if agent.deviceGraph == nil {
-		agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceId, agent.deviceMgr.GetDevice)
+		agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceID, agent.deviceMgr.GetDevice)
 	}
 	agent.deviceGraph.AddPort(lp)
 	agent.deviceGraph.Print()
@@ -1590,83 +1554,20 @@ func (agent *LogicalDeviceAgent) updateDeviceGraph(lp *voltha.LogicalPort) {
 
 //generateDeviceGraph regenerates the device graph
 func (agent *LogicalDeviceAgent) generateDeviceGraph() {
-	log.Debugw("generateDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceId})
+	log.Debugw("generateDeviceGraph", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	// Get the latest logical device
 	if ld, err := agent.getLogicalDeviceWithoutLock(); err != nil {
-		log.Errorw("logical-device-not-present", log.Fields{"logicalDeviceId": agent.logicalDeviceId, "error": err})
+		log.Errorw("logical-device-not-present", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 	} else {
-		log.Debugw("generating-graph", log.Fields{"lDeviceId": agent.logicalDeviceId, "lPorts": len(ld.Ports)})
+		log.Debugw("generating-graph", log.Fields{"lDeviceId": agent.logicalDeviceID, "lPorts": len(ld.Ports)})
 		if agent.deviceGraph == nil {
-			agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceId, agent.deviceMgr.GetDevice)
+			agent.deviceGraph = graph.NewDeviceGraph(agent.logicalDeviceID, agent.deviceMgr.GetDevice)
 		}
 		agent.deviceGraph.ComputeRoutes(ld.Ports)
 		agent.deviceGraph.Print()
 	}
-}
-
-// portAdded is a callback invoked when a port is added to the logical device.
-// TODO: To use when POST_ADD is fixed.
-func (agent *LogicalDeviceAgent) portAdded(args ...interface{}) interface{} {
-	log.Debugw("portAdded-callback", log.Fields{"argsLen": len(args)})
-
-	var port *voltha.LogicalPort
-
-	// Sanity check
-	if args[0] != nil {
-		log.Warnw("previous-data-not-nil", log.Fields{"args0": args[0]})
-	}
-	var ok bool
-	if port, ok = args[1].(*voltha.LogicalPort); !ok {
-		log.Errorw("invalid-args", log.Fields{"args1": args[1]})
-		return nil
-	}
-
-	// Set the proxy and callback for that port
-	agent.portProxiesLock.Lock()
-	agent.portProxies[port.Id] = agent.clusterDataProxy.CreateProxy(
-		context.Background(),
-		fmt.Sprintf("/logical_devices/%s/ports/%s", agent.logicalDeviceId, port.Id),
-		false)
-	agent.portProxies[port.Id].RegisterCallback(model.POST_UPDATE, agent.portUpdated)
-	agent.portProxiesLock.Unlock()
-
-	// Send the port change event to the OF controller
-	agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceId,
-		&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_ADD, Desc: port.OfpPort})
-
-	return nil
-}
-
-// portRemoved is a callback invoked when a port is removed from the logical device.
-// TODO: To use when POST_ADD is fixed.
-func (agent *LogicalDeviceAgent) portRemoved(args ...interface{}) interface{} {
-	log.Debugw("portRemoved-callback", log.Fields{"argsLen": len(args)})
-
-	var port *voltha.LogicalPort
-
-	// Sanity check
-	if args[1] != nil {
-		log.Warnw("data-not-nil", log.Fields{"args1": args[1]})
-	}
-	var ok bool
-	if port, ok = args[0].(*voltha.LogicalPort); !ok {
-		log.Errorw("invalid-args", log.Fields{"args0": args[0]})
-		return nil
-	}
-
-	// Remove the proxy and callback for that port
-	agent.portProxiesLock.Lock()
-	agent.portProxies[port.Id].UnregisterCallback(model.POST_UPDATE, agent.portUpdated)
-	delete(agent.portProxies, port.Id)
-	agent.portProxiesLock.Unlock()
-
-	// Send the port change event to the OF controller
-	agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceId,
-		&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_DELETE, Desc: port.OfpPort})
-
-	return nil
 }
 
 // diff go over two lists of logical ports and return what's new, what's changed and what's removed.
@@ -1735,15 +1636,15 @@ func (agent *LogicalDeviceAgent) portUpdated(args ...interface{}) interface{} {
 
 	// Send the port change events to the OF controller
 	for _, newP := range newPorts {
-		go agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceId,
+		go agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_ADD, Desc: newP.OfpPort})
 	}
 	for _, change := range changedPorts {
-		go agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceId,
+		go agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_MODIFY, Desc: change.OfpPort})
 	}
 	for _, del := range deletedPorts {
-		go agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceId,
+		go agent.ldeviceMgr.grpcNbiHdlr.sendChangeEvent(agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_DELETE, Desc: del.OfpPort})
 	}
 
@@ -1771,7 +1672,7 @@ func (agent *LogicalDeviceAgent) addNNILogicalPort(device *voltha.Device, port *
 	var portCap *ic.PortCapability
 	var err error
 	// First get the port capability
-	if portCap, err = agent.deviceMgr.getPortCapability(nil, device.Id, port.PortNo); err != nil {
+	if portCap, err = agent.deviceMgr.getPortCapability(context.TODO(), device.Id, port.PortNo); err != nil {
 		log.Errorw("error-retrieving-port-capabilities", log.Fields{"error": err})
 		return false, err
 	}
@@ -1846,7 +1747,7 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(childDevice *voltha.Device, p
 	var portCap *ic.PortCapability
 	var err error
 	// First get the port capability
-	if portCap, err = agent.deviceMgr.getPortCapability(nil, childDevice.Id, port.PortNo); err != nil {
+	if portCap, err = agent.deviceMgr.getPortCapability(context.TODO(), childDevice.Id, port.PortNo); err != nil {
 		log.Errorw("error-retrieving-port-capabilities", log.Fields{"error": err})
 		return false, err
 	}
@@ -1858,28 +1759,28 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(childDevice *voltha.Device, p
 		return false, nil
 	}
 	// Get stored logical device
-	if ldevice, err := agent.getLogicalDeviceWithoutLock(); err != nil {
-		return false, status.Error(codes.NotFound, agent.logicalDeviceId)
-	} else {
-		log.Debugw("adding-uni", log.Fields{"deviceId": childDevice.Id})
-		portCap.Port.RootPort = false
-		portCap.Port.Id = port.Label
-		portCap.Port.OfpPort.PortNo = port.PortNo
-		portCap.Port.DeviceId = childDevice.Id
-		portCap.Port.DevicePortNo = port.PortNo
-		cloned := (proto.Clone(ldevice)).(*voltha.LogicalDevice)
-		if cloned.Ports == nil {
-			cloned.Ports = make([]*voltha.LogicalPort, 0)
-		}
-		cloned.Ports = append(cloned.Ports, portCap.Port)
-		if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
-			return false, err
-		}
-		// Update the device graph with this new logical port
-		clonedLP := (proto.Clone(portCap.Port)).(*voltha.LogicalPort)
-		go agent.updateDeviceGraph(clonedLP)
-		return true, nil
+	ldevice, err := agent.getLogicalDeviceWithoutLock()
+	if err != nil {
+		return false, status.Error(codes.NotFound, agent.logicalDeviceID)
 	}
+	log.Debugw("adding-uni", log.Fields{"deviceId": childDevice.Id})
+	portCap.Port.RootPort = false
+	portCap.Port.Id = port.Label
+	portCap.Port.OfpPort.PortNo = port.PortNo
+	portCap.Port.DeviceId = childDevice.Id
+	portCap.Port.DevicePortNo = port.PortNo
+	cloned := (proto.Clone(ldevice)).(*voltha.LogicalDevice)
+	if cloned.Ports == nil {
+		cloned.Ports = make([]*voltha.LogicalPort, 0)
+	}
+	cloned.Ports = append(cloned.Ports, portCap.Port)
+	if err := agent.updateLogicalDeviceWithoutLock(cloned); err != nil {
+		return false, err
+	}
+	// Update the device graph with this new logical port
+	clonedLP := (proto.Clone(portCap.Port)).(*voltha.LogicalPort)
+	go agent.updateDeviceGraph(clonedLP)
+	return true, nil
 }
 
 func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
@@ -1890,19 +1791,19 @@ func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 	outPort := fu.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
-	if err := agent.deviceMgr.packetOut(agent.rootDeviceId, outPort, packet); err != nil {
-		log.Error("packetout-failed", log.Fields{"logicalDeviceID": agent.rootDeviceId})
+	if err := agent.deviceMgr.packetOut(agent.rootDeviceID, outPort, packet); err != nil {
+		log.Error("packetout-failed", log.Fields{"logicalDeviceID": agent.rootDeviceID})
 	}
 }
 
-func (agent *LogicalDeviceAgent) packetIn(port uint32, transactionId string, packet []byte) {
+func (agent *LogicalDeviceAgent) packetIn(port uint32, transactionID string, packet []byte) {
 	log.Debugw("packet-in", log.Fields{
 		"port":          port,
 		"packet":        hex.EncodeToString(packet),
-		"transactionId": transactionId,
+		"transactionId": transactionID,
 	})
 	packetIn := fu.MkPacketIn(port, packet)
-	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceId, transactionId, packetIn)
+	agent.ldeviceMgr.grpcNbiHdlr.sendPacketIn(agent.logicalDeviceID, transactionID, packetIn)
 	log.Debugw("sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
 }
 
@@ -1921,14 +1822,6 @@ func (agent *LogicalDeviceAgent) addLogicalPortsToMap(lps []*voltha.LogicalPort)
 		if exist := agent.logicalPortsNo[lp.DevicePortNo]; !exist {
 			agent.logicalPortsNo[lp.DevicePortNo] = lp.RootPort
 		}
-	}
-}
-
-func (agent *LogicalDeviceAgent) deleteLogicalPortFromMap(portNo uint32) {
-	agent.lockLogicalPortsNo.Lock()
-	defer agent.lockLogicalPortsNo.Unlock()
-	if exist := agent.logicalPortsNo[portNo]; exist {
-		delete(agent.logicalPortsNo, portNo)
 	}
 }
 
