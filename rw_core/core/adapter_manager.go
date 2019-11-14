@@ -122,8 +122,8 @@ func (aMgr *AdapterManager) start(ctx context.Context) {
 	aMgr.deviceTypeProxy = aMgr.clusterDataProxy.CreateProxy(context.Background(), "/device_types", false)
 
 	// Register the callbacks
-	aMgr.adapterProxy.RegisterCallback(model.POST_UPDATE, aMgr.adapterUpdated)
-	aMgr.deviceTypeProxy.RegisterCallback(model.POST_UPDATE, aMgr.deviceTypesUpdated)
+	aMgr.adapterProxy.RegisterCallback(model.PostUpdate, aMgr.adapterUpdated)
+	aMgr.deviceTypeProxy.RegisterCallback(model.PostUpdate, aMgr.deviceTypesUpdated)
 	probe.UpdateStatusFromContext(ctx, "adapter-manager", probe.ServiceStatusRunning)
 	log.Info("adapter-manager-started")
 }
