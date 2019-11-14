@@ -17,8 +17,9 @@
 package mocks
 
 import (
-	"github.com/opencord/voltha-lib-go/v2/pkg/adapters"
 	"testing"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/adapters"
 )
 
 func TestOLTAdapterImplementsIAdapter(t *testing.T) {
