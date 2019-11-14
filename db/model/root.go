@@ -20,12 +20,13 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"reflect"
+	"sync"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"reflect"
-	"sync"
 )
 
 // Root is used to provide an abstraction to the base root structure
@@ -53,7 +54,7 @@ type root struct {
 }
 
 // NewRoot creates an new instance of a root object
-func NewRoot(initialData interface{}, kvStore *db.Backend) *root {
+func NewRoot(initialData interface{}, kvStore *db.Backend) *root { // nolint
 	root := &root{}
 
 	root.KvStore = kvStore
@@ -71,7 +72,7 @@ func NewRoot(initialData interface{}, kvStore *db.Backend) *root {
 	root.Callbacks = []CallbackTuple{}
 	root.NotificationCallbacks = []CallbackTuple{}
 
-	root.node = NewNode(root, initialData, false, "")
+	root.node = newNode(root, initialData, false, "")
 
 	return root
 }
@@ -104,7 +105,9 @@ func (r *root) FoldTxBranch(txid string) {
 		// Merge operation fails
 		r.DeleteTxBranch(txid)
 	} else {
-		r.node.MergeBranch(txid, false)
+		if _, err = r.node.MergeBranch(txid, false); err != nil {
+			log.Errorw("Unable to integrate the contents of a transaction branch within the latest branch of a given node", log.Fields{"error": err})
+		}
 		r.node.GetRoot().ExecuteCallbacks()
 		r.DeleteTxBranch(txid)
 	}
@@ -166,7 +169,7 @@ func (r *root) AddNotificationCallback(callback CallbackFunction, args ...interf
 func (r *root) syncParent(childRev Revision, txid string) {
 	data := proto.Clone(r.GetProxy().ParentNode.Latest().GetData().(proto.Message))
 
-	for fieldName, _ := range ChildrenFields(data) {
+	for fieldName := range ChildrenFields(data) {
 		childDataName, childDataHolder := GetAttributeValue(data, fieldName, 0)
 		if reflect.TypeOf(childRev.GetData()) == reflect.TypeOf(childDataHolder.Interface()) {
 			childDataHolder = reflect.ValueOf(childRev.GetData())
@@ -181,14 +184,6 @@ func (r *root) syncParent(childRev Revision, txid string) {
 // Update modifies the content of an object at a given path with the provided data
 func (r *root) Update(ctx context.Context, path string, data interface{}, strict bool, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
-
-	if makeBranch != nil {
-		// TODO: raise error
-	}
-
-	if r.hasCallbacks() {
-		// TODO: raise error
-	}
 
 	if txid != "" {
 		trackDirty := func(node *node) *Branch {
@@ -217,14 +212,6 @@ func (r *root) Update(ctx context.Context, path string, data interface{}, strict
 func (r *root) Add(ctx context.Context, path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
 
-	if makeBranch != nil {
-		// TODO: raise error
-	}
-
-	if r.hasCallbacks() {
-		// TODO: raise error
-	}
-
 	if txid != "" {
 		trackDirty := func(node *node) *Branch {
 			r.DirtyNodes[txid] = append(r.DirtyNodes[txid], node)
@@ -245,14 +232,6 @@ func (r *root) Add(ctx context.Context, path string, data interface{}, txid stri
 // Remove discards an object at a given path
 func (r *root) Remove(ctx context.Context, path string, txid string, makeBranch MakeBranchFunction) Revision {
 	var result Revision
-
-	if makeBranch != nil {
-		// TODO: raise error
-	}
-
-	if r.hasCallbacks() {
-		// TODO: raise error
-	}
 
 	if txid != "" {
 		trackDirty := func(node *node) *Branch {
