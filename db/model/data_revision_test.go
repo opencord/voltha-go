@@ -17,13 +17,14 @@
 package model
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 var (
@@ -88,9 +89,9 @@ func TestNewDataRevision(t *testing.T) {
 }
 func TestNoDataRevision(t *testing.T) {
 
-	TestNode_Data = nil
-	TestNode_Root = &root{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
-	rev := NewDataRevision(TestNode_Root, TestNode_Data)
+	TestNodeData = nil
+	TestNodeRoot = &root{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
+	rev := NewDataRevision(TestNodeRoot, TestNodeData)
 	assert.Nil(t, rev.Data, "Problem to marshal data when data is nil")
 
 }
