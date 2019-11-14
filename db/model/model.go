@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
@@ -24,6 +25,7 @@ func init() {
 	defer log.CleanUp()
 }
 
+// constants -
 const (
 	// period to determine when data requires a refresh (in milliseconds)
 	// TODO: make this configurable?

@@ -22,13 +22,13 @@ type CallbackType uint8
 // Enumerated list of callback types
 const (
 	GET CallbackType = iota
-	PRE_UPDATE
-	POST_UPDATE
-	PRE_ADD
-	POST_ADD
-	PRE_REMOVE
-	POST_REMOVE
-	POST_LISTCHANGE
+	PreUpdate
+	PostUpdate
+	PreAdd
+	PostAdd
+	PreRemove
+	PostRemove
+	PostListchange
 )
 
 var enumCallbackTypes = []string{
