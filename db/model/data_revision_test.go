@@ -17,13 +17,14 @@
 package model
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 var (
@@ -72,7 +73,7 @@ var (
 
 func TestNewDataRevision(t *testing.T) {
 
-	TestNodeRoot := &root{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
+	TestNodeRoot := &PRoot{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
 	dr := NewDataRevision(TestNodeRoot, TestNodeData)
 	t.Logf("Data -->%v, Hash-->%v, ", dr.Data, dr.Hash)
 	assert.NotNil(t, dr.Data)
@@ -80,7 +81,7 @@ func TestNewDataRevision(t *testing.T) {
 	assert.True(t, reflect.ValueOf(dr.Data) == reflect.ValueOf(TestNodeData), "Data Values mismatch on NonPersistedRevision")
 	assert.NotNil(t, dr.Hash)
 
-	drPR := NewDataRevision(&root{RevisionClass: reflect.TypeOf(PersistedRevision{})}, TestNodeData)
+	drPR := NewDataRevision(&PRoot{RevisionClass: reflect.TypeOf(PersistedRevision{})}, TestNodeData)
 	assert.NotNil(t, drPR)
 	assert.True(t, reflect.TypeOf(drPR.Data) == reflect.TypeOf(TestNodeData), "Data Type mismatc on PersistedRevisionh")
 	assert.True(t, reflect.ValueOf(drPR.Data) == reflect.ValueOf(TestNodeData), "Data Values mismatch PersistedRevision")
@@ -88,9 +89,9 @@ func TestNewDataRevision(t *testing.T) {
 }
 func TestNoDataRevision(t *testing.T) {
 
-	TestNode_Data = nil
-	TestNode_Root = &root{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
-	rev := NewDataRevision(TestNode_Root, TestNode_Data)
+	TestNodeData = nil
+	TestNodeRoot = &PRoot{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
+	rev := NewDataRevision(TestNodeRoot, TestNodeData)
 	assert.Nil(t, rev.Data, "Problem to marshal data when data is nil")
 
 }

@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
+// Transaction -
 type Transaction struct {
 	proxy *Proxy
 	txid  string
 }
 
+// NewTransaction -
 func NewTransaction(proxy *Proxy, txid string) *Transaction {
 	tx := &Transaction{
 		proxy: proxy,
@@ -62,10 +66,14 @@ func (t *Transaction) Remove(ctx context.Context, path string) (interface{}, err
 	}
 	return t.proxy.Remove(ctx, path, t.txid)
 }
+
+// Cancel -
 func (t *Transaction) Cancel() {
 	t.proxy.cancelTransaction(t.txid)
 	t.txid = ""
 }
+
+// Commit -
 func (t *Transaction) Commit() {
 	t.proxy.commitTransaction(t.txid)
 	t.txid = ""
