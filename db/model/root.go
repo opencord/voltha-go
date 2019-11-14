@@ -20,12 +20,13 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"reflect"
+	"sync"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"reflect"
-	"sync"
 )
 
 // Root is used to provide an abstraction to the base root structure
@@ -166,7 +167,7 @@ func (r *root) AddNotificationCallback(callback CallbackFunction, args ...interf
 func (r *root) syncParent(childRev Revision, txid string) {
 	data := proto.Clone(r.GetProxy().ParentNode.Latest().GetData().(proto.Message))
 
-	for fieldName, _ := range ChildrenFields(data) {
+	for fieldName := range ChildrenFields(data) {
 		childDataName, childDataHolder := GetAttributeValue(data, fieldName, 0)
 		if reflect.TypeOf(childRev.GetData()) == reflect.TypeOf(childDataHolder.Interface()) {
 			childDataHolder = reflect.ValueOf(childRev.GetData())

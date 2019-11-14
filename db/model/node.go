@@ -22,12 +22,13 @@ package model
 import (
 	"context"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 // When a branch has no transaction id, everything gets stored in NONE
@@ -255,9 +256,6 @@ func (n *node) List(ctx context.Context, path string, hash string, depth int, de
 	defer n.mutex.Unlock()
 
 	log.Debugw("node-list-request", log.Fields{"path": path, "hash": hash, "depth": depth, "deep": deep, "txid": txid})
-	if deep {
-		depth = -1
-	}
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -321,7 +319,7 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 		// 2.  Then look in the revision tree, especially if it's a sub-path such as /devices/1234/flows
 		// 3.  Move on to the KV store if that path cannot be found or if the entry has expired
 		if entry, exists := GetRevCache().Get(path); exists && entry.(Revision) != nil {
-			entryAge := time.Now().Sub(entry.(Revision).GetLastUpdate()).Nanoseconds() / int64(time.Millisecond)
+			entryAge := time.Since(entry.(Revision).GetLastUpdate()).Nanoseconds() / int64(time.Millisecond)
 			if entryAge < DataRefreshPeriod {
 				log.Debugw("using-cache-entry", log.Fields{
 					"path": path,
@@ -329,9 +327,8 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 					"age":  entryAge,
 				})
 				return proto.Clone(entry.(Revision).GetData().(proto.Message))
-			} else {
-				log.Debugw("cache-entry-expired", log.Fields{"path": path, "hash": hash, "age": entryAge})
 			}
+			log.Debugw("cache-entry-expired", log.Fields{"path": path, "hash": hash, "age": entryAge})
 		} else if result = n.getPath(ctx, rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
 			log.Debugw("using-rev-tree-entry", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
 			return result
@@ -354,7 +351,7 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 	// If we got to this point, we are either trying to reconcile with the db
 	// or we simply failed at getting information from memory
 	if n.Root.KvStore != nil {
-		if pr := rev.LoadFromPersistence(ctx, path, txid, nil); pr != nil && len(pr) > 0 {
+		if pr := rev.LoadFromPersistence(ctx, path, txid, nil); pr != nil {
 			// Did we receive a single or multiple revisions?
 			if len(pr) > 1 {
 				var revs []interface{}
@@ -399,27 +396,14 @@ func (n *node) getPath(ctx context.Context, rev Revision, path string, depth int
 				key := partition[0]
 				path = ""
 				keyValue := field.KeyFromStr(key)
-				if _, childRev := n.findRevByKey(children, field.Key, keyValue); childRev == nil {
+				_, childRev := n.findRevByKey(children, field.Key, keyValue)
+				if childRev == nil {
 					return nil
-				} else {
-					childNode := childRev.GetNode()
-					return childNode.getPath(ctx, childRev, path, depth)
 				}
-			} else {
-				var response []interface{}
-				for _, childRev := range children {
-					childNode := childRev.GetNode()
-					value := childNode.getData(childRev, depth)
-					response = append(response, value)
-				}
-				return response
+				childNode := childRev.GetNode()
+				return childNode.getPath(ctx, childRev, path, depth)
 			}
-		} else {
 			var response []interface{}
-			if path != "" {
-				// TODO: raise error
-				return response
-			}
 			for _, childRev := range children {
 				childNode := childRev.GetNode()
 				value := childNode.getData(childRev, depth)
@@ -427,7 +411,18 @@ func (n *node) getPath(ctx context.Context, rev Revision, path string, depth int
 			}
 			return response
 		}
-	} else if children := rev.GetChildren(name); children != nil && len(children) > 0 {
+		var response []interface{}
+		if path != "" {
+			// TODO: raise error
+			return response
+		}
+		for _, childRev := range children {
+			childNode := childRev.GetNode()
+			value := childNode.getData(childRev, depth)
+			response = append(response, value)
+		}
+		return response
+	} else if children := rev.GetChildren(name); children != nil {
 		childRev := children[0]
 		childNode := childRev.GetNode()
 		return childNode.getPath(ctx, childRev, path, depth)
@@ -602,8 +597,8 @@ func (n *node) doUpdate(ctx context.Context, branch *Branch, data interface{}, s
 	//}
 
 	if n.GetProxy() != nil {
-		log.Debug("invoking proxy PRE_UPDATE Callbacks")
-		n.GetProxy().InvokeCallbacks(PRE_UPDATE, false, branch.GetLatest(), data)
+		log.Debug("invoking proxy PreUpdate Callbacks")
+		n.GetProxy().InvokeCallbacks(PreUpdate, false, branch.GetLatest(), data)
 	}
 
 	if branch.GetLatest().GetData().(proto.Message).String() != data.(proto.Message).String() {
@@ -613,7 +608,7 @@ func (n *node) doUpdate(ctx context.Context, branch *Branch, data interface{}, s
 		}
 
 		rev := branch.GetLatest().UpdateData(ctx, data, branch)
-		changes := []ChangeTuple{{POST_UPDATE, branch.GetLatest().GetData(), rev.GetData()}}
+		changes := []ChangeTuple{{PostUpdate, branch.GetLatest().GetData(), rev.GetData()}}
 		n.makeLatest(branch, rev, changes)
 
 		return rev
@@ -663,8 +658,8 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 		if path == "" {
 			if field.Key != "" {
 				if n.GetProxy() != nil {
-					log.Debug("invoking proxy PRE_ADD Callbacks")
-					n.GetProxy().InvokeCallbacks(PRE_ADD, false, data)
+					log.Debug("invoking proxy PreAdd Callbacks")
+					n.GetProxy().InvokeCallbacks(PreAdd, false, data)
 				}
 
 				children = make([]Revision, len(rev.GetChildren(name)))
@@ -688,7 +683,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 				children = append(children, childRev)
 
 				updatedRev := rev.UpdateChildren(ctx, name, children, branch)
-				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
+				changes := []ChangeTuple{{PostAdd, nil, childRev.GetData()}}
 				childRev.SetupWatch(childRev.GetName())
 
 				n.makeLatest(branch, updatedRev, changes)
@@ -822,13 +817,14 @@ func (n *node) Remove(ctx context.Context, path string, txid string, makeBranch 
 				return branch.GetLatest()
 			}
 
-			if idx, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil && idx >= 0 {
+			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
+			if childRev != nil && idx >= 0 {
 				if n.GetProxy() != nil {
 					data := childRev.GetData()
-					n.GetProxy().InvokeCallbacks(PRE_REMOVE, false, data)
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data, nil})
+					n.GetProxy().InvokeCallbacks(PreRemove, false, data)
+					postAnnouncement = append(postAnnouncement, ChangeTuple{PostRemove, data, nil})
 				} else {
-					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
+					postAnnouncement = append(postAnnouncement, ChangeTuple{PostRemove, childRev.GetData(), nil})
 				}
 
 				childRev.StorageDrop(txid, true)
@@ -844,9 +840,8 @@ func (n *node) Remove(ctx context.Context, path string, txid string, makeBranch 
 				n.makeLatest(branch, rev, postAnnouncement)
 
 				return rev
-			} else {
-				log.Errorw("failed-to-find-revision", log.Fields{"name": name, "key": keyValue.(string)})
 			}
+			log.Errorw("failed-to-find-revision", log.Fields{"name": name, "key": keyValue.(string)})
 		}
 		log.Errorw("cannot-add-to-non-keyed-container", log.Fields{"name": name, "path": path, "fieldKey": field.Key})
 
@@ -1014,8 +1009,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 					path = partition[1]
 				}
 				keyValue := field.KeyFromStr(key)
-				var children []Revision
-				children = make([]Revision, len(rev.GetChildren(name)))
+				children := make([]Revision, len(rev.GetChildren(name)))
 				copy(children, rev.GetChildren(name))
 
 				var childRev Revision
@@ -1026,7 +1020,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 						"fullPath":         fullPath,
 						"name":             name,
 					})
-				} else if revs := n.GetBranch(NONE).GetLatest().LoadFromPersistence(ctx, fullPath, "", nil); revs != nil && len(revs) > 0 {
+				} else if revs := n.GetBranch(NONE).GetLatest().LoadFromPersistence(ctx, fullPath, "", nil); revs != nil {
 					log.Debugw("found-revision-matching-key-in-db", log.Fields{
 						"node-type":        reflect.ValueOf(n.Type).Type(),
 						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),

@@ -18,23 +18,24 @@ package model
 import (
 	"context"
 	"encoding/hex"
-	"github.com/google/uuid"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/common"
-	"github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"math/rand"
 	"reflect"
 	"strconv"
 	"sync"
 	"testing"
+
+	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-protos/v2/go/common"
+	"github.com/opencord/voltha-protos/v2/go/openflow_13"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
 )
 
 var (
-	BenchmarkProxy_Root        *root
-	BenchmarkProxy_DeviceProxy *Proxy
-	BenchmarkProxy_PLT         *proxyLoadTest
-	BenchmarkProxy_Logger      log.Logger
+	BenchmarkProxyRoot        *root
+	BenchmarkProxyDeviceProxy *Proxy
+	BenchmarkProxyPLT         *proxyLoadTest
+	BenchmarkProxyLogger      log.Logger
 )
 
 type proxyLoadChanges struct {
@@ -81,9 +82,9 @@ func (plt *proxyLoadTest) SetPostUpdateExecuted(status bool) {
 }
 
 func init() {
-	BenchmarkProxy_Root = NewRoot(&voltha.Voltha{}, nil)
+	BenchmarkProxyRoot = NewRoot(&voltha.Voltha{}, nil)
 
-	BenchmarkProxy_Logger, _ = log.AddPackage(log.JSON, log.DebugLevel, log.Fields{"instanceId": "PLT"})
+	BenchmarkProxyLogger, _ = log.AddPackage(log.JSON, log.DebugLevel, log.Fields{"instanceId": "PLT"})
 	//log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
 	//Setup default logger - applies for packages that do not have specific logger set
 	if _, err := log.SetDefaultLogger(log.JSON, log.DebugLevel, log.Fields{"instanceId": "PLT"}); err != nil {
@@ -96,16 +97,16 @@ func init() {
 	}
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
 
-	BenchmarkProxy_DeviceProxy = BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/", false)
+	BenchmarkProxyDeviceProxy = BenchmarkProxyRoot.node.CreateProxy(context.Background(), "/", false)
 	// Register ADD instructions callbacks
-	BenchmarkProxy_PLT = &proxyLoadTest{}
+	BenchmarkProxyPLT = &proxyLoadTest{}
 
-	BenchmarkProxy_DeviceProxy.RegisterCallback(PRE_ADD, commonCallbackFunc, "PRE_ADD", BenchmarkProxy_PLT.SetPreAddExecuted)
-	BenchmarkProxy_DeviceProxy.RegisterCallback(POST_ADD, commonCallbackFunc, "POST_ADD", BenchmarkProxy_PLT.SetPostAddExecuted)
+	BenchmarkProxyDeviceProxy.RegisterCallback(PreAdd, commonCallbackFunc, "PreAdd", BenchmarkProxyPLT.SetPreAddExecuted)
+	BenchmarkProxyDeviceProxy.RegisterCallback(PostAdd, commonCallbackFunc, "PostAdd", BenchmarkProxyPLT.SetPostAddExecuted)
 
 	//// Register UPDATE instructions callbacks
-	BenchmarkProxy_DeviceProxy.RegisterCallback(PRE_UPDATE, commonCallbackFunc, "PRE_UPDATE", BenchmarkProxy_PLT.SetPreUpdateExecuted)
-	BenchmarkProxy_DeviceProxy.RegisterCallback(POST_UPDATE, commonCallbackFunc, "POST_UPDATE", BenchmarkProxy_PLT.SetPostUpdateExecuted)
+	BenchmarkProxyDeviceProxy.RegisterCallback(PreUpdate, commonCallbackFunc, "PreUpdate", BenchmarkProxyPLT.SetPreUpdateExecuted)
+	BenchmarkProxyDeviceProxy.RegisterCallback(PostUpdate, commonCallbackFunc, "PostUpdate", BenchmarkProxyPLT.SetPostUpdateExecuted)
 
 }
 
@@ -145,25 +146,25 @@ func BenchmarkProxy_AddDevice(b *testing.B) {
 			ltDevID := "0001" + hex.EncodeToString(ltDevIDBin)[:12]
 			ltDevice.Id = ltDevID
 
-			BenchmarkProxy_PLT.SetPreAddExecuted(false)
-			BenchmarkProxy_PLT.SetPostAddExecuted(false)
+			BenchmarkProxyPLT.SetPreAddExecuted(false)
+			BenchmarkProxyPLT.SetPostAddExecuted(false)
 
 			var added interface{}
 			// Add the device
-			if added = BenchmarkProxy_DeviceProxy.AddWithID(context.Background(), "/devices", ltDevID, ltDevice, ""); added == nil {
-				BenchmarkProxy_Logger.Errorf("Failed to add device: %+v", ltDevice)
+			if added = BenchmarkProxyDeviceProxy.AddWithID(context.Background(), "/devices", ltDevID, ltDevice, ""); added == nil {
+				BenchmarkProxyLogger.Errorf("Failed to add device: %+v", ltDevice)
 				continue
 			} else {
-				BenchmarkProxy_Logger.Infof("Device was added 1: %+v", added)
+				BenchmarkProxyLogger.Infof("Device was added 1: %+v", added)
 			}
 
-			BenchmarkProxy_PLT.addMutex.Lock()
-			BenchmarkProxy_PLT.addedDevices = append(BenchmarkProxy_PLT.addedDevices, added.(*voltha.Device).Id)
-			BenchmarkProxy_PLT.addMutex.Unlock()
+			BenchmarkProxyPLT.addMutex.Lock()
+			BenchmarkProxyPLT.addedDevices = append(BenchmarkProxyPLT.addedDevices, added.(*voltha.Device).Id)
+			BenchmarkProxyPLT.addMutex.Unlock()
 		}
 	})
 
-	BenchmarkProxy_Logger.Infof("Number of added devices : %d", len(BenchmarkProxy_PLT.addedDevices))
+	BenchmarkProxyLogger.Infof("Number of added devices : %d", len(BenchmarkProxyPLT.addedDevices))
 }
 
 func BenchmarkProxy_UpdateFirmware(b *testing.B) {
@@ -171,20 +172,20 @@ func BenchmarkProxy_UpdateFirmware(b *testing.B) {
 		for pb.Next() {
 			//for i:=0; i < b.N; i++ {
 
-			if len(BenchmarkProxy_PLT.addedDevices) > 0 {
+			if len(BenchmarkProxyPLT.addedDevices) > 0 {
 				var target interface{}
-				randomID := BenchmarkProxy_PLT.addedDevices[rand.Intn(len(BenchmarkProxy_PLT.addedDevices))]
-				firmProxy := BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/", false)
+				randomID := BenchmarkProxyPLT.addedDevices[rand.Intn(len(BenchmarkProxyPLT.addedDevices))]
+				firmProxy := BenchmarkProxyRoot.node.CreateProxy(context.Background(), "/", false)
 				if target = firmProxy.Get(context.Background(), "/devices/"+randomID, 0, false,
 					""); !reflect.ValueOf(target).IsValid() {
-					BenchmarkProxy_Logger.Errorf("Failed to find device: %s %+v", randomID, target)
+					BenchmarkProxyLogger.Errorf("Failed to find device: %s %+v", randomID, target)
 					continue
 				}
 
-				BenchmarkProxy_PLT.SetPreUpdateExecuted(false)
-				BenchmarkProxy_PLT.SetPostUpdateExecuted(false)
-				firmProxy.RegisterCallback(PRE_UPDATE, commonCallbackFunc, "PRE_UPDATE", BenchmarkProxy_PLT.SetPreUpdateExecuted)
-				firmProxy.RegisterCallback(POST_UPDATE, commonCallbackFunc, "POST_UPDATE", BenchmarkProxy_PLT.SetPostUpdateExecuted)
+				BenchmarkProxyPLT.SetPreUpdateExecuted(false)
+				BenchmarkProxyPLT.SetPostUpdateExecuted(false)
+				firmProxy.RegisterCallback(PreUpdate, commonCallbackFunc, "PreUpdate", BenchmarkProxyPLT.SetPreUpdateExecuted)
+				firmProxy.RegisterCallback(PostUpdate, commonCallbackFunc, "PostUpdate", BenchmarkProxyPLT.SetPostUpdateExecuted)
 
 				var fwVersion int
 
@@ -202,32 +203,32 @@ func BenchmarkProxy_UpdateFirmware(b *testing.B) {
 				var updated interface{}
 				if updated = firmProxy.Update(context.Background(), "/devices/"+randomID, target.(*voltha.Device), false,
 					""); updated == nil {
-					BenchmarkProxy_Logger.Errorf("Failed to update device: %+v", target)
+					BenchmarkProxyLogger.Errorf("Failed to update device: %+v", target)
 					continue
 				} else {
-					BenchmarkProxy_Logger.Infof("Device was updated : %+v", updated)
+					BenchmarkProxyLogger.Infof("Device was updated : %+v", updated)
 
 				}
 
 				if d := firmProxy.Get(context.Background(), "/devices/"+randomID, 0, false,
 					""); !reflect.ValueOf(d).IsValid() {
-					BenchmarkProxy_Logger.Errorf("Failed to get device: %s", randomID)
+					BenchmarkProxyLogger.Errorf("Failed to get device: %s", randomID)
 					continue
 				} else if d.(*voltha.Device).FirmwareVersion == after {
-					BenchmarkProxy_Logger.Infof("Imm Device was updated with new value: %s %+v", randomID, d)
+					BenchmarkProxyLogger.Infof("Imm Device was updated with new value: %s %+v", randomID, d)
 				} else if d.(*voltha.Device).FirmwareVersion == before {
-					BenchmarkProxy_Logger.Errorf("Imm Device kept old value: %s %+v %+v", randomID, d, target)
+					BenchmarkProxyLogger.Errorf("Imm Device kept old value: %s %+v %+v", randomID, d, target)
 				} else {
-					BenchmarkProxy_Logger.Errorf("Imm Device has unknown value: %s %+v %+v", randomID, d, target)
+					BenchmarkProxyLogger.Errorf("Imm Device has unknown value: %s %+v %+v", randomID, d, target)
 				}
 
-				BenchmarkProxy_PLT.firmwareMutex.Lock()
+				BenchmarkProxyPLT.firmwareMutex.Lock()
 
-				BenchmarkProxy_PLT.updatedFirmwares = append(
-					BenchmarkProxy_PLT.updatedFirmwares,
+				BenchmarkProxyPLT.updatedFirmwares = append(
+					BenchmarkProxyPLT.updatedFirmwares,
 					proxyLoadChanges{ID: randomID, Before: before, After: after},
 				)
-				BenchmarkProxy_PLT.firmwareMutex.Unlock()
+				BenchmarkProxyPLT.firmwareMutex.Unlock()
 			}
 		}
 	})
@@ -242,14 +243,14 @@ func traverseBranches(revision Revision, depth int) {
 		prefix += "  "
 	}
 
-	BenchmarkProxy_Logger.Debugf("%sRevision: %s %+v", prefix, revision.GetHash(), revision.GetData())
+	BenchmarkProxyLogger.Debugf("%sRevision: %s %+v", prefix, revision.GetHash(), revision.GetData())
 
 	//for brIdx, brRev := range revision.GetBranch().Revisions {
-	//	BenchmarkProxy_Logger.Debugf("%sbranchIndex: %s", prefix, brIdx)
+	//	BenchmarkProxyLogger.Debugf("%sbranchIndex: %s", prefix, brIdx)
 	//	traverseBranches(brRev, depth+1)
 	//}
 	for childrenI, children := range revision.GetAllChildren() {
-		BenchmarkProxy_Logger.Debugf("%schildrenIndex: %s, length: %d", prefix, childrenI, len(children))
+		BenchmarkProxyLogger.Debugf("%schildrenIndex: %s, length: %d", prefix, childrenI, len(children))
 
 		for _, subrev := range children {
 			//subrev.GetBranch().Latest
@@ -261,10 +262,10 @@ func traverseBranches(revision Revision, depth int) {
 func BenchmarkProxy_UpdateFlows(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if len(BenchmarkProxy_PLT.addedDevices) > 0 {
-				randomID := BenchmarkProxy_PLT.addedDevices[rand.Intn(len(BenchmarkProxy_PLT.addedDevices))]
+			if len(BenchmarkProxyPLT.addedDevices) > 0 {
+				randomID := BenchmarkProxyPLT.addedDevices[rand.Intn(len(BenchmarkProxyPLT.addedDevices))]
 
-				flowsProxy := BenchmarkProxy_Root.node.CreateProxy(context.Background(), "/devices/"+randomID+"/flows", false)
+				flowsProxy := BenchmarkProxyRoot.node.CreateProxy(context.Background(), "/devices/"+randomID+"/flows", false)
 				flows := flowsProxy.Get(context.Background(), "/", 0, false, "")
 
 				before := flows.(*openflow_13.Flows).Items[0].TableId
@@ -272,11 +273,11 @@ func BenchmarkProxy_UpdateFlows(b *testing.B) {
 				after := flows.(*openflow_13.Flows).Items[0].TableId
 
 				flowsProxy.RegisterCallback(
-					PRE_UPDATE,
+					PreUpdate,
 					commonCallback2,
 				)
 				flowsProxy.RegisterCallback(
-					POST_UPDATE,
+					PostUpdate,
 					commonCallback2,
 				)
 
@@ -284,14 +285,14 @@ func BenchmarkProxy_UpdateFlows(b *testing.B) {
 				if updated = flowsProxy.Update(context.Background(), "/", flows.(*openflow_13.Flows), false, ""); updated == nil {
 					b.Errorf("Failed to update flows for device: %+v", flows)
 				} else {
-					BenchmarkProxy_Logger.Infof("Flows were updated : %+v", updated)
+					BenchmarkProxyLogger.Infof("Flows were updated : %+v", updated)
 				}
-				BenchmarkProxy_PLT.flowMutex.Lock()
-				BenchmarkProxy_PLT.updatedFlows = append(
-					BenchmarkProxy_PLT.updatedFlows,
+				BenchmarkProxyPLT.flowMutex.Lock()
+				BenchmarkProxyPLT.updatedFlows = append(
+					BenchmarkProxyPLT.updatedFlows,
 					proxyLoadChanges{ID: randomID, Before: before, After: after},
 				)
-				BenchmarkProxy_PLT.flowMutex.Unlock()
+				BenchmarkProxyPLT.flowMutex.Unlock()
 			}
 		}
 	})
@@ -300,33 +301,33 @@ func BenchmarkProxy_UpdateFlows(b *testing.B) {
 func BenchmarkProxy_GetDevices(b *testing.B) {
 	//traverseBranches(BenchmarkProxy_DeviceProxy.Root.node.Branches[NONE].GetLatest(), 0)
 
-	for i := 0; i < len(BenchmarkProxy_PLT.addedDevices); i++ {
-		devToGet := BenchmarkProxy_PLT.addedDevices[i]
+	for i := 0; i < len(BenchmarkProxyPLT.addedDevices); i++ {
+		devToGet := BenchmarkProxyPLT.addedDevices[i]
 		// Verify that the added device can now be retrieved
-		if d := BenchmarkProxy_DeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
+		if d := BenchmarkProxyDeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
 			""); !reflect.ValueOf(d).IsValid() {
-			BenchmarkProxy_Logger.Errorf("Failed to get device: %s", devToGet)
+			BenchmarkProxyLogger.Errorf("Failed to get device: %s", devToGet)
 			continue
 		} else {
-			BenchmarkProxy_Logger.Infof("Got device: %s %+v", devToGet, d)
+			BenchmarkProxyLogger.Infof("Got device: %s %+v", devToGet, d)
 		}
 	}
 }
 
 func BenchmarkProxy_GetUpdatedFirmware(b *testing.B) {
-	for i := 0; i < len(BenchmarkProxy_PLT.updatedFirmwares); i++ {
-		devToGet := BenchmarkProxy_PLT.updatedFirmwares[i].ID
+	for i := 0; i < len(BenchmarkProxyPLT.updatedFirmwares); i++ {
+		devToGet := BenchmarkProxyPLT.updatedFirmwares[i].ID
 		// Verify that the updated device can be retrieved and that the updates were actually applied
-		if d := BenchmarkProxy_DeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
+		if d := BenchmarkProxyDeviceProxy.Get(context.Background(), "/devices/"+devToGet, 0, false,
 			""); !reflect.ValueOf(d).IsValid() {
-			BenchmarkProxy_Logger.Errorf("Failed to get device: %s", devToGet)
+			BenchmarkProxyLogger.Errorf("Failed to get device: %s", devToGet)
 			continue
-		} else if d.(*voltha.Device).FirmwareVersion == BenchmarkProxy_PLT.updatedFirmwares[i].After.(string) {
-			BenchmarkProxy_Logger.Infof("Device was updated with new value: %s %+v", devToGet, d)
-		} else if d.(*voltha.Device).FirmwareVersion == BenchmarkProxy_PLT.updatedFirmwares[i].Before.(string) {
-			BenchmarkProxy_Logger.Errorf("Device kept old value: %s %+v %+v", devToGet, d, BenchmarkProxy_PLT.updatedFirmwares[i])
+		} else if d.(*voltha.Device).FirmwareVersion == BenchmarkProxyPLT.updatedFirmwares[i].After.(string) {
+			BenchmarkProxyLogger.Infof("Device was updated with new value: %s %+v", devToGet, d)
+		} else if d.(*voltha.Device).FirmwareVersion == BenchmarkProxyPLT.updatedFirmwares[i].Before.(string) {
+			BenchmarkProxyLogger.Errorf("Device kept old value: %s %+v %+v", devToGet, d, BenchmarkProxyPLT.updatedFirmwares[i])
 		} else {
-			BenchmarkProxy_Logger.Errorf("Device has unknown value: %s %+v %+v", devToGet, d, BenchmarkProxy_PLT.updatedFirmwares[i])
+			BenchmarkProxyLogger.Errorf("Device has unknown value: %s %+v %+v", devToGet, d, BenchmarkProxyPLT.updatedFirmwares[i])
 		}
 	}
 }
