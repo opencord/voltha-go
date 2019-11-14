@@ -32,11 +32,11 @@ type EventBus struct {
 // ignoredCallbacks keeps a list of callbacks that should not be advertised on the event bus
 var (
 	ignoredCallbacks = map[CallbackType]struct{}{
-		PRE_ADD:         {},
-		GET:             {},
-		POST_LISTCHANGE: {},
-		PRE_REMOVE:      {},
-		PRE_UPDATE:      {},
+		PreAdd:         {},
+		GET:            {},
+		PostListchange: {},
+		PreRemove:      {},
+		PreUpdate:      {},
 	}
 )
 
@@ -60,9 +60,9 @@ func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	}
 	var kind voltha.ConfigEventType_ConfigEventType
 	switch eventType {
-	case POST_ADD:
+	case PostAdd:
 		kind = voltha.ConfigEventType_add
-	case POST_REMOVE:
+	case PostRemove:
 		kind = voltha.ConfigEventType_remove
 	default:
 		kind = voltha.ConfigEventType_update

@@ -136,7 +136,7 @@ func Merge3Way(
 					}
 					if field.IsContainer {
 						changes = append(
-							changes, ChangeTuple{POST_LISTCHANGE,
+							changes, ChangeTuple{PostListchange,
 								NewOperationContext("", nil, fieldName, ""), nil},
 						)
 					}
@@ -160,13 +160,13 @@ func Merge3Way(
 					// FIXME: newRev may come back as nil... exclude those entries for now
 					if newRev != nil {
 						newList[idx] = newRev
-						changes = append(changes, ChangeTuple{POST_ADD, newList[idx].GetData(), newRev.GetData()})
+						changes = append(changes, ChangeTuple{PostAdd, newList[idx].GetData(), newRev.GetData()})
 					}
 				}
 				for key := range src.RemovedKeys {
 					oldRev := forkList[src.KeyMap1[key]]
 					revsToDiscard = append(revsToDiscard, oldRev)
-					changes = append(changes, ChangeTuple{POST_REMOVE, oldRev.GetData(), nil})
+					changes = append(changes, ChangeTuple{PostRemove, oldRev.GetData(), nil})
 				}
 				for key := range src.ChangedKeys {
 					idx := src.KeyMap2[key]
@@ -200,7 +200,7 @@ func Merge3Way(
 					} else {
 						newRev := mergeChildFunc(srcList[src.KeyMap2[key]])
 						newList = append(newList, newRev)
-						changes = append(changes, ChangeTuple{POST_ADD, srcList[src.KeyMap2[key]], newRev.GetData()})
+						changes = append(changes, ChangeTuple{PostAdd, srcList[src.KeyMap2[key]], newRev.GetData()})
 					}
 				}
 				for key := range src.ChangedKeys {
@@ -237,7 +237,7 @@ func Merge3Way(
 						newList[len(newList)-1] = nil
 						newList = newList[:len(newList)-1]
 
-						changes = append(changes, ChangeTuple{POST_REMOVE, oldRev.GetData(), nil})
+						changes = append(changes, ChangeTuple{PostRemove, oldRev.GetData(), nil})
 					}
 				}
 
@@ -264,7 +264,7 @@ func Merge3Way(
 		rev = rev.UpdateAllChildren(newChildren, dstRev.GetBranch())
 
 		if configChanged {
-			changes = append(changes, ChangeTuple{POST_UPDATE, dstRev.GetBranch().GetLatest().GetData(), rev.GetData()})
+			changes = append(changes, ChangeTuple{PostUpdate, dstRev.GetBranch().GetLatest().GetData(), rev.GetData()})
 		}
 		return rev, changes
 	}
