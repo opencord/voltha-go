@@ -21,12 +21,13 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"reflect"
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 // OperationContext holds details on the information used during an operation
@@ -85,8 +86,8 @@ func NewProxy(root *root, node *node, parentNode *node, path string, fullPath st
 	return p
 }
 
-// GetRoot returns the root attribute of the proxy
-func (p *Proxy) GetRoot() *root {
+// getRoot returns the root attribute of the proxy
+func (p *Proxy) getRoot() *root {
 	return p.Root
 }
 
@@ -146,19 +147,19 @@ func (p *Proxy) DeleteCallback(callbackType CallbackType, funcHash string) {
 	delete(p.Callbacks[callbackType], funcHash)
 }
 
-// CallbackType is an enumerated value to express when a callback should be executed
+// ProxyOperation callbackType is an enumerated value to express when a callback should be executed
 type ProxyOperation uint8
 
 // Enumerated list of callback types
 const (
-	PROXY_NONE ProxyOperation = iota
-	PROXY_GET
-	PROXY_LIST
-	PROXY_ADD
-	PROXY_UPDATE
-	PROXY_REMOVE
-	PROXY_CREATE
-	PROXY_WATCH
+	ProxyNone ProxyOperation = iota
+	ProxyGet
+	ProxyList
+	ProxyAdd
+	ProxyUpdate
+	ProxyRemove
+	ProxyCreate
+	ProxyWatch
 )
 
 var proxyOperationTypes = []string{
@@ -176,12 +177,14 @@ func (t ProxyOperation) String() string {
 	return proxyOperationTypes[t]
 }
 
+// GetOperation -
 func (p *Proxy) GetOperation() ProxyOperation {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	return p.operation
 }
 
+// SetOperation -
 func (p *Proxy) SetOperation(operation ProxyOperation) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -201,7 +204,6 @@ func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled
 		case 2:
 			controlled = false
 			pathLock = ""
-			break
 		case 3:
 			fallthrough
 		default:
@@ -224,8 +226,8 @@ func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txi
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	p.SetOperation(PROXY_LIST)
-	defer p.SetOperation(PROXY_NONE)
+	p.SetOperation(ProxyList)
+	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-list", log.Fields{
 		"path":       path,
@@ -235,7 +237,7 @@ func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txi
 		"operation":  p.GetOperation(),
 	})
 
-	rv := p.GetRoot().List(ctx, path, "", depth, deep, txid)
+	rv := p.getRoot().List(ctx, path, "", depth, deep, txid)
 
 	return rv
 }
@@ -251,8 +253,8 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	p.SetOperation(PROXY_GET)
-	defer p.SetOperation(PROXY_NONE)
+	p.SetOperation(ProxyGet)
+	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-get", log.Fields{
 		"path":       path,
@@ -262,7 +264,7 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 		"operation":  p.GetOperation(),
 	})
 
-	rv := p.GetRoot().Get(ctx, path, "", depth, deep, txid)
+	rv := p.getRoot().Get(ctx, path, "", depth, deep, txid)
 
 	return rv
 }
@@ -285,8 +287,8 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	p.SetOperation(PROXY_UPDATE)
-	defer p.SetOperation(PROXY_NONE)
+	p.SetOperation(ProxyUpdate)
+	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-update", log.Fields{
 		"path":       path,
@@ -297,12 +299,19 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 		"operation":  p.GetOperation(),
 	})
 
-	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	if p.getRoot().KvStore != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+			log.Errorw("Unable to acquire a key and set it to a given value", log.Fields{"error": err})
+			return nil
+		}
+		defer func() {
+			if err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_"); err != nil {
+				log.Errorw("Unable to release reservation for a specific key", log.Fields{"error": err})
+			}
+		}()
 	}
 
-	result := p.GetRoot().Update(ctx, fullPath, data, strict, txid, nil)
+	result := p.getRoot().Update(ctx, fullPath, data, strict, txid, nil)
 
 	if result != nil {
 		return result.GetData()
@@ -331,8 +340,8 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	p.SetOperation(PROXY_ADD)
-	defer p.SetOperation(PROXY_NONE)
+	p.SetOperation(ProxyAdd)
+	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-add-with-id", log.Fields{
 		"path":       path,
@@ -343,12 +352,19 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 		"operation":  p.GetOperation(),
 	})
 
-	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	if p.getRoot().KvStore != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+			log.Errorw("Unable to acquire a key and set it to a given value", log.Fields{"error": err})
+			return nil
+		}
+		defer func() {
+			if err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_"); err != nil {
+				log.Errorw("Unable to release reservation for a specific key", log.Fields{"error": err})
+			}
+		}()
 	}
 
-	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
+	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
 
 	if result != nil {
 		return result.GetData()
@@ -375,8 +391,8 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	p.SetOperation(PROXY_ADD)
-	defer p.SetOperation(PROXY_NONE)
+	p.SetOperation(ProxyAdd)
+	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-add", log.Fields{
 		"path":       path,
@@ -387,12 +403,19 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 		"operation":  p.GetOperation(),
 	})
 
-	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	if p.getRoot().KvStore != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+			log.Errorw("Unable to acquire a key and set it to a given value", log.Fields{"error": err})
+			return nil
+		}
+		defer func() {
+			if err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_"); err != nil {
+				log.Errorw("Unable to release reservation for a specific key", log.Fields{"error": err})
+			}
+		}()
 	}
 
-	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
+	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
 
 	if result != nil {
 		return result.GetData()
@@ -419,8 +442,8 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) interface{
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	p.SetOperation(PROXY_REMOVE)
-	defer p.SetOperation(PROXY_NONE)
+	p.SetOperation(ProxyRemove)
+	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-remove", log.Fields{
 		"path":       path,
@@ -431,12 +454,19 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) interface{
 		"operation":  p.GetOperation(),
 	})
 
-	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	if p.getRoot().KvStore != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+			log.Errorw("Unable to acquire a key and set it to a given value", log.Fields{"error": err})
+			return nil
+		}
+		defer func() {
+			if err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_"); err != nil {
+				log.Errorw("Unable to release reservation for a specific key", log.Fields{"error": err})
+			}
+		}()
 	}
 
-	result := p.GetRoot().Remove(ctx, fullPath, txid, nil)
+	result := p.getRoot().Remove(ctx, fullPath, txid, nil)
 
 	if result != nil {
 		return result.GetData()
@@ -464,8 +494,8 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) *P
 
 	pathLock, controlled := p.parseForControlledPath(effectivePath)
 
-	p.SetOperation(PROXY_CREATE)
-	defer p.SetOperation(PROXY_NONE)
+	p.SetOperation(ProxyCreate)
+	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-create", log.Fields{
 		"path":       path,
@@ -476,28 +506,35 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) *P
 		"operation":  p.GetOperation(),
 	})
 
-	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+	if p.getRoot().KvStore != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+			log.Errorw("Unable to acquire a key and set it to a given value", log.Fields{"error": err})
+			return nil
+		}
+		defer func() {
+			if err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_"); err != nil {
+				log.Errorw("Unable to release reservation for a specific key", log.Fields{"error": err})
+			}
+		}()
 	}
 
-	return p.GetRoot().CreateProxy(ctx, fullPath, exclusive)
+	return p.getRoot().CreateProxy(ctx, fullPath, exclusive)
 }
 
 // OpenTransaction creates a new transaction branch to isolate operations made to the data model
 func (p *Proxy) OpenTransaction() *Transaction {
-	txid := p.GetRoot().MakeTxBranch()
+	txid := p.getRoot().MakeTxBranch()
 	return NewTransaction(p, txid)
 }
 
 // commitTransaction will apply and merge modifications made in the transaction branch to the data model
 func (p *Proxy) commitTransaction(txid string) {
-	p.GetRoot().FoldTxBranch(txid)
+	p.getRoot().FoldTxBranch(txid)
 }
 
 // cancelTransaction will terminate a transaction branch along will all changes within it
 func (p *Proxy) cancelTransaction(txid string) {
-	p.GetRoot().DeleteTxBranch(txid)
+	p.getRoot().DeleteTxBranch(txid)
 }
 
 // CallbackFunction is a type used to define callback functions
@@ -513,15 +550,9 @@ type CallbackTuple struct {
 func (tuple *CallbackTuple) Execute(contextArgs []interface{}) interface{} {
 	args := []interface{}{}
 
-	for _, ta := range tuple.args {
-		args = append(args, ta)
-	}
+	args = append(args, tuple.args...)
 
-	if contextArgs != nil {
-		for _, ca := range contextArgs {
-			args = append(args, ca)
-		}
-	}
+	args = append(args, contextArgs...)
 
 	return tuple.callback(args...)
 }
