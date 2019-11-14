@@ -17,7 +17,8 @@
 Defines a DeviceManager Interface - Used for unit testing of the flow decomposer only at this
 time.
 */
-package coreIf
+
+package coreif
 
 import "github.com/opencord/voltha-protos/v2/go/voltha"
 

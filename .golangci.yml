@@ -1,0 +1,83 @@
+#Copyright 2018-present Open Networking Foundation
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+linters-settings:
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+
+  misspell:
+    locale: US
+
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - golint
+    - ineffassign
+
+run:
+  skip-dirs:
+    - vendor
+    - db
+    - ro_core
+    - tests
+    - common
+  modules-download-mode: vendor
+
+issues:
+  exclude-rules:
+    - text: "weak cryptographic primitive"
+      linters:
+        - gosec
+  exclude:
+    - "don't use underscores in Go names; method Adapter_descriptor"
+    - "don't use underscores in Go names; method Device_types"
+    - "don't use underscores in Go names; method Adopt_device"
+    - "don't use underscores in Go names; method Reconcile_device"
+    - "don't use underscores in Go names; method Abandon_device"
+    - "don't use underscores in Go names; method Disable_device"
+    - "don't use underscores in Go names; method Reenable_device"
+    - "don't use underscores in Go names; method Reboot_device"
+    - "don't use underscores in Go names; method Self_test_device"
+    - "don't use underscores in Go names; method Delete_device"
+    - "don't use underscores in Go names; method Get_device_details"
+    - "don't use underscores in Go names; method Update_flows_bulk"
+    - "don't use underscores in Go names; method Update_flows_incrementally"
+    - "don't use underscores in Go names; method Update_pm_config"
+    - "don't use underscores in Go names; method Receive_packet_out"
+    - "don't use underscores in Go names; method Suppress_alarm"
+    - "don't use underscores in Go names; method Unsuppress_alarm"
+    - "don't use underscores in Go names; method Get_ofp_device_info"
+    - "don't use underscores in Go names; method Get_ofp_port_info"
+    - "don't use underscores in Go names; method Process_inter_adapter_message"
+    - "don't use underscores in Go names; method Download_image"
+    - "don't use underscores in Go names; method Get_image_download_status"
+    - "don't use underscores in Go names; method Cancel_image_download"
+    - "don't use underscores in Go names; method Activate_image_update"
+    - "don't use underscores in Go names; method Revert_image_update"
+  exclude-use-default: false
+
+# golangci.com configuration
+# https://github.com/golangci/golangci/wiki/Configuration
+service:
+  golangci-lint-version: 1.17.1 # use the fixed version to not introduce new linters unexpectedly
+  prepare:
+    - echo "here I can run custom commands, but no preparation needed for this repo"
