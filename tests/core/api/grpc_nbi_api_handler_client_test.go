@@ -21,6 +21,12 @@ package api
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -32,11 +38,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"os"
-	"os/exec"
-	"strings"
-	"testing"
-	"time"
 )
 
 var conn *grpc.ClientConn
