@@ -16,17 +16,18 @@
 package core
 
 import (
-	"github.com/opencord/voltha-go/rw_core/coreIf"
+	"reflect"
+	"testing"
+
+	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-go/rw_core/mocks"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 var transitionMap *TransitionMap
-var tdm coreIf.DeviceManager
+var tdm coreif.DeviceManager
 
 type testDeviceManager struct {
 	mocks.DeviceManager
