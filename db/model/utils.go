@@ -17,8 +17,6 @@
 package model
 
 import (
-	"bytes"
-	"encoding/gob"
 	"reflect"
 	"strings"
 )
@@ -252,24 +250,4 @@ func GetAttributeStructure(data interface{}, name string, depth int) reflect.Str
 
 	return result
 
-}
-
-func clone2(a interface{}) interface{} {
-	b := reflect.ValueOf(a)
-	buff := new(bytes.Buffer)
-	enc := gob.NewEncoder(buff)
-	dec := gob.NewDecoder(buff)
-	enc.Encode(a)
-	dec.Decode(b.Elem().Interface())
-
-	return b.Interface()
-}
-
-func clone(a, b interface{}) interface{} {
-	buff := new(bytes.Buffer)
-	enc := gob.NewEncoder(buff)
-	dec := gob.NewDecoder(buff)
-	enc.Encode(a)
-	dec.Decode(b)
-	return b
 }

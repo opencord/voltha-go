@@ -17,8 +17,9 @@
 package model
 
 import (
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"sync"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 // Profiling is used to store performance details collected at runtime
@@ -37,8 +38,8 @@ type profiling struct {
 var profilingInstance *profiling
 var profilingOnce sync.Once
 
-// GetProfiling returns a singleton instance of the Profiling structure
-func GetProfiling() *profiling {
+// getProfiling returns a singleton instance of the Profiling structure
+func getProfiling() *profiling {
 	profilingOnce.Do(func() {
 		profilingInstance = &profiling{}
 	})
