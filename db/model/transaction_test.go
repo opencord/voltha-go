@@ -19,33 +19,34 @@ package model
 import (
 	"context"
 	"encoding/hex"
+	"strconv"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"testing"
 )
 
 var (
-	TestTransaction_Root           *root
-	TestTransaction_RootProxy      *Proxy
-	TestTransaction_TargetDeviceId string
-	TestTransaction_DeviceId       string
+	TestTransactionRoot           *PRoot
+	TestTransactionRootProxy      *Proxy
+	TestTransactionTargetDeviceID string
+	TestTransactionDeviceID       string
 )
 
 func init() {
 	var err error
-	TestTransaction_Root = NewRoot(&voltha.Voltha{}, nil)
-	if TestTransaction_RootProxy, err = TestTransaction_Root.node.CreateProxy(context.Background(), "/", false); err != nil {
+	TestTransactionRoot = NewRoot(&voltha.Voltha{}, nil)
+	if TestTransactionRootProxy, err = TestTransactionRoot.node.CreateProxy(context.Background(), "/", false); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot create proxy")
 	}
 }
 
 func TestTransaction_2_AddDevice(t *testing.T) {
 	devIDBin, _ := uuid.New().MarshalBinary()
-	TestTransaction_DeviceId = "0001" + hex.EncodeToString(devIDBin)[:12]
+	TestTransactionDeviceID = "0001" + hex.EncodeToString(devIDBin)[:12]
 
 	ports := []*voltha.Port{
 		{
@@ -60,14 +61,14 @@ func TestTransaction_2_AddDevice(t *testing.T) {
 	}
 
 	device := &voltha.Device{
-		Id:         TestTransaction_DeviceId,
+		Id:         TestTransactionDeviceID,
 		Type:       "simulated_olt",
 		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
 		AdminState: voltha.AdminState_PREPROVISIONED,
 		Ports:      ports,
 	}
 
-	addTx := TestTransaction_RootProxy.OpenTransaction()
+	addTx := TestTransactionRootProxy.OpenTransaction()
 
 	added, err := addTx.Add(context.Background(), "/devices", device)
 	if err != nil {
@@ -77,7 +78,7 @@ func TestTransaction_2_AddDevice(t *testing.T) {
 	if added == nil {
 		t.Error("Failed to add device")
 	} else {
-		TestTransaction_TargetDeviceId = added.(*voltha.Device).Id
+		TestTransactionTargetDeviceID = added.(*voltha.Device).Id
 		t.Logf("Added device : %+v", added)
 	}
 	addTx.Commit()
@@ -85,9 +86,9 @@ func TestTransaction_2_AddDevice(t *testing.T) {
 
 func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 
-	basePath := "/devices/" + TestTransaction_DeviceId
+	basePath := "/devices/" + TestTransactionDeviceID
 
-	getDevWithPortsTx := TestTransaction_RootProxy.OpenTransaction()
+	getDevWithPortsTx := TestTransactionRootProxy.OpenTransaction()
 	device1, err := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
 	if err != nil {
 		log.Errorf("Failed to get device with ports due to error %v", err)
@@ -96,7 +97,7 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
-	getDevTx := TestTransaction_RootProxy.OpenTransaction()
+	getDevTx := TestTransactionRootProxy.OpenTransaction()
 	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
 	if err != nil {
 		log.Errorf("Failed to open transaction due to error %v", err)
@@ -108,8 +109,8 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 }
 
 func TestTransaction_4_UpdateDevice(t *testing.T) {
-	updateTx := TestTransaction_RootProxy.OpenTransaction()
-	if retrieved, err := updateTx.Get(context.Background(), "/devices/"+TestTransaction_TargetDeviceId, 1, false); err != nil {
+	updateTx := TestTransactionRootProxy.OpenTransaction()
+	if retrieved, err := updateTx.Get(context.Background(), "/devices/"+TestTransactionTargetDeviceID, 1, false); err != nil {
 		log.Errorf("Failed to retrieve device info due to error %v", err)
 		assert.NotNil(t, err)
 	} else if retrieved == nil {
@@ -128,7 +129,7 @@ func TestTransaction_4_UpdateDevice(t *testing.T) {
 		t.Logf("Before update : %+v", retrieved)
 
 		// FIXME: The makeBranch passed in function is nil or not being executed properly!!!!!
-		afterUpdate, err := updateTx.Update(context.Background(), "/devices/"+TestTransaction_TargetDeviceId, retrieved, false)
+		afterUpdate, err := updateTx.Update(context.Background(), "/devices/"+TestTransactionTargetDeviceID, retrieved, false)
 		if err != nil {
 			log.Errorf("Failed to update device info due to error %v", err)
 			assert.NotNil(t, err)
@@ -144,9 +145,9 @@ func TestTransaction_4_UpdateDevice(t *testing.T) {
 
 func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 
-	basePath := "/devices/" + TestTransaction_DeviceId
+	basePath := "/devices/" + TestTransactionDeviceID
 
-	getDevWithPortsTx := TestTransaction_RootProxy.OpenTransaction()
+	getDevWithPortsTx := TestTransactionRootProxy.OpenTransaction()
 	device1, err := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
 	if err != nil {
 		log.Errorf("Failed to device with ports info due to error %v", err)
@@ -155,7 +156,7 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 	t.Logf("retrieved device with ports: %+v", device1)
 	getDevWithPortsTx.Commit()
 
-	getDevTx := TestTransaction_RootProxy.OpenTransaction()
+	getDevTx := TestTransactionRootProxy.OpenTransaction()
 	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
 	if err != nil {
 		log.Errorf("Failed to  get device info due to error %v", err)
@@ -167,8 +168,8 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 }
 
 func TestTransaction_6_RemoveDevice(t *testing.T) {
-	removeTx := TestTransaction_RootProxy.OpenTransaction()
-	removed, err := removeTx.Remove(context.Background(), "/devices/"+TestTransaction_DeviceId)
+	removeTx := TestTransactionRootProxy.OpenTransaction()
+	removed, err := removeTx.Remove(context.Background(), "/devices/"+TestTransactionDeviceID)
 	if err != nil {
 		log.Errorf("Failed to remove device due to error %v", err)
 		assert.NotNil(t, err)
@@ -183,10 +184,10 @@ func TestTransaction_6_RemoveDevice(t *testing.T) {
 
 func TestTransaction_7_GetDevice_PostRemove(t *testing.T) {
 
-	basePath := "/devices/" + TestTransaction_DeviceId
+	basePath := "/devices/" + TestTransactionDeviceID
 
-	getDevTx := TestTransaction_RootProxy.OpenTransaction()
-	device, err := TestTransaction_RootProxy.Get(context.Background(), basePath, 0, false, "")
+	getDevTx := TestTransactionRootProxy.OpenTransaction()
+	device, err := TestTransactionRootProxy.Get(context.Background(), basePath, 0, false, "")
 	if err != nil {
 		log.Errorf("Failed to get device info post remove due to error %v", err)
 		assert.NotNil(t, err)
