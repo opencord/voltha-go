@@ -18,28 +18,17 @@ package model
 import (
 	"crypto/md5"
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
-	"reflect"
-	"testing"
 )
 
 var (
-	TestNode_Port = []*voltha.Port{
-		{
-			PortNo:     123,
-			Label:      "test-etcd_port-0",
-			Type:       voltha.Port_PON_OLT,
-			AdminState: common.AdminState_ENABLED,
-			OperStatus: common.OperStatus_ACTIVE,
-			DeviceId:   "etcd_port-0-device-id",
-			Peers:      []*voltha.Port_PeerPort{},
-		},
-	}
-
-	TestNode_Device = &voltha.Device{
+	TestNodeDevice = &voltha.Device{
 		Id:              "Config-SomeNode-01-new-test",
 		Type:            "simulated_olt",
 		Root:            true,
@@ -62,32 +51,30 @@ var (
 		Reason:          "",
 		ConnectStatus:   common.ConnectStatus_REACHABLE,
 		Custom:          &any.Any{},
-		Ports:           TestNode_Port,
+		Ports:           TestNodePort,
 		Flows:           &openflow_13.Flows{},
 		FlowGroups:      &openflow_13.FlowGroups{},
 		PmConfigs:       &voltha.PmConfigs{},
 		ImageDownloads:  []*voltha.ImageDownload{},
 	}
 
-	TestNode_Data = TestNode_Device
-
-	TestNode_Txid = fmt.Sprintf("%x", md5.Sum([]byte("node_transaction_id")))
-	TestNode_Root = &root{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
+	TestNodeTxid = fmt.Sprintf("%x", md5.Sum([]byte("node_transaction_id")))
+	TestNodeRoot = &root{RevisionClass: reflect.TypeOf(NonPersistedRevision{})}
 )
 
 // Exercise node creation code
 // This test will
 func TestNode_01_NewNode(t *testing.T) {
-	node := NewNode(TestNode_Root, TestNode_Data, false, TestNode_Txid)
+	node := newNode(TestNodeRoot, TestNodeDevice, false, TestNodeTxid)
 
-	if reflect.ValueOf(node.Type).Type() != reflect.TypeOf(TestNode_Data) {
+	if reflect.ValueOf(node.Type).Type() != reflect.TypeOf(TestNodeDevice) {
 		t.Errorf("Node type does not match original data type: %+v", reflect.ValueOf(node.Type).Type())
-	} else if node.GetBranch(TestNode_Txid) == nil || node.GetBranch(TestNode_Txid).Latest == nil {
-		t.Errorf("No branch associated to txid: %s", TestNode_Txid)
-	} else if node.GetBranch(TestNode_Txid).Latest == nil {
-		t.Errorf("Branch has no latest revision : %s", TestNode_Txid)
-	} else if node.GetBranch(TestNode_Txid).GetLatest().GetConfig() == nil {
-		t.Errorf("Latest revision has no assigned data: %+v", node.GetBranch(TestNode_Txid).GetLatest())
+	} else if node.GetBranch(TestNodeTxid) == nil || node.GetBranch(TestNodeTxid).Latest == nil {
+		t.Errorf("No branch associated to txid: %s", TestNodeTxid)
+	} else if node.GetBranch(TestNodeTxid).Latest == nil {
+		t.Errorf("Branch has no latest revision : %s", TestNodeTxid)
+	} else if node.GetBranch(TestNodeTxid).GetLatest().GetConfig() == nil {
+		t.Errorf("Latest revision has no assigned data: %+v", node.GetBranch(TestNodeTxid).GetLatest())
 	}
 
 	t.Logf("Created new node successfully : %+v\n", node)

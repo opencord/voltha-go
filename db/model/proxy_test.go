@@ -19,6 +19,12 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"math/rand"
+	"reflect"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -26,48 +32,43 @@ import (
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"math/rand"
-	"reflect"
-	"strconv"
-	"testing"
-	"time"
 )
 
 var (
-	TestProxy_Root                  *root
-	TestProxy_Root_LogicalDevice    *Proxy
-	TestProxy_Root_Device           *Proxy
-	TestProxy_Root_Adapter          *Proxy
-	TestProxy_DeviceId              string
-	TestProxy_AdapterId             string
-	TestProxy_LogicalDeviceId       string
-	TestProxy_TargetDeviceId        string
-	TestProxy_TargetLogicalDeviceId string
-	TestProxy_LogicalPorts          []*voltha.LogicalPort
-	TestProxy_Ports                 []*voltha.Port
-	TestProxy_Stats                 *openflow_13.OfpFlowStats
-	TestProxy_Flows                 *openflow_13.Flows
-	TestProxy_Device                *voltha.Device
-	TestProxy_LogicalDevice         *voltha.LogicalDevice
-	TestProxy_Adapter               *voltha.Adapter
+	TestProxyRoot                  Root
+	TestProxyRootLogicalDevice     *Proxy
+	TestProxyRootDevice            *Proxy
+	TestProxyRootAdapter           *Proxy
+	TestProxyDeviceID              string
+	TestProxyAdapterID             string
+	TestProxyLogicalDeviceID       string
+	TestProxyTargetDeviceID        string
+	TestProxyTargetLogicalDeviceID string
+	TestProxyLogicalPorts          []*voltha.LogicalPort
+	TestProxyPorts                 []*voltha.Port
+	TestProxyStats                 *openflow_13.OfpFlowStats
+	TestProxyFlows                 *openflow_13.Flows
+	TestProxyDevice                *voltha.Device
+	TestProxyLogicalDevice         *voltha.LogicalDevice
+	TestProxyAdapter               *voltha.Adapter
 )
 
 func init() {
 	//log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"})
 	//log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
 	var err error
-	TestProxy_Root = NewRoot(&voltha.Voltha{}, nil)
-	if TestProxy_Root_LogicalDevice, err = TestProxy_Root.CreateProxy(context.Background(), "/", false); err != nil {
+	TestProxyRoot = NewRoot(&voltha.Voltha{}, nil)
+	if TestProxyRootLogicalDevice, err = TestProxyRoot.CreateProxy(context.Background(), "/", false); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot create logical device proxy")
 	}
-	if TestProxy_Root_Device, err = TestProxy_Root.CreateProxy(context.Background(), "/", false); err != nil {
+	if TestProxyRootDevice, err = TestProxyRoot.CreateProxy(context.Background(), "/", false); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot create device proxy")
 	}
-	if TestProxy_Root_Adapter, err = TestProxy_Root.CreateProxy(context.Background(), "/", false); err != nil {
+	if TestProxyRootAdapter, err = TestProxyRoot.CreateProxy(context.Background(), "/", false); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot create adapter proxy")
 	}
 
-	TestProxy_LogicalPorts = []*voltha.LogicalPort{
+	TestProxyLogicalPorts = []*voltha.LogicalPort{
 		{
 			Id:           "123",
 			DeviceId:     "logicalport-0-device-id",
@@ -75,7 +76,7 @@ func init() {
 			RootPort:     false,
 		},
 	}
-	TestProxy_Ports = []*voltha.Port{
+	TestProxyPorts = []*voltha.Port{
 		{
 			PortNo:     123,
 			Label:      "test-port-0",
@@ -87,30 +88,30 @@ func init() {
 		},
 	}
 
-	TestProxy_Stats = &openflow_13.OfpFlowStats{
+	TestProxyStats = &openflow_13.OfpFlowStats{
 		Id: 1111,
 	}
-	TestProxy_Flows = &openflow_13.Flows{
-		Items: []*openflow_13.OfpFlowStats{TestProxy_Stats},
+	TestProxyFlows = &openflow_13.Flows{
+		Items: []*openflow_13.OfpFlowStats{TestProxyStats},
 	}
-	TestProxy_Device = &voltha.Device{
-		Id:         TestProxy_DeviceId,
+	TestProxyDevice = &voltha.Device{
+		Id:         TestProxyDeviceID,
 		Type:       "simulated_olt",
 		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
 		AdminState: voltha.AdminState_PREPROVISIONED,
-		Flows:      TestProxy_Flows,
-		Ports:      TestProxy_Ports,
+		Flows:      TestProxyFlows,
+		Ports:      TestProxyPorts,
 	}
 
-	TestProxy_LogicalDevice = &voltha.LogicalDevice{
-		Id:         TestProxy_DeviceId,
+	TestProxyLogicalDevice = &voltha.LogicalDevice{
+		Id:         TestProxyDeviceID,
 		DatapathId: 0,
-		Ports:      TestProxy_LogicalPorts,
-		Flows:      TestProxy_Flows,
+		Ports:      TestProxyLogicalPorts,
+		Flows:      TestProxyFlows,
 	}
 
-	TestProxy_Adapter = &voltha.Adapter{
-		Id:      TestProxy_AdapterId,
+	TestProxyAdapter = &voltha.Adapter{
+		Id:      TestProxyAdapterID,
 		Vendor:  "test-adapter-vendor",
 		Version: "test-adapter-version",
 	}
@@ -118,27 +119,27 @@ func init() {
 
 func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 	devIDBin, _ := uuid.New().MarshalBinary()
-	TestProxy_DeviceId = "0001" + hex.EncodeToString(devIDBin)[:12]
-	TestProxy_Device.Id = TestProxy_DeviceId
+	TestProxyDeviceID = "0001" + hex.EncodeToString(devIDBin)[:12]
+	TestProxyDevice.Id = TestProxyDeviceID
 
 	preAddExecuted := make(chan struct{})
 	postAddExecuted := make(chan struct{})
 	preAddExecutedPtr, postAddExecutedPtr := preAddExecuted, postAddExecuted
 
-	devicesProxy, err := TestProxy_Root.node.CreateProxy(context.Background(), "/devices", false)
+	devicesProxy, err := TestProxyRoot.CreateProxy(context.Background(), "/devices", false)
 	if err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot create devices proxy")
 	}
-	devicesProxy.RegisterCallback(PRE_ADD, commonCallback2, "PRE_ADD Device container changes")
-	devicesProxy.RegisterCallback(POST_ADD, commonCallback2, "POST_ADD Device container changes")
+	devicesProxy.RegisterCallback(PreAdd, commonCallback2, "PRE_ADD Device container changes")
+	devicesProxy.RegisterCallback(PostAdd, commonCallback2, "POST_ADD Device container changes")
 
 	// Register ADD instructions callbacks
-	TestProxy_Root_Device.RegisterCallback(PRE_ADD, commonChanCallback, "PRE_ADD instructions", &preAddExecutedPtr)
-	TestProxy_Root_Device.RegisterCallback(POST_ADD, commonChanCallback, "POST_ADD instructions", &postAddExecutedPtr)
+	TestProxyRootDevice.RegisterCallback(PreAdd, commonChanCallback, "PreAdd instructions", &preAddExecutedPtr)
+	TestProxyRootDevice.RegisterCallback(PostAdd, commonChanCallback, "PostAdd instructions", &postAddExecutedPtr)
 
-	added, err := TestProxy_Root_Device.Add(context.Background(), "/devices", TestProxy_Device, "")
+	added, err := TestProxyRootDevice.Add(context.Background(), "/devices", TestProxyDevice, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to add test proxy device due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to add test proxy device due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if added == nil {
@@ -148,16 +149,16 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 	}
 
 	if !verifyGotResponse(preAddExecuted) {
-		t.Error("PRE_ADD callback was not executed")
+		t.Error("PreAdd callback was not executed")
 	}
 	if !verifyGotResponse(postAddExecuted) {
-		t.Error("POST_ADD callback was not executed")
+		t.Error("PostAdd callback was not executed")
 	}
 
 	// Verify that the added device can now be retrieved
-	d, err := TestProxy_Root_Device.Get(context.Background(), "/devices/"+TestProxy_DeviceId, 0, false, "")
+	d, err := TestProxyRootDevice.Get(context.Background(), "/devices/"+TestProxyDeviceID, 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed get device info from test proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed get device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if !reflect.ValueOf(d).IsValid() {
@@ -169,15 +170,15 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 }
 
 func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
-	TestProxy_Device.Id = TestProxy_DeviceId
+	TestProxyDevice.Id = TestProxyDeviceID
 
-	added, err := TestProxy_Root_Device.Add(context.Background(), "/devices", TestProxy_Device, "")
+	added, err := TestProxyRootDevice.Add(context.Background(), "/devices", TestProxyDevice, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to add device to test proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to add device to test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
-	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_Device).Interface().(proto.Message).String() {
-		t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
+	if added.(proto.Message).String() != reflect.ValueOf(TestProxyDevice).Interface().(proto.Message).String() {
+		t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxyLogicalDevice, added)
 	}
 }
 
@@ -196,20 +197,20 @@ func verifyGotResponse(callbackIndicator <-chan struct{}) bool {
 }
 
 func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
-	TestProxy_AdapterId = "test-adapter"
-	TestProxy_Adapter.Id = TestProxy_AdapterId
+	TestProxyAdapterID = "test-adapter"
+	TestProxyAdapter.Id = TestProxyAdapterID
 	preAddExecuted := make(chan struct{})
 	postAddExecuted := make(chan struct{})
 	preAddExecutedPtr, postAddExecutedPtr := preAddExecuted, postAddExecuted
 
 	// Register ADD instructions callbacks
-	TestProxy_Root_Adapter.RegisterCallback(PRE_ADD, commonChanCallback, "PRE_ADD instructions for adapters", &preAddExecutedPtr)
-	TestProxy_Root_Adapter.RegisterCallback(POST_ADD, commonChanCallback, "POST_ADD instructions for adapters", &postAddExecutedPtr)
+	TestProxyRootAdapter.RegisterCallback(PreAdd, commonChanCallback, "PreAdd instructions for adapters", &preAddExecutedPtr)
+	TestProxyRootAdapter.RegisterCallback(PostAdd, commonChanCallback, "PostAdd instructions for adapters", &postAddExecutedPtr)
 
 	// Add the adapter
-	added, err := TestProxy_Root_Adapter.Add(context.Background(), "/adapters", TestProxy_Adapter, "")
+	added, err := TestProxyRootAdapter.Add(context.Background(), "/adapters", TestProxyAdapter, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to add adapter to test proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to add adapter to test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if added == nil {
@@ -221,9 +222,9 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 	verifyGotResponse(postAddExecuted)
 
 	// Verify that the added device can now be retrieved
-	d, err := TestProxy_Root_Adapter.Get(context.Background(), "/adapters/"+TestProxy_AdapterId, 0, false, "")
+	d, err := TestProxyRootAdapter.Get(context.Background(), "/adapters/"+TestProxyAdapterID, 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to retrieve device info from test proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to retrieve device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if !reflect.ValueOf(d).IsValid() {
@@ -234,36 +235,36 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 	}
 
 	if !verifyGotResponse(preAddExecuted) {
-		t.Error("PRE_ADD callback was not executed")
+		t.Error("PreAdd callback was not executed")
 	}
 	if !verifyGotResponse(postAddExecuted) {
-		t.Error("POST_ADD callback was not executed")
+		t.Error("PostAdd callback was not executed")
 	}
 }
 
 func TestProxy_1_2_1_Get_AllDevices(t *testing.T) {
-	devices, err := TestProxy_Root_Device.Get(context.Background(), "/devices", 1, false, "")
+	devices, err := TestProxyRootDevice.Get(context.Background(), "/devices", 1, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get all devices info from test proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get all devices info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if len(devices.([]interface{})) == 0 {
 		t.Error("there are no available devices to retrieve")
 	} else {
 		// Save the target device id for later tests
-		TestProxy_TargetDeviceId = devices.([]interface{})[0].(*voltha.Device).Id
+		TestProxyTargetDeviceID = devices.([]interface{})[0].(*voltha.Device).Id
 		t.Logf("retrieved all devices: %+v", devices)
 	}
 }
 
 func TestProxy_1_2_2_Get_SingleDevice(t *testing.T) {
-	d, err := TestProxy_Root_Device.Get(context.Background(), "/devices/"+TestProxy_TargetDeviceId, 0, false, "")
+	d, err := TestProxyRootDevice.Get(context.Background(), "/devices/"+TestProxyTargetDeviceID, 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get single device info from test proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get single device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if !reflect.ValueOf(d).IsValid() {
-		t.Errorf("Failed to find device : %s", TestProxy_TargetDeviceId)
+		t.Errorf("Failed to find device : %s", TestProxyTargetDeviceID)
 	} else {
 		djson, _ := json.Marshal(d)
 		t.Logf("Found device: %s", string(djson))
@@ -277,9 +278,9 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 	postUpdateExecuted := make(chan struct{})
 	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
-	retrieved, err := TestProxy_Root_Device.Get(context.Background(), "/devices/"+TestProxy_TargetDeviceId, 1, false, "")
+	retrieved, err := TestProxyRootDevice.Get(context.Background(), "/devices/"+TestProxyTargetDeviceID, 1, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get device info from test proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if retrieved == nil {
@@ -296,20 +297,20 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 
 		retrieved.(*voltha.Device).FirmwareVersion = strconv.Itoa(fwVersion)
 
-		TestProxy_Root_Device.RegisterCallback(
-			PRE_UPDATE,
+		TestProxyRootDevice.RegisterCallback(
+			PreUpdate,
 			commonChanCallback,
-			"PRE_UPDATE instructions (root proxy)", &preUpdateExecutedPtr,
+			"PreUpdate instructions (root proxy)", &preUpdateExecutedPtr,
 		)
-		TestProxy_Root_Device.RegisterCallback(
-			POST_UPDATE,
+		TestProxyRootDevice.RegisterCallback(
+			PostUpdate,
 			commonChanCallback,
-			"POST_UPDATE instructions (root proxy)", &postUpdateExecutedPtr,
+			"PostUpdate instructions (root proxy)", &postUpdateExecutedPtr,
 		)
 
-		afterUpdate, err := TestProxy_Root_Device.Update(context.Background(), "/devices/"+TestProxy_TargetDeviceId, retrieved, false, "")
+		afterUpdate, err := TestProxyRootDevice.Update(context.Background(), "/devices/"+TestProxyTargetDeviceID, retrieved, false, "")
 		if err != nil {
-			BenchmarkProxy_Logger.Errorf("Failed to update device info test proxy due to error: %v", err)
+			BenchmarkProxyLogger.Errorf("Failed to update device info test proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		}
 		if afterUpdate == nil {
@@ -319,15 +320,15 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 		}
 
 		if !verifyGotResponse(preUpdateExecuted) {
-			t.Error("PRE_UPDATE callback was not executed")
+			t.Error("PreUpdate callback was not executed")
 		}
 		if !verifyGotResponse(postUpdateExecuted) {
-			t.Error("POST_UPDATE callback was not executed")
+			t.Error("PostUpdate callback was not executed")
 		}
 
-		d, err := TestProxy_Root_Device.Get(context.Background(), "/devices/"+TestProxy_TargetDeviceId, 1, false, "")
+		d, err := TestProxyRootDevice.Get(context.Background(), "/devices/"+TestProxyTargetDeviceID, 1, false, "")
 		if err != nil {
-			BenchmarkProxy_Logger.Errorf("Failed to get device info from test proxy due to error: %v", err)
+			BenchmarkProxyLogger.Errorf("Failed to get device info from test proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		}
 		if !reflect.ValueOf(d).IsValid() {
@@ -341,13 +342,13 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 
 func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	// Get a device proxy and update a specific port
-	devFlowsProxy, err := TestProxy_Root.node.CreateProxy(context.Background(), "/devices/"+TestProxy_DeviceId+"/flows", false)
+	devFlowsProxy, err := TestProxyRoot.CreateProxy(context.Background(), "/devices/"+TestProxyDeviceID+"/flows", false)
 	if err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot create device flows proxy")
 	}
 	flows, err := devFlowsProxy.Get(context.Background(), "/", 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get flows from device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get flows from device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	flows.(*openflow_13.Flows).Items[0].TableId = 2244
@@ -357,19 +358,19 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
 	devFlowsProxy.RegisterCallback(
-		PRE_UPDATE,
+		PreUpdate,
 		commonChanCallback,
-		"PRE_UPDATE instructions (flows proxy)", &preUpdateExecutedPtr,
+		"PreUpdate instructions (flows proxy)", &preUpdateExecutedPtr,
 	)
 	devFlowsProxy.RegisterCallback(
-		POST_UPDATE,
+		PostUpdate,
 		commonChanCallback,
-		"POST_UPDATE instructions (flows proxy)", &postUpdateExecutedPtr,
+		"PostUpdate instructions (flows proxy)", &postUpdateExecutedPtr,
 	)
 
 	kvFlows, err := devFlowsProxy.Get(context.Background(), "/", 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get flows from device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get flows from device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 
@@ -379,7 +380,7 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 
 	updated, err := devFlowsProxy.Update(context.Background(), "/", flows.(*openflow_13.Flows), false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to update flows in device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to update flows in device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if updated == nil {
@@ -389,15 +390,15 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 	}
 
 	if !verifyGotResponse(preUpdateExecuted) {
-		t.Error("PRE_UPDATE callback was not executed")
+		t.Error("PreUpdate callback was not executed")
 	}
 	if !verifyGotResponse(postUpdateExecuted) {
-		t.Error("POST_UPDATE callback was not executed")
+		t.Error("PostUpdate callback was not executed")
 	}
 
 	d, err := devFlowsProxy.Get(context.Background(), "/", 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get flows in device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get flows in device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if d == nil {
@@ -407,9 +408,9 @@ func TestProxy_1_3_2_Update_DeviceFlows(t *testing.T) {
 		t.Logf("Found flows (flows proxy): %s", string(djson))
 	}
 
-	d, err = TestProxy_Root_Device.Get(context.Background(), "/devices/"+TestProxy_DeviceId+"/flows", 1, false, "")
+	d, err = TestProxyRootDevice.Get(context.Background(), "/devices/"+TestProxyDeviceID+"/flows", 1, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get flows from device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get flows from device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if !reflect.ValueOf(d).IsValid() {
@@ -425,13 +426,13 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 	postUpdateExecuted := make(chan struct{})
 	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
-	adaptersProxy, err := TestProxy_Root.node.CreateProxy(context.Background(), "/adapters", false)
+	adaptersProxy, err := TestProxyRoot.CreateProxy(context.Background(), "/adapters", false)
 	if err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot create adapters proxy")
 	}
-	retrieved, err := TestProxy_Root_Adapter.Get(context.Background(), "/adapters/"+TestProxy_AdapterId, 1, false, "")
+	retrieved, err := TestProxyRootAdapter.Get(context.Background(), "/adapters/"+TestProxyAdapterID, 1, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to retrieve adapter info from adapters proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to retrieve adapter info from adapters proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if retrieved == nil {
@@ -442,19 +443,19 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 		retrieved.(*voltha.Adapter).Version = "test-adapter-version-2"
 
 		adaptersProxy.RegisterCallback(
-			PRE_UPDATE,
+			PreUpdate,
 			commonChanCallback,
-			"PRE_UPDATE instructions for adapters", &preUpdateExecutedPtr,
+			"PreUpdate instructions for adapters", &preUpdateExecutedPtr,
 		)
 		adaptersProxy.RegisterCallback(
-			POST_UPDATE,
+			PostUpdate,
 			commonChanCallback,
-			"POST_UPDATE instructions for adapters", &postUpdateExecutedPtr,
+			"PostUpdate instructions for adapters", &postUpdateExecutedPtr,
 		)
 
-		afterUpdate, err := adaptersProxy.Update(context.Background(), "/"+TestProxy_AdapterId, retrieved, false, "")
+		afterUpdate, err := adaptersProxy.Update(context.Background(), "/"+TestProxyAdapterID, retrieved, false, "")
 		if err != nil {
-			BenchmarkProxy_Logger.Errorf("Failed to update adapter info in adapters proxy due to error: %v", err)
+			BenchmarkProxyLogger.Errorf("Failed to update adapter info in adapters proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		}
 		if afterUpdate == nil {
@@ -464,15 +465,15 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 		}
 
 		if !verifyGotResponse(preUpdateExecuted) {
-			t.Error("PRE_UPDATE callback for adapter was not executed")
+			t.Error("PreUpdate callback for adapter was not executed")
 		}
 		if !verifyGotResponse(postUpdateExecuted) {
-			t.Error("POST_UPDATE callback for adapter was not executed")
+			t.Error("PostUpdate callback for adapter was not executed")
 		}
 
-		d, err := TestProxy_Root_Adapter.Get(context.Background(), "/adapters/"+TestProxy_AdapterId, 1, false, "")
+		d, err := TestProxyRootAdapter.Get(context.Background(), "/adapters/"+TestProxyAdapterID, 1, false, "")
 		if err != nil {
-			BenchmarkProxy_Logger.Errorf("Failed to get updated adapter info from adapters proxy due to error: %v", err)
+			BenchmarkProxyLogger.Errorf("Failed to get updated adapter info from adapters proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		}
 		if !reflect.ValueOf(d).IsValid() {
@@ -489,20 +490,20 @@ func TestProxy_1_4_1_Remove_Device(t *testing.T) {
 	postRemoveExecuted := make(chan struct{})
 	preRemoveExecutedPtr, postRemoveExecutedPtr := preRemoveExecuted, postRemoveExecuted
 
-	TestProxy_Root_Device.RegisterCallback(
-		PRE_REMOVE,
+	TestProxyRootDevice.RegisterCallback(
+		PreRemove,
 		commonChanCallback,
-		"PRE_REMOVE instructions (root proxy)", &preRemoveExecutedPtr,
+		"PreRemove instructions (root proxy)", &preRemoveExecutedPtr,
 	)
-	TestProxy_Root_Device.RegisterCallback(
-		POST_REMOVE,
+	TestProxyRootDevice.RegisterCallback(
+		PostRemove,
 		commonChanCallback,
-		"POST_REMOVE instructions (root proxy)", &postRemoveExecutedPtr,
+		"PostRemove instructions (root proxy)", &postRemoveExecutedPtr,
 	)
 
-	removed, err := TestProxy_Root_Device.Remove(context.Background(), "/devices/"+TestProxy_DeviceId, "")
+	removed, err := TestProxyRootDevice.Remove(context.Background(), "/devices/"+TestProxyDeviceID, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to remove device from devices proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to remove device from devices proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if removed == nil {
@@ -512,42 +513,42 @@ func TestProxy_1_4_1_Remove_Device(t *testing.T) {
 	}
 
 	if !verifyGotResponse(preRemoveExecuted) {
-		t.Error("PRE_REMOVE callback was not executed")
+		t.Error("PreRemove callback was not executed")
 	}
 	if !verifyGotResponse(postRemoveExecuted) {
-		t.Error("POST_REMOVE callback was not executed")
+		t.Error("PostRemove callback was not executed")
 	}
 
-	d, err := TestProxy_Root_Device.Get(context.Background(), "/devices/"+TestProxy_DeviceId, 0, false, "")
+	d, err := TestProxyRootDevice.Get(context.Background(), "/devices/"+TestProxyDeviceID, 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get device info from devices proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get device info from devices proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
 	} else {
-		t.Logf("Device was removed: %s", TestProxy_DeviceId)
+		t.Logf("Device was removed: %s", TestProxyDeviceID)
 	}
 }
 
 func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 
 	ldIDBin, _ := uuid.New().MarshalBinary()
-	TestProxy_LogicalDeviceId = "0001" + hex.EncodeToString(ldIDBin)[:12]
-	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
+	TestProxyLogicalDeviceID = "0001" + hex.EncodeToString(ldIDBin)[:12]
+	TestProxyLogicalDevice.Id = TestProxyLogicalDeviceID
 
 	preAddExecuted := make(chan struct{})
 	postAddExecuted := make(chan struct{})
 	preAddExecutedPtr, postAddExecutedPtr := preAddExecuted, postAddExecuted
 
 	// Register
-	TestProxy_Root_LogicalDevice.RegisterCallback(PRE_ADD, commonChanCallback, "PRE_ADD instructions", &preAddExecutedPtr)
-	TestProxy_Root_LogicalDevice.RegisterCallback(POST_ADD, commonChanCallback, "POST_ADD instructions", &postAddExecutedPtr)
+	TestProxyRootLogicalDevice.RegisterCallback(PreAdd, commonChanCallback, "PreAdd instructions", &preAddExecutedPtr)
+	TestProxyRootLogicalDevice.RegisterCallback(PostAdd, commonChanCallback, "PostAdd instructions", &postAddExecutedPtr)
 
-	added, err := TestProxy_Root_LogicalDevice.Add(context.Background(), "/logical_devices", TestProxy_LogicalDevice, "")
+	added, err := TestProxyRootLogicalDevice.Add(context.Background(), "/logical_devices", TestProxyLogicalDevice, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to add new logical device into proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to add new logical device into proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if added == nil {
@@ -558,9 +559,9 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 
 	verifyGotResponse(postAddExecuted)
 
-	ld, err := TestProxy_Root_LogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, "")
+	ld, err := TestProxyRootLogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxyLogicalDeviceID, 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get logical device info from logical device proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get logical device info from logical device proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if !reflect.ValueOf(ld).IsValid() {
@@ -571,49 +572,49 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 	}
 
 	if !verifyGotResponse(preAddExecuted) {
-		t.Error("PRE_ADD callback was not executed")
+		t.Error("PreAdd callback was not executed")
 	}
 	if !verifyGotResponse(postAddExecuted) {
-		t.Error("POST_ADD callback was not executed")
+		t.Error("PostAdd callback was not executed")
 	}
 }
 
 func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
-	TestProxy_LogicalDevice.Id = TestProxy_LogicalDeviceId
+	TestProxyLogicalDevice.Id = TestProxyLogicalDeviceID
 
-	added, err := TestProxy_Root_LogicalDevice.Add(context.Background(), "/logical_devices", TestProxy_LogicalDevice, "")
+	added, err := TestProxyRootLogicalDevice.Add(context.Background(), "/logical_devices", TestProxyLogicalDevice, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to add logical device due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to add logical device due to error: %v", err)
 		assert.NotNil(t, err)
 	}
-	if added.(proto.Message).String() != reflect.ValueOf(TestProxy_LogicalDevice).Interface().(proto.Message).String() {
-		t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxy_LogicalDevice, added)
+	if added.(proto.Message).String() != reflect.ValueOf(TestProxyLogicalDevice).Interface().(proto.Message).String() {
+		t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxyLogicalDevice, added)
 	}
 }
 
 func TestProxy_2_2_1_Get_AllLogicalDevices(t *testing.T) {
-	logicalDevices, err := TestProxy_Root_LogicalDevice.Get(context.Background(), "/logical_devices", 1, false, "")
+	logicalDevices, err := TestProxyRootLogicalDevice.Get(context.Background(), "/logical_devices", 1, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get all logical devices from proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get all logical devices from proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if len(logicalDevices.([]interface{})) == 0 {
 		t.Error("there are no available logical devices to retrieve")
 	} else {
 		// Save the target device id for later tests
-		TestProxy_TargetLogicalDeviceId = logicalDevices.([]interface{})[0].(*voltha.LogicalDevice).Id
+		TestProxyTargetLogicalDeviceID = logicalDevices.([]interface{})[0].(*voltha.LogicalDevice).Id
 		t.Logf("retrieved all logical devices: %+v", logicalDevices)
 	}
 }
 
 func TestProxy_2_2_2_Get_SingleLogicalDevice(t *testing.T) {
-	ld, err := TestProxy_Root_LogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxy_TargetLogicalDeviceId, 0, false, "")
+	ld, err := TestProxyRootLogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxyTargetLogicalDeviceID, 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get single logical device from proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get single logical device from proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if !reflect.ValueOf(ld).IsValid() {
-		t.Errorf("Failed to find logical device : %s", TestProxy_TargetLogicalDeviceId)
+		t.Errorf("Failed to find logical device : %s", TestProxyTargetLogicalDeviceID)
 	} else {
 		ldJSON, _ := json.Marshal(ld)
 		t.Logf("Found logical device: %s", string(ldJSON))
@@ -627,9 +628,9 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 	postUpdateExecuted := make(chan struct{})
 	preUpdateExecutedPtr, postUpdateExecutedPtr := preUpdateExecuted, postUpdateExecuted
 
-	retrieved, err := TestProxy_Root_LogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxy_TargetLogicalDeviceId, 1, false, "")
+	retrieved, err := TestProxyRootLogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxyTargetLogicalDeviceID, 1, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get logical devices due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get logical devices due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if retrieved == nil {
@@ -644,23 +645,23 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 			fwVersion++
 		}
 
-		TestProxy_Root_LogicalDevice.RegisterCallback(
-			PRE_UPDATE,
+		TestProxyRootLogicalDevice.RegisterCallback(
+			PreUpdate,
 			commonChanCallback,
-			"PRE_UPDATE instructions (root proxy)", &preUpdateExecutedPtr,
+			"PreUpdate instructions (root proxy)", &preUpdateExecutedPtr,
 		)
-		TestProxy_Root_LogicalDevice.RegisterCallback(
-			POST_UPDATE,
+		TestProxyRootLogicalDevice.RegisterCallback(
+			PostUpdate,
 			commonChanCallback,
-			"POST_UPDATE instructions (root proxy)", &postUpdateExecutedPtr,
+			"PostUpdate instructions (root proxy)", &postUpdateExecutedPtr,
 		)
 
 		retrieved.(*voltha.LogicalDevice).RootDeviceId = strconv.Itoa(fwVersion)
 
-		afterUpdate, err := TestProxy_Root_LogicalDevice.Update(context.Background(), "/logical_devices/"+TestProxy_TargetLogicalDeviceId, retrieved, false,
+		afterUpdate, err := TestProxyRootLogicalDevice.Update(context.Background(), "/logical_devices/"+TestProxyTargetLogicalDeviceID, retrieved, false,
 			"")
 		if err != nil {
-			BenchmarkProxy_Logger.Errorf("Faield to update logical device info due to error: %v", err)
+			BenchmarkProxyLogger.Errorf("Faield to update logical device info due to error: %v", err)
 			assert.NotNil(t, err)
 		}
 		if afterUpdate == nil {
@@ -670,15 +671,15 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 		}
 
 		if !verifyGotResponse(preUpdateExecuted) {
-			t.Error("PRE_UPDATE callback was not executed")
+			t.Error("PreUpdate callback was not executed")
 		}
 		if !verifyGotResponse(postUpdateExecuted) {
-			t.Error("POST_UPDATE callback was not executed")
+			t.Error("PostUpdate callback was not executed")
 		}
 
-		d, err := TestProxy_Root_LogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxy_TargetLogicalDeviceId, 1, false, "")
+		d, err := TestProxyRootLogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxyTargetLogicalDeviceID, 1, false, "")
 		if err != nil {
-			BenchmarkProxy_Logger.Errorf("Failed to get logical device info due to error: %v", err)
+			BenchmarkProxyLogger.Errorf("Failed to get logical device info due to error: %v", err)
 			assert.NotNil(t, err)
 		}
 		if !reflect.ValueOf(d).IsValid() {
@@ -693,30 +694,30 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 
 func TestProxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
 	// Get a device proxy and update a specific port
-	ldFlowsProxy, err := TestProxy_Root.node.CreateProxy(context.Background(), "/logical_devices/"+TestProxy_LogicalDeviceId+"/flows", false)
+	ldFlowsProxy, err := TestProxyRoot.CreateProxy(context.Background(), "/logical_devices/"+TestProxyLogicalDeviceID+"/flows", false)
 	if err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Failed to create logical device flows proxy")
 	}
 	flows, err := ldFlowsProxy.Get(context.Background(), "/", 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get flows from logical device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get flows from logical device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	flows.(*openflow_13.Flows).Items[0].TableId = rand.Uint32()
 	t.Logf("before updated flows: %+v", flows)
 
 	ldFlowsProxy.RegisterCallback(
-		PRE_UPDATE,
+		PreUpdate,
 		commonCallback2,
 	)
 	ldFlowsProxy.RegisterCallback(
-		POST_UPDATE,
+		PostUpdate,
 		commonCallback2,
 	)
 
 	kvFlows, err := ldFlowsProxy.Get(context.Background(), "/", 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Faield to get flows from logical device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Faield to get flows from logical device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if reflect.DeepEqual(flows, kvFlows) {
@@ -725,7 +726,7 @@ func TestProxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
 
 	updated, err := ldFlowsProxy.Update(context.Background(), "/", flows.(*openflow_13.Flows), false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to update flows in logical device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to update flows in logical device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if updated == nil {
@@ -741,10 +742,10 @@ func TestProxy_2_3_2_Update_LogicalDeviceFlows(t *testing.T) {
 		t.Logf("Found flows (flows proxy): %s", string(djson))
 	}
 
-	d, err := TestProxy_Root_LogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxy_LogicalDeviceId+"/flows", 0, false,
+	d, err := TestProxyRootLogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxyLogicalDeviceID+"/flows", 0, false,
 		"")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get flows from logical device flows proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get flows from logical device flows proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if !reflect.ValueOf(d).IsValid() {
@@ -760,20 +761,20 @@ func TestProxy_2_4_1_Remove_Device(t *testing.T) {
 	postRemoveExecuted := make(chan struct{})
 	preRemoveExecutedPtr, postRemoveExecutedPtr := preRemoveExecuted, postRemoveExecuted
 
-	TestProxy_Root_LogicalDevice.RegisterCallback(
-		PRE_REMOVE,
+	TestProxyRootLogicalDevice.RegisterCallback(
+		PreRemove,
 		commonChanCallback,
-		"PRE_REMOVE instructions (root proxy)", &preRemoveExecutedPtr,
+		"PreRemove instructions (root proxy)", &preRemoveExecutedPtr,
 	)
-	TestProxy_Root_LogicalDevice.RegisterCallback(
-		POST_REMOVE,
+	TestProxyRootLogicalDevice.RegisterCallback(
+		PostRemove,
 		commonChanCallback,
-		"POST_REMOVE instructions (root proxy)", &postRemoveExecutedPtr,
+		"PostRemove instructions (root proxy)", &postRemoveExecutedPtr,
 	)
 
-	removed, err := TestProxy_Root_LogicalDevice.Remove(context.Background(), "/logical_devices/"+TestProxy_LogicalDeviceId, "")
+	removed, err := TestProxyRootLogicalDevice.Remove(context.Background(), "/logical_devices/"+TestProxyLogicalDeviceID, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to remove device from logical devices proxy due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to remove device from logical devices proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if removed == nil {
@@ -783,22 +784,22 @@ func TestProxy_2_4_1_Remove_Device(t *testing.T) {
 	}
 
 	if !verifyGotResponse(preRemoveExecuted) {
-		t.Error("PRE_REMOVE callback was not executed")
+		t.Error("PreRemove callback was not executed")
 	}
 	if !verifyGotResponse(postRemoveExecuted) {
-		t.Error("POST_REMOVE callback was not executed")
+		t.Error("PostRemove callback was not executed")
 	}
 
-	d, err := TestProxy_Root_LogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxy_LogicalDeviceId, 0, false, "")
+	d, err := TestProxyRootLogicalDevice.Get(context.Background(), "/logical_devices/"+TestProxyLogicalDeviceID, 0, false, "")
 	if err != nil {
-		BenchmarkProxy_Logger.Errorf("Failed to get logical device info due to error: %v", err)
+		BenchmarkProxyLogger.Errorf("Failed to get logical device info due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 	if reflect.ValueOf(d).IsValid() {
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
 	} else {
-		t.Logf("Device was removed: %s", TestProxy_LogicalDeviceId)
+		t.Logf("Device was removed: %s", TestProxyLogicalDeviceID)
 	}
 }
 
@@ -807,34 +808,34 @@ func TestProxy_2_4_1_Remove_Device(t *testing.T) {
 // -----------------------------
 
 func TestProxy_Callbacks_1_Register(t *testing.T) {
-	TestProxy_Root_Device.RegisterCallback(PRE_ADD, firstCallback, "abcde", "12345")
+	TestProxyRootDevice.RegisterCallback(PreAdd, firstCallback, "abcde", "12345")
 
 	m := make(map[string]string)
 	m["name"] = "fghij"
-	TestProxy_Root_Device.RegisterCallback(PRE_ADD, secondCallback, m, 1.2345)
+	TestProxyRootDevice.RegisterCallback(PreAdd, secondCallback, m, 1.2345)
 
 	d := &voltha.Device{Id: "12345"}
-	TestProxy_Root_Device.RegisterCallback(PRE_ADD, thirdCallback, "klmno", d)
+	TestProxyRootDevice.RegisterCallback(PreAdd, thirdCallback, "klmno", d)
 }
 
 func TestProxy_Callbacks_2_Invoke_WithNoInterruption(t *testing.T) {
-	TestProxy_Root_Device.InvokeCallbacks(PRE_ADD, false, nil)
+	TestProxyRootDevice.InvokeCallbacks(PreAdd, false, nil)
 }
 
 func TestProxy_Callbacks_3_Invoke_WithInterruption(t *testing.T) {
-	TestProxy_Root_Device.InvokeCallbacks(PRE_ADD, true, nil)
+	TestProxyRootDevice.InvokeCallbacks(PreAdd, true, nil)
 }
 
 func TestProxy_Callbacks_4_Unregister(t *testing.T) {
-	TestProxy_Root_Device.UnregisterCallback(PRE_ADD, firstCallback)
-	TestProxy_Root_Device.UnregisterCallback(PRE_ADD, secondCallback)
-	TestProxy_Root_Device.UnregisterCallback(PRE_ADD, thirdCallback)
+	TestProxyRootDevice.UnregisterCallback(PreAdd, firstCallback)
+	TestProxyRootDevice.UnregisterCallback(PreAdd, secondCallback)
+	TestProxyRootDevice.UnregisterCallback(PreAdd, thirdCallback)
 }
 
 //func TestProxy_Callbacks_5_Add(t *testing.T) {
-//	TestProxy_Root_Device.Root.AddCallback(TestProxy_Root_Device.InvokeCallbacks, POST_UPDATE, false, "some data", "some new data")
+//	TestProxyRootDevice.Root.AddCallback(TestProxyRootDevice.InvokeCallbacks, PostUpdate, false, "some data", "some new data")
 //}
 //
 //func TestProxy_Callbacks_6_Execute(t *testing.T) {
-//	TestProxy_Root_Device.Root.ExecuteCallbacks()
+//	TestProxyRootDevice.Root.ExecuteCallbacks()
 //}

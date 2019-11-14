@@ -16,23 +16,12 @@
 package model
 
 import (
-	"github.com/opencord/voltha-lib-go/v2/pkg/db"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"runtime/debug"
 	"sync"
-)
 
-type ModelTestConfig struct {
-	Root      *root
-	Backend   *db.Backend
-	RootProxy *Proxy
-	DbPrefix  string
-	DbType    string
-	DbHost    string
-	DbPort    int
-	DbTimeout int
-}
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
+)
 
 var callbackMutex sync.Mutex
 
