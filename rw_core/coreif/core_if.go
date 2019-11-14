@@ -17,15 +17,18 @@
 Defines a DeviceManager Interface - Used for unit testing of the flow decomposer only at this
 time.
 */
-package coreIf
+
+package coreif
 
 import (
 	"context"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
 )
 
+// Core represent core methods
 type Core interface {
 	Start(ctx context.Context)
 	Stop(ctx context.Context)

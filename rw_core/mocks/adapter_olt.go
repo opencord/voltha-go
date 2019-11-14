@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package mocks
 
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v2/pkg/adapters/adapterif"
 	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
@@ -25,24 +28,26 @@ import (
 	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	of "github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
-	"strings"
 )
 
 const (
 	numONUPerOLT = 4
 )
 
+// OLTAdapter represent OLT adapter
 type OLTAdapter struct {
 	Adapter
 }
 
+// NewOLTAdapter - creates OLT adapter instance
 func NewOLTAdapter(cp adapterif.CoreProxy) *OLTAdapter {
 	a := &OLTAdapter{}
 	a.coreProxy = cp
 	return a
 }
 
-func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error {
+// AdoptDevice creates new handler for added device
+func (oltA *OLTAdapter) AdoptDevice(device *voltha.Device) error {
 	go func() {
 		d := proto.Clone(device).(*voltha.Device)
 		d.Root = true
@@ -112,7 +117,8 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error {
 	return nil
 }
 
-func (oltA *OLTAdapter) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapability, error) {
+// GetOfpDeviceInfo returns ofp device info
+func (oltA *OLTAdapter) GetOfpDeviceInfo(device *voltha.Device) (*ic.SwitchCapability, error) {
 	if d := oltA.getDevice(device.Id); d == nil {
 		log.Fatalf("device-not-found-%s", device.Id)
 	}
@@ -133,7 +139,8 @@ func (oltA *OLTAdapter) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCa
 	}, nil
 }
 
-func (oltA *OLTAdapter) Get_ofp_port_info(device *voltha.Device, port_no int64) (*ic.PortCapability, error) {
+// GetOfpPortInfo returns ofp port info
+func (oltA *OLTAdapter) GetOfpPortInfo(device *voltha.Device, portNo int64) (*ic.PortCapability, error) {
 	if d := oltA.getDevice(device.Id); d == nil {
 		log.Fatalf("device-not-found-%s", device.Id)
 	}
@@ -151,16 +158,18 @@ func (oltA *OLTAdapter) Get_ofp_port_info(device *voltha.Device, port_no int64) 
 				MaxSpeed:   uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
 			},
 			DeviceId:     device.Id,
-			DevicePortNo: uint32(port_no),
+			DevicePortNo: uint32(portNo),
 		},
 	}, nil
 }
 
+// GetNumONUPerOLT returns number of ONUs per OLT
 func (oltA *OLTAdapter) GetNumONUPerOLT() int {
 	return numONUPerOLT
 }
 
-func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error {
+// DisableDevice disables device
+func (oltA *OLTAdapter) DisableDevice(device *voltha.Device) error {
 	go func() {
 		if d := oltA.getDevice(device.Id); d == nil {
 			log.Fatalf("device-not-found-%s", device.Id)
@@ -192,7 +201,8 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error {
 	return nil
 }
 
-func (oltA *OLTAdapter) Reenable_device(device *voltha.Device) error {
+// ReenableDevice reenables device
+func (oltA *OLTAdapter) ReenableDevice(device *voltha.Device) error {
 	go func() {
 		if d := oltA.getDevice(device.Id); d == nil {
 			log.Fatalf("device-not-found-%s", device.Id)

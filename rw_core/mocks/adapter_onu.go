@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package mocks
 
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v2/pkg/adapters/adapterif"
 	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
@@ -25,21 +28,23 @@ import (
 	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
 	of "github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
-	"strings"
 )
 
+// ONUAdapter represent ONU adapter attributes
 type ONUAdapter struct {
 	coreProxy adapterif.CoreProxy
 	Adapter
 }
 
+// NewONUAdapter creates ONU adapter
 func NewONUAdapter(cp adapterif.CoreProxy) *ONUAdapter {
 	a := &ONUAdapter{}
 	a.coreProxy = cp
 	return a
 }
 
-func (onuA *ONUAdapter) Adopt_device(device *voltha.Device) error {
+// AdoptDevice creates new handler for added device
+func (onuA *ONUAdapter) AdoptDevice(device *voltha.Device) error {
 	go func() {
 		d := proto.Clone(device).(*voltha.Device)
 		d.Root = false
@@ -111,7 +116,8 @@ func (onuA *ONUAdapter) Adopt_device(device *voltha.Device) error {
 	return nil
 }
 
-func (onuA *ONUAdapter) Get_ofp_port_info(device *voltha.Device, port_no int64) (*ic.PortCapability, error) {
+// GetOfpPortInfo returns ofp device info
+func (onuA *ONUAdapter) GetOfpPortInfo(device *voltha.Device, portNo int64) (*ic.PortCapability, error) {
 	if d := onuA.getDevice(device.Id); d == nil {
 		log.Fatalf("device-not-found-%s", device.Id)
 	}
@@ -129,12 +135,13 @@ func (onuA *ONUAdapter) Get_ofp_port_info(device *voltha.Device, port_no int64) 
 				MaxSpeed:   uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
 			},
 			DeviceId:     device.Id,
-			DevicePortNo: uint32(port_no),
+			DevicePortNo: uint32(portNo),
 		},
 	}, nil
 }
 
-func (onuA *ONUAdapter) Disable_device(device *voltha.Device) error {
+// DisableDevice disables device
+func (onuA *ONUAdapter) DisableDevice(device *voltha.Device) error {
 	go func() {
 		if d := onuA.getDevice(device.Id); d == nil {
 			log.Fatalf("device-not-found-%s", device.Id)
@@ -158,7 +165,8 @@ func (onuA *ONUAdapter) Disable_device(device *voltha.Device) error {
 	return nil
 }
 
-func (onuA *ONUAdapter) Reenable_device(device *voltha.Device) error {
+// ReenableDevice reenables device
+func (onuA *ONUAdapter) ReenableDevice(device *voltha.Device) error {
 	go func() {
 		if d := onuA.getDevice(device.Id); d == nil {
 			log.Fatalf("device-not-found-%s", device.Id)
