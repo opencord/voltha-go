@@ -237,7 +237,7 @@ endif
 sca: golangci_lint_tool_install
 	rm -rf ./sca-report
 	@mkdir -p ./sca-report
-	$(GOLANGCI_LINT_TOOL) run -E golint --out-format junit-xml ./cli/... 2>&1 | tee ./sca-report/sca-report.xml
+	$(GOLANGCI_LINT_TOOL) run -E golint -D structcheck --out-format junit-xml ./cli/... ./rw_core/...  2>&1 | tee ./sca-report/sca-report.xml
 
 test: go_junit_install gocover_cobertura_install local-lib-go
 	@mkdir -p ./tests/results
