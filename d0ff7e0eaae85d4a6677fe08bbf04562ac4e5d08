@@ -16,6 +16,24 @@
       "revId": "d0ff7e0eaae85d4a6677fe08bbf04562ac4e5d08",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64125299_06bc8e17",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-14T05:37:44Z",
+      "side": 1,
+      "message": "Yes, we are going to enable sca in jenkins, this will run sca only on folders cli, ro_core as of now. This will stop introducing new warnings in these folders.",
+      "parentUuid": "2bccd58c_167ee395",
+      "revId": "d0ff7e0eaae85d4a6677fe08bbf04562ac4e5d08",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
