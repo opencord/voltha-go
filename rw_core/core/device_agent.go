@@ -140,7 +140,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 		log.Errorw("failed-to-add-devices-to-cluster-proxy", log.Fields{"error": err})
 		return nil, err
 	}
-	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
+	agent.deviceProxy.RegisterCallback(model.PostUpdate, agent.processUpdate)
 
 	log.Debugw("device-agent-started", log.Fields{"deviceId": agent.deviceID})
 	return device, nil
@@ -154,7 +154,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 	log.Debugw("stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
 
 	// First unregister any callbacks
-	agent.deviceProxy.UnregisterCallback(model.POST_UPDATE, agent.processUpdate)
+	agent.deviceProxy.UnregisterCallback(model.PostUpdate, agent.processUpdate)
 
 	//	Remove the device from the KV store
 	removed, err := agent.clusterDataProxy.Remove(ctx, "/devices/"+agent.deviceID, "")
