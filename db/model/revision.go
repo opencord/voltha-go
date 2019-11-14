@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package model
 
 import (
 	"context"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"time"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 )
 
+// Revision -
 type Revision interface {
 	Finalize(bool)
 	SetConfig(revision *DataRevision)
