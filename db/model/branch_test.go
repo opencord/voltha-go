@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	TestBranch_BRANCH *Branch
-	TestBranch_HASH   string
+	TestBranchBranch *Branch
+	TestBranchHash   string
 )
 
 // Create a new branch and ensure that fields are populated
@@ -38,72 +38,72 @@ func TestBranch_NewBranch(t *testing.T) {
 	}
 	txid := fmt.Sprintf("%x", md5.Sum([]byte("branch_transaction_id")))
 
-	TestBranch_BRANCH = NewBranch(node, txid, origin, true)
-	t.Logf("New Branch(txid:%s) created: %+v\n", txid, TestBranch_BRANCH)
+	TestBranchBranch = NewBranch(node, txid, origin, true)
+	t.Logf("New Branch(txid:%s) created: %+v\n", txid, TestBranchBranch)
 
-	if TestBranch_BRANCH.Latest == nil {
+	if TestBranchBranch.Latest == nil {
 		t.Errorf("Branch latest pointer is nil")
-	} else if TestBranch_BRANCH.Origin == nil {
+	} else if TestBranchBranch.Origin == nil {
 		t.Errorf("Branch origin pointer is nil")
-	} else if TestBranch_BRANCH.Node == nil {
+	} else if TestBranchBranch.Node == nil {
 		t.Errorf("Branch node pointer is nil")
-	} else if TestBranch_BRANCH.Revisions == nil {
+	} else if TestBranchBranch.Revisions == nil {
 		t.Errorf("Branch revisions map is nil")
-	} else if TestBranch_BRANCH.Txid == "" {
+	} else if TestBranchBranch.Txid == "" {
 		t.Errorf("Branch transaction id is empty")
 	}
 }
 
 // Add a new revision to the branch
 func TestBranch_AddRevision(t *testing.T) {
-	TestBranch_HASH = fmt.Sprintf("%x", md5.Sum([]byte("revision_hash")))
+	TestBranchHash = fmt.Sprintf("%x", md5.Sum([]byte("revision_hash")))
 	rev := &NonPersistedRevision{
 		Config:   &DataRevision{},
 		Children: make(map[string][]Revision),
-		Hash:     TestBranch_HASH,
+		Hash:     TestBranchHash,
 		Branch:   &Branch{},
 	}
 
-	TestBranch_BRANCH.AddRevision(rev)
+	TestBranchBranch.AddRevision(rev)
 	t.Logf("Added revision: %+v\n", rev)
 
-	if len(TestBranch_BRANCH.Revisions) == 0 {
+	if len(TestBranchBranch.Revisions) == 0 {
 		t.Errorf("Branch revisions map is empty")
 	}
 }
 
 // Ensure that the added revision can be retrieved
 func TestBranch_GetRevision(t *testing.T) {
-	if rev := TestBranch_BRANCH.GetRevision(TestBranch_HASH); rev == nil {
-		t.Errorf("Unable to retrieve revision for hash:%s", TestBranch_HASH)
+	if rev := TestBranchBranch.GetRevision(TestBranchHash); rev == nil {
+		t.Errorf("Unable to retrieve revision for hash:%s", TestBranchHash)
 	} else {
-		t.Logf("Got revision for hash:%s rev:%+v\n", TestBranch_HASH, rev)
+		t.Logf("Got revision for hash:%s rev:%+v\n", TestBranchHash, rev)
 	}
 }
 
 // Set the added revision as the latest
 func TestBranch_LatestRevision(t *testing.T) {
-	addedRevision := TestBranch_BRANCH.GetRevision(TestBranch_HASH)
-	TestBranch_BRANCH.SetLatest(addedRevision)
+	addedRevision := TestBranchBranch.GetRevision(TestBranchHash)
+	TestBranchBranch.SetLatest(addedRevision)
 
-	rev := TestBranch_BRANCH.GetLatest()
+	rev := TestBranchBranch.GetLatest()
 	t.Logf("Retrieved latest revision :%+v", rev)
 
 	if rev == nil {
 		t.Error("Unable to retrieve latest revision")
-	} else if rev.GetHash() != TestBranch_HASH {
-		t.Errorf("Latest revision does not match hash: %s", TestBranch_HASH)
+	} else if rev.GetHash() != TestBranchHash {
+		t.Errorf("Latest revision does not match hash: %s", TestBranchHash)
 	}
 }
 
 // Ensure that the origin revision remains and differs from subsequent revisions
 func TestBranch_OriginRevision(t *testing.T) {
-	rev := TestBranch_BRANCH.Origin
+	rev := TestBranchBranch.Origin
 	t.Logf("Retrieved origin revision :%+v", rev)
 
 	if rev == nil {
 		t.Error("Unable to retrieve origin revision")
-	} else if rev.GetHash() == TestBranch_HASH {
-		t.Errorf("Origin revision should differ from added revision: %s", TestBranch_HASH)
+	} else if rev.GetHash() == TestBranchHash {
+		t.Errorf("Origin revision should differ from added revision: %s", TestBranchHash)
 	}
 }
