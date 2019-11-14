@@ -17,14 +17,15 @@
 package mocks
 
 import (
-	"github.com/opencord/voltha-go/rw_core/coreIf"
 	"testing"
+
+	"github.com/opencord/voltha-go/rw_core/coreif"
 )
 
 func TestDeviceManagerImplementsDeviceManagerIf(t *testing.T) {
 	deviceMgr := &DeviceManager{}
 
-	if _, ok := interface{}(deviceMgr).(coreIf.DeviceManager); !ok {
-		t.Error("Device manager does not implement the coreIf.DeviceManager interface")
+	if _, ok := interface{}(deviceMgr).(coreif.DeviceManager); !ok {
+		t.Error("Device manager does not implement the coreif.DeviceManager interface")
 	}
 }

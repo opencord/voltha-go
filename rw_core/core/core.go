@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
+	"time"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
@@ -29,11 +32,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"time"
 )
 
+// Core represent read,write core attributes
 type Core struct {
-	instanceId        string
+	instanceID        string
 	deviceMgr         *DeviceManager
 	logicalDeviceMgr  *LogicalDeviceManager
 	grpcServer        *grpcserver.GrpcServer
@@ -53,12 +56,16 @@ type Core struct {
 }
 
 func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
+	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	if err != nil {
+		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+	}
 }
 
+// NewCore creates instance of rw core
 func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaClient kafka.Client) *Core {
 	var core Core
-	core.instanceId = id
+	core.instanceID = id
 	core.exitChannel = make(chan int, 1)
 	core.config = cf
 	core.kvClient = kvClient
@@ -84,6 +91,7 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 	return &core
 }
 
+// Start brings up core services
 func (core *Core) Start(ctx context.Context) {
 
 	// If the context has a probe then fetch it and register our services
@@ -102,7 +110,7 @@ func (core *Core) Start(ctx context.Context) {
 		}
 	}
 
-	log.Info("starting-core-services", log.Fields{"coreId": core.instanceId})
+	log.Info("starting-core-services", log.Fields{"coreId": core.instanceID})
 
 	// Wait until connection to KV Store is up
 	if err := core.waitUntilKVStoreReachableOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
@@ -120,7 +128,7 @@ func (core *Core) Start(ctx context.Context) {
 
 	log.Debugw("values", log.Fields{"kmp": core.kmp})
 	core.deviceMgr = newDeviceManager(core)
-	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceId, core.deviceMgr)
+	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceID, core.deviceMgr)
 	core.deviceMgr.adapterMgr = core.adapterMgr
 	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy, core.config.DefaultCoreTimeout)
 
@@ -140,12 +148,13 @@ func (core *Core) Start(ctx context.Context) {
 	go core.monitorKvstoreLiveness(ctx)
 
 	// Setup device ownership context
-	core.deviceOwnership = NewDeviceOwnership(core.instanceId, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
+	core.deviceOwnership = NewDeviceOwnership(core.instanceID, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
 		"service/voltha/owns_device", 10)
 
 	log.Info("core-services-started")
 }
 
+// Stop brings down core services
 func (core *Core) Stop(ctx context.Context) {
 	log.Info("stopping-adaptercore")
 	if core.exitChannel != nil {
@@ -231,13 +240,13 @@ func (core *Core) initKafkaManager(ctx context.Context) error {
 /*
  * KafkaMonitorThread
  *
- * Repsonsible for starting the Kafka Interadapter Proxy and monitoring its liveness
+ * Responsible for starting the Kafka Interadapter Proxy and monitoring its liveness
  * state.
  *
  * Any producer that fails to send will cause KafkaInterContainerProxy to
  * post a false event on its liveness channel. Any producer that succeeds in sending
  * will cause KafkaInterContainerProxy to post a true event on its liveness
- * channel. Group recievers also update liveness state, and a receiver will typically
+ * channel. Group receivers also update liveness state, and a receiver will typically
  * indicate a loss of liveness within 3-5 seconds of Kafka going down. Receivers
  * only indicate restoration of liveness if a message is received. During normal
  * operation, messages will be routinely produced and received, automatically
@@ -281,7 +290,7 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval ti
 			log.Infow("started-kafka-proxy", log.Fields{})
 
 			// cannot do this until after the kmp is started
-			if err := core.registerAdapterRequestHandlers(ctx, core.instanceId, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
+			if err := core.registerAdapterRequestHandlers(ctx, core.instanceID, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
 				log.Fatal("Failure-registering-adapterRequestHandler")
 			}
 
@@ -357,7 +366,7 @@ func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRe
 					return status.Error(codes.Unavailable, "kv store unreachable")
 				}
 			}
-			count += 1
+			count++
 			//	Take a nap before retrying
 			time.Sleep(retryInterval)
 			log.Infow("retry-KV-store-connectivity", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
@@ -370,10 +379,10 @@ func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRe
 	return nil
 }
 
-func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstanceId string, dMgr *DeviceManager,
+func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstanceID string, dMgr *DeviceManager,
 	ldMgr *LogicalDeviceManager, aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy,
 ) error {
-	requestProxy := NewAdapterRequestHandlerProxy(core, coreInstanceId, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
+	requestProxy := NewAdapterRequestHandlerProxy(core, coreInstanceID, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
 		core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 
 	// Register the broadcast topic to handle any core-bound broadcast requests
