@@ -198,7 +198,7 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 	}
 	// TODO:  Use a port proxy once the POST_ADD is fixed
 	if agent.ldProxy != nil {
-		agent.ldProxy.RegisterCallback(model.POST_UPDATE, agent.portUpdated)
+		agent.ldProxy.RegisterCallback(model.PostUpdate, agent.portUpdated)
 	} else {
 		log.Errorw("logical-device-proxy-null", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		return status.Error(codes.Internal, "logical-device-proxy-null")
