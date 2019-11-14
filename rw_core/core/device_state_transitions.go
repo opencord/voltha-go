@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
-	"github.com/opencord/voltha-go/rw_core/coreIf"
+	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 )
 
+// DeviceType mentions type of device like parent, child
 type DeviceType int32
 
 const (
@@ -29,14 +31,17 @@ const (
 	any    DeviceType = 2
 )
 
+// DeviceState has admin, operational and connection status of device
 type DeviceState struct {
 	Admin       voltha.AdminState_AdminState
 	Connection  voltha.ConnectStatus_ConnectStatus
 	Operational voltha.OperStatus_OperStatus
 }
 
+// TransitionHandler function type which takes device as input parameter
 type TransitionHandler func(*voltha.Device) error
 
+// Transition represent transition related attributes
 type Transition struct {
 	deviceType    DeviceType
 	previousState DeviceState
@@ -44,12 +49,14 @@ type Transition struct {
 	handlers      []TransitionHandler
 }
 
+// TransitionMap represent map of transitions and device manager
 type TransitionMap struct {
 	transitions []Transition
-	dMgr        coreIf.DeviceManager
+	dMgr        coreif.DeviceManager
 }
 
-func NewTransitionMap(dMgr coreIf.DeviceManager) *TransitionMap {
+// NewTransitionMap creates transition map
+func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
 	var transitionMap TransitionMap
 	transitionMap.dMgr = dMgr
 	transitionMap.transitions = make([]Transition, 0)
@@ -197,6 +204,7 @@ func getHandler(previous *DeviceState, current *DeviceState, transition *Transit
 	return nil, false
 }
 
+// GetTransitionHandler returns transition handler
 func (tMap *TransitionMap) GetTransitionHandler(pDevice *voltha.Device, cDevice *voltha.Device) []TransitionHandler {
 	//1. Get the previous and current set of states
 	pState := getDeviceStates(pDevice)
