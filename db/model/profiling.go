@@ -17,12 +17,13 @@
 package model
 
 import (
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"sync"
+
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
 // Profiling is used to store performance details collected at runtime
-type profiling struct {
+type Profiling struct {
 	sync.RWMutex
 	DatabaseRetrieveTime  float64
 	DatabaseRetrieveCount int
@@ -34,19 +35,19 @@ type profiling struct {
 	InMemoryLockCount     int
 }
 
-var profilingInstance *profiling
+var profilingInstance *Profiling
 var profilingOnce sync.Once
 
 // GetProfiling returns a singleton instance of the Profiling structure
-func GetProfiling() *profiling {
+func GetProfiling() *Profiling {
 	profilingOnce.Do(func() {
-		profilingInstance = &profiling{}
+		profilingInstance = &Profiling{}
 	})
 	return profilingInstance
 }
 
 // AddToDatabaseRetrieveTime appends a time period to retrieve data from the database
-func (p *profiling) AddToDatabaseRetrieveTime(period float64) {
+func (p *Profiling) AddToDatabaseRetrieveTime(period float64) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -55,7 +56,7 @@ func (p *profiling) AddToDatabaseRetrieveTime(period float64) {
 }
 
 // AddToInMemoryModelTime appends a time period to construct/deconstruct data in memory
-func (p *profiling) AddToInMemoryModelTime(period float64) {
+func (p *Profiling) AddToInMemoryModelTime(period float64) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -64,7 +65,7 @@ func (p *profiling) AddToInMemoryModelTime(period float64) {
 }
 
 // AddToInMemoryProcessTime appends a time period to process data
-func (p *profiling) AddToInMemoryProcessTime(period float64) {
+func (p *Profiling) AddToInMemoryProcessTime(period float64) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -72,7 +73,7 @@ func (p *profiling) AddToInMemoryProcessTime(period float64) {
 }
 
 // AddToDatabaseStoreTime appends a time period to store data in the database
-func (p *profiling) AddToDatabaseStoreTime(period float64) {
+func (p *Profiling) AddToDatabaseStoreTime(period float64) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -80,7 +81,7 @@ func (p *profiling) AddToDatabaseStoreTime(period float64) {
 }
 
 // AddToInMemoryLockTime appends a time period when a code block was locked
-func (p *profiling) AddToInMemoryLockTime(period float64) {
+func (p *Profiling) AddToInMemoryLockTime(period float64) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -89,7 +90,7 @@ func (p *profiling) AddToInMemoryLockTime(period float64) {
 }
 
 // Reset initializes the profile counters
-func (p *profiling) Reset() {
+func (p *Profiling) Reset() {
 	p.Lock()
 	defer p.Unlock()
 
@@ -104,7 +105,7 @@ func (p *profiling) Reset() {
 }
 
 // Report will provide the current profile counter status
-func (p *profiling) Report() {
+func (p *Profiling) Report() {
 	p.Lock()
 	defer p.Unlock()
 
