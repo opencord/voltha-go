@@ -20,14 +20,15 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"reflect"
+	"strings"
+	"sync"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"reflect"
-	"strings"
-	"sync"
 )
 
 // PersistedRevision holds information of revision meant to be saved in a persistent storage
@@ -51,6 +52,7 @@ type watchCache struct {
 var watchCacheInstance *watchCache
 var watchCacheOne sync.Once
 
+// Watches -
 func Watches() *watchCache {
 	watchCacheOne.Do(func() {
 		watchCacheInstance = &watchCache{Cache: sync.Map{}}
@@ -116,6 +118,7 @@ func (pr *PersistedRevision) store(skipOnExist bool) {
 	}
 }
 
+// SetupWatch -
 func (pr *PersistedRevision) SetupWatch(key string) {
 	if key == "" {
 		log.Debugw("ignoring-watch", log.Fields{"key": key, "revision-hash": pr.GetHash()})
@@ -198,11 +201,10 @@ StopWatchLoop:
 					log.Debugw("un-marshaled-watch-data", log.Fields{"key": latestRev.GetHash(), "watch": latestRev.GetName(), "data": data.Interface()})
 
 					var pathLock string
-					var blobs map[string]*kvstore.KVPair
 
 					// The watch reported new persistence data.
 					// Construct an object that will be used to update the memory
-					blobs = make(map[string]*kvstore.KVPair)
+					blobs := make(map[string]*kvstore.KVPair)
 					key, _ := kvstore.ToString(event.Key)
 					blobs[key] = &kvstore.KVPair{
 						Key:     key,
@@ -219,7 +221,7 @@ StopWatchLoop:
 						//
 
 						//If the proxy already has a request in progress, then there is no need to process the watch
-						if latestRev.GetNode().GetProxy().GetOperation() != PROXY_NONE {
+						if latestRev.GetNode().GetProxy().GetOperation() != ProxyNone {
 							log.Debugw("operation-in-progress", log.Fields{
 								"key":       latestRev.GetHash(),
 								"path":      latestRev.GetNode().GetProxy().getFullPath(),
@@ -232,7 +234,7 @@ StopWatchLoop:
 
 						// Reserve the path to prevent others to modify while we reload from persistence
 						latestRev.GetNode().GetProxy().GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-						latestRev.GetNode().GetProxy().SetOperation(PROXY_WATCH)
+						latestRev.GetNode().GetProxy().SetOperation(ProxyWatch)
 
 						// Load changes and apply to memory
 						latestRev.LoadFromPersistence(context.Background(), latestRev.GetName(), "", blobs)
@@ -342,7 +344,7 @@ func (pr *PersistedRevision) Drop(txid string, includeConfig bool) {
 	pr.Revision.Drop(txid, includeConfig)
 }
 
-// Drop takes care of eliminating a revision hash that is no longer needed
+// StorageDrop takes care of eliminating a revision hash that is no longer needed
 // and its associated config when required
 func (pr *PersistedRevision) StorageDrop(txid string, includeConfig bool) {
 	log.Debugw("dropping-revision", log.Fields{"txid": txid, "hash": pr.GetHash(), "config-hash": pr.GetConfig().Hash})
@@ -531,7 +533,7 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 	}
 
 	if pr.kvStore != nil && path != "" {
-		if blobs == nil || len(blobs) == 0 {
+		if blobs == nil {
 			log.Debugw("retrieve-from-kv", log.Fields{"path": path, "txid": txid})
 			blobs, _ = pr.kvStore.List(path)
 		}
