@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package flow_decomposition
+package flowdecomposition
 
 import (
 	"errors"
+
 	"github.com/opencord/voltha-go/rw_core/graph"
 	fu "github.com/opencord/voltha-lib-go/v2/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -97,17 +98,17 @@ func newTestDeviceManager() *testDeviceManager {
 	return &tdm
 }
 
-func (tdm *testDeviceManager) GetDevice(deviceId string) (*voltha.Device, error) {
-	if d, ok := tdm.devices[deviceId]; ok {
+func (tdm *testDeviceManager) GetDevice(deviceID string) (*voltha.Device, error) {
+	if d, ok := tdm.devices[deviceID]; ok {
 		return d, nil
 	}
-	return nil, errors.New("ABSENT.")
+	return nil, errors.New("ABSENT")
 }
-func (tdm *testDeviceManager) IsRootDevice(deviceId string) (bool, error) {
-	if d, ok := tdm.devices[deviceId]; ok {
+func (tdm *testDeviceManager) IsRootDevice(deviceID string) (bool, error) {
+	if d, ok := tdm.devices[deviceID]; ok {
 		return d.Root, nil
 	}
-	return false, errors.New("ABSENT.")
+	return false, errors.New("ABSENT")
 }
 
 func (tdm *testDeviceManager) NotifyInvalidTransition(pcDevice *voltha.Device) error {
@@ -361,8 +362,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 
 	tfd.defaultRules = fu.NewDeviceRules()
 	fg := fu.NewFlowsAndGroups()
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
 			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
@@ -427,11 +427,11 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	return &tfd
 }
 
-func (tfd *testFlowDecomposer) getDeviceHelper(deviceId string) (*voltha.Device, error) {
-	return tfd.dMgr.GetDevice(deviceId)
+func (tfd *testFlowDecomposer) getDeviceHelper(deviceID string) (*voltha.Device, error) {
+	return tfd.dMgr.GetDevice(deviceID)
 }
 
-func (tfd *testFlowDecomposer) GetDeviceLogicalId() string {
+func (tfd *testFlowDecomposer) GetDeviceLogicalID() string {
 	return ""
 }
 
@@ -485,8 +485,7 @@ func (tfd *testFlowDecomposer) GetRoute(ingressPortNo uint32, egressPortNo uint3
 
 func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -510,8 +509,7 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
 
-	var faParent *fu.FlowArgs
-	faParent = &fu.FlowArgs{
+	faParent := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -529,8 +527,7 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
-	var faChild *fu.FlowArgs
-	faChild = &fu.FlowArgs{
+	faChild := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
@@ -550,8 +547,7 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 
 func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -575,8 +571,7 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
 
-	var faParent *fu.FlowArgs
-	faParent = &fu.FlowArgs{
+	faParent := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -594,8 +589,7 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
-	var faChild *fu.FlowArgs
-	faChild = &fu.FlowArgs{
+	faChild := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
@@ -615,8 +609,7 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 
 func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -639,8 +632,7 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
 
-	var faParent *fu.FlowArgs
-	faParent = &fu.FlowArgs{
+	faParent := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -657,8 +649,7 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
-	var faChild *fu.FlowArgs
-	faChild = &fu.FlowArgs{
+	faChild := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
@@ -676,8 +667,7 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 
 func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -704,8 +694,7 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
 
-	var faParent *fu.FlowArgs
-	faParent = &fu.FlowArgs{
+	faParent := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -726,8 +715,7 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
-	var faChild *fu.FlowArgs
-	faChild = &fu.FlowArgs{
+	faChild := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
@@ -748,8 +736,7 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 }
 
 func TestLldpReRouteRuleDecomposition(t *testing.T) {
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(10),
@@ -786,8 +773,7 @@ func TestLldpReRouteRuleDecomposition(t *testing.T) {
 }
 
 func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 5000, "table_id": 0},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -799,8 +785,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	var fa2 *fu.FlowArgs
-	fa2 = &fu.FlowArgs{
+	fa2 := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 1},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
@@ -892,8 +877,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 
 func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 	log.Debugf("Starting Test Unicast Downstream")
-	var fa1 *fu.FlowArgs
-	fa1 = &fu.FlowArgs{
+	fa1 := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 0},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(10),
@@ -905,8 +889,7 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	var fa2 *fu.FlowArgs
-	fa2 = &fu.FlowArgs{
+	fa2 := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 1},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(10),
@@ -989,8 +972,7 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 }
 
 func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
-	var fa *fu.FlowArgs
-	fa = &fu.FlowArgs{
+	fa := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(10),
@@ -1004,8 +986,7 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	var ga *fu.GroupArgs
-	ga = &fu.GroupArgs{
+	ga := &fu.GroupArgs{
 		GroupId: 10,
 		Buckets: []*ofp.OfpBucket{
 			{Actions: []*ofp.OfpAction{
