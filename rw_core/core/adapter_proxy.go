@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package core
 
 import (
 	"context"
+
 	"github.com/golang/protobuf/ptypes"
 	a "github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
@@ -28,6 +30,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// AdapterProxy represents adapter proxy attributes
 type AdapterProxy struct {
 	TestMode              bool
 	deviceTopicRegistered bool
@@ -35,6 +38,7 @@ type AdapterProxy struct {
 	kafkaICProxy          *kafka.InterContainerProxy
 }
 
+// NewAdapterProxy will return adapter proxy instance
 func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy, corePairTopic string) *AdapterProxy {
 	return &AdapterProxy{
 		kafkaICProxy:          kafkaProxy,
@@ -43,20 +47,19 @@ func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy, corePairTopic string
 	}
 }
 
-func unPackResponse(rpc string, deviceId string, success bool, response *a.Any) error {
+func unPackResponse(rpc string, deviceID string, success bool, response *a.Any) error {
 	if success {
 		return nil
-	} else {
-		unpackResult := &ic.Error{}
-		var err error
-		if err = ptypes.UnmarshalAny(response, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return err
-		}
-		log.Debugw("response", log.Fields{"rpc": rpc, "deviceId": deviceId, "success": success, "error": err})
-		// TODO:  Need to get the real error code
-		return status.Errorf(codes.Canceled, "%s", unpackResult.Reason)
 	}
+	unpackResult := &ic.Error{}
+	var err error
+	if err = ptypes.UnmarshalAny(response, unpackResult); err != nil {
+		log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		return err
+	}
+	log.Debugw("response", log.Fields{"rpc": rpc, "deviceId": deviceID, "success": success, "error": err})
+	// TODO:  Need to get the real error code
+	return status.Errorf(codes.Canceled, "%s", unpackResult.Reason)
 }
 
 func (ap *AdapterProxy) getCoreTopic() kafka.Topic {
@@ -67,6 +70,7 @@ func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic {
 	return kafka.Topic{Name: adapterName}
 }
 
+// AdoptDevice invokes adopt device rpc
 func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("AdoptDevice", log.Fields{"device": device})
 	rpc := "adopt_device"
@@ -85,6 +89,7 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// DisableDevice invokes disable device rpc
 func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("DisableDevice", log.Fields{"deviceId": device.Id})
 	rpc := "disable_device"
@@ -106,6 +111,7 @@ func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// ReEnableDevice invokes reenable device rpc
 func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("ReEnableDevice", log.Fields{"deviceId": device.Id})
 	rpc := "reenable_device"
@@ -122,6 +128,7 @@ func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Devic
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// RebootDevice invokes reboot device rpc
 func (ap *AdapterProxy) RebootDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("RebootDevice", log.Fields{"deviceId": device.Id})
 	rpc := "reboot_device"
@@ -138,6 +145,7 @@ func (ap *AdapterProxy) RebootDevice(ctx context.Context, device *voltha.Device)
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// DeleteDevice invokes delete device rpc
 func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("DeleteDevice", log.Fields{"deviceId": device.Id})
 	rpc := "delete_device"
@@ -155,6 +163,7 @@ func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device)
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// GetOfpDeviceInfo invokes get ofp device info rpc
 func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) {
 	log.Debugw("GetOfpDeviceInfo", log.Fields{"deviceId": device.Id})
 	toTopic := ap.getAdapterTopic(device.Adapter)
@@ -174,18 +183,18 @@ func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Dev
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return unpackResult, nil
-	} else {
-		unpackResult := &ic.Error{}
-		var err error
-		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-		}
-		log.Debugw("GetOfpDeviceInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
-		// TODO:  Need to get the real error code
-		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
+	unpackResult := &ic.Error{}
+	var err error
+	if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+		log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+	}
+	log.Debugw("GetOfpDeviceInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
+	// TODO:  Need to get the real error code
+	return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 }
 
+// GetOfpPortInfo invokes get ofp port info rpc
 func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Device, portNo uint32) (*ic.PortCapability, error) {
 	log.Debugw("GetOfpPortInfo", log.Fields{"deviceId": device.Id})
 	toTopic := ap.getAdapterTopic(device.Adapter)
@@ -210,35 +219,38 @@ func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Devic
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return unpackResult, nil
-	} else {
-		unpackResult := &ic.Error{}
-		var err error
-		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-		}
-		log.Debugw("GetOfpPortInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
-		// TODO:  Need to get the real error code
-		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
+	unpackResult := &ic.Error{}
+	var err error
+	if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+		log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+	}
+	log.Debugw("GetOfpPortInfo-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
+	// TODO:  Need to get the real error code
+	return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 }
 
 //TODO: Implement the functions below
 
+// AdapterDescriptor - TODO
 func (ap *AdapterProxy) AdapterDescriptor() (*voltha.Adapter, error) {
 	log.Debug("AdapterDescriptor")
 	return nil, nil
 }
 
+// DeviceTypes - TODO
 func (ap *AdapterProxy) DeviceTypes() (*voltha.DeviceType, error) {
 	log.Debug("DeviceTypes")
 	return nil, nil
 }
 
+// Health - TODO
 func (ap *AdapterProxy) Health() (*voltha.HealthStatus, error) {
 	log.Debug("Health")
 	return nil, nil
 }
 
+// ReconcileDevice invokes reconcile device rpc
 func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("ReconcileDevice", log.Fields{"deviceId": device.Id})
 	rpc := "Reconcile_device"
@@ -254,16 +266,19 @@ func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Devi
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// AbandonDevice - TODO
 func (ap *AdapterProxy) AbandonDevice(device voltha.Device) error {
 	log.Debug("AbandonDevice")
 	return nil
 }
 
+// GetDeviceDetails - TODO
 func (ap *AdapterProxy) GetDeviceDetails(device voltha.Device) (*voltha.Device, error) {
 	log.Debug("GetDeviceDetails")
 	return nil, nil
 }
 
+// DownloadImage invokes download image rpc
 func (ap *AdapterProxy) DownloadImage(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) error {
 	log.Debugw("DownloadImage", log.Fields{"deviceId": device.Id, "image": download.Name})
 	rpc := "download_image"
@@ -285,6 +300,7 @@ func (ap *AdapterProxy) DownloadImage(ctx context.Context, device *voltha.Device
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// GetImageDownloadStatus invokes get image download status rpc
 func (ap *AdapterProxy) GetImageDownloadStatus(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("GetImageDownloadStatus", log.Fields{"deviceId": device.Id, "image": download.Name})
 	rpc := "get_image_download_status"
@@ -310,18 +326,18 @@ func (ap *AdapterProxy) GetImageDownloadStatus(ctx context.Context, device *volt
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return unpackResult, nil
-	} else {
-		unpackResult := &ic.Error{}
-		var err error
-		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return nil, err
-		}
-		log.Debugw("GetImageDownloadStatus-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
-		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
+	unpackResult := &ic.Error{}
+	var err error
+	if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+		log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		return nil, err
+	}
+	log.Debugw("GetImageDownloadStatus-return", log.Fields{"deviceid": device.Id, "success": success, "error": err})
+	return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 }
 
+// CancelImageDownload invokes cancel image download rpc
 func (ap *AdapterProxy) CancelImageDownload(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) error {
 	log.Debugw("CancelImageDownload", log.Fields{"deviceId": device.Id, "image": download.Name})
 	rpc := "cancel_image_download"
@@ -343,6 +359,7 @@ func (ap *AdapterProxy) CancelImageDownload(ctx context.Context, device *voltha.
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// ActivateImageUpdate invokes activate image update rpc
 func (ap *AdapterProxy) ActivateImageUpdate(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) error {
 	log.Debugw("ActivateImageUpdate", log.Fields{"deviceId": device.Id, "image": download.Name})
 	rpc := "activate_image_update"
@@ -364,6 +381,7 @@ func (ap *AdapterProxy) ActivateImageUpdate(ctx context.Context, device *voltha.
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// RevertImageUpdate invokes revert image update rpc
 func (ap *AdapterProxy) RevertImageUpdate(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) error {
 	log.Debugw("RevertImageUpdate", log.Fields{"deviceId": device.Id, "image": download.Name})
 	rpc := "revert_image_update"
@@ -385,20 +403,21 @@ func (ap *AdapterProxy) RevertImageUpdate(ctx context.Context, device *voltha.De
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// SelfTestDevice - TODO
 func (ap *AdapterProxy) SelfTestDevice(device voltha.Device) (*voltha.SelfTestResponse, error) {
 	log.Debug("SelfTestDevice")
 	return nil, nil
 }
 
-func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort uint32, packet *openflow_13.OfpPacketOut) error {
-	log.Debugw("packetOut", log.Fields{"deviceId": deviceId})
+func (ap *AdapterProxy) packetOut(deviceType string, deviceID string, outPort uint32, packet *openflow_13.OfpPacketOut) error {
+	log.Debugw("packetOut", log.Fields{"deviceId": deviceID})
 	toTopic := ap.getAdapterTopic(deviceType)
 	rpc := "receive_packet_out"
-	dId := &ic.StrType{Val: deviceId}
+	dID := &ic.StrType{Val: deviceID}
 	args := make([]*kafka.KVArg, 3)
 	args[0] = &kafka.KVArg{
 		Key:   "deviceId",
-		Value: dId,
+		Value: dID,
 	}
 	op := &ic.IntType{Val: int64(outPort)}
 	args[1] = &kafka.KVArg{
@@ -413,11 +432,12 @@ func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort ui
 	// TODO:  Do we need to wait for an ACK on a packet Out?
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("packetOut", log.Fields{"deviceid": deviceId, "success": success})
-	return unPackResponse(rpc, deviceId, success, result)
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, deviceID, args...)
+	log.Debugw("packetOut", log.Fields{"deviceid": deviceID, "success": success})
+	return unPackResponse(rpc, deviceID, success, result)
 }
 
+// UpdateFlowsBulk invokes update flows bulk rpc
 func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("UpdateFlowsBulk", log.Fields{"deviceId": device.Id, "flowsInUpdate": len(flows.Items), "groupsToUpdate": len(groups.Items)})
 	toTopic := ap.getAdapterTopic(device.Adapter)
@@ -442,11 +462,12 @@ func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flo
 
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("UpdateFlowsBulk-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// UpdateFlowsIncremental invokes update flows incremental rpc
 func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("UpdateFlowsIncremental",
 		log.Fields{
@@ -479,11 +500,12 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChange
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("UpdateFlowsIncremental-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
+// UpdatePmConfigs invokes update pm configs rpc
 func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Device, pmConfigs *voltha.PmConfigs) error {
 	log.Debugw("UpdatePmConfigs", log.Fields{"deviceId": device.Id})
 	toTopic := ap.getAdapterTopic(device.Adapter)
@@ -499,26 +521,30 @@ func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Devi
 	}
 
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("UpdatePmConfigs-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
-func (ap *AdapterProxy) ReceivePacketOut(deviceId voltha.ID, egressPortNo int, msg interface{}) error {
+// ReceivePacketOut - TODO
+func (ap *AdapterProxy) ReceivePacketOut(deviceID voltha.ID, egressPortNo int, msg interface{}) error {
 	log.Debug("ReceivePacketOut")
 	return nil
 }
 
+// SuppressAlarm - TODO
 func (ap *AdapterProxy) SuppressAlarm(filter voltha.AlarmFilter) error {
 	log.Debug("SuppressAlarm")
 	return nil
 }
 
+// UnSuppressAlarm - TODO
 func (ap *AdapterProxy) UnSuppressAlarm(filter voltha.AlarmFilter) error {
 	log.Debug("UnSuppressAlarm")
 	return nil
 }
 
+// SimulateAlarm invokes simulate alarm rpc
 func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device, simulatereq *voltha.SimulateAlarmRequest) error {
 	log.Debugw("SimulateAlarm", log.Fields{"id": simulatereq.Id})
 	rpc := "simulate_alarm"

@@ -17,16 +17,19 @@
 Defines a DeviceManager Interface - Used for unit testing of the flow decomposer only at this
 time.
 */
-package coreIf
+
+package coreif
 
 import (
 	"context"
+
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 )
 
+// LogicalDeviceManager represent logical device manager related methods
 type LogicalDeviceManager interface {
-	GetLogicalPort(lPortId *voltha.LogicalPortId) (*voltha.LogicalPort, error)
+	GetLogicalPort(lPortID *voltha.LogicalPortId) (*voltha.LogicalPort, error)
 	EnableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{})
 	DisableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{})
 	UpdateFlowTable(ctx context.Context, id string, flow *openflow_13.OfpFlowMod, ch chan interface{})
