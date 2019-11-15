@@ -18,6 +18,7 @@ package core
 import (
 	"context"
 	"errors"
+	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
@@ -112,9 +113,24 @@ func (dMgr *DeviceManager) deleteDeviceAgentFromMap(agent *DeviceAgent) {
 	delete(dMgr.rootDevices, agent.deviceId)
 }
 
+func (dMgr *DeviceManager) reconcileAgent(agent *DeviceAgent) {
+	if agent.deviceType == "" {
+		// TODO: context timeout
+		if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 1, false, ""); device != nil {
+			if d, ok := device.(*voltha.Device); ok {
+				log.Debugw("smbaker-devicetype-2", log.Fields{"Adapter": d.Adapter, "Id": d.Id, "type": d.Type, "root": d.Root, "parent_id": d.ParentId, "vendor": d.Vendor, "model": d.Model, "serial": d.SerialNumber, "mac_address": d.MacAddress, "admin_state": d.AdminState, "oper_status": d.OperStatus, "connect_status": d.ConnectStatus})
+				agent.lastData = proto.Clone(d).(*voltha.Device)
+				agent.deviceType = agent.lastData.Adapter
+				log.Debugw("smbaker-devicetype-3", log.Fields{"deviceType": agent.deviceType, "deviceId": agent.deviceId})
+			}
+		}
+	}
+}
+
 // getDeviceAgent returns the agent managing the device.  If the device is not in memory, it will loads it, if it exists
 func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 	if agent, ok := dMgr.deviceAgents.Load(deviceId); ok {
+		dMgr.reconcileAgent(agent.(*DeviceAgent))
 		return agent.(*DeviceAgent)
 	} else {
 		//	Try to load into memory - loading will also create the device agent and set the device ownership
@@ -122,6 +138,7 @@ func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 			if agent, ok = dMgr.deviceAgents.Load(deviceId); !ok {
 				return nil
 			} else {
+				dMgr.reconcileAgent(agent.(*DeviceAgent))
 				// Register this device for ownership tracking
 				go dMgr.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: deviceId})
 				return agent.(*DeviceAgent)
