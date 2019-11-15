@@ -150,6 +150,30 @@
       "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64630d3a_7767a092",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-15T16:20:29Z",
+      "side": 1,
+      "message": "Same as above... I was supposing that functionality is not the goal here (just consistency and code coverage)",
+      "parentUuid": "a73f8d05_db2218db",
+      "range": {
+        "startLine": 176,
+        "startChar": 18,
+        "endLine": 176,
+        "endChar": 25
+      },
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
