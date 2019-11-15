@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d93862b7_16a73e7b",
+        "filename": "ro_core/config/config_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:26:38Z",
+      "side": 1,
+      "message": "Should the test be skipped if the function signature is not the same?   Shouldn\u0027t it be an error?",
+      "revId": "0d6a8883327b5eaf3776fdc731dc34d77dc3db57",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
