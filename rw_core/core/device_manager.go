@@ -115,6 +115,7 @@ func (dMgr *DeviceManager) deleteDeviceAgentFromMap(agent *DeviceAgent) {
 // getDeviceAgent returns the agent managing the device.  If the device is not in memory, it will loads it, if it exists
 func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 	if agent, ok := dMgr.deviceAgents.Load(deviceId); ok {
+		//dMgr.reconcileAgent(agent.(*DeviceAgent))
 		return agent.(*DeviceAgent)
 	} else {
 		//	Try to load into memory - loading will also create the device agent and set the device ownership
@@ -122,6 +123,7 @@ func (dMgr *DeviceManager) getDeviceAgent(deviceId string) *DeviceAgent {
 			if agent, ok = dMgr.deviceAgents.Load(deviceId); !ok {
 				return nil
 			} else {
+				//dMgr.reconcileAgent(agent.(*DeviceAgent))
 				// Register this device for ownership tracking
 				go dMgr.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: deviceId})
 				return agent.(*DeviceAgent)
