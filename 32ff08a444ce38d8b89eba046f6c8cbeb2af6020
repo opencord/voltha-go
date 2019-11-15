@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3479ebc8_930476be",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-15T23:22:33Z",
+      "side": 1,
+      "message": "Possible performance problems: This lock is held for the duration of reconcile, so only one device can be reconciled at any given time.",
+      "revId": "32ff08a444ce38d8b89eba046f6c8cbeb2af6020",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
