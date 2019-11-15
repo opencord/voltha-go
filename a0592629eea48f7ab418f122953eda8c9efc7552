@@ -16,6 +16,24 @@
       "revId": "a0592629eea48f7ab418f122953eda8c9efc7552",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c913f8d5_06f2aea7",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-15T06:44:46Z",
+      "side": 1,
+      "message": "Yes. They refer to time interval in seconds. Kept them as int ; same as KVStoreTimeout attribute",
+      "parentUuid": "d3d2a4f3_8fb4de07",
+      "revId": "a0592629eea48f7ab418f122953eda8c9efc7552",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
