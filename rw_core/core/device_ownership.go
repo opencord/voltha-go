@@ -228,6 +228,11 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) (bool, error) {
 		chnl:  myChnl}
 	da.deviceMapLock.Unlock()
 
+	// If we're taking ownership of this device, then reconcile it with the KVstore
+	// Fixes VOL-2226 where a core would take ownership and have stale data
+	agent := da.deviceMgr.getDeviceAgent(idStr)
+	agent.reconcileWithKVStore()
+
 	log.Debugw("set-new-ownership", log.Fields{"Id": ownershipKey, "owned": reservedByMe})
 	go da.monitorOwnership(ownershipKey, myChnl)
 	return reservedByMe, nil
