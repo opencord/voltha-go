@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c0e69105_b90903b5",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-15T16:17:46Z",
+      "side": 1,
+      "message": "David, if you see the called function it is trivial … it just assigns the passed values to the fields of a struct and returns the struct itself. Up to now I see all these functions are tested with no other controls.",
+      "parentUuid": "b49c105a_d58e730b",
+      "range": {
+        "startLine": 69,
+        "startChar": 8,
+        "endLine": 69,
+        "endChar": 14
+      },
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1108a051_8a980a87",
         "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 4
@@ -70,6 +94,30 @@
       "writtenOn": "2019-11-15T15:58:11Z",
       "side": 1,
       "message": "need to verify the returned levels are as expected, not just that they are not nil",
+      "range": {
+        "startLine": 155,
+        "startChar": 18,
+        "endLine": 155,
+        "endChar": 25
+      },
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f0977f1_671c07e9",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-15T16:17:46Z",
+      "side": 1,
+      "message": "David, I was supposing that unit tests are maily for code coverage, not funcional tests. As far as I can see around in other UTs this is how they are designed. But it can be discussed, let me know",
+      "parentUuid": "86f82677_c90261a2",
       "range": {
         "startLine": 155,
         "startChar": 18,
