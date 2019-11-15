@@ -159,9 +159,14 @@ func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Devi
 	// Create and start a device agent for that device
 	agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 	dMgr.addDeviceAgentToMap(agent)
-	agent.start(ctx, false)
+	device, err := agent.start(ctx, device)
+	if err != nil {
+		log.Errorf("Failed to start device")
+		sendResponse(ctx, ch, errors.New("Failed to start device"))
+		return
+	}
 
-	sendResponse(ctx, ch, agent.lastData)
+	sendResponse(ctx, ch, device)
 }
 
 func (dMgr *DeviceManager) enableDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
@@ -376,7 +381,7 @@ func (dMgr *DeviceManager) ListDevices() (*voltha.Devices, error) {
 			if !dMgr.IsDeviceInCache(device.(*voltha.Device).Id) {
 				log.Debugw("loading-device-from-Model", log.Fields{"id": device.(*voltha.Device).Id})
 				agent := newDeviceAgent(dMgr.adapterProxy, device.(*voltha.Device), dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
-				if err := agent.start(nil, true); err != nil {
+				if _, err := agent.start(nil, nil); err != nil {
 					log.Warnw("failure-starting-agent", log.Fields{"deviceId": device.(*voltha.Device).Id})
 					agent.stop(nil)
 				} else {
@@ -435,7 +440,7 @@ func (dMgr *DeviceManager) loadDevice(deviceId string) (*DeviceAgent, error) {
 			if device, err = dMgr.getDeviceFromModel(deviceId); err == nil {
 				log.Debugw("loading-device", log.Fields{"deviceId": deviceId})
 				agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
-				if err = agent.start(nil, true); err != nil {
+				if _, err = agent.start(nil, nil); err != nil {
 					log.Warnw("Failure loading device", log.Fields{"deviceId": deviceId, "error": err})
 					agent.stop(nil)
 				} else {
@@ -949,7 +954,11 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	// Create and start a device agent for that device
 	agent := newDeviceAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 	dMgr.addDeviceAgentToMap(agent)
-	agent.start(nil, false)
+	childDevice, err = agent.start(nil, childDevice)
+	if err != nil {
+		log.Error("error-starting-child")
+		return nil, err
+	}
 
 	// Since this Core has handled this request then it therefore owns this child device.  Set the
 	// ownership of this device to this Core
@@ -963,7 +972,7 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceId string, parentPort
 	// Publish on the messaging bus that we have discovered new devices
 	go dMgr.kafkaICProxy.DeviceDiscovered(agent.deviceId, deviceType, parentDeviceId, dMgr.coreInstanceId)
 
-	return agent.lastData, nil
+	return childDevice, nil
 }
 
 func (dMgr *DeviceManager) processTransition(previous *voltha.Device, current *voltha.Device) error {
