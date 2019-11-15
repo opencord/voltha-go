@@ -1,0 +1,259 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ec1c9cf_43de706c",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "Check for error and on error do a log.fatal to bring down the core.",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c3a5946_83453ecf",
+        "filename": "ro_core/core/model_proxy_test.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ed76bc0_51911ed5",
+        "filename": "ro_core/core/model_proxy_test.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "567cb713_66b014be",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7376269_3f922622",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b750e38_846c1b1f",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "Check on these errors as well.  In these cases, it\u0027s ok to have a fatal error which will bring down the Core.",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b97b79a_5d69f8ca",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "This should be log.fatal, otherwise it will be a silent error.",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "022ee06d_40886adf",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1f4ab56_8820748d",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "219071e9_a2827d14",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bff13643_1cc8f173",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "This return will cause the logical device to be locked.   You could move the agent.lockLogicalDevice.Unlock() right after the lock and do a defer on it.",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3547916a_33b4548e",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b46dfab5_b36c9b39",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5bef064_f7b1ec77",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 579,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ee35735_8c10ed6d",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1642,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:17:52Z",
+      "side": 1,
+      "message": "No error check here?",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
