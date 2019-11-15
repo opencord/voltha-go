@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0189914_7614c3d4",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-15T01:00:48Z",
+      "side": 1,
+      "message": "(Temporary Fix)\nWill probably move this into device_agent.go and modify to only be called when taking ownership.",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 63
+      },
+      "revId": "725af693f442eefeb61ba13e759c5749a01f548c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
