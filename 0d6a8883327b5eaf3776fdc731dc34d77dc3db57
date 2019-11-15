@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "7a493bd1_721383b5",
+        "filename": "ro_core/config/config_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-15T16:35:09Z",
+      "side": 1,
+      "message": "Don\u0027t know … the function has no parameters and return nothing. It invokes the golang parser providing default values, as far as I understand.",
+      "parentUuid": "3c343f74_17aff40d",
+      "range": {
+        "startLine": 67,
+        "startChar": 13,
+        "endLine": 67,
+        "endChar": 34
+      },
+      "revId": "0d6a8883327b5eaf3776fdc731dc34d77dc3db57",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c0e3eab_9d728602",
         "filename": "ro_core/config/config_test.go",
         "patchSetId": 3
@@ -71,6 +95,30 @@
       "writtenOn": "2019-11-15T15:54:10Z",
       "side": 1,
       "message": "We need to test more than not nil perhaps? Is there a way to verify that we get a valid value or the \"expected\" value?",
+      "range": {
+        "startLine": 73,
+        "startChar": 12,
+        "endLine": 73,
+        "endChar": 28
+      },
+      "revId": "0d6a8883327b5eaf3776fdc731dc34d77dc3db57",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc3d8af6_44b0d135",
+        "filename": "ro_core/config/config_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-15T16:35:09Z",
+      "side": 1,
+      "message": "I tryed but I think that I need to set a env variable inside the test … have you seen the module under test? It is simply a return of the value of an env variable.",
+      "parentUuid": "5c0e3eab_9d728602",
       "range": {
         "startLine": 73,
         "startChar": 12,
