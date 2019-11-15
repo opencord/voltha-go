@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e771d298_2b10c32d",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-15T06:41:53Z",
+      "side": 1,
+      "message": "If we get here what happens? I see an error logged, but then the code continues. Will the code try to reconnect to the KV store somewhere else? Should the core fail exit and restart? What does the rw core do in this case",
+      "range": {
+        "startLine": 116,
+        "startChar": 6,
+        "endLine": 116,
+        "endChar": 11
+      },
+      "revId": "f06e9a5db64aeb5ccd07a4719c93d7e37766e44d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
