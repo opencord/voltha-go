@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1108a051_8a980a87",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:36:51Z",
+      "side": 1,
+      "message": "This is not needed as I planned to remove the test mode.",
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52008743_3acb972e",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T15:36:51Z",
+      "side": 1,
+      "message": "Don\u0027t you need to verify that the log level has been properly set?",
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
