@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "b49c105a_d58e730b",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-15T15:58:11Z",
+      "side": 1,
+      "message": "is there more than a not-nil check that can be done to validate the returned handler was created correctly? i.e. check that the passed parameters were actually set up correctly?",
+      "range": {
+        "startLine": 69,
+        "startChar": 8,
+        "endLine": 69,
+        "endChar": 14
+      },
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1108a051_8a980a87",
         "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 4
@@ -30,6 +53,52 @@
       "writtenOn": "2019-11-15T15:36:51Z",
       "side": 1,
       "message": "Don\u0027t you need to verify that the log level has been properly set?",
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86f82677_c90261a2",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-15T15:58:11Z",
+      "side": 1,
+      "message": "need to verify the returned levels are as expected, not just that they are not nil",
+      "range": {
+        "startLine": 155,
+        "startChar": 18,
+        "endLine": 155,
+        "endChar": 25
+      },
+      "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a73f8d05_db2218db",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-15T15:58:11Z",
+      "side": 1,
+      "message": "need to verify more than not nil. were the devices actually reconciled?",
+      "range": {
+        "startLine": 176,
+        "startChar": 18,
+        "endLine": 176,
+        "endChar": 25
+      },
       "revId": "cc5068424fba0725c8e2be7d51771db25a9a4f01",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
