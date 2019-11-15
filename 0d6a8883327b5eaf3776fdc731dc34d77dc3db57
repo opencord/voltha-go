@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fbd8185a_88501346",
+        "filename": "ro_core/config/config_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-15T16:22:48Z",
+      "side": 1,
+      "message": "It can be discussed. In my opinion it has to be skipped, otherwise gerrit stops. The developer could have modified the signature for any good reason and then merged the change. In any case it is tracked as \"SKIP\"ed and probably it is the test that has to be updated.",
+      "parentUuid": "d93862b7_16a73e7b",
+      "revId": "0d6a8883327b5eaf3776fdc731dc34d77dc3db57",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c343f74_17aff40d",
         "filename": "ro_core/config/config_test.go",
         "patchSetId": 3
