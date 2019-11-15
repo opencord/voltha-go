@@ -16,6 +16,24 @@
       "revId": "32ff08a444ce38d8b89eba046f6c8cbeb2af6020",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c2b3fb9_960c4c14",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-15T23:32:12Z",
+      "side": 1,
+      "message": "Good point. I don\u0027t think we should do the reconcile unless the tryToReserveKey() has succeeded, and that\u0027s inside the lock. I could launch the reconcile from a goRoutine, but I\u0027m concerned if we reconcile asynchronously that we could end up using stale data for a short while. What would you suggest?",
+      "parentUuid": "3479ebc8_930476be",
+      "revId": "32ff08a444ce38d8b89eba046f6c8cbeb2af6020",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
