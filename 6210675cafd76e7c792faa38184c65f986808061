@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ab7608e_6510e079",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-15T17:24:29Z",
+      "side": 1,
+      "message": "Does it make more sense to just retry forever?",
+      "revId": "6210675cafd76e7c792faa38184c65f986808061",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
