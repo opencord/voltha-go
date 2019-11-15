@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96c5f704_dd1d4cb2",
+        "filename": "db/model/data_revision_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-15T16:16:28Z",
+      "side": 1,
+      "message": "Is there a way to check that the data has been properly set?",
+      "revId": "c74d7d3db945af30f617c24a0386dd9225f24429",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
