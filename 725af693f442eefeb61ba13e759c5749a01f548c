@@ -22,6 +22,30 @@
       "revId": "725af693f442eefeb61ba13e759c5749a01f548c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57e7a414_47a26d4f",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-15T16:34:02Z",
+      "side": 1,
+      "message": "This needs to be done when taking ownership, or there\u0027s a chance of keeping stale data.  (And eventually writing that stale data back to the DB)",
+      "parentUuid": "e0189914_7614c3d4",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 63
+      },
+      "revId": "725af693f442eefeb61ba13e759c5749a01f548c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
