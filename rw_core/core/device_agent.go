@@ -127,6 +127,19 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 
 }
 
+// Load the most recent state from the KVStore for the device.
+func (agent *DeviceAgent) reconcileWithKVStore() {
+	// TODO: context timeout
+	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceId, 1, false, ""); device != nil {
+		if d, ok := device.(*voltha.Device); ok {
+			log.Debugw("smbaker-devicetype-2", log.Fields{"Adapter": d.Adapter, "Id": d.Id, "type": d.Type, "root": d.Root, "parent_id": d.ParentId, "vendor": d.Vendor, "model": d.Model, "serial": d.SerialNumber, "mac_address": d.MacAddress, "admin_state": d.AdminState, "oper_status": d.OperStatus, "connect_status": d.ConnectStatus})
+			agent.lastData = proto.Clone(d).(*voltha.Device)
+			agent.deviceType = agent.lastData.Adapter
+			log.Debugw("smbaker-devicetype-3", log.Fields{"deviceType": agent.deviceType, "deviceId": agent.deviceId})
+		}
+	}
+}
+
 // GetDevice retrieves the latest device information from the data model
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.RLock()
