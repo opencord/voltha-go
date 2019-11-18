@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "530644e6_f7289ad9",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-18T16:00:19Z",
+      "side": 1,
+      "message": "Which start() function are you referring to?\nIf agent.lastData is only supposed to be used in one function, could it not just be a local variable?",
+      "parentUuid": "861eea74_8180b178",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e821792d_f0177641",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-18T15:02:42Z",
       "side": 1,
       "message": "This is the only place where agent.deviceType is used.   The purpose of this use was to speed up packet processing without taking a peak into the device.   Since the device will be in the model\u0027s memory then a peak is not that expensive.   We would therefore only need a check in this method:\n\n\tif agent.deviceType \u003d\u003d \"\" {\n\t\tif d, err :\u003d agent.getDevice(); err !\u003d nil {\n\t\t\treturn err\n\t\t} else {\n\t\t\tagent.deviceType \u003d d.Type\n\t\t}\n\t}",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c994d5f9_f14a7957",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-18T16:00:19Z",
+      "side": 1,
+      "message": "If a peak into the model is not that expensive, why not just remove agent.deviceType?",
+      "parentUuid": "e821792d_f0177641",
       "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
