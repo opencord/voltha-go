@@ -38,7 +38,7 @@ REPOSITORY=voltha/ docker-compose -f compose/ponsim_onu.yml up -d
 
 Now, start the CLI. Password for 'voltha' user is 'admin'. Please see Dockerfile.cli for passwords
 
-```$xslt
+```shell
 tput rmam // If you are running on MAC for a clean output
 ssh -p 5022 voltha@localhost
 ```
@@ -49,7 +49,7 @@ At the prompt, if you type ```help``` you will see all the supported commands an
 
 Run the following at the prompt
 
-```$xslt
+```shell
 preprovision_olt -t ponsim_olt -H <IP of Ponsim OLT>:50060 // Note this is the actial ponsim_olt container IP
 enable <deviceId>  // Use the device ID returned in the previous command
 ```
@@ -88,14 +88,14 @@ where
 ```
 
 Below are some examples.
-```$xslt
+```shell
 log -l ERROR // This sets the entire RW_CORE to output ERROR and above logs for all packages
 log -p rw_core/core -l DEBUG // This sets the rw_core/core package to debug level
 ```
 
 Typically, if you want to debug, say something with the kvstore, then you would set the log level for
 the entire RW Core to error followed by setting the log level to debug for the kvstore as shown below.
-```$xslt
+```shell
 log -l ERROR // This sets the entire RW_CORE to output ERROR and above logs for all packages
 log -p db/kvstore -l DEBUG // This sets the db/kvstore package to debug level
 ```

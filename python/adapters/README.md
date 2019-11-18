@@ -88,19 +88,19 @@ First get the IP address of the Ponsim OLT container by using the docker inspect
 
 Now, start the CLI. Password for 'voltha' user is 'admin'. Please see Dockerfile.cli for passwords
 
-```$xslt
+```shell
 ssh -p 5022 voltha@localhost
 ```
 
 Perform the provisioning
 
-```$xslt
+```shell
 preprovision_olt -t ponsim_olt -H <IP of Ponsim OLT>:50060
 enable <deviceId>  // Use the device ID returned in the previous command
 ```
 
 At this point you can send flows to the devices using the test option in the CLI. 
-```$xslt
+```shell
 test
 install_eapol_flow <logical_device_id>
 install_dhcp_flows  <logical_device_id>
@@ -110,7 +110,7 @@ install_all_sample_flows <logical_device_id>
 
 You can also see the metrics the Ponsim OLT and ONU adapters are pushing onto the kafka bus.
 
-```$xslt
+```shell
 kafkacat -b <host IP>:9092 -t voltha.kpis -p 0  -o beginning
 ```
 
