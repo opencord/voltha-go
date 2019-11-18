@@ -16,6 +16,24 @@
       "revId": "6210675cafd76e7c792faa38184c65f986808061",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7aef9393_72bd947f",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000627
+      },
+      "writtenOn": "2019-11-18T11:21:37Z",
+      "side": 1,
+      "message": "Rw_core is also retrying forever.I followed same approach in ro_core.",
+      "parentUuid": "5ab7608e_6510e079",
+      "revId": "6210675cafd76e7c792faa38184c65f986808061",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
