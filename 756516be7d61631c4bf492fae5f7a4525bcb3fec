@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "861eea74_8180b178",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-18T15:02:42Z",
+      "side": 1,
+      "message": "agent.lastdata was meant to be used only in the start() function.  A few places now uses agent.lastdata.Id instead of just using agent.deviceId.  If this case is made (using agent.deviceId) then there is no reason to sync on lastdata.",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e821792d_f0177641",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-18T15:02:42Z",
+      "side": 1,
+      "message": "This is the only place where agent.deviceType is used.   The purpose of this use was to speed up packet processing without taking a peak into the device.   Since the device will be in the model\u0027s memory then a peak is not that expensive.   We would therefore only need a check in this method:\n\n\tif agent.deviceType \u003d\u003d \"\" {\n\t\tif d, err :\u003d agent.getDevice(); err !\u003d nil {\n\t\t\treturn err\n\t\t} else {\n\t\t\tagent.deviceType \u003d d.Type\n\t\t}\n\t}",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dd39e42_1f97fac1",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-18T15:02:42Z",
+      "side": 1,
+      "message": "This will address only 1 child and 1 parent device.   If there are multiple child devices then they will be skipped once the parent device is owned by this Core.   See my other comments for a potential fix.",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
