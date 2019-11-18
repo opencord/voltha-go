@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25d8f83f_0ad0674b",
+        "filename": "go.mod",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-11-18T17:17:38Z",
+      "side": 1,
+      "message": "i suspect we only want the v2 version.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 44
+      },
+      "revId": "9dc4526266bbc511003f97cd7fdbd87d28b48752",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
