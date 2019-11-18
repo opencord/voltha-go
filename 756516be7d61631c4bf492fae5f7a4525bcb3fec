@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "80b7d717_08609d94",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-18T16:08:16Z",
+      "side": 1,
+      "message": "deviceAgent.start()\n\nIt potentially could be made a local variable.  However, it will require changes in the \"NewDeviceAgent\", \"start()\" and any places invoking these functions.   It\u0027s not a lot but can be done.",
+      "parentUuid": "530644e6_f7289ad9",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e821792d_f0177641",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 3
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "If a peak into the model is not that expensive, why not just remove agent.deviceType?",
       "parentUuid": "e821792d_f0177641",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b4cc787_3f02521b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-18T16:08:16Z",
+      "side": 1,
+      "message": "addressing a local variable (agent.deviceType) is way faster than invoking the model.  Packet processing needs to be fast.  Even a tiny latency will make a different over the long run.",
+      "parentUuid": "c994d5f9_f14a7957",
       "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
