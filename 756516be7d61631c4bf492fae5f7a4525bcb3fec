@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "1f0755dd_8799d5e1",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-18T18:31:35Z",
+      "side": 1,
+      "message": "When the device agent is started to load device from db (relevant to list calls and not create devices), you are storing the adapterName as device type.  (agent.lastData.Adapter)\n if loadFromdB {\n                if device :\u003d agent.clusterDataProxy.Get(ctx, \"/devices/\"+agent.deviceId, 1, false, \"\"); device !\u003d nil {\n                        if d, ok :\u003d device.(*voltha.Device); ok {\n                                agent.lastData \u003d proto.Clone(d).(*voltha.Device)\n                                agent.deviceType \u003d agent.lastData.Adapter\n                        }\n\nShould that be agent.lastData.Type ?  (its not that important in the grand scheme of things or this bug) \nAlso since you are keeping the agent.lastData cache for cloned device, should you also update the agent.lastData cache while updating deviceType if its \"\" like below (see agent.lastData \u003d d before deviceType update)\n\nif agent.deviceType \u003d\u003d \"\" {\n\t\tif d, err :\u003d agent.getDevice(); err !\u003d nil {\n\t\t\treturn err\n\t\t} else {\n                       agent.lastData \u003d d\n\t\t\tagent.deviceType \u003d d.Type\n\t\t}\n\t}\n\nThe agent.lastData ITSELF appears to be a BOGUS cache of the created/cloned_device_from_db that is used currently in only logging where the \"device\" itself is available. So little confusing if that cache of a cloned device during agent start is really required? \n\nAlso, if you fetch the deviceType from model as Kent suggested, it would be less performant as opposed to using the agent cache, however it would be the same hit that you take during packetIn as packetIn has to: agent.getDevice on the device id before sending out through logical device manager ParentId. But the check to cache the device type seems ok as a speed up hack as you have suggested for packetOut case.\n\nBut maybe it makes more sense to synchronize this information for the device agent in device_manager.go: load function when it loads the device and there it can probably synchronize the agent cache after dAgent.getDevice in device_manager: load before the call to packetOut comes through to the agent. Thoughts?",
+      "parentUuid": "3b4cc787_3f02521b",
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5dd39e42_1f97fac1",
         "filename": "rw_core/core/device_ownership.go",
         "patchSetId": 3
