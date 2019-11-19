@@ -140,6 +140,29 @@
       "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c558fdf_f4750585",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2019-11-19T17:15:10Z",
+      "side": 1,
+      "message": "do you mind to add an agent nil check here?",
+      "range": {
+        "startLine": 234,
+        "startChar": 0,
+        "endLine": 234,
+        "endChar": 29
+      },
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
