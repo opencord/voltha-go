@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b81ea488_f0709412",
+        "filename": "ro_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2019-11-19T06:55:28Z",
+      "side": 1,
+      "message": "To be consistent with other changes. Guess this needs be like:\nInstanceId -\u003e InstanceID",
+      "range": {
+        "startLine": 40,
+        "startChar": 70,
+        "endLine": 40,
+        "endChar": 80
+      },
+      "revId": "7c955eb874eb0e95d2a24a3f7bd9e6bd061cdbcd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
