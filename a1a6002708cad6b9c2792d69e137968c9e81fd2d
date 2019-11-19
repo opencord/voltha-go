@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f688184_9545772c",
+        "filename": "ro_core/core/core_test.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-19T15:54:47Z",
+      "side": 1,
+      "message": "the first param is a config name.  You can name it anyname, like \"voltha.rocore.test\".\n\nThe 4th parameter is used to create a local directory for that embedded etcd instance.  You can name it again any name, eg. voltha.rocore.etcd\"",
+      "revId": "a1a6002708cad6b9c2792d69e137968c9e81fd2d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ea64d8a_2c19b75e",
+        "filename": "ro_core/core/core_test.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-19T15:54:47Z",
+      "side": 1,
+      "message": "Creating the server and then immediately closing it does not bring much.",
+      "revId": "a1a6002708cad6b9c2792d69e137968c9e81fd2d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
