@@ -1,0 +1,280 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f4cba93_340298cf",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 30,
+        "startChar": 23,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d2cf621_7cfc3e4a",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 41,
+        "startChar": 26,
+        "endLine": 41,
+        "endChar": 30
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41e6a8d4_fc88da2b",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 47,
+        "startChar": 20,
+        "endLine": 47,
+        "endChar": 24
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de5d264a_b4d18535",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 53,
+        "startChar": 19,
+        "endLine": 53,
+        "endChar": 23
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd83b706_b0aead74",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 59,
+        "startChar": 22,
+        "endLine": 59,
+        "endChar": 26
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60ba7af8_00ad2d3f",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 65,
+        "startChar": 15,
+        "endLine": 65,
+        "endChar": 19
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0b10f8f_dbd77999",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 71,
+        "startChar": 23,
+        "endLine": 71,
+        "endChar": 27
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a9d5c21_d21a2aea",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 77,
+        "startChar": 21,
+        "endLine": 77,
+        "endChar": 25
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff91ff8c_4693750d",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 83,
+        "startChar": 18,
+        "endLine": 83,
+        "endChar": 22
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffbe8587_4e986bda",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 89,
+        "startChar": 24,
+        "endLine": 89,
+        "endChar": 28
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9585901c_82de3cba",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 95,
+        "startChar": 22,
+        "endLine": 95,
+        "endChar": 26
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8f90497_11748603",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:06:27Z",
+      "side": 1,
+      "message": "Please complete description of the function.",
+      "range": {
+        "startLine": 101,
+        "startChar": 28,
+        "endLine": 101,
+        "endChar": 32
+      },
+      "revId": "277e5bd5b3f57c389ae97060965b3f39b95f22df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
