@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56bfbdbe_d926b3d3",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T04:46:38Z",
+      "side": 1,
+      "message": "beyond not nil I would check that the ID read is the one you set.",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 32
+      },
+      "revId": "9065036d958af8b095f77f7369ac5565312a02d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ffd9ab6_1ca626c3",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T04:46:38Z",
+      "side": 1,
+      "message": "i would check it the value is what you expect. Do we know what the ID will be or is it random?\n\nI would also check if there are any other values on the returned Agent that are public and we can predict what the values are.",
+      "range": {
+        "startLine": 81,
+        "startChar": 18,
+        "endLine": 81,
+        "endChar": 31
+      },
+      "revId": "9065036d958af8b095f77f7369ac5565312a02d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
