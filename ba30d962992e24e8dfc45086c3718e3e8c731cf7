@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1426fae1_699f876f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-19T15:30:06Z",
+      "side": 1,
+      "message": "Will fix, that was unintended.",
+      "parentUuid": "8451452f_b714dce0",
+      "revId": "ba30d962992e24e8dfc45086c3718e3e8c731cf7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2508b709_82e66c34",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-19T15:23:24Z",
       "side": 1,
       "message": "Is there a way to reconcile when ownership is taken?  Otherwise _any_ call might have delayed/stale data, and all calls would need this test. (correct me if this understanding is incorrect.)",
+      "revId": "ba30d962992e24e8dfc45086c3718e3e8c731cf7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88fbae90_158ea140",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-19T15:30:06Z",
+      "side": 1,
+      "message": "As Khen pointed out, the only place that agent.deviceType is used is here, and the only thing updated by the reconcile is agent.deviceType, so I moved it here.",
+      "parentUuid": "2508b709_82e66c34",
       "revId": "ba30d962992e24e8dfc45086c3718e3e8c731cf7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
