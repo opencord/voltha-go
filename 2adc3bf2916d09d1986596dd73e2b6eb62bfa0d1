@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70ce0b09_dc4eec8f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-19T15:37:00Z",
+      "side": 1,
+      "message": "Since the deviceId has already been created in newDeviceAgent() then the adminstate, flowgroups and flows will need to be set when creating the device.",
+      "revId": "2adc3bf2916d09d1986596dd73e2b6eb62bfa0d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b42de4c5_8e56459b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-19T15:37:00Z",
+      "side": 1,
+      "message": "Use \"true\" instead of \"false\" to force a read from KV store.",
+      "revId": "2adc3bf2916d09d1986596dd73e2b6eb62bfa0d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
