@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b19c0b41_bb96205b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-19T16:57:53Z",
+      "side": 1,
+      "message": "Please use \"true\" instead of \"false\"",
+      "revId": "5301f3b23d78ffe55b7d6088badf74e897af4f6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3beab385_8828b357",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-19T16:57:53Z",
+      "side": 1,
+      "message": "You will need to lock the agent as the deviceType is being changed.",
+      "revId": "5301f3b23d78ffe55b7d6088badf74e897af4f6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
