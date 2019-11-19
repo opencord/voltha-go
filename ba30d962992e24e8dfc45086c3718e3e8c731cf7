@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8451452f_b714dce0",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-19T15:23:24Z",
+      "side": 1,
+      "message": "Using \u0027:\u003d\u0027 here will redeclare device, and the original device var from line 80 will not be changed.  Not sure if this is intended.",
+      "revId": "ba30d962992e24e8dfc45086c3718e3e8c731cf7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2508b709_82e66c34",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-19T15:23:24Z",
+      "side": 1,
+      "message": "Is there a way to reconcile when ownership is taken?  Otherwise _any_ call might have delayed/stale data, and all calls would need this test. (correct me if this understanding is incorrect.)",
+      "revId": "ba30d962992e24e8dfc45086c3718e3e8c731cf7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cb3eee7_0d30afb5",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-19T15:23:24Z",
+      "side": 1,
+      "message": "remove commented code",
+      "revId": "ba30d962992e24e8dfc45086c3718e3e8c731cf7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
