@@ -22,6 +22,30 @@
       "revId": "7c955eb874eb0e95d2a24a3f7bd9e6bd061cdbcd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85eebd61_6e33f744",
+        "filename": "ro_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-19T09:06:09Z",
+      "side": 1,
+      "message": "Ok, i will change",
+      "parentUuid": "b81ea488_f0709412",
+      "range": {
+        "startLine": 40,
+        "startChar": 70,
+        "endLine": 40,
+        "endChar": 80
+      },
+      "revId": "7c955eb874eb0e95d2a24a3f7bd9e6bd061cdbcd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
