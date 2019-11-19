@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b11a98ea_7989a54c",
+        "filename": "ro_core/core/logical_device_manager_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2019-11-19T05:32:06Z",
+      "side": 1,
+      "message": "Done for all. Thanks.",
+      "parentUuid": "56bfbdbe_d926b3d3",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 32
+      },
+      "revId": "9065036d958af8b095f77f7369ac5565312a02d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ffd9ab6_1ca626c3",
         "filename": "ro_core/core/logical_device_manager_test.go",
         "patchSetId": 4
