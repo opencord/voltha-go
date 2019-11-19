@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e48da75d_d7413de3",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:03:23Z",
+      "side": 1,
+      "message": "actually just return stub.ListDevices(...)",
+      "parentUuid": "5f172bd4_f864718e",
+      "range": {
+        "startLine": 172,
+        "startChar": 1,
+        "endLine": 175,
+        "endChar": 21
+      },
+      "revId": "6271199914adee591dd0bbab6df611c0ccd88e73",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b60b672a_5ead3f5c",
         "filename": "tests/utils/test_utils.go",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "acdee90c_328a9c2b",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:03:23Z",
+      "side": 1,
+      "message": "just return stub.ListLogicalDevice(...)",
+      "parentUuid": "b60b672a_5ead3f5c",
+      "range": {
+        "startLine": 180,
+        "startChar": 1,
+        "endLine": 183,
+        "endChar": 21
+      },
+      "revId": "6271199914adee591dd0bbab6df611c0ccd88e73",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d147907e_d7c2f56a",
         "filename": "tests/utils/test_utils.go",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2019-11-19T06:00:01Z",
       "side": 1,
       "message": "return devices, err",
+      "range": {
+        "startLine": 201,
+        "startChar": 1,
+        "endLine": 204,
+        "endChar": 16
+      },
+      "revId": "6271199914adee591dd0bbab6df611c0ccd88e73",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e16e59ec_5c5233a8",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:03:23Z",
+      "side": 1,
+      "message": "just return getDevices(...)",
+      "parentUuid": "d147907e_d7c2f56a",
       "range": {
         "startLine": 201,
         "startChar": 1,
