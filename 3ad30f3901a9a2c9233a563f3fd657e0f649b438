@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f22c36d_5c7cd200",
+        "filename": "ro_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2019-11-19T11:21:55Z",
+      "side": 1,
+      "message": "Hello Nikhil.. One observation here:\nIn your lint (SCA) activity, for RO Core you have changed \"instanceId\" tag to \"instanceID\" but for other cases like RW core etc. it is still \"instanceId\". There was an old JIRA VOL-2028 where the ask was to keep it consistent across vOLTHA components like for cores, adapters etc. Please check and, either change this for all or keep it as it is. Thanks..\n--Hardik",
+      "range": {
+        "startLine": 198,
+        "startChar": 70,
+        "endLine": 198,
+        "endChar": 80
+      },
+      "revId": "3ad30f3901a9a2c9233a563f3fd657e0f649b438",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
