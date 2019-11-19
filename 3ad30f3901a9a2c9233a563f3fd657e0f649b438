@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "3f990251_039c9b4b",
+        "filename": "Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2019-11-19T11:42:53Z",
+      "side": 1,
+      "message": "Add \"sca\" as an option in the \"help\" output",
+      "range": {
+        "startLine": 227,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 3
+      },
+      "revId": "3ad30f3901a9a2c9233a563f3fd657e0f649b438",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f22c36d_5c7cd200",
         "filename": "ro_core/main.go",
         "patchSetId": 6
