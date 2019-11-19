@@ -163,6 +163,30 @@
       "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a334fac_84ca2c1a",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-19T17:22:20Z",
+      "side": 1,
+      "message": "This code was removed in favor of only doing the reconcile on packetOut, as packetOut was the only place where agent.deviceType was referenced.",
+      "parentUuid": "7c558fdf_f4750585",
+      "range": {
+        "startLine": 234,
+        "startChar": 0,
+        "endLine": 234,
+        "endChar": 29
+      },
+      "revId": "756516be7d61631c4bf492fae5f7a4525bcb3fec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
