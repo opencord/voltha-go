@@ -22,6 +22,30 @@
       "revId": "3ad30f3901a9a2c9233a563f3fd657e0f649b438",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d6e10f7_37d85428",
+        "filename": "ro_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-19T11:29:27Z",
+      "side": 1,
+      "message": "IT would be better to have all as \"instanceID\" because \"instanceId\" will give lint warning, we are pushing changes folder wise, I am still adding some changes in rw_core. If we find any \"instanceId\", it is better we change it to \"instanceID\"",
+      "parentUuid": "9f22c36d_5c7cd200",
+      "range": {
+        "startLine": 198,
+        "startChar": 70,
+        "endLine": 198,
+        "endChar": 80
+      },
+      "revId": "3ad30f3901a9a2c9233a563f3fd657e0f649b438",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
