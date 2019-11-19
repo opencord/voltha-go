@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f172bd4_f864718e",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:00:01Z",
+      "side": 1,
+      "message": "i think you don\u0027t need the if conditional here. all you need is \n\n`return response, err`\n\nas if ListDevices returns an error then it doesn\u0027t matter what the value of response is. and if ListDevice does not return an error then err will be nil",
+      "range": {
+        "startLine": 172,
+        "startChar": 1,
+        "endLine": 175,
+        "endChar": 21
+      },
+      "revId": "6271199914adee591dd0bbab6df611c0ccd88e73",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b60b672a_5ead3f5c",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:00:01Z",
+      "side": 1,
+      "message": "just return resonse, err",
+      "range": {
+        "startLine": 180,
+        "startChar": 1,
+        "endLine": 183,
+        "endChar": 21
+      },
+      "revId": "6271199914adee591dd0bbab6df611c0ccd88e73",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d147907e_d7c2f56a",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:00:01Z",
+      "side": 1,
+      "message": "return devices, err",
+      "range": {
+        "startLine": 201,
+        "startChar": 1,
+        "endLine": 204,
+        "endChar": 16
+      },
+      "revId": "6271199914adee591dd0bbab6df611c0ccd88e73",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
