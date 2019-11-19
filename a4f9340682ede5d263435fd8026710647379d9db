@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9e9e4db8_9c2d8b2c",
+        "filename": "go.sum",
+        "patchSetId": 6
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-19T14:43:23Z",
+      "side": 1,
+      "message": "Not in lexicographical order.  Not sure what happened here, since the tooling should use a sane order.\n\nUse go mod tidy \u0026 go mod vendor to cleanup dependencies, don\u0027t do it by hand.",
+      "revId": "a4f9340682ede5d263435fd8026710647379d9db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc8b23dd_33e30f9c",
         "filename": "ro_core/config/config.go",
         "patchSetId": 6
