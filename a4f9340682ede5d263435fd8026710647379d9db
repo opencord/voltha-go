@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc8b23dd_33e30f9c",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:47:29Z",
+      "side": 1,
+      "message": "time.Duration",
+      "range": {
+        "startLine": 48,
+        "startChar": 33,
+        "endLine": 48,
+        "endChar": 35
+      },
+      "revId": "a4f9340682ede5d263435fd8026710647379d9db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16dad254_3dd6a03d",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:47:29Z",
+      "side": 1,
+      "message": "time.Duration",
+      "range": {
+        "startLine": 49,
+        "startChar": 33,
+        "endLine": 49,
+        "endChar": 34
+      },
+      "revId": "a4f9340682ede5d263435fd8026710647379d9db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbb43152_49322429",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:47:29Z",
+      "side": 1,
+      "message": "This should be a time.Duration. This is what I believe rw core uses and as the configuration is used by an operator it allows the duration to be specified in a form that is non-ambiguous as the time unit is included.",
+      "range": {
+        "startLine": 74,
+        "startChar": 22,
+        "endLine": 74,
+        "endChar": 25
+      },
+      "revId": "a4f9340682ede5d263435fd8026710647379d9db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad0480ff_256c9a9b",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:47:29Z",
+      "side": 1,
+      "message": "time.Duration",
+      "range": {
+        "startLine": 75,
+        "startChar": 22,
+        "endLine": 75,
+        "endChar": 25
+      },
+      "revId": "a4f9340682ede5d263435fd8026710647379d9db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0265e111_55360da4",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:47:29Z",
+      "side": 1,
+      "message": "time.Duration",
+      "range": {
+        "startLine": 161,
+        "startChar": 6,
+        "endLine": 161,
+        "endChar": 12
+      },
+      "revId": "a4f9340682ede5d263435fd8026710647379d9db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d06d2ed_ef1e49cb",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-19T06:47:29Z",
+      "side": 1,
+      "message": "time.Duraton",
+      "range": {
+        "startLine": 164,
+        "startChar": 6,
+        "endLine": 164,
+        "endChar": 12
+      },
+      "revId": "a4f9340682ede5d263435fd8026710647379d9db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
