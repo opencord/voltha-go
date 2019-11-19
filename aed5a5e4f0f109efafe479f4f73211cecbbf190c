@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16755fc9_c2636495",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-19T17:59:09Z",
+      "side": 1,
+      "message": "I\u0027m still not sure the utility of these signature checks. If the function signature changes in a backward-compatible manner, then I would expect the unit test to continue to pass. If the signature changes in a manner that is not backward-compatible then I would expect the unit test to break either due to a compile-time issue or due to incorrect behavior. Willing to be convinced otherwise, I just have not seen this type of testing before.",
+      "range": {
+        "startLine": 98,
+        "startChar": 1,
+        "endLine": 98,
+        "endChar": 67
+      },
+      "revId": "aed5a5e4f0f109efafe479f4f73211cecbbf190c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
