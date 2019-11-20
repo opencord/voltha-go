@@ -354,10 +354,26 @@ func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
 	return "", errors.New(fmt.Sprintf("Adapter-not-registered-for-device-type %s", deviceType))
 }
 
+func (aMgr *AdapterManager) listDeviceTypes() []*voltha.DeviceType {
+	aMgr.lockdDeviceTypeToAdapterMap.Lock()
+	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
+
+	deviceTypes := make([]*voltha.DeviceType, 0, len(aMgr.deviceTypeToAdapterMap))
+	for deviceTypeId, adapterId := range aMgr.deviceTypeToAdapterMap {
+		if adapterAgent, have := aMgr.adapterAgents[adapterId]; have {
+			if deviceType := adapterAgent.getDeviceType(deviceTypeId); deviceType != nil {
+				deviceTypes = append(deviceTypes, deviceType)
+			}
+		}
+	}
+	return deviceTypes
+}
+
 // getDeviceType returns the device type proto definition given the name of the device type
 func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
+
 	if adapterId, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
 		if adapterAgent, _ := aMgr.adapterAgents[adapterId]; adapterAgent != nil {
 			return adapterAgent.getDeviceType(deviceType)
