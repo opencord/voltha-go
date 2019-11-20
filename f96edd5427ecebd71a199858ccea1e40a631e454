@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3547d11e_1dfb572e",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "It\u0027s better to return an unimplemented error than to crash the server.",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75bfdc52_e3e8130c",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "It\u0027s better to return an unimplemented error than to crash the server.",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4c40ff5_13077d7c",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "Use adapter manager for this call",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "384d8b1f_4ef16e6d",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "Use adapter manager for this call",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a955c904_8b602c4f",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1141,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "Return unimplemented error instead",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69a60bbf_ae3518c7",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1150,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "Return unimplemented error",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0e5dd43_7e66a2e3",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1202,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "Better to return unimplemented error.",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "876ff41d_85f78212",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1206,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:33:50Z",
+      "side": 1,
+      "message": "Better to return unimplemented error.",
+      "revId": "f96edd5427ecebd71a199858ccea1e40a631e454",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
