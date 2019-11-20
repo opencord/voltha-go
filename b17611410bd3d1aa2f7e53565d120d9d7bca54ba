@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa024752_ef61f33a",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "No point returning an error that\u0027s always nil.",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0709e907_8b3eebbb",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "Unnecessary comment",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c55edebd_090b7f59",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "This is implemented in this test file (line 30), so no need to assert that it\u0027s !\u003dnil.",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7943930f_9f4624e3",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "Just a !\u003dnil test isn\u0027t really beneficial.  I suggest removing this one as well.",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c61ceed_8b780e9b",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "Unnecessary comment",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2360ccd5_f9de5124",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "again, no need to assert !\u003dnil",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e73de042_76b56650",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "Unnecessary comment",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77a23973_c89df426",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T18:19:19Z",
+      "side": 1,
+      "message": "Don\u0027t mix `var` \u0026 `:\u003d` for variable declaration, pick one and stick to it.",
+      "revId": "b17611410bd3d1aa2f7e53565d120d9d7bca54ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
