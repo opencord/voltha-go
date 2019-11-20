@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff3542ea_db5bea60",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-20T21:49:42Z",
+      "side": 1,
+      "message": "Changing the flag parameter to true will not make a difference ... as it is not currently used in the List function.",
+      "revId": "a9cc6d0f167f64cba0d2e16c71e777be9512e0d0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
