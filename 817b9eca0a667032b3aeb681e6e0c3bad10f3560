@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14846671_f5185d79",
+        "filename": "go.sum",
+        "patchSetId": 20
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T16:52:20Z",
+      "side": 1,
+      "message": "Still here, please remove.\n\nYou should not be modifying go.sum or vendor/ directly, not sure how this was pulled in.",
+      "revId": "817b9eca0a667032b3aeb681e6e0c3bad10f3560",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3341880_8d0ca68a",
+        "filename": "go.sum",
+        "patchSetId": 20
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T16:52:20Z",
+      "side": 1,
+      "message": "Still here, please remove.",
+      "revId": "817b9eca0a667032b3aeb681e6e0c3bad10f3560",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c34f173_3817cf23",
+        "filename": "ro_core/core/core_test.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-20T16:52:20Z",
+      "side": 1,
+      "message": "No need to test cli\u003d\u003dnil, just assume cli is valid if there\u0027s no error.",
+      "revId": "817b9eca0a667032b3aeb681e6e0c3bad10f3560",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
