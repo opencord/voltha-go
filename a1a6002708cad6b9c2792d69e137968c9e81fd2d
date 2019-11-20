@@ -33,6 +33,24 @@
       "revId": "a1a6002708cad6b9c2792d69e137968c9e81fd2d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47cb48d2_4845e9b0",
+        "filename": "ro_core/core/core_test.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-20T16:25:41Z",
+      "side": 1,
+      "message": "I think it\u0027s only being closed if there\u0027s an error. The server is probably used inside TestNewCoreStartStop().",
+      "parentUuid": "4ea64d8a_2c19b75e",
+      "revId": "a1a6002708cad6b9c2792d69e137968c9e81fd2d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
