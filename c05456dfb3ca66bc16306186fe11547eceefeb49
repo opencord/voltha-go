@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2d4858_b146f477",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-20T16:55:43Z",
+      "side": 1,
+      "message": "you can write this as `60 * time.Second` and it works, same for next line",
+      "range": {
+        "startLine": 49,
+        "startChar": 33,
+        "endLine": 49,
+        "endChar": 64
+      },
+      "revId": "c05456dfb3ca66bc16306186fe11547eceefeb49",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e7a079f_b611223f",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-20T16:55:43Z",
+      "side": 1,
+      "message": "you shouldn\u0027t have to do this. can\u0027t you use flag.DurationVar?",
+      "range": {
+        "startLine": 161,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 0
+      },
+      "revId": "c05456dfb3ca66bc16306186fe11547eceefeb49",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3092ed81_8a4d4428",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-20T16:55:43Z",
+      "side": 1,
+      "message": "This should not be needed",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 1
+      },
+      "revId": "c05456dfb3ca66bc16306186fe11547eceefeb49",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
