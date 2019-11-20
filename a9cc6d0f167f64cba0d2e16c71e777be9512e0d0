@@ -16,6 +16,24 @@
       "revId": "a9cc6d0f167f64cba0d2e16c71e777be9512e0d0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b8dc69d_26d541d1",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-20T23:24:40Z",
+      "side": 1,
+      "message": "Does list always go to the db?",
+      "parentUuid": "ff3542ea_db5bea60",
+      "revId": "a9cc6d0f167f64cba0d2e16c71e777be9512e0d0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
