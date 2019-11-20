@@ -196,7 +196,7 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	return out, nil
 }
 
-func (aa APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingComponent) (*voltha.Loggings, error) {
+func (_ APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingComponent) (*voltha.Loggings, error) {
 	logLevels := &voltha.Loggings{}
 
 	// do the per-package log levels
@@ -220,6 +220,20 @@ func (aa APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingCompone
 	logLevels.Items = append(logLevels.Items, logLevel)
 
 	return logLevels, nil
+}
+
+// ListCoreInstances returns details on the running core containers
+func (handler *APIHandler) ListCoreInstances(ctx context.Context, empty *empty.Empty) (*voltha.CoreInstances, error) {
+	log.Debug("ListCoreInstances")
+	// TODO: unused stub
+	return &voltha.CoreInstances{}, status.Errorf(codes.NotFound, "no-core-instances")
+}
+
+// GetCoreInstance returns the details of a specific core container
+func (handler *APIHandler) GetCoreInstance(ctx context.Context, id *voltha.ID) (*voltha.CoreInstance, error) {
+	log.Debugw("GetCoreInstance", log.Fields{"id": id})
+	//TODO: unused stub
+	return &voltha.CoreInstance{}, status.Errorf(codes.NotFound, "core-instance-%s", id.Id)
 }
 
 func (handler *APIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
@@ -388,7 +402,7 @@ func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.
 
 // ListAdapters returns the contents of all adapters known to the system
 func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
-	log.Debug("ListDevices")
+	log.Debug("ListAdapters")
 	return handler.adapterMgr.listAdapters(ctx)
 }
 
@@ -605,6 +619,51 @@ func (handler *APIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (
 	return flows, nil
 }
 
+// ListDeviceFlowGroups returns the flow group details for a specific device entry
+func (handler *APIHandler) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
+	log.Debugw("ListDeviceFlowGroups", log.Fields{"deviceid": id})
+
+	if device, _ := handler.deviceMgr.GetDevice(id.Id); device != nil {
+		return device.GetFlowGroups(), nil
+	}
+	return &voltha.FlowGroups{}, status.Errorf(codes.NotFound, "device-%s", id.Id)
+}
+
+// ListDeviceGroups returns all the device groups known to the system
+func (handler *APIHandler) ListDeviceGroups(ctx context.Context, empty *empty.Empty) (*voltha.DeviceGroups, error) {
+	panic("unimplemented")
+}
+
+// GetDeviceGroup returns a specific device group entry
+func (handler *APIHandler) GetDeviceGroup(ctx context.Context, id *voltha.ID) (*voltha.DeviceGroup, error) {
+	panic("unimplemented")
+}
+
+// ListDeviceTypes returns all the device types known to the system
+func (handler *APIHandler) ListDeviceTypes(ctx context.Context, empty *empty.Empty) (*voltha.DeviceTypes, error) {
+	log.Debug("ListDeviceTypes")
+
+	deviceTypesIf := handler.core.clusterDataProxy.List(ctx, "/device_types/", 0, false, "")
+	deviceTypes := &voltha.DeviceTypes{}
+	if deviceTypesIf != nil {
+		for _, item := range deviceTypesIf.([]interface{}) {
+			deviceTypes.Items = append(deviceTypes.Items, item.(*voltha.DeviceType))
+		}
+	}
+	return deviceTypes, nil
+}
+
+// GetDeviceType returns the device type for a specific device entry
+func (handler *APIHandler) GetDeviceType(ctx context.Context, id *voltha.ID) (*voltha.DeviceType, error) {
+	log.Debugw("GetDeviceType", log.Fields{"typeid": id})
+
+	deviceTypeIf := handler.core.clusterDataProxy.Get(ctx, "/device_types/"+id.Id, 0, false, "")
+	if deviceTypeIf == nil {
+		return nil, status.Errorf(codes.NotFound, "device_type-%s", id.Id)
+	}
+	return deviceTypeIf.(*voltha.DeviceType), nil
+}
+
 // GetVoltha returns the contents of all components (i.e. devices, logical_devices, ...)
 func (handler *APIHandler) GetVoltha(ctx context.Context, empty *empty.Empty) (*voltha.Voltha, error) {
 
@@ -790,6 +849,16 @@ func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID
 	}
 }
 
+// GetImages returns all images for a specific device entry
+func (handler *APIHandler) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
+	log.Debugw("GetImages", log.Fields{"deviceid": id.Id})
+	device, err := handler.deviceMgr.GetDevice(id.Id)
+	if err != nil {
+		return &voltha.Images{}, err
+	}
+	return device.GetImages(), nil
+}
+
 func (handler *APIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
 	log.Debugw("UpdateDevicePmConfigs-request", log.Fields{"configs": *configs})
 	if isTestMode(ctx) {
@@ -847,6 +916,16 @@ func (handler *APIHandler) DeleteAlarmFilter(ctx context.Context, id *voltha.ID)
 		return out, nil
 	}
 	return nil, errors.New("UnImplemented")
+}
+
+func (handler *APIHandler) ListAlarmFilters(ctx context.Context, empty *empty.Empty) (*voltha.AlarmFilters, error) {
+	log.Debug("ListAlarmFilters")
+	return &voltha.AlarmFilters{}, errors.New("UnImplemented")
+}
+
+func (handler *APIHandler) GetAlarmFilter(ctx context.Context, id *voltha.ID) (*voltha.AlarmFilter, error) {
+	log.Debugw("GetAlarmFilter", log.Fields{"alarmid": id})
+	return &voltha.AlarmFilter{}, errors.New("UnImplemented")
 }
 
 func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
@@ -1054,6 +1133,15 @@ func (handler *APIHandler) ListLogicalDeviceMeters(ctx context.Context, id *volt
 }
 
 //@TODO useless stub, what should this actually do?
+func (handler *APIHandler) GetMeterStatsOfLogicalDevice(
+	ctx context.Context,
+	in *common.ID,
+) (*openflow_13.MeterStatsReply, error) {
+	log.Debug("GetMeterStatsOfLogicalDevice-stub")
+	return nil, nil
+}
+
+//@TODO useless stub, what should this actually do?
 func (handler *APIHandler) GetMibDeviceData(
 	ctx context.Context,
 	in *common.ID,
@@ -1108,4 +1196,12 @@ func (handler *APIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, me
 	defer close(ch)
 	go handler.logicalDeviceMgr.updateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
+}
+
+func (handler *APIHandler) GetMembership(context.Context, *empty.Empty) (*voltha.Membership, error) {
+	panic("implement me")
+}
+
+func (handler *APIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
+	panic("implement me")
 }
