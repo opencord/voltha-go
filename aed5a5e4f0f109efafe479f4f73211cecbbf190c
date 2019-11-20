@@ -22,6 +22,30 @@
       "revId": "aed5a5e4f0f109efafe479f4f73211cecbbf190c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f83854e_d56b32d6",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-20T13:47:20Z",
+      "side": 1,
+      "message": "You are right that the test would fail at compile time, this was only an alternative way to have the failure, just trying to be more sophisticated. I remove it.",
+      "parentUuid": "16755fc9_c2636495",
+      "range": {
+        "startLine": 98,
+        "startChar": 1,
+        "endLine": 98,
+        "endChar": 67
+      },
+      "revId": "aed5a5e4f0f109efafe479f4f73211cecbbf190c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
