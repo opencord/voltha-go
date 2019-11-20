@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48dfdf6c_c2b77d0b",
+        "filename": "ro_core/config/config_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-20T17:54:12Z",
+      "side": 1,
+      "message": "Have we decided to drop these signature checks?",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 116,
+        "endChar": 62
+      },
+      "revId": "03fdc4e059fdfc7c75ecc9742dbc7d2055e712df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "030cbb8e_306d4079",
+        "filename": "ro_core/config/config_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-20T17:54:12Z",
+      "side": 1,
+      "message": "This checks that all config flags are set to their default values, but nothing checks parsing of the command line itself (maybe it\u0027s not important to do so -- our goal isn\u0027t to test that the golang flags module works as expected -- just making an observation)",
+      "range": {
+        "startLine": 128,
+        "startChar": 1,
+        "endLine": 128,
+        "endChar": 33
+      },
+      "revId": "03fdc4e059fdfc7c75ecc9742dbc7d2055e712df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
