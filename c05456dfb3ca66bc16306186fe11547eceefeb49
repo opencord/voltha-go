@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bb8fa6bd_20f45cdf",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-20T17:16:13Z",
+      "side": 1,
+      "message": "I felt using time.Duration is a more standard way. Anyway changed to suggested format",
+      "parentUuid": "5a2d4858_b146f477",
+      "range": {
+        "startLine": 49,
+        "startChar": 33,
+        "endLine": 49,
+        "endChar": 64
+      },
+      "revId": "c05456dfb3ca66bc16306186fe11547eceefeb49",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e7a079f_b611223f",
         "filename": "ro_core/config/config.go",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-20T16:55:43Z",
       "side": 1,
       "message": "you shouldn\u0027t have to do this. can\u0027t you use flag.DurationVar?",
+      "range": {
+        "startLine": 161,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 0
+      },
+      "revId": "c05456dfb3ca66bc16306186fe11547eceefeb49",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1083709f_30c6d865",
+        "filename": "ro_core/config/config.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-20T17:16:13Z",
+      "side": 1,
+      "message": "My bad. Strangely, I completely overlooked that flag already has DurationVar. Changed to use that",
+      "parentUuid": "2e7a079f_b611223f",
       "range": {
         "startLine": 161,
         "startChar": 0,
