@@ -378,11 +378,11 @@ func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.
 		} else {
 			defer txn.Close()
 		}
-	}
-	if handler.isOFControllerRequest(ctx) {
-		//	Since an OF controller is only interested in the set of logical devices managed by thgis Core then return
-		//	only logical devices managed/monitored by this Core.
-		return handler.logicalDeviceMgr.listManagedLogicalDevices()
+		if handler.isOFControllerRequest(ctx) {
+			//	Since an OF controller is only interested in the set of logical devices managed by thgis Core then return
+			//	only logical devices managed/monitored by this Core.
+			return handler.logicalDeviceMgr.listManagedLogicalDevices()
+		}
 	}
 	return handler.logicalDeviceMgr.listLogicalDevices()
 }
