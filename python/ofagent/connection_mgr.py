@@ -171,6 +171,12 @@ class ConnectionManager(object):
 
         log.debug('stop-assign-grpc-attributes')
 
+    def reset_vcore_subscription(self):
+        log.debug('start-reset-vcore-attributes')
+        self._reset_grpc_attributes()
+        self.get_vcore_subscription()
+        log.debug('stop-reset-vcore-attributes')
+
     @inlineCallbacks
     def get_vcore_subscription(self):
         log.debug('start-get-vcore-subscription')

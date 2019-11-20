@@ -110,6 +110,9 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
+                    reactor.callInThread(self.connection_manager.reset_vcore_subscription())
+                    return
+                else:
                     os.system("kill -15 {}".format(os.getpid()))
 
         reactor.callInThread(stream_packets_out)
@@ -132,6 +135,9 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
+                    reactor.callInThread(self.connection_manager.reset_vcore_subscription())
+                    return
+                else:
                     os.system("kill -15 {}".format(os.getpid()))
 
         reactor.callInThread(receive_packet_in_stream)
@@ -152,6 +158,9 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
+                    reactor.callInThread(self.connection_manager.reset_vcore_subscription())
+                    return
+                else:
                     os.system("kill -15 {}".format(os.getpid()))
 
         reactor.callInThread(receive_change_events)
