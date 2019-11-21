@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "35904db2_aa5f9349",
+        "filename": "ro_core/config/config_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-21T10:57:53Z",
+      "side": 1,
+      "message": "Yes, ok, removed",
+      "parentUuid": "48dfdf6c_c2b77d0b",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 116,
+        "endChar": 62
+      },
+      "revId": "03fdc4e059fdfc7c75ecc9742dbc7d2055e712df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "030cbb8e_306d4079",
         "filename": "ro_core/config/config_test.go",
         "patchSetId": 8
