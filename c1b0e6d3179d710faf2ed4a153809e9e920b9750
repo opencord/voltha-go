@@ -16,6 +16,24 @@
       "revId": "c1b0e6d3179d710faf2ed4a153809e9e920b9750",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9373bf3_754809dd",
+        "filename": "go.mod",
+        "patchSetId": 22
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-21T16:14:34Z",
+      "side": 1,
+      "message": "I\u0027ve seen the appengine indirect dependency pop up in other repos when running go mod tidy. Are we sure it is unnecessary? Divya, please run the patch through a `god mod tidy` / `go mod vendor` cycle to ensure vendor is up to date with go mod.",
+      "parentUuid": "4fa33998_f63d6dec",
+      "revId": "c1b0e6d3179d710faf2ed4a153809e9e920b9750",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
