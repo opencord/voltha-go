@@ -189,6 +189,24 @@
     },
     {
       "key": {
+        "uuid": "097e03e5_37eea805",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-11-21T16:41:12Z",
+      "side": 1,
+      "message": "Tried doing\nagent.lockLogicalDevice.Lock()\ndefer agent.lockLogicalDevice.UnLock()\nHowever, ListLogicalDevices is failing. So could not make the change as you suggested.",
+      "parentUuid": "bff13643_1cc8f173",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3547916a_33b4548e",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 14
