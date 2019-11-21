@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3157218d_8fa6e1f6",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-21T16:40:13Z",
+      "side": 1,
+      "message": "nil by default (zero value for pointers), no need to explicitly assign nil.",
+      "revId": "24f878997e3acc986ad9ef699503d62d5c35a188",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "edbb2189_5ee97c32",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-21T16:40:13Z",
+      "side": 1,
+      "message": "Other existing tests make sense, this one in particular doesn\u0027t seem useful, consider removing.  (Will +1 if the decision is made to leave it though.)",
+      "revId": "24f878997e3acc986ad9ef699503d62d5c35a188",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
