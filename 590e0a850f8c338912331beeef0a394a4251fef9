@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1936bf43_0db493d5",
+        "filename": "Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-22T18:12:37Z",
+      "side": 1,
+      "message": "lint-mod exists currently (though `go mod verify` ignores vendor/)\n\nPerhaps just repurpose this make target?",
+      "revId": "590e0a850f8c338912331beeef0a394a4251fef9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0cd46ed_f7b7f90c",
+        "filename": "Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-22T18:12:37Z",
+      "side": 1,
+      "message": "If lint-mod is repurposed: it\u0027s already run here, doesn\u0027t need to be added to `test` target.",
+      "revId": "590e0a850f8c338912331beeef0a394a4251fef9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
