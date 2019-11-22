@@ -15,10 +15,11 @@
 #
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from structlog import get_logger
-from connection_mgr import ConnectionManager
 log = get_logger()
 
 class Probe(SimpleHTTPRequestHandler):
+
+    connection_manager = None
 
     def do_GET(self):
 
@@ -30,7 +31,7 @@ class Probe(SimpleHTTPRequestHandler):
 
     def health_probe(self):
 
-        if ConnectionManager.liveness_probe():
+        if Probe.connection_manager is None or Probe.connection_manager.liveness_probe():
             self.send_response(200)
             self.end_headers()
         else :
@@ -39,7 +40,7 @@ class Probe(SimpleHTTPRequestHandler):
 
     def ready_probe(self):
 
-        if ConnectionManager.readiness_probe():
+        if Probe.connection_manager is not None and Probe.connection_manager.readiness_probe():
             self.send_response(200)
             self.end_headers()
         else :

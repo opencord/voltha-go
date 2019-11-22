@@ -276,6 +276,7 @@ class Main(object):
             args.enable_tls,
             args.key_file,
             args.cert_file).start()
+        Probe.connection_manager = self.connection_manager
         self.log.info('started-internal-services')
 
     @inlineCallbacks

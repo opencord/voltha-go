@@ -82,8 +82,13 @@ class GrpcClient(object):
         return self
 
     def stop(self):
+        log.debug('stop requested')
+        if self.stopped:
+            log.debug('already stopped, no action taken')
+            return
         log.debug('stopping')
         self.stopped = True
+        self.connection_manager.grpc_client_terminated()
         log.info('stopped')
 
     def get_core_transaction_metadata(self):
@@ -92,7 +97,7 @@ class GrpcClient(object):
     def start_packet_out_stream(self):
 
         def packet_generator():
-            while 1:
+            while True:
                 try:
                     packet = self.packet_out_queue.get(block=True, timeout=1.0)
                 except Empty:
@@ -110,7 +115,7 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
-                    os.system("kill -15 {}".format(os.getpid()))
+                    self.stop()
 
         reactor.callInThread(stream_packets_out)
 
@@ -132,7 +137,7 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
-                    os.system("kill -15 {}".format(os.getpid()))
+                    self.stop()
 
         reactor.callInThread(receive_packet_in_stream)
 
@@ -152,7 +157,7 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
-                    os.system("kill -15 {}".format(os.getpid()))
+                    self.stop()
 
         reactor.callInThread(receive_change_events)
 
