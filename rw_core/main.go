@@ -143,7 +143,7 @@ func (rw *rwCore) start(ctx context.Context, instanceId string) {
 		rw.config.KafkaAdapterHost,
 		rw.config.KafkaAdapterPort,
 		instanceId,
-		time.Duration(rw.config.LiveProbeInterval)*time.Second/2); err != nil {
+		rw.config.LiveProbeInterval/2); err != nil {
 		log.Fatal("Unsupported-kafka-client")
 	}
 

@@ -47,6 +47,7 @@ type Core struct {
 	localDataProxy    *model.Proxy
 	exitChannel       chan int
 	kvClient          kvstore.Client
+	backend           db.Backend
 	kafkaClient       kafka.Client
 	deviceOwnership   *DeviceOwnership
 }
@@ -63,16 +64,21 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 	core.kvClient = kvClient
 	core.kafkaClient = kafkaClient
 
+	// Configure backend to push Liveness Status at least every (cf.LiveProbeInterval / 2) seconds
+	// so as to avoid trigger of Liveness check (due to Liveness timeout) when backend is alive
+	livenessChannelInterval := cf.LiveProbeInterval / 2
+
 	// Setup the KV store
-	backend := db.Backend{
-		Client:     kvClient,
-		StoreType:  cf.KVStoreType,
-		Host:       cf.KVStoreHost,
-		Port:       cf.KVStorePort,
-		Timeout:    cf.KVStoreTimeout,
-		PathPrefix: cf.KVStoreDataPrefix}
-	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &backend)
-	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &backend)
+	core.backend = db.Backend{
+		Client:                  kvClient,
+		StoreType:               cf.KVStoreType,
+		Host:                    cf.KVStoreHost,
+		Port:                    cf.KVStorePort,
+		Timeout:                 cf.KVStoreTimeout,
+		LivenessChannelInterval: livenessChannelInterval,
+		PathPrefix:              cf.KVStoreDataPrefix}
+	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &core.backend)
+	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &core.backend)
 	core.clusterDataProxy = core.clusterDataRoot.CreateProxy(context.Background(), "/", false)
 	core.localDataProxy = core.localDataRoot.CreateProxy(context.Background(), "/", false)
 	return &core
@@ -131,6 +137,7 @@ func (core *Core) Start(ctx context.Context) {
 	go core.startLogicalDeviceManager(ctx)
 	go core.startGRPCService(ctx)
 	go core.startAdapterManager(ctx)
+	go core.monitorKvstoreLiveness(ctx)
 
 	// Setup device ownership context
 	core.deviceOwnership = NewDeviceOwnership(core.instanceId, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
@@ -254,7 +261,7 @@ func (core *Core) initKafkaManager(ctx context.Context) error {
  * though the current default is that both are set to 60 seconds.
  */
 
-func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval int, liveProbeInterval int, notLiveProbeInterval int) {
+func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval time.Duration, liveProbeInterval time.Duration, notLiveProbeInterval time.Duration) {
 	log.Infow("starting-kafka-manager-thread", log.Fields{"host": core.config.KafkaAdapterHost,
 		"port": core.config.KafkaAdapterPort, "topic": core.config.CoreTopic})
 
@@ -267,7 +274,7 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval in
 			// Don't worry about liveness, as we can't be live until we've started.
 			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusNotReady)
 			log.Infow("error-starting-kafka-messaging-proxy", log.Fields{"error": err})
-			time.Sleep(time.Duration(startupRetryInterval) * time.Second)
+			time.Sleep(startupRetryInterval)
 		} else {
 			// We started. We only need to do this once.
 			// Next we'll fall through and start checking liveness.
@@ -288,7 +295,7 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval in
 
 	log.Info("enabled-kafka-liveness-channel")
 
-	timeout := time.Duration(liveProbeInterval) * time.Second
+	timeout := liveProbeInterval
 	for {
 		timeoutTimer := time.NewTimer(timeout)
 		select {
@@ -303,7 +310,7 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval in
 				}
 
 				// retry frequently while life is bad
-				timeout = time.Duration(notLiveProbeInterval) * time.Second
+				timeout = notLiveProbeInterval
 			} else {
 				probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusRunning)
 
@@ -312,7 +319,7 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval in
 				}
 
 				// retry infrequently while life is good
-				timeout = time.Duration(liveProbeInterval) * time.Second
+				timeout = liveProbeInterval
 			}
 			if !timeoutTimer.Stop() {
 				<-timeoutTimer.C
@@ -333,7 +340,7 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval in
 }
 
 // waitUntilKVStoreReachableOrMaxTries will wait until it can connect to a KV store or until maxtries has been reached
-func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRetries int, retryInterval int) error {
+func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRetries int, retryInterval time.Duration) error {
 	log.Infow("verifying-KV-store-connectivity", log.Fields{"host": core.config.KVStoreHost,
 		"port": core.config.KVStorePort, "retries": maxRetries, "retryInterval": retryInterval})
 	// Get timeout in seconds with 1 second set as minimum
@@ -352,7 +359,7 @@ func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRe
 			}
 			count += 1
 			//	Take a nap before retrying
-			time.Sleep(time.Duration(retryInterval) * time.Second)
+			time.Sleep(retryInterval)
 			log.Infow("retry-KV-store-connectivity", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
 
 		} else {
@@ -401,4 +408,70 @@ func (core *Core) startAdapterManager(ctx context.Context) {
 	log.Info("Adapter-Manager-Starting...")
 	core.adapterMgr.start(ctx)
 	log.Info("Adapter-Manager-Started")
+}
+
+/*
+* Thread to monitor kvstore Liveness (connection status)
+*
+* This function constantly monitors Liveness State of kvstore as reported
+* periodically by backend and updates the Status of kv-store service registered
+* with rw_core probe.
+*
+* If no liveness event has been seen within a timeout, then the thread will
+* perform a "liveness" check attempt, which will in turn trigger a liveness event on
+* the liveness channel, true or false depending on whether the attempt succeeded.
+*
+* The gRPC server in turn monitors the state of the readiness probe and will
+* start issuing UNAVAILABLE response while the probe is not ready.
+ */
+func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
+	log.Info("start-monitoring-kvstore-liveness")
+
+	// Instruct backend to create Liveness channel for transporting state updates
+	livenessChannel := core.backend.EnableLivenessChannel()
+
+	log.Debug("enabled-kvstore-liveness-channel")
+
+	// Default state for kvstore is alive for rw_core
+	timeout := core.config.LiveProbeInterval
+	for {
+		timeoutTimer := time.NewTimer(timeout)
+		select {
+
+		case liveness := <-livenessChannel:
+			log.Debugw("received-liveness-change-notification", log.Fields{"liveness": liveness})
+
+			if !liveness {
+				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
+
+				if core.grpcServer != nil {
+					log.Info("kvstore-set-server-notready")
+				}
+
+				timeout = core.config.NotLiveProbeInterval
+
+			} else {
+				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusRunning)
+
+				if core.grpcServer != nil {
+					log.Info("kvstore-set-server-ready")
+				}
+
+				timeout = core.config.LiveProbeInterval
+			}
+
+			if !timeoutTimer.Stop() {
+				<-timeoutTimer.C
+			}
+
+		case <-timeoutTimer.C:
+			log.Info("kvstore-perform-liveness-check-on-timeout")
+
+			// Trigger Liveness check if no liveness update received within the timeout period.
+			// The Liveness check will push Live state to same channel which this routine is
+			// reading and processing. This, do it asynchronously to avoid blocking for
+			// backend response and avoid any possibility of deadlock
+			go core.backend.PerformLivenessCheck(core.config.KVStoreTimeout)
+		}
+	}
 }
