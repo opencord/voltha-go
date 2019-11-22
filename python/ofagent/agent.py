@@ -25,6 +25,7 @@ import loxi.of13 as of13
 from pyvoltha.common.utils.asleep import asleep
 from of_connection import OpenFlowConnection
 from of_protocol_handler import OpenFlowProtocolHandler
+#from connection_mgr import ConnectionManager2
 
 log = structlog.get_logger()
 
@@ -35,10 +36,10 @@ class Agent(protocol.ClientFactory):
     cached_generation_id = None
 
     def __init__(self,
+                 connection_manager,
                  controller_endpoint,
                  datapath_id,
                  device_id,
-                 rpc_stub,
                  enable_tls=False,
                  key_file=None,
                  cert_file=None,
@@ -47,7 +48,7 @@ class Agent(protocol.ClientFactory):
         self.controller_endpoint = controller_endpoint
         self.datapath_id = datapath_id
         self.device_id = device_id
-        self.rpc_stub = rpc_stub
+        self.connection_manager = connection_manager
         self.enable_tls = enable_tls
         self.key_file = key_file
         self.cert_file = cert_file
@@ -142,7 +143,7 @@ class Agent(protocol.ClientFactory):
     def protocol(self):
         cxn = OpenFlowConnection(self)  # Low level message handler
         self.proto_handler = OpenFlowProtocolHandler(
-            self.datapath_id, self.device_id, self, cxn, self.rpc_stub)
+            self.datapath_id, self.device_id, self, cxn)
         return cxn
 
     def clientConnectionFailed(self, connector, reason):
@@ -165,7 +166,6 @@ class Agent(protocol.ClientFactory):
                 self.proto_handler.forward_port_status(event.port_status)
         else:
             log.error('unknown-change-event', change_event=event)
-
 
 if __name__ == '__main__':
     """Run this to test the agent for N concurrent sessions:

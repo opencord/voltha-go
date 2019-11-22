@@ -70,7 +70,7 @@ class GrpcClient(object):
         self.change_event_queue = DeferredQueue()  # queue change events
 
     def start(self):
-        log.debug('starting', grpc_timeout=self.grpc_timeout,
+        log.debug('dkb-starting', grpc_timeout=self.grpc_timeout,
                   core_binding_key=self.core_group_id_key,
                   core_transaction_key=self.core_transaction_key)
         self.start_packet_out_stream()
@@ -78,12 +78,17 @@ class GrpcClient(object):
         self.start_change_event_in_stream()
         reactor.callLater(0, self.packet_in_forwarder_loop)
         reactor.callLater(0, self.change_event_processing_loop)
-        log.info('started')
+        log.info('dkb-started')
         return self
 
     def stop(self):
+        log.debug('stop requested')
+        if self.stopped:
+            log.debug('already stopped, no action taken')
+            return
         log.debug('stopping')
         self.stopped = True
+        self.connection_manager.grpc_client_terminated()
         log.info('stopped')
 
     def get_core_transaction_metadata(self):
@@ -92,7 +97,7 @@ class GrpcClient(object):
     def start_packet_out_stream(self):
 
         def packet_generator():
-            while 1:
+            while True:
                 try:
                     packet = self.packet_out_queue.get(block=True, timeout=1.0)
                 except Empty:
@@ -107,10 +112,13 @@ class GrpcClient(object):
                 self.grpc_stub.StreamPacketsOut(generator,
                                                 metadata=((self.core_group_id_key, self.core_group_id),
                                                            self.get_core_transaction_metadata(),))
+                log.debug('dkb - streamed-packet-out')
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
-                    os.system("kill -15 {}".format(os.getpid()))
+                    log.debug('dkb-liveness-probe-change stream-packets-out')
+                    self.stop()
+                    #os.system("kill -15 {}".format(os.getpid()))
 
         reactor.callInThread(stream_packets_out)
 
@@ -132,7 +140,9 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
-                    os.system("kill -15 {}".format(os.getpid()))
+                    log.debug("dkb-liveness-probe-change receive_packet_in_stream")
+                    self.stop()
+                    #os.system("kill -15 {}".format(os.getpid()))
 
         reactor.callInThread(receive_packet_in_stream)
 
@@ -152,7 +162,9 @@ class GrpcClient(object):
             except _Rendezvous, e:
                 log.error('grpc-exception', status=e.code())
                 if e.code() == StatusCode.UNAVAILABLE:
-                    os.system("kill -15 {}".format(os.getpid()))
+                    log.debug("dkb-liveness-probe-change receive_change_events")
+                    self.stop()
+                    #os.system("kill -15 {}".format(os.getpid()))
 
         reactor.callInThread(receive_change_events)
 
