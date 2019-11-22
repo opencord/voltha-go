@@ -34,6 +34,23 @@
       "revId": "c1b0e6d3179d710faf2ed4a153809e9e920b9750",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "327251f6_4efc28db",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000548
+      },
+      "writtenOn": "2019-11-22T05:08:42Z",
+      "side": 1,
+      "message": "maxRetries also could have been set to some min retry count if not provided to avoid indefinite retries",
+      "revId": "c1b0e6d3179d710faf2ed4a153809e9e920b9750",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
