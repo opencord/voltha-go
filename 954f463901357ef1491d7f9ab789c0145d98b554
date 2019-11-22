@@ -16,6 +16,24 @@
       "revId": "954f463901357ef1491d7f9ab789c0145d98b554",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ce0f836_b279eae6",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-22T20:24:30Z",
+      "side": 1,
+      "message": "Without the `go mod verify` I don\u0027t think we get the guarantee that the source code matches the checksum in go.sum. For example, I tried modifying `pkg/adapters/iAdapter.go` in both the package cache and the vendor directory, and neither `go mod tidy` nor `go mod vendor` noticed the source was incompatible with the sum, but `go mod verify` did. Do we want to keep that verification?",
+      "parentUuid": "cdecd62d_2ef8d25e",
+      "revId": "954f463901357ef1491d7f9ab789c0145d98b554",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
