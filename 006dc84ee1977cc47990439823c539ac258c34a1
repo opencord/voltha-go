@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac2e1249_8da5912f",
+        "filename": "python/ofagent/connection_mgr.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-22T20:13:38Z",
+      "side": 1,
+      "message": "itervalues is not python3 compatible. \nUse: iter(self.agent_map.values())",
+      "revId": "006dc84ee1977cc47990439823c539ac258c34a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
