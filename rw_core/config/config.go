@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"time"
 )
 
 // RW Core service default constants
@@ -53,9 +54,9 @@ const (
 	default_CoreBindingKey            = "voltha_backend_name"
 	default_CorePairTopic             = "rwcore_1"
 	default_MaxConnectionRetries      = -1 // retries forever
-	default_ConnectionRetryInterval   = 2  // in seconds
-	default_LiveProbeInterval         = 60 // in seconds
-	default_NotLiveProbeInterval      = 60 // in seconds
+	default_ConnectionRetryInterval   = 2 * time.Second
+	default_LiveProbeInterval         = 60 * time.Second
+	default_NotLiveProbeInterval      = 5 * time.Second // Probe more frequently when not alive
 	default_ProbeHost                 = ""
 	default_ProbePort                 = 8080
 )
@@ -91,9 +92,9 @@ type RWCoreFlags struct {
 	CoreBindingKey            string
 	CorePairTopic             string
 	MaxConnectionRetries      int
-	ConnectionRetryInterval   int
-	LiveProbeInterval         int
-	NotLiveProbeInterval      int
+	ConnectionRetryInterval   time.Duration
+	LiveProbeInterval         time.Duration
+	NotLiveProbeInterval      time.Duration
 	ProbeHost                 string
 	ProbePort                 int
 }
@@ -223,13 +224,13 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", default_MaxConnectionRetries, help)
 
 	help = fmt.Sprintf("The number of seconds between each connection retry attempt")
-	flag.IntVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
+	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", default_ConnectionRetryInterval, help)
 
 	help = fmt.Sprintf("The number of seconds between liveness probes while in a live state")
-	flag.IntVar(&(cf.LiveProbeInterval), "live_probe_interval", default_LiveProbeInterval, help)
+	flag.DurationVar(&(cf.LiveProbeInterval), "live_probe_interval", default_LiveProbeInterval, help)
 
 	help = fmt.Sprintf("The number of seconds between liveness probes while in a not live state")
-	flag.IntVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", default_NotLiveProbeInterval, help)
+	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", default_NotLiveProbeInterval, help)
 
 	help = fmt.Sprintf("The host on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.StringVar(&(cf.ProbeHost), "probe_host", default_ProbeHost, help)
