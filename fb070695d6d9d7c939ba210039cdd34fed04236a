@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2f155ce_013ddd0b",
+        "filename": "python/ofagent/main.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-22T15:45:06Z",
+      "side": 1,
+      "message": "Does not do much for now, right?",
+      "revId": "fb070695d6d9d7c939ba210039cdd34fed04236a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e9b318d_809e0fd7",
+        "filename": "python/ofagent/of_protocol_handler.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-22T15:45:06Z",
+      "side": 1,
+      "message": "While you are here you may want to write \"except Exception as e:\"  to limit the amount of changes required to move to python3.",
+      "revId": "fb070695d6d9d7c939ba210039cdd34fed04236a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
