@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e4591593_f15088f0",
+        "filename": "Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-22T18:28:31Z",
+      "side": 1,
+      "message": "sure, let me fold it all together",
+      "parentUuid": "1936bf43_0db493d5",
+      "revId": "590e0a850f8c338912331beeef0a394a4251fef9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0cd46ed_f7b7f90c",
         "filename": "Makefile",
         "patchSetId": 4
