@@ -16,6 +16,24 @@
       "revId": "720d5d0c06e5e8ffc1f3e8183afc45435a7b1db2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e07fcd5f_1df3110c",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2019-11-22T15:24:45Z",
+      "side": 1,
+      "message": "No. I don\u0027t intend to update Helm Charts because all the 3 timeout config attributes updated here are absent in the default CLI arguments in rw_core.yaml template. So, existing helm chart template of rw_core will work; I tested the new generated image locally as well.",
+      "parentUuid": "410a6664_8cb427cd",
+      "revId": "720d5d0c06e5e8ffc1f3e8183afc45435a7b1db2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
