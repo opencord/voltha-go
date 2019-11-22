@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17ae515e_6f1e1a5e",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-22T15:10:02Z",
+      "side": 1,
+      "message": "While removing the \"_\" will may go lint happy, it makes this struct not compatible with the iAdapter interface. The same function name in that interface are used in both go and python adapters.  SInce the python adapters came earlier then that is the naming convention that was used.  For now, I suggest ignoring the mocks directory in the go lint command.",
+      "revId": "d7613d54f1640996c8e9b5bcf4211b060446863b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
