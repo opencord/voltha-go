@@ -19,10 +19,12 @@ import os
 
 import yaml
 import SocketServer
+import time
 
 from probe import Probe
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
+from pyvoltha.common.utils.asleep import asleep
 
 from pyvoltha.common.structlog_setup import setup_logging
 from pyvoltha.common.utils.dockerhelpers import get_my_containers_name
@@ -261,6 +263,12 @@ class Main(object):
     def start(self):
         self.start_reactor()  # will not return except Keyboard interrupt
 
+    def check(self):
+        self.log.debug('dkb i am in check')
+        while True:
+            self.log.debug("dkb- self.exiting=%s, reactor.running=%s" % (self.exiting, reactor.running))
+            time.sleep(3)
+
     @inlineCallbacks
     def startup_components(self):
         self.log.info('starting-internal-components')
@@ -281,7 +289,7 @@ class Main(object):
     @inlineCallbacks
     def shutdown_components(self):
         """Execute before the reactor is shut down"""
-        self.log.info('exiting-on-keyboard-interrupt')
+        self.log.info('dkb-exiting-on-keyboard-interrupt')
         self.exiting = True
         if self.connection_manager is not None:
             yield self.connection_manager.stop()
@@ -292,6 +300,7 @@ class Main(object):
 
         reactor.addSystemEventTrigger('before', 'shutdown',
                                       self.shutdown_components)
+        reactor.callInThread(self.check)
         reactor.callInThread(self.start_probe)
         reactor.run()
 

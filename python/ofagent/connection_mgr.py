@@ -73,6 +73,7 @@ class ConnectionManager(object):
         self.devices_refresh_interval = devices_refresh_interval
         self.subscription_refresh_interval = subscription_refresh_interval
         self.subscription = None
+        self.i_am_connecting = False
 
         self.running = False
 
@@ -97,6 +98,18 @@ class ConnectionManager(object):
 
         return self
 
+    def grpc_client_terminated(self):
+        log.debug('dkb - grpc client terminate notification %s %s' % (self.grpc_client, self.i_am_connecting))
+        if self.grpc_client is not None and not self.i_am_connecting:
+            #os._exit(0)
+            self._reset_grpc_attributes()
+            reactor.callInThread(self.get_vcore_subscription)
+
+    def grpc_client_connected(self):
+        log.debug('dkb - grpc client connected notification %s %s' % (self.grpc_client, self.i_am_connecting))
+        for agent in self.agent_map.itervalues():
+            agent.setRpcClient(self.grpc_client)
+        
     @classmethod
     def liveness_probe(cls):
         # Pod restarts when liveness condition fails
@@ -175,6 +188,7 @@ class ConnectionManager(object):
     def get_vcore_subscription(self):
         log.debug('start-get-vcore-subscription')
 
+        self.i_am_connecting = True
         while self.running and self.subscription is None:
             try:
                 # If a subscription is not yet assigned then establish new GRPC connection
@@ -201,6 +215,8 @@ class ConnectionManager(object):
                         log.debug('subscription-with-vcore-successful', subscription=subscription)
                         self.subscription = subscription
                         self.grpc_client.start()
+                        self.i_am_connecting = False
+                        self.grpc_client_connected()
 
                     # Sleep a bit in between each subscribe
                     yield asleep(self.subscription_refresh_interval)
@@ -226,6 +242,7 @@ class ConnectionManager(object):
             # Sleep for a short period and retry
             yield asleep(self.vcore_retry_interval)
 
+        self.i_am_connecting = False    
         log.debug('stop-get-vcore-subscription')
 
     @inlineCallbacks

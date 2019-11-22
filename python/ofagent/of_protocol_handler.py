@@ -83,7 +83,7 @@ class OpenFlowProtocolHandler(object):
                               request=req, xid=req.xid, type=req.type)
 
         except Exception, e:
-            log.exception('exception', e=e)
+            log.exception('dkb - exception', e=e)
 
         log.info('started')
         returnValue(self)
@@ -92,6 +92,10 @@ class OpenFlowProtocolHandler(object):
         log.debug('stopping')
         pass  # nothing to do yet
         log.info('stopped')
+
+    def setRpcClient(self, grpc_client):
+        log.debug('dkb set grpc_client on protocol-handler')
+        self.rpc = grpc_client
 
     def handle_echo_request(self, req):
         self.cxn.send(ofp.message.echo_reply(xid=req.xid))
@@ -122,6 +126,7 @@ class OpenFlowProtocolHandler(object):
         raise NotImplementedError()
 
     def handle_flow_mod_request(self, req):
+        log.debug('flow mod request')
         if self.role == ofp.OFPCR_ROLE_MASTER or self.role == ofp.OFPCR_ROLE_EQUAL:
            try:
               grpc_req = to_grpc(req)

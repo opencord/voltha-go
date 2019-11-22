@@ -166,6 +166,10 @@ class Agent(protocol.ClientFactory):
         else:
             log.error('unknown-change-event', change_event=event)
 
+    def setRpcClient(self, grpc_client):
+        log.debug('dkb set rpc client on agent')
+        self.rpc_stub = grpc_client
+        self.proto_handler.setRpcClient(self.rpc_stub)
 
 if __name__ == '__main__':
     """Run this to test the agent for N concurrent sessions:

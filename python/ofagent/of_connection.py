@@ -40,7 +40,7 @@ class OpenFlowConnection(protocol.Protocol):
         self.agent.enter_connected()
 
     def dataReceived(self, data):
-        log.debug('data-received', len=len(data),
+        log.debug('dkb data-received', len=len(data),
                   received=hexdump(data, result='return'))
 
         assert len(data)  # connection close shall be handled by the protocol
@@ -69,9 +69,9 @@ class OpenFlowConnection(protocol.Protocol):
 
             msg = ofp.message.parse_message(rawmsg)
             if not msg:
-                log.warn('could-not-parse',
+                log.warn('dkb - could-not-parse',
                          data=hexdump(rawmsg, result='return'))
-            log.debug('received-msg', module=type(msg).__module__,
+            log.debug('dkb - received-msg', module=type(msg).__module__,
                   name=type(msg).__name__, xid=msg.xid, len=len(buf))
             self.rx.put(msg)
 
