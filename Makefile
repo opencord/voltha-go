@@ -188,7 +188,17 @@ lint-sanity:
 lint-mod:
 	@echo "Running dependency check..."
 	@go mod verify
-	@echo "Dependency check OK"
+	@echo "Dependency check OK. Running vendor check..."
+	@git status > /dev/null
+	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && echo "`git status`" && exit 1)
+	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && echo "`git status`" && exit 1)
+	go mod tidy
+	go mod vendor
+	@git status > /dev/null
+	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && echo "`git status`" && exit 1)
+	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && echo "`git status`" && exit 1)
+	@echo "Vendor check OK."
+
 
 lint: lint-style lint-sanity lint-mod lint-dockerfile
 
