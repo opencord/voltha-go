@@ -594,13 +594,13 @@ func (dMgr *DeviceManager) adapterRestarted(adapter *voltha.Adapter) error {
 		return nil
 	}
 
-	chnlsList := make([]chan interface{}, 0)
+	responses := make([]utils.Response, 0)
 	for _, rootDeviceId := range rootDeviceIds {
 		if rootDevice, _ := dMgr.getDeviceFromModel(rootDeviceId); rootDevice != nil {
 			if rootDevice.Adapter == adapter.Id {
 				if isOkToReconcile(rootDevice) {
 					log.Debugw("reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
-					chnlsList = dMgr.sendReconcileDeviceRequest(rootDevice, chnlsList)
+					responses = append(responses, dMgr.sendReconcileDeviceRequest(rootDevice))
 				} else {
 					log.Debugw("not-reconciling-root-device", log.Fields{"rootId": rootDevice.Id, "state": rootDevice.AdminState})
 				}
@@ -612,7 +612,7 @@ func (dMgr *DeviceManager) adapterRestarted(adapter *voltha.Adapter) error {
 							if childDevice.Adapter == adapter.Id {
 								if isOkToReconcile(childDevice) {
 									log.Debugw("reconciling-child-device", log.Fields{"childId": childDevice.Id})
-									chnlsList = dMgr.sendReconcileDeviceRequest(childDevice, chnlsList)
+									responses = append(responses, dMgr.sendReconcileDeviceRequest(childDevice))
 								} else {
 									log.Debugw("not-reconciling-child-device", log.Fields{"childId": childDevice.Id, "state": childDevice.AdminState})
 								}
@@ -627,9 +627,9 @@ func (dMgr *DeviceManager) adapterRestarted(adapter *voltha.Adapter) error {
 			}
 		}
 	}
-	if len(chnlsList) > 0 {
+	if len(responses) > 0 {
 		// Wait for completion
-		if res := utils.WaitForNilOrErrorResponses(dMgr.defaultTimeout, chnlsList...); res != nil {
+		if res := utils.WaitForNilOrErrorResponses(dMgr.defaultTimeout, responses...); res != nil {
 			return status.Errorf(codes.Aborted, "errors-%s", res)
 		}
 	} else {
@@ -638,36 +638,35 @@ func (dMgr *DeviceManager) adapterRestarted(adapter *voltha.Adapter) error {
 	return nil
 }
 
-func (dMgr *DeviceManager) sendReconcileDeviceRequest(device *voltha.Device, chnlsList []chan interface{}) []chan interface{} {
+func (dMgr *DeviceManager) sendReconcileDeviceRequest(device *voltha.Device) utils.Response {
 	// Send a reconcile request to the adapter. Since this Core may not be managing this device then there is no
 	// point of creating a device agent (if the device is not being managed by this Core) before sending the request
 	// to the adapter.   We will therefore bypass the adapter adapter and send the request directly to teh adapter via
 	// the adapter_proxy.
-	ch := make(chan interface{})
-	chnlsList = append(chnlsList, ch)
+	response := utils.NewResponse()
 	go func(device *voltha.Device) {
 		if err := dMgr.adapterProxy.ReconcileDevice(context.Background(), device); err != nil {
 			log.Errorw("reconcile-request-failed", log.Fields{"deviceId": device.Id, "error": err})
-			ch <- status.Errorf(codes.Internal, "device: %s", device.Id)
+			response.Error(status.Errorf(codes.Internal, "device: %s", device.Id))
 		}
-		ch <- nil
+		response.Done()
 	}(device)
 
-	return chnlsList
+	return response
 }
 
 func (dMgr *DeviceManager) reconcileChildDevices(parentDeviceId string) error {
 	if parentDevice, _ := dMgr.getDeviceFromModel(parentDeviceId); parentDevice != nil {
-		chnlsList := make([]chan interface{}, 0)
+		responses := make([]utils.Response, 0)
 		for _, port := range parentDevice.Ports {
 			for _, peer := range port.Peers {
 				if childDevice, _ := dMgr.getDeviceFromModel(peer.DeviceId); childDevice != nil {
-					chnlsList = dMgr.sendReconcileDeviceRequest(childDevice, chnlsList)
+					responses = append(responses, dMgr.sendReconcileDeviceRequest(childDevice))
 				}
 			}
 		}
 		// Wait for completion
-		if res := utils.WaitForNilOrErrorResponses(dMgr.defaultTimeout, chnlsList...); res != nil {
+		if res := utils.WaitForNilOrErrorResponses(dMgr.defaultTimeout, responses...); res != nil {
 			return status.Errorf(codes.Aborted, "errors-%s", res)
 		}
 	}
