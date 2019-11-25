@@ -17,6 +17,7 @@
 package flow_decomposition
 
 import (
+	"context"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/coreIf"
 	"github.com/opencord/voltha-go/rw_core/graph"
@@ -512,7 +513,7 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreIf.LogicalDeviceAgent, flow *o
 	} else {
 		var ingressDevice *voltha.Device
 		var err error
-		if ingressDevice, err = fd.deviceMgr.GetDevice(route[0].DeviceID); err != nil {
+		if ingressDevice, err = fd.deviceMgr.GetDevice(context.TODO(), route[0].DeviceID); err != nil {
 			log.Errorw("ingress-device-not-found", log.Fields{"deviceId": route[0].DeviceID, "flow": flow})
 			return deviceRules
 		}

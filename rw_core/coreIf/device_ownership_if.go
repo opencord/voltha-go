@@ -20,9 +20,9 @@ import (
 )
 
 type DeviceOwnership interface {
-	Start(ctx context.Context)
-	Stop(ctx context.Context)
-	OwnedByMe(id interface{}) (bool, error)
-	AbandonDevice(id string) error
+	Start(context.Context)
+	Stop(context.Context)
+	OwnedByMe(interface{}) (bool, error)
+	AbandonDevice(string) error
 	GetAllDeviceIdsOwnedByMe() []string
 }

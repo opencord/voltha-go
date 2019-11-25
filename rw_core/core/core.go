@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-go/rw_core/coreIf"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	grpcserver "github.com/opencord/voltha-lib-go/v2/pkg/grpc"
@@ -85,7 +86,6 @@ func NewCore(id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaCl
 }
 
 func (core *Core) Start(ctx context.Context) {
-
 	// If the context has a probe then fetch it and register our services
 	var p *probe.Probe
 	if value := ctx.Value(probe.ProbeContextKey); value != nil {
@@ -128,15 +128,15 @@ func (core *Core) Start(ctx context.Context) {
 	// logicalDeviceMgr have been created, as once the kmp is started, it will register
 	// the above with the kmp.
 
-	go core.startKafkaManager(ctx,
+	go core.StartKafkaManager(ctx,
 		core.config.ConnectionRetryInterval,
 		core.config.LiveProbeInterval,
 		core.config.NotLiveProbeInterval)
 
-	go core.startDeviceManager(ctx)
-	go core.startLogicalDeviceManager(ctx)
-	go core.startGRPCService(ctx)
-	go core.startAdapterManager(ctx)
+	go core.StartDeviceManager(ctx)
+	go core.StartLogicalDeviceManager(ctx)
+	go core.StartGRPCService(ctx)
+	go core.StartAdapterManager(ctx)
 	go core.monitorKvstoreLiveness(ctx)
 
 	// Setup device ownership context
@@ -167,8 +167,40 @@ func (core *Core) Stop(ctx context.Context) {
 	log.Info("adaptercore-stopped")
 }
 
+func (core *Core) GetKafkaInterContainerProxy() *kafka.InterContainerProxy {
+	return core.kmp
+}
+
+func (core *Core) GetConfig() *config.RWCoreFlags {
+	return core.config
+}
+
+func (core *Core) GetInstanceId() string {
+	return core.instanceId
+}
+
+func (core *Core) GetClusterDataProxy() *model.Proxy {
+	return core.clusterDataProxy
+}
+
+func (core *Core) GetAdapterManager() coreIf.AdapterManager {
+	return core.adapterMgr
+}
+
+func (core *Core) GetDeviceManager() coreIf.DeviceManager {
+	return core.deviceMgr
+}
+
+func (core *Core) GetLogicalDeviceManager() coreIf.LogicalDeviceManager {
+	return core.logicalDeviceMgr
+}
+
+func (core *Core) GetDeviceOwnerShip() coreIf.DeviceOwnership {
+	return core.deviceOwnership
+}
+
 //startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server
-func (core *Core) startGRPCService(ctx context.Context) {
+func (core *Core) StartGRPCService(ctx context.Context) {
 	//	create an insecure gserver server
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
 	log.Info("grpc-server-created")
@@ -176,6 +208,7 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcNBIAPIHandler = NewAPIHandler(core)
 	log.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
 	core.logicalDeviceMgr.setGrpcNbiHandler(core.grpcNBIAPIHandler)
+
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
 		voltha.RegisterVolthaServiceServer(
@@ -261,7 +294,7 @@ func (core *Core) initKafkaManager(ctx context.Context) error {
  * though the current default is that both are set to 60 seconds.
  */
 
-func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval time.Duration, liveProbeInterval time.Duration, notLiveProbeInterval time.Duration) {
+func (core *Core) StartKafkaManager(ctx context.Context, startupRetryInterval time.Duration, liveProbeInterval time.Duration, notLiveProbeInterval time.Duration) {
 	log.Infow("starting-kafka-manager-thread", log.Fields{"host": core.config.KafkaAdapterHost,
 		"port": core.config.KafkaAdapterPort, "topic": core.config.CoreTopic})
 
@@ -392,19 +425,19 @@ func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstan
 	return nil
 }
 
-func (core *Core) startDeviceManager(ctx context.Context) {
+func (core *Core) StartDeviceManager(ctx context.Context) {
 	log.Info("DeviceManager-Starting...")
 	core.deviceMgr.start(ctx, core.logicalDeviceMgr)
 	log.Info("DeviceManager-Started")
 }
 
-func (core *Core) startLogicalDeviceManager(ctx context.Context) {
+func (core *Core) StartLogicalDeviceManager(ctx context.Context) {
 	log.Info("Logical-DeviceManager-Starting...")
 	core.logicalDeviceMgr.start(ctx)
 	log.Info("Logical-DeviceManager-Started")
 }
 
-func (core *Core) startAdapterManager(ctx context.Context) {
+func (core *Core) StartAdapterManager(ctx context.Context) {
 	log.Info("Adapter-Manager-Starting...")
 	core.adapterMgr.start(ctx)
 	log.Info("Adapter-Manager-Started")

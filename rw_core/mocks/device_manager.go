@@ -23,7 +23,7 @@ import (
 type DeviceManager struct {
 }
 
-func (dm *DeviceManager) GetDevice(deviceId string) (*voltha.Device, error) {
+func (dm *DeviceManager) GetDevice(ctx context.Context, deviceId string) (*voltha.Device, error) {
 	return nil, nil
 }
 func (dm *DeviceManager) IsRootDevice(deviceId string) (bool, error) {
@@ -66,11 +66,11 @@ func (dm *DeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
 	return nil
 }
 
-func (dm *DeviceManager) ListDevices() (*voltha.Devices, error) {
+func (dm *DeviceManager) ListDevices(ctx context.Context) (*voltha.Devices, error) {
 	return nil, nil
 }
 
-func (dm *DeviceManager) ListDeviceIds() (*voltha.IDs, error) {
+func (dm *DeviceManager) ListDeviceIds(ctx context.Context) (*voltha.IDs, error) {
 	return nil, nil
 }
 

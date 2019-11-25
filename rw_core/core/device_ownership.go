@@ -322,7 +322,7 @@ func (da *DeviceOwnership) getOwnershipKey(id interface{}) (ownershipKey string,
 		if val, exist := da.deviceToKeyMap[dId.Id]; exist {
 			return val, dId.Id, true, nil
 		}
-		if device, _ = da.deviceMgr.GetDevice(dId.Id); device == nil {
+		if device, _ = da.deviceMgr.GetDevice(context.TODO(), dId.Id); device == nil {
 			return "", dId.Id, false, status.Errorf(codes.NotFound, "id-absent-%s", dId)
 		}
 		if device.Root {
@@ -335,7 +335,7 @@ func (da *DeviceOwnership) getOwnershipKey(id interface{}) (ownershipKey string,
 		if val, exist := da.deviceToKeyMap[ldId.Id]; exist {
 			return val, ldId.Id, true, nil
 		}
-		if lDevice, _ = da.logicalDeviceMgr.getLogicalDevice(ldId.Id); lDevice == nil {
+		if lDevice, _ = da.logicalDeviceMgr.GetLogicalDevice(context.TODO(), ldId.Id); lDevice == nil {
 			return "", ldId.Id, false, status.Errorf(codes.NotFound, "id-absent-%s", dId)
 		}
 		return lDevice.RootDeviceId, ldId.Id, false, nil

@@ -19,19 +19,44 @@ time.
 */
 package coreIf
 
-import "github.com/opencord/voltha-protos/v2/go/voltha"
+import (
+	"context"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
+)
 
 // DeviceManager represents a generic device manager
 type DeviceManager interface {
-	GetDevice(string) (*voltha.Device, error)
+	ReconcileDevices(context.Context, *voltha.IDs, chan interface{})
+	CreateDevice(context.Context, *voltha.Device, chan interface{})
+	EnableDevice(context.Context, *voltha.ID, chan interface{})
+	DisableDevice(context.Context, *voltha.ID, chan interface{})
+	RebootDevice(context.Context, *voltha.ID, chan interface{})
+	DeleteDevice(context.Context, *voltha.ID, chan interface{})
+	DownloadImage(context.Context, *voltha.ImageDownload, chan interface{})
+	CancelImageDownload(context.Context, *voltha.ImageDownload, chan interface{})
+	ActivateImage(context.Context, *voltha.ImageDownload, chan interface{})
+	RevertImage(context.Context, *voltha.ImageDownload, chan interface{})
+	GetImageDownloadStatus(context.Context, *voltha.ImageDownload, chan interface{})
+	UpdateImageDownload(string, *voltha.ImageDownload) error
+	GetImageDownload(context.Context, *voltha.ImageDownload) (*voltha.ImageDownload, error)
+	ListImageDownloads(context.Context, string) (*voltha.ImageDownloads, error)
+	UpdatePmConfigs(context.Context, *voltha.PmConfigs, chan interface{})
+	ListPmConfigs(context.Context, string) (*voltha.PmConfigs, error)
+	SimulateAlarm(context.Context, *voltha.SimulateAlarmRequest, chan interface{})
+	GetDevice(context.Context, string) (*voltha.Device, error)
+	ListDevices(context.Context) (*voltha.Devices, error)
+	ListDeviceIds(context.Context) (*voltha.IDs, error)
+	StopManagingDevice(string)
 	IsRootDevice(string) (bool, error)
 	NotifyInvalidTransition(*voltha.Device) error
 	SetAdminStateToEnable(*voltha.Device) error
 	CreateLogicalDevice(*voltha.Device) error
 	SetupUNILogicalPorts(*voltha.Device) error
-	DisableAllChildDevices(cDevice *voltha.Device) error
-	DeleteLogicalDevice(cDevice *voltha.Device) error
-	DeleteLogicalPorts(cDevice *voltha.Device) error
-	DeleteAllChildDevices(cDevice *voltha.Device) error
-	RunPostDeviceDelete(cDevice *voltha.Device) error
+	DisableAllChildDevices(*voltha.Device) error
+	DeleteLogicalDevice(*voltha.Device) error
+	DeleteLogicalPorts(*voltha.Device) error
+	DeleteAllChildDevices(*voltha.Device) error
+	RunPostDeviceDelete(*voltha.Device) error
+	DeletePeerPorts(string, string) error
+	ProcessTransition(*voltha.Device, *voltha.Device) error
 }

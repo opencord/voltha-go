@@ -425,7 +425,7 @@ func (agent *LogicalDeviceAgent) setupNNILogicalPorts(ctx context.Context, devic
 	var err error
 
 	var device *voltha.Device
-	if device, err = agent.deviceMgr.GetDevice(deviceId); err != nil {
+	if device, err = agent.deviceMgr.GetDevice(ctx, deviceId); err != nil {
 		log.Errorw("error-retrieving-device", log.Fields{"error": err, "deviceId": deviceId})
 		return err
 	}
@@ -587,9 +587,9 @@ func (agent *LogicalDeviceAgent) generateDeviceGraphIfNeeded() error {
 	return nil
 }
 
-//updateFlowTable updates the flow table of that logical device
+//UpdateFlowTable updates the flow table of that logical device
 func (agent *LogicalDeviceAgent) updateFlowTable(ctx context.Context, flow *ofp.OfpFlowMod) error {
-	log.Debug("updateFlowTable")
+	log.Debug("UpdateFlowTable")
 	if flow == nil {
 		return nil
 	}
@@ -612,9 +612,9 @@ func (agent *LogicalDeviceAgent) updateFlowTable(ctx context.Context, flow *ofp.
 		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, flow.GetCommand())
 }
 
-//updateGroupTable updates the group table of that logical device
+//UpdateGroupTable updates the group table of that logical device
 func (agent *LogicalDeviceAgent) updateGroupTable(ctx context.Context, groupMod *ofp.OfpGroupMod) error {
-	log.Debug("updateGroupTable")
+	log.Debug("UpdateGroupTable")
 	if groupMod == nil {
 		return nil
 	}
@@ -633,9 +633,9 @@ func (agent *LogicalDeviceAgent) updateGroupTable(ctx context.Context, groupMod 
 		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceId, groupMod.GetCommand())
 }
 
-// updateMeterTable updates the meter table of that logical device
+// UpdateMeterTable updates the meter table of that logical device
 func (agent *LogicalDeviceAgent) updateMeterTable(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
-	log.Debug("updateMeterTable")
+	log.Debug("UpdateMeterTable")
 	if meterMod == nil {
 		return nil
 	}
@@ -1400,7 +1400,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPorts(deviceId string) error {
 	return nil
 }
 
-// enableLogicalPort enables the logical port
+// EnableLogicalPort enables the logical port
 func (agent *LogicalDeviceAgent) enableLogicalPort(lPortId string) error {
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
@@ -1426,7 +1426,7 @@ func (agent *LogicalDeviceAgent) enableLogicalPort(lPortId string) error {
 	}
 }
 
-// disableLogicalPort disabled the logical port
+// DisableLogicalPort disabled the logical port
 func (agent *LogicalDeviceAgent) disableLogicalPort(lPortId string) error {
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
@@ -1882,7 +1882,7 @@ func (agent *LogicalDeviceAgent) addUNILogicalPort(childDevice *voltha.Device, p
 	}
 }
 
-func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
+func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) error {
 	log.Debugw("packet-out", log.Fields{
 		"packet": hex.EncodeToString(packet.Data),
 		"inPort": packet.GetInPort(),
@@ -1892,7 +1892,9 @@ func (agent *LogicalDeviceAgent) packetOut(packet *ofp.OfpPacketOut) {
 	//TODO: Use a channel between the logical agent and the device agent
 	if err := agent.deviceMgr.packetOut(agent.rootDeviceId, outPort, packet); err != nil {
 		log.Error("packetout-failed", log.Fields{"logicalDeviceID": agent.rootDeviceId})
+		return err
 	}
+	return nil
 }
 
 func (agent *LogicalDeviceAgent) packetIn(port uint32, transactionId string, packet []byte) {
