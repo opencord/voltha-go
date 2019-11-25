@@ -115,9 +115,10 @@ func (r *root) ExecuteCallbacks() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	for len(r.Callbacks) > 0 {
-		callback := r.Callbacks[0]
-		r.Callbacks = r.Callbacks[1:]
+	saveCallbacks := r.Callbacks
+	for len(saveCallbacks) > 0 {
+		callback := saveCallbacks[0]
+		saveCallbacks = saveCallbacks[1:]
 		go callback.Execute(nil)
 	}
 	//for len(r.NotificationCallbacks) > 0 {
@@ -128,7 +129,7 @@ func (r *root) ExecuteCallbacks() {
 }
 
 func (r *root) hasCallbacks() bool {
-	return len(r.Callbacks) == 0
+	return len(r.Callbacks) > 0
 }
 
 // getCallbacks returns the available callbacks
