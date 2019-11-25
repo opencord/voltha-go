@@ -391,7 +391,7 @@ func (ap *AdapterProxy) SelfTestDevice(device voltha.Device) (*voltha.SelfTestRe
 }
 
 func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort uint32, packet *openflow_13.OfpPacketOut) error {
-	log.Debugw("packetOut", log.Fields{"deviceId": deviceId})
+	log.Debugw("PacketOut", log.Fields{"deviceId": deviceId})
 	toTopic := ap.getAdapterTopic(deviceType)
 	rpc := "receive_packet_out"
 	dId := &ic.StrType{Val: deviceId}
@@ -414,7 +414,7 @@ func (ap *AdapterProxy) packetOut(deviceType string, deviceId string, outPort ui
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("packetOut", log.Fields{"deviceid": deviceId, "success": success})
+	log.Debugw("PacketOut", log.Fields{"deviceid": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
 

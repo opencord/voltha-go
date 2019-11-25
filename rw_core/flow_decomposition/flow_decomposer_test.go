@@ -16,6 +16,7 @@
 package flow_decomposition
 
 import (
+	"context"
 	"errors"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	"github.com/opencord/voltha-go/rw_core/mocks"
@@ -99,7 +100,7 @@ func newTestDeviceManager() *testDeviceManager {
 	return &tdm
 }
 
-func (tdm *testDeviceManager) GetDevice(deviceId string) (*voltha.Device, error) {
+func (tdm *testDeviceManager) GetDevice(ctx context.Context, deviceId string) (*voltha.Device, error) {
 	if d, ok := tdm.devices[deviceId]; ok {
 		return d, nil
 	}
@@ -393,8 +394,8 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	return &tfd
 }
 
-func (tfd *testFlowDecomposer) getDeviceHelper(deviceId string) (*voltha.Device, error) {
-	return tfd.dMgr.GetDevice(deviceId)
+func (tfd *testFlowDecomposer) getDeviceHelper(ctx context.Context, deviceId string) (*voltha.Device, error) {
+	return tfd.dMgr.GetDevice(ctx, deviceId)
 }
 
 func (tfd *testFlowDecomposer) GetDeviceLogicalId() string {

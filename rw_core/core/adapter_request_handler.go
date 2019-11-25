@@ -16,6 +16,7 @@
 package core
 
 import (
+	"context"
 	"errors"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -145,7 +146,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 	if rhp.TestMode { // Execute only for test cases
 		return &voltha.CoreInstance{InstanceId: "CoreInstance"}, nil
 	}
-	return rhp.adapterMgr.registerAdapter(adapter, deviceTypes), nil
+	return rhp.adapterMgr.RegisterAdapter(adapter, deviceTypes), nil
 }
 
 func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.Device, error) {
@@ -188,7 +189,7 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 	}
 
 	// Get the device via the device manager
-	if device, err := rhp.deviceMgr.GetDevice(pID.Id); err != nil {
+	if device, err := rhp.deviceMgr.GetDevice(context.TODO(), pID.Id); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
 	} else {
 		log.Debugw("GetDevice-response", log.Fields{"deviceId": pID.Id})
@@ -1076,8 +1077,8 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	go rhp.deviceMgr.updateImageDownload(deviceId.Id, img)
-	//if err := rhp.deviceMgr.updateImageDownload(deviceId.Id, img); err != nil {
+	go rhp.deviceMgr.UpdateImageDownload(deviceId.Id, img)
+	//if err := rhp.deviceMgr.UpdateImageDownload(deviceId.Id, img); err != nil {
 	//	return nil, err
 	//}
 	return new(empty.Empty), nil

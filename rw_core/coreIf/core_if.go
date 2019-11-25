@@ -24,18 +24,23 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
+	"time"
 )
 
 type Core interface {
-	Start(ctx context.Context)
-	Stop(ctx context.Context)
+	Start(context.Context)
+	Stop(context.Context)
 	GetKafkaInterContainerProxy() *kafka.InterContainerProxy
 	GetConfig() *config.RWCoreFlags
 	GetInstanceId() string
 	GetClusterDataProxy() *model.Proxy
 	GetAdapterManager() AdapterManager
-	StartGRPCService(ctx context.Context)
+	StartGRPCService(context.Context)
 	GetDeviceManager() DeviceManager
 	GetLogicalDeviceManager() LogicalDeviceManager
 	GetDeviceOwnerShip() DeviceOwnership
+	StartKafkaManager(context.Context, time.Duration, time.Duration, time.Duration)
+	StartDeviceManager(context.Context)
+	StartLogicalDeviceManager(context.Context)
+	StartAdapterManager(context.Context)
 }

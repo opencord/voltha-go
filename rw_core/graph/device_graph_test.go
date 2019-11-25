@@ -16,6 +16,7 @@
 package graph
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/opencord/voltha-protos/v2/go/openflow_13"
@@ -112,7 +113,7 @@ func setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu
 	}
 }
 
-func GetDeviceHelper(id string) (*voltha.Device, error) {
+func GetDeviceHelper(ctx context.Context, id string) (*voltha.Device, error) {
 	lock.Lock()
 	numCalled += 1
 	lock.Unlock()

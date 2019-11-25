@@ -26,18 +26,19 @@ import (
 )
 
 type LogicalDeviceManager interface {
-	GetLogicalPort(lPortId *voltha.LogicalPortId) (*voltha.LogicalPort, error)
-	EnableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{})
-	DisableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{})
-	UpdateFlowTable(ctx context.Context, id string, flow *openflow_13.OfpFlowMod, ch chan interface{})
-	UpdateMeterTable(ctx context.Context, id string, meter *openflow_13.OfpMeterMod, ch chan interface{})
-	UpdateGroupTable(ctx context.Context, id string, groupMod *openflow_13.OfpGroupMod, ch chan interface{})
-	GetLogicalDevice(id string) (*voltha.LogicalDevice, error)
+	CreateLogicalDevice(context.Context, *voltha.Device) (*string, error)
+	GetLogicalPort(context.Context, *voltha.LogicalPortId) (*voltha.LogicalPort, error)
+	EnableLogicalPort(context.Context, *voltha.LogicalPortId, chan interface{})
+	DisableLogicalPort(context.Context, *voltha.LogicalPortId, chan interface{})
+	UpdateFlowTable(context.Context, string, *openflow_13.OfpFlowMod, chan interface{})
+	UpdateMeterTable(context.Context, string, *openflow_13.OfpMeterMod, chan interface{})
+	UpdateGroupTable(context.Context, string, *openflow_13.OfpGroupMod, chan interface{})
+	GetLogicalDevice(context.Context, string) (*voltha.LogicalDevice, error)
 	ListManagedLogicalDevices() (*voltha.LogicalDevices, error)
-	ListLogicalDevices() (*voltha.LogicalDevices, error)
-	ListLogicalDeviceFlows(ctx context.Context, id string) (*openflow_13.Flows, error)
-	ListLogicalDeviceFlowGroups(ctx context.Context, id string) (*openflow_13.FlowGroups, error)
-	ListLogicalDevicePorts(ctx context.Context, id string) (*voltha.LogicalPorts, error)
-	ListLogicalDeviceMeters(ctx context.Context, id string) (*openflow_13.Meters, error)
-	PacketOut(packet *openflow_13.PacketOut) error
+	ListLogicalDevices(context.Context) (*voltha.LogicalDevices, error)
+	ListLogicalDeviceFlows(context.Context, string) (*openflow_13.Flows, error)
+	ListLogicalDeviceFlowGroups(context.Context, string) (*openflow_13.FlowGroups, error)
+	ListLogicalDevicePorts(context.Context, string) (*voltha.LogicalPorts, error)
+	ListLogicalDeviceMeters(context.Context, string) (*openflow_13.Meters, error)
+	PacketOut(*openflow_13.PacketOut) error
 }

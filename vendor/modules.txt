@@ -159,6 +159,7 @@ go.etcd.io/bbolt
 go.etcd.io/etcd/clientv3
 go.etcd.io/etcd/clientv3/concurrency
 go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes
+go.etcd.io/etcd/embed
 go.etcd.io/etcd/auth/authpb
 go.etcd.io/etcd/clientv3/balancer
 go.etcd.io/etcd/clientv3/balancer/picker
@@ -168,10 +169,6 @@ go.etcd.io/etcd/etcdserver/etcdserverpb
 go.etcd.io/etcd/mvcc/mvccpb
 go.etcd.io/etcd/pkg/logutil
 go.etcd.io/etcd/pkg/types
-go.etcd.io/etcd/embed
-go.etcd.io/etcd/clientv3/balancer/connectivity
-go.etcd.io/etcd/pkg/systemd
-go.etcd.io/etcd/raft
 go.etcd.io/etcd/etcdserver
 go.etcd.io/etcd/etcdserver/api/etcdhttp
 go.etcd.io/etcd/etcdserver/api/rafthttp
@@ -197,10 +194,9 @@ go.etcd.io/etcd/pkg/tlsutil
 go.etcd.io/etcd/pkg/transport
 go.etcd.io/etcd/version
 go.etcd.io/etcd/wal
-go.etcd.io/etcd/raft/confchange
-go.etcd.io/etcd/raft/quorum
-go.etcd.io/etcd/raft/raftpb
-go.etcd.io/etcd/raft/tracker
+go.etcd.io/etcd/clientv3/balancer/connectivity
+go.etcd.io/etcd/pkg/systemd
+go.etcd.io/etcd/raft
 go.etcd.io/etcd/auth
 go.etcd.io/etcd/etcdserver/api
 go.etcd.io/etcd/etcdserver/api/membership
@@ -220,6 +216,7 @@ go.etcd.io/etcd/pkg/idutil
 go.etcd.io/etcd/pkg/pbutil
 go.etcd.io/etcd/pkg/schedule
 go.etcd.io/etcd/pkg/wait
+go.etcd.io/etcd/raft/raftpb
 go.etcd.io/etcd/wal/walpb
 go.etcd.io/etcd/etcdserver/api/v2error
 go.etcd.io/etcd/pkg/ioutil
@@ -228,6 +225,9 @@ go.etcd.io/etcd/proxy/grpcproxy/adapter
 go.etcd.io/etcd/pkg/adt
 go.etcd.io/etcd/pkg/cpuutil
 go.etcd.io/etcd/pkg/crc
+go.etcd.io/etcd/raft/confchange
+go.etcd.io/etcd/raft/quorum
+go.etcd.io/etcd/raft/tracker
 go.etcd.io/etcd/etcdserver/api/snap/snappb
 go.etcd.io/etcd/client
 go.etcd.io/etcd/lease/leasepb

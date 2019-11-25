@@ -17,6 +17,7 @@
 package graph
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gyuho/goraph"
@@ -47,7 +48,7 @@ type ofPortLinkToPath struct {
 	path []RouteHop
 }
 
-type GetDeviceFunc func(id string) (*voltha.Device, error)
+type GetDeviceFunc func(context.Context, string) (*voltha.Device, error)
 
 type DeviceGraph struct {
 	logicalDeviceId    string
@@ -243,7 +244,7 @@ func (dg *DeviceGraph) getDevice(id string, useCache bool) (*voltha.Device, erro
 		dg.cachedDevicesLock.RUnlock()
 	}
 	//	Not cached
-	if d, err := dg.getDeviceFromModel(id); err != nil {
+	if d, err := dg.getDeviceFromModel(context.TODO(), id); err != nil {
 		log.Errorw("device-not-found", log.Fields{"deviceId": id, "error": err})
 		return nil, err
 	} else { // cache it

@@ -264,7 +264,7 @@ func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, save
 	}
 }
 
-func (aMgr *AdapterManager) listAdapters(ctx context.Context) (*voltha.Adapters, error) {
+func (aMgr *AdapterManager) ListAdapters(ctx context.Context) (*voltha.Adapters, error) {
 	result := &voltha.Adapters{Items: []*voltha.Adapter{}}
 	aMgr.lockAdaptersMap.RLock()
 	defer aMgr.lockAdaptersMap.RUnlock()
@@ -327,8 +327,8 @@ func (aMgr *AdapterManager) updateDeviceTypeWithoutLock(deviceType *voltha.Devic
 	aMgr.deviceTypeToAdapterMap[deviceType.Id] = deviceType.Adapter
 }
 
-func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *voltha.CoreInstance {
-	log.Debugw("registerAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
+func (aMgr *AdapterManager) RegisterAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *voltha.CoreInstance {
+	log.Debugw("RegisterAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
 
 	if aMgr.getAdapter(adapter.Id) != nil {
 		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
@@ -344,8 +344,8 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 	return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceId}
 }
 
-//getAdapterName returns the name of the device adapter that service this device type
-func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
+//GetAdapterName returns the name of the device adapter that service this device type
+func (aMgr *AdapterManager) GetAdapterName(deviceType string) (string, error) {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 	if adapterId, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
@@ -354,7 +354,7 @@ func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
 	return "", errors.New(fmt.Sprintf("Adapter-not-registered-for-device-type %s", deviceType))
 }
 
-func (aMgr *AdapterManager) listDeviceTypes() []*voltha.DeviceType {
+func (aMgr *AdapterManager) ListDeviceTypes(ctx context.Context) []*voltha.DeviceType {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
@@ -362,15 +362,17 @@ func (aMgr *AdapterManager) listDeviceTypes() []*voltha.DeviceType {
 	for deviceTypeId, adapterId := range aMgr.deviceTypeToAdapterMap {
 		if adapterAgent, have := aMgr.adapterAgents[adapterId]; have {
 			if deviceType := adapterAgent.getDeviceType(deviceTypeId); deviceType != nil {
-				deviceTypes = append(deviceTypes, deviceType)
+				if deviceType.Id != SENTINEL_DEVICETYPE_ID { // don't report the sentinel
+					deviceTypes = append(deviceTypes, deviceType)
+				}
 			}
 		}
 	}
 	return deviceTypes
 }
 
-// getDeviceType returns the device type proto definition given the name of the device type
-func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType {
+// GetDeviceType returns the device type proto definition given the name of the device type
+func (aMgr *AdapterManager) GetDeviceType(deviceType string) *voltha.DeviceType {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 

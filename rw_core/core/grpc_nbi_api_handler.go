@@ -22,6 +22,7 @@ import (
 	"errors"
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
+	"github.com/opencord/voltha-go/rw_core/coreIf"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-lib-go/v2/pkg/version"
@@ -46,9 +47,9 @@ const (
 )
 
 type APIHandler struct {
-	deviceMgr                 *DeviceManager
-	logicalDeviceMgr          *LogicalDeviceManager
-	adapterMgr                *AdapterManager
+	deviceMgr                 coreIf.DeviceManager
+	logicalDeviceMgr          coreIf.LogicalDeviceManager
+	adapterMgr                coreIf.AdapterManager
 	packetInQueue             chan openflow_13.PacketIn
 	changeEventQueue          chan openflow_13.ChangeEvent
 	packetInQueueDone         chan bool
@@ -56,18 +57,18 @@ type APIHandler struct {
 	coreInCompetingMode       bool
 	longRunningRequestTimeout int64
 	defaultRequestTimeout     int64
+	core                      coreIf.Core
 	da.DefaultAPIHandler
-	core *Core
 }
 
-func NewAPIHandler(core *Core) *APIHandler {
+func NewAPIHandler(core coreIf.Core) *APIHandler {
 	handler := &APIHandler{
-		deviceMgr:                 core.deviceMgr,
-		logicalDeviceMgr:          core.logicalDeviceMgr,
-		adapterMgr:                core.adapterMgr,
-		coreInCompetingMode:       core.config.InCompetingMode,
-		longRunningRequestTimeout: core.config.LongRunningRequestTimeout,
-		defaultRequestTimeout:     core.config.DefaultRequestTimeout,
+		deviceMgr:                 core.GetDeviceManager(),
+		logicalDeviceMgr:          core.GetLogicalDeviceManager(),
+		adapterMgr:                core.GetAdapterManager(),
+		coreInCompetingMode:       core.GetConfig().InCompetingMode,
+		longRunningRequestTimeout: core.GetConfig().LongRunningRequestTimeout,
+		defaultRequestTimeout:     core.GetConfig().DefaultRequestTimeout,
 		packetInQueue:             make(chan openflow_13.PacketIn, 100),
 		changeEventQueue:          make(chan openflow_13.ChangeEvent, 100),
 		packetInQueueDone:         make(chan bool, 1),
@@ -112,7 +113,7 @@ func (handler *APIHandler) createKvTransaction(ctx context.Context) (*KVTransact
 func (handler *APIHandler) isOFControllerRequest(ctx context.Context) bool {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		// Metadata in context
-		if _, ok = md[handler.core.config.CoreBindingKey]; ok {
+		if _, ok = md[handler.core.GetConfig().CoreBindingKey]; ok {
 			// OFAgent field in metadata
 			log.Debug("OFController-request")
 			return true
@@ -145,7 +146,7 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 	var acquired bool
 	if id != nil {
 		var ownedByMe bool
-		if ownedByMe, err = handler.core.deviceOwnership.OwnedByMe(id); err != nil {
+		if ownedByMe, err = handler.core.GetDeviceOwnerShip().OwnedByMe(id); err != nil {
 			log.Warnw("getting-ownership-failed", log.Fields{"deviceId": id, "error": err})
 			return nil, errorIdNotFound
 		}
@@ -247,7 +248,7 @@ func (handler *APIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.
 			defer txn.Close()
 		}
 	}
-	return handler.logicalDeviceMgr.getLogicalPort(id)
+	return handler.logicalDeviceMgr.GetLogicalPort(ctx, id)
 }
 
 func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
@@ -266,7 +267,7 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.enableLogicalPort(ctx, id, ch)
+	go handler.logicalDeviceMgr.EnableLogicalPort(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -286,7 +287,7 @@ func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *vol
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.disableLogicalPort(ctx, id, ch)
+	go handler.logicalDeviceMgr.DisableLogicalPort(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -306,7 +307,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
+	go handler.logicalDeviceMgr.UpdateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -326,20 +327,20 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
+	go handler.logicalDeviceMgr.UpdateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // GetDevice must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
 	log.Debugw("GetDevice-request", log.Fields{"id": id})
-	return handler.deviceMgr.GetDevice(id.Id)
+	return handler.deviceMgr.GetDevice(ctx, id.Id)
 }
 
 // GetDevice must be implemented in the read-only containers - should it also be implemented here?
 func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
 	log.Debug("ListDevices")
-	return handler.deviceMgr.ListDevices()
+	return handler.deviceMgr.ListDevices(ctx)
 }
 
 // ListDeviceIds returns the list of device ids managed by a voltha core
@@ -348,7 +349,7 @@ func (handler *APIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty
 	if isTestMode(ctx) {
 		return &voltha.IDs{Items: make([]*voltha.ID, 0)}, nil
 	}
-	return handler.deviceMgr.ListDeviceIds()
+	return handler.deviceMgr.ListDeviceIds(ctx)
 }
 
 //ReconcileDevices is a request to a voltha core to managed a list of devices  based on their IDs
@@ -375,7 +376,7 @@ func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) 
 			defer txn.Close()
 		}
 	}
-	return handler.logicalDeviceMgr.getLogicalDevice(id.Id)
+	return handler.logicalDeviceMgr.GetLogicalDevice(ctx, id.Id)
 }
 
 func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
@@ -389,16 +390,16 @@ func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.
 		if handler.isOFControllerRequest(ctx) {
 			//	Since an OF controller is only interested in the set of logical devices managed by thgis Core then return
 			//	only logical devices managed/monitored by this Core.
-			return handler.logicalDeviceMgr.listManagedLogicalDevices()
+			return handler.logicalDeviceMgr.ListManagedLogicalDevices()
 		}
 	}
-	return handler.logicalDeviceMgr.listLogicalDevices()
+	return handler.logicalDeviceMgr.ListLogicalDevices(ctx)
 }
 
 // ListAdapters returns the contents of all adapters known to the system
 func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
-	log.Debug("ListAdapters")
-	return handler.adapterMgr.listAdapters(ctx)
+	log.Debug("ListDevices")
+	return handler.adapterMgr.ListAdapters(ctx)
 }
 
 func (handler *APIHandler) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
@@ -459,7 +460,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.createDevice(ctx, device, ch)
+	go handler.deviceMgr.CreateDevice(ctx, device, ch)
 	select {
 	case res := <-ch:
 		if res != nil {
@@ -467,7 +468,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 				return &voltha.Device{}, err
 			}
 			if d, ok := res.(*voltha.Device); ok {
-				handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: d.Id})
+				handler.core.GetDeviceOwnerShip().OwnedByMe(&utils.DeviceID{Id: d.Id})
 				return d, nil
 			}
 		}
@@ -497,7 +498,7 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.enableDevice(ctx, id, ch)
+	go handler.deviceMgr.EnableDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -518,13 +519,13 @@ func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*e
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.disableDevice(ctx, id, ch)
+	go handler.deviceMgr.DisableDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 //RebootDevice invoked the reboot API to the corresponding adapter
 func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
-	log.Debugw("rebootDevice-request", log.Fields{"id": id})
+	log.Debugw("RebootDevice-request", log.Fields{"id": id})
 	if isTestMode(ctx) {
 		return &empty.Empty{}, nil
 	}
@@ -539,7 +540,7 @@ func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*em
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.rebootDevice(ctx, id, ch)
+	go handler.deviceMgr.RebootDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -553,9 +554,9 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 	if handler.competeForTransaction() {
 		if txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{Id: id.Id}); err != nil {
 			if err == errorTransactionNotAcquired {
-				if ownedByMe, err := handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{Id: id.Id}); !ownedByMe && err == nil {
+				if ownedByMe, err := handler.core.GetDeviceOwnerShip().OwnedByMe(&utils.DeviceID{Id: id.Id}); !ownedByMe && err == nil {
 					// Remove the device in memory
-					handler.deviceMgr.stopManagingDevice(id.Id)
+					handler.deviceMgr.StopManagingDevice(id.Id)
 				}
 			}
 			return &empty.Empty{}, err
@@ -566,7 +567,7 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.deleteDevice(ctx, id, ch)
+	go handler.deviceMgr.DeleteDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -581,7 +582,7 @@ func (handler *APIHandler) ListDevicePorts(ctx context.Context, id *voltha.ID) (
 		}
 	}
 
-	device, err := handler.deviceMgr.GetDevice(id.Id)
+	device, err := handler.deviceMgr.GetDevice(ctx, id.Id)
 	if err != nil {
 		return &voltha.Ports{}, err
 	}
@@ -603,7 +604,7 @@ func (handler *APIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (
 		}
 	}
 
-	device, err := handler.deviceMgr.GetDevice(id.Id)
+	device, err := handler.deviceMgr.GetDevice(ctx, id.Id)
 	if err != nil {
 		return &openflow_13.Flows{}, err
 	}
@@ -618,7 +619,7 @@ func (handler *APIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (
 func (handler *APIHandler) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
 	log.Debugw("ListDeviceFlowGroups", log.Fields{"deviceid": id})
 
-	if device, _ := handler.deviceMgr.GetDevice(id.Id); device != nil {
+	if device, _ := handler.deviceMgr.GetDevice(context.TODO(), id.Id); device != nil {
 		return device.GetFlowGroups(), nil
 	}
 	return &voltha.FlowGroups{}, status.Errorf(codes.NotFound, "device-%s", id.Id)
@@ -640,14 +641,14 @@ func (handler *APIHandler) GetDeviceGroup(ctx context.Context, id *voltha.ID) (*
 func (handler *APIHandler) ListDeviceTypes(ctx context.Context, _ *empty.Empty) (*voltha.DeviceTypes, error) {
 	log.Debug("ListDeviceTypes")
 
-	return &voltha.DeviceTypes{Items: handler.adapterMgr.listDeviceTypes()}, nil
+	return &voltha.DeviceTypes{Items: handler.adapterMgr.ListDeviceTypes(ctx)}, nil
 }
 
 // GetDeviceType returns the device type for a specific device entry
 func (handler *APIHandler) GetDeviceType(ctx context.Context, id *voltha.ID) (*voltha.DeviceType, error) {
 	log.Debugw("GetDeviceType", log.Fields{"typeid": id})
 
-	if deviceType := handler.adapterMgr.getDeviceType(id.Id); deviceType != nil {
+	if deviceType := handler.adapterMgr.GetDeviceType(id.Id); deviceType != nil {
 		return deviceType, nil
 	}
 	return &voltha.DeviceType{}, status.Errorf(codes.NotFound, "device_type-%s", id.Id)
@@ -698,13 +699,13 @@ func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.
 	defer close(ch)
 	switch requestType {
 	case IMAGE_DOWNLOAD:
-		go handler.deviceMgr.downloadImage(ctx, img, ch)
+		go handler.deviceMgr.DownloadImage(ctx, img, ch)
 	case CANCEL_IMAGE_DOWNLOAD:
-		go handler.deviceMgr.cancelImageDownload(ctx, img, ch)
+		go handler.deviceMgr.CancelImageDownload(ctx, img, ch)
 	case ACTIVATE_IMAGE:
-		go handler.deviceMgr.activateImage(ctx, img, ch)
+		go handler.deviceMgr.ActivateImage(ctx, img, ch)
 	case REVERT_IMAGE:
-		go handler.deviceMgr.revertImage(ctx, img, ch)
+		go handler.deviceMgr.RevertImage(ctx, img, ch)
 	default:
 		log.Warn("invalid-request-type", log.Fields{"requestType": requestType})
 		return failedresponse, status.Errorf(codes.InvalidArgument, "%d", requestType)
@@ -738,7 +739,7 @@ func (handler *APIHandler) DownloadImage(ctx context.Context, img *voltha.ImageD
 }
 
 func (handler *APIHandler) CancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
-	log.Debugw("cancelImageDownload-request", log.Fields{"img": *img})
+	log.Debugw("CancelImageDownload-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
 		resp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 		return resp, nil
@@ -767,7 +768,7 @@ func (handler *APIHandler) RevertImageUpdate(ctx context.Context, img *voltha.Im
 }
 
 func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	log.Debugw("getImageDownloadStatus-request", log.Fields{"img": *img})
+	log.Debugw("GetImageDownloadStatus-request", log.Fields{"img": *img})
 	if isTestMode(ctx) {
 		resp := &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_SUCCEEDED}
 		return resp, nil
@@ -785,7 +786,7 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.getImageDownloadStatus(ctx, img, ch)
+	go handler.deviceMgr.GetImageDownloadStatus(ctx, img, ch)
 
 	select {
 	case res := <-ch:
@@ -800,7 +801,7 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 		log.Warnw("download-image-status", log.Fields{"result": res})
 		return failedresponse, status.Errorf(codes.Internal, "%s", res)
 	case <-ctx.Done():
-		log.Debug("downloadImage-client-timeout")
+		log.Debug("DownloadImage-client-timeout")
 		return failedresponse, ctx.Err()
 	}
 }
@@ -812,7 +813,7 @@ func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.Ima
 		return resp, nil
 	}
 
-	if download, err := handler.deviceMgr.getImageDownload(ctx, img); err != nil {
+	if download, err := handler.deviceMgr.GetImageDownload(ctx, img); err != nil {
 		return &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}, err
 	} else {
 		return download, nil
@@ -826,7 +827,7 @@ func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID
 		return resp, nil
 	}
 
-	if downloads, err := handler.deviceMgr.listImageDownloads(ctx, id.Id); err != nil {
+	if downloads, err := handler.deviceMgr.ListImageDownloads(ctx, id.Id); err != nil {
 		failedResp := &voltha.ImageDownloads{
 			Items: []*voltha.ImageDownload{
 				{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN},
@@ -841,7 +842,7 @@ func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID
 // GetImages returns all images for a specific device entry
 func (handler *APIHandler) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
 	log.Debugw("GetImages", log.Fields{"deviceid": id.Id})
-	device, err := handler.deviceMgr.GetDevice(id.Id)
+	device, err := handler.deviceMgr.GetDevice(context.TODO(), id.Id)
 	if err != nil {
 		return &voltha.Images{}, err
 	}
@@ -863,7 +864,7 @@ func (handler *APIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *v
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.updatePmConfigs(ctx, configs, ch)
+	go handler.deviceMgr.UpdatePmConfigs(ctx, configs, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -876,7 +877,7 @@ func (handler *APIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.I
 			defer txn.Close()
 		}
 	}
-	return handler.deviceMgr.listPmConfigs(ctx, id.Id)
+	return handler.deviceMgr.ListPmConfigs(ctx, id.Id)
 }
 
 func (handler *APIHandler) CreateAlarmFilter(ctx context.Context, filter *voltha.AlarmFilter) (*voltha.AlarmFilter, error) {
@@ -929,9 +930,10 @@ func (handler *APIHandler) forwardPacketOut(packet *openflow_13.PacketOut) {
 	//TODO: Update this logic once the OF Controller (OFAgent in this case) can include a transaction Id in its
 	// request.  For performance reason we can let both Cores in a Core-Pair forward the Packet to the adapters and
 	// let once of the shim layer (kafka proxy or adapter request handler filters out the duplicate packet)
-	if ownedByMe, err := handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{Id: packet.Id}); ownedByMe && err == nil {
-		agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id)
-		agent.packetOut(packet.PacketOut)
+	if ownedByMe, err := handler.core.GetDeviceOwnerShip().OwnedByMe(&utils.LogicalDeviceID{Id: packet.Id}); ownedByMe && err == nil {
+		if err := handler.logicalDeviceMgr.PacketOut(packet); err != nil {
+			log.Errorw("packetout-failed", log.Fields{"logicalDeviceId": packet.Id})
+		}
 	}
 }
 
@@ -1143,7 +1145,7 @@ func (handler *APIHandler) SimulateAlarm(
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.simulateAlarm(ctx, in, ch)
+	go handler.deviceMgr.SimulateAlarm(ctx, in, ch)
 	return successResp, nil
 }
 
@@ -1165,7 +1167,7 @@ func (handler *APIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, me
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
+	go handler.logicalDeviceMgr.UpdateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
