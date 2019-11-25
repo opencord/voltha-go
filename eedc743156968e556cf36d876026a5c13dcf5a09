@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "765ae4ab_4aa05535",
+        "filename": "db/model/root.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-25T16:30:46Z",
+      "side": 1,
+      "message": "Can you explain what the bug is with this block?",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 35
+      },
+      "revId": "eedc743156968e556cf36d876026a5c13dcf5a09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0377438f_17295317",
+        "filename": "db/model/root.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-25T16:30:46Z",
+      "side": 1,
+      "message": "Good catch.  Fortunately, this function was not really used to its full purpose.",
+      "revId": "eedc743156968e556cf36d876026a5c13dcf5a09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
