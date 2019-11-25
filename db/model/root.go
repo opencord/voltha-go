@@ -128,7 +128,7 @@ func (r *root) ExecuteCallbacks() {
 }
 
 func (r *root) hasCallbacks() bool {
-	return len(r.Callbacks) == 0
+	return len(r.Callbacks) > 0
 }
 
 // getCallbacks returns the available callbacks
