@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "558bce86_dc3f0af4",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-25T23:58:12Z",
+      "side": 1,
+      "message": "remove commented code if unused please",
+      "range": {
+        "startLine": 296,
+        "startChar": 2,
+        "endLine": 296,
+        "endChar": 89
+      },
+      "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30eb7975_5bede7a8",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-25T23:58:12Z",
+      "side": 1,
+      "message": "should this throw a test error on fail rather than being ignored (similar comments throughout this file and other test files)",
+      "range": {
+        "startLine": 99,
+        "startChar": 1,
+        "endLine": 99,
+        "endChar": 31
+      },
+      "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6d9f5c2_aea1b49d",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-25T23:58:12Z",
+      "side": 1,
+      "message": "catch error?",
+      "range": {
+        "startLine": 128,
+        "startChar": 1,
+        "endLine": 128,
+        "endChar": 21
+      },
+      "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "825c5375_498f0ec2",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-25T23:58:12Z",
+      "side": 1,
+      "message": "include the error message in the log output?",
+      "range": {
+        "startLine": 472,
+        "startChar": 4,
+        "endLine": 472,
+        "endChar": 38
+      },
+      "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ccbc3b7_d1a019c9",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-25T23:58:12Z",
+      "side": 1,
+      "message": "catch error?",
+      "range": {
+        "startLine": 143,
+        "startChar": 1,
+        "endLine": 143,
+        "endChar": 19
+      },
+      "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50b9b837_981ff912",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-25T23:58:12Z",
+      "side": 1,
+      "message": "why true to false here?",
+      "range": {
+        "startLine": 148,
+        "startChar": 100,
+        "endLine": 148,
+        "endChar": 105
+      },
+      "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
