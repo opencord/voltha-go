@@ -36,14 +36,14 @@ func init() {
 	taskFailureError = status.Error(codes.Internal, "test failure task")
 }
 
-func runSuccessfulTask(ch chan interface{}, durationRange int) {
+func runSuccessfulTask(response Response, durationRange int) {
 	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond)
-	ch <- nil
+	response.Done()
 }
 
-func runFailureTask(ch chan interface{}, durationRange int) {
+func runFailureTask(response Response, durationRange int) {
 	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond)
-	ch <- taskFailureError
+	response.Error(taskFailureError)
 }
 
 func runMultipleTasks(timeout, numTasks, taskDurationRange, numSuccessfulTask, numFailuretask int) []error {
@@ -51,17 +51,17 @@ func runMultipleTasks(timeout, numTasks, taskDurationRange, numSuccessfulTask, n
 		return []error{status.Error(codes.FailedPrecondition, "invalid-num-tasks")}
 	}
 	numSuccessfulTaskCreated := 0
-	chnls := make([]chan interface{}, numTasks)
+	responses := make([]Response, numTasks)
 	for i := 0; i < numTasks; i++ {
-		chnls[i] = make(chan interface{})
+		responses[i] = NewResponse()
 		if numSuccessfulTaskCreated < numSuccessfulTask {
-			go runSuccessfulTask(chnls[i], taskDurationRange)
+			go runSuccessfulTask(responses[i], taskDurationRange)
 			numSuccessfulTaskCreated += 1
 			continue
 		}
-		go runFailureTask(chnls[i], taskDurationRange)
+		go runFailureTask(responses[i], taskDurationRange)
 	}
-	return WaitForNilOrErrorResponses(int64(timeout), chnls...)
+	return WaitForNilOrErrorResponses(int64(timeout), responses...)
 }
 
 func getNumSuccessFailure(inputs []error) (numSuccess, numFailure, numTimeout int) {
