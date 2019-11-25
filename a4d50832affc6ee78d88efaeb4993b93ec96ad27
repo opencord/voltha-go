@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdb26254_2407c606",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-25T17:09:09Z",
+      "side": 1,
+      "message": "this can be replaced with\n\nreturn stub.ListLogicalDevices(ctx, \u0026empty.Empty{})\n\nno need for the check as if err !\u003d nil it doesn\u0027t matter what the response value is.",
+      "range": {
+        "startLine": 139,
+        "startChar": 1,
+        "endLine": 143,
+        "endChar": 21
+      },
+      "revId": "a4d50832affc6ee78d88efaeb4993b93ec96ad27",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
