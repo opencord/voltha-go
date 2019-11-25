@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2fc1a77_fe3bd1ab",
+        "filename": "db/model/data_revision_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-25T16:38:43Z",
+      "side": 1,
+      "message": "A data revision will be produced for any data being passed.  Thu, shouldn\u0027t your error message be \"Problem to marshal data when data is nil\"?",
+      "revId": "1bbd522c080932c757346ef46954c389317790f4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
