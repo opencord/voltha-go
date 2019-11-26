@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "177a2585_49a3501d",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T16:17:29Z",
+      "side": 1,
+      "message": "Did you actually remove packetout?",
+      "revId": "efb17edc61e40272e0abba93fb818b4bc50a7d9d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
