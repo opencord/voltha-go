@@ -87,6 +87,74 @@
     },
     {
       "key": {
+        "uuid": "a74a132e_3a1c181a",
+        "filename": "rw_core/core/core_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T21:52:52Z",
+      "side": 1,
+      "message": "If there is no !ok path, should be able to just do something like:\n`oltAdapter.(*cm.OLTAdapter).GetNumONUPerOLT()`\n\nalternatively, change createMockAdapter() to return a `*cm.OLTAdapter`",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c5120b1_651a372c",
+        "filename": "rw_core/core/core_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T21:52:52Z",
+      "side": 1,
+      "message": "Do we want something like ct.etcdServer.Stop() ?",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85326b34_8ee72e50",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T21:52:52Z",
+      "side": 1,
+      "message": "tab should be space",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4530466e_44934771",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T21:52:52Z",
+      "side": 1,
+      "message": "tab should be space",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5532e68b_2ea4b7cf",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 2
@@ -115,6 +183,40 @@
       "writtenOn": "2019-11-26T19:31:52Z",
       "side": 1,
       "message": "comment should be enabled",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "645391ab_e33bf2e1",
+        "filename": "rw_core/coreIf/nbi_api_handler_if.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T21:52:52Z",
+      "side": 1,
+      "message": "Embed voltha.VolthaServiceServer rather than duplicating all its functions.",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "575fd431_3a4e6942",
+        "filename": "vendor/modules.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T21:52:52Z",
+      "side": 1,
+      "message": "Appears not to be in lexicographical order.  Was this edited manually?",
       "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
