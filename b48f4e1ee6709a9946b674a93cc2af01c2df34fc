@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "500eaa77_86cafcc6",
+        "filename": "db/model/node.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T18:05:41Z",
+      "side": 0,
+      "message": "why was this removed. if pr is an empty list (len \u003d\u003d 0) then pr[0] will be deferenced and an panic will occur",
+      "range": {
+        "startLine": 357,
+        "startChar": 68,
+        "endLine": 357,
+        "endChar": 82
+      },
+      "revId": "b48f4e1ee6709a9946b674a93cc2af01c2df34fc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "189408bf_b60088c9",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T18:05:41Z",
+      "side": 0,
+      "message": "if revs is returned as an empty list len(revs) \u003d\u003d 0, then revs[0] is deferenced and a panic occurs.",
+      "range": {
+        "startLine": 258,
+        "startChar": 82,
+        "endLine": 258,
+        "endChar": 95
+      },
+      "revId": "b48f4e1ee6709a9946b674a93cc2af01c2df34fc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47ba1d1e_2fa73736",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T18:05:41Z",
+      "side": 0,
+      "message": "panic if len(ts) \u003d\u003d 0",
+      "range": {
+        "startLine": 485,
+        "startChar": 17,
+        "endLine": 485,
+        "endChar": 28
+      },
+      "revId": "b48f4e1ee6709a9946b674a93cc2af01c2df34fc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
