@@ -22,6 +22,30 @@
       "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "972f0a4a_39b71378",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T17:26:48Z",
+      "side": 1,
+      "message": "On error, we should not proceed any further.  Just return error is sufficient.",
+      "parentUuid": "fec401cf_0610df87",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 2
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
