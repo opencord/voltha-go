@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f3b38185_53f46abf",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "49a25fa2_8fcfd0cf",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98956965_0e2fccf3",
         "filename": "rw_core/core/common_test.go",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6e5834cd_d27b7bdc",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "This was meant as an example - I always need to look at other code to remember the syntax :)",
+      "parentUuid": "98956965_0e2fccf3",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ef2637b_5d61d09e",
         "filename": "rw_core/core/common_test.go",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2019-11-26T19:31:52Z",
       "side": 1,
       "message": "0 buffer channel. Can block write/go_routine if readiness wait times out device becomes ready after",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3310834f_fadd4371",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "Not sure I follow.",
+      "parentUuid": "9ef2637b_5d61d09e",
       "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -104,6 +158,24 @@
     },
     {
       "key": {
+        "uuid": "f4401bae_52c40306",
+        "filename": "rw_core/core/core_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "createMockAdapter can return both an OLT or an ONU adapter",
+      "parentUuid": "a74a132e_3a1c181a",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c5120b1_651a372c",
         "filename": "rw_core/core/core_test.go",
         "patchSetId": 2
@@ -115,6 +187,24 @@
       "writtenOn": "2019-11-26T21:52:52Z",
       "side": 1,
       "message": "Do we want something like ct.etcdServer.Stop() ?",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8544f234_cee84200",
+        "filename": "rw_core/core/core_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "That\u0027s what the stopEmbeddedEtcdServer() does.",
+      "parentUuid": "1c5120b1_651a372c",
       "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -172,6 +262,24 @@
     },
     {
       "key": {
+        "uuid": "f1b8cafd_f8c429d0",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "Will fix",
+      "parentUuid": "5532e68b_2ea4b7cf",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6acc5c07_9347d0cf",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 2
@@ -183,6 +291,24 @@
       "writtenOn": "2019-11-26T19:31:52Z",
       "side": 1,
       "message": "comment should be enabled",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ee6e978_26491d24",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "Will fix",
+      "parentUuid": "6acc5c07_9347d0cf",
       "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -206,6 +332,24 @@
     },
     {
       "key": {
+        "uuid": "1983496d_2c584022",
+        "filename": "rw_core/coreIf/nbi_api_handler_if.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "Good point, will fix.",
+      "parentUuid": "645391ab_e33bf2e1",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "575fd431_3a4e6942",
         "filename": "vendor/modules.txt",
         "patchSetId": 2
@@ -217,6 +361,24 @@
       "writtenOn": "2019-11-26T21:52:52Z",
       "side": 1,
       "message": "Appears not to be in lexicographical order.  Was this edited manually?",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "721210e5_52aaa9ef",
+        "filename": "vendor/modules.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "Nope, no manual editing.",
+      "parentUuid": "575fd431_3a4e6942",
       "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
