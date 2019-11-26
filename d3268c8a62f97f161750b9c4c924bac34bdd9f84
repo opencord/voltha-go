@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49a25fa2_8fcfd0cf",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-26T19:31:52Z",
+      "side": 1,
+      "message": "was logl level meant to be passed as an arg ?",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98956965_0e2fccf3",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-26T19:31:52Z",
+      "side": 1,
+      "message": "maybe remove commented code",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ef2637b_5d61d09e",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-26T19:31:52Z",
+      "side": 1,
+      "message": "0 buffer channel. Can block write/go_routine if readiness wait times out device becomes ready after",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e357bbcf_34b2c35f",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-26T19:31:52Z",
+      "side": 1,
+      "message": "0 buffer channel",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ce3e70a_3e04c344",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-26T19:31:52Z",
+      "side": 1,
+      "message": "0 buffer channel",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5532e68b_2ea4b7cf",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-26T19:31:52Z",
+      "side": 1,
+      "message": "comment should be enabled",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6acc5c07_9347d0cf",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-11-26T19:31:52Z",
+      "side": 1,
+      "message": "comment should be enabled",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
