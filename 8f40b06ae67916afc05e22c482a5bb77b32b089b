@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "97013b55_520d21b3",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T15:12:21Z",
+      "side": 1,
+      "message": "Hm... Made a false assumption wrt closures \u0026 redeclaration of range variables.  Will fix.",
+      "parentUuid": "40fb3858_7f9a4b93",
+      "revId": "8f40b06ae67916afc05e22c482a5bb77b32b089b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4544350_963b251e",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -64,6 +82,24 @@
       "writtenOn": "2019-11-25T23:38:41Z",
       "side": 1,
       "message": "If you are waiting on multiple channels then you you are sequencing the  responses.   If one response is slower and cause a timeout then all subsequent responses will look like timeouts even if they succeeded.",
+      "revId": "8f40b06ae67916afc05e22c482a5bb77b32b089b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21ba881b_45d51486",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-26T15:12:21Z",
+      "side": 1,
+      "message": "Another false assumption: I assumed select would prioritize order like switch, appears that\u0027s not the case.  Will fix.",
+      "parentUuid": "6e3b66ed_c0c57a19",
       "revId": "8f40b06ae67916afc05e22c482a5bb77b32b089b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
