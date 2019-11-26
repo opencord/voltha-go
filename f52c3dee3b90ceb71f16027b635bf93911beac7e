@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1bc8296_f1be74f0",
+        "filename": ".golangci.yml",
+        "patchSetId": 7
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-26T00:24:57Z",
+      "side": 1,
+      "message": "Rather than listing all of these in separate yaml file, is it possible to leave `nolint` comments in place in the code? This would locate the linting exceptions with the code they\u0027re excepting. https://github.com/golangci/golangci-lint#nolint",
+      "range": {
+        "startLine": 51,
+        "startChar": 4,
+        "endLine": 51,
+        "endChar": 68
+      },
+      "revId": "f52c3dee3b90ceb71f16027b635bf93911beac7e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
