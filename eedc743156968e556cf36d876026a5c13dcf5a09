@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "e0051349_33b8a0c8",
+        "filename": "db/model/root.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000119
+      },
+      "writtenOn": "2019-11-26T16:27:09Z",
+      "side": 1,
+      "message": "The callbacks are to be removed from the array as soon as they have been executed.  They are callbacks internal to the model and are triggered when a change occurs.  They eventually call the callbacks registered through ro/rw cores (associated to the proxy object).  These last ones remain untouched by this code.",
+      "parentUuid": "002c477a_d5328c6e",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 35
+      },
+      "revId": "eedc743156968e556cf36d876026a5c13dcf5a09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0377438f_17295317",
         "filename": "db/model/root.go",
         "patchSetId": 2
