@@ -2,6 +2,552 @@
   "comments": [
     {
       "key": {
+        "uuid": "60e98385_af6efaad",
+        "filename": "db/model/persisted_revision.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "no point in putting this in an else clause as the \"if\" clause returns.",
+      "range": {
+        "startLine": 539,
+        "startChar": 4,
+        "endLine": 541,
+        "endChar": 4
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d40bce59_40857eaf",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "better to use fmt.Errorf as opposed to errors.New and string math?",
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0281e8d1_c4dfcf0c",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if _, err :\u003d ...; err !\u003d nil {\n    return nil, err\n}",
+      "range": {
+        "startLine": 297,
+        "startChar": 0,
+        "endLine": 299,
+        "endChar": 3
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "471d1d8a_95cc70ee",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "confused, how is this logged as an error and then not error returned? should this be a warning or informational message?",
+      "range": {
+        "startLine": 316,
+        "startChar": 0,
+        "endLine": 319,
+        "endChar": 2
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b8cccfe_085e60ca",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if _, err :\u003d ...; err !\u003d nil {\nreturn nil, err\n}",
+      "range": {
+        "startLine": 345,
+        "startChar": 0,
+        "endLine": 348,
+        "endChar": 3
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d040a8c1_d74b398c",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "return nil, fmt.Errorf(\"invalid path: \u0027%s\u0027\", path)",
+      "range": {
+        "startLine": 365,
+        "startChar": 0,
+        "endLine": 365,
+        "endChar": 48
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba772f78_90024980",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "delete unused code",
+      "range": {
+        "startLine": 392,
+        "startChar": 0,
+        "endLine": 392,
+        "endChar": 89
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1757ac68_6f47b295",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "single line",
+      "range": {
+        "startLine": 393,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 3
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8b5c9f2_d8e636e8",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "fmt.Errorf",
+      "range": {
+        "startLine": 413,
+        "startChar": 20,
+        "endLine": 413,
+        "endChar": 21
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca446d84_351bff2e",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "simplify to one line",
+      "range": {
+        "startLine": 440,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 3
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb755964_4a4d4e07",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "fmt.Errorf ... and for all the other instnaces of this patterns",
+      "range": {
+        "startLine": 461,
+        "startChar": 0,
+        "endLine": 461,
+        "endChar": 48
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e670f08_9b623a33",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "single line ... same for all the other instances of this pattern",
+      "range": {
+        "startLine": 490,
+        "startChar": 0,
+        "endLine": 493,
+        "endChar": 3
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c52d44e_b60a2d9b",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "should not be package global, declare in methods that it needs to be used.",
+      "range": {
+        "startLine": 38,
+        "startChar": 28,
+        "endLine": 38,
+        "endChar": 33
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7876d0f_6ce8c55f",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if it is an error then processing needs to be stopped and the error needs to be returned. if processing continues then you have to assume the value of BenchmarkProxy is not valid and account for that.",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 2
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f2a1685_5a3449e1",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "when not check err as well. will added ever be nil if error is not nill? If so I would check for both added \u003d\u003d nil || err !\u003d nil",
+      "range": {
+        "startLine": 157,
+        "startChar": 0,
+        "endLine": 157,
+        "endChar": 126
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0777ba33_6f4e7ecf",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 184,
+        "endChar": 5
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0b92dfa_d59f6782",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 32
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5057cb96_701ab23a",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 212,
+        "startChar": 0,
+        "endLine": 214,
+        "endChar": 32
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48ba9476_4e1f5dd1",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 223,
+        "startChar": 0,
+        "endLine": 225,
+        "endChar": 32
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55bc7e3c_5b81960b",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 281,
+        "startChar": 0,
+        "endLine": 283,
+        "endChar": 5
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3ea2b76_732906d8",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 287,
+        "endChar": 5
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "049307b1_1b785e07",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 304,
+        "startChar": 0,
+        "endLine": 304,
+        "endChar": 32
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fccbf16_f8820160",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 328,
+        "startChar": 0,
+        "endLine": 329,
+        "endChar": 30
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43915492_87ff5ad5",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "if this is an error then it needs to be handled and/or returned. an error means processing must stop. Also, any error message needs to be more descriptive.",
+      "range": {
+        "startLine": 345,
+        "startChar": 0,
+        "endLine": 345,
+        "endChar": 30
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fec401cf_0610df87",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 29
@@ -37,6 +583,29 @@
       "side": 1,
       "message": "On error, we should not proceed any further.  Just return error is sufficient.",
       "parentUuid": "fec401cf_0610df87",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 2
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f11f890e_e0ac2e73",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T17:41:23Z",
+      "side": 1,
+      "message": "after talking with @khen all these error checks should actually return the error as well as should return a more detailed description with the error. This can be accomplished with a custom error implementation or using fmt.Errorf, but should be more descriptive, i.e. \"unable to create proxy for logical device flows for device \u003cagent.localDeviceId\u003e : \u003cerr.Error()\u003e.",
       "range": {
         "startLine": 147,
         "startChar": 0,
