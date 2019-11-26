@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d3db75b2_b67e9352",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T22:30:06Z",
+      "side": 1,
+      "message": "why is this commented out? should it just be deleted?",
+      "range": {
+        "startLine": 202,
+        "startChar": 0,
+        "endLine": 215,
+        "endChar": 19
+      },
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49a25fa2_8fcfd0cf",
         "filename": "rw_core/core/common_test.go",
         "patchSetId": 2
@@ -31,6 +54,29 @@
       "side": 1,
       "message": "yes",
       "parentUuid": "49a25fa2_8fcfd0cf",
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e519983_c3590854",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T22:30:06Z",
+      "side": 1,
+      "message": "what does \"4\" mean. is there a constant that could be used like \"WARNING\"?",
+      "range": {
+        "startLine": 68,
+        "startChar": 20,
+        "endLine": 68,
+        "endChar": 21
+      },
       "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
