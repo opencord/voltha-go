@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "002c477a_d5328c6e",
+        "filename": "db/model/root.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-26T09:06:18Z",
+      "side": 1,
+      "message": "As said by Scott, the elements of r.callbacks are removed at every call of this function. If this is the expected behaviour my patch is wrong off course. What is the expected behaviour?",
+      "parentUuid": "765ae4ab_4aa05535",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 35
+      },
+      "revId": "eedc743156968e556cf36d876026a5c13dcf5a09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0377438f_17295317",
         "filename": "db/model/root.go",
         "patchSetId": 2
