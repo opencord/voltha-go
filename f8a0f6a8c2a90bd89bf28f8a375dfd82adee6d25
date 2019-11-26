@@ -16,6 +16,24 @@
       "revId": "f8a0f6a8c2a90bd89bf28f8a375dfd82adee6d25",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e966776e_87016f33",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-26T22:09:09Z",
+      "side": 1,
+      "message": "This should not have been commented out.  Will fix.",
+      "parentUuid": "9acfe426_cf3d3482",
+      "revId": "f8a0f6a8c2a90bd89bf28f8a375dfd82adee6d25",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
