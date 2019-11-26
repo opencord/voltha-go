@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "3f5eeb3c_ac4ec25d",
+        "filename": "db/model/root.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-11-26T16:30:10Z",
+      "side": 1,
+      "message": "Ok, I remove this patch",
+      "parentUuid": "e0051349_33b8a0c8",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 35
+      },
+      "revId": "eedc743156968e556cf36d876026a5c13dcf5a09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0377438f_17295317",
         "filename": "db/model/root.go",
         "patchSetId": 2
