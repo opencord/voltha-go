@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d6aa9392_0686c982",
+        "filename": "db/model/root.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-11-26T00:18:30Z",
+      "side": 1,
+      "message": "It looks like the original code is modifying r.callbacks in place, causing them to be permanently removed. Can we get clarification on what the expected behavior of this function is? Should the callbacks be removed upon execution? or should they remain? (If they\u0027re supposed to be removed then the code comment should be updated to indicate the side-effect)",
+      "parentUuid": "765ae4ab_4aa05535",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 35
+      },
+      "revId": "eedc743156968e556cf36d876026a5c13dcf5a09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0377438f_17295317",
         "filename": "db/model/root.go",
         "patchSetId": 2
