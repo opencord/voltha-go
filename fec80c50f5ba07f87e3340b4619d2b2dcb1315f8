@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fec401cf_0610df87",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 29
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T16:48:28Z",
+      "side": 1,
+      "message": "@khen. What is the risk of logging and error, but then continuing to process? Should these errors be fatal?",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 2
+      },
+      "revId": "fec80c50f5ba07f87e3340b4619d2b2dcb1315f8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
