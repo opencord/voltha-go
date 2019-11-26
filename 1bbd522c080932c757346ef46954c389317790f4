@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7775c900_dcede514",
+        "filename": "db/model/data_revision_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-11-26T02:00:13Z",
+      "side": 1,
+      "message": "2019",
+      "range": {
+        "startLine": 2,
+        "startChar": 13,
+        "endLine": 2,
+        "endChar": 17
+      },
+      "revId": "1bbd522c080932c757346ef46954c389317790f4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2fc1a77_fe3bd1ab",
         "filename": "db/model/data_revision_test.go",
         "patchSetId": 7
