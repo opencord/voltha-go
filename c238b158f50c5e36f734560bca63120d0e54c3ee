@@ -207,6 +207,24 @@
     },
     {
       "key": {
+        "uuid": "19389a2f_37d6dbd3",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-11-26T10:27:41Z",
+      "side": 1,
+      "message": "It seems there is one more lock in the same method which causes the issue. So we added an explicit unlock in error handler.",
+      "parentUuid": "097e03e5_37eea805",
+      "revId": "c238b158f50c5e36f734560bca63120d0e54c3ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3547916a_33b4548e",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 14
