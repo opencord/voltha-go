@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "73b0fdbd_32968759",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-27T14:14:44Z",
+      "side": 1,
+      "message": "It should not have been commented.  Will fix.",
+      "parentUuid": "d3db75b2_b67e9352",
+      "range": {
+        "startLine": 202,
+        "startChar": 0,
+        "endLine": 215,
+        "endChar": 19
+      },
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49a25fa2_8fcfd0cf",
         "filename": "rw_core/core/common_test.go",
         "patchSetId": 2
@@ -71,6 +95,30 @@
       "writtenOn": "2019-11-26T22:30:06Z",
       "side": 1,
       "message": "what does \"4\" mean. is there a constant that could be used like \"WARNING\"?",
+      "range": {
+        "startLine": 68,
+        "startChar": 20,
+        "endLine": 68,
+        "endChar": 21
+      },
+      "revId": "d3268c8a62f97f161750b9c4c924bac34bdd9f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "273ebba0_8f1825dd",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-27T14:14:44Z",
+      "side": 1,
+      "message": "Will fix.  Can be changed to log.SetAllLogLevel(log.ErrorLevel).",
+      "parentUuid": "3e519983_c3590854",
       "range": {
         "startLine": 68,
         "startChar": 20,
