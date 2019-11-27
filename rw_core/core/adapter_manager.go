@@ -355,7 +355,9 @@ func (aMgr *AdapterManager) listDeviceTypes() []*voltha.DeviceType {
 	for deviceTypeID, adapterID := range aMgr.deviceTypeToAdapterMap {
 		if adapterAgent, have := aMgr.adapterAgents[adapterID]; have {
 			if deviceType := adapterAgent.getDeviceType(deviceTypeID); deviceType != nil {
-				deviceTypes = append(deviceTypes, deviceType)
+				if deviceType.Id != SentinelDevicetypeID { // don't report the sentinel
+					deviceTypes = append(deviceTypes, deviceType)
+				}
 			}
 		}
 	}
