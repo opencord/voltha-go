@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "02ce4f5d_ba2c9e5e",
+        "filename": "db/model/event_bus.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-28T13:29:14Z",
+      "side": 1,
+      "message": "All capitals is allowed",
+      "parentUuid": "b1c1a0a5_9a0c02b8",
+      "range": {
+        "startLine": 36,
+        "startChar": 2,
+        "endLine": 36,
+        "endChar": 5
+      },
+      "revId": "0afe9f48a401c06bcca200022adfcd8352d3c506",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0dcc2d8c_3c6f12b3",
         "filename": "db/model/node.go",
         "patchSetId": 4
@@ -59,6 +83,30 @@
       "writtenOn": "2019-11-26T18:05:41Z",
       "side": 1,
       "message": "needs a full description",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 14
+      },
+      "revId": "0afe9f48a401c06bcca200022adfcd8352d3c506",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b88e3b25_74e6f950",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-28T13:29:14Z",
+      "side": 1,
+      "message": "Opened seperate jira for documentation VOL-2285 - Updating documentation for exported functions, fields.",
+      "parentUuid": "28a70b9b_776e64ff",
       "range": {
         "startLine": 55,
         "startChar": 3,
@@ -197,6 +245,30 @@
       "writtenOn": "2019-11-26T18:05:41Z",
       "side": 1,
       "message": "might this return an error and/or blobs now \u003d\u003d nil?",
+      "range": {
+        "startLine": 538,
+        "startChar": 3,
+        "endLine": 538,
+        "endChar": 35
+      },
+      "revId": "0afe9f48a401c06bcca200022adfcd8352d3c506",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "957d5a06_7aba5cfd",
+        "filename": "db/model/persisted_revision.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-28T13:29:14Z",
+      "side": 1,
+      "message": "will modify",
+      "parentUuid": "806a48b2_d5dde2f5",
       "range": {
         "startLine": 538,
         "startChar": 3,

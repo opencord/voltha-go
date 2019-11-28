@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4962aea8_4e8271b0",
+        "filename": "db/model/node.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-28T13:29:14Z",
+      "side": 0,
+      "message": "gosimple throws warning for this - should omit nil check; len() for nil slices is defined as zero, i will exclude this with // nolint comment, i will be using // nolint comment in some other places where we cannot address the warning as of now",
+      "parentUuid": "500eaa77_86cafcc6",
+      "range": {
+        "startLine": 357,
+        "startChar": 68,
+        "endLine": 357,
+        "endChar": 82
+      },
+      "revId": "b48f4e1ee6709a9946b674a93cc2af01c2df34fc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "189408bf_b60088c9",
         "filename": "db/model/non_persisted_revision.go",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c19c3c5a_0b2c9ca0",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-28T13:29:14Z",
+      "side": 0,
+      "message": "will modify",
+      "parentUuid": "189408bf_b60088c9",
+      "range": {
+        "startLine": 258,
+        "startChar": 82,
+        "endLine": 258,
+        "endChar": 95
+      },
+      "revId": "b48f4e1ee6709a9946b674a93cc2af01c2df34fc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47ba1d1e_2fa73736",
         "filename": "db/model/non_persisted_revision.go",
         "patchSetId": 4
@@ -59,6 +107,30 @@
       "writtenOn": "2019-11-26T18:05:41Z",
       "side": 0,
       "message": "panic if len(ts) \u003d\u003d 0",
+      "range": {
+        "startLine": 485,
+        "startChar": 17,
+        "endLine": 485,
+        "endChar": 28
+      },
+      "revId": "b48f4e1ee6709a9946b674a93cc2af01c2df34fc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55403e53_da8308e9",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-28T13:29:14Z",
+      "side": 0,
+      "message": "will modify",
+      "parentUuid": "47ba1d1e_2fa73736",
       "range": {
         "startLine": 485,
         "startChar": 17,
