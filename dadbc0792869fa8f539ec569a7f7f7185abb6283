@@ -1,0 +1,361 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eec4b008_fca8edac",
+        "filename": "db/model/model.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "use `if err :\u003d foo(); err !\u003d nil {` form",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc9391dd_2d1c2515",
+        "filename": "db/model/model.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "This defer doesn\u0027t make any sense here.  Can probably just remove it.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bba8c92_e88e721f",
+        "filename": "db/model/model.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "useless comment",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7aa22a5_e33d715b",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Useless comments throughout this file.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7013913_c497ca6a",
+        "filename": "db/model/persisted_revision.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Use `if err:\u003dfoo(); err!\u003dnil{` form",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e996c65_4fcf9ad0",
+        "filename": "db/model/persisted_revision.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "useless comment",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8ecf76c_2f1002ac",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Don\u0027t dasherize errors.  (More like this, I won\u0027t leave a comment on every one.)",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f12e563_73668c87",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Can use `if err :\u003d foo(); err !\u003d nil {` format to save a line here.  Many similar cases.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "727c357f_cdfca0e4",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Can use `if err :\u003d foo(); err !\u003d nil {` format to save a line here.  Many similar cases.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aad7cb35_90e3d6ad",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Merely printing here will silence the check, but doesn\u0027t really handle the error.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc2ccb30_1097fe33",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Merely printing here will silence the check, but doesn\u0027t really handle the error.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f3db965_7e11a521",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Merely printing here will silence the check, but doesn\u0027t really handle the error.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9834743e_7653016d",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Merely printing here will silence the check, but doesn\u0027t really handle the error.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84bdbf6b_d06b6f67",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Merely printing here will silence the check, but doesn\u0027t really handle the error.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59436e10_e78a19b2",
+        "filename": "db/model/revision.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Useless comment.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "733d600e_6366ff89",
+        "filename": "db/model/root.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "use `if err:\u003dfoo(); err!\u003dnil{` form",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9461c579_78082327",
+        "filename": "db/model/root.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "don\u0027t dasherize errors",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b4288f8_7e74c084",
+        "filename": "db/model/root.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Just remove commented code.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7841fa54_aee6559d",
+        "filename": "db/model/root.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Just remove commented code.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d290954_d9dc95ce",
+        "filename": "db/model/root.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Just remove commented code.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3422ff0e_8da2ffa1",
+        "filename": "db/model/transaction.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T19:38:47Z",
+      "side": 1,
+      "message": "Useless comments throughout this file.",
+      "revId": "dadbc0792869fa8f539ec569a7f7f7185abb6283",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
