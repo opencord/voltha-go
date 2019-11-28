@@ -22,6 +22,30 @@
       "revId": "5415a0e9774a7423af6d7337f2758ad0b5e194c5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1f91915_8c246830",
+        "filename": "db/model/event_bus.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-28T12:03:19Z",
+      "side": 1,
+      "message": "We can have uppercase, it should be in camel case if it has more than one word",
+      "parentUuid": "39f40f83_1deb690e",
+      "range": {
+        "startLine": 36,
+        "startChar": 2,
+        "endLine": 36,
+        "endChar": 5
+      },
+      "revId": "5415a0e9774a7423af6d7337f2758ad0b5e194c5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
