@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42344390_5f5fe9cb",
+        "filename": "db/model/proxy_load_test.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "Should there be an assert.notnil(t, err)?   Since this is a test then I would think we want it to fail on error.  Please adjust the code everywhere in the test.",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e3b37e6_cb0ce556",
+        "filename": "db/model/transaction_test.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "Test must fail.  Please do an assert everywhere in the test where a failure is expected.",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e20f630e_b0532577",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "Log fatal please.",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f56ab91e_a6160eac",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "log.fatal please.",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd00fa94_e533896d",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "No need for else if.  Just do a \"if ...\" on the next line.",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4ef4a86_ac4d9ae6",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "Similar comments as above",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "059b0712_221f46ff",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "Similar comments as above",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb59acad_e57e22f1",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "Similar comments as above",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b61da94f_a4ab4ec5",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "If these code are not used then please remove them",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0345c03d_18594137",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "No need for \"else if\" in this case.  Just \"if ...\" on the next line is sufficient.",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7132adc4_11274b21",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "Same as above",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2605815_35bc63ef",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 39
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-11-28T17:12:17Z",
+      "side": 1,
+      "message": "No need for else if",
+      "revId": "14e2dab13d2984f79d83342116188d462d85bc8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
