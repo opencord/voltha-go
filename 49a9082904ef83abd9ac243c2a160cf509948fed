@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08476ea2_796c0753",
+        "filename": "ro_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T16:47:59Z",
+      "side": 1,
+      "message": "Using `:\u003d` here would allow `if agent, ok :\u003d dMgr.deviceAgents.Load(deviceID); ok {`",
+      "revId": "49a9082904ef83abd9ac243c2a160cf509948fed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b4780c2_e40553f8",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T16:47:59Z",
+      "side": 1,
+      "message": "variable handler is unused, can replace with `_`",
+      "revId": "49a9082904ef83abd9ac243c2a160cf509948fed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "619cf998_af9b0a0e",
+        "filename": "ro_core/core/model_proxy_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-11-28T16:47:59Z",
+      "side": 1,
+      "message": "Change to: \"used to watch adapters in kv\"",
+      "revId": "49a9082904ef83abd9ac243c2a160cf509948fed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
