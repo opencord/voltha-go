@@ -2,7 +2,7 @@
   "devices": {
     "of:00000000ac110001": {
       "accessDevice": {
-        "uplink": "65536",
+        "uplink": "1048576",
         "vlan": "1"
       },
       "basic": {
@@ -41,11 +41,11 @@
         },
         "entries": [
           {
-            "id": "BBSIMOLT000",
-            "uplinkPort": 65536,
+            "id": "BBSIM_OLT_0",
+            "uplinkPort": 1048576,
             "hardwareIdentifier": "00:00:ac:11:00:01",
             "ipAddress": "172.17.0.1",
-            "nasId": "BBSIMOLT000"
+            "nasId": "BBSIM_OLT_0"
           },
           {
             "id": "BBSM00000001-1",
@@ -53,7 +53,7 @@
             "sTag": 900,
             "nasPortId": "BBSM00000001-1",
             "circuitId": "BBSM00000001-1",
-            "remoteId": "BBSIMOLT000",
+            "remoteId": "BBSIM_OLT_0",
             "technologyProfileId": 64,
             "upstreamBandwidthProfile": "Default",
             "downstreamBandwidthProfile": "Default"
@@ -64,7 +64,7 @@
             "sTag": 900,
             "nasPortId": "BBSM00000001-2",
             "circuitId": "BBSM00000001-2",
-            "remoteId": "BBSIMOLT000",
+            "remoteId": "BBSIM_OLT_0",
             "technologyProfileId": 64,
             "upstreamBandwidthProfile": "Default",
             "downstreamBandwidthProfile": "Default"
@@ -75,7 +75,7 @@
             "sTag": 900,
             "nasPortId": "BBSM00000001-3",
             "circuitId": "BBSM00000001-3",
-            "remoteId": "BBSIMOLT000",
+            "remoteId": "BBSIM_OLT_0",
             "technologyProfileId": 64,
             "upstreamBandwidthProfile": "Default",
             "downstreamBandwidthProfile": "Default"
@@ -86,7 +86,7 @@
             "sTag": 900,
             "nasPortId": "BBSM00000001-4",
             "circuitId": "BBSM00000001-4",
-            "remoteId": "BBSIMOLT000",
+            "remoteId": "BBSIM_OLT_0",
             "technologyProfileId": 64,
             "upstreamBandwidthProfile": "Default",
             "downstreamBandwidthProfile": "Default"
@@ -104,11 +104,11 @@
         "entries": [
           {
             "id": "Default",
-            "cir": 1000000,
-            "cbs": 1001,
-            "eir": 1002,
-            "ebs": 1003,
-            "air": 1004
+            "air": 10000000,
+            "cbs": 5000,
+            "cir": 750000,
+            "ebs": 5000,
+            "eir": 1000000
           }
         ]
       }

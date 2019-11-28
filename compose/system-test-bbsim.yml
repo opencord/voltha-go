@@ -181,15 +181,15 @@ services:
 
 
   bbsim:
-    image: "voltha/voltha-bbsim:latest"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}"
     privileged: true
     command: [
       "./bbsim",
-      "-m",
-      "both",
-      "-i",
+      "-auth",
+      "-dhcp",
+      "-pon",
       "1",
-      "-n",
+      "-onu",
       "1"
     ]
     ports:
