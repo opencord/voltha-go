@@ -393,6 +393,7 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreif.LogicalDeviceAgent, 
 	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
 
 	log.Debugw("multicast-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
+	log.Debugw("--", log.Fields{"route": route, "groupMap": outPortNo, "grpID:":grpID, "flow:": flow})
 	deviceRules := fu.NewDeviceRules()
 
 	//having no Group yet is the same as having a Group with no buckets
@@ -406,75 +407,14 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreif.LogicalDeviceAgent, 
 		log.Warnw("Group-or-desc-nil", log.Fields{"grpId": grpID, "grp": grp})
 		return deviceRules
 	}
-	for _, bucket := range grp.Desc.Buckets {
-		otherActions := make([]*ofp.OfpAction, 0)
-		for _, action := range bucket.Actions {
-			if action.Type == fu.OUTPUT {
-				outPortNo = action.GetOutput().Port
-			} else if action.Type != fu.POP_VLAN {
-				otherActions = append(otherActions, action)
-			}
-		}
 
-		route2 := agent.GetRoute(inPortNo, outPortNo)
-		switch len(route2) {
-		case 0:
-			log.Errorw("mc-no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "comment": "deleting flow"})
-			//	TODO: Delete flow
-			return deviceRules
-		case 2:
-			log.Debugw("route-found", log.Fields{"ingressHop": route2[0], "egressHop": route2[1]})
-		default:
-			log.Errorw("invalid-route-length", log.Fields{"routeLen": len(route)})
-			return deviceRules
-		}
-
-		ingressHop := route[0]
-		ingressHop2 := route2[0]
-		egressHop := route2[1]
-
-		if ingressHop.Ingress != ingressHop2.Ingress {
-			log.Errorw("mc-ingress-hop-hop2-mismatch", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "comment": "ignoring flow"})
-			return deviceRules
-		}
-		// Set the parent device flow
-		fa := &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
-			MatchFields: []*ofp.OfpOxmOfbField{
-				fu.InPort(ingressHop.Ingress),
-			},
-		}
-		// Augment the matchfields with the ofpfields from the flow
-		fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
-
-		// Augment the Actions
-		filteredAction := fu.GetActions(flow, fu.GROUP)
-		filteredAction = append(filteredAction, fu.PopVlan())
-		filteredAction = append(filteredAction, fu.Output(route2[1].Ingress))
-		fa.Actions = filteredAction
-
-		fg := fu.NewFlowsAndGroups()
-		fg.AddFlow(fu.MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
-
-		// Set the child device flow
-		fa = &fu.FlowArgs{
-			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
-			MatchFields: []*ofp.OfpOxmOfbField{
-				fu.InPort(egressHop.Ingress),
-			},
-		}
-		// Augment the matchfields with the ofpfields from the flow
-		fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.VLAN_VID, fu.VLAN_PCP)...)
-
-		// Augment the Actions
-		otherActions = append(otherActions, fu.Output(egressHop.Egress))
-		fa.Actions = otherActions
-
-		fg = fu.NewFlowsAndGroups()
-		fg.AddFlow(fu.MkFlowStat(fa))
-		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
-	}
+	log.Debug("----- creating dev rules")
+	log.Debugw("----- route[0].DeviceID", log.Fields{"route[0].DeviceID": route[0].DeviceID})
+	deviceRules.CreateEntryIfNotExist(route[0].DeviceID)
+	fg := fu.NewFlowsAndGroups()
+	fg.AddFlow(flow)
+	//return the multicast flow without decomposing it
+	deviceRules.AddFlowsAndGroup(route[0].DeviceID, fg)
 	return deviceRules
 }
 
@@ -483,6 +423,15 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreif.LogicalDeviceAgent, flow *o
 	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
 
 	inPortNo := fu.GetInPort(flow)
+	if fu.HasGroup(flow) && inPortNo == 0 {
+		//if no in-port specified for a multicast flow, put NNI port as in-port
+		//so that a valid route can be found for the flow
+		nni, err := agent.GetFirstNNIPort()
+		if err == nil {
+			inPortNo = nni
+			log.Debugw("Assigning NNI port as in-port for the multicast flow", log.Fields{"nni": nni, "flow:": flow})
+		}
+	}
 	outPortNo := fu.GetOutPort(flow)
 	deviceRules := fu.NewDeviceRules()
 	route := agent.GetRoute(inPortNo, outPortNo)
