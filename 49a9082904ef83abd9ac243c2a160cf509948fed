@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "02168f0b_380336c0",
+        "filename": "ro_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-29T07:07:35Z",
+      "side": 1,
+      "message": "Sorry, I did not get your point.",
+      "parentUuid": "08476ea2_796c0753",
+      "revId": "49a9082904ef83abd9ac243c2a160cf509948fed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b4780c2_e40553f8",
         "filename": "ro_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-28T16:47:59Z",
       "side": 1,
       "message": "variable handler is unused, can replace with `_`",
+      "revId": "49a9082904ef83abd9ac243c2a160cf509948fed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4be4315c_69a87bae",
+        "filename": "ro_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-11-29T07:07:35Z",
+      "side": 1,
+      "message": "receiver name cannot be an underscore, just to maintain uniformity for receiving names I had kept it, another option is I can omit the name.",
+      "parentUuid": "4b4780c2_e40553f8",
       "revId": "49a9082904ef83abd9ac243c2a160cf509948fed",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
