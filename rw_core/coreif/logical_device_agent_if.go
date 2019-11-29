@@ -31,4 +31,5 @@ type LogicalDeviceAgent interface {
 	GetDeviceGraph() *graph.DeviceGraph
 	GetWildcardInputPorts(excludePort ...uint32) []uint32
 	GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop
+	GetNNIPorts() []uint32
 }
