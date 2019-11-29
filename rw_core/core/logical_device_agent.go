@@ -1368,7 +1368,7 @@ func (agent *LogicalDeviceAgent) GetRoute(ingressPortNo uint32, egressPortNo uin
 		}
 		//treat it as if the output port is the first NNI of the OLT
 		var err error
-		if egressPortNo, err = agent.getFirstNNIPort(); err != nil {
+		if egressPortNo, err = agent.GetFirstNNIPort(); err != nil {
 			log.Warnw("no-nni-port", log.Fields{"error": err})
 			return nil
 		}
@@ -1730,7 +1730,7 @@ func (agent *LogicalDeviceAgent) isNNIPort(portNo uint32) bool {
 	return false
 }
 
-func (agent *LogicalDeviceAgent) getFirstNNIPort() (uint32, error) {
+func (agent *LogicalDeviceAgent) GetFirstNNIPort() (uint32, error) {
 	agent.lockLogicalPortsNo.RLock()
 	defer agent.lockLogicalPortsNo.RUnlock()
 	for portNo, nni := range agent.logicalPortsNo {
