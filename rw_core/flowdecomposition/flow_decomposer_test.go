@@ -17,6 +17,8 @@ package flowdecomposition
 
 import (
 	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/opencord/voltha-go/rw_core/graph"
 	"github.com/opencord/voltha-go/rw_core/mocks"
@@ -120,6 +122,7 @@ type testFlowDecomposer struct {
 	defaultRules *fu.DeviceRules
 	deviceGraph  *graph.DeviceGraph
 	fd           *FlowDecomposer
+	logicalPortsNo     map[uint32]bool
 }
 
 func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
@@ -127,13 +130,18 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	tfd.dMgr = deviceMgr
 
 	tfd.logicalPorts = make(map[uint32]*voltha.LogicalPort)
+	tfd.logicalPortsNo = make(map[uint32]bool)
 	// Go protobuf interpreted absence of a port as 0, so we can't use port #0 as an openflow
 	// port
 	tfd.logicalPorts[10] = &voltha.LogicalPort{Id: "10", DeviceId: "olt", DevicePortNo: 2}
+	tfd.logicalPorts[65536] = &voltha.LogicalPort{Id: "65536", DeviceId: "olt", DevicePortNo: 65536}
 	tfd.logicalPorts[1] = &voltha.LogicalPort{Id: "1", DeviceId: "onu1", DevicePortNo: 2}
 	tfd.logicalPorts[2] = &voltha.LogicalPort{Id: "2", DeviceId: "onu2", DevicePortNo: 2}
 	tfd.logicalPorts[3] = &voltha.LogicalPort{Id: "3", DeviceId: "onu3", DevicePortNo: 2}
 	tfd.logicalPorts[4] = &voltha.LogicalPort{Id: "4", DeviceId: "onu4", DevicePortNo: 2}
+
+	tfd.logicalPortsNo[10] = false
+	tfd.logicalPortsNo[65536] = true // nni
 
 	tfd.routes = make(map[graph.OFPortLink][]graph.RouteHop)
 
@@ -447,6 +455,15 @@ func (tfd *testFlowDecomposer) GetRoute(ingressPortNo uint32, egressPortNo uint3
 		}
 	}
 	return nil
+}
+
+func (tfd *testFlowDecomposer) GetFirstNNIPort() (uint32, error) {
+	for portNo, nni := range tfd.logicalPortsNo {
+		if nni {
+			return portNo, nil
+		}
+	}
+	return 0, status.Error(codes.NotFound, "No NNI port found")
 }
 
 func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
