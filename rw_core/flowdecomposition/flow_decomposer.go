@@ -483,6 +483,15 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreif.LogicalDeviceAgent, flow *o
 	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
 
 	inPortNo := fu.GetInPort(flow)
+	if fu.HasGroup(flow) && inPortNo == 0 {
+		//if no in-port specified for a multicast flow, put NNI port as in-port
+		//so that a valid route can be found for the flow
+		nni, err := agent.GetFirstNNIPort()
+		if err == nil {
+			inPortNo = nni
+			log.Debugw("Assigning NNI port as in-port for the multicast flow", log.Fields{"nni": nni, "flow:": flow})
+		}
+	}
 	outPortNo := fu.GetOutPort(flow)
 	deviceRules := fu.NewDeviceRules()
 	route := agent.GetRoute(inPortNo, outPortNo)
@@ -521,7 +530,12 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreif.LogicalDeviceAgent, flow *o
 			deviceRules = fd.processUnicastFlow(agent, route, inPortNo, outPortNo, flow)
 		} else if grpID := fu.GetGroup(flow); grpID != 0 && flow.TableId == 0 { //Multicast
 			log.Debugw("processMulticastFlow", log.Fields{"flows": flow})
-			deviceRules = fd.processMulticastFlow(agent, route, inPortNo, outPortNo, flow, grpID, groupMap)
+			//deviceRules = fd.processMulticastFlow(agent, route, inPortNo, outPortNo, flow, grpID, groupMap)
+			deviceRules.CreateEntryIfNotExist(route[0].DeviceID)
+			fg := fu.NewFlowsAndGroups()
+			fg.AddFlow(flow)
+			//return the multicast flow without decomposing it
+			deviceRules.AddFlowsAndGroup(route[0].DeviceID, fg)
 		} else {
 			log.Errorw("unknown-downstream-flow", log.Fields{"flow": *flow})
 		}
