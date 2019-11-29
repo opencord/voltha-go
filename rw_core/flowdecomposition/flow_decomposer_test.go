@@ -17,7 +17,6 @@ package flowdecomposition
 
 import (
 	"errors"
-
 	"github.com/opencord/voltha-go/rw_core/graph"
 	"github.com/opencord/voltha-go/rw_core/mocks"
 	fu "github.com/opencord/voltha-lib-go/v2/pkg/flows"
@@ -114,12 +113,13 @@ func (tdm *testDeviceManager) IsRootDevice(deviceID string) (bool, error) {
 }
 
 type testFlowDecomposer struct {
-	dMgr         *testDeviceManager
-	logicalPorts map[uint32]*voltha.LogicalPort
-	routes       map[graph.OFPortLink][]graph.RouteHop
-	defaultRules *fu.DeviceRules
-	deviceGraph  *graph.DeviceGraph
-	fd           *FlowDecomposer
+	dMgr           *testDeviceManager
+	logicalPorts   map[uint32]*voltha.LogicalPort
+	routes         map[graph.OFPortLink][]graph.RouteHop
+	defaultRules   *fu.DeviceRules
+	deviceGraph    *graph.DeviceGraph
+	fd             *FlowDecomposer
+	logicalPortsNo map[uint32]bool
 }
 
 func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
@@ -127,13 +127,18 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	tfd.dMgr = deviceMgr
 
 	tfd.logicalPorts = make(map[uint32]*voltha.LogicalPort)
+	tfd.logicalPortsNo = make(map[uint32]bool)
 	// Go protobuf interpreted absence of a port as 0, so we can't use port #0 as an openflow
 	// port
 	tfd.logicalPorts[10] = &voltha.LogicalPort{Id: "10", DeviceId: "olt", DevicePortNo: 2}
+	tfd.logicalPorts[65536] = &voltha.LogicalPort{Id: "65536", DeviceId: "olt", DevicePortNo: 65536}
 	tfd.logicalPorts[1] = &voltha.LogicalPort{Id: "1", DeviceId: "onu1", DevicePortNo: 2}
 	tfd.logicalPorts[2] = &voltha.LogicalPort{Id: "2", DeviceId: "onu2", DevicePortNo: 2}
 	tfd.logicalPorts[3] = &voltha.LogicalPort{Id: "3", DeviceId: "onu3", DevicePortNo: 2}
 	tfd.logicalPorts[4] = &voltha.LogicalPort{Id: "4", DeviceId: "onu4", DevicePortNo: 2}
+
+	tfd.logicalPortsNo[10] = false
+	tfd.logicalPortsNo[65536] = true // nni
 
 	tfd.routes = make(map[graph.OFPortLink][]graph.RouteHop)
 
@@ -447,6 +452,16 @@ func (tfd *testFlowDecomposer) GetRoute(ingressPortNo uint32, egressPortNo uint3
 		}
 	}
 	return nil
+}
+
+func (tfd *testFlowDecomposer) GetNNIPorts() []uint32 {
+	nniPorts := make([]uint32, 0)
+	for portNo, nni := range tfd.logicalPortsNo {
+		if nni {
+			nniPorts = append(nniPorts, portNo)
+		}
+	}
+	return nniPorts
 }
 
 func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
@@ -968,43 +983,24 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
 	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
-	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
-	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
-	assert.Equal(t, 0, onu1FlowAndGroup.Groups.Len())
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
 
 	fa = &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			fu.InPort(2),
+			fu.InPort(10),
 			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 170),
 			fu.VlanPcp(0),
 			fu.EthType(0x800),
 			fu.Ipv4Dst(0xe00a0a0a),
 		},
 		Actions: []*ofp.OfpAction{
-			fu.PopVlan(),
-			fu.Output(1),
+			fu.Group(10),
 		},
 	}
 	expectedOltFlow := fu.MkFlowStat(fa)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
-
-	fa = &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": 500},
-		MatchFields: []*ofp.OfpOxmOfbField{
-			fu.InPort(1),
-			fu.EthType(0x800),
-			fu.Ipv4Dst(0xe00a0a0a),
-		},
-		Actions: []*ofp.OfpAction{
-			fu.Output(2),
-		},
-	}
-	expectedOnu1Flow := fu.MkFlowStat(fa)
-	derivedFlow = onu1FlowAndGroup.GetFlow(0)
-	assert.Equal(t, expectedOnu1Flow.String(), derivedFlow.String())
 }

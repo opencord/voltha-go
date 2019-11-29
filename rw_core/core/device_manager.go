@@ -762,7 +762,7 @@ func (dMgr *DeviceManager) deletePeerPorts(fromDeviceID string, deviceID string)
 }
 
 func (dMgr *DeviceManager) addFlowsAndGroups(deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
-	log.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceID, "flowMetadata": flowMetadata})
+	log.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceID, "groups:": groups, "flowMetadata": flowMetadata})
 	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
 		return agent.addFlowsAndGroups(flows, groups, flowMetadata)
 	}
