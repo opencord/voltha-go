@@ -1772,3 +1772,16 @@ func (agent *LogicalDeviceAgent) getFirstNNIPort() (uint32, error) {
 	}
 	return 0, status.Error(codes.NotFound, "No NNI port found")
 }
+
+//GetNNIPorts returns NNI ports.
+func (agent *LogicalDeviceAgent) GetNNIPorts() []uint32 {
+	agent.lockLogicalPortsNo.RLock()
+	defer agent.lockLogicalPortsNo.RUnlock()
+	nniPorts := make([]uint32, 0)
+	for portNo, nni := range agent.logicalPortsNo {
+		if nni {
+			nniPorts = append(nniPorts, portNo)
+		}
+	}
+	return nniPorts
+}
