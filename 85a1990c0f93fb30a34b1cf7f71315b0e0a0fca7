@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44f44bf3_f0e7b933",
+        "filename": "ro_core/core/model_proxy_test.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "error check is in an odd placement, i.e. not right after assignment. Also, is an error return a failed test?",
+      "range": {
+        "startLine": 41,
+        "startChar": 1,
+        "endLine": 43,
+        "endChar": 2
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3931c058_6ab94ef3",
+        "filename": "ro_core/core/model_proxy_test.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "error check is in an odd placement, i.e. not right after assignment. Also, is an error return a failed test?",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 2
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e7b9ff_3869b8b1",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "Is crashing here the correct response, or does NewCore need to return an error and the caller need to decide if a crash is the correct response? a crash will just cause k8s to restart the container.",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 73
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e6e8a8a_f39dbc98",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "Is crashing here the correct response, or does NewCore need to return an error and the caller need to decide if a crash is the correct response? a crash will just cause k8s to restart the container.",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 71
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4abf08e7_c4b8c0cc",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "A fatal here will cause the container to crash and restart in k8s. Is this likely to fix the problem? If the issue is a connection to the kv store shouldn\u0027t this put the \"ready\" state to false and continue to retry to connect to the kv strore?",
+      "range": {
+        "startLine": 427,
+        "startChar": 0,
+        "endLine": 427,
+        "endChar": 49
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4af87fe6_033534f2",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "does this method need to return an error? returning false here and not an error is misleading to the caller.",
+      "range": {
+        "startLine": 424,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 14
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb3522f6_fdd02fe8",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "under what circumstances would device not be a `*voltha.Device`? And if it is not a `*voltha.Device` would that be more than just a not found error?",
+      "range": {
+        "startLine": 444,
+        "startChar": 0,
+        "endLine": 453,
+        "endChar": 1
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0953ef8f_907c37ae",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "why is an empty struct return if there is an error? the return value of a function should never be used if err !\u003d nil",
+      "range": {
+        "startLine": 491,
+        "startChar": 0,
+        "endLine": 491,
+        "endChar": 32
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73cb3460_428bc172",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 44
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "unused code should be removed, not commented out.",
+      "range": {
+        "startLine": 304,
+        "startChar": 0,
+        "endLine": 332,
+        "endChar": 3
+      },
+      "revId": "85a1990c0f93fb30a34b1cf7f71315b0e0a0fca7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
