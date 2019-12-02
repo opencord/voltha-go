@@ -1,0 +1,268 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b981ce5_89ae1343",
+        "filename": "db/model/event_bus.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "Not \"Get\"?",
+      "range": {
+        "startLine": 36,
+        "startChar": 2,
+        "endLine": 36,
+        "endChar": 5
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fccf6de_35f54b6c",
+        "filename": "db/model/model.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "Is this turning off a check on the result (err) return? Should that error be logged as well?",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 24
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef7f7d8a_b7b2eebb",
+        "filename": "db/model/node.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "len(pr) \u003e 0 only",
+      "range": {
+        "startLine": 354,
+        "startChar": 58,
+        "endLine": 354,
+        "endChar": 82
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08a3080b_26da1d89",
+        "filename": "db/model/node.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "SCA is suggesting using `_newKeyType :\u003d newKey.String()` as opposed to Sprintf. As this is used only a single place below, it would be better to replace the refernce to `_newKeyType` in the `if` below with just `newKey.String()`",
+      "range": {
+        "startLine": 537,
+        "startChar": 3,
+        "endLine": 537,
+        "endChar": 53
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "604a2e04_42dd8c49",
+        "filename": "db/model/node.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "either in this patchset or a separate JIRA unused code should be removed.",
+      "range": {
+        "startLine": 909,
+        "startChar": 0,
+        "endLine": 929,
+        "endChar": 74
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70e78f53_db01d5b0",
+        "filename": "db/model/node.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1010,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "can\u0027t len(revs) \u003d\u003d 0? and if so won\u0027t childRev \u003d revs[0] cause a panic?",
+      "range": {
+        "startLine": 1010,
+        "startChar": 97,
+        "endLine": 1010,
+        "endChar": 108
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2f3f1d1_d93c9de7",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "please see the comment in revision.go about the interface.",
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d94171bd_11c04a79",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "just need to check len(revs) \u003e 0, no nil check required.",
+      "range": {
+        "startLine": 279,
+        "startChar": 66,
+        "endLine": 279,
+        "endChar": 95
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0377f81_a73e7e73",
+        "filename": "db/model/non_persisted_revision.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "What the lint message is indicating is that instead of both checks, a simple `if len(ts) \u003e 0` will suffice. This is because in go if `ts`, which is of type `[]time.Time` is nil then `len(ts)` \u003d\u003d 0. So there is no need for the nil check.",
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01076a0b_acac7305",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "This method should not be exposed outside the package or the type root needs to be exposed outside the package. i suspect this method is package local only.",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 43
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67f6c76e_8682689d",
+        "filename": "db/model/revision.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "ok, this is going to get a bit more complicated. This interface is not used outside of the `model` package and as such should not start with a capital `R` as it is package locale. It may not need an interface unless there are multiple receivers (structs) that implement it. \n\nthis was highlighted because the `GetNode` method returns a package local type `node`. This pointed me to look deeper at this interface.\n\nThis change will filter through many files in the package.",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 36
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "660c7e36_a529cda4",
+        "filename": "db/model/root.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T19:21:43Z",
+      "side": 1,
+      "message": "if NewRoot is used outside the model package then the type `root` needs to be exposed outside the package. I suspect both the `Root` interface and this function are package local and should not be exposed outside the package.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 76
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
