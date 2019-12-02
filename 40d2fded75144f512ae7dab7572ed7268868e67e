@@ -137,6 +137,30 @@
       "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b68c3e7_3a78a490",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T20:02:04Z",
+      "side": 1,
+      "message": "need a response to this question.",
+      "parentUuid": "50b9b837_981ff912",
+      "range": {
+        "startLine": 148,
+        "startChar": 100,
+        "endLine": 148,
+        "endChar": 105
+      },
+      "revId": "40d2fded75144f512ae7dab7572ed7268868e67e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
