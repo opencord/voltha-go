@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "d6160086_f95dccc5",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-02T17:07:22Z",
+      "side": 1,
+      "message": "Should not be returning nil on error (due to a gRPC limitation).\nReturn a `\u0026voltha.EventFilters{}` instead.\n\nSee https://github.com/grpc/grpc-go/issues/532 for more details.",
+      "revId": "05250968cb65b2f56fc14e1bc1d48bf39073750c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "76d62510_424f6965",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 21
@@ -36,6 +53,23 @@
         "endLine": 948,
         "endChar": 1
       },
+      "revId": "05250968cb65b2f56fc14e1bc1d48bf39073750c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cc97136_4c71267f",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 957,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-02T17:07:22Z",
+      "side": 1,
+      "message": "Should not be returning nil on error (due to a gRPC limitation).\nReturn a `\u0026voltha.EventFilters{}` instead.",
       "revId": "05250968cb65b2f56fc14e1bc1d48bf39073750c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
