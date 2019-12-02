@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57edebdd_50e2b844",
+        "filename": "ro_core/core/model_proxy_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T16:52:05Z",
+      "side": 1,
+      "message": "Please make sure that there is a JIRA for this \"TODO\" and add the JIRA ID as part of the comment.",
+      "revId": "05250968cb65b2f56fc14e1bc1d48bf39073750c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76d62510_424f6965",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T16:52:05Z",
+      "side": 1,
+      "message": "If this is unimplemented, why are we returning something in test mode? If it is unimplemented in production, I would think we want it unimplemented in test mode as well.",
+      "range": {
+        "startLine": 941,
+        "startChar": 0,
+        "endLine": 948,
+        "endChar": 1
+      },
+      "revId": "05250968cb65b2f56fc14e1bc1d48bf39073750c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34e48203_7eeea4b2",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-02T16:52:05Z",
+      "side": 1,
+      "message": "If this is unimplemented, why are we returning something in test mode? If it is unimplemented in production, I would think we want it unimplemented in test mode as well.",
+      "range": {
+        "startLine": 951,
+        "startChar": 0,
+        "endLine": 958,
+        "endChar": 1
+      },
+      "revId": "05250968cb65b2f56fc14e1bc1d48bf39073750c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
