@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19753c4e_9f2b95d5",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-02T17:07:22Z",
+      "side": 1,
+      "message": "Comment is out of sync, remove or fix.",
+      "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34a3c2c1_3cbbd77f",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-02T17:07:22Z",
+      "side": 1,
+      "message": "Comment is out of sync.",
+      "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6167272f_c75fca97",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-02T17:07:22Z",
+      "side": 1,
+      "message": "Why are there both ListEventFilters() and ListEventFilter() ?",
+      "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
