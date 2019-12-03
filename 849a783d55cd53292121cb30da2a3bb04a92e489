@@ -50,6 +50,24 @@
       "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76c120c8_e67fe391",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-12-03T00:32:25Z",
+      "side": 1,
+      "message": "The protos only define `ListEventFilters`. Is this one an unintended duplicate?",
+      "parentUuid": "6167272f_c75fca97",
+      "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
