@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "60733eb9_a66741bc",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1000564
+      },
+      "writtenOn": "2019-12-03T07:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19753c4e_9f2b95d5",
+      "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34a3c2c1_3cbbd77f",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 15
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-02T17:07:22Z",
       "side": 1,
       "message": "Comment is out of sync.",
+      "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "502770b1_a94ccbe5",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1000564
+      },
+      "writtenOn": "2019-12-03T07:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34a3c2c1_3cbbd77f",
       "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -64,6 +100,24 @@
       "writtenOn": "2019-12-03T00:32:25Z",
       "side": 1,
       "message": "The protos only define `ListEventFilters`. Is this one an unintended duplicate?",
+      "parentUuid": "6167272f_c75fca97",
+      "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ba4d7ce_ee6e9105",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1000564
+      },
+      "writtenOn": "2019-12-03T07:30:50Z",
+      "side": 1,
+      "message": "Yes, this is an unintentional duplicate. ListEventFilters() is the only rpc.",
       "parentUuid": "6167272f_c75fca97",
       "revId": "849a783d55cd53292121cb30da2a3bb04a92e489",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
