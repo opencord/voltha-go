@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a4c350b_d30b1c90",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-03T15:02:21Z",
+      "side": 1,
+      "message": "Please ensure that any process started for these tests are cleaned up after the test .",
+      "revId": "9dc96671d570be07b93b7ddb80462f5cc49156cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "379552ea_77e4c6be",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-03T15:02:21Z",
+      "side": 1,
+      "message": "Make your config name and directory name unique.  Otherwise your tests will trip over existing tests that uses those names.",
+      "revId": "9dc96671d570be07b93b7ddb80462f5cc49156cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfc45848_0e26d81a",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-03T15:02:21Z",
+      "side": 1,
+      "message": "When do you close the etcdserver?  It needs to be stopped and closed",
+      "revId": "9dc96671d570be07b93b7ddb80462f5cc49156cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
