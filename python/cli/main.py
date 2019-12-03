@@ -481,6 +481,23 @@ class VolthaCli(Cmd):
         sub = AlarmFiltersCli(self.get_stub)
         sub.cmdloop()
 
+    def do_start_omci_test(self, line):
+        """
+        This is entry point to implement ON Demand API for optical parameter.
+        :param line:
+        :param opts:
+        :return:
+        """
+        device_id = line or self.default_device_id
+        self.poutput('Started Omci Test {}'.format(device_id))
+        try:
+            stub = self.get_stub()
+            self.poutput('params:%s' % device_id)
+            res = stub.StartOmciTestAction(voltha_pb2.ID(id=device_id))
+            self.poutput(dumps(pb2dict(res), indent=4))
+        except Exception as e:
+            self.poutput('Error %s' % e)
+
 
 class TestCli(VolthaCli):
     def __init__(self, history, voltha_grpc, get_stub, voltha_sim_rest):
