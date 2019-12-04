@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "69ba262b_1c2a04c8",
+        "filename": "db/model/model.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2019-12-04T04:54:32Z",
+      "side": 1,
+      "message": "Yes, the error should be logged, but make test is failing if I log this. Every other package has this call in its main, here it is called in init().",
+      "parentUuid": "2fccf6de_35f54b6c",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 24
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef7f7d8a_b7b2eebb",
         "filename": "db/model/node.go",
         "patchSetId": 14
