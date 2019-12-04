@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "18609fe0_fa50c767",
+        "filename": "db/model/model.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-04T17:34:29Z",
+      "side": 1,
+      "message": "log.CleanUp() probably shouldn\u0027t be called here at all.  The purpose of calling this in a defer in main() is probably to flush the log before the program exits.  In this case, flushing the log here has no observable effect.",
+      "parentUuid": "69ba262b_1c2a04c8",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 24
+      },
+      "revId": "61a40f9796ad7f915de3139d064a3a6d0b2c693f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef7f7d8a_b7b2eebb",
         "filename": "db/model/node.go",
         "patchSetId": 14
