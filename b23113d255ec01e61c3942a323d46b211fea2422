@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ffb5224_73f73f74",
+        "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/adapters/iAdapter.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-12-04T13:39:53Z",
+      "side": 1,
+      "message": "just a reminder, we will need to keep the python/pyvoltha adapter interfaces updated too.",
+      "range": {
+        "startLine": 42,
+        "startChar": 1,
+        "endLine": 43,
+        "endChar": 51
+      },
+      "revId": "b23113d255ec01e61c3942a323d46b211fea2422",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
