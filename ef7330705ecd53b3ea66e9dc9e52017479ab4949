@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b14e22e0_8838f0e8",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1000068
+      },
+      "writtenOn": "2019-12-05T23:31:06Z",
+      "side": 1,
+      "message": "Instead of simply commenting out this line, I would completely remove the line, and in addition remove the method processMulticastFlow as it is a completely bogus decomposition.\n\nThe current method \u0027decomposes\u0027 a multicast flow which points to a multicast group, into a bunch of unicast flows, one for each bucket in the group - this is totally and absolutely wrong, and a holdover from a time in the old voltha, when somebody had this bullshit idea to implement \u0027multicast\u0027 -- please remove it.\n\nAs for the bypassing of the decomposition itself, in the current multicast design, there are related unicast flows (for Video-on-demand) that are decomposed and sent to the onu-adaptor, that ends up triggering the OMCI task to create the specific multicast MEs for multicast. We could in principle, also trigger the ME creation from IGMP flows. This has not been implemented yet - see VOL-1599\n\nThe multicast flows themselves do not need decomposition - they are meant only for the OLT and they themselves do not trigger multicast ME creation. The multicast flow looks like this:\n\nmatch: multicast IP address\naction: group\nThe group has buckets with UNI port numbers.\n\nThe openolt adaptor will take the UNI port numbers and figure out if they are on the same or different PON ports. If they are on the same PON port then only 1 bucket is needed (as downstream is broadcast in the PON); if they are on different pon ports, then multiple buckets are needed for replication in the OLT. \n\nNow, you could argue that flow-decomposition could do the same figuring above, and replace the UNI ports in the buckets with PON port numbers, but it would then have to still relay the original UNI port numbers somehow to the openolt adaptor, similar to the \"tunnelId\" number Matt did for flow-decomposition for output ports. What Matt did for flows was fine as there was 1 output port, and so only 1 tunnelId needed. For multicast group buckets, it will end up with multiple such tunnelIds and I am not sure where we would put them --- seems like overkill.\n\nAs you can see, the ONU adaptor has nothing to do for each multicast flow/group - hence no decomposition is necessary. Once the ONU adaptor has created the multicast MEs and setup the ONU bridge to do IGMP snooping/filtering, its job is done.",
+      "revId": "ef7330705ecd53b3ea66e9dc9e52017479ab4949",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef0a8e3e_77809282",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 2
