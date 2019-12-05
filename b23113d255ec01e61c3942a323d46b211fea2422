@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "facabb5e_3e53ec1f",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-12-05T18:51:56Z",
+      "side": 1,
+      "message": "Please replace these with `return nil, errors.New(\"Unimplemented\")`. We\u0027ve had a discussion on slack and determined that is the correct convention, rather than returning an empty \u0026volthe.EventFilter{]. Please address all other occurrences in this files. Then patch should be ready for merge.",
+      "range": {
+        "startLine": 910,
+        "startChar": 1,
+        "endLine": 910,
+        "endChar": 58
+      },
+      "revId": "b23113d255ec01e61c3942a323d46b211fea2422",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ffb5224_73f73f74",
         "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/adapters/iAdapter.go",
         "patchSetId": 26
