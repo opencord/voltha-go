@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "67da3460_1797d604",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-12-06T01:57:07Z",
+      "side": 1,
+      "message": "it would seem most of this function would go away since most of the group/bucket work is done only on the olt.  better to take the code below and have it moved here.  If this whole function needs rewriting so be it.  the code would be easier for unit testing and error handling.\n\nand from what i understand the ONU based flows (OMCI ME) would get created more generally from the IGMP trap flows, not here.   so no need to decompose.",
+      "range": {
+        "startLine": 432,
+        "startChar": 2,
+        "endLine": 434,
+        "endChar": 24
+      },
+      "revId": "ef7330705ecd53b3ea66e9dc9e52017479ab4949",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b14e22e0_8838f0e8",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 2
@@ -30,6 +53,29 @@
       "writtenOn": "2019-11-29T15:58:06Z",
       "side": 1,
       "message": "No check whether a groupID exist?",
+      "revId": "ef7330705ecd53b3ea66e9dc9e52017479ab4949",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9b6219b_5ade6f8e",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2019-12-06T01:57:07Z",
+      "side": 1,
+      "message": "i think it would make more sense to just move this (albeit simple) logic to the processMulticastFlow() function and completely rewrite it.",
+      "range": {
+        "startLine": 535,
+        "startChar": 3,
+        "endLine": 538,
+        "endChar": 54
+      },
       "revId": "ef7330705ecd53b3ea66e9dc9e52017479ab4949",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
