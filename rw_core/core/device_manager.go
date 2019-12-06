@@ -269,7 +269,7 @@ func (dMgr *DeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
 func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
 	log.Debugw("GetDevice", log.Fields{"deviceid": id})
 	if agent := dMgr.getDeviceAgent(id); agent != nil {
-		return agent.getDevice()
+		return agent.getDevice(), nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -535,10 +535,7 @@ func (dMgr *DeviceManager) load(deviceID string) error {
 		return err
 	}
 	// Get the loaded device details
-	var device *voltha.Device
-	if device, err = dAgent.getDevice(); err != nil {
-		return err
-	}
+	device := dAgent.getDevice()
 
 	// If the device is in Pre-provisioning or deleted state stop here
 	if device.AdminState == voltha.AdminState_PREPROVISIONED || device.AdminState == voltha.AdminState_DELETED {

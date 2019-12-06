@@ -27,7 +27,7 @@ import (
 
 // LogicalDeviceAgent represents a generic agent
 type LogicalDeviceAgent interface {
-	GetLogicalDevice() (*voltha.LogicalDevice, error)
+	GetLogicalDevice() *voltha.LogicalDevice
 	GetDeviceGraph() *graph.DeviceGraph
 	GetWildcardInputPorts(excludePort ...uint32) []uint32
 	GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop
