@@ -92,7 +92,7 @@ func (onuA *ONUAdapter) Adopt_device(device *voltha.Device) error { // nolint
 			Type:       voltha.Port_PON_ONU,
 			OperStatus: voltha.OperStatus_ACTIVE,
 			Peers: []*voltha.Port_PeerPort{{DeviceId: d.ParentId, // Peer device  is OLT
-				PortNo: uniPortNo}}, // Peer port is UNI port
+				PortNo: device.ParentPortNo}}, // Peer port is parent's port number
 		}
 		if err = onuA.coreProxy.PortCreated(context.TODO(), d.Id, ponPort); err != nil {
 			log.Fatalf("PortCreated-failed-%s", err)

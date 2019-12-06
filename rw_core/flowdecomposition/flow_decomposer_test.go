@@ -401,8 +401,8 @@ func (tfd *testFlowDecomposer) GetDeviceLogicalID() string {
 	return ""
 }
 
-func (tfd *testFlowDecomposer) GetLogicalDevice() (*voltha.LogicalDevice, error) {
-	return nil, nil
+func (tfd *testFlowDecomposer) GetLogicalDevice() *voltha.LogicalDevice {
+	return nil
 }
 
 func (tfd *testFlowDecomposer) GetDeviceGraph() *graph.DeviceGraph {
