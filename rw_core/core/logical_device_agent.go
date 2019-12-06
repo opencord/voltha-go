@@ -1111,9 +1111,15 @@ func (agent *LogicalDeviceAgent) groupAdd(groupMod *ofp.OfpGroupMod) error {
 	if fu.FindGroup(groups, groupMod.GroupId) == -1 {
 		groups = append(groups, fu.GroupEntryFromGroupMod(groupMod))
 
-		deviceRules := agent.flowDecomposer.DecomposeRules(agent, *lDevice.Flows, ofp.FlowGroups{Items: groups})
-		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
-		if err := agent.addDeviceFlowsAndGroups(deviceRules, nil); err != nil {
+		deviceRules := fu.NewDeviceRules()
+		deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
+		fg := fu.NewFlowsAndGroups()
+		fg.AddGroup(fu.GroupEntryFromGroupMod(groupMod))
+		deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
+
+		log.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String()})
+		var flowMetadata voltha.FlowMetadata
+		if err := agent.addDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
 			log.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
@@ -1202,10 +1208,15 @@ func (agent *LogicalDeviceAgent) groupModify(groupMod *ofp.OfpGroupMod) error {
 	groups[idx] = groupEntry
 	groupsChanged = true
 	if groupsChanged {
-		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: lDevice.Flows.Items}, ofp.FlowGroups{Items: groups})
-		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
+		deviceRules := fu.NewDeviceRules()
+		deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
+		fg := fu.NewFlowsAndGroups()
+		fg.AddGroup(fu.GroupEntryFromGroupMod(groupMod))
+		deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
 
-		if err := agent.updateDeviceFlowsAndGroups(deviceRules, nil); err != nil {
+		log.Debugw("rules", log.Fields{"rules for group-modify": deviceRules.String()})
+		var flowMetadata voltha.FlowMetadata
+		if err := agent.updateDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
 			log.Errorw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			return err
 		}
