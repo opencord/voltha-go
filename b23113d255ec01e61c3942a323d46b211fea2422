@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7f2191df_64c195bd",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1000564
+      },
+      "writtenOn": "2019-12-06T13:36:14Z",
+      "side": 1,
+      "message": "Changes are made as suggested.",
+      "parentUuid": "facabb5e_3e53ec1f",
+      "range": {
+        "startLine": 910,
+        "startChar": 1,
+        "endLine": 910,
+        "endChar": 58
+      },
+      "revId": "b23113d255ec01e61c3942a323d46b211fea2422",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ffb5224_73f73f74",
         "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/adapters/iAdapter.go",
         "patchSetId": 26
