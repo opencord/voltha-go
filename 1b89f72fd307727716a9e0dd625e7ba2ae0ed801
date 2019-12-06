@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7849a6c6_a7bcad56",
+        "filename": "db/model/node.go",
+        "patchSetId": 46
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-06T15:20:19Z",
+      "side": 1,
+      "message": "Here err is nil, might as well return nil.",
+      "revId": "1b89f72fd307727716a9e0dd625e7ba2ae0ed801",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbd8bc45_a51d1017",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 46
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-06T15:20:19Z",
+      "side": 1,
+      "message": "It\u0027s ok to crash the core right away in this scenario.  Otherwise, the Core will eventually crash on null pointer exception when the clusterDataProxy is used.",
+      "revId": "1b89f72fd307727716a9e0dd625e7ba2ae0ed801",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b15d4e7_d9173839",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 46
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-06T15:20:19Z",
+      "side": 1,
+      "message": "Same comments as above.",
+      "revId": "1b89f72fd307727716a9e0dd625e7ba2ae0ed801",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8298912_e2516201",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 46
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-06T15:20:19Z",
+      "side": 1,
+      "message": "If the Core cannot be created without error then crash it.",
+      "revId": "1b89f72fd307727716a9e0dd625e7ba2ae0ed801",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81386c4f_be6bbac5",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 46
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-06T15:20:19Z",
+      "side": 1,
+      "message": "Same as above",
+      "revId": "1b89f72fd307727716a9e0dd625e7ba2ae0ed801",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5ab5e27_cbb36dad",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 46
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-06T15:20:19Z",
+      "side": 1,
+      "message": "The error should be \"Failed to retrieve parent devices\"",
+      "revId": "1b89f72fd307727716a9e0dd625e7ba2ae0ed801",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
