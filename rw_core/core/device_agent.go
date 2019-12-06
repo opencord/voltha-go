@@ -49,6 +49,7 @@ type DeviceAgent struct {
 	deviceProxy      *model.Proxy
 	exitChannel      chan int
 	lockDevice       sync.RWMutex
+	lastData         *voltha.Device
 	defaultTimeout   int64
 }
 
@@ -58,6 +59,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	agent.adapterProxy = ap
 	if device.Id == "" {
 		agent.deviceID = CreateDeviceID()
+		device.Id = agent.deviceID
 	} else {
 		agent.deviceID = device.Id
 	}
@@ -71,6 +73,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	agent.clusterDataProxy = cdProxy
 	agent.lockDevice = sync.RWMutex{}
 	agent.defaultTimeout = timeout
+	agent.lastData = proto.Clone(device).(*voltha.Device)
 	return &agent
 }
 
@@ -90,6 +93,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 			var ok bool
 			if device, ok = loadedDevice.(*voltha.Device); ok {
 				agent.deviceType = device.Adapter
+				agent.lastData = proto.Clone(device).(*voltha.Device)
 			} else {
 				log.Errorw("failed-to-convert-device", log.Fields{"deviceId": agent.deviceID})
 				return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
@@ -120,6 +124,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 			log.Errorw("failed-to-add-device", log.Fields{"deviceId": agent.deviceID})
 			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s", agent.deviceID)
 		}
+		agent.lastData = proto.Clone(device).(*voltha.Device)
 	}
 
 	agent.deviceProxy = agent.clusterDataProxy.CreateProxy(ctx, "/devices/"+agent.deviceID, false)
@@ -152,6 +157,7 @@ func (agent *DeviceAgent) reconcileWithKVStore() {
 	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 1, true, ""); device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			agent.deviceType = d.Adapter
+			agent.lastData = proto.Clone(d).(*voltha.Device)
 			log.Debugw("reconciled-device-agent-devicetype", log.Fields{"Id": agent.deviceID, "type": agent.deviceType})
 		}
 	}
@@ -161,25 +167,14 @@ func (agent *DeviceAgent) reconcileWithKVStore() {
 func (agent *DeviceAgent) getDevice() (*voltha.Device, error) {
 	agent.lockDevice.RLock()
 	defer agent.lockDevice.RUnlock()
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, ""); device != nil {
-		if d, ok := device.(*voltha.Device); ok {
-			cloned := proto.Clone(d).(*voltha.Device)
-			return cloned, nil
-		}
-	}
-	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
+
+	return agent.lastData, nil
 }
 
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 // This function is meant so that we do not have duplicate code all over the device agent functions
 func (agent *DeviceAgent) getDeviceWithoutLock() (*voltha.Device, error) {
-	if device := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 0, false, ""); device != nil {
-		if d, ok := device.(*voltha.Device); ok {
-			cloned := proto.Clone(d).(*voltha.Device)
-			return cloned, nil
-		}
-	}
-	return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
+	return agent.lastData, nil
 }
 
 // enableDevice activates a preprovisioned or a disable device
@@ -1390,6 +1385,8 @@ func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(device *voltha.Device, 
 		return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceID)
 	}
 	log.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
+
+	agent.lastData = proto.Clone(device).(*voltha.Device)
 
 	return nil
 }
