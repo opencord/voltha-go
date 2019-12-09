@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "dd8bc14d_943ca471",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 46
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000619
+      },
+      "writtenOn": "2019-12-09T06:20:34Z",
+      "side": 1,
+      "message": "Hi Khen, David had mentioned earlier that crashing may not be the correct response. Could you discuss and let me know how to proceed. \nhttps://gerrit.opencord.org/#/c/16169/44/rw_core/core/core.go",
+      "parentUuid": "cbd8bc45_a51d1017",
+      "revId": "1b89f72fd307727716a9e0dd625e7ba2ae0ed801",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b15d4e7_d9173839",
         "filename": "ro_core/core/core.go",
         "patchSetId": 46
