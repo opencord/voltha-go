@@ -298,8 +298,8 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+		p.GetRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(ctx, pathLock + "_")
 	}
 
 	result := p.GetRoot().Update(ctx, fullPath, data, strict, txid, nil)
@@ -344,8 +344,8 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+		p.GetRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(ctx, pathLock + "_")
 	}
 
 	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
@@ -388,8 +388,8 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+		p.GetRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(ctx, pathLock + "_")
 	}
 
 	result := p.GetRoot().Add(ctx, fullPath, data, txid, nil)
@@ -432,8 +432,8 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) interface{
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+		p.GetRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(ctx, pathLock + "_")
 	}
 
 	result := p.GetRoot().Remove(ctx, fullPath, txid, nil)
@@ -477,8 +477,8 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) *P
 	})
 
 	if p.GetRoot().KvStore != nil {
-		p.GetRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL)
-		defer p.GetRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+		p.GetRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL)
+		defer p.GetRoot().KvStore.Client.ReleaseReservation(ctx, pathLock + "_")
 	}
 
 	return p.GetRoot().CreateProxy(ctx, fullPath, exclusive)
@@ -491,8 +491,8 @@ func (p *Proxy) OpenTransaction() *Transaction {
 }
 
 // commitTransaction will apply and merge modifications made in the transaction branch to the data model
-func (p *Proxy) commitTransaction(txid string) {
-	p.GetRoot().FoldTxBranch(txid)
+func (p *Proxy) commitTransaction(ctx context.Context, txid string) {
+	p.GetRoot().FoldTxBranch(ctx, txid)
 }
 
 // cancelTransaction will terminate a transaction branch along will all changes within it
