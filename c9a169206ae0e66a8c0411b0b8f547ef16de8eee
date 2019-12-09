@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa547a19_96f8b948",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-09T21:26:52Z",
+      "side": 1,
+      "message": "- should this be done as a `defer` call as opposed to a check here\n- @khen original comment spoke about a stop and close this is only stopped. is there more that needs to be done?",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 3
+      },
+      "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
