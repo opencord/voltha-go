@@ -37,7 +37,7 @@ const (
 
 // Node interface is an abstraction of the node data structure
 type Node interface {
-	MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple)
+	MakeLatest(ctx context.Context, branch *Branch, revision Revision, changeAnnouncement []ChangeTuple)
 
 	// CRUD functions
 	Add(ctx context.Context, path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision
@@ -689,7 +689,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 
 				updatedRev := rev.UpdateChildren(ctx, name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
-				childRev.SetupWatch(childRev.GetName())
+				childRev.SetupWatch(ctx, childRev.GetName())
 
 				n.makeLatest(branch, updatedRev, changes)
 
@@ -831,7 +831,7 @@ func (n *node) Remove(ctx context.Context, path string, txid string, makeBranch 
 					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
 				}
 
-				childRev.StorageDrop(txid, true)
+				childRev.StorageDrop(ctx, txid, true)
 				GetRevCache().Delete(childRev.GetName())
 
 				branch.LatestLock.Lock()
@@ -875,12 +875,12 @@ func (n *node) DeleteBranch(txid string) {
 	delete(n.Branches, txid)
 }
 
-func (n *node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
+func (n *node) mergeChild(ctx context.Context, txid string, dryRun bool) func(Revision) Revision {
 	f := func(rev Revision) Revision {
 		childBranch := rev.GetBranch()
 
 		if childBranch.Txid == txid {
-			rev, _ = childBranch.Node.MergeBranch(txid, dryRun)
+			rev, _ = childBranch.Node.MergeBranch(ctx, txid, dryRun)
 		}
 
 		return rev
@@ -889,7 +889,7 @@ func (n *node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
 }
 
 // MergeBranch will integrate the contents of a transaction branch within the latest branch of a given node
-func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
+func (n *node) MergeBranch(ctx context.Context, txid string, dryRun bool) (Revision, error) {
 	srcBranch := n.GetBranch(txid)
 	dstBranch := n.GetBranch(NONE)
 
@@ -897,7 +897,7 @@ func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 	srcRev := srcBranch.GetLatest()
 	dstRev := dstBranch.GetLatest()
 
-	rev, changes := Merge3Way(forkRev, srcRev, dstRev, n.mergeChild(txid, dryRun), dryRun)
+	rev, changes := Merge3Way(ctx, forkRev, srcRev, dstRev, n.mergeChild(ctx, txid, dryRun), dryRun)
 
 	if !dryRun {
 		if rev != nil {
