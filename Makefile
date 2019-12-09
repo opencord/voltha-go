@@ -31,8 +31,6 @@ DOCKER_REPOSITORY          ?=
 DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
 RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core
 ROCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-core
-OFAGENT_IMAGENAME          := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent
-CLI_IMAGENAME              := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli
 
 ## Docker labels. Only set ref and commit date if committed
 DOCKER_LABEL_VCS_URL       ?= $(shell git remote get-url $(shell git remote))
@@ -57,10 +55,9 @@ DOCKER_BUILD_ARGS ?= \
 	--build-arg org_opencord_vcs_dirty="${DOCKER_LABEL_VCS_DIRTY}"
 
 DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
-	--build-arg LOCAL_PYVOLTHA=${LOCAL_PYVOLTHA} \
 	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
 
-.PHONY: rw_core ro_core local-protos local-pyvoltha
+.PHONY: rw_core ro_core local-protos
 
 # This should to be the first and default target in this Makefile
 help:
@@ -71,11 +68,8 @@ help:
 	@echo "                         - If this is the first time you are building, choose 'make build' option."
 	@echo "rw_core              : Build the rw_core docker image"
 	@echo "ro_core              : Build the ro_core docker image"
-	@echo "ofagent              : Build the openflow agent docker image"
-	@echo "cli                  : Build the voltha CLI docker image"
-	@echo "venv                 : Build local Python virtualenv"
 	@echo "clean                : Remove files created by the build and tests"
-	@echo "distclean            : Remove venv directory"
+	@echo "distclean            : Remove sca directory and clean"
 	@echo "docker-push          : Push the docker images to an external repository"
 	@echo "lint-dockerfile      : Perform static analysis on Dockerfiles"
 	@echo "lint-style           : Verify code is properly gofmt-ed"
@@ -88,13 +82,9 @@ help:
 
 ## Local Development Helpers
 local-protos:
-	@mkdir -p python/local_imports
 ifdef LOCAL_PROTOS
 	mkdir -p vendor/github.com/opencord/voltha-protos/v2/go
 	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v2/go
-	rm -rf python/local_imports/voltha-protos
-	mkdir -p python/local_imports/voltha-protos/dist
-	cp ${LOCAL_PROTOS}/dist/*.tar.gz python/local_imports/voltha-protos/dist/
 endif
 
 ## Local Development Helpers
@@ -104,37 +94,11 @@ ifdef LOCAL_LIB_GO
 	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v2/pkg/
 endif
 
-local-pyvoltha:
-	@mkdir -p python/local_imports
-ifdef LOCAL_PYVOLTHA
-	rm -rf python/local_imports/pyvoltha
-	mkdir -p python/local_imports/pyvoltha/dist
-	cp ${LOCAL_PYVOLTHA}/dist/*.tar.gz python/local_imports/pyvoltha/dist/
-endif
-
-## Python venv dev environment
-
-VENVDIR := python/venv-volthago
-
-venv: distclean local-protos local-pyvoltha
-	virtualenv ${VENVDIR};\
-	source ./${VENVDIR}/bin/activate ; set -u ;\
-	rm -f ${VENVDIR}/local/bin ${VENVDIR}/local/lib ${VENVDIR}/local/include ;\
-	pip install -r python/requirements.txt
-ifdef LOCAL_PYVOLTHA
-	source ./${VENVDIR}/bin/activate ; set -u ;\
-	pip install python/local_imports/pyvoltha/dist/*.tar.gz
-endif
-ifdef LOCAL_PROTOS
-	source ./${VENVDIR}/bin/activate ; set -u ;\
-	pip install python/local_imports/voltha-protos/dist/*.tar.gz
-endif
-
 ## Docker targets
 
 build: docker-build
 
-docker-build: rw_core ro_core ofagent cli
+docker-build: rw_core ro_core
 
 rw_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -t ${RWCORE_IMAGENAME}:latest -f docker/Dockerfile.rw_core .
@@ -142,17 +106,9 @@ rw_core: local-protos local-lib-go
 ro_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${ROCORE_IMAGENAME}:${DOCKER_TAG} -t ${ROCORE_IMAGENAME}:latest -f docker/Dockerfile.ro_core .
 
-ofagent: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${OFAGENT_IMAGENAME}:${DOCKER_TAG} -t ${OFAGENT_IMAGENAME}:latest -f python/docker/Dockerfile.ofagent python
-
-cli: local-protos local-pyvoltha
-	docker build $(DOCKER_BUILD_ARGS_LOCAL) -t ${CLI_IMAGENAME}:${DOCKER_TAG} -t ${CLI_IMAGENAME}:latest -f python/docker/Dockerfile.cli python
-
 docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 	docker push ${ROCORE_IMAGENAME}:${DOCKER_TAG}
-	docker push ${OFAGENT_IMAGENAME}:${DOCKER_TAG}
-	docker push ${CLI_IMAGENAME}:${DOCKER_TAG}
 
 ## lint and unit tests
 
@@ -238,7 +194,7 @@ endif
 sca: golangci_lint_tool_install
 	rm -rf ./sca-report
 	@mkdir -p ./sca-report
-	$(GOLANGCI_LINT_TOOL) run -E golint -D structcheck --out-format junit-xml ./cli/... ./rw_core/... ./ro_core/... ./tests/... ./common/... 2>&1 | tee ./sca-report/sca-report.xml
+	$(GOLANGCI_LINT_TOOL) run -E golint -D structcheck --out-format junit-xml ./rw_core/... ./ro_core/... ./tests/... ./common/... 2>&1 | tee ./sca-report/sca-report.xml
 
 test: go_junit_install gocover_cobertura_install local-lib-go
 	@mkdir -p ./tests/results
@@ -249,11 +205,9 @@ test: go_junit_install gocover_cobertura_install local-lib-go
 	exit $$RETURN
 
 clean:
-	rm -rf python/local_imports
-	find python -name '*.pyc' | xargs rm -f
 
 distclean: clean
-	rm -rf ${VENVDIR} ./sca_report
+	rm -rf ./sca_report
 
 mod-update:
 	go mod tidy
