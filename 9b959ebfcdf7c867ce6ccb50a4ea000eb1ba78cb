@@ -22,6 +22,30 @@
       "revId": "9b959ebfcdf7c867ce6ccb50a4ea000eb1ba78cb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25c7d5d1_33ee5da5",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-12-10T17:30:25Z",
+      "side": 0,
+      "message": "I saw that - that\u0027s the work Don did here?: https://jira.opencord.org/browse/VOL-1552 \n\nI tried removing it which had `git mod` implications, so I\u0027ll put that in a different patchset.",
+      "parentUuid": "8ad8b626_3438df17",
+      "range": {
+        "startLine": 241,
+        "startChar": 77,
+        "endLine": 241,
+        "endChar": 81
+      },
+      "revId": "9b959ebfcdf7c867ce6ccb50a4ea000eb1ba78cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }

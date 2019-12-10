@@ -16,6 +16,24 @@
       "revId": "b9b1afb342c3e9b8d15f940e7c32379a37d49fd5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ca78096_6aadceb8",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-12-10T17:30:25Z",
+      "side": 1,
+      "message": "I would having just `clean` and no `distclean` be OK?",
+      "parentUuid": "5904b404_02544003",
+      "revId": "b9b1afb342c3e9b8d15f940e7c32379a37d49fd5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
