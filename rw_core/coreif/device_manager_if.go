@@ -20,11 +20,14 @@ time.
 
 package coreif
 
-import "github.com/opencord/voltha-protos/v2/go/voltha"
+import (
+	"context"
+	"github.com/opencord/voltha-protos/v2/go/voltha"
+)
 
 // DeviceManager represents a generic device manager
 type DeviceManager interface {
-	GetDevice(string) (*voltha.Device, error)
+	GetDevice(context.Context, string) (*voltha.Device, error)
 	IsRootDevice(string) (bool, error)
 	NotifyInvalidTransition(*voltha.Device) error
 	SetAdminStateToEnable(*voltha.Device) error

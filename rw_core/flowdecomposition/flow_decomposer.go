@@ -17,6 +17,7 @@
 package flowdecomposition
 
 import (
+	"context"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-go/rw_core/graph"
@@ -46,7 +47,7 @@ func NewFlowDecomposer(deviceMgr coreif.DeviceManager) *FlowDecomposer {
 }
 
 //DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
-func (fd *FlowDecomposer) DecomposeRules(agent coreif.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) *fu.DeviceRules {
+func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent coreif.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) *fu.DeviceRules {
 	deviceRules := *fu.NewDeviceRules()
 	devicesToUpdate := make(map[string]string)
 
@@ -57,7 +58,7 @@ func (fd *FlowDecomposer) DecomposeRules(agent coreif.LogicalDeviceAgent, flows 
 
 	var decomposedRules *fu.DeviceRules
 	for _, flow := range flows.Items {
-		decomposedRules = fd.decomposeFlow(agent, flow, groupMap)
+		decomposedRules = fd.decomposeFlow(ctx, agent, flow, groupMap)
 		for deviceID, flowAndGroups := range decomposedRules.Rules {
 			deviceRules.CreateEntryIfNotExist(deviceID)
 			deviceRules.Rules[deviceID].AddFrom(flowAndGroups)
@@ -479,7 +480,7 @@ func (fd *FlowDecomposer) processMulticastFlow(agent coreif.LogicalDeviceAgent, 
 }
 
 // decomposeFlow decomposes a flow for a logical device into flows for each physical device
-func (fd *FlowDecomposer) decomposeFlow(agent coreif.LogicalDeviceAgent, flow *ofp.OfpFlowStats,
+func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.LogicalDeviceAgent, flow *ofp.OfpFlowStats,
 	groupMap map[uint32]*ofp.OfpGroupEntry) *fu.DeviceRules {
 
 	inPortNo := fu.GetInPort(flow)
@@ -505,7 +506,7 @@ func (fd *FlowDecomposer) decomposeFlow(agent coreif.LogicalDeviceAgent, flow *o
 	} else {
 		var ingressDevice *voltha.Device
 		var err error
-		if ingressDevice, err = fd.deviceMgr.GetDevice(route[0].DeviceID); err != nil {
+		if ingressDevice, err = fd.deviceMgr.GetDevice(ctx, route[0].DeviceID); err != nil {
 			log.Errorw("ingress-device-not-found", log.Fields{"deviceId": route[0].DeviceID, "flow": flow})
 			return deviceRules
 		}

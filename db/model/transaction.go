@@ -65,7 +65,7 @@ func (t *Transaction) Cancel() {
 	t.proxy.cancelTransaction(t.txid)
 	t.txid = ""
 }
-func (t *Transaction) Commit() {
-	t.proxy.commitTransaction(t.txid)
+func (t *Transaction) Commit(ctx context.Context) {
+	t.proxy.commitTransaction(ctx, t.txid)
 	t.txid = ""
 }

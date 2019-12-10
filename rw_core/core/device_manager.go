@@ -116,7 +116,7 @@ func (dMgr *DeviceManager) deleteDeviceAgentFromMap(agent *DeviceAgent) {
 }
 
 // getDeviceAgent returns the agent managing the device.  If the device is not in memory, it will loads it, if it exists
-func (dMgr *DeviceManager) getDeviceAgent(deviceID string) *DeviceAgent {
+func (dMgr *DeviceManager) getDeviceAgent(ctx context.Context, deviceID string) *DeviceAgent {
 	agent, ok := dMgr.deviceAgents.Load(deviceID)
 	if ok {
 		return agent.(*DeviceAgent)
@@ -130,7 +130,7 @@ func (dMgr *DeviceManager) getDeviceAgent(deviceID string) *DeviceAgent {
 		}
 		// Register this device for ownership tracking
 		go func() {
-			_, err = dMgr.core.deviceOwnership.OwnedByMe(&utils.DeviceID{ID: deviceID})
+			_, err = dMgr.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: deviceID})
 			if err != nil {
 				log.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
 			}
@@ -180,7 +180,7 @@ func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Devi
 func (dMgr *DeviceManager) enableDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
 	log.Debugw("enableDevice", log.Fields{"deviceid": id})
 	var res interface{}
-	if agent := dMgr.getDeviceAgent(id.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.enableDevice(ctx)
 		log.Debugw("EnableDevice-result", log.Fields{"result": res})
 	}
@@ -191,7 +191,7 @@ func (dMgr *DeviceManager) enableDevice(ctx context.Context, id *voltha.ID, ch c
 func (dMgr *DeviceManager) disableDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
 	log.Debugw("disableDevice", log.Fields{"deviceid": id})
 	var res interface{}
-	if agent := dMgr.getDeviceAgent(id.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.disableDevice(ctx)
 		log.Debugw("disableDevice-result", log.Fields{"result": res})
 	} else {
@@ -204,7 +204,7 @@ func (dMgr *DeviceManager) disableDevice(ctx context.Context, id *voltha.ID, ch 
 func (dMgr *DeviceManager) rebootDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
 	log.Debugw("rebootDevice", log.Fields{"deviceid": id})
 	var res interface{}
-	if agent := dMgr.getDeviceAgent(id.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.rebootDevice(ctx)
 		log.Debugw("rebootDevice-result", log.Fields{"result": res})
 	} else {
@@ -216,7 +216,7 @@ func (dMgr *DeviceManager) rebootDevice(ctx context.Context, id *voltha.ID, ch c
 func (dMgr *DeviceManager) deleteDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
 	log.Debugw("deleteDevice", log.Fields{"deviceid": id})
 	var res interface{}
-	if agent := dMgr.getDeviceAgent(id.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.deleteDevice(ctx)
 		log.Debugw("deleteDevice-result", log.Fields{"result": res})
 	} else {
@@ -266,7 +266,7 @@ func (dMgr *DeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
 }
 
 // GetDevice will returns a device, either from memory or from the dB, if present
-func (dMgr *DeviceManager) GetDevice(id string) (*voltha.Device, error) {
+func (dMgr *DeviceManager) GetDevice(ctx context.Context, id string) (*voltha.Device, error) {
 	log.Debugw("GetDevice", log.Fields{"deviceid": id})
 	if agent := dMgr.getDeviceAgent(id); agent != nil {
 		return agent.getDevice()
@@ -692,16 +692,16 @@ func (dMgr *DeviceManager) reconcileChildDevices(parentDeviceID string) error {
 	return nil
 }
 
-func (dMgr *DeviceManager) updateDeviceUsingAdapterData(device *voltha.Device) error {
+func (dMgr *DeviceManager) updateDeviceUsingAdapterData(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("updateDeviceUsingAdapterData", log.Fields{"deviceid": device.Id, "device": device})
-	if agent := dMgr.getDeviceAgent(device.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
 		return agent.updateDeviceUsingAdapterData(device)
 	}
 	return status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
-func (dMgr *DeviceManager) addPort(deviceID string, port *voltha.Port) error {
-	agent := dMgr.getDeviceAgent(deviceID)
+func (dMgr *DeviceManager) addPort(ctx context.Context, deviceID string, port *voltha.Port) error {
+	agent := dMgr.getDeviceAgent(ctx, deviceID)
 	if agent != nil {
 		if err := agent.addPort(port); err != nil {
 			return err
@@ -709,7 +709,7 @@ func (dMgr *DeviceManager) addPort(deviceID string, port *voltha.Port) error {
 		//	Setup peer ports
 		meAsPeer := &voltha.Port_PeerPort{DeviceId: deviceID, PortNo: port.PortNo}
 		for _, peerPort := range port.Peers {
-			if agent := dMgr.getDeviceAgent(peerPort.DeviceId); agent != nil {
+			if agent := dMgr.getDeviceAgent(ctx, peerPort.DeviceId); agent != nil {
 				if err := agent.addPeerPort(meAsPeer); err != nil {
 					log.Errorw("failed-to-add-peer", log.Fields{"peer-device-id": peerPort.DeviceId})
 					return err
@@ -735,33 +735,33 @@ func (dMgr *DeviceManager) addPort(deviceID string, port *voltha.Port) error {
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) deletePeerPorts(fromDeviceID string, deviceID string) error {
+func (dMgr *DeviceManager) deletePeerPorts(ctx context.Context, fromDeviceID string, deviceID string) error {
 	log.Debugw("deletePeerPorts", log.Fields{"fromDeviceId": fromDeviceID, "deviceid": deviceID})
-	if agent := dMgr.getDeviceAgent(fromDeviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, fromDeviceID); agent != nil {
 		return agent.deletePeerPorts(deviceID)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) addFlowsAndGroups(deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *DeviceManager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceID, "flowMetadata": flowMetadata})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.addFlowsAndGroups(flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) deleteFlowsAndGroups(deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *DeviceManager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("deleteFlowsAndGroups", log.Fields{"deviceid": deviceID})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.deleteFlowsAndGroups(flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) updateFlowsAndGroups(deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *DeviceManager) updateFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("updateFlowsAndGroups", log.Fields{"deviceid": deviceID})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateFlowsAndGroups(flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
@@ -773,7 +773,7 @@ func (dMgr *DeviceManager) updatePmConfigs(ctx context.Context, pmConfigs *volth
 	var res interface{}
 	if pmConfigs.Id == "" {
 		res = status.Errorf(codes.FailedPrecondition, "invalid-device-Id")
-	} else if agent := dMgr.getDeviceAgent(pmConfigs.Id); agent != nil {
+	} else if agent := dMgr.getDeviceAgent(ctx, pmConfigs.Id); agent != nil {
 		res = agent.updatePmConfigs(ctx, pmConfigs)
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", pmConfigs.Id)
@@ -782,18 +782,18 @@ func (dMgr *DeviceManager) updatePmConfigs(ctx context.Context, pmConfigs *volth
 }
 
 // initPmConfigs initialize the pm configs as defined by the adapter.
-func (dMgr *DeviceManager) initPmConfigs(deviceID string, pmConfigs *voltha.PmConfigs) error {
+func (dMgr *DeviceManager) initPmConfigs(ctx context.Context, deviceID string, pmConfigs *voltha.PmConfigs) error {
 	if pmConfigs.Id == "" {
 		return status.Errorf(codes.FailedPrecondition, "invalid-device-Id")
 	}
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.initPmConfigs(pmConfigs)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
 func (dMgr *DeviceManager) listPmConfigs(ctx context.Context, deviceID string) (*voltha.PmConfigs, error) {
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.listPmConfigs(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
@@ -801,7 +801,7 @@ func (dMgr *DeviceManager) listPmConfigs(ctx context.Context, deviceID string) (
 
 func (dMgr *DeviceManager) getSwitchCapability(ctx context.Context, deviceID string) (*ic.SwitchCapability, error) {
 	log.Debugw("getSwitchCapability", log.Fields{"deviceid": deviceID})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.getSwitchCapability(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
@@ -809,7 +809,7 @@ func (dMgr *DeviceManager) getSwitchCapability(ctx context.Context, deviceID str
 
 func (dMgr *DeviceManager) getPorts(ctx context.Context, deviceID string, portType voltha.Port_PortType) (*voltha.Ports, error) {
 	log.Debugw("getPorts", log.Fields{"deviceid": deviceID, "portType": portType})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.getPorts(ctx, portType), nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
@@ -817,21 +817,21 @@ func (dMgr *DeviceManager) getPorts(ctx context.Context, deviceID string, portTy
 
 func (dMgr *DeviceManager) getPortCapability(ctx context.Context, deviceID string, portNo uint32) (*ic.PortCapability, error) {
 	log.Debugw("getPortCapability", log.Fields{"deviceid": deviceID})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.getPortCapability(ctx, portNo)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) updateDeviceStatus(deviceID string, operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
+func (dMgr *DeviceManager) updateDeviceStatus(ctx context.Context, deviceID string, operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
 	log.Debugw("updateDeviceStatus", log.Fields{"deviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateDeviceStatus(operStatus, connStatus)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) updateChildrenStatus(deviceID string, operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
+func (dMgr *DeviceManager) updateChildrenStatus(ctx context.Context, deviceID string, operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
 	log.Debugw("updateChildrenStatus", log.Fields{"parentDeviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
 	var parentDevice *voltha.Device
 	var err error
@@ -846,7 +846,7 @@ func (dMgr *DeviceManager) updateChildrenStatus(deviceID string, operStatus volt
 		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
 	}
 	for _, childDeviceID := range childDeviceIds {
-		if agent := dMgr.getDeviceAgent(childDeviceID); agent != nil {
+		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			if err = agent.updateDeviceStatus(operStatus, connStatus); err != nil {
 				return status.Errorf(codes.Aborted, "childDevice:%s, error:%s", childDeviceID, err.Error())
 			}
@@ -855,9 +855,9 @@ func (dMgr *DeviceManager) updateChildrenStatus(deviceID string, operStatus volt
 	return nil
 }
 
-func (dMgr *DeviceManager) updatePortState(deviceID string, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
+func (dMgr *DeviceManager) updatePortState(ctx context.Context, deviceID string, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
 	log.Debugw("updatePortState", log.Fields{"deviceid": deviceID, "portType": portType, "portNo": portNo, "operStatus": operStatus})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if err := agent.updatePortState(portType, portNo, operStatus); err != nil {
 			log.Errorw("updating-port-state-failed", log.Fields{"deviceid": deviceID, "portNo": portNo, "error": err})
 			return err
@@ -873,9 +873,9 @@ func (dMgr *DeviceManager) updatePortState(deviceID string, portType voltha.Port
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) deleteAllPorts(deviceID string) error {
+func (dMgr *DeviceManager) deleteAllPorts(ctx context.Context, deviceID string) error {
 	log.Debugw("DeleteAllPorts", log.Fields{"deviceid": deviceID})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if err := agent.deleteAllPorts(); err != nil {
 			return err
 		}
@@ -899,11 +899,11 @@ func (dMgr *DeviceManager) deleteAllPorts(deviceID string) error {
 }
 
 //updatePortsState updates all ports on the device
-func (dMgr *DeviceManager) updatePortsState(deviceID string, state voltha.OperStatus_OperStatus) error {
+func (dMgr *DeviceManager) updatePortsState(ctx context.Context, deviceID string, state voltha.OperStatus_OperStatus) error {
 	log.Debugw("updatePortsState", log.Fields{"deviceid": deviceID})
 
 	var adminState voltha.AdminState_AdminState
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		switch state {
 		case voltha.OperStatus_ACTIVE:
 			adminState = voltha.AdminState_ENABLED
@@ -935,7 +935,7 @@ func (dMgr *DeviceManager) updatePortsState(deviceID string, state voltha.OperSt
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) childDeviceDetected(parentDeviceID string, parentPortNo int64, deviceType string,
+func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDeviceID string, parentPortNo int64, deviceType string,
 	channelID int64, vendorID string, serialNumber string, onuID int64) (*voltha.Device, error) {
 	log.Debugw("childDeviceDetected", log.Fields{"parentDeviceId": parentDeviceID, "parentPortNo": parentPortNo, "deviceType": deviceType, "channelId": channelID, "vendorId": vendorID, "serialNumber": serialNumber, "onuId": onuID})
 
@@ -995,13 +995,13 @@ func (dMgr *DeviceManager) childDeviceDetected(parentDeviceID string, parentPort
 
 	// Since this Core has handled this request then it therefore owns this child device.  Set the
 	// ownership of this device to this Core
-	_, err = dMgr.core.deviceOwnership.OwnedByMe(&utils.DeviceID{ID: agent.deviceID})
+	_, err = dMgr.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: agent.deviceID})
 	if err != nil {
 		log.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
 	}
 
 	// Activate the child device
-	if agent = dMgr.getDeviceAgent(agent.deviceID); agent != nil {
+	if agent = dMgr.getDeviceAgent(ctx, agent.deviceID); agent != nil {
 		go func() {
 			err := agent.enableDevice(context.TODO())
 			if err != nil {
@@ -1068,9 +1068,9 @@ func (dMgr *DeviceManager) PacketIn(deviceID string, port uint32, transactionID 
 	return nil
 }
 
-func (dMgr *DeviceManager) setParentID(device *voltha.Device, parentID string) error {
+func (dMgr *DeviceManager) setParentID(ctx context.Context, device *voltha.Device, parentID string) error {
 	log.Debugw("setParentId", log.Fields{"deviceId": device.Id, "parentId": parentID})
-	if agent := dMgr.getDeviceAgent(device.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
 		return agent.setParentID(device, parentID)
 	}
 	return status.Errorf(codes.NotFound, "%s", device.Id)
@@ -1158,7 +1158,7 @@ func (dMgr *DeviceManager) childDevicesLost(parentDeviceID string) error {
 
 //childDevicesDetected is invoked by an adapter when child devices are found, typically after after a
 // disable/enable sequence.  This will trigger the Core to Enable all the child devices of that parent.
-func (dMgr *DeviceManager) childDevicesDetected(parentDeviceID string) error {
+func (dMgr *DeviceManager) childDevicesDetected(ctx context.Context, parentDeviceID string) error {
 	log.Debug("childDevicesDetected")
 	var err error
 	var parentDevice *voltha.Device
@@ -1177,7 +1177,7 @@ func (dMgr *DeviceManager) childDevicesDetected(parentDeviceID string) error {
 	}
 	allChildEnableRequestSent := true
 	for _, childDeviceID := range childDeviceIds {
-		if agent := dMgr.getDeviceAgent(childDeviceID); agent != nil {
+		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			// Run the children re-registration in its own routine
 			go func() {
 				err = agent.enableDevice(context.TODO())
@@ -1319,7 +1319,7 @@ func (dMgr *DeviceManager) downloadImage(ctx context.Context, img *voltha.ImageD
 	log.Debugw("downloadImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
-	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.downloadImage(ctx, img); err != nil {
 			log.Debugw("downloadImage-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
@@ -1334,7 +1334,7 @@ func (dMgr *DeviceManager) cancelImageDownload(ctx context.Context, img *voltha.
 	log.Debugw("cancelImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
-	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.cancelImageDownload(ctx, img); err != nil {
 			log.Debugw("cancelImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
@@ -1349,7 +1349,7 @@ func (dMgr *DeviceManager) activateImage(ctx context.Context, img *voltha.ImageD
 	log.Debugw("activateImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
-	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.activateImage(ctx, img); err != nil {
 			log.Debugw("activateImage-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
@@ -1379,7 +1379,7 @@ func (dMgr *DeviceManager) getImageDownloadStatus(ctx context.Context, img *volt
 	log.Debugw("getImageDownloadStatus", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
-	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.getImageDownloadStatus(ctx, img); err != nil {
 			log.Debugw("getImageDownloadStatus-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
@@ -1390,9 +1390,9 @@ func (dMgr *DeviceManager) getImageDownloadStatus(ctx context.Context, img *volt
 	sendResponse(ctx, ch, res)
 }
 
-func (dMgr *DeviceManager) updateImageDownload(deviceID string, img *voltha.ImageDownload) error {
+func (dMgr *DeviceManager) updateImageDownload(ctx context.Context, deviceID string, img *voltha.ImageDownload) error {
 	log.Debugw("updateImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if err := agent.updateImageDownload(img); err != nil {
 			log.Debugw("updateImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
 			return err
@@ -1405,7 +1405,7 @@ func (dMgr *DeviceManager) updateImageDownload(deviceID string, img *voltha.Imag
 
 func (dMgr *DeviceManager) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	log.Debugw("getImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
-	if agent := dMgr.getDeviceAgent(img.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		return agent.getImageDownload(ctx, img)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", img.Id)
@@ -1413,7 +1413,7 @@ func (dMgr *DeviceManager) getImageDownload(ctx context.Context, img *voltha.Ima
 
 func (dMgr *DeviceManager) listImageDownloads(ctx context.Context, deviceID string) (*voltha.ImageDownloads, error) {
 	log.Debugw("listImageDownloads", log.Fields{"deviceID": deviceID})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.listImageDownloads(ctx, deviceID)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
@@ -1467,7 +1467,7 @@ func (dMgr *DeviceManager) simulateAlarm(ctx context.Context, simulatereq *volth
 		"PortTypeName": simulatereq.PortTypeName, "OnuDeviceId": simulatereq.OnuDeviceId, "InverseBitErrorRate": simulatereq.InverseBitErrorRate,
 		"Drift": simulatereq.Drift, "NewEqd": simulatereq.NewEqd, "OnuSerialNumber": simulatereq.OnuSerialNumber, "Operation": simulatereq.Operation})
 	var res interface{}
-	if agent := dMgr.getDeviceAgent(simulatereq.Id); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, simulatereq.Id); agent != nil {
 		res = agent.simulateAlarm(ctx, simulatereq)
 		log.Debugw("SimulateAlarm-result", log.Fields{"result": res})
 	}
@@ -1475,9 +1475,9 @@ func (dMgr *DeviceManager) simulateAlarm(ctx context.Context, simulatereq *volth
 	sendResponse(ctx, ch, res)
 }
 
-func (dMgr *DeviceManager) updateDeviceReason(deviceID string, reason string) error {
+func (dMgr *DeviceManager) updateDeviceReason(ctx context.Context, deviceID string, reason string) error {
 	log.Debugw("updateDeviceReason", log.Fields{"deviceid": deviceID, "reason": reason})
-	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateDeviceReason(reason)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)

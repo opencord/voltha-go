@@ -661,7 +661,7 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 	//	If this is a child device then remove the associated peer ports on the parent device
 	if !device.Root {
 		go func() {
-			err := agent.deviceMgr.deletePeerPorts(device.ParentId, device.Id)
+			err := agent.deviceMgr.deletePeerPorts(ctx, device.ParentId, device.Id)
 			if err != nil {
 				log.Errorw("unable-to-delete-peer-ports", log.Fields{"error": err})
 			}

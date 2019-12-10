@@ -92,11 +92,11 @@ func (da *DeviceOwnership) Stop(ctx context.Context) {
 	log.Info("deviceOwnership-stopped")
 }
 
-func (da *DeviceOwnership) tryToReserveKey(id string) bool {
+func (da *DeviceOwnership) tryToReserveKey(ctx context.Context, id string) bool {
 	var currOwner string
 	//Try to reserve the key
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
-	value, err := da.kvClient.Reserve(kvKey, da.instanceID, da.reservationTimeout)
+	value, err := da.kvClient.Reserve(ctx, kvKey, da.instanceID, da.reservationTimeout)
 	if err != nil {
 		log.Errorw("error", log.Fields{"error": err, "id": id, "instanceId": da.instanceID})
 	}
@@ -109,17 +109,17 @@ func (da *DeviceOwnership) tryToReserveKey(id string) bool {
 	return false
 }
 
-func (da *DeviceOwnership) renewReservation(id string) bool {
+func (da *DeviceOwnership) renewReservation(ctx context.Context, id string) bool {
 	// Try to reserve the key
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
-	if err := da.kvClient.RenewReservation(kvKey); err != nil {
+	if err := da.kvClient.RenewReservation(ctx, kvKey); err != nil {
 		log.Errorw("reservation-renewal-error", log.Fields{"error": err, "instance": da.instanceID})
 		return false
 	}
 	return true
 }
 
-func (da *DeviceOwnership) monitorOwnership(id string, chnl chan int) {
+func (da *DeviceOwnership) monitorOwnership(ctx context.Context, id string, chnl chan int) {
 	log.Debugw("start-device-monitoring", log.Fields{"id": id})
 	op := "starting"
 	exit := false
@@ -144,7 +144,7 @@ func (da *DeviceOwnership) monitorOwnership(id string, chnl chan int) {
 		if deviceOwned && ownedByMe {
 			// Device owned; renew reservation
 			op = "renew"
-			if da.renewReservation(id) {
+			if da.renewReservation(ctx, id) {
 				log.Debugw("reservation-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
 			} else {
 				log.Debugw("reservation-not-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
@@ -152,7 +152,7 @@ func (da *DeviceOwnership) monitorOwnership(id string, chnl chan int) {
 		} else {
 			// Device not owned or not owned by me; try to seize ownership
 			op = "retry"
-			if err := da.setOwnership(id, da.tryToReserveKey(id)); err != nil {
+			if err := da.setOwnership(id, da.tryToReserveKey(ctx, id)); err != nil {
 				log.Errorw("unexpected-error", log.Fields{"error": err})
 			}
 		}
@@ -197,7 +197,7 @@ func (da *DeviceOwnership) GetAllDeviceIdsOwnedByMe() []string {
 
 // OwnedByMe returns whether this Core instance active owns this device.   This function will automatically
 // trigger the process to monitor the device and update the device ownership regularly.
-func (da *DeviceOwnership) OwnedByMe(id interface{}) (bool, error) {
+func (da *DeviceOwnership) OwnedByMe(ctx context.Context, id interface{}) (bool, error) {
 	// Retrieve the ownership key based on the id
 	var ownershipKey string
 	var err error
@@ -227,7 +227,7 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) (bool, error) {
 		return ownedByMe, nil
 	}
 	// Not owned by me or maybe nobody else.  Try to reserve it
-	reservedByMe := da.tryToReserveKey(ownershipKey)
+	reservedByMe := da.tryToReserveKey(ctx, ownershipKey)
 	myChnl := make(chan int)
 
 	da.deviceMapLock.Lock()
@@ -238,7 +238,7 @@ func (da *DeviceOwnership) OwnedByMe(id interface{}) (bool, error) {
 	da.deviceMapLock.Unlock()
 
 	log.Debugw("set-new-ownership", log.Fields{"Id": ownershipKey, "owned": reservedByMe})
-	go da.monitorOwnership(ownershipKey, myChnl)
+	go da.monitorOwnership(ctx, ownershipKey, myChnl)
 	return reservedByMe, nil
 }
 

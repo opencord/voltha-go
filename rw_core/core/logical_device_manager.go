@@ -173,7 +173,7 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 
 	// Update the root device with the logical device Id reference
-	if err := ldMgr.deviceMgr.setParentID(device, id); err != nil {
+	if err := ldMgr.deviceMgr.setParentID(ctx, device, id); err != nil {
 		log.Errorw("failed-setting-parent-id", log.Fields{"logicalDeviceId": id, "deviceId": device.Id})
 		return nil, err
 	}
