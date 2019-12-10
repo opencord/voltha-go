@@ -1,0 +1,293 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43b2efa2_a04b2c86",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Consider simply \"device\" instead of \"lastData\"",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e0ca460_0411a172",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Is cloning here necessary?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaac6913_91f98d81",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Is cloning here necessary?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb11d8a0_8f58e3b6",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "If this function can no longer return error, should the return value be removed?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f63de9d_1f1313be",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Consider cloning here.",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70934178_45c84b46",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "If this function can no longer return error, should the return value be removed?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "417162b2_13e49edf",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Consider cloning here.",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e4c4071_c1afb998",
+        "filename": "rw_core/core/device_agent_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Remove commented code?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "417dafd8_309e1606",
+        "filename": "rw_core/core/device_agent_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Could save a few lines by cloning originalDevice outside of the go func, \u0026 setting deviceToUpdate fields directly.",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef2da2a2_0c473a3c",
+        "filename": "rw_core/core/device_agent_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "consider proto.Equal()",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a5bacb2_9ca38297",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "consider simply `logicalDevice` instead of `lastData`",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a1f92b9_db9f5566",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "This can no longer return error, should the return value be removed?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd4f20a1_a936fdb6",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Consider cloning here instead of in in each calling function.",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7f8c6bb_1ef5f4cf",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Handle errors first, and success path second:\nhttps://github.com/golang/go/wiki/CodeReviewComments#indent-error-flow\n(multiple like this, I won\u0027t comment on each one.)",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54429dbe_202d29fa",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "This can no longer return error, should the return value be removed?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6413c24_5b882612",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "consider cloning here.",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79882811_1f0232b9",
+        "filename": "rw_core/core/logical_device_agent_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-10T14:56:06Z",
+      "side": 1,
+      "message": "Are there constants available instead of raw ints?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
