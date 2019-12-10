@@ -154,9 +154,9 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 			log.Warnw("getting-ownership-failed", log.Fields{"deviceId": id, "error": err})
 			return nil, errorIDNotFound
 		}
-		acquired, err = txn.Acquired(timeout, ownedByMe)
+		acquired, err = txn.Acquired(ctx, timeout, ownedByMe)
 	} else {
-		acquired, err = txn.Acquired(timeout)
+		acquired, err = txn.Acquired(ctx, timeout)
 	}
 	if err == nil && acquired {
 		log.Debugw("transaction-acquired", log.Fields{"transactionId": txn.txnID})
@@ -575,9 +575,9 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 		txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{ID: id.Id})
 		if err != nil {
 			if err == errorTransactionNotAcquired {
-				if ownedByMe, err := handler.core.deviceOwnership.OwnedByMe(&utils.DeviceID{ID: id.Id}); !ownedByMe && err == nil {
+				if ownedByMe, err := handler.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: id.Id}); !ownedByMe && err == nil {
 					// Remove the device in memory
-					handler.deviceMgr.stopManagingDevice(id.Id)
+					handler.deviceMgr.stopManagingDevice(ctx, id.Id)
 				}
 			}
 			return &empty.Empty{}, err

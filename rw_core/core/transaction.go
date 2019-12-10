@@ -31,6 +31,7 @@ package core
 
 import (
 	"time"
+	"context"
 
 	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -78,7 +79,7 @@ type TransactionContext struct {
 	txnPrefix          string
 }
 
-var ctx *TransactionContext
+var tctx *TransactionContext
 
 var txnState = []string{
 	"UNKNOWN",
@@ -128,7 +129,7 @@ func SetTransactionContext(owner string,
 	kvClient kvstore.Client,
 	kvOpTimeout int) error {
 
-	ctx = NewTransactionContext(owner, txnPrefix, kvClient, kvOpTimeout)
+	tctx = NewTransactionContext(owner, txnPrefix, kvClient, kvOpTimeout)
 	return nil
 }
 
@@ -150,7 +151,7 @@ type KVTransaction struct {
 func NewKVTransaction(txnID string) *KVTransaction {
 	return &KVTransaction{
 		txnID:  txnID,
-		txnKey: ctx.txnPrefix + txnID}
+		txnKey: tctx.txnPrefix + txnID}
 }
 
 /*
@@ -173,7 +174,7 @@ func NewKVTransaction(txnID string) *KVTransaction {
  */
 
 // Acquired aquires transaction status
-func (c *KVTransaction) Acquired(minDuration int64, ownedByMe ...bool) (bool, error) {
+func (c *KVTransaction) Acquired(ctx context.Context, minDuration int64, ownedByMe ...bool) (bool, error) {
 	var acquired bool
 	var currOwner string
 	var res int
@@ -197,15 +198,15 @@ func (c *KVTransaction) Acquired(minDuration int64, ownedByMe ...bool) (bool, er
 		// Keep the reservation longer that the minDuration (which is really the request timeout) to ensure the
 		// transaction key stays in the KV store until after the Core finalize a request timeout condition (which is
 		// a success from a request completion perspective).
-		if err := c.tryToReserveTxn(durationInSecs * 2); err == nil {
+		if err := c.tryToReserveTxn(ctx, durationInSecs * 2); err == nil {
 			res = SeizedBySelf
 		} else {
 			log.Debugw("watch-other-server",
 				log.Fields{"transactionId": c.txnID, "owner": currOwner, "timeout": durationInSecs})
-			res = c.Watch(durationInSecs)
+			res = c.Watch(ctx, durationInSecs)
 		}
 	} else {
-		res = c.Watch(durationInSecs)
+		res = c.Watch(ctx, durationInSecs)
 	}
 	switch res {
 	case SeizedBySelf, AbandonedByOther:
@@ -217,21 +218,21 @@ func (c *KVTransaction) Acquired(minDuration int64, ownedByMe ...bool) (bool, er
 	return acquired, nil
 }
 
-func (c *KVTransaction) tryToReserveTxn(durationInSecs int64) error {
+func (c *KVTransaction) tryToReserveTxn(ctx context.Context, durationInSecs int64) error {
 	var currOwner string
 	var res int
 	var err error
-	value, _ := ctx.kvClient.Reserve(c.txnKey, ctx.owner, durationInSecs)
+	value, _ := tctx.kvClient.Reserve(ctx, c.txnKey, tctx.owner, durationInSecs)
 	if value != nil {
 		if currOwner, err = kvstore.ToString(value); err != nil { // This should never happen
 			log.Errorw("unexpected-owner-type", log.Fields{"transactionId": c.txnID, "error": err})
 			return err
 		}
-		if currOwner == ctx.owner {
+		if currOwner == tctx.owner {
 			log.Debugw("acquired-transaction", log.Fields{"transactionId": c.txnID, "result": txnState[res]})
 			// Setup the monitoring channel
 			c.monitorCh = make(chan int)
-			go c.holdOnToTxnUntilProcessingCompleted(c.txnKey, ctx.owner, durationInSecs)
+			go c.holdOnToTxnUntilProcessingCompleted(ctx, c.txnKey, tctx.owner, durationInSecs)
 			return nil
 		}
 	}
@@ -239,22 +240,22 @@ func (c *KVTransaction) tryToReserveTxn(durationInSecs int64) error {
 }
 
 // Watch watches transaction
-func (c *KVTransaction) Watch(durationInSecs int64) int {
+func (c *KVTransaction) Watch(ctx context.Context, durationInSecs int64) int {
 	var res int
 
-	events := ctx.kvClient.Watch(c.txnKey)
-	defer ctx.kvClient.CloseWatch(c.txnKey, events)
+	events := tctx.kvClient.Watch(ctx, c.txnKey)
+	defer tctx.kvClient.CloseWatch(c.txnKey, events)
 
 	transactionWasAcquiredByOther := false
 
 	//Check whether the transaction was already completed by the other Core before we got here.
-	if kvp, _ := ctx.kvClient.Get(c.txnKey, ctx.kvOperationTimeout); kvp != nil {
+	if kvp, _ := tctx.kvClient.Get(ctx, c.txnKey); kvp != nil {
 		transactionWasAcquiredByOther = true
 		if val, err := kvstore.ToString(kvp.Value); err == nil {
 			if val == TransactionComplete {
 				res = CompletedByOther
 				// Do an immediate delete of the transaction in the KV Store to free up KV Storage faster
-				err = c.Delete()
+				err = c.Delete(ctx)
 				if err != nil {
 					log.Errorw("unable-to-delete-the-transaction", log.Fields{"error": err})
 				}
@@ -283,7 +284,7 @@ func (c *KVTransaction) Watch(durationInSecs int64) int {
 					if val == TransactionComplete {
 						res = CompletedByOther
 						// Successful request completion has been detected. Remove the transaction key
-						err := c.Delete()
+						err := c.Delete(ctx)
 						if err != nil {
 							log.Errorw("unable-to-delete-the-transaction", log.Fields{"error": err})
 						}
@@ -315,12 +316,12 @@ func (c *KVTransaction) Watch(durationInSecs int64) int {
 }
 
 // Close closes transaction
-func (c *KVTransaction) Close() error {
+func (c *KVTransaction) Close(ctx context.Context) error {
 	log.Debugw("close", log.Fields{"txn": c.txnID})
 	// Stop monitoring the key (applies only when there has been no transaction switch over)
 	if c.monitorCh != nil {
 		close(c.monitorCh)
-		err := ctx.kvClient.Put(c.txnKey, TransactionComplete, ctx.kvOperationTimeout)
+		err := tctx.kvClient.Put(ctx, c.txnKey, TransactionComplete)
 
 		if err != nil {
 			log.Errorw("unable-to-write-a-key-value-pair-to-the-KV-store", log.Fields{"error": err})
@@ -330,15 +331,15 @@ func (c *KVTransaction) Close() error {
 }
 
 // Delete deletes transaction
-func (c *KVTransaction) Delete() error {
+func (c *KVTransaction) Delete(ctx context.Context) error {
 	log.Debugw("delete", log.Fields{"txn": c.txnID})
-	return ctx.kvClient.Delete(c.txnKey, ctx.kvOperationTimeout)
+	return tctx.kvClient.Delete(ctx, c.txnKey)
 }
 
 // holdOnToTxnUntilProcessingCompleted renews the transaction lease until the transaction is complete.  durationInSecs
 // is used to calculate the frequency at which the Core processing the transaction renews the lease.  This function
 // exits only when the transaction is Closed, i.e completed.
-func (c *KVTransaction) holdOnToTxnUntilProcessingCompleted(key string, owner string, durationInSecs int64) {
+func (c *KVTransaction) holdOnToTxnUntilProcessingCompleted(ctx context.Context, key string, owner string, durationInSecs int64) {
 	log.Debugw("holdOnToTxnUntilProcessingCompleted", log.Fields{"txn": c.txnID})
 	renewInterval := durationInSecs / NumTxnRenewalPerRequest
 	if renewInterval < MinTxnRenewalIntervalInSec {
@@ -351,7 +352,7 @@ forLoop:
 			log.Debugw("transaction-renewal-exits", log.Fields{"txn": c.txnID})
 			break forLoop
 		case <-time.After(time.Duration(renewInterval) * time.Second):
-			if err := ctx.kvClient.RenewReservation(c.txnKey); err != nil {
+			if err := tctx.kvClient.RenewReservation(ctx, c.txnKey); err != nil {
 				// Log and continue.
 				log.Warnw("transaction-renewal-failed", log.Fields{"txnId": c.txnKey, "error": err})
 			}

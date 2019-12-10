@@ -66,7 +66,7 @@ func NewAdapterRequestHandlerProxy(core *Core, coreInstanceID string, dMgr *Devi
 }
 
 // This is a helper function that attempts to acquire the request by using the device ownership model
-func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionID string, devID string, maxTimeout ...int64) (*KVTransaction, error) {
+func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(ctx context.Context, transactionID string, devID string, maxTimeout ...int64) (*KVTransaction, error) {
 	timeout := rhp.defaultRequestTimeout
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
@@ -80,13 +80,13 @@ func (rhp *AdapterRequestHandlerProxy) takeRequestOwnership(transactionID string
 	var err error
 	if devID != "" {
 		var ownedByMe bool
-		if ownedByMe, err = rhp.core.deviceOwnership.OwnedByMe(&utils.DeviceID{ID: devID}); err != nil {
+		if ownedByMe, err = rhp.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: devID}); err != nil {
 			log.Warnw("getting-ownership-failed", log.Fields{"deviceId": devID, "error": err})
 			return nil, kafka.ErrorTransactionInvalidId
 		}
-		acquired, err = txn.Acquired(timeout, ownedByMe)
+		acquired, err = txn.Acquired(ctx, timeout, ownedByMe)
 	} else {
-		acquired, err = txn.Acquired(timeout)
+		acquired, err = txn.Acquired(ctx, timeout)
 	}
 	if err == nil && acquired {
 		log.Debugw("transaction-acquired", log.Fields{"transactionId": txn.txnID})
@@ -103,7 +103,7 @@ func (rhp *AdapterRequestHandlerProxy) competeForTransaction() bool {
 }
 
 // Register registers the adapter
-func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.CoreInstance, error) {
+func (rhp *AdapterRequestHandlerProxy) Register(ctx context.Context, args []*ic.Argument) (*voltha.CoreInstance, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -135,7 +135,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, "")
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, "")
 		if err != nil {
 			if err.Error() == kafka.ErrorTransactionNotAcquired.Error() {
 				log.Debugw("Another core handled the request", log.Fields{"transactionId": transactionID})
@@ -144,7 +144,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 			}
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -154,7 +154,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 }
 
 // GetDevice returns device info
-func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.Device, error) {
+func (rhp *AdapterRequestHandlerProxy) GetDevice(ctx context.Context, args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -181,12 +181,12 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, pID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -203,7 +203,7 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 }
 
 // DeviceUpdate updates device using adapter data
-func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -230,12 +230,12 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, device.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, device.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	log.Debugw("DeviceUpdate got txn", log.Fields{"deviceID": device.Id, "transactionID": transactionID.Val})
@@ -243,7 +243,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 		return new(empty.Empty), nil
 	}
 	go func() {
-		err := rhp.deviceMgr.updateDeviceUsingAdapterData(device)
+		err := rhp.deviceMgr.updateDeviceUsingAdapterData(ctx, device)
 		if err != nil {
 			log.Errorw("unable-to-update-device-using-adapter-data", log.Fields{"error": err})
 		}
@@ -252,7 +252,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 }
 
 // GetChildDevice returns details of child device
-func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*voltha.Device, error) {
+func (rhp *AdapterRequestHandlerProxy) GetChildDevice(ctx context.Context, args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -297,12 +297,12 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, pID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -312,7 +312,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 }
 
 // GetChildDeviceWithProxyAddress returns details of child device with proxy address
-func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic.Argument) (*voltha.Device, error) {
+func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(ctx context.Context, args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -339,12 +339,12 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, proxyAddress.DeviceId)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, proxyAddress.DeviceId)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -354,7 +354,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic
 }
 
 // GetPorts returns the ports information of the device based on the port type.
-func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Ports, error) {
+func (rhp *AdapterRequestHandlerProxy) GetPorts(ctx context.Context, args []*ic.Argument) (*voltha.Ports, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -391,19 +391,19 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Po
 	}
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	return rhp.deviceMgr.getPorts(context.TODO(), deviceID.Id, voltha.Port_PortType(pt.Val))
 }
 
 // GetChildDevices gets all the child device IDs from the device passed as parameter
-func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*voltha.Devices, error) {
+func (rhp *AdapterRequestHandlerProxy) GetChildDevices(ctx context.Context, args []*ic.Argument) (*voltha.Devices, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -430,12 +430,12 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, pID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -448,7 +448,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 // ChildDeviceDetected is invoked when a child device is detected.  The following
 // parameters are expected:
 // {parent_device_id, parent_port_no, child_device_type, channel_id, vendor_id, serial_number)
-func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) (*voltha.Device, error) {
+func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(ctx context.Context, args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) < 5 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -513,18 +513,18 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, pID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, pID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
-	device, err := rhp.deviceMgr.childDeviceDetected(pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
+	device, err := rhp.deviceMgr.childDeviceDetected(ctx, pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
 	if err != nil {
 		log.Errorw("child-detection-failed", log.Fields{"parentID": pID.Id, "onuID": onuID.Val, "error": err})
 		return nil, err
@@ -534,7 +534,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 }
 
 // DeviceStateUpdate updates device status
-func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -573,12 +573,12 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -586,7 +586,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 	}
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
 	go func() {
-		err := rhp.deviceMgr.updateDeviceStatus(deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+		err := rhp.deviceMgr.updateDeviceStatus(ctx, deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val),
 			voltha.ConnectStatus_ConnectStatus(connStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-device-status", log.Fields{"error": err})
@@ -597,7 +597,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 }
 
 // ChildrenStateUpdate updates child device status
-func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -636,12 +636,12 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -650,7 +650,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
 	go func() {
-		err := rhp.deviceMgr.updateChildrenStatus(deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val),
+		err := rhp.deviceMgr.updateChildrenStatus(ctx, deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val),
 			voltha.ConnectStatus_ConnectStatus(connStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-children-status", log.Fields{"error": err})
@@ -665,7 +665,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 }
 
 // PortsStateUpdate updates the ports state related to the device
-func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -697,12 +697,12 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*e
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -710,7 +710,7 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*e
 	}
 
 	go func() {
-		err := rhp.deviceMgr.updatePortsState(deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val))
+		err := rhp.deviceMgr.updatePortsState(ctx, deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-ports-state", log.Fields{"error": err})
 		}
@@ -720,7 +720,7 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*e
 }
 
 // PortStateUpdate updates the port state of the device
-func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -765,12 +765,12 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -778,7 +778,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 	}
 
 	go func() {
-		err := rhp.deviceMgr.updatePortState(deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+		err := rhp.deviceMgr.updatePortState(ctx, deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
 			voltha.OperStatus_OperStatus(operStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-port-state", log.Fields{"error": err})
@@ -793,7 +793,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 }
 
 // DeleteAllPorts deletes all ports of device
-func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -819,12 +819,12 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(args []*ic.Argument) (*emp
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -832,7 +832,7 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(args []*ic.Argument) (*emp
 	}
 
 	go func() {
-		err := rhp.deviceMgr.deleteAllPorts(deviceID.Id)
+		err := rhp.deviceMgr.deleteAllPorts(ctx, deviceID.Id)
 		if err != nil {
 			log.Errorw("unable-to-delete-ports", log.Fields{"error": err})
 		}
@@ -843,7 +843,7 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(args []*ic.Argument) (*emp
 
 // ChildDevicesLost indicates that a parent device is in a state (Disabled) where it cannot manage the child devices.
 // This will trigger the Core to disable all the child devices.
-func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -869,12 +869,12 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(args []*ic.Argument) (*e
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, parentDeviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, parentDeviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -893,7 +893,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(args []*ic.Argument) (*e
 
 // ChildDevicesDetected invoked by an adapter when child devices are found, typically after after a disable/enable sequence.
 // This will trigger the Core to Enable all the child devices of that parent.
-func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -919,19 +919,19 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(args []*ic.Argument)
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, parentDeviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, parentDeviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
 
-	if err := rhp.deviceMgr.childDevicesDetected(parentDeviceID.Id); err != nil {
+	if err := rhp.deviceMgr.childDevicesDetected(ctx, parentDeviceID.Id); err != nil {
 		log.Errorw("child-devices-dection-failed", log.Fields{"parentID": parentDeviceID.Id, "error": err})
 		return nil, err
 	}
@@ -940,7 +940,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(args []*ic.Argument)
 }
 
 // PortCreated adds port to device
-func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) PortCreated(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 3 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -972,19 +972,19 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
 	go func() {
-		err := rhp.deviceMgr.addPort(deviceID.Id, port)
+		err := rhp.deviceMgr.addPort(ctx, deviceID.Id, port)
 		if err != nil {
 			log.Errorw("unable-to-add-port", log.Fields{"error": err})
 		}
@@ -994,7 +994,7 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 }
 
 // DevicePMConfigUpdate initializes the pm configs as defined by the adapter.
-func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -1021,12 +1021,12 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, pmConfigs.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, pmConfigs.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -1034,7 +1034,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 	}
 
 	go func() {
-		err := rhp.deviceMgr.initPmConfigs(pmConfigs.Id, pmConfigs)
+		err := rhp.deviceMgr.initPmConfigs(ctx, pmConfigs.Id, pmConfigs)
 		if err != nil {
 			log.Errorw("unable-to-initialize-pm-configs", log.Fields{"error": err})
 		}
@@ -1044,7 +1044,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 }
 
 // PacketIn sends the incoming packet of device
-func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) PacketIn(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 4 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -1085,12 +1085,12 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 	// TODO: If this adds too much latencies then needs to remove transaction and let OFAgent filter out
 	// duplicates.
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
@@ -1106,7 +1106,7 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 }
 
 // UpdateImageDownload updates image download
-func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -1139,19 +1139,19 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
 		return nil, nil
 	}
 	go func() {
-		err := rhp.deviceMgr.updateImageDownload(deviceID.Id, img)
+		err := rhp.deviceMgr.updateImageDownload(ctx, deviceID.Id, img)
 		if err != nil {
 			log.Errorw("unable-to-update-image-download", log.Fields{"error": err})
 		}
@@ -1163,7 +1163,7 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 }
 
 // ReconcileChildDevices reconciles child devices
-func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("invalid-number-of-args")
@@ -1189,12 +1189,12 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, parentDeviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, parentDeviceID.Id)
 		if err != nil {
 			log.Debugw("Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -1213,7 +1213,7 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument
 }
 
 // DeviceReasonUpdate updates device reason
-func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(args []*ic.Argument) (*empty.Empty, error) {
+func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(ctx context.Context, args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		log.Warn("DeviceReasonUpdate: invalid-number-of-args", log.Fields{"args": args})
 		err := errors.New("DeviceReasonUpdate: invalid-number-of-args")
@@ -1246,12 +1246,12 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(args []*ic.Argument) (
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
-		txn, err := rhp.takeRequestOwnership(transactionID.Val, deviceID.Id)
+		txn, err := rhp.takeRequestOwnership(ctx, transactionID.Val, deviceID.Id)
 		if err != nil {
 			log.Debugw("DeviceReasonUpdate: Core did not process request", log.Fields{"transactionID": transactionID, "error": err})
 			return nil, err
 		}
-		defer txn.Close()
+		defer txn.Close(ctx)
 	}
 
 	if rhp.TestMode { // Execute only for test cases
@@ -1260,7 +1260,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(args []*ic.Argument) (
 
 	// Run it in its own routine
 	go func() {
-		err := rhp.deviceMgr.updateDeviceReason(deviceID.Id, reason.Val)
+		err := rhp.deviceMgr.updateDeviceReason(ctx, deviceID.Id, reason.Val)
 		if err != nil {
 			log.Errorw("unable-to-update-device-reason", log.Fields{"error": err})
 		}
