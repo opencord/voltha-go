@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "cea7e8dd_0327ebb3",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:07:20Z",
+      "side": 1,
+      "message": "Please use a config name and a directory name that is relevant to your test case.  This is not a mock test.   E.g. of name could be voltha.db.model.TestDBModelRoot",
+      "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa547a19_96f8b948",
         "filename": "db/model/root_test.go",
         "patchSetId": 3
@@ -19,6 +36,47 @@
         "endLine": 89,
         "endChar": 3
       },
+      "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c24f32b_c0f291f2",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:07:20Z",
+      "side": 1,
+      "message": "The stop is sufficient as this call results in the server being stopped  and closel.",
+      "parentUuid": "fa547a19_96f8b948",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 3
+      },
+      "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a578a684_7b8e8b47",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:07:20Z",
+      "side": 1,
+      "message": "By closing the etcdserver, the backend is pointing nowhere.  Is that intentional?",
       "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
