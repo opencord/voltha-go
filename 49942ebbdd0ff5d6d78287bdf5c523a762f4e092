@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0e738e05_949687e3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:26:02Z",
+      "side": 1,
+      "message": "lastData is clear in its intent.   Not sure about this yet.",
+      "parentUuid": "43b2efa2_a04b2c86",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e0ca460_0411a172",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-10T14:56:06Z",
       "side": 1,
       "message": "Is cloning here necessary?",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57f17911_f64fecc4",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:26:02Z",
+      "side": 1,
+      "message": "Yes, since the proxy may not be returning a cloned copy.",
+      "parentUuid": "8e0ca460_0411a172",
       "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e80062d9_3014b584",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:26:02Z",
+      "side": 1,
+      "message": "yep",
+      "parentUuid": "eaac6913_91f98d81",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb11d8a0_8f58e3b6",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 3
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "81cc20c9_da9c718d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:26:02Z",
+      "side": 1,
+      "message": "Will remove it",
+      "parentUuid": "bb11d8a0_8f58e3b6",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f63de9d_1f1313be",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 3
@@ -81,6 +153,24 @@
       "writtenOn": "2019-12-10T14:56:06Z",
       "side": 1,
       "message": "Consider cloning here.",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bb89026_2793d081",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:26:02Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "1f63de9d_1f1313be",
       "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -234,6 +324,24 @@
       "writtenOn": "2019-12-10T14:56:06Z",
       "side": 1,
       "message": "Handle errors first, and success path second:\nhttps://github.com/golang/go/wiki/CodeReviewComments#indent-error-flow\n(multiple like this, I won\u0027t comment on each one.)",
+      "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06725db9_23281166",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-10T15:26:02Z",
+      "side": 1,
+      "message": "It just adds more line of code.  WIll change but I don\u0027t think all the suggestions from that link apply to all scenarios.",
+      "parentUuid": "c7f8c6bb_1ef5f4cf",
       "revId": "49942ebbdd0ff5d6d78287bdf5c523a762f4e092",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
