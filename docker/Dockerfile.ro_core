@@ -20,7 +20,7 @@ FROM golang:1.12-alpine3.9 AS build-env
 # Install required packages
 RUN apk add --no-cache \
         wget=1.20.3-r0 \
-        git=2.20.1-r0 \
+        git=2.20.2-r0 \
         make=4.2.1-r2 \
         build-base=0.5-r1 \
         protobuf=3.6.1-r1 \
