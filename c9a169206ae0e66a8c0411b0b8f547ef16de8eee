@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fc877249_8efc645c",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-12-11T14:26:01Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "cea7e8dd_0327ebb3",
+      "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa547a19_96f8b948",
         "filename": "db/model/root_test.go",
         "patchSetId": 3
@@ -77,6 +95,24 @@
       "writtenOn": "2019-12-10T15:07:20Z",
       "side": 1,
       "message": "By closing the etcdserver, the backend is pointing nowhere.  Is that intentional?",
+      "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4a656cd_f15f7503",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-12-11T14:26:01Z",
+      "side": 1,
+      "message": "No, I corrected now.",
+      "parentUuid": "a578a684_7b8e8b47",
       "revId": "c9a169206ae0e66a8c0411b0b8f547ef16de8eee",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
