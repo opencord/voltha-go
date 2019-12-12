@@ -178,6 +178,24 @@
     },
     {
       "key": {
+        "uuid": "c269c0e1_878d6d30",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-12-12T16:42:13Z",
+      "side": 1,
+      "message": "Right. But technically there is no need to call WaitforNilorErrorResponses function if nothing was done or operation was a no-op. But because that would make you happy, i would do the change. But would need re-testing.",
+      "parentUuid": "f0d5f2d4_614db85d",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "920cc377_ce4dab75",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
