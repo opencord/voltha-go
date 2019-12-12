@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2019-present Open Networking Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
-  Defines a logicalDeviceAgent Interface - Used for unit testing of the flow decomposer only at this
- time.
-*/
-
-package coreif
+package db
 
 import (
-	"github.com/opencord/voltha-go/rw_core/graph"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
-// LogicalDeviceAgent represents a generic agent
-type LogicalDeviceAgent interface {
-	GetLogicalDevice() *voltha.LogicalDevice
-	GetDeviceGraph() *graph.DeviceGraph
-	GetWildcardInputPorts(excludePort ...uint32) []uint32
-	GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop
+const (
+	logLevel = log.FatalLevel
+)
+
+// Unit test initialization. This init() function handles all unit tests in
+// the current directory.
+func init() {
+	// Setup this package so that it's log level can be modified at run time
+	_, err := log.AddPackage(log.JSON, logLevel, log.Fields{"pkg": "db"})
+	if err != nil {
+		panic(err)
+	}
 }

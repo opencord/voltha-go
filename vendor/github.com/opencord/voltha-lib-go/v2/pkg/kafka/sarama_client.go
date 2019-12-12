@@ -907,7 +907,10 @@ startloop:
 		select {
 		case err, ok := <-consumer.Errors():
 			if ok {
-				log.Warnw("partition-consumers-error", log.Fields{"error": err})
+				if sc.isLivenessError(err) {
+					sc.updateLiveness(false)
+					log.Warnw("partition-consumers-error", log.Fields{"error": err})
+				}
 			} else {
 				// Channel is closed
 				break startloop
@@ -919,6 +922,8 @@ startloop:
 				break startloop
 			}
 			msgBody := msg.Value
+			sc.updateLiveness(true)
+			log.Debugw("message-received", log.Fields{"timestamp": msg.Timestamp, "receivedTopic": msg.Topic})
 			icm := &ic.InterContainerMessage{}
 			if err := proto.Unmarshal(msgBody, icm); err != nil {
 				log.Warnw("partition-invalid-message", log.Fields{"error": err})
