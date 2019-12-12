@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "05a75a3e_a83b8369",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-12-12T15:54:57Z",
+      "side": 1,
+      "message": "The response could be nil (nothing to do for operation or empty) or error. This handles both. What do you mean by already-complete response?",
+      "parentUuid": "837400a3_dfa60af7",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "920cc377_ce4dab75",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
