@@ -58,6 +58,19 @@ func NewResponse() Response {
 	}
 }
 
+// Fake a completed response.
+func DoneResponse() Response {
+	r := Response{
+		&response{
+			err:  nil,
+			ch:   make(chan struct{}),
+			done: true,
+		},
+	}
+	close(r.ch)
+	return r
+}
+
 // Error sends a response with the given error.  It may only be called once.
 func (r Response) Error(err error) {
 	// if this is called twice, it will panic; this is intentional
