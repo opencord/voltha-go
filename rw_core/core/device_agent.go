@@ -257,14 +257,12 @@ func (agent *DeviceAgent) sendIncrementalFlowsToAdapters(device *voltha.Device, 
 	response.Done()
 }
 
-//addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
-//adapters
-func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (*coreutils.Response, error) {
 	log.Debugw("addFlowsAndGroups", log.Fields{"deviceId": agent.deviceID, "flows": newFlows, "groups": newGroups, "flowMetadata": flowMetadata})
 
 	if (len(newFlows) | len(newGroups)) == 0 {
 		log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flows": newFlows, "groups": newGroups})
-		return nil
+		return nil, nil
 	}
 
 	agent.lockDevice.Lock()
@@ -273,7 +271,7 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 	var device *voltha.Device
 	var err error
 	if device, err = agent.getDeviceWithoutLock(); err != nil {
-		return status.Errorf(codes.NotFound, "%s", agent.deviceID)
+		return nil, status.Errorf(codes.NotFound, "%s", agent.deviceID)
 	}
 
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
@@ -307,7 +305,7 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 	// Sanity check
 	if (len(updatedFlows) | len(flowsToDelete) | len(updatedGroups) | len(groupsToDelete)) == 0 {
 		log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flows": newFlows, "groups": newGroups})
-		return nil
+		return nil, nil
 	}
 
 	// Send update to adapters
@@ -321,7 +319,7 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 
 		if len(updatedGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedGroups) && len(updatedFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedFlows) {
 			log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flows": newFlows, "groups": newGroups})
-			return nil
+			return nil, nil
 		}
 		go agent.sendBulkFlowsToAdapters(device, &voltha.Flows{Items: updatedFlows}, &voltha.FlowGroups{Items: updatedGroups}, flowMetadata, response)
 
@@ -342,25 +340,32 @@ func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGro
 	device.Flows = &voltha.Flows{Items: updatedFlows}
 	device.FlowGroups = &voltha.FlowGroups{Items: updatedGroups}
 	if err := agent.updateDeviceWithoutLock(device); err != nil {
-		return status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
+		return nil, status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
 	}
 
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); res != nil {
+	return &response, nil
+}
+
+//addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
+//adapters
+func (agent *DeviceAgent) addFlowsAndGroups(newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+	response, err := agent.addFlowsAndGroupsToAdapter(newFlows, newGroups, flowMetadata)
+	if response == nil {
+		return err
+	}
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, *response); res != nil {
 		log.Debugw("Failed to get response from adapter[or] DB", log.Fields{"result": res})
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
-
 	return nil
 }
 
-//deleteFlowsAndGroups removes the "flowsToDel" and "groupsToDel" from the existing flows/groups and sends the update to the
-//adapters
-func (agent *DeviceAgent) deleteFlowsAndGroups(flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (*coreutils.Response, error) {
 	log.Debugw("deleteFlowsAndGroups", log.Fields{"deviceId": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
 
 	if (len(flowsToDel) | len(groupsToDel)) == 0 {
 		log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
-		return nil
+		return nil, nil
 	}
 
 	agent.lockDevice.Lock()
@@ -370,7 +375,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroups(flowsToDel []*ofp.OfpFlowStats, g
 	var err error
 
 	if device, err = agent.getDeviceWithoutLock(); err != nil {
-		return status.Errorf(codes.NotFound, "%s", agent.deviceID)
+		return nil, status.Errorf(codes.NotFound, "%s", agent.deviceID)
 	}
 
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
@@ -405,7 +410,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroups(flowsToDel []*ofp.OfpFlowStats, g
 	// Sanity check
 	if (len(flowsToKeep) | len(flowsToDel) | len(groupsToKeep) | len(groupsToDel)) == 0 {
 		log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flowsToDel": flowsToDel, "groupsToDel": groupsToDel})
-		return nil
+		return nil, nil
 	}
 
 	// Send update to adapters
@@ -414,7 +419,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroups(flowsToDel []*ofp.OfpFlowStats, g
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		if len(groupsToKeep) != 0 && reflect.DeepEqual(existingGroups.Items, groupsToKeep) && len(flowsToKeep) != 0 && reflect.DeepEqual(existingFlows.Items, flowsToKeep) {
 			log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flowsToDel": flowsToDel, "groupsToDel": groupsToDel})
-			return nil
+			return nil, nil
 		}
 		go agent.sendBulkFlowsToAdapters(device, &voltha.Flows{Items: flowsToKeep}, &voltha.FlowGroups{Items: groupsToKeep}, flowMetadata, response)
 	} else {
@@ -434,24 +439,32 @@ func (agent *DeviceAgent) deleteFlowsAndGroups(flowsToDel []*ofp.OfpFlowStats, g
 	device.Flows = &voltha.Flows{Items: flowsToKeep}
 	device.FlowGroups = &voltha.FlowGroups{Items: groupsToKeep}
 	if err := agent.updateDeviceWithoutLock(device); err != nil {
-		return status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
+		return nil, status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
 	}
 
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); res != nil {
-		return status.Errorf(codes.Aborted, "errors-%s", res)
-	}
-	return nil
+	return &response, nil
 
 }
 
-//updateFlowsAndGroups replaces the existing flows and groups with "updatedFlows" and "updatedGroups" respectively. It
-//also sends the updates to the adapters
-func (agent *DeviceAgent) updateFlowsAndGroups(updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+//deleteFlowsAndGroups removes the "flowsToDel" and "groupsToDel" from the existing flows/groups and sends the update to the
+//adapters
+func (agent *DeviceAgent) deleteFlowsAndGroups(flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+	response, err := agent.deleteFlowsAndGroupsFromAdapter(flowsToDel, groupsToDel, flowMetadata)
+	if response == nil {
+		return err
+	}
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, *response); res != nil {
+		return status.Errorf(codes.Aborted, "errors-%s", res)
+	}
+	return nil
+}
+
+func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (*coreutils.Response, error) {
 	log.Debugw("updateFlowsAndGroups", log.Fields{"deviceId": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 
 	if (len(updatedFlows) | len(updatedGroups)) == 0 {
 		log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
-		return nil
+		return nil, nil
 	}
 
 	agent.lockDevice.Lock()
@@ -459,14 +472,14 @@ func (agent *DeviceAgent) updateFlowsAndGroups(updatedFlows []*ofp.OfpFlowStats,
 	var device *voltha.Device
 	var err error
 	if device, err = agent.getDeviceWithoutLock(); err != nil {
-		return status.Errorf(codes.NotFound, "%s", agent.deviceID)
+		return nil, status.Errorf(codes.NotFound, "%s", agent.deviceID)
 	}
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
 	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
 
 	if len(updatedGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedGroups) && len(updatedFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedFlows) {
 		log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
-		return nil
+		return nil, nil
 	}
 
 	log.Debugw("updating-flows-and-groups",
@@ -524,7 +537,7 @@ func (agent *DeviceAgent) updateFlowsAndGroups(updatedFlows []*ofp.OfpFlowStats,
 		// Sanity check
 		if (len(flowsToAdd) | len(flowsToDelete) | len(groupsToAdd) | len(groupsToDelete) | len(updatedGroups)) == 0 {
 			log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
-			return nil
+			return nil, nil
 		}
 
 		flowChanges := &ofp.FlowChanges{
@@ -543,10 +556,20 @@ func (agent *DeviceAgent) updateFlowsAndGroups(updatedFlows []*ofp.OfpFlowStats,
 	device.Flows = &voltha.Flows{Items: updatedFlows}
 	device.FlowGroups = &voltha.FlowGroups{Items: updatedGroups}
 	if err := agent.updateDeviceWithoutLock(device); err != nil {
-		return status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
+		return nil, status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
 	}
 
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); res != nil {
+	return &response, nil
+}
+
+//updateFlowsAndGroups replaces the existing flows and groups with "updatedFlows" and "updatedGroups" respectively. It
+//also sends the updates to the adapters
+func (agent *DeviceAgent) updateFlowsAndGroups(updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+	response, err := agent.updateFlowsAndGroupsToAdapter(updatedFlows, updatedGroups, flowMetadata)
+	if response == nil {
+		return err
+	}
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, *response); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
