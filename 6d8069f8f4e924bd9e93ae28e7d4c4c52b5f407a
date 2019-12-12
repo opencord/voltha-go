@@ -106,6 +106,42 @@
     },
     {
       "key": {
+        "uuid": "aa97cf32_78117383",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T16:17:11Z",
+      "side": 1,
+      "message": "Already-complete response: Add a function like `DoneResponse()` to coreutils that returns a Response with a closed chan, (thus returning a nil error immediately when sent to WaitForNilOrErrorResponse)",
+      "parentUuid": "05a75a3e_a83b8369",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0a6ae14_53013ef2",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T16:17:11Z",
+      "side": 1,
+      "message": "The wait isn\u0027t needed, but it\u0027s counter-intuitive and hard to read.  If err!\u003dnil, handle error.  If err\u003d\u003dnil, other values should be valid.\ni.e. - don\u0027t use nil as a special case.\n\nhttps://github.com/golang/go/wiki/CodeReviewComments#in-band-errors",
+      "parentUuid": "2139b43c_61e47450",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "920cc377_ce4dab75",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
