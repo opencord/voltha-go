@@ -142,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "987f6bbf_52066eeb",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-12-12T16:27:26Z",
+      "side": 1,
+      "message": "So you are saying, add a fake complete response when operation is a no-op and returns nil error. And then let waitfornil function would become another no-op as response was faked and return nil error? \nI can add: if err !\u003d nil || response \u003d\u003d nil though not possible for this iteration but if someone does a copy and spins another? \nWill that make you happy or you want to fake a response and do this circus? :)",
+      "parentUuid": "d0a6ae14_53013ef2",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "920cc377_ce4dab75",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
