@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55e17b39_e8a07a6e",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.\n\n(An already-closed response could/should be added to the Response helper.)",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f21151d6_58b3ddcb",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ab550a3_c5810975",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "837400a3_dfa60af7",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Should always check if err !\u003d nil first, and use that to determine if other values are valid.\nhttps://github.com/golang/go/wiki/CodeReviewComments#indent-error-flow",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "920cc377_ce4dab75",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bd2eec8_a660da87",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b770860_5d45d791",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e512511_2e606c4c",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Just return Response instead of *Response.\n(Response already masks a pointer.)",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79f030ac_f3aaa407",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "should check err to determine validity of other values, not the other way around.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea35696a_8623ca2f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94d2058d_f65adb10",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fbee069_e280ec2e",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Consider returning an already-complete `Response`.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fca992ac_cb714668",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Just return Response instead of *Response.\n(Response already masks a pointer.)",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d3ffc96_2a1be84f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 571,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-12T14:08:47Z",
+      "side": 1,
+      "message": "Again: should check err to determine validity of other values, not the other way around.",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
