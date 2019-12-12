@@ -88,6 +88,24 @@
     },
     {
       "key": {
+        "uuid": "2139b43c_61e47450",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-12-12T15:59:01Z",
+      "side": 1,
+      "message": "The error would be nil when response is empty or nothing was done for the operation. No wait needed.",
+      "parentUuid": "05a75a3e_a83b8369",
+      "revId": "6d8069f8f4e924bd9e93ae28e7d4c4c52b5f407a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "920cc377_ce4dab75",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
