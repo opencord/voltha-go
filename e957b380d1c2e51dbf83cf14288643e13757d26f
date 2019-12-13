@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e0de3b7_532c7604",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-13T15:39:31Z",
+      "side": 1,
+      "message": "In the tests before, I do not see any data being saved to the KV store.  Do you need to have the etcdserver?",
+      "revId": "e957b380d1c2e51dbf83cf14288643e13757d26f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68b57eb0_7c683d5e",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-13T15:39:31Z",
+      "side": 1,
+      "message": "For each test a new etcd server is created but they also use the same data directory which gets erased and recreated for each test.    If you need the etcdserver then create only 1 instance to be used by all the tests.   After all the tests are executed then close the etcdserver.",
+      "revId": "e957b380d1c2e51dbf83cf14288643e13757d26f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02ea97c0_1681c215",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-13T15:39:31Z",
+      "side": 1,
+      "message": "Please do the error check right after the function call.",
+      "revId": "e957b380d1c2e51dbf83cf14288643e13757d26f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
