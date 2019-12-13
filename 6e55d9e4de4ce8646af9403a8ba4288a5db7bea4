@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "8532042b_6d61e8c5",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-13T15:54:09Z",
+      "side": 1,
+      "message": "yes, I understand. but the this function leaves `agent.logicalDevice` in an incomplete state and expects the caller to understand how to correctly clean up that incomplete state. The concern/question is, would it be cleaner if the func that creates a partial state cleans that up as it is really the only one that knows that partial state.\n\nThis is a package internal func, so perhaps it isn\u0027t critical here, but just a question.",
+      "parentUuid": "9986ff8b_486db935",
+      "revId": "6e55d9e4de4ce8646af9403a8ba4288a5db7bea4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4d46021_a5fe5e56",
         "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/db/common.go",
         "patchSetId": 1
