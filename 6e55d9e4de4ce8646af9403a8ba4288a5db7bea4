@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9986ff8b_486db935",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-13T15:45:01Z",
+      "side": 1,
+      "message": "The failure in this \"else\" is when the agent is started upon a load from dB request.  Either the data exist or does not.  On failure the agent itself is stopped and deleted.  So no data cleanup is required in this case.",
+      "parentUuid": "89eaa6ca_93f78c02",
+      "revId": "6e55d9e4de4ce8646af9403a8ba4288a5db7bea4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4d46021_a5fe5e56",
         "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/db/common.go",
         "patchSetId": 1
