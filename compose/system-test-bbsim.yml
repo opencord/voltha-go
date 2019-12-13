@@ -50,7 +50,7 @@ services:
 
 
   etcd:
-    image: "quay.io/coreos/etcd:v3.2.9"
+    image: "quay.io/coreos/etcd:v3.4.1"
     command: [
       "etcd",
       "--name=etcd0",
@@ -94,20 +94,6 @@ services:
       - 50057:50057
     networks:
     - default
-    restart: unless-stopped
-
-
-  cli:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-cli:${DOCKER_TAG}"
-    environment:
-      DOCKER_HOST_IP: "${DOCKER_HOST_IP}"
-    entrypoint:
-    - /voltha/python/cli/setup.sh
-    - -g ${DOCKER_HOST_IP}:50057
-    networks:
-    - default
-    ports:
-    - "5022:22"
     restart: unless-stopped
 
 

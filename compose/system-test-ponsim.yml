@@ -48,7 +48,7 @@ services:
 
 
   etcd:
-    image: "quay.io/coreos/etcd:v3.2.9"
+    image: "quay.io/coreos/etcd:v3.4.1"
     command: [
       "etcd",
       "--name=etcd0",
@@ -93,24 +93,6 @@ services:
     networks:
     - default
     restart: unless-stopped
-
-
-  cli:
-    image: "${REGISTRY}${REPOSITORY}voltha-cli:latest"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    environment:
-      DOCKER_HOST_IP: "${DOCKER_HOST_IP}"
-    entrypoint:
-    - /voltha/python/cli/setup.sh
-    - -g ${DOCKER_HOST_IP}:50057
-    networks:
-    - default
-    ports:
-    - "5022:22"
 
 
   ofagent:
