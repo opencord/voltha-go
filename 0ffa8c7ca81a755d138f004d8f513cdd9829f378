@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbc7efa9_fe80f5cb",
+        "filename": "Makefile",
+        "patchSetId": 26
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-13T15:40:52Z",
+      "side": 1,
+      "message": "Consider merging \"clean:\" and \"distclean:\" targets.\n(I think I mentioned this elsewhere...)",
+      "revId": "0ffa8c7ca81a755d138f004d8f513cdd9829f378",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
