@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f8914058_cb046767",
+        "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/db/common.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-13T15:15:29Z",
+      "side": 1,
+      "message": "The previous name of that file was common_test.go.  Therefore when this file was not brought down when importing the package in the unit tests in this scenario.   Without it the unit tests cannot control the logging level of this db package hence leading to lots of unnecessary logs on jenkins and potentially masking real errors.",
+      "parentUuid": "a4d46021_a5fe5e56",
+      "revId": "6e55d9e4de4ce8646af9403a8ba4288a5db7bea4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21c9d7b3_b5534bab",
         "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/mocks/common.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-13T15:10:21Z",
       "side": 1,
       "message": "What does this have to do with unit tests?",
+      "revId": "6e55d9e4de4ce8646af9403a8ba4288a5db7bea4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91bf4ca7_f73a7e09",
+        "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/mocks/common.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-13T15:15:29Z",
+      "side": 1,
+      "message": "See other comments",
+      "parentUuid": "21c9d7b3_b5534bab",
       "revId": "6e55d9e4de4ce8646af9403a8ba4288a5db7bea4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
