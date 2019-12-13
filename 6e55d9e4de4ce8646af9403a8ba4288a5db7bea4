@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "ecc5e152_9d7b4682",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-13T16:01:20Z",
+      "side": 1,
+      "message": "Your point is valid for the general case.  However, in this scenario the states per say are internal to the logicaldevice agent itself and the calling function deleted this agent, hence the agent.logicalDevice is gone as well.",
+      "parentUuid": "8532042b_6d61e8c5",
+      "revId": "6e55d9e4de4ce8646af9403a8ba4288a5db7bea4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4d46021_a5fe5e56",
         "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/db/common.go",
         "patchSetId": 1
