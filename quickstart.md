@@ -38,8 +38,8 @@ sudo apt install golang-1.12
 
 ### Setup environment
 
-Setup a local Golang and docker-compose environment, verifying the golang-1.12 binaries are in your path.  Also add your local GOPATH's bin folder to PATH.
-Add to your `~/.profile` to persist.
+Setup a local Golang and docker-compose environment, verifying the golang-1.12 binaries are in your path.  Also add your local `GOPATH` bin folder to `PATH`
+Add export statements to your `~/.profile` to persist.
 
 ```sh
 mkdir $HOME/source
@@ -67,7 +67,7 @@ Logout/Login to assume new group membership needed for running docker as non-roo
 
 ### VOLTHA 2.x Core Containers
 
-Checkout needed source from gerrit. Build the `voltha-rw-core` and `voltha-ofagent` docker images.
+Checkout needed source from gerrit. Build the `voltha-rw-core` docker image.
 ```sh
 cd ~/source/
 git clone https://gerrit.opencord.org/voltha-go.git
@@ -103,6 +103,18 @@ cd ~/source/
 git clone https://gerrit.opencord.org/voltha-openonu-adapter.git
 cd ~/source/voltha-openonu-adapter/
 make build
+```
+
+
+
+### VOLTHA 2.x OFAgent
+
+Checkout needed source from gerrit.  Build the `voltha-ofagent` docker image.
+```sh
+cd ~/source/
+git clone https://gerrit.opencord.org/ofagent-py.git
+cd ~/source/ofagent-py/
+make docker-build
 ```
 
 
