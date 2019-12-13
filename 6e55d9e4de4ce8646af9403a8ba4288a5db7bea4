@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "89eaa6ca_93f78c02",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-12-13T15:37:29Z",
+      "side": 1,
+      "message": "This creates a dependency that you can\u0027t control. As the agent was created outside of the func is fine to let the caller deal with the agent in an error case, but as the logical device was \"started\" or \"partially created\" in this func should this func clean that up in the case of an error?",
+      "revId": "6e55d9e4de4ce8646af9403a8ba4288a5db7bea4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4d46021_a5fe5e56",
         "filename": "vendor/github.com/opencord/voltha-lib-go/v2/pkg/db/common.go",
         "patchSetId": 1
