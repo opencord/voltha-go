@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5397c8a5_869606b5",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 55
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T19:05:34Z",
+      "side": 1,
+      "message": "This function should not have been changed.",
+      "revId": "88abe10c5d7c8147e641b97143a7287f301c7ffb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
