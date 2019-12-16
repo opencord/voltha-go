@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f640608a_ff944d3a",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T18:51:45Z",
+      "side": 1,
+      "message": "Would be good to verify whether the callbacks were actually received.",
+      "revId": "01669530013d80ef0414732874272ffe564f266f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "153f3cc2_1526dcc2",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T18:51:45Z",
+      "side": 1,
+      "message": "There are two tests that are starting and closing the etcd server.  This is an expensive operation.  Can you use only 1 instance of the server.  Also, is the etcd server really needed in these tests?",
+      "revId": "01669530013d80ef0414732874272ffe564f266f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
