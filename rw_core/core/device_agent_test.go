@@ -23,10 +23,12 @@ import (
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	lm "github.com/opencord/voltha-lib-go/v2/pkg/mocks"
+	ofp "github.com/opencord/voltha-protos/v2/go/openflow_13"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -224,4 +226,233 @@ func TestConcurrentDevices(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func isFlowSliceEqual(a, b []*ofp.OfpFlowStats) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	sort.Slice(a, func(i, j int) bool {
+		return a[i].Id < a[j].Id
+	})
+	sort.Slice(b, func(i, j int) bool {
+		return b[i].Id < b[j].Id
+	})
+	for idx := range a {
+		if !proto.Equal(a[idx], b[idx]) {
+			return false
+		}
+	}
+	return true
+}
+
+func isGroupSliceEqual(a, b []*ofp.OfpGroupEntry) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	sort.Slice(a, func(i, j int) bool {
+		return a[i].Desc.GroupId < a[j].Desc.GroupId
+	})
+	sort.Slice(b, func(i, j int) bool {
+		return b[i].Desc.GroupId < b[j].Desc.GroupId
+	})
+	for idx := range a {
+		if !proto.Equal(a[idx], b[idx]) {
+			return false
+		}
+	}
+	return true
+}
+
+func TestFlowsToUpdateToDelete_EmptySlices(t *testing.T) {
+	newFlows := []*ofp.OfpFlowStats{}
+	existingFlows := []*ofp.OfpFlowStats{}
+	expectedNewFlows := []*ofp.OfpFlowStats{}
+	expectedFlowsToDelete := []*ofp.OfpFlowStats{}
+	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{}
+	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
+	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
+	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
+}
+
+func TestFlowsToUpdateToDelete_NoExistingFlows(t *testing.T) {
+	newFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+	}
+	existingFlows := []*ofp.OfpFlowStats{}
+	expectedNewFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+	}
+	expectedFlowsToDelete := []*ofp.OfpFlowStats{}
+	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+	}
+	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
+	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
+	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
+}
+
+func TestFlowsToUpdateToDelete_UpdateNoDelete(t *testing.T) {
+	newFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+	}
+	existingFlows := []*ofp.OfpFlowStats{
+		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
+	}
+	expectedNewFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+	}
+	expectedFlowsToDelete := []*ofp.OfpFlowStats{}
+	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
+		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
+	}
+	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
+	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
+	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
+}
+
+func TestFlowsToUpdateToDelete_UpdateAndDelete(t *testing.T) {
+	newFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 20},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 10, Flags: 0, Cookie: 1250000, PacketCount: 0},
+		{Id: 126, TableId: 1260, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
+	}
+	existingFlows := []*ofp.OfpFlowStats{
+		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
+		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+	}
+	expectedNewFlows := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 20},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 10, Flags: 0, Cookie: 1250000, PacketCount: 0},
+		{Id: 126, TableId: 1260, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
+	}
+	expectedFlowsToDelete := []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+	}
+	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{
+		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
+		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 20},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 10, Flags: 0, Cookie: 1250000, PacketCount: 0},
+		{Id: 126, TableId: 1260, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
+	}
+	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
+	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
+	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
+}
+
+func TestGroupsToUpdateToDelete_EmptySlices(t *testing.T) {
+	newGroups := []*ofp.OfpGroupEntry{}
+	existingGroups := []*ofp.OfpGroupEntry{}
+	expectedNewGroups := []*ofp.OfpGroupEntry{}
+	expectedGroupsToDelete := []*ofp.OfpGroupEntry{}
+	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{}
+	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
+	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
+	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
+}
+
+func TestGroupsToUpdateToDelete_NoExistingGroups(t *testing.T) {
+	newGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+	}
+	existingGroups := []*ofp.OfpGroupEntry{}
+	expectedNewGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+	}
+	expectedGroupsToDelete := []*ofp.OfpGroupEntry{}
+	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+	}
+	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
+	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
+	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
+}
+
+func TestGroupsToUpdateToDelete_UpdateNoDelete(t *testing.T) {
+	newGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+	}
+	existingGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	}
+	expectedNewGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+	}
+	expectedGroupsToDelete := []*ofp.OfpGroupEntry{}
+	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	}
+	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
+	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
+	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
+}
+
+func TestGroupsToUpdateToDelete_UpdateWithDelete(t *testing.T) {
+	newGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: []*ofp.OfpBucket{{WatchPort: 10}}}},
+	}
+	existingGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	}
+	expectedNewGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: []*ofp.OfpBucket{{WatchPort: 10}}}},
+	}
+	expectedGroupsToDelete := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+	}
+	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: []*ofp.OfpBucket{{WatchPort: 10}}}},
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	}
+	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
+	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
+	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
 }
