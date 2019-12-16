@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85163f86_be1f9bdb",
+        "filename": "db/model/non_persisted_revision_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T19:16:12Z",
+      "side": 1,
+      "message": "Please change the year to 2019",
+      "revId": "7d9dd56c5be5e158db9fd51ad703c7fe55e4c986",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eac2afd2_768cb628",
+        "filename": "db/model/non_persisted_revision_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T19:16:12Z",
+      "side": 1,
+      "message": "Other than nil,  do you need to take a peek inside the struct to see if the fields have been setup correctly?",
+      "revId": "7d9dd56c5be5e158db9fd51ad703c7fe55e4c986",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a5f0da8_4fbcc6bf",
+        "filename": "db/model/non_persisted_revision_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T19:16:12Z",
+      "side": 1,
+      "message": "Do you need to have the same name for all the tests?",
+      "revId": "7d9dd56c5be5e158db9fd51ad703c7fe55e4c986",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6d61706_ecbb83a4",
+        "filename": "db/model/non_persisted_revision_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T19:16:12Z",
+      "side": 1,
+      "message": "Is it possible to check the content of the config? E.g. set the config first and verify that the get returns the correct values?",
+      "revId": "7d9dd56c5be5e158db9fd51ad703c7fe55e4c986",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccb835ca_092a0ffe",
+        "filename": "db/model/non_persisted_revision_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-16T19:16:12Z",
+      "side": 1,
+      "message": "Anything that needs to be verified after a set?",
+      "revId": "7d9dd56c5be5e158db9fd51ad703c7fe55e4c986",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
