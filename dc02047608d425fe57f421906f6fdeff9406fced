@@ -16,6 +16,24 @@
       "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "139979a7_2bda879f",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T20:22:47Z",
+      "side": 1,
+      "message": "I thought it made the most sense to expose generic \"metadata\" up from the kafka library, and allow the implementation (in this case, this function) to decide what information to extract.\n\n`inter_container.Header` seemed to contain the general communication metadata, since it\u0027s included with each message.",
+      "parentUuid": "a3310b6c_8c1ca9ec",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
