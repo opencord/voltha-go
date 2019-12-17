@@ -112,7 +112,7 @@ func (kc *KafkaClient) UnSubscribe(topic *kafka.Topic, ch <-chan *ic.InterContai
 }
 
 func (kc *KafkaClient) SubscribeForMetadata(_ func(fromTopic string, timestamp int64)) {
-	panic("unimplemented")
+	logger.Debug("SubscribeForMetadata - unimplemented")
 }
 
 func (kc *KafkaClient) Send(msg interface{}, topic *kafka.Topic, keys ...string) error {
@@ -137,9 +137,11 @@ func (kc *KafkaClient) SendLiveness() error {
 }
 
 func (kc *KafkaClient) EnableLivenessChannel(enable bool) chan bool {
+	logger.Debug("EnableLivenessChannel - unimplemented")
 	return nil
 }
 
 func (kc *KafkaClient) EnableHealthinessChannel(enable bool) chan bool {
+	logger.Debug("EnableHealthinessChannel - unimplemented")
 	return nil
 }
