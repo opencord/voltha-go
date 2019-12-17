@@ -176,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "4295659e_36d03830",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:15:09Z",
+      "side": 1,
+      "message": "Will double check.",
+      "parentUuid": "fbc79443_d7d3520f",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43540a08_b6f28d46",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
