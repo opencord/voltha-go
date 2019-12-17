@@ -109,6 +109,24 @@
     },
     {
       "key": {
+        "uuid": "04a44423_5a796dae",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T16:50:47Z",
+      "side": 1,
+      "message": "Code that can fail never seems as clean as code that can\u0027t.  \n\nUnfortunately, that\u0027s rarely the case. ¯\\_(ツ)_/¯",
+      "parentUuid": "b93d62e3_399b874d",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a036a50_2955b882",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
