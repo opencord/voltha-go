@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a7dcae00_2fb4fbc7",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-12-17T16:23:18Z",
+      "side": 1,
+      "message": "Ok, using a \u0027chan\u0027 to verify that callback are actually invoked. (before there was just a log)",
+      "parentUuid": "f640608a_ff944d3a",
+      "revId": "01669530013d80ef0414732874272ffe564f266f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "153f3cc2_1526dcc2",
         "filename": "db/model/root_test.go",
         "patchSetId": 7
