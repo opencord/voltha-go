@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "6e5fc9f2_2681e521",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:30:13Z",
+      "side": 1,
+      "message": "If the calling function is invoking it with incorrect index then nothing happens. Panicking in this scenario is too drastic,",
+      "parentUuid": "2d8d3a45_67bcbd62",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a036a50_2955b882",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
@@ -230,6 +248,24 @@
     },
     {
       "key": {
+        "uuid": "d8462e12_7695ea0f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:30:13Z",
+      "side": 1,
+      "message": "got it.  Good catch!",
+      "parentUuid": "7768a6f6_da0dc94a",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43540a08_b6f28d46",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
@@ -311,6 +347,24 @@
       "side": 1,
       "message": ":\u003d only spits out errors if _all_ the variables are already defined.  So long as at least one new variable is being defined, it won\u0027t complain.",
       "parentUuid": "ba160057_b98b5246",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b31b002a_09d80003",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:30:13Z",
+      "side": 1,
+      "message": "hum ... my ide complains about that.",
+      "parentUuid": "3ef1ea73_ab139377",
       "revId": "fab092e5fc557173314921884c3b4241749f1137",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
