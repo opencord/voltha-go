@@ -43,6 +43,7 @@ type Core struct {
 	grpcServer        *grpcserver.GrpcServer
 	grpcNBIAPIHandler *APIHandler
 	adapterMgr        *AdapterManager
+	eventFilterAgent  *EventFilterAgent
 	config            *config.RWCoreFlags
 	kmp               *kafka.InterContainerProxy
 	clusterDataRoot   model.Root
@@ -142,7 +143,7 @@ func (core *Core) Start(ctx context.Context) error {
 	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceID, core.deviceMgr)
 	core.deviceMgr.adapterMgr = core.adapterMgr
 	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy, core.config.DefaultCoreTimeout)
-
+	core.eventFilterAgent = NewEventFilterAgent(core.deviceMgr, core.clusterDataProxy)
 	// Start the KafkaManager. This must be done after the deviceMgr, adapterMgr, and
 	// logicalDeviceMgr have been created, as once the kmp is started, it will register
 	// the above with the kmp.
@@ -157,7 +158,7 @@ func (core *Core) Start(ctx context.Context) error {
 	go core.startGRPCService(ctx)
 	go core.startAdapterManager(ctx)
 	go core.monitorKvstoreLiveness(ctx)
-
+	go core.startEventFilterAgent(ctx)
 	// Setup device ownership context
 	core.deviceOwnership = NewDeviceOwnership(core.instanceID, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
 		"service/voltha/owns_device", 10)
@@ -432,6 +433,12 @@ func (core *Core) startAdapterManager(ctx context.Context) {
 		log.Fatalf("failed-to-start-adapter-manager: error %v ", err)
 	}
 	log.Info("Adapter-Manager-Started")
+}
+
+func (core *Core) startEventFilterAgent(ctx context.Context) {
+	log.Info("Event-filter-Starting...")
+	core.eventFilterAgent.start(ctx)
+	log.Info("Event-Filter-Started")
 }
 
 /*
