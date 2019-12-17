@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "bbc21cfa_a5037864",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T16:36:34Z",
+      "side": 1,
+      "message": "It\u0027s an out-of-bounds memory access, default handling of such a situation is to panic.\n\nIt just seems strange to have a check for a case that\u0027s not supposed to happen (and especially here, since it would fail silently).\n\nSimply removing the check would allow the default panic behavior to work.  Seems like more work for less robustness.",
+      "parentUuid": "6e5fc9f2_2681e521",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a036a50_2955b882",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
