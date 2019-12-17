@@ -21,6 +21,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/hashicorp/go-uuid"
 	"io"
 	"sync"
 
@@ -907,29 +908,48 @@ func (handler *APIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.I
 
 func (handler *APIHandler) CreateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
 	log.Debugw("CreateEventFilter-request", log.Fields{"filter": *filter})
-	return nil, errors.New("UnImplemented")
+	filter.Id, _ = uuid.GenerateUUID()
+	if err := handler.core.eventFilterAgent.CreateEventFilter(filter); err != nil {
+		log.Errorw("create-event-filter-failed", log.Fields{"filter": filter, "error": err})
+		return nil, err
+	}
+	return filter, nil
 }
 
 func (handler *APIHandler) UpdateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
 	log.Debugw("UpdateEventFilter-request", log.Fields{"filter": *filter})
-	return nil, errors.New("UnImplemented")
+	if err := handler.core.eventFilterAgent.UpdateEventFilter(filter); err != nil {
+		log.Errorw("update-event-filter-failed", log.Fields{"filter": filter, "error": err})
+		return nil, err
+	}
+	return filter, nil
 }
 
 func (handler *APIHandler) DeleteEventFilter(ctx context.Context, filterInfo *voltha.EventFilter) (*empty.Empty, error) {
 	log.Debugw("DeleteEventFilter-request", log.Fields{"device-id": filterInfo.DeviceId, "filter-id": filterInfo.Id})
-	return nil, errors.New("UnImplemented")
+	if err := handler.core.eventFilterAgent.DeleteEventFilter(filterInfo); err != nil {
+		log.Errorw("delete-event-filter-failed", log.Fields{"filter-info": filterInfo})
+		return nil, err
+	}
+	return &empty.Empty{}, nil
 }
 
 // GetEventFilter returns all the filters present for a device
 func (handler *APIHandler) GetEventFilter(ctx context.Context, id *voltha.ID) (*voltha.EventFilters, error) {
 	log.Debugw("GetEventFilter-request", log.Fields{"device-id": id})
-	return nil, errors.New("UnImplemented")
+	var err error
+	var filters *voltha.EventFilters
+	if filters, err = handler.core.eventFilterAgent.GetEventFilter(id); err != nil {
+		log.Errorw("get-event-filter-failed", log.Fields{"device-id": id.Id})
+		return nil, err
+	}
+	return filters, nil
 }
 
 // ListEventFilters returns all the filters known to the system
 func (handler *APIHandler) ListEventFilters(ctx context.Context, empty *empty.Empty) (*voltha.EventFilters, error) {
 	log.Debug("ListEventFilter-request")
-	return nil, errors.New("UnImplemented")
+	return handler.core.eventFilterAgent.ListEventFilter(), nil
 }
 
 func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
