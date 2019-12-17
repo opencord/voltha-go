@@ -42,6 +42,7 @@ type Core struct {
 	grpcServer        *grpcserver.GrpcServer
 	grpcNBIAPIHandler *APIHandler
 	adapterMgr        *AdapterManager
+	eventFilterAgent  *EventFilterAgent
 	config            *config.RWCoreFlags
 	kmp               *kafka.InterContainerProxy
 	clusterDataRoot   model.Root
@@ -148,6 +149,7 @@ func (core *Core) Start(ctx context.Context) {
 	go core.monitorKvstoreLiveness(ctx)
 
 	// Setup device ownership context
+	core.eventFilterAgent = NewEventFilterAgent(core.config.KVStoreHost, core.config.KVStorePort, core.config.KVStoreType, core.deviceMgr)
 	core.deviceOwnership = NewDeviceOwnership(core.instanceID, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
 		"service/voltha/owns_device", 10)
 
