@@ -678,7 +678,11 @@ func (dMgr *DeviceManager) sendReconcileDeviceRequest(device *voltha.Device) uti
 	// the adapter_proxy.
 	response := utils.NewResponse()
 	go func(device *voltha.Device) {
-		if err := dMgr.adapterProxy.ReconcileDevice(context.Background(), device); err != nil {
+		filterForDevice, err := dMgr.core.eventFilterAgent.GetEventFilter(device.Id)
+		if err != nil {
+			log.Debugw("cannot-fetch-filter-device", log.Fields{"device-id": device.Id})
+		}
+		if err := dMgr.adapterProxy.ReconcileDevice(context.Background(), device, filterForDevice); err != nil {
 			log.Errorw("reconcile-request-failed", log.Fields{"deviceId": device.Id, "error": err})
 			response.Error(status.Errorf(codes.Internal, "device: %s", device.Id))
 		}
