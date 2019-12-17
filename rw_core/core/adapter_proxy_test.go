@@ -110,7 +110,6 @@ func testSimpleRequests(t *testing.T) {
 		ap.DisableDevice,
 		ap.RebootDevice,
 		ap.DeleteDevice,
-		ap.ReconcileDevice,
 		ap.ReEnableDevice,
 	}
 	for _, f := range simpleRequests {
