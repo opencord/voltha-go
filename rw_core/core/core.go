@@ -139,7 +139,7 @@ func (core *Core) Start(ctx context.Context) error {
 
 	log.Debugw("values", log.Fields{"kmp": core.kmp})
 	core.deviceMgr = newDeviceManager(core)
-	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceID, core.deviceMgr)
+	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceID, core.kafkaClient, core.deviceMgr)
 	core.deviceMgr.adapterMgr = core.adapterMgr
 	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy, core.config.DefaultCoreTimeout)
 
