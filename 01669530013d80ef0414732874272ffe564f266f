@@ -33,6 +33,24 @@
       "revId": "01669530013d80ef0414732874272ffe564f266f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7018643_5ae9195f",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2019-12-17T14:04:54Z",
+      "side": 1,
+      "message": "It is a etcd client that I would keep to set the backend struct required by NewRoot()",
+      "parentUuid": "153f3cc2_1526dcc2",
+      "revId": "01669530013d80ef0414732874272ffe564f266f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
