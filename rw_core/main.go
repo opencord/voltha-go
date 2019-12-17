@@ -106,7 +106,7 @@ func (rw *rwCore) setKVClient() error {
 	client, err := newKVClient(rw.config.KVStoreType, addr, rw.config.KVStoreTimeout)
 	if err != nil {
 		rw.kvClient = nil
-		log.Error(err)
+		log.Fatal(err)
 		return err
 	}
 	rw.kvClient = client
