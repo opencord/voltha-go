@@ -534,12 +534,37 @@ func (ap *AdapterProxy) ReceivePacketOut(deviceID voltha.ID, egressPortNo int, m
 
 func (ap *AdapterProxy) SuppressEvent(filter *voltha.EventFilter) error {
 	log.Debug("SuppressEvent")
-	return nil
+	log.Debug("SuppressEvent")
+	rpc := "suppress_event"
+	toTopic := ap.getAdapterTopic("openolt")
+	args := make([]*kafka.KVArg, 1)
+	args[0] = &kafka.KVArg{
+		Key:   "filter",
+		Value: filter,
+	}
+	// Use a device specific topic as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, filter.DeviceId, args...)
+	log.Debugw("SuppressEvent-response", log.Fields{"filter": filter, "success": success})
+
+	return unPackResponse(rpc, filter.DeviceId, success, result)
 }
 
 func (ap *AdapterProxy) UnSuppressEvent(filter *voltha.EventFilter) error {
 	log.Debug("UnSuppressEvent")
-	return nil
+	rpc := "unsuppress_event"
+	toTopic := ap.getAdapterTopic("openolt")
+	args := make([]*kafka.KVArg, 1)
+	args[0] = &kafka.KVArg{
+		Key:   "filter",
+		Value: filter,
+	}
+	// Use a device specific topic as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, filter.DeviceId, args...)
+	log.Debugw("UnsuppressEvent-response", log.Fields{"filter": filter, "success": success})
+
+	return unPackResponse(rpc, filter.DeviceId, success, result)
 }
 
 // SimulateAlarm invokes simulate alarm rpc
