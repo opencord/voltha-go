@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3adc11a6_da7cd798",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "Should improper use just panic?  Not sure this check is necessary.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a036a50_2955b882",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "To avoid a memory leak, the last element of the slice should be set to nil rather than the value of flows[index].\n\nhttps://github.com/golang/go/wiki/SliceTricks#delete-without-preserving-order",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "774b39f4_dcbd9982",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "Should improper use just panic?  Not sure this check is necessary.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "754f87b3_91b6fc44",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "To avoid a memory leak, the last element of the slice should be set to nil rather than the value of flows[index].\n\nhttps://github.com/golang/go/wiki/SliceTricks#delete-without-preserving-order",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89cf2663_3760ece6",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "Since the usage assigns updatedNewFlows back to newFlows, having separate updatedNewFlows and newFlows is unnecessary, just modify \u0026 return the existing newFlows.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16f505be_837c0588",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "Inconsistent usage of idx: just because newFlows[idx] \u003d\u003d flow, doesn\u0027t mean updatedNewFlows[idx] \u003d\u003d flow. (since updatedNewFlows may have been changed on a previous loop iteration.)\n\nUsing updatedNewFlows instead of newFlows throughout this function should fix the problem.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43540a08_b6f28d46",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "Since the usage assigns updatedNewGroups back to newGroups, having separate updatedNeGroups and newGroups is unnecessary, just modify \u0026 return the existing newGroups.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69c5e8e4_23eed42e",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "Inconsistent usage of idx: just because newGroups[idx] \u003d\u003d group, doesn\u0027t mean updatedNewGroups[idx] \u003d\u003d group. (since updatedNewGroups may have been changed on a previous loop iteration.)\n\nUsing updatedNewGroups instead of newGroups throughout this function should fix the problem.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa135c39_86b8c07c",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T15:49:35Z",
+      "side": 1,
+      "message": "Don\u0027t need to predeclare these variables, and just use `:\u003d` for flowsToUpdateToDelete and groupsToUpdateToDelete.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
