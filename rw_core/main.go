@@ -101,33 +101,25 @@ func newRWCore(cf *config.RWCoreFlags) *rwCore {
 	return &rwCore
 }
 
-func (rw *rwCore) setKVClient() error {
-	addr := rw.config.KVStoreHost + ":" + strconv.Itoa(rw.config.KVStorePort)
-	client, err := newKVClient(rw.config.KVStoreType, addr, rw.config.KVStoreTimeout)
-	if err != nil {
-		rw.kvClient = nil
-		log.Error(err)
-		return err
-	}
-	rw.kvClient = client
-	return nil
-}
-
 func (rw *rwCore) start(ctx context.Context, instanceID string) {
 	log.Info("Starting RW Core components")
 
 	// Setup KV Client
 	log.Debugw("create-kv-client", log.Fields{"kvstore": rw.config.KVStoreType})
-	err := rw.setKVClient()
-	if err == nil {
-		// Setup KV transaction context
-		txnPrefix := rw.config.KVStoreDataPrefix + "/transactions/"
-		if err = c.SetTransactionContext(instanceID,
-			txnPrefix,
-			rw.kvClient,
-			rw.config.KVStoreTimeout); err != nil {
-			log.Fatal("creating-transaction-context-failed")
-		}
+	var err error
+	if rw.kvClient, err = newKVClient(
+		rw.config.KVStoreType,
+		rw.config.KVStoreHost+":"+strconv.Itoa(rw.config.KVStorePort),
+		rw.config.KVStoreTimeout); err != nil {
+		log.Fatal(err)
+	}
+
+	// Setup KV transaction context
+	if err := c.SetTransactionContext(instanceID,
+		rw.config.KVStoreDataPrefix+"/transactions/",
+		rw.kvClient,
+		rw.config.KVStoreTimeout); err != nil {
+		log.Fatal("creating-transaction-context-failed")
 	}
 
 	// Setup Kafka Client
