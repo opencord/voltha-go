@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3310b6c_8c1ca9ec",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T19:27:38Z",
+      "side": 1,
+      "message": "Would it make sense to use time as a parameter instead of the inter_container proto which is mostly meant to be used by components interacting with kafka?",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
