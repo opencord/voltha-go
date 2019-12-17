@@ -70,6 +70,24 @@
       "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a620d7c0_1a7c96c9",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T20:47:47Z",
+      "side": 1,
+      "message": "With gRPC, even if we got the connectivity status, we still need to report it somewhere.\n\nAdding time and adapter name to this function param would be my preferred approach.",
+      "parentUuid": "ad240142_80309c7a",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
