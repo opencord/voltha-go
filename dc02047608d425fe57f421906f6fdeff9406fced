@@ -34,6 +34,24 @@
       "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2aec1e3d_8c68407f",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T20:28:35Z",
+      "side": 1,
+      "message": "It depends on the point of view.  When we move to gRPC then we won\u0027t have an inter_container header and this code will need to change.   Separating what\u0027s specific to kafka and this code require less change later on.",
+      "parentUuid": "139979a7_2bda879f",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
