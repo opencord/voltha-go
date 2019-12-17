@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "b93d62e3_399b874d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:44:59Z",
+      "side": 1,
+      "message": "If the default Go behavior is to panic then I will remove the check.  Just don\u0027t like it!",
+      "parentUuid": "bbc21cfa_a5037864",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a036a50_2955b882",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
