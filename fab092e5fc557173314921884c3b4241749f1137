@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "acbfe6ac_ae1e71f4",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:07:50Z",
+      "side": 1,
+      "message": "Can\u0027t panic for this scenario.",
+      "parentUuid": "3adc11a6_da7cd798",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a036a50_2955b882",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-17T15:49:35Z",
       "side": 1,
       "message": "To avoid a memory leak, the last element of the slice should be set to nil rather than the value of flows[index].\n\nhttps://github.com/golang/go/wiki/SliceTricks#delete-without-preserving-order",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "428480df_0a49eada",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:07:50Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "1a036a50_2955b882",
       "revId": "fab092e5fc557173314921884c3b4241749f1137",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "fcb21e33_acf1abd3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:07:50Z",
+      "side": 1,
+      "message": "Since this is a function call which can be invoked in different scenarios  then I don\u0027t want to update the passing parameters.",
+      "parentUuid": "89cf2663_3760ece6",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16f505be_837c0588",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
@@ -98,6 +152,24 @@
       "writtenOn": "2019-12-17T15:49:35Z",
       "side": 1,
       "message": "Inconsistent usage of idx: just because newFlows[idx] \u003d\u003d flow, doesn\u0027t mean updatedNewFlows[idx] \u003d\u003d flow. (since updatedNewFlows may have been changed on a previous loop iteration.)\n\nUsing updatedNewFlows instead of newFlows throughout this function should fix the problem.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbc79443_d7d3520f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:07:50Z",
+      "side": 1,
+      "message": "Not sure I follow.   It is not expected that the idx in NewFlows and updateNewFlows to point to the same flow. Besides, updateNewFlows[idx] is not used.",
+      "parentUuid": "16f505be_837c0588",
       "revId": "fab092e5fc557173314921884c3b4241749f1137",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -149,6 +221,24 @@
       "writtenOn": "2019-12-17T15:49:35Z",
       "side": 1,
       "message": "Don\u0027t need to predeclare these variables, and just use `:\u003d` for flowsToUpdateToDelete and groupsToUpdateToDelete.",
+      "revId": "fab092e5fc557173314921884c3b4241749f1137",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba160057_b98b5246",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2019-12-17T16:07:50Z",
+      "side": 1,
+      "message": "Since newFlows and newGroups are already defined then this can\u0027t be done.",
+      "parentUuid": "fa135c39_86b8c07c",
       "revId": "fab092e5fc557173314921884c3b4241749f1137",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
