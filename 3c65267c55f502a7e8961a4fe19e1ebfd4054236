@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fa8a535_eb68300f",
+        "filename": "Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-12-17T23:43:24Z",
+      "side": 1,
+      "message": "TYPE isn\u0027t set anywhere, but would be set by kind-voltha ?",
+      "range": {
+        "startLine": 114,
+        "startChar": 42,
+        "endLine": 114,
+        "endChar": 48
+      },
+      "revId": "3c65267c55f502a7e8961a4fe19e1ebfd4054236",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c6e67a7_5a3b94a3",
+        "filename": "Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-12-17T23:43:24Z",
+      "side": 1,
+      "message": "Should this be $(TYPE) as well ?",
+      "range": {
+        "startLine": 115,
+        "startChar": 95,
+        "endLine": 115,
+        "endChar": 102
+      },
+      "revId": "3c65267c55f502a7e8961a4fe19e1ebfd4054236",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5dfa3bb_acdc7b6e",
+        "filename": "Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-12-17T23:43:24Z",
+      "side": 1,
+      "message": "ro_core isn\u0027t being used.",
+      "range": {
+        "startLine": 116,
+        "startChar": 24,
+        "endLine": 116,
+        "endChar": 43
+      },
+      "revId": "3c65267c55f502a7e8961a4fe19e1ebfd4054236",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
