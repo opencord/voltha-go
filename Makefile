@@ -110,6 +110,11 @@ docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 	docker push ${ROCORE_IMAGENAME}:${DOCKER_TAG}
 
+docker-kind-load:
+	@if [ "`kind get clusters`" = '' ]; then echo "no kind cluster found" && exit 1; fi
+	kind load docker-image ${RWCORE_IMAGENAME}:${DOCKER_TAG}
+	kind load docker-image ${ROCORE_IMAGENAME}:${DOCKER_TAG}
+
 ## lint and unit tests
 
 PATH:=$(GOPATH)/bin:$(PATH)
