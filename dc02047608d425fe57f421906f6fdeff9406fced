@@ -52,6 +52,24 @@
       "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad240142_80309c7a",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-17T20:43:12Z",
+      "side": 1,
+      "message": "With gRPC, we should have adapter-connectivity information already, making this whole approach obsolete.\n\nI\u0027m not really opposed to just exposing the time.  If that\u0027s preferred I can change it.\n\n(It\u0027s looking like this feature won\u0027t be merged until the new year anyways.)",
+      "parentUuid": "2aec1e3d_8c68407f",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
