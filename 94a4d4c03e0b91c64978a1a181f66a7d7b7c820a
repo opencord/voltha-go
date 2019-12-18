@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c12a283_ffe0d15c",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-12-18T00:36:37Z",
+      "side": 1,
+      "message": "Would `--no-headers` remove the need for this?",
+      "range": {
+        "startLine": 117,
+        "startChar": 170,
+        "endLine": 117,
+        "endChar": 193
+      },
+      "revId": "94a4d4c03e0b91c64978a1a181f66a7d7b7c820a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
