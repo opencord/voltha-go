@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83dd7399_bc30a221",
+        "filename": "db/model/non_persisted_revision_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T19:24:25Z",
+      "side": 1,
+      "message": "Rather than redeclaring this struct for each test, just create a local helper struct type.",
+      "revId": "c4ef9fe3e6c404ee4d779831a0f7a5393b7f8647",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
