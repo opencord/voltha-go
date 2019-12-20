@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "295b6f20_48850325",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1000498
+      },
+      "writtenOn": "2019-12-20T10:15:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89314d6a_126e78dd",
+      "revId": "64d33e59ecbf9c328c255bed72f1b82c37ca742c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "857551c2_146cad3f",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-19T20:30:52Z",
       "side": 1,
       "message": "Rather than declaring a var, can just pass \u0026voltha.FlowMetaData{} inline.",
+      "revId": "64d33e59ecbf9c328c255bed72f1b82c37ca742c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b53c992_9805ec6d",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1219,
+      "author": {
+        "id": 1000498
+      },
+      "writtenOn": "2019-12-20T10:15:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "857551c2_146cad3f",
       "revId": "64d33e59ecbf9c328c255bed72f1b82c37ca742c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
