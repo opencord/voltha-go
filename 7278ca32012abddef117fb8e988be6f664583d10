@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12c828b8_6e96938b",
+        "filename": "db/model/persisted_revision_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T22:51:19Z",
+      "side": 1,
+      "message": "This is a pointless test.",
+      "revId": "7278ca32012abddef117fb8e988be6f664583d10",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca36801c_e99c9762",
+        "filename": "db/model/persisted_revision_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T22:51:19Z",
+      "side": 1,
+      "message": "This test can be done statically at compile-time by, in global scope, adding:\n\n`var _ Revision \u003d \u0026PersistedRevision{}`",
+      "revId": "7278ca32012abddef117fb8e988be6f664583d10",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
