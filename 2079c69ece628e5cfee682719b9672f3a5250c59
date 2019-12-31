@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "220ba70e_acdd36ec",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2019-12-31T11:30:46Z",
+      "side": 1,
+      "message": "not checking for errors ?",
+      "revId": "2079c69ece628e5cfee682719b9672f3a5250c59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
