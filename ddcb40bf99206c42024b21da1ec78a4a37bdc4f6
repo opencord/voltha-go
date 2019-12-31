@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a798aad0_5e14816a",
+        "filename": "rw_core/core/event_filter_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2019-12-31T11:30:46Z",
+      "side": 1,
+      "message": "core should be agnostic of the type of adapter",
+      "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d0b16fe_d5e20934",
+        "filename": "rw_core/core/event_filter_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2019-12-31T11:30:46Z",
+      "side": 1,
+      "message": "why not make use of mode db proxy instead ?",
+      "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d255784_aa2c3679",
+        "filename": "rw_core/core/event_filter_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2019-12-31T11:30:46Z",
+      "side": 1,
+      "message": "will this filter data sent to adapters on adapter restart ? or is it for core itself on restart ?",
+      "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
