@@ -50,6 +50,24 @@
       "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cbc3d4a_9e83a67e",
+        "filename": "rw_core/core/event_filter_agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000564
+      },
+      "writtenOn": "2020-01-01T09:39:13Z",
+      "side": 1,
+      "message": "This is for the case if the core restarts",
+      "parentUuid": "7d255784_aa2c3679",
+      "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
