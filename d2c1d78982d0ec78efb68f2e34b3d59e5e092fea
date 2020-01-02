@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "080468d9_7a0ca520",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-02T23:58:39Z",
+      "side": 1,
+      "message": "How do we know these calls worked?",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 33
+      },
+      "revId": "d2c1d78982d0ec78efb68f2e34b3d59e5e092fea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a072765b_95de9b7b",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-02T23:58:39Z",
+      "side": 1,
+      "message": "How do we know if this worked?",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 197,
+        "endChar": 44
+      },
+      "revId": "d2c1d78982d0ec78efb68f2e34b3d59e5e092fea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
