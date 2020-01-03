@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e863f4ac_e170650c",
+        "filename": "db/model/event_bus_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-03T15:48:19Z",
+      "side": 1,
+      "message": "This seems to check if the call to Advertise does not return an error, but is there a way to check to verify that the event was \"actually\" sent?\n\nThis comment really applies to all the test methods.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 61
+      },
+      "revId": "dc7289d63fcfabd98ad2270b3c559be17add7b04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
