@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71bdbb6c_4bd2eda3",
+        "filename": "db/model/node.go",
+        "patchSetId": 60
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-03T00:56:20Z",
+      "side": 1,
+      "message": "to Khen\u0027s comment on patchset 46, returning the literal `nil` instead of `err` would be more clear that there is not error returned.\n\nfrom this code it does look like result could be nill if pr \u003d\u003d nil, is pr \u003d\u003d nil a valid return result? or should that be an error?",
+      "range": {
+        "startLine": 282,
+        "startChar": 0,
+        "endLine": 293,
+        "endChar": 19
+      },
+      "revId": "5295eb786a103315ce02ebfbb14a3895b7a2109b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a1f7c9f_2033ea0f",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 60
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-03T00:56:20Z",
+      "side": 1,
+      "message": "My same comments against patchset 44 sort of apply here. Within \"Start\" the code is crashing the container. The question is if Start should return an error and the calling function determines the correct response (crash or ??)",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 77
+      },
+      "revId": "5295eb786a103315ce02ebfbb14a3895b7a2109b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49c2f755_1dd1647e",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 60
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-03T00:56:20Z",
+      "side": 1,
+      "message": "Do we want the container to crash here? Under what conditions can an error actually be returned?",
+      "revId": "5295eb786a103315ce02ebfbb14a3895b7a2109b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
