@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "f206b48a_2c4d27c7",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-01-06T19:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a620d7c0_1a7c96c9",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fe64f884_69c7d748",
         "filename": "rw_core/main.go",
         "patchSetId": 1
@@ -138,6 +156,24 @@
       "side": 1,
       "message": "ok, does log.Fatal do a system exit if so the return is sort of pointless, yes?",
       "parentUuid": "69331639_309bfd47",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80bb23e9_58a8dc88",
+        "filename": "rw_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-01-06T19:28:54Z",
+      "side": 1,
+      "message": "Was trying to avoid unrelated refactoring.  Patch #2 solves this \"properly\".",
+      "parentUuid": "2be52f9e_8cf55de2",
       "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
