@@ -123,6 +123,24 @@
       "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2be52f9e_8cf55de2",
+        "filename": "rw_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-06T18:24:23Z",
+      "side": 1,
+      "message": "ok, does log.Fatal do a system exit if so the return is sort of pointless, yes?",
+      "parentUuid": "69331639_309bfd47",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
