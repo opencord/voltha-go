@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56a39a67_5ed32cb9",
+        "filename": "rw_core/coreif/logical_device_agent_if.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-06T15:35:52Z",
+      "side": 1,
+      "message": "Since this function has moved into an interface then it would have been preferable to name it GetNNIPorts() and return an array of NNI ports.  First does not really mean anything in this context. If the calling function needs to the first NNI port then it can take the first one in the list if that is what it meant by first.",
+      "revId": "90223afc4e7d5accad6c11ba74c1e83295482519",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
