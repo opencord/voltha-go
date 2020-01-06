@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "658c517e_464e0884",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-06T16:00:04Z",
+      "side": 1,
+      "message": "The SuppressEvent() and UnSuppressEvent() functions are not invoked.   Is there a NB API that need to be implemented for this?",
+      "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a798aad0_5e14816a",
         "filename": "rw_core/core/event_filter_agent.go",
         "patchSetId": 8
@@ -65,6 +82,23 @@
       "side": 1,
       "message": "This is for the case if the core restarts",
       "parentUuid": "7d255784_aa2c3679",
+      "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "420e7fad_e357b5b6",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-06T16:00:04Z",
+      "side": 1,
+      "message": "It\u0027s preferable to have the eventFilterAgent handle the creation of the filter.Id.",
       "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
