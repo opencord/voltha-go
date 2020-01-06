@@ -105,6 +105,24 @@
       "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69331639_309bfd47",
+        "filename": "rw_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-01-06T18:10:47Z",
+      "side": 1,
+      "message": "This err is not for loss of connectivity, it\u0027s reported when the client cannot be initialized.  \n\nThere is no check for rw.kvClient \u003d\u003d nil, which was causing the container to crash with a confusing nil pointer dereference.  I wanted to make the reason for the crash obvious.",
+      "parentUuid": "fe64f884_69c7d748",
+      "revId": "dc02047608d425fe57f421906f6fdeff9406fced",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
