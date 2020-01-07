@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "691ad58f_0768646c",
+        "filename": "db/model/event_bus.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-07T19:16:14Z",
+      "side": 1,
+      "message": "The issue isn\u0027t that it is or isn\u0027t allowed, but why is it different?",
+      "parentUuid": "02ce4f5d_ba2c9e5e",
+      "range": {
+        "startLine": 36,
+        "startChar": 2,
+        "endLine": 36,
+        "endChar": 5
+      },
+      "revId": "0afe9f48a401c06bcca200022adfcd8352d3c506",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0dcc2d8c_3c6f12b3",
         "filename": "db/model/node.go",
         "patchSetId": 4
