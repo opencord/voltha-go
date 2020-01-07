@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f7d63d1f_b9428845",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2020-01-07T15:18:53Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "080468d9_7a0ca520",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 33
+      },
+      "revId": "d2c1d78982d0ec78efb68f2e34b3d59e5e092fea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a072765b_95de9b7b",
         "filename": "db/model/root_test.go",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2020-01-02T23:58:39Z",
       "side": 1,
       "message": "How do we know if this worked?",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 197,
+        "endChar": 44
+      },
+      "revId": "d2c1d78982d0ec78efb68f2e34b3d59e5e092fea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7704c04f_2ad4f387",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000574
+      },
+      "writtenOn": "2020-01-07T15:18:53Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "a072765b_95de9b7b",
       "range": {
         "startLine": 197,
         "startChar": 0,
