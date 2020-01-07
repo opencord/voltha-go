@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6a6e127_6ad95d22",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-07T19:16:14Z",
+      "side": 1,
+      "message": "either root needs to be exposed outside of the package or GetRoot needs to be package private. this should not be masked with // nolint",
+      "range": {
+        "startLine": 90,
+        "startChar": 27,
+        "endLine": 90,
+        "endChar": 31
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68886c80_c0c3d5f0",
+        "filename": "db/model/revision.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-07T19:16:14Z",
+      "side": 1,
+      "message": "My comment made against patch version 14 is still valid. what is the resolution that this interface is not used outside the package and thus does not need to be public.",
+      "range": {
+        "startLine": 27,
+        "startChar": 5,
+        "endLine": 27,
+        "endChar": 13
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be194ced_4726f6a4",
+        "filename": "db/model/root.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-07T19:16:14Z",
+      "side": 1,
+      "message": "this should not be masked with // nolint. if the func is not used outsside the package, it should not be public.",
+      "range": {
+        "startLine": 57,
+        "startChar": 5,
+        "endLine": 57,
+        "endChar": 12
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
