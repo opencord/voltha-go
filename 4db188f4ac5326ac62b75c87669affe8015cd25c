@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b0085c5_8ad06bc2",
+        "filename": "db/model/root_test.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-07T17:17:58Z",
+      "side": 1,
+      "message": "beyond nil testing is there a way to determine we have the branch that we expect?",
+      "range": {
+        "startLine": 120,
+        "startChar": 48,
+        "endLine": 120,
+        "endChar": 54
+      },
+      "revId": "4db188f4ac5326ac62b75c87669affe8015cd25c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
