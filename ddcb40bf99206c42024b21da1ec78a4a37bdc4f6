@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dcf608ee_ab66bb4b",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1000564
+      },
+      "writtenOn": "2020-01-08T06:44:19Z",
+      "side": 1,
+      "message": "It will be invoked by the entity which is handling the filter creation/deletion/update requests i.e. event filter agent. During creation the rpc will be invoked and the filter will be forwarded to the adapter.",
+      "parentUuid": "658c517e_464e0884",
+      "revId": "ddcb40bf99206c42024b21da1ec78a4a37bdc4f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a798aad0_5e14816a",
         "filename": "rw_core/core/event_filter_agent.go",
         "patchSetId": 8
