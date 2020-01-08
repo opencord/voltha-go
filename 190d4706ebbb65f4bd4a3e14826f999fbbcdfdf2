@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3010954_e638df5b",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 61
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-08T19:03:52Z",
+      "side": 1,
+      "message": "Thomas,  I thought it was decided to have this function returns an error  and let main.go figure out whether it will crash the core, yes?",
+      "revId": "190d4706ebbb65f4bd4a3e14826f999fbbcdfdf2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
