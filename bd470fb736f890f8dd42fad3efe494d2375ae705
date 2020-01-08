@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cc6cf76f_bf89f1ae",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2020-01-08T10:42:10Z",
+      "side": 1,
+      "message": "I will make the change.",
+      "parentUuid": "e6a6e127_6ad95d22",
+      "range": {
+        "startLine": 90,
+        "startChar": 27,
+        "endLine": 90,
+        "endChar": 31
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68886c80_c0c3d5f0",
         "filename": "db/model/revision.go",
         "patchSetId": 32
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "93099261_0baefcd0",
+        "filename": "db/model/revision.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2020-01-08T10:42:10Z",
+      "side": 1,
+      "message": "There are some exported methods returning this interface.",
+      "parentUuid": "68886c80_c0c3d5f0",
+      "range": {
+        "startLine": 27,
+        "startChar": 5,
+        "endLine": 27,
+        "endChar": 13
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be194ced_4726f6a4",
         "filename": "db/model/root.go",
         "patchSetId": 32
@@ -59,6 +107,30 @@
       "writtenOn": "2020-01-07T19:16:14Z",
       "side": 1,
       "message": "this should not be masked with // nolint. if the func is not used outsside the package, it should not be public.",
+      "range": {
+        "startLine": 57,
+        "startChar": 5,
+        "endLine": 57,
+        "endChar": 12
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "662b001e_dcb217d3",
+        "filename": "db/model/root.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2020-01-08T10:42:10Z",
+      "side": 1,
+      "message": "The function is used outside the package.",
+      "parentUuid": "be194ced_4726f6a4",
       "range": {
         "startLine": 57,
         "startChar": 5,
