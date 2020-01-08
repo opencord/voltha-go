@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d4b0f30_647b6263",
+        "filename": "ro_core/core/core.go",
+        "patchSetId": 62
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-08T19:03:52Z",
+      "side": 1,
+      "message": "Please return an error here as well to be consistent with the rw-core.",
+      "revId": "b728a002bda4c5adc3bfb92300b874874035d9bf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c80db1e4_e0fe6104",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 62
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-08T19:03:52Z",
+      "side": 1,
+      "message": "Should this just return an error?",
+      "revId": "b728a002bda4c5adc3bfb92300b874874035d9bf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02c94714_8b45f099",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 62
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-08T19:03:52Z",
+      "side": 1,
+      "message": "Error message incorrect",
+      "revId": "b728a002bda4c5adc3bfb92300b874874035d9bf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
