@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "a27939f2_a6115666",
+        "filename": "db/model/revision.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-08T17:32:16Z",
+      "side": 1,
+      "message": "This is a problem then because some of the methods in this interface return non-public types. So either all the types must then be public or the interface needs to be private or do we need to split the interface into a public and private interface.",
+      "parentUuid": "93099261_0baefcd0",
+      "range": {
+        "startLine": 27,
+        "startChar": 5,
+        "endLine": 27,
+        "endChar": 13
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be194ced_4726f6a4",
         "filename": "db/model/root.go",
         "patchSetId": 32
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "The function is used outside the package.",
       "parentUuid": "be194ced_4726f6a4",
+      "range": {
+        "startLine": 57,
+        "startChar": 5,
+        "endLine": 57,
+        "endChar": 12
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8801ee9b_d686b859",
+        "filename": "db/model/root.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-08T17:32:16Z",
+      "side": 1,
+      "message": "This function is returning a private type so it should either not be used outside the package or the `root` type needs to be made public.",
+      "parentUuid": "662b001e_dcb217d3",
       "range": {
         "startLine": 57,
         "startChar": 5,
