@@ -16,6 +16,24 @@
       "revId": "90223afc4e7d5accad6c11ba74c1e83295482519",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9808022_2b394b5e",
+        "filename": "rw_core/coreif/logical_device_agent_if.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000498
+      },
+      "writtenOn": "2020-01-09T08:46:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56a39a67_5ed32cb9",
+      "revId": "90223afc4e7d5accad6c11ba74c1e83295482519",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
