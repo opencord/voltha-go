@@ -38,19 +38,21 @@ import (
 
 // DeviceAgent represents device agent attributes
 type DeviceAgent struct {
-	deviceID         string
-	parentID         string
-	deviceType       string
-	isRootdevice     bool
-	adapterProxy     *AdapterProxy
-	adapterMgr       *AdapterManager
-	deviceMgr        *DeviceManager
-	clusterDataProxy *model.Proxy
-	deviceProxy      *model.Proxy
-	exitChannel      chan int
-	lockDevice       sync.RWMutex
-	device           *voltha.Device
-	defaultTimeout   int64
+	deviceID           string
+	parentID           string
+	deviceType         string
+	isRootdevice       bool
+	adapterProxy       *AdapterProxy
+	adapterMgr         *AdapterManager
+	deviceMgr          *DeviceManager
+	clusterDataProxy   *model.Proxy
+	deviceProxy        *model.Proxy
+	exitChannel        chan int
+	lockDevice         sync.RWMutex
+	device             *voltha.Device
+	requestQueue       chan chan struct{}
+	coreProcessingDone chan struct{}
+	defaultTimeout     int64
 }
 
 //newDeviceAgent creates a new device agent. The device will be initialized when start() is called.
@@ -73,6 +75,8 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	agent.lockDevice = sync.RWMutex{}
 	agent.defaultTimeout = timeout
 	agent.device = proto.Clone(device).(*voltha.Device)
+	agent.requestQueue = make(chan chan struct{})
+	agent.coreProcessingDone = make(chan struct{})
 	return &agent
 }
 
@@ -142,6 +146,9 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 	}
 	agent.deviceProxy.RegisterCallback(model.POST_UPDATE, agent.processUpdate)
 
+	// Launch the request ordering routine
+	go agent.startRequestSequencer()
+
 	log.Debugw("device-agent-started", log.Fields{"deviceId": agent.deviceID})
 	return device, nil
 }
@@ -164,15 +171,50 @@ func (agent *DeviceAgent) stop(ctx context.Context) {
 	if removed == nil {
 		log.Debugw("device-already-removed", log.Fields{"id": agent.deviceID})
 	}
+
+	// Stop the request queueing channel
+	close(agent.requestQueue)
+
+	// Close the request complete channel
+	close(agent.coreProcessingDone)
+
 	agent.exitChannel <- 1
 	log.Debug("device-agent-stopped")
 
 }
 
+// startRequestSequencer starts a routine to process requests to this device agent sequentially
+func (agent *DeviceAgent) startRequestSequencer() {
+	go func() {
+		// Wait for requests
+		for ch := range agent.requestQueue {
+			// Let the first element in the queue to proceed
+			ch <- struct{}{}
+			// Wait until that request is completed before letting another request through
+			<-agent.coreProcessingDone
+		}
+	}()
+}
+
+// waitForGreenLight is invoked when a new request is received by the device agent
+func (agent *DeviceAgent) waitForGreenLight() {
+	ch := make(chan struct{})
+	defer close(ch)
+	// Queue the channel to wait our turn
+	agent.requestQueue <- ch
+	// Wait until we get the go ahead
+	<-ch
+}
+
+func (agent *DeviceAgent) yieldToNextRequest() {
+	agent.coreProcessingDone <- struct{}{}
+}
+
 // Load the most recent state from the KVStore for the device.
 func (agent *DeviceAgent) reconcileWithKVStore() {
-	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
+	agent.waitForGreenLight()
+	defer agent.yieldToNextRequest()
+
 	log.Debug("reconciling-device-agent-devicetype")
 	// TODO: context timeout
 	device, err := agent.clusterDataProxy.Get(context.Background(), "/devices/"+agent.deviceID, 1, true, "")
@@ -191,8 +233,9 @@ func (agent *DeviceAgent) reconcileWithKVStore() {
 
 // getDevice returns the device data from cache
 func (agent *DeviceAgent) getDevice() *voltha.Device {
-	agent.lockDevice.RLock()
-	defer agent.lockDevice.RUnlock()
+	agent.waitForGreenLight()
+	defer agent.yieldToNextRequest()
+
 	return proto.Clone(agent.device).(*voltha.Device)
 }
 
@@ -203,8 +246,8 @@ func (agent *DeviceAgent) getDeviceWithoutLock() *voltha.Device {
 
 // enableDevice activates a preprovisioned or a disable device
 func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
-	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
+	agent.waitForGreenLight()
+
 	log.Debugw("enableDevice", log.Fields{"id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
@@ -215,12 +258,14 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	adapterName, err := agent.adapterMgr.getAdapterName(cloned.Type)
 	if err != nil {
 		log.Warnw("no-adapter-registered-for-device-type", log.Fields{"deviceType": cloned.Type, "deviceAdapter": cloned.Adapter})
+		agent.yieldToNextRequest()
 		return err
 	}
 	cloned.Adapter = adapterName
 
 	if cloned.AdminState == voltha.AdminState_ENABLED {
 		log.Debugw("device-already-enabled", log.Fields{"id": agent.deviceID})
+		agent.yieldToNextRequest()
 		return nil
 	}
 
@@ -228,6 +273,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 		// This is a temporary state when a device is deleted before it gets removed from the model.
 		err = status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-a-deleted-device: %s ", cloned.Id))
 		log.Warnw("invalid-state", log.Fields{"id": agent.deviceID, "state": cloned.AdminState, "error": err})
+		agent.yieldToNextRequest()
 		return err
 	}
 
@@ -239,21 +285,27 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	cloned.OperStatus = voltha.OperStatus_ACTIVATING
 
 	if err := agent.updateDeviceInStoreWithoutLock(cloned, false, ""); err != nil {
+		agent.yieldToNextRequest()
 		return err
 	}
 
+	// Send request to the Adapter
+	//
 	// Adopt the device if it was in preprovision state.  In all other cases, try to reenable it.
 	device := proto.Clone(cloned).(*voltha.Device)
+	ch := make(chan error)
 	if previousAdminState == voltha.AdminState_PREPROVISIONED {
-		if err := agent.adapterProxy.AdoptDevice(ctx, device); err != nil {
-			log.Debugw("adoptDevice-error", log.Fields{"id": agent.deviceID, "error": err})
-			return err
-		}
+		go agent.adapterProxy.AdoptDevice(ctx, device, ch)
 	} else {
-		if err := agent.adapterProxy.ReEnableDevice(ctx, device); err != nil {
-			log.Debugw("renableDevice-error", log.Fields{"id": agent.deviceID, "error": err})
-			return err
-		}
+		go agent.adapterProxy.ReEnableDevice(ctx, device, ch)
+	}
+
+	agent.yieldToNextRequest()
+
+	// Wait for response
+	err = <-ch
+	if err != nil {
+		log.Errorw("failure enabling device", log.Fields{"id": agent.deviceID, "error": err})
 	}
 	return nil
 }

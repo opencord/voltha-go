@@ -71,11 +71,10 @@ func (ap *AdapterProxy) getAdapterTopic(adapterName string) kafka.Topic {
 }
 
 // AdoptDevice invokes adopt device rpc
-func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) error {
+func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device, ch chan error) {
 	log.Debugw("AdoptDevice", log.Fields{"device": device})
 	rpc := "adopt_device"
 	toTopic := ap.getAdapterTopic(device.Adapter)
-	//topic := kafka.Topic{Name: device.Adapter}
 	args := make([]*kafka.KVArg, 1)
 	args[0] = &kafka.KVArg{
 		Key:   "device",
@@ -86,7 +85,7 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 	ap.deviceTopicRegistered = true
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("AdoptDevice-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
-	return unPackResponse(rpc, device.Id, success, result)
+	ch <- unPackResponse(rpc, device.Id, success, result)
 }
 
 // DisableDevice invokes disable device rpc
@@ -112,7 +111,7 @@ func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device
 }
 
 // ReEnableDevice invokes reenable device rpc
-func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Device) error {
+func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Device, ch chan error) {
 	log.Debugw("ReEnableDevice", log.Fields{"deviceId": device.Id})
 	rpc := "reenable_device"
 	toTopic := ap.getAdapterTopic(device.Adapter)
@@ -125,7 +124,7 @@ func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Devic
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("ReEnableDevice-response", log.Fields{"deviceid": device.Id, "success": success})
-	return unPackResponse(rpc, device.Id, success, result)
+	ch <- unPackResponse(rpc, device.Id, success, result)
 }
 
 // RebootDevice invokes reboot device rpc

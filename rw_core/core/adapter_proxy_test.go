@@ -106,12 +106,12 @@ func testSimpleRequests(t *testing.T) {
 	type simpleRequest func(context.Context, *voltha.Device) error
 	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
 	simpleRequests := []simpleRequest{
-		ap.AdoptDevice,
+		//ap.AdoptDevice,
 		ap.DisableDevice,
 		ap.RebootDevice,
 		ap.DeleteDevice,
 		ap.ReconcileDevice,
-		ap.ReEnableDevice,
+		//ap.ReEnableDevice,
 	}
 	for _, f := range simpleRequests {
 		//Success
