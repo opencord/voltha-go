@@ -253,7 +253,7 @@ func (ap *AdapterProxy) Health() (*voltha.HealthStatus, error) {
 // ReconcileDevice invokes reconcile device rpc
 func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Device) error {
 	log.Debugw("ReconcileDevice", log.Fields{"deviceId": device.Id})
-	rpc := "Reconcile_device"
+	rpc := "reconcile_device"
 	toTopic := ap.getAdapterTopic(device.Adapter)
 	args := []*kafka.KVArg{
 		{Key: "device", Value: device},
