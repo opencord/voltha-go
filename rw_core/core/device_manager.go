@@ -246,11 +246,7 @@ func (dMgr *DeviceManager) stopManagingDevice(id string) {
 					log.Errorw("unable-to-abandon-the-device", log.Fields{"error": err})
 				}
 			}
-			// stop managing the child devices
-			childDeviceIds := dMgr.getAllDeviceIdsWithDeviceParentID(id)
-			for _, cID := range childDeviceIds {
-				dMgr.stopManagingDevice(cID)
-			}
+			// We do not need to stop the child devices as this is taken care by the state machine.
 		}
 		if agent := dMgr.getDeviceAgent(id); agent != nil {
 			agent.stop(context.TODO())
@@ -1268,32 +1264,15 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(parentDevice *voltha.Device) er
 			if err = agent.deleteDevice(context.TODO()); err != nil {
 				log.Errorw("failure-delete-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
 				allChildDeleted = false
-			} else {
-				agent.stop(context.TODO())
-				dMgr.deleteDeviceAgentFromMap(agent)
 			}
+			// No further action is required here.  The deleteDevice will change the device state where the resulting
+			// callback will take care of cleaning the child device agent.
 		}
 	}
 	if !allChildDeleted {
 		return err
 	}
 	return nil
-}
-
-//getAllDeviceIdsWithDeviceParentId returns the list of device Ids which has id as parent Id.  This function uses the
-// data from the agent instead of using the data from the parent device as that data would disappear from a parent
-// device during a delete device operation.
-func (dMgr *DeviceManager) getAllDeviceIdsWithDeviceParentID(id string) []string {
-	log.Debugw("getAllAgentsWithDeviceParentId", log.Fields{"parentDeviceId": id})
-	deviceIds := make([]string, 0)
-	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
-		agent := value.(*DeviceAgent)
-		if agent.parentID == id {
-			deviceIds = append(deviceIds, key.(string))
-		}
-		return true
-	})
-	return deviceIds
 }
 
 //getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter

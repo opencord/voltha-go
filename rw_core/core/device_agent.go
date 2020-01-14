@@ -150,7 +150,8 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 func (agent *DeviceAgent) stop(ctx context.Context) {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	log.Debug("stopping-device-agent")
+
+	log.Debugw("stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
 
 	// First unregister any callbacks
 	agent.deviceProxy.UnregisterCallback(model.POST_UPDATE, agent.processUpdate)
