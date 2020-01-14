@@ -51,8 +51,10 @@ import (
 )
 
 const (
+	// Returns -1 for inavlid loglevel
+	InvalidLevel = iota - 1
 	// DebugLevel logs a message at debug level
-	DebugLevel = iota
+	DebugLevel
 	// InfoLevel logs a message at info level
 	InfoLevel
 	// WarnLevel logs a message at warning level
@@ -175,20 +177,21 @@ func levelToInt(l zc.Level) int {
 	return ErrorLevel
 }
 
-func StringToInt(l string) int {
-	switch l {
+func StringToInt(l string) (int, error) {
+	str := strings.ToUpper(l)
+	switch str {
 	case "DEBUG":
-		return DebugLevel
+		return DebugLevel, nil
 	case "INFO":
-		return InfoLevel
+		return InfoLevel, nil
 	case "WARN":
-		return WarnLevel
+		return WarnLevel, nil
 	case "ERROR":
-		return ErrorLevel
+		return ErrorLevel, nil
 	case "FATAL":
-		return FatalLevel
+		return FatalLevel, nil
 	}
-	return ErrorLevel
+	return InvalidLevel, errors.New("Given LogLevel in invalid : " + l)
 }
 
 func getDefaultConfig(outputType string, level int, defaultFields Fields) zp.Config {
