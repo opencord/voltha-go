@@ -272,7 +272,14 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	// subscriber on that topic will receive the request in the order it was sent.  The key used is the deviceId.
 	//key := GetDeviceIdFromTopic(*toTopic)
 	logger.Debugw("sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
-	go kp.kafkaClient.Send(protoRequest, toTopic, key)
+	go func() {
+		if err := kp.kafkaClient.Send(protoRequest, toTopic, key); err != nil {
+			logger.Errorw("send-failed", log.Fields{
+				"topic": toTopic,
+				"key":   key,
+				"error": err})
+		}
+	}()
 
 	if waitForResponse {
 		// Create a child context based on the parent context, if any
@@ -287,7 +294,13 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 
 		// Wait for response as well as timeout or cancellation
 		// Remove the subscription for a response on return
-		defer kp.unSubscribeForResponse(protoRequest.Header.Id)
+		defer func() {
+			if err := kp.unSubscribeForResponse(protoRequest.Header.Id); err != nil {
+				logger.Errorw("response-unsubscribe-failed", log.Fields{
+					"id":    protoRequest.Header.Id,
+					"error": err})
+			}
+		}()
 		select {
 		case msg, ok := <-ch:
 			if !ok {
@@ -378,23 +391,6 @@ func (kp *interContainerProxy) UnSubscribeFromRequestHandler(topic Topic) error 
 	return kp.deleteFromTopicRequestHandlerChannelMap(topic.Name)
 }
 
-// setupTopicResponseChannelMap sets up single consumers channel that will act as a broadcast channel for all
-// responses from that topic.
-func (kp *interContainerProxy) setupTopicResponseChannelMap(topic string, arg <-chan *ic.InterContainerMessage) {
-	kp.lockTopicResponseChannelMap.Lock()
-	defer kp.lockTopicResponseChannelMap.Unlock()
-	if _, exist := kp.topicToResponseChannelMap[topic]; !exist {
-		kp.topicToResponseChannelMap[topic] = arg
-	}
-}
-
-func (kp *interContainerProxy) isTopicSubscribedForResponse(topic string) bool {
-	kp.lockTopicResponseChannelMap.RLock()
-	defer kp.lockTopicResponseChannelMap.RUnlock()
-	_, exist := kp.topicToResponseChannelMap[topic]
-	return exist
-}
-
 func (kp *interContainerProxy) deleteFromTopicResponseChannelMap(topic string) error {
 	kp.lockTopicResponseChannelMap.Lock()
 	defer kp.lockTopicResponseChannelMap.Unlock()
@@ -407,15 +403,16 @@ func (kp *interContainerProxy) deleteFromTopicResponseChannelMap(topic string) e
 		delete(kp.topicToResponseChannelMap, topic)
 		return err
 	} else {
-		return errors.New(fmt.Sprintf("%s-Topic-not-found", topic))
+		return fmt.Errorf("%s-Topic-not-found", topic)
 	}
 }
 
+// nolint: unused
 func (kp *interContainerProxy) deleteAllTopicResponseChannelMap() error {
 	kp.lockTopicResponseChannelMap.Lock()
 	defer kp.lockTopicResponseChannelMap.Unlock()
 	var err error
-	for topic, _ := range kp.topicToResponseChannelMap {
+	for topic := range kp.topicToResponseChannelMap {
 		// Unsubscribe to this topic first - this will close the subscribed channel
 		if err = kp.kafkaClient.UnSubscribe(&Topic{Name: topic}, kp.topicToResponseChannelMap[topic]); err != nil {
 			logger.Errorw("unsubscribing-error", log.Fields{"topic": topic, "error": err})
@@ -438,19 +435,22 @@ func (kp *interContainerProxy) deleteFromTopicRequestHandlerChannelMap(topic str
 	defer kp.lockTopicRequestHandlerChannelMap.Unlock()
 	if _, exist := kp.topicToRequestHandlerChannelMap[topic]; exist {
 		// Close the kafka client client first by unsubscribing to this topic
-		kp.kafkaClient.UnSubscribe(&Topic{Name: topic}, kp.topicToRequestHandlerChannelMap[topic].ch)
+		if err := kp.kafkaClient.UnSubscribe(&Topic{Name: topic}, kp.topicToRequestHandlerChannelMap[topic].ch); err != nil {
+			return err
+		}
 		delete(kp.topicToRequestHandlerChannelMap, topic)
 		return nil
 	} else {
-		return errors.New(fmt.Sprintf("%s-Topic-not-found", topic))
+		return fmt.Errorf("%s-Topic-not-found", topic)
 	}
 }
 
+// nolint: unused
 func (kp *interContainerProxy) deleteAllTopicRequestHandlerChannelMap() error {
 	kp.lockTopicRequestHandlerChannelMap.Lock()
 	defer kp.lockTopicRequestHandlerChannelMap.Unlock()
 	var err error
-	for topic, _ := range kp.topicToRequestHandlerChannelMap {
+	for topic := range kp.topicToRequestHandlerChannelMap {
 		// Close the kafka client client first by unsubscribing to this topic
 		if err = kp.kafkaClient.UnSubscribe(&Topic{Name: topic}, kp.topicToRequestHandlerChannelMap[topic].ch); err != nil {
 			logger.Errorw("unsubscribing-error", log.Fields{"topic": topic, "error": err})
@@ -489,6 +489,7 @@ func (kp *interContainerProxy) deleteTopicTransactionIdToChannelMap(id string) {
 	}
 }
 
+// nolint: unused
 func (kp *interContainerProxy) deleteAllTransactionIdToChannelMap() {
 	kp.lockTransactionIdToChannelMap.Lock()
 	defer kp.lockTransactionIdToChannelMap.Unlock()
@@ -575,11 +576,12 @@ func encodeResponse(request *ic.InterContainerMessage, success bool, returnedVal
 	// Go over all returned values
 	var marshalledReturnedVal *any.Any
 	var err error
-	for _, returnVal := range returnedValues {
-		if marshalledReturnedVal, err = encodeReturnedValue(returnVal); err != nil {
+
+	// for now we support only 1 returned value - (excluding the error)
+	if len(returnedValues) > 0 {
+		if marshalledReturnedVal, err = encodeReturnedValue(returnedValues[0]); err != nil {
 			logger.Warnw("cannot-marshal-response-body", log.Fields{"error": err})
 		}
-		break // for now we support only 1 returned value - (excluding the error)
 	}
 
 	responseBody := &ic.InterContainerResponseBody{
@@ -730,7 +732,14 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 			key := msg.Header.KeyTopic
 			logger.Debugw("sending-response-to-kafka", log.Fields{"rpc": requestBody.Rpc, "header": icm.Header, "key": key})
 			// TODO: handle error response.
-			go kp.kafkaClient.Send(icm, replyTopic, key)
+			go func() {
+				if err := kp.kafkaClient.Send(icm, replyTopic, key); err != nil {
+					logger.Errorw("send-reply-failed", log.Fields{
+						"topic": replyTopic,
+						"key":   key,
+						"error": err})
+				}
+			}()
 		}
 	} else if msg.Header.Type == ic.MessageType_RESPONSE {
 		logger.Debugw("response-received", log.Fields{"msg-header": msg.Header})
