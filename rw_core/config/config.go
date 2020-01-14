@@ -41,7 +41,7 @@ const (
 	defaultKVStorePort               = 2379 // Consul = 8500; Etcd = 2379
 	defaultKVTxnKeyDelTime           = 60
 	defaultKVStoreDataPrefix         = "service/voltha"
-	defaultLogLevel                  = 0
+	defaultLogLevel                  = "DEBUG"
 	defaultBanner                    = false
 	defaultDisplayVersionOnly        = false
 	defaultCoreTopic                 = "rwcore"
@@ -81,7 +81,7 @@ type RWCoreFlags struct {
 	KVTxnKeyDelTime           int
 	KVStoreDataPrefix         string
 	CoreTopic                 string
-	LogLevel                  int
+	LogLevel                  string
 	Banner                    bool
 	DisplayVersionOnly        bool
 	RWCoreKey                 string
@@ -201,7 +201,7 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	flag.StringVar(&(cf.KVStoreDataPrefix), "kv_store_data_prefix", defaultKVStoreDataPrefix, help)
 
 	help = fmt.Sprintf("Log level")
-	flag.IntVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
+	flag.StringVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
 
 	help = fmt.Sprintf("Timeout for long running request")
 	flag.Int64Var(&(cf.LongRunningRequestTimeout), "timeout_long_request", defaultLongRunningRequestTimeout, help)
