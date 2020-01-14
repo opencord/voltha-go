@@ -689,7 +689,10 @@ func HashFlowStats(flow *ofp.OfpFlowStats) uint64 {
 	}
 	var flowString = fmt.Sprintf("%d%d%d%d%s%s", flow.TableId, flow.Priority, flow.Flags, flow.Cookie, flow.Match.String(), instructionString.String())
 	h := md5.New()
-	h.Write([]byte(flowString))
+	if _, err := h.Write([]byte(flowString)); err != nil {
+		logger.Errorw("hash-flow-status", log.Fields{"error": err})
+		return 0
+	}
 	hash := big.NewInt(0)
 	hash.SetBytes(h.Sum(nil))
 	return hash.Uint64()
@@ -745,7 +748,7 @@ func MeterEntryFromMeterMod(meterMod *ofp.OfpMeterMod) *ofp.OfpMeterEntry {
 	meter.Stats.DurationSec = 0
 	meter.Stats.DurationNsec = 0
 	// band stats init
-	for _, _ = range meterMod.Bands {
+	for range meterMod.Bands {
 		band := &ofp.OfpMeterBandStats{}
 		band.PacketBandCount = 0
 		band.ByteBandCount = 0

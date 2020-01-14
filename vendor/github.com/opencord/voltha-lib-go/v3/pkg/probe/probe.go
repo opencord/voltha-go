@@ -231,15 +231,26 @@ func (p *Probe) detailzFunc(w http.ResponseWriter, req *http.Request) {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("{"))
+	if _, err := w.Write([]byte("{")); err != nil {
+		log.Errorw("write-response", log.Fields{"error": err})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	comma := ""
 	for c, s := range p.status {
-		w.Write([]byte(fmt.Sprintf("%s\"%s\": \"%s\"", comma, c, s.String())))
+		if _, err := w.Write([]byte(fmt.Sprintf("%s\"%s\": \"%s\"", comma, c, s.String()))); err != nil {
+			log.Errorw("write-response", log.Fields{"error": err})
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		comma = ", "
 	}
-	w.Write([]byte("}"))
+	if _, err := w.Write([]byte("}")); err != nil {
+		log.Errorw("write-response", log.Fields{"error": err})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-
 }
 
 // ListenAndServe implements 3 HTTP endpoints on the given port for healthz, readz, and detailz. Returns only on error
