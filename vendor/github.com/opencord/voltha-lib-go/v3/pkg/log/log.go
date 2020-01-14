@@ -175,20 +175,20 @@ func levelToInt(l zc.Level) int {
 	return ErrorLevel
 }
 
-func StringToInt(l string) int {
+func StringToInt(l string) (int, error) {
 	switch l {
 	case "DEBUG":
-		return DebugLevel
+		return DebugLevel, nil
 	case "INFO":
-		return InfoLevel
+		return InfoLevel, nil
 	case "WARN":
-		return WarnLevel
+		return WarnLevel, nil
 	case "ERROR":
-		return ErrorLevel
+		return ErrorLevel, nil
 	case "FATAL":
-		return FatalLevel
+		return FatalLevel, nil
 	}
-	return ErrorLevel
+	return -1, errors.New("Given LogLevel in invalid")
 }
 
 func getDefaultConfig(outputType string, level int, defaultFields Fields) zp.Config {

@@ -613,3 +613,48 @@ func (rhp *RequestHandlerProxy) Activate_image_update(args []*ic.Argument) (*vol
 func (rhp *RequestHandlerProxy) Revert_image_update(args []*ic.Argument) (*voltha.ImageDownload, error) {
 	return &voltha.ImageDownload{}, nil
 }
+
+func (rhp *RequestHandlerProxy) Enable_port(args []*ic.Argument) error {
+	logger.Debugw("enable_port", log.Fields{"args": args})
+	deviceId, port, err := rhp.getEnableDisableParams(args)
+	if err != nil {
+		logger.Warnw("enable_port", log.Fields{"args": args, "deviceId": deviceId, "port": port})
+		return err
+	}
+	return rhp.adapter.Enable_port(deviceId, port)
+}
+
+func (rhp *RequestHandlerProxy) Disable_port(args []*ic.Argument) error {
+	logger.Debugw("disable_port", log.Fields{"args": args})
+	deviceId, port, err := rhp.getEnableDisableParams(args)
+	if err != nil {
+		logger.Warnw("disable_port", log.Fields{"args": args, "deviceId": deviceId, "port": port})
+		return err
+	}
+	return rhp.adapter.Disable_port(deviceId, port)
+}
+
+func (rhp *RequestHandlerProxy) getEnableDisableParams(args []*ic.Argument) (string, *voltha.Port, error) {
+	logger.Debugw("getEnableDisableParams", log.Fields{"args": args})
+	if len(args) < 3 {
+		logger.Warn("invalid-number-of-args", log.Fields{"args": args})
+		return "", nil, errors.New("invalid-number-of-args")
+	}
+	deviceId := &ic.StrType{}
+	port := &voltha.Port{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "deviceId":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				logger.Warnw("cannot-unmarshal-device", log.Fields{"error": err})
+				return "", nil, err
+			}
+		case "port":
+			if err := ptypes.UnmarshalAny(arg.Value, port); err != nil {
+				logger.Warnw("cannot-unmarshal-port", log.Fields{"error": err})
+				return "", nil, err
+			}
+		}
+	}
+	return deviceId.Val, port, nil
+}

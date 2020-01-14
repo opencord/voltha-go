@@ -232,8 +232,14 @@ func main() {
 		log.Fatal("HOSTNAME not set")
 	}
 
+	loglevel, _ := log.StringToInt(cf.LogLevel)
+
+	if loglevel == -1 {
+		log.Error("Given LogLevel is invalid, hence setting LogLevel to Error")
+	}
+
 	//Setup default logger - applies for packages that do not have specific logger set
-	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": instanceID}); err != nil {
+	if _, err := log.SetDefaultLogger(log.JSON, loglevel, log.Fields{"instanceId": instanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
@@ -243,7 +249,7 @@ func main() {
 	}
 
 	// Update all loggers to log level specified as input parameter
-	log.SetAllLogLevel(cf.LogLevel)
+	log.SetAllLogLevel(loglevel)
 
 	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 
