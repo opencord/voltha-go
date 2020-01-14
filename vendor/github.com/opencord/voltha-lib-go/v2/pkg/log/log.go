@@ -59,8 +59,6 @@ const (
 	WarnLevel
 	// ErrorLevel logs a message at error level
 	ErrorLevel
-	// PanicLevel logs a message, then panics.
-	PanicLevel
 	// FatalLevel logs a message, then calls os.Exit(1).
 	FatalLevel
 )
@@ -109,6 +107,9 @@ type Logger interface {
 
 	// V reports whether verbosity level l is at least the requested verbose level.
 	V(l int) bool
+
+	//Returns the log level of this specific logger
+	GetLogLevel() int
 }
 
 // Fields is used as key-value pairs for structured logging
@@ -121,8 +122,9 @@ var loggers map[string]*logger
 var cfgs map[string]zp.Config
 
 type logger struct {
-	log    *zp.SugaredLogger
-	parent *zp.Logger
+	log         *zp.SugaredLogger
+	parent      *zp.Logger
+	packageName string
 }
 
 func intToAtomicLevel(l int) zp.AtomicLevel {
@@ -135,8 +137,6 @@ func intToAtomicLevel(l int) zp.AtomicLevel {
 		return zp.NewAtomicLevelAt(zc.WarnLevel)
 	case ErrorLevel:
 		return zp.NewAtomicLevelAt(zc.ErrorLevel)
-	case PanicLevel:
-		return zp.NewAtomicLevelAt(zc.PanicLevel)
 	case FatalLevel:
 		return zp.NewAtomicLevelAt(zc.FatalLevel)
 	}
@@ -153,8 +153,6 @@ func intToLevel(l int) zc.Level {
 		return zc.WarnLevel
 	case ErrorLevel:
 		return zc.ErrorLevel
-	case PanicLevel:
-		return zc.PanicLevel
 	case FatalLevel:
 		return zc.FatalLevel
 	}
@@ -171,9 +169,23 @@ func levelToInt(l zc.Level) int {
 		return WarnLevel
 	case zc.ErrorLevel:
 		return ErrorLevel
-	case zc.PanicLevel:
-		return PanicLevel
-	case FatalLevel:
+	case zc.FatalLevel:
+		return FatalLevel
+	}
+	return ErrorLevel
+}
+
+func StringToInt(l string) int {
+	switch l {
+	case "DEBUG":
+		return DebugLevel
+	case "INFO":
+		return InfoLevel
+	case "WARN":
+		return WarnLevel
+	case "ERROR":
+		return ErrorLevel
+	case "FATAL":
 		return FatalLevel
 	}
 	return ErrorLevel
@@ -258,8 +270,9 @@ func AddPackage(outputType string, level int, defaultFields Fields, pkgNames ...
 	}
 
 	loggers[pkgName] = &logger{
-		log:    l.Sugar(),
-		parent: l,
+		log:         l.Sugar(),
+		parent:      l,
+		packageName: pkgName,
 	}
 	return loggers[pkgName], nil
 }
@@ -279,8 +292,9 @@ func UpdateAllLoggers(defaultFields Fields) error {
 		}
 
 		loggers[pkgName] = &logger{
-			log:    l.Sugar(),
-			parent: l,
+			log:         l.Sugar(),
+			parent:      l,
+			packageName: pkgName,
 		}
 	}
 	return nil
@@ -326,8 +340,9 @@ func UpdateLogger(defaultFields Fields) (Logger, error) {
 
 	// Set the logger
 	loggers[pkgName] = &logger{
-		log:    l.Sugar(),
-		parent: l,
+		log:         l.Sugar(),
+		parent:      l,
+		packageName: pkgName,
 	}
 	return loggers[pkgName], nil
 }
@@ -342,8 +357,6 @@ func setLevel(cfg zp.Config, level int) {
 		cfg.Level.SetLevel(zc.WarnLevel)
 	case ErrorLevel:
 		cfg.Level.SetLevel(zc.ErrorLevel)
-	case PanicLevel:
-		cfg.Level.SetLevel(zc.PanicLevel)
 	case FatalLevel:
 		cfg.Level.SetLevel(zc.FatalLevel)
 	default:
@@ -632,6 +645,11 @@ func (l logger) V(level int) bool {
 	return l.parent.Core().Enabled(intToLevel(level))
 }
 
+// GetLogLevel returns the current level of the logger
+func (l logger) GetLogLevel() int {
+	return levelToInt(cfgs[l.packageName].Level.Level())
+}
+
 // With returns a logger initialized with the key-value pairs
 func With(keysAndValues Fields) Logger {
 	return logger{log: getPackageLevelSugaredLogger().With(serializeMap(keysAndValues)...), parent: defaultLogger.parent}
@@ -760,4 +778,9 @@ func Warningf(format string, args ...interface{}) {
 // V reports whether verbosity level l is at least the requested verbose level.
 func V(level int) bool {
 	return getPackageLevelLogger().V(level)
+}
+
+//GetLogLevel returns the log level of the invoking package
+func GetLogLevel() int {
+	return getPackageLevelLogger().GetLogLevel()
 }

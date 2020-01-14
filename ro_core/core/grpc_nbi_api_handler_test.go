@@ -96,10 +96,10 @@ func TestUpdateLogLevel_grpc(t *testing.T) {
 		want    int
 		wantErr error
 	}{
-		{"TestUpdateLogLevel-1", ahndl, args{testCtx, testLogDef}, 0, nil},
-		{"TestUpdateLogLevel-2", ahndl, args{testCtx, testLogEmpty}, 5, nil},
-		{"TestUpdateLogLevel-3", ahndl, args{testCtx, testLog}, 5, nil},
-		{"TestUpdateLogLevel-4", ahndl, args{testCtx, testLog3}, 3, nil},
+		{"TestUpdateLogLevel-1", ahndl, args{testCtx, testLogDef}, log.DebugLevel, nil},
+		{"TestUpdateLogLevel-2", ahndl, args{testCtx, testLogEmpty}, log.FatalLevel, nil},
+		{"TestUpdateLogLevel-3", ahndl, args{testCtx, testLog}, log.FatalLevel, nil},
+		{"TestUpdateLogLevel-4", ahndl, args{testCtx, testLog3}, log.ErrorLevel, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -142,13 +142,12 @@ func TestGetLogLevels_grpc(t *testing.T) {
 		want    int
 		wantErr error
 	}{
-		{"TestGetLogLevels-1", ahndl, args{testCtx, testLc}, 0, nil},
-		{"TestGetLogLevels-2", ahndl, args{testCtx, testLc}, 1, nil},
-		{"TestGetLogLevels-3", ahndl, args{testCtx, testLc}, 2, nil},
-		{"TestGetLogLevels-4", ahndl, args{testCtx, testLc}, 3, nil},
-		{"TestGetLogLevels-5", ahndl, args{testCtx, testLc}, 4, nil},
-		{"TestGetLogLevels-6", ahndl, args{testCtx, testLc}, 5, nil},
-		{"TestGetLogLevels-7", ahndl, args{testCtx, testLc}, 3, nil},
+		{"TestGetLogLevels-1", ahndl, args{testCtx, testLc}, log.DebugLevel, nil},
+		{"TestGetLogLevels-2", ahndl, args{testCtx, testLc}, log.InfoLevel, nil},
+		{"TestGetLogLevels-3", ahndl, args{testCtx, testLc}, log.WarnLevel, nil},
+		{"TestGetLogLevels-4", ahndl, args{testCtx, testLc}, log.ErrorLevel, nil},
+		{"TestGetLogLevels-5", ahndl, args{testCtx, testLc}, log.FatalLevel, nil},
+		{"TestGetLogLevels-7", ahndl, args{testCtx, testLc}, log.ErrorLevel, nil},
 	}
 	for itt, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

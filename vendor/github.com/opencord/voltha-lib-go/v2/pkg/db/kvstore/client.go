@@ -15,10 +15,6 @@
  */
 package kvstore
 
-import (
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-)
-
 const (
 	// Default timeout in seconds when making a kvstore request
 	defaultKVGetTimeout = 5
@@ -41,10 +37,6 @@ type KVPair struct {
 	Version int64
 	Session string
 	Lease   int64
-}
-
-func init() {
-	log.AddPackage(log.JSON, log.WarnLevel, nil)
 }
 
 // NewKVPair creates a new KVPair object

@@ -17,6 +17,8 @@ package common
 
 import (
 	"context"
+	"sync"
+
 	"github.com/golang/protobuf/ptypes"
 	a "github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
@@ -25,7 +27,6 @@ import (
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 )
 
 type CoreProxy struct {
@@ -43,7 +44,7 @@ func NewCoreProxy(kafkaProxy *kafka.InterContainerProxy, adapterTopic string, co
 	proxy.coreTopic = coreTopic
 	proxy.deviceIdCoreMap = make(map[string]string)
 	proxy.lockDeviceIdCoreMap = sync.RWMutex{}
-	log.Debugw("TOPICS", log.Fields{"core": proxy.coreTopic, "adapter": proxy.adapterTopic})
+	logger.Debugw("TOPICS", log.Fields{"core": proxy.coreTopic, "adapter": proxy.adapterTopic})
 
 	return &proxy
 }
@@ -55,9 +56,9 @@ func unPackResponse(rpc string, deviceId string, success bool, response *a.Any) 
 		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(response, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 		}
-		log.Debugw("response", log.Fields{"rpc": rpc, "deviceId": deviceId, "success": success, "error": err})
+		logger.Debugw("response", log.Fields{"rpc": rpc, "deviceId": deviceId, "success": success, "error": err})
 		// TODO:  Need to get the real error code
 		return status.Errorf(codes.Canceled, "%s", unpackResult.Reason)
 	}
@@ -93,7 +94,7 @@ func (ap *CoreProxy) getAdapterTopic(args ...string) kafka.Topic {
 }
 
 func (ap *CoreProxy) RegisterAdapter(ctx context.Context, adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) error {
-	log.Debugw("registering-adapter", log.Fields{"coreTopic": ap.coreTopic, "adapterTopic": ap.adapterTopic})
+	logger.Debugw("registering-adapter", log.Fields{"coreTopic": ap.coreTopic, "adapterTopic": ap.adapterTopic})
 	rpc := "Register"
 	topic := kafka.Topic{Name: ap.coreTopic}
 	replyToTopic := ap.getAdapterTopic()
@@ -108,12 +109,12 @@ func (ap *CoreProxy) RegisterAdapter(ctx context.Context, adapter *voltha.Adapte
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &topic, &replyToTopic, true, "", args...)
-	log.Debugw("Register-Adapter-response", log.Fields{"replyTopic": replyToTopic, "success": success})
+	logger.Debugw("Register-Adapter-response", log.Fields{"replyTopic": replyToTopic, "success": success})
 	return unPackResponse(rpc, "", success, result)
 }
 
 func (ap *CoreProxy) DeviceUpdate(ctx context.Context, device *voltha.Device) error {
-	log.Debugw("DeviceUpdate", log.Fields{"deviceId": device.Id})
+	logger.Debugw("DeviceUpdate", log.Fields{"deviceId": device.Id})
 	rpc := "DeviceUpdate"
 	toTopic := ap.getCoreTopic(device.Id)
 	args := make([]*kafka.KVArg, 1)
@@ -124,12 +125,12 @@ func (ap *CoreProxy) DeviceUpdate(ctx context.Context, device *voltha.Device) er
 	// Use a device specific topic as we are the only adaptercore handling requests for this device
 	replyToTopic := ap.getAdapterTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
-	log.Debugw("DeviceUpdate-response", log.Fields{"deviceId": device.Id, "success": success})
+	logger.Debugw("DeviceUpdate-response", log.Fields{"deviceId": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
 func (ap *CoreProxy) PortCreated(ctx context.Context, deviceId string, port *voltha.Port) error {
-	log.Debugw("PortCreated", log.Fields{"portNo": port.PortNo})
+	logger.Debugw("PortCreated", log.Fields{"portNo": port.PortNo})
 	rpc := "PortCreated"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -148,12 +149,12 @@ func (ap *CoreProxy) PortCreated(ctx context.Context, deviceId string, port *vol
 	// Use a device specific topic as we are the only adaptercore handling requests for this device
 	replyToTopic := ap.getAdapterTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("PortCreated-response", log.Fields{"deviceId": deviceId, "success": success})
+	logger.Debugw("PortCreated-response", log.Fields{"deviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
 func (ap *CoreProxy) PortsStateUpdate(ctx context.Context, deviceId string, operStatus voltha.OperStatus_OperStatus) error {
-	log.Debugw("PortsStateUpdate", log.Fields{"deviceId": deviceId})
+	logger.Debugw("PortsStateUpdate", log.Fields{"deviceId": deviceId})
 	rpc := "PortsStateUpdate"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -174,12 +175,12 @@ func (ap *CoreProxy) PortsStateUpdate(ctx context.Context, deviceId string, oper
 	// Use a device specific topic as we are the only adaptercore handling requests for this device
 	replyToTopic := ap.getAdapterTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("PortsStateUpdate-response", log.Fields{"deviceId": deviceId, "success": success})
+	logger.Debugw("PortsStateUpdate-response", log.Fields{"deviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
 func (ap *CoreProxy) DeleteAllPorts(ctx context.Context, deviceId string) error {
-	log.Debugw("DeleteAllPorts", log.Fields{"deviceId": deviceId})
+	logger.Debugw("DeleteAllPorts", log.Fields{"deviceId": deviceId})
 	rpc := "DeleteAllPorts"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -195,13 +196,13 @@ func (ap *CoreProxy) DeleteAllPorts(ctx context.Context, deviceId string) error 
 	// Use a device specific topic as we are the only adaptercore handling requests for this device
 	replyToTopic := ap.getAdapterTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("DeleteAllPorts-response", log.Fields{"deviceId": deviceId, "success": success})
+	logger.Debugw("DeleteAllPorts-response", log.Fields{"deviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
 func (ap *CoreProxy) DeviceStateUpdate(ctx context.Context, deviceId string,
 	connStatus voltha.ConnectStatus_ConnectStatus, operStatus voltha.OperStatus_OperStatus) error {
-	log.Debugw("DeviceStateUpdate", log.Fields{"deviceId": deviceId})
+	logger.Debugw("DeviceStateUpdate", log.Fields{"deviceId": deviceId})
 	rpc := "DeviceStateUpdate"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -226,13 +227,13 @@ func (ap *CoreProxy) DeviceStateUpdate(ctx context.Context, deviceId string,
 	// Use a device specific topic as we are the only adaptercore handling requests for this device
 	replyToTopic := ap.getAdapterTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("DeviceStateUpdate-response", log.Fields{"deviceId": deviceId, "success": success})
+	logger.Debugw("DeviceStateUpdate-response", log.Fields{"deviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
 func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId string, parentPortNo int,
 	childDeviceType string, channelId int, vendorId string, serialNumber string, onuId int64) (*voltha.Device, error) {
-	log.Debugw("ChildDeviceDetected", log.Fields{"pDeviceId": parentDeviceId, "channelId": channelId})
+	logger.Debugw("ChildDeviceDetected", log.Fields{"pDeviceId": parentDeviceId, "channelId": channelId})
 	rpc := "ChildDeviceDetected"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -277,12 +278,12 @@ func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId str
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
-	log.Debugw("ChildDeviceDetected-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	logger.Debugw("ChildDeviceDetected-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 
 	if success {
 		volthaDevice := &voltha.Device{}
 		if err := ptypes.UnmarshalAny(result, volthaDevice); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevice, nil
@@ -290,9 +291,9 @@ func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId str
 		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 		}
-		log.Debugw("ChildDeviceDetected-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
+		logger.Debugw("ChildDeviceDetected-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
 		// TODO: Need to get the real error code
 		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
@@ -300,7 +301,7 @@ func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId str
 }
 
 func (ap *CoreProxy) ChildDevicesLost(ctx context.Context, parentDeviceId string) error {
-	log.Debugw("ChildDevicesLost", log.Fields{"pDeviceId": parentDeviceId})
+	logger.Debugw("ChildDevicesLost", log.Fields{"pDeviceId": parentDeviceId})
 	rpc := "ChildDevicesLost"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -315,12 +316,12 @@ func (ap *CoreProxy) ChildDevicesLost(ctx context.Context, parentDeviceId string
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
-	log.Debugw("ChildDevicesLost-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	logger.Debugw("ChildDevicesLost-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 	return unPackResponse(rpc, parentDeviceId, success, result)
 }
 
 func (ap *CoreProxy) ChildDevicesDetected(ctx context.Context, parentDeviceId string) error {
-	log.Debugw("ChildDevicesDetected", log.Fields{"pDeviceId": parentDeviceId})
+	logger.Debugw("ChildDevicesDetected", log.Fields{"pDeviceId": parentDeviceId})
 	rpc := "ChildDevicesDetected"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -335,12 +336,12 @@ func (ap *CoreProxy) ChildDevicesDetected(ctx context.Context, parentDeviceId st
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
-	log.Debugw("ChildDevicesDetected-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	logger.Debugw("ChildDevicesDetected-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 	return unPackResponse(rpc, parentDeviceId, success, result)
 }
 
 func (ap *CoreProxy) GetDevice(ctx context.Context, parentDeviceId string, deviceId string) (*voltha.Device, error) {
-	log.Debugw("GetDevice", log.Fields{"deviceId": deviceId})
+	logger.Debugw("GetDevice", log.Fields{"deviceId": deviceId})
 	rpc := "GetDevice"
 
 	toTopic := ap.getCoreTopic(parentDeviceId)
@@ -354,12 +355,12 @@ func (ap *CoreProxy) GetDevice(ctx context.Context, parentDeviceId string, devic
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
-	log.Debugw("GetDevice-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	logger.Debugw("GetDevice-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 
 	if success {
 		volthaDevice := &voltha.Device{}
 		if err := ptypes.UnmarshalAny(result, volthaDevice); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevice, nil
@@ -367,16 +368,16 @@ func (ap *CoreProxy) GetDevice(ctx context.Context, parentDeviceId string, devic
 		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 		}
-		log.Debugw("GetDevice-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
+		logger.Debugw("GetDevice-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
 		// TODO:  Need to get the real error code
 		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
 }
 
 func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, kwargs map[string]interface{}) (*voltha.Device, error) {
-	log.Debugw("GetChildDevice", log.Fields{"parentDeviceId": parentDeviceId, "kwargs": kwargs})
+	logger.Debugw("GetChildDevice", log.Fields{"parentDeviceId": parentDeviceId, "kwargs": kwargs})
 	rpc := "GetChildDevice"
 
 	toTopic := ap.getCoreTopic(parentDeviceId)
@@ -414,12 +415,12 @@ func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, 
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
-	log.Debugw("GetChildDevice-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	logger.Debugw("GetChildDevice-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 
 	if success {
 		volthaDevice := &voltha.Device{}
 		if err := ptypes.UnmarshalAny(result, volthaDevice); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevice, nil
@@ -427,16 +428,16 @@ func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, 
 		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 		}
-		log.Debugw("GetChildDevice-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
+		logger.Debugw("GetChildDevice-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
 		// TODO:  Need to get the real error code
 		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
 }
 
 func (ap *CoreProxy) GetChildDevices(ctx context.Context, parentDeviceId string) (*voltha.Devices, error) {
-	log.Debugw("GetChildDevices", log.Fields{"parentDeviceId": parentDeviceId})
+	logger.Debugw("GetChildDevices", log.Fields{"parentDeviceId": parentDeviceId})
 	rpc := "GetChildDevices"
 
 	toTopic := ap.getCoreTopic(parentDeviceId)
@@ -450,12 +451,12 @@ func (ap *CoreProxy) GetChildDevices(ctx context.Context, parentDeviceId string)
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
-	log.Debugw("GetChildDevices-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	logger.Debugw("GetChildDevices-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 
 	if success {
 		volthaDevices := &voltha.Devices{}
 		if err := ptypes.UnmarshalAny(result, volthaDevices); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevices, nil
@@ -463,16 +464,16 @@ func (ap *CoreProxy) GetChildDevices(ctx context.Context, parentDeviceId string)
 		unpackResult := &ic.Error{}
 		var err error
 		if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
-			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 		}
-		log.Debugw("GetChildDevices-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
+		logger.Debugw("GetChildDevices-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
 		// TODO:  Need to get the real error code
 		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
 }
 
 func (ap *CoreProxy) SendPacketIn(ctx context.Context, deviceId string, port uint32, pktPayload []byte) error {
-	log.Debugw("SendPacketIn", log.Fields{"deviceId": deviceId, "port": port, "pktPayload": pktPayload})
+	logger.Debugw("SendPacketIn", log.Fields{"deviceId": deviceId, "port": port, "pktPayload": pktPayload})
 	rpc := "PacketIn"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -496,12 +497,12 @@ func (ap *CoreProxy) SendPacketIn(ctx context.Context, deviceId string, port uin
 		Value: pkt,
 	}
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("SendPacketIn-response", log.Fields{"pDeviceId": deviceId, "success": success})
+	logger.Debugw("SendPacketIn-response", log.Fields{"pDeviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
 func (ap *CoreProxy) DeviceReasonUpdate(ctx context.Context, deviceId string, deviceReason string) error {
-	log.Debugw("DeviceReasonUpdate", log.Fields{"deviceId": deviceId, "deviceReason": deviceReason})
+	logger.Debugw("DeviceReasonUpdate", log.Fields{"deviceId": deviceId, "deviceReason": deviceReason})
 	rpc := "DeviceReasonUpdate"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -520,12 +521,12 @@ func (ap *CoreProxy) DeviceReasonUpdate(ctx context.Context, deviceId string, de
 		Value: reason,
 	}
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
-	log.Debugw("DeviceReason-response", log.Fields{"pDeviceId": deviceId, "success": success})
+	logger.Debugw("DeviceReason-response", log.Fields{"pDeviceId": deviceId, "success": success})
 	return unPackResponse(rpc, deviceId, success, result)
 }
 
 func (ap *CoreProxy) DevicePMConfigUpdate(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
-	log.Debugw("DevicePMConfigUpdate", log.Fields{"pmConfigs": pmConfigs})
+	logger.Debugw("DevicePMConfigUpdate", log.Fields{"pmConfigs": pmConfigs})
 	rpc := "DevicePMConfigUpdate"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -538,12 +539,12 @@ func (ap *CoreProxy) DevicePMConfigUpdate(ctx context.Context, pmConfigs *voltha
 		Value: pmConfigs,
 	}
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, pmConfigs.Id, args...)
-	log.Debugw("DevicePMConfigUpdate-response", log.Fields{"pDeviceId": pmConfigs.Id, "success": success})
+	logger.Debugw("DevicePMConfigUpdate-response", log.Fields{"pDeviceId": pmConfigs.Id, "success": success})
 	return unPackResponse(rpc, pmConfigs.Id, success, result)
 }
 
 func (ap *CoreProxy) ReconcileChildDevices(ctx context.Context, parentDeviceId string) error {
-	log.Debugw("ReconcileChildDevices", log.Fields{"parentDeviceId": parentDeviceId})
+	logger.Debugw("ReconcileChildDevices", log.Fields{"parentDeviceId": parentDeviceId})
 	rpc := "ReconcileChildDevices"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -555,6 +556,43 @@ func (ap *CoreProxy) ReconcileChildDevices(ctx context.Context, parentDeviceId s
 	}
 
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
-	log.Debugw("ReconcileChildDevices-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
+	logger.Debugw("ReconcileChildDevices-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 	return unPackResponse(rpc, parentDeviceId, success, result)
+}
+
+func (ap *CoreProxy) PortStateUpdate(ctx context.Context, deviceId string, pType voltha.Port_PortType, portNum uint32,
+	operStatus voltha.OperStatus_OperStatus) error {
+	logger.Debugw("PortStateUpdate", log.Fields{"deviceId": deviceId, "portType": pType, "portNo": portNum, "operation_status": operStatus})
+	rpc := "PortStateUpdate"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(deviceId)
+	args := make([]*kafka.KVArg, 4)
+	deviceID := &voltha.ID{Id: deviceId}
+	portNo := &ic.IntType{Val: int64(portNum)}
+	portType := &ic.IntType{Val: int64(pType)}
+	oStatus := &ic.IntType{Val: int64(operStatus)}
+
+	args[0] = &kafka.KVArg{
+		Key:   "device_id",
+		Value: deviceID,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "oper_status",
+		Value: oStatus,
+	}
+	args[2] = &kafka.KVArg{
+		Key:   "port_type",
+		Value: portType,
+	}
+	args[3] = &kafka.KVArg{
+		Key:   "port_no",
+		Value: portNo,
+	}
+
+	// Use a device specific topic as we are the only adaptercore handling requests for this device
+	replyToTopic := ap.getAdapterTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
+	logger.Debugw("PortStateUpdate-response", log.Fields{"deviceId": deviceId, "success": success})
+	return unPackResponse(rpc, deviceId, success, result)
 }

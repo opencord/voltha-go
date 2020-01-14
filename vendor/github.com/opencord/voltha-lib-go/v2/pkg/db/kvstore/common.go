@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package db
+package kvstore
 
 import (
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -28,7 +28,7 @@ var logger log.Logger
 func init() {
 	// Setup this package so that it's log level can be modified at run time
 	var err error
-	logger, err = log.AddPackage(log.JSON, logLevel, log.Fields{"pkg": "db"})
+	logger, err = log.AddPackage(log.JSON, logLevel, log.Fields{"pkg": "kvstore"})
 	if err != nil {
 		panic(err)
 	}

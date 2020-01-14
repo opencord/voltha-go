@@ -69,4 +69,5 @@ type Client interface {
 	Send(msg interface{}, topic *Topic, keys ...string) error
 	SendLiveness() error
 	EnableLivenessChannel(enable bool) chan bool
+	EnableHealthinessChannel(enable bool) chan bool
 }
