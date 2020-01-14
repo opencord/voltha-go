@@ -111,6 +111,7 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 		ld.Flows = &ofp.Flows{Items: nil}
 		ld.FlowGroups = &ofp.FlowGroups{Items: nil}
+		ld.Ports = []*voltha.LogicalPort{}
 
 		agent.lockLogicalDevice.Lock()
 		// Save the logical device

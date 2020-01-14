@@ -345,24 +345,21 @@ func (pr *PersistedRevision) Drop(txid string, includeConfig bool) {
 // Drop takes care of eliminating a revision hash that is no longer needed
 // and its associated config when required
 func (pr *PersistedRevision) StorageDrop(txid string, includeConfig bool) {
-	log.Debugw("dropping-revision", log.Fields{"txid": txid, "hash": pr.GetHash(), "config-hash": pr.GetConfig().Hash})
+	log.Debugw("dropping-revision", log.Fields{"txid": txid, "hash": pr.GetHash(), "config-hash": pr.GetConfig().Hash, "key": pr.GetName(), "isStored": pr.isStored})
 
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 	if pr.kvStore != nil && txid == "" {
-		if pr.isStored {
-			if pr.isWatched {
-				pr.kvStore.DeleteWatch(pr.GetName(), pr.events)
-				pr.isWatched = false
-			}
-
-			if err := pr.kvStore.Delete(pr.GetName()); err != nil {
-				log.Errorw("failed-to-remove-revision", log.Fields{"hash": pr.GetHash(), "error": err.Error()})
-			} else {
-				pr.isStored = false
-			}
+		if pr.isWatched {
+			pr.kvStore.DeleteWatch(pr.GetName(), pr.events)
+			pr.isWatched = false
 		}
 
+		if err := pr.kvStore.Delete(pr.GetName()); err != nil {
+			log.Errorw("failed-to-remove-revision", log.Fields{"hash": pr.GetHash(), "error": err.Error()})
+		} else {
+			pr.isStored = false
+		}
 	} else {
 		if includeConfig {
 			log.Debugw("attempted-to-remove-transacted-revision-config", log.Fields{"hash": pr.GetConfig().Hash, "txid": txid})
