@@ -59,8 +59,6 @@ const (
 	WarnLevel
 	// ErrorLevel logs a message at error level
 	ErrorLevel
-	// PanicLevel logs a message, then panics.
-	PanicLevel
 	// FatalLevel logs a message, then calls os.Exit(1).
 	FatalLevel
 )
@@ -135,8 +133,6 @@ func intToAtomicLevel(l int) zp.AtomicLevel {
 		return zp.NewAtomicLevelAt(zc.WarnLevel)
 	case ErrorLevel:
 		return zp.NewAtomicLevelAt(zc.ErrorLevel)
-	case PanicLevel:
-		return zp.NewAtomicLevelAt(zc.PanicLevel)
 	case FatalLevel:
 		return zp.NewAtomicLevelAt(zc.FatalLevel)
 	}
@@ -153,8 +149,6 @@ func intToLevel(l int) zc.Level {
 		return zc.WarnLevel
 	case ErrorLevel:
 		return zc.ErrorLevel
-	case PanicLevel:
-		return zc.PanicLevel
 	case FatalLevel:
 		return zc.FatalLevel
 	}
@@ -171,9 +165,23 @@ func levelToInt(l zc.Level) int {
 		return WarnLevel
 	case zc.ErrorLevel:
 		return ErrorLevel
-	case zc.PanicLevel:
-		return PanicLevel
-	case FatalLevel:
+	case zc.FatalLevel:
+		return FatalLevel
+	}
+	return ErrorLevel
+}
+
+func StringToInt(l string) int {
+	switch l {
+	case "DEBUG":
+		return DebugLevel
+	case "INFO":
+		return InfoLevel
+	case "WARN":
+		return WarnLevel
+	case "ERROR":
+		return ErrorLevel
+	case "FATAL":
 		return FatalLevel
 	}
 	return ErrorLevel
@@ -342,8 +350,6 @@ func setLevel(cfg zp.Config, level int) {
 		cfg.Level.SetLevel(zc.WarnLevel)
 	case ErrorLevel:
 		cfg.Level.SetLevel(zc.ErrorLevel)
-	case PanicLevel:
-		cfg.Level.SetLevel(zc.PanicLevel)
 	case FatalLevel:
 		cfg.Level.SetLevel(zc.FatalLevel)
 	default:

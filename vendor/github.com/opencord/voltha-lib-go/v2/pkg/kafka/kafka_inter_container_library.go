@@ -768,6 +768,10 @@ func (kp *InterContainerProxy) EnableLivenessChannel(enable bool) chan bool {
 	return kp.kafkaClient.EnableLivenessChannel(enable)
 }
 
+func (kp *InterContainerProxy) EnableHealthinessChannel(enable bool) chan bool {
+	return kp.kafkaClient.EnableHealthinessChannel(enable)
+}
+
 func (kp *InterContainerProxy) SendLiveness() error {
 	return kp.kafkaClient.SendLiveness()
 }

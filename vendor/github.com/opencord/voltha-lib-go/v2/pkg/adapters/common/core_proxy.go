@@ -17,6 +17,8 @@ package common
 
 import (
 	"context"
+	"sync"
+
 	"github.com/golang/protobuf/ptypes"
 	a "github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
@@ -25,7 +27,6 @@ import (
 	"github.com/opencord/voltha-protos/v2/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 )
 
 type CoreProxy struct {
@@ -557,4 +558,41 @@ func (ap *CoreProxy) ReconcileChildDevices(ctx context.Context, parentDeviceId s
 	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, parentDeviceId, args...)
 	log.Debugw("ReconcileChildDevices-response", log.Fields{"pDeviceId": parentDeviceId, "success": success})
 	return unPackResponse(rpc, parentDeviceId, success, result)
+}
+
+func (ap *CoreProxy) PortStateUpdate(ctx context.Context, deviceId string, pType voltha.Port_PortType, portNum uint32,
+	operStatus voltha.OperStatus_OperStatus) error {
+	log.Debugw("PortStateUpdate", log.Fields{"deviceId": deviceId, "portType": pType, "portNo": portNum, "operation_status": operStatus})
+	rpc := "PortStateUpdate"
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	toTopic := ap.getCoreTopic(deviceId)
+	args := make([]*kafka.KVArg, 4)
+	deviceID := &voltha.ID{Id: deviceId}
+	portNo := &ic.IntType{Val: int64(portNum)}
+	portType := &ic.IntType{Val: int64(pType)}
+	oStatus := &ic.IntType{Val: int64(operStatus)}
+
+	args[0] = &kafka.KVArg{
+		Key:   "device_id",
+		Value: deviceID,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "oper_status",
+		Value: oStatus,
+	}
+	args[2] = &kafka.KVArg{
+		Key:   "port_type",
+		Value: portType,
+	}
+	args[3] = &kafka.KVArg{
+		Key:   "port_no",
+		Value: portNo,
+	}
+
+	// Use a device specific topic as we are the only adaptercore handling requests for this device
+	replyToTopic := ap.getAdapterTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(nil, rpc, &toTopic, &replyToTopic, true, deviceId, args...)
+	log.Debugw("PortStateUpdate-response", log.Fields{"deviceId": deviceId, "success": success})
+	return unPackResponse(rpc, deviceId, success, result)
 }
