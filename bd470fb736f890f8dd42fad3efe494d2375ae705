@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "2ad4b8d3_d422911c",
+        "filename": "db/model/revision.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2020-01-14T11:38:26Z",
+      "side": 1,
+      "message": "Can we take this change in a separate ticket, since this is getting late, there are chances new lint warnings enter into db folder",
+      "parentUuid": "a27939f2_a6115666",
+      "range": {
+        "startLine": 27,
+        "startChar": 5,
+        "endLine": 27,
+        "endChar": 13
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be194ced_4726f6a4",
         "filename": "db/model/root.go",
         "patchSetId": 32
@@ -179,6 +203,30 @@
       "side": 1,
       "message": "This function is returning a private type so it should either not be used outside the package or the `root` type needs to be made public.",
       "parentUuid": "662b001e_dcb217d3",
+      "range": {
+        "startLine": 57,
+        "startChar": 5,
+        "endLine": 57,
+        "endChar": 12
+      },
+      "revId": "bd470fb736f890f8dd42fad3efe494d2375ae705",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "662aaa20_a208340e",
+        "filename": "db/model/root.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2020-01-14T11:38:26Z",
+      "side": 1,
+      "message": "I will make root as public.",
+      "parentUuid": "8801ee9b_d686b859",
       "range": {
         "startLine": 57,
         "startChar": 5,
