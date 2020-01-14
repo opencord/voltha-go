@@ -30,7 +30,6 @@ import (
 // EtcdClient represents the Etcd KV store client
 type EtcdClient struct {
 	ectdAPI          *v3Client.Client
-	leaderRev        v3Client.Client
 	keyReservations  map[string]*v3Client.LeaseID
 	watchedChannels  sync.Map
 	writeLock        sync.Mutex
@@ -38,9 +37,6 @@ type EtcdClient struct {
 	lockToSessionMap map[string]*v3Concurrency.Session
 	lockToMutexLock  sync.Mutex
 }
-
-// Connection Timeout in Seconds
-var connTimeout int = 2
 
 // NewEtcdClient returns a new client for the Etcd KV store
 func NewEtcdClient(addr string, timeout int) (*EtcdClient, error) {
