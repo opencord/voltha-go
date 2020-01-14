@@ -191,12 +191,12 @@ func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.L
 	log.Debugw("UpdateLogLevel-request", log.Fields{"package": logging.PackageName, "intval": int(logging.Level)})
 
 	if logging.PackageName == "" {
-		log.SetAllLogLevel(int(logging.Level))
-		log.SetDefaultLogLevel(int(logging.Level))
+		log.SetAllLogLevel(log.LogLevel(logging.Level))
+		log.SetDefaultLogLevel(log.LogLevel(logging.Level))
 	} else if logging.PackageName == "default" {
-		log.SetDefaultLogLevel(int(logging.Level))
+		log.SetDefaultLogLevel(log.LogLevel(logging.Level))
 	} else {
-		log.SetPackageLogLevel(logging.PackageName, int(logging.Level))
+		log.SetPackageLogLevel(logging.PackageName, log.LogLevel(logging.Level))
 	}
 
 	return &empty.Empty{}, nil

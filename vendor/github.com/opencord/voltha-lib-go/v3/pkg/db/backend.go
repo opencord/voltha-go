@@ -103,7 +103,7 @@ func (b *Backend) updateLiveness(alive bool) {
 			logger.Debug("update-liveness-channel-reason-change")
 			b.liveness <- alive
 			b.lastLivenessTime = time.Now()
-		} else if time.Now().Sub(b.lastLivenessTime) > b.LivenessChannelInterval {
+		} else if time.Since(b.lastLivenessTime) > b.LivenessChannelInterval {
 			logger.Debug("update-liveness-channel-reason-interval")
 			b.liveness <- alive
 			b.lastLivenessTime = time.Now()
