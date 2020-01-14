@@ -38,7 +38,7 @@ func NewKafkaClient() *KafkaClient {
 }
 
 func (kc *KafkaClient) Start() error {
-	log.Debug("kafka-client-started")
+	logger.Debug("kafka-client-started")
 	return nil
 }
 
@@ -51,11 +51,11 @@ func (kc *KafkaClient) Stop() {
 		}
 		delete(kc.topicsChannelMap, topic)
 	}
-	log.Debug("kafka-client-stopped")
+	logger.Debug("kafka-client-stopped")
 }
 
 func (kc *KafkaClient) CreateTopic(topic *kafka.Topic, numPartition int, repFactor int) error {
-	log.Debugw("CreatingTopic", log.Fields{"topic": topic.Name, "numPartition": numPartition, "replicationFactor": repFactor})
+	logger.Debugw("CreatingTopic", log.Fields{"topic": topic.Name, "numPartition": numPartition, "replicationFactor": repFactor})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	if _, ok := kc.topicsChannelMap[topic.Name]; ok {
@@ -67,7 +67,7 @@ func (kc *KafkaClient) CreateTopic(topic *kafka.Topic, numPartition int, repFact
 }
 
 func (kc *KafkaClient) DeleteTopic(topic *kafka.Topic) error {
-	log.Debugw("DeleteTopic", log.Fields{"topic": topic.Name})
+	logger.Debugw("DeleteTopic", log.Fields{"topic": topic.Name})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	delete(kc.topicsChannelMap, topic.Name)
@@ -75,7 +75,7 @@ func (kc *KafkaClient) DeleteTopic(topic *kafka.Topic) error {
 }
 
 func (kc *KafkaClient) Subscribe(topic *kafka.Topic, kvArgs ...*kafka.KVArg) (<-chan *ic.InterContainerMessage, error) {
-	log.Debugw("Subscribe", log.Fields{"topic": topic.Name, "args": kvArgs})
+	logger.Debugw("Subscribe", log.Fields{"topic": topic.Name, "args": kvArgs})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	ch := make(chan *ic.InterContainerMessage)
@@ -89,7 +89,7 @@ func removeChannel(s []chan *ic.InterContainerMessage, i int) []chan *ic.InterCo
 }
 
 func (kc *KafkaClient) UnSubscribe(topic *kafka.Topic, ch <-chan *ic.InterContainerMessage) error {
-	log.Debugw("UnSubscribe", log.Fields{"topic": topic.Name})
+	logger.Debugw("UnSubscribe", log.Fields{"topic": topic.Name})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	if chnls, ok := kc.topicsChannelMap[topic.Name]; ok {
@@ -118,7 +118,7 @@ func (kc *KafkaClient) Send(msg interface{}, topic *kafka.Topic, keys ...string)
 	kc.lock.RLock()
 	defer kc.lock.RUnlock()
 	for _, ch := range kc.topicsChannelMap[topic.Name] {
-		log.Debugw("Publishing", log.Fields{"fromTopic": req.Header.FromTopic, "toTopic": topic.Name, "id": req.Header.Id})
+		logger.Debugw("Publishing", log.Fields{"fromTopic": req.Header.FromTopic, "toTopic": topic.Name, "id": req.Header.Id})
 		ch <- req
 	}
 	return nil
@@ -129,5 +129,9 @@ func (kc *KafkaClient) SendLiveness() error {
 }
 
 func (kc *KafkaClient) EnableLivenessChannel(enable bool) chan bool {
+	return nil
+}
+
+func (kc *KafkaClient) EnableHealthinessChannel(enable bool) chan bool {
 	return nil
 }

@@ -20,14 +20,15 @@ import (
 )
 
 const (
-	logLevel = log.FatalLevel
+	logLevel = log.ErrorLevel
 )
 
-// Unit test initialization. This init() function handles all unit tests in
-// the current directory.
+var logger log.Logger
+
 func init() {
 	// Setup this package so that it's log level can be modified at run time
-	_, err := log.AddPackage(log.JSON, logLevel, log.Fields{"pkg": "mocks"})
+	var err error
+	logger, err = log.AddPackage(log.JSON, logLevel, log.Fields{"pkg": "mocks"})
 	if err != nil {
 		panic(err)
 	}

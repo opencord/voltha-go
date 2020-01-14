@@ -100,7 +100,7 @@ github.com/mitchellh/mapstructure
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
-# github.com/opencord/voltha-lib-go/v2 v2.2.21
+# github.com/opencord/voltha-lib-go/v2 v2.2.28
 github.com/opencord/voltha-lib-go/v2/pkg/log
 github.com/opencord/voltha-lib-go/v2/pkg/db
 github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore

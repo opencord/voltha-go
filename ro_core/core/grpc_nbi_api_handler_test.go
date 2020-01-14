@@ -97,8 +97,8 @@ func TestUpdateLogLevel_grpc(t *testing.T) {
 		wantErr error
 	}{
 		{"TestUpdateLogLevel-1", ahndl, args{testCtx, testLogDef}, 0, nil},
-		{"TestUpdateLogLevel-2", ahndl, args{testCtx, testLogEmpty}, 5, nil},
-		{"TestUpdateLogLevel-3", ahndl, args{testCtx, testLog}, 5, nil},
+		{"TestUpdateLogLevel-2", ahndl, args{testCtx, testLogEmpty}, 4, nil},
+		{"TestUpdateLogLevel-3", ahndl, args{testCtx, testLog}, 4, nil},
 		{"TestUpdateLogLevel-4", ahndl, args{testCtx, testLog3}, 3, nil},
 	}
 	for _, tt := range tests {
@@ -147,7 +147,6 @@ func TestGetLogLevels_grpc(t *testing.T) {
 		{"TestGetLogLevels-3", ahndl, args{testCtx, testLc}, 2, nil},
 		{"TestGetLogLevels-4", ahndl, args{testCtx, testLc}, 3, nil},
 		{"TestGetLogLevels-5", ahndl, args{testCtx, testLc}, 4, nil},
-		{"TestGetLogLevels-6", ahndl, args{testCtx, testLc}, 5, nil},
 		{"TestGetLogLevels-7", ahndl, args{testCtx, testLc}, 3, nil},
 	}
 	for itt, tt := range tests {

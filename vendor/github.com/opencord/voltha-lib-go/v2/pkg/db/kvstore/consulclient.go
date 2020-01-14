@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	log "github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"sync"
 	"time"
 	//log "ciena.com/coordinator/common"
@@ -53,7 +53,7 @@ func NewConsulClient(addr string, timeout int) (*ConsulClient, error) {
 	config.WaitTime = duration
 	consul, err := consulapi.NewClient(config)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func NewConsulClient(addr string, timeout int) (*ConsulClient, error) {
 
 // IsConnectionUp returns whether the connection to the Consul KV store is up
 func (c *ConsulClient) IsConnectionUp(timeout int) bool {
-	log.Error("Unimplemented function")
+	logger.Error("Unimplemented function")
 	return false
 }
 
@@ -80,7 +80,7 @@ func (c *ConsulClient) List(key string, timeout int) (map[string]*KVPair, error)
 	// For now we ignore meta data
 	kvps, _, err := kv.List(key, &queryOptions)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 		return nil, err
 	}
 	m := make(map[string]*KVPair)
@@ -102,7 +102,7 @@ func (c *ConsulClient) Get(key string, timeout int) (*KVPair, error) {
 	// For now we ignore meta data
 	kvp, _, err := kv.Get(key, &queryOptions)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 		return nil, err
 	}
 	if kvp != nil {
@@ -121,7 +121,7 @@ func (c *ConsulClient) Put(key string, value interface{}, timeout int) error {
 	var val []byte
 	var er error
 	if val, er = ToByte(value); er != nil {
-		log.Error(er)
+		logger.Error(er)
 		return er
 	}
 
@@ -133,7 +133,7 @@ func (c *ConsulClient) Put(key string, value interface{}, timeout int) error {
 	defer c.writeLock.Unlock()
 	_, err := kv.Put(&kvp, &writeOptions)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 		return err
 	}
 	return nil
@@ -148,7 +148,7 @@ func (c *ConsulClient) Delete(key string, timeout int) error {
 	defer c.writeLock.Unlock()
 	_, err := kv.Delete(key, &writeOptions)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 		return err
 	}
 	return nil
@@ -156,11 +156,11 @@ func (c *ConsulClient) Delete(key string, timeout int) error {
 
 func (c *ConsulClient) deleteSession() {
 	if c.sessionID != "" {
-		log.Debug("cleaning-up-session")
+		logger.Debug("cleaning-up-session")
 		session := c.consul.Session()
 		_, err := session.Destroy(c.sessionID, nil)
 		if err != nil {
-			log.Errorw("error-cleaning-session", log.Fields{"session": c.sessionID, "error": err})
+			logger.Errorw("error-cleaning-session", log.Fields{"session": c.sessionID, "error": err})
 		}
 	}
 	c.sessionID = ""
@@ -177,17 +177,17 @@ func (c *ConsulClient) createSession(ttl int64, retries int) (*consulapi.Session
 	for {
 		id, meta, err := session.Create(entry, nil)
 		if err != nil {
-			log.Errorw("create-session-error", log.Fields{"error": err})
+			logger.Errorw("create-session-error", log.Fields{"error": err})
 			if retries == 0 {
 				return nil, "", err
 			}
 		} else if meta.RequestTime == 0 {
-			log.Errorw("create-session-bad-meta-data", log.Fields{"meta-data": meta})
+			logger.Errorw("create-session-bad-meta-data", log.Fields{"meta-data": meta})
 			if retries == 0 {
 				return nil, "", errors.New("bad-meta-data")
 			}
 		} else if id == "" {
-			log.Error("create-session-nil-id")
+			logger.Error("create-session-nil-id")
 			if retries == 0 {
 				return nil, "", errors.New("ID-nil")
 			}
@@ -198,7 +198,7 @@ func (c *ConsulClient) createSession(ttl int64, retries int) (*consulapi.Session
 		if retries > 0 {
 			retries--
 		}
-		log.Debug("retrying-session-create-after-a-second-delay")
+		logger.Debug("retrying-session-create-after-a-second-delay")
 		time.Sleep(time.Duration(1) * time.Second)
 	}
 }
@@ -225,7 +225,7 @@ func (c *ConsulClient) Reserve(key string, value interface{}, ttl int64) (interf
 	var val []byte
 	var er error
 	if val, er = ToByte(value); er != nil {
-		log.Error(er)
+		logger.Error(er)
 		return nil, er
 	}
 
@@ -238,17 +238,17 @@ func (c *ConsulClient) Reserve(key string, value interface{}, ttl int64) (interf
 	reservationSuccessful := false
 	defer func() {
 		if !reservationSuccessful {
-			log.Debug("deleting-session")
+			logger.Debug("deleting-session")
 			c.deleteSession()
 		}
 	}()
 
 	session, sessionID, err := c.createSession(ttl, -1)
 	if err != nil {
-		log.Errorw("no-session-created", log.Fields{"error": err})
+		logger.Errorw("no-session-created", log.Fields{"error": err})
 		return "", errors.New("no-session-created")
 	}
-	log.Debugw("session-created", log.Fields{"session-id": sessionID})
+	logger.Debugw("session-created", log.Fields{"session-id": sessionID})
 	c.sessionID = sessionID
 	c.session = session
 
@@ -257,11 +257,11 @@ func (c *ConsulClient) Reserve(key string, value interface{}, ttl int64) (interf
 	kvp := consulapi.KVPair{Key: key, Value: val, Session: c.sessionID}
 	result, _, err := kv.Acquire(&kvp, nil)
 	if err != nil {
-		log.Errorw("error-acquiring-keys", log.Fields{"error": err})
+		logger.Errorw("error-acquiring-keys", log.Fields{"error": err})
 		return nil, err
 	}
 
-	log.Debugw("key-acquired", log.Fields{"key": key, "status": result})
+	logger.Debugw("key-acquired", log.Fields{"key": key, "status": result})
 
 	// Irrespective whether we were successful in acquiring the key, let's read it back and see if it's us.
 	m, err := c.Get(key, defaultKVGetTimeout)
@@ -269,7 +269,7 @@ func (c *ConsulClient) Reserve(key string, value interface{}, ttl int64) (interf
 		return nil, err
 	}
 	if m != nil {
-		log.Debugw("response-received", log.Fields{"key": m.Key, "m.value": string(m.Value.([]byte)), "value": value})
+		logger.Debugw("response-received", log.Fields{"key": m.Key, "m.value": string(m.Value.([]byte)), "value": value})
 		if m.Key == key && isEqual(m.Value, value) {
 			// My reservation is successful - register it.  For now, support is only for 1 reservation per key
 			// per session.
@@ -299,11 +299,11 @@ func (c *ConsulClient) ReleaseAllReservations() error {
 		kvp = consulapi.KVPair{Key: key, Value: value.([]byte), Session: c.sessionID}
 		result, _, err = kv.Release(&kvp, nil)
 		if err != nil {
-			log.Errorw("cannot-release-reservation", log.Fields{"key": key, "error": err})
+			logger.Errorw("cannot-release-reservation", log.Fields{"key": key, "error": err})
 			return err
 		}
 		if !result {
-			log.Errorw("cannot-release-reservation", log.Fields{"key": key})
+			logger.Errorw("cannot-release-reservation", log.Fields{"key": key})
 		}
 		delete(c.keyReservations, key)
 	}
@@ -390,14 +390,14 @@ func (c *ConsulClient) CloseWatch(key string, ch chan *Event) {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	if watchedChannelsContexts, ok = c.watchedChannelsContext[key]; !ok {
-		log.Errorw("key-has-no-watched-context-or-channel", log.Fields{"key": key})
+		logger.Errorw("key-has-no-watched-context-or-channel", log.Fields{"key": key})
 		return
 	}
 	// Look for the channels
 	var pos = -1
 	for i, chCtxMap := range watchedChannelsContexts {
 		if chCtxMap.channel == ch {
-			log.Debug("channel-found")
+			logger.Debug("channel-found")
 			chCtxMap.cancel()
 			//close the channel
 			close(ch)
@@ -409,7 +409,7 @@ func (c *ConsulClient) CloseWatch(key string, ch chan *Event) {
 	if pos >= 0 {
 		c.watchedChannelsContext[key] = append(c.watchedChannelsContext[key][:pos], c.watchedChannelsContext[key][pos+1:]...)
 	}
-	log.Debugw("watched-channel-exiting", log.Fields{"key": key, "channel": c.watchedChannelsContext[key]})
+	logger.Debugw("watched-channel-exiting", log.Fields{"key": key, "channel": c.watchedChannelsContext[key]})
 }
 
 func (c *ConsulClient) isKVEqual(kv1 *consulapi.KVPair, kv2 *consulapi.KVPair) bool {
@@ -430,7 +430,7 @@ func (c *ConsulClient) isKVEqual(kv1 *consulapi.KVPair, kv2 *consulapi.KVPair) b
 }
 
 func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key string, ch chan *Event) {
-	log.Debugw("start-watching-channel", log.Fields{"key": key, "channel": ch})
+	logger.Debugw("start-watching-channel", log.Fields{"key": key, "channel": ch})
 
 	defer c.CloseWatch(key, ch)
 	duration := GetDuration(defaultKVGetTimeout)
@@ -441,7 +441,7 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 	// Get the existing value, if any
 	previousKVPair, meta, err := kv.Get(key, &queryOptions)
 	if err != nil {
-		log.Debug(err)
+		logger.Debug(err)
 	}
 	lastIndex := meta.LastIndex
 
@@ -456,30 +456,30 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 		pair, meta, err = kv.Get(key, waitOptions)
 		select {
 		case <-watchContext.Done():
-			log.Debug("done-event-received-exiting")
+			logger.Debug("done-event-received-exiting")
 			return
 		default:
 			if err != nil {
-				log.Warnw("error-from-watch", log.Fields{"error": err})
+				logger.Warnw("error-from-watch", log.Fields{"error": err})
 				ch <- NewEvent(CONNECTIONDOWN, key, []byte(""), -1)
 			} else {
-				log.Debugw("index-state", log.Fields{"lastindex": lastIndex, "newindex": meta.LastIndex, "key": key})
+				logger.Debugw("index-state", log.Fields{"lastindex": lastIndex, "newindex": meta.LastIndex, "key": key})
 			}
 		}
 		if err != nil {
-			log.Debug(err)
+			logger.Debug(err)
 			// On error, block for 10 milliseconds to prevent endless loop
 			time.Sleep(10 * time.Millisecond)
 		} else if meta.LastIndex <= lastIndex {
-			log.Info("no-index-change-or-negative")
+			logger.Info("no-index-change-or-negative")
 		} else {
-			log.Debugw("update-received", log.Fields{"pair": pair})
+			logger.Debugw("update-received", log.Fields{"pair": pair})
 			if pair == nil {
 				ch <- NewEvent(DELETE, key, []byte(""), -1)
 			} else if !c.isKVEqual(pair, previousKVPair) {
 				// Push the change onto the channel if the data has changed
 				// For now just assume it's a PUT change
-				log.Debugw("pair-details", log.Fields{"session": pair.Session, "key": pair.Key, "value": pair.Value})
+				logger.Debugw("pair-details", log.Fields{"session": pair.Session, "key": pair.Key, "value": pair.Value})
 				ch <- NewEvent(PUT, pair.Key, pair.Value, -1)
 			}
 			previousKVPair = pair
@@ -500,7 +500,7 @@ func (c *ConsulClient) Close() {
 
 	// Clear the sessionID
 	if _, err := c.consul.Session().Destroy(c.sessionID, &writeOptions); err != nil {
-		log.Errorw("error-closing-client", log.Fields{"error": err})
+		logger.Errorw("error-closing-client", log.Fields{"error": err})
 	}
 }
 

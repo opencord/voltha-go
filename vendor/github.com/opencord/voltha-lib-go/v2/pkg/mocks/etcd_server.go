@@ -18,7 +18,6 @@ package mocks
 import (
 	"fmt"
 	"go.etcd.io/etcd/embed"
-	"log"
 	"net/url"
 	"os"
 	"time"
@@ -58,19 +57,19 @@ func MKConfig(configName string, clientPort, peerPort int, localPersistentStorag
 	cfg.Dir = localPersistentStorageDir
 	cfg.Logger = "zap"
 	if !islogLevelValid(logLevel) {
-		log.Fatalf("Invalid log level -%s", logLevel)
+		logger.Fatalf("Invalid log level -%s", logLevel)
 	}
 	cfg.LogLevel = logLevel
 	acurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", clientPort))
 	if err != nil {
-		log.Fatalf("Invalid client port -%d", clientPort)
+		logger.Fatalf("Invalid client port -%d", clientPort)
 	}
 	cfg.ACUrls = []url.URL{*acurl}
 	cfg.LCUrls = []url.URL{*acurl}
 
 	apurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", peerPort))
 	if err != nil {
-		log.Fatalf("Invalid peer port -%d", peerPort)
+		logger.Fatalf("Invalid peer port -%d", peerPort)
 	}
 	cfg.LPUrls = []url.URL{*apurl}
 	cfg.APUrls = []url.URL{*apurl}
@@ -100,23 +99,23 @@ func StartEtcdServer(cfg *embed.Config) *EtcdServer {
 	// Remove the local directory as
 	// a safeguard for the case where a prior test failed
 	if err := os.RemoveAll(cfg.Dir); err != nil {
-		log.Fatalf("Failure removing local directory %s", cfg.Dir)
+		logger.Fatalf("Failure removing local directory %s", cfg.Dir)
 	}
 	e, err := embed.StartEtcd(cfg)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	select {
 	case <-e.Server.ReadyNotify():
-		log.Printf("Embedded Etcd server is ready!")
+		logger.Debug("Embedded Etcd server is ready!")
 	case <-time.After(serverStartUpTimeout):
 		e.Server.HardStop() // trigger a shutdown
 		e.Close()
-		log.Fatal("Embedded Etcd server took too long to start!")
+		logger.Fatal("Embedded Etcd server took too long to start!")
 	case err := <-e.Err():
 		e.Server.HardStop() // trigger a shutdown
 		e.Close()
-		log.Fatalf("Embedded Etcd server errored out - %s", err)
+		logger.Fatalf("Embedded Etcd server errored out - %s", err)
 	}
 	return &EtcdServer{server: e}
 }
@@ -128,7 +127,7 @@ func (es *EtcdServer) Stop() {
 		es.server.Server.HardStop()
 		es.server.Close()
 		if err := os.RemoveAll(storage); err != nil {
-			log.Fatalf("Failure removing local directory %s", es.server.Config().Dir)
+			logger.Fatalf("Failure removing local directory %s", es.server.Config().Dir)
 		}
 	}
 }
