@@ -63,7 +63,7 @@ func newNBTest() *NBTest {
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-nbi-test"
-	test.defaultTimeout = 5 * time.Second
+	test.defaultTimeout = 10 * time.Second
 	test.maxTimeout = 20 * time.Second
 	return test
 }
@@ -74,6 +74,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
 	cfg.DefaultRequestTimeout = nb.defaultTimeout.Nanoseconds() / 1000000 //TODO: change when Core changes to Duration
+	cfg.DefaultCoreTimeout = nb.defaultTimeout.Nanoseconds() / 1000000
 	cfg.KVStorePort = nb.kvClientPort
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
@@ -472,6 +473,50 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 }
 
+func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
+	//Get an OLT device
+	oltDevice, err := nb.getADevice(true, nbi)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+
+	// Disable the oltDevice
+	_, err = nbi.DisableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	// Wait for the olt device to be disabled
+	var vdFunction isDeviceConditionSatisfied = func(device *voltha.Device) bool {
+		return device.AdminState == voltha.AdminState_DISABLED && device.OperStatus == voltha.OperStatus_UNKNOWN
+	}
+	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
+	assert.Nil(t, err)
+
+	// Verify that all onu devices are disabled as well
+	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(oltDevice.Id)
+	assert.Nil(t, err)
+	for _, onu := range onuDevices.Items {
+		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
+		assert.Nil(t, err)
+	}
+
+	// Delete the oltDevice
+	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	var vFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
+		return devices != nil && len(devices.Items) == 0
+	}
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction)
+	assert.Nil(t, err)
+
+	// Wait for absence of logical device
+	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
+		return lds != nil && len(lds.Items) == 0
+	}
+
+	err = waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
+	assert.Nil(t, err)
+}
+
 func TestSuite1(t *testing.T) {
 	nb := newNBTest()
 	assert.NotNil(t, nb)
@@ -493,14 +538,20 @@ func TestSuite1(t *testing.T) {
 	// 2. Test adapter registration
 	nb.testAdapterRegistration(t, nbi)
 
-	// 3. Test create device
-	nb.testCreateDevice(t, nbi)
+	numberOfDeviceTestRuns := 2
+	for i := 1; i <= numberOfDeviceTestRuns; i++ {
+		// 3. Test create device
+		nb.testCreateDevice(t, nbi)
 
-	// 4. Test Enable a device
-	nb.testEnableDevice(t, nbi)
+		// 4. Test Enable a device
+		nb.testEnableDevice(t, nbi)
 
-	// 5. Test disable and ReEnable a root device
-	nb.testDisableAndReEnableRootDevice(t, nbi)
+		// 5. Test disable and ReEnable a root device
+		nb.testDisableAndReEnableRootDevice(t, nbi)
+
+		// 6. Test disable and delete all devices
+		nb.testDisableAndDeleteAllDevice(t, nbi)
+	}
 
 	//x. TODO - More tests to come
 }

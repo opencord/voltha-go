@@ -121,7 +121,7 @@ func (dg *DeviceGraph) GetDeviceNodeIds() map[string]string {
 //ComputeRoutes creates a device graph from the logical ports and then calculates all the routes
 //between the logical ports.  This will clear up the graph and routes if there were any.
 func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
-	if dg == nil {
+	if dg == nil || len(lps) == 0 {
 		return
 	}
 	dg.graphBuildLock.Lock()
