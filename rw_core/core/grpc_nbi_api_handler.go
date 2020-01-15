@@ -953,8 +953,11 @@ func (handler *APIHandler) forwardPacketOut(packet *openflow_13.PacketOut) {
 	// request.  For performance reason we can let both Cores in a Core-Pair forward the Packet to the adapters and
 	// let once of the shim layer (kafka proxy or adapter request handler filters out the duplicate packet)
 	if ownedByMe, err := handler.core.deviceOwnership.OwnedByMe(&utils.LogicalDeviceID{ID: packet.Id}); ownedByMe && err == nil {
-		agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id)
-		agent.packetOut(packet.PacketOut)
+		if agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(packet.Id); agent != nil {
+			agent.packetOut(packet.PacketOut)
+		} else {
+			log.Errorf("No logical device agent present", log.Fields{"logicaldeviceID": packet.Id})
+		}
 	}
 }
 

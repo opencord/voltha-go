@@ -99,7 +99,15 @@ func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDevi
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(logicalDeviceID string) *LogicalDeviceAgent {
 	agent, ok := ldMgr.logicalDeviceAgents.Load(logicalDeviceID)
 	if ok {
-		return agent.(*LogicalDeviceAgent)
+		lda := agent.(*LogicalDeviceAgent)
+		if lda.logicalDevice == nil {
+			// This can happen when an agent for the logical device has been created but the logical device
+			// itself is not ready for action as it is waiting for switch and port capabilities from the
+			// relevant adapter.  In such a case prevent any request aimed at that logical device.
+			log.Debugf("Logical device %s is not ready to serve requests", logicalDeviceID)
+			return nil
+		}
+		return lda
 	}
 	//	Try to load into memory - loading will also create the logical device agent
 	if err := ldMgr.load(logicalDeviceID); err == nil {
