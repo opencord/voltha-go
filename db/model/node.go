@@ -37,7 +37,7 @@ const (
 
 // Node interface is an abstraction of the node data structure
 type Node interface {
-	MakeLatest(branch *Branch, revision Revision, changeAnnouncement []ChangeTuple)
+	MakeLatest(ctx context.Context, branch *Branch, revision Revision, changeAnnouncement []ChangeTuple)
 
 	// CRUD functions
 	Add(ctx context.Context, path string, data interface{}, txid string, makeBranch MakeBranchFunction) Revision
@@ -51,11 +51,11 @@ type Node interface {
 
 	MakeBranch(txid string) *Branch
 	DeleteBranch(txid string)
-	MergeBranch(txid string, dryRun bool) (Revision, error)
+	MergeBranch(ctx context.Context, txid string, dryRun bool) (Revision, error)
 
 	MakeTxBranch() string
 	DeleteTxBranch(txid string)
-	FoldTxBranch(txid string)
+	FoldTxBranch(ctx context.Context, txid string)
 }
 
 type node struct {
@@ -381,7 +381,7 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 //getPath traverses the specified path and retrieves the data associated to it
 func (n *node) getPath(ctx context.Context, rev Revision, path string, depth int) interface{} {
 	if path == "" {
-		return n.getData(rev, depth)
+		return n.getData(ctx, rev, depth)
 	}
 
 	partition := strings.SplitN(path, "/", 2)
@@ -416,7 +416,7 @@ func (n *node) getPath(ctx context.Context, rev Revision, path string, depth int
 				var response []interface{}
 				for _, childRev := range children {
 					childNode := childRev.GetNode()
-					value := childNode.getData(childRev, depth)
+					value := childNode.getData(ctx, childRev, depth)
 					response = append(response, value)
 				}
 				return response
@@ -429,7 +429,7 @@ func (n *node) getPath(ctx context.Context, rev Revision, path string, depth int
 			}
 			for _, childRev := range children {
 				childNode := childRev.GetNode()
-				value := childNode.getData(childRev, depth)
+				value := childNode.getData(ctx, childRev, depth)
 				response = append(response, value)
 			}
 			return response
@@ -444,13 +444,13 @@ func (n *node) getPath(ctx context.Context, rev Revision, path string, depth int
 }
 
 // getData retrieves the data from a node revision
-func (n *node) getData(rev Revision, depth int) interface{} {
+func (n *node) getData(ctx context.Context, rev Revision, depth int) interface{} {
 	msg := rev.GetBranch().GetLatest().Get(depth)
 	var modifiedMsg interface{}
 
 	if n.GetProxy() != nil {
 		log.Debugw("invoking-get-callbacks", log.Fields{"data": msg})
-		if modifiedMsg = n.GetProxy().InvokeCallbacks(GET, false, msg); modifiedMsg != nil {
+		if modifiedMsg = n.GetProxy().InvokeCallbacks(ctx, GET, false, msg); modifiedMsg != nil {
 			msg = modifiedMsg
 		}
 
@@ -610,7 +610,7 @@ func (n *node) doUpdate(ctx context.Context, branch *Branch, data interface{}, s
 
 	if n.GetProxy() != nil {
 		log.Debug("invoking proxy PRE_UPDATE Callbacks")
-		n.GetProxy().InvokeCallbacks(PRE_UPDATE, false, branch.GetLatest(), data)
+		n.GetProxy().InvokeCallbacks(ctx, PRE_UPDATE, false, branch.GetLatest(), data)
 	}
 
 	if branch.GetLatest().GetData().(proto.Message).String() != data.(proto.Message).String() {
@@ -671,7 +671,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 			if field.Key != "" {
 				if n.GetProxy() != nil {
 					log.Debug("invoking proxy PRE_ADD Callbacks")
-					n.GetProxy().InvokeCallbacks(PRE_ADD, false, data)
+					n.GetProxy().InvokeCallbacks(ctx, PRE_ADD, false, data)
 				}
 
 				children = make([]Revision, len(rev.GetChildren(name)))
@@ -696,7 +696,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 
 				updatedRev := rev.UpdateChildren(ctx, name, children, branch)
 				changes := []ChangeTuple{{POST_ADD, nil, childRev.GetData()}}
-				childRev.SetupWatch(childRev.GetName())
+				childRev.SetupWatch(ctx, childRev.GetName())
 
 				n.makeLatest(branch, updatedRev, changes)
 
@@ -832,13 +832,13 @@ func (n *node) Remove(ctx context.Context, path string, txid string, makeBranch 
 			if idx, childRev := n.findRevByKey(children, field.Key, keyValue); childRev != nil && idx >= 0 {
 				if n.GetProxy() != nil {
 					data := childRev.GetData()
-					n.GetProxy().InvokeCallbacks(PRE_REMOVE, false, data)
+					n.GetProxy().InvokeCallbacks(ctx, PRE_REMOVE, false, data)
 					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, data, nil})
 				} else {
 					postAnnouncement = append(postAnnouncement, ChangeTuple{POST_REMOVE, childRev.GetData(), nil})
 				}
 
-				childRev.StorageDrop(txid, true)
+				childRev.StorageDrop(ctx, txid, true)
 				GetRevCache().Delete(childRev.GetName())
 
 				branch.LatestLock.Lock()
@@ -882,12 +882,12 @@ func (n *node) DeleteBranch(txid string) {
 	delete(n.Branches, txid)
 }
 
-func (n *node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
+func (n *node) mergeChild(ctx context.Context, txid string, dryRun bool) func(Revision) Revision {
 	f := func(rev Revision) Revision {
 		childBranch := rev.GetBranch()
 
 		if childBranch.Txid == txid {
-			rev, _ = childBranch.Node.MergeBranch(txid, dryRun)
+			rev, _ = childBranch.Node.MergeBranch(ctx, txid, dryRun)
 		}
 
 		return rev
@@ -896,7 +896,7 @@ func (n *node) mergeChild(txid string, dryRun bool) func(Revision) Revision {
 }
 
 // MergeBranch will integrate the contents of a transaction branch within the latest branch of a given node
-func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
+func (n *node) MergeBranch(ctx context.Context, txid string, dryRun bool) (Revision, error) {
 	srcBranch := n.GetBranch(txid)
 	dstBranch := n.GetBranch(NONE)
 
@@ -904,7 +904,7 @@ func (n *node) MergeBranch(txid string, dryRun bool) (Revision, error) {
 	srcRev := srcBranch.GetLatest()
 	dstRev := dstBranch.GetLatest()
 
-	rev, changes := Merge3Way(forkRev, srcRev, dstRev, n.mergeChild(txid, dryRun), dryRun)
+	rev, changes := Merge3Way(ctx, forkRev, srcRev, dstRev, n.mergeChild(ctx, txid, dryRun), dryRun)
 
 	if !dryRun {
 		if rev != nil {

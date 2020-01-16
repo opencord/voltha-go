@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/hex"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/common"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
@@ -80,7 +81,9 @@ func TestTransaction_2_AddDevice(t *testing.T) {
 		TestTransaction_TargetDeviceId = added.(*voltha.Device).Id
 		t.Logf("Added device : %+v", added)
 	}
-	addTx.Commit()
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	addTx.Commit(ctx)
 }
 
 func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
@@ -94,7 +97,9 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 		assert.NotNil(t, err)
 	}
 	t.Logf("retrieved device with ports: %+v", device1)
-	getDevWithPortsTx.Commit()
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	getDevWithPortsTx.Commit(ctx)
 
 	getDevTx := TestTransaction_RootProxy.OpenTransaction()
 	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
@@ -104,7 +109,7 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 	}
 	t.Logf("retrieved device: %+v", device2)
 
-	getDevTx.Commit()
+	getDevTx.Commit(ctx)
 }
 
 func TestTransaction_4_UpdateDevice(t *testing.T) {
@@ -139,7 +144,9 @@ func TestTransaction_4_UpdateDevice(t *testing.T) {
 			t.Logf("Updated device : %+v", afterUpdate)
 		}
 	}
-	updateTx.Commit()
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	updateTx.Commit(ctx)
 }
 
 func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
@@ -153,7 +160,9 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 		assert.NotNil(t, err)
 	}
 	t.Logf("retrieved device with ports: %+v", device1)
-	getDevWithPortsTx.Commit()
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	getDevWithPortsTx.Commit(ctx)
 
 	getDevTx := TestTransaction_RootProxy.OpenTransaction()
 	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
@@ -163,7 +172,7 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 	}
 	t.Logf("retrieved device: %+v", device2)
 
-	getDevTx.Commit()
+	getDevTx.Commit(ctx)
 }
 
 func TestTransaction_6_RemoveDevice(t *testing.T) {
@@ -178,7 +187,9 @@ func TestTransaction_6_RemoveDevice(t *testing.T) {
 	} else {
 		t.Logf("Removed device : %+v", removed)
 	}
-	removeTx.Commit()
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	removeTx.Commit(ctx)
 }
 
 func TestTransaction_7_GetDevice_PostRemove(t *testing.T) {
@@ -193,5 +204,7 @@ func TestTransaction_7_GetDevice_PostRemove(t *testing.T) {
 	}
 	t.Logf("retrieved device: %+v", device)
 
-	getDevTx.Commit()
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	getDevTx.Commit(ctx)
 }

@@ -16,6 +16,7 @@
 package model
 
 import (
+	"context"
 	"github.com/opencord/voltha-lib-go/v2/pkg/db"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 	"github.com/opencord/voltha-protos/v2/go/voltha"
@@ -36,7 +37,7 @@ type ModelTestConfig struct {
 
 var callbackMutex sync.Mutex
 
-func commonChanCallback(args ...interface{}) interface{} {
+func commonChanCallback(ctx context.Context, args ...interface{}) interface{} {
 	log.Infof("Running common callback - arg count: %d", len(args))
 
 	//for i := 0; i < len(args); i++ {
@@ -58,13 +59,13 @@ func commonChanCallback(args ...interface{}) interface{} {
 	return nil
 }
 
-func commonCallback2(args ...interface{}) interface{} {
+func commonCallback2(ctx context.Context, args ...interface{}) interface{} {
 	log.Infof("Running common2 callback - arg count: %d %+v", len(args), args)
 
 	return nil
 }
 
-func commonCallbackFunc(args ...interface{}) interface{} {
+func commonCallbackFunc(ctx context.Context, args ...interface{}) interface{} {
 	log.Infof("Running common callback - arg count: %d", len(args))
 
 	for i := 0; i < len(args); i++ {
@@ -78,14 +79,14 @@ func commonCallbackFunc(args ...interface{}) interface{} {
 	return nil
 }
 
-func firstCallback(args ...interface{}) interface{} {
+func firstCallback(ctx context.Context, args ...interface{}) interface{} {
 	name := args[0]
 	id := args[1]
 	log.Infof("Running first callback - name: %s, id: %s\n", name, id)
 	return nil
 }
 
-func secondCallback(args ...interface{}) interface{} {
+func secondCallback(ctx context.Context, args ...interface{}) interface{} {
 	name := args[0].(map[string]string)
 	id := args[1]
 	log.Infof("Running second callback - name: %s, id: %f\n", name["name"], id)
@@ -94,7 +95,7 @@ func secondCallback(args ...interface{}) interface{} {
 	return nil
 }
 
-func thirdCallback(args ...interface{}) interface{} {
+func thirdCallback(ctx context.Context, args ...interface{}) interface{} {
 	name := args[0]
 	id := args[1].(*voltha.Device)
 	log.Infof("Running third callback - name: %+v, id: %s\n", name, id.Id)

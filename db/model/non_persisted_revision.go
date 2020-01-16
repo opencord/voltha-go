@@ -184,7 +184,7 @@ func (npr *NonPersistedRevision) GetNode() *node {
 	return npr.Branch.Node
 }
 
-func (npr *NonPersistedRevision) Finalize(skipOnExist bool) {
+func (npr *NonPersistedRevision) Finalize(ctx context.Context, skipOnExist bool) {
 	npr.Hash = npr.hashContent()
 }
 
@@ -307,7 +307,7 @@ func (npr *NonPersistedRevision) UpdateData(ctx context.Context, data interface{
 		newRev.Children[entryName] = append(newRev.Children[entryName], childrenEntry...)
 	}
 
-	newRev.Finalize(false)
+	newRev.Finalize(ctx, false)
 
 	log.Debugw("update-data-complete", log.Fields{"updated": newRev.Config.Data, "provided": data})
 
@@ -413,13 +413,13 @@ func (npr *NonPersistedRevision) UpdateChildren(ctx context.Context, name string
 		updatedRev.SetChildren(name, children)
 	}
 
-	updatedRev.Finalize(false)
+	updatedRev.Finalize(ctx, false)
 
 	return updatedRev
 }
 
 // UpdateAllChildren will replace the current list of children with the provided ones
-func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision {
+func (npr *NonPersistedRevision) UpdateAllChildren(ctx context.Context, children map[string][]Revision, branch *Branch) Revision {
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 
@@ -434,7 +434,7 @@ func (npr *NonPersistedRevision) UpdateAllChildren(children map[string][]Revisio
 	for entryName, childrenEntry := range children {
 		newRev.Children[entryName] = append(newRev.Children[entryName], childrenEntry...)
 	}
-	newRev.Finalize(false)
+	newRev.Finalize(ctx, false)
 
 	return newRev
 }
@@ -501,11 +501,11 @@ func (npr *NonPersistedRevision) LoadFromPersistence(ctx context.Context, path s
 	return nil, nil
 }
 
-func (npr *NonPersistedRevision) SetupWatch(key string) {
+func (npr *NonPersistedRevision) SetupWatch(ctx context.Context, key string) {
 	// stub ... required by interface
 }
 
-func (npr *NonPersistedRevision) StorageDrop(txid string, includeConfig bool) {
+func (npr *NonPersistedRevision) StorageDrop(ctx context.Context, txid string, includeConfig bool) {
 	// stub ... required by interface
 }
 
