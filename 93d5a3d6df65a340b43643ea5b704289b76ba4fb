@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d54159c1_ceb79872",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 959,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-16T16:24:12Z",
+      "side": 1,
+      "message": "a bit of a nit, but the message might want to o call out that the packet is being dropped.",
+      "range": {
+        "startLine": 959,
+        "startChar": 13,
+        "endLine": 959,
+        "endChar": 15
+      },
+      "revId": "93d5a3d6df65a340b43643ea5b704289b76ba4fb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60183b2e_2451f5ba",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-16T16:24:12Z",
+      "side": 1,
+      "message": "Would it make sense to queue events until it is ready? or return an error indicating that it is not ready so that caller can retry? Not sure who calls this, but do they always retry?\n\nalso, it seems that the func is using nil as a \"error\", i.e. not found, should we separate the value and the errors (not found, not ready)?",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 13
+      },
+      "revId": "93d5a3d6df65a340b43643ea5b704289b76ba4fb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db327bb4_b921676d",
+        "filename": "rw_core/graph/device_graph.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-16T16:24:12Z",
+      "side": 1,
+      "message": "i have seen this in other parts of the code where a method is called on a nil pointer and it routed to the func based on type. Just wondering if we should find instances where a function is being called on nil and not let that happen.",
+      "range": {
+        "startLine": 124,
+        "startChar": 4,
+        "endLine": 124,
+        "endChar": 13
+      },
+      "revId": "93d5a3d6df65a340b43643ea5b704289b76ba4fb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
