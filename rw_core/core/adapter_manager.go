@@ -444,7 +444,7 @@ func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType 
 }
 
 //adapterUpdated is a callback invoked when an adapter change has been noticed
-func (aMgr *AdapterManager) adapterUpdated(args ...interface{}) interface{} {
+func (aMgr *AdapterManager) adapterUpdated(ctx context.Context, args ...interface{}) interface{} {
 	log.Debugw("updateAdapter-callback", log.Fields{"argsLen": len(args)})
 
 	var previousData *voltha.Adapters
@@ -477,7 +477,7 @@ func (aMgr *AdapterManager) adapterUpdated(args ...interface{}) interface{} {
 }
 
 //deviceTypesUpdated is a callback invoked when a device type change has been noticed
-func (aMgr *AdapterManager) deviceTypesUpdated(args ...interface{}) interface{} {
+func (aMgr *AdapterManager) deviceTypesUpdated(ctx context.Context, args ...interface{}) interface{} {
 	log.Debugw("deviceTypesUpdated-callback", log.Fields{"argsLen": len(args)})
 
 	var previousData *voltha.DeviceTypes

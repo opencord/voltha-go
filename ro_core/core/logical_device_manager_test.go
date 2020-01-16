@@ -19,6 +19,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
@@ -119,6 +120,8 @@ func TestDeleteLogicalDeviceAgent(t *testing.T) {
 }
 
 func TestLdMgrGetLogicalDevice(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	wantResult := &voltha.LogicalDevice{}
 
 	core := MakeTestNewCoreConfig()
@@ -126,7 +129,7 @@ func TestLdMgrGetLogicalDevice(t *testing.T) {
 	assert.NotNil(t, ldMgr)
 
 	/*** Case: getLogicalDevice() is NIL ***/
-	logicalDevNil, errNotNil := ldMgr.getLogicalDevice("id")
+	logicalDevNil, errNotNil := ldMgr.getLogicalDevice(ctx, "id")
 	assert.Nil(t, logicalDevNil)
 	assert.NotNil(t, errNotNil)
 
@@ -156,7 +159,7 @@ func TestLdMgrGetLogicalDevice(t *testing.T) {
 	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify getLogicalDevice() is NOT NIL
-	logicalDevNotNil, errNil := ldMgr.getLogicalDevice("id")
+	logicalDevNotNil, errNil := ldMgr.getLogicalDevice(ctx, "id")
 	assert.NotNil(t, logicalDevNotNil)
 	assert.Nil(t, errNil)
 	if reflect.TypeOf(logicalDevNotNil) != reflect.TypeOf(wantResult) {

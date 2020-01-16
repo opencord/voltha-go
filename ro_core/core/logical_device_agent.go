@@ -87,11 +87,14 @@ func (agent *LogicalDeviceAgent) stop(ctx context.Context) {
 }
 
 // GetLogicalDevice locks the logical device model and then retrieves the latest logical device information
-func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, error) {
+func (agent *LogicalDeviceAgent) GetLogicalDevice(ctx context.Context) (*voltha.LogicalDevice, error) {
 	log.Debug("GetLogicalDevice")
+
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
-	if logicalDevice, err := agent.clusterDataProxy.Get(context.Background(), "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); err != nil {
+	t, _ := ctx.Deadline()
+	log.Infof("timeout---------------", t)
+	if logicalDevice, err := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceID, 0, false, ""); err != nil {
 		log.Errorw("failed-to-get-logical-device", log.Fields{"error": err})
 		return nil, err
 	} else if logicalDevice != nil {
@@ -103,9 +106,9 @@ func (agent *LogicalDeviceAgent) GetLogicalDevice() (*voltha.LogicalDevice, erro
 }
 
 // ListLogicalDevicePorts returns all logical device ports details
-func (agent *LogicalDeviceAgent) ListLogicalDevicePorts() (*voltha.LogicalPorts, error) {
+func (agent *LogicalDeviceAgent) ListLogicalDevicePorts(ctx context.Context) (*voltha.LogicalPorts, error) {
 	log.Debug("ListLogicalDevicePorts")
-	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceID); logicalDevice != nil {
+	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(ctx, agent.logicalDeviceID); logicalDevice != nil {
 		lPorts := make([]*voltha.LogicalPort, 0)
 		lPorts = append(lPorts, logicalDevice.Ports...)
 		return &voltha.LogicalPorts{Items: lPorts}, nil
@@ -114,18 +117,20 @@ func (agent *LogicalDeviceAgent) ListLogicalDevicePorts() (*voltha.LogicalPorts,
 }
 
 // ListLogicalDeviceFlows - listFlows locks the logical device model and then retrieves the latest flow information
-func (agent *LogicalDeviceAgent) ListLogicalDeviceFlows() (*voltha.Flows, error) {
+func (agent *LogicalDeviceAgent) ListLogicalDeviceFlows(ctx context.Context) (*voltha.Flows, error) {
 	log.Debug("ListLogicalDeviceFlows")
-	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceID); logicalDevice != nil {
+
+	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(ctx, agent.logicalDeviceID); logicalDevice != nil {
 		return logicalDevice.GetFlows(), nil
 	}
 	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 }
 
 // ListLogicalDeviceFlowGroups - listFlowGroups locks the logical device model and then retrieves the latest flow groups information
-func (agent *LogicalDeviceAgent) ListLogicalDeviceFlowGroups() (*voltha.FlowGroups, error) {
+func (agent *LogicalDeviceAgent) ListLogicalDeviceFlowGroups(ctx context.Context) (*voltha.FlowGroups, error) {
 	log.Debug("ListLogicalDeviceFlowGroups")
-	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(agent.logicalDeviceID); logicalDevice != nil {
+
+	if logicalDevice, _ := agent.ldeviceMgr.getLogicalDevice(ctx, agent.logicalDeviceID); logicalDevice != nil {
 		return logicalDevice.GetFlowGroups(), nil
 	}
 	return nil, status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)

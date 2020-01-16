@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/opencord/voltha-go/ro_core/config"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
@@ -102,7 +103,8 @@ func TestNewCore(t *testing.T) {
 
 func TestNewCoreStartStop(t *testing.T) {
 
-	var ctx context.Context
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	roCoreFlgs, roC := makeTestNewCore()
 	assert.NotNil(t, roCoreFlgs)

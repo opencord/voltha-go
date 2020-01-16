@@ -93,10 +93,11 @@ func (da *DeviceOwnership) Stop(ctx context.Context) {
 }
 
 func (da *DeviceOwnership) tryToReserveKey(id string) bool {
+	ctx := context.Background()
 	var currOwner string
 	//Try to reserve the key
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
-	value, err := da.kvClient.Reserve(kvKey, da.instanceID, da.reservationTimeout)
+	value, err := da.kvClient.Reserve(ctx, kvKey, da.instanceID, da.reservationTimeout)
 	if err != nil {
 		log.Errorw("error", log.Fields{"error": err, "id": id, "instanceId": da.instanceID})
 	}
@@ -110,9 +111,10 @@ func (da *DeviceOwnership) tryToReserveKey(id string) bool {
 }
 
 func (da *DeviceOwnership) renewReservation(id string) bool {
+	ctx := context.Background()
 	// Try to reserve the key
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
-	if err := da.kvClient.RenewReservation(kvKey); err != nil {
+	if err := da.kvClient.RenewReservation(ctx, kvKey); err != nil {
 		log.Errorw("reservation-renewal-error", log.Fields{"error": err, "instance": da.instanceID})
 		return false
 	}
