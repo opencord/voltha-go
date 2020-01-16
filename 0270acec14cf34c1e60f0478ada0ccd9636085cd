@@ -16,6 +16,24 @@
       "revId": "0270acec14cf34c1e60f0478ada0ccd9636085cd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8605c7b6_5483f895",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-16T14:00:22Z",
+      "side": 1,
+      "message": "Sure, I will add a log.",
+      "parentUuid": "3557b0b5_e6743937",
+      "revId": "0270acec14cf34c1e60f0478ada0ccd9636085cd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
