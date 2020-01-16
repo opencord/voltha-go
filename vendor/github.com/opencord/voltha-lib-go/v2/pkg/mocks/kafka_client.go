@@ -131,3 +131,7 @@ func (kc *KafkaClient) SendLiveness() error {
 func (kc *KafkaClient) EnableLivenessChannel(enable bool) chan bool {
 	return nil
 }
+
+func (kc *KafkaClient) EnableHealthinessChannel(enable bool) chan bool {
+	return nil
+}

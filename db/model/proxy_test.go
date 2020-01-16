@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
@@ -818,11 +819,15 @@ func TestProxy_Callbacks_1_Register(t *testing.T) {
 }
 
 func TestProxy_Callbacks_2_Invoke_WithNoInterruption(t *testing.T) {
-	TestProxy_Root_Device.InvokeCallbacks(PRE_ADD, false, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	TestProxy_Root_Device.InvokeCallbacks(ctx, PRE_ADD, false, nil)
 }
 
 func TestProxy_Callbacks_3_Invoke_WithInterruption(t *testing.T) {
-	TestProxy_Root_Device.InvokeCallbacks(PRE_ADD, true, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	TestProxy_Root_Device.InvokeCallbacks(ctx, PRE_ADD, true, nil)
 }
 
 func TestProxy_Callbacks_4_Unregister(t *testing.T) {
