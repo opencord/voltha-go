@@ -27,6 +27,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/common"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -819,11 +820,15 @@ func TestProxy_Callbacks_1_Register(t *testing.T) {
 }
 
 func TestProxy_Callbacks_2_Invoke_WithNoInterruption(t *testing.T) {
-	TestProxyRootDevice.InvokeCallbacks(PreAdd, false, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	TestProxyRootDevice.InvokeCallbacks(ctx, PreAdd, false, nil)
 }
 
 func TestProxy_Callbacks_3_Invoke_WithInterruption(t *testing.T) {
-	TestProxyRootDevice.InvokeCallbacks(PreAdd, true, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
+	TestProxyRootDevice.InvokeCallbacks(ctx, PreAdd, true, nil)
 }
 
 func TestProxy_Callbacks_4_Unregister(t *testing.T) {

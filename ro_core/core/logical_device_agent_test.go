@@ -17,12 +17,16 @@ package core
 
 import (
 	"context"
+
 	"github.com/opencord/voltha-go/ro_core/config"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/phayes/freeport"
-	"github.com/stretchr/testify/assert"
+
 	"strconv"
 	"testing"
+
+	"github.com/phayes/freeport"
+	"github.com/stretchr/testify/assert"
 )
 
 func MakeTestLogDevAgConfig() (*Core, error) {
@@ -62,6 +66,8 @@ func TestNewLogicalDeviceAgent(t *testing.T) {
 
 // GetLogicalDevice, Flows, Ports test
 func TestGetLogicalDevice(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
 	core, _ := MakeTestLogDevAgConfig()
 	assert.NotNil(t, core)
 
@@ -79,18 +85,18 @@ func TestGetLogicalDevice(t *testing.T) {
 
 	logDevMgr.addLogicalDeviceAgentToMap(logAgent)
 
-	logDev, err := logAgent.GetLogicalDevice()
+	logDev, err := logAgent.GetLogicalDevice(ctx)
 	assert.Nil(t, logDev)
 	assert.NotNil(t, err)
 
-	Flws, err := logAgent.ListLogicalDeviceFlows()
+	Flws, err := logAgent.ListLogicalDeviceFlows(ctx)
 	assert.Nil(t, Flws)
 	assert.NotNil(t, err)
-	FlwsGrp, err := logAgent.ListLogicalDeviceFlowGroups()
+	FlwsGrp, err := logAgent.ListLogicalDeviceFlowGroups(ctx)
 	assert.Nil(t, FlwsGrp)
 	assert.NotNil(t, err)
 
-	logDevPorts, err := logAgent.ListLogicalDevicePorts()
+	logDevPorts, err := logAgent.ListLogicalDevicePorts(ctx)
 	assert.Nil(t, logDevPorts)
 	assert.NotNil(t, err)
 

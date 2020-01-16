@@ -159,7 +159,7 @@ func (rw *rwCore) stop(ctx context.Context) {
 	// Cleanup - applies only if we had a kvClient
 	if rw.kvClient != nil {
 		// Release all reservations
-		if err := rw.kvClient.ReleaseAllReservations(); err != nil {
+		if err := rw.kvClient.ReleaseAllReservations(ctx); err != nil {
 			log.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
 		}
 		// Close the DB connection
