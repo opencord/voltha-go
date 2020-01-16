@@ -122,12 +122,12 @@ func (aMgr *AdapterManager) start(ctx context.Context) error {
 	}
 
 	//// Create the proxies
-	aMgr.adapterProxy, err = aMgr.clusterDataProxy.CreateProxy(context.Background(), "/adapters", false)
+	aMgr.adapterProxy, err = aMgr.clusterDataProxy.CreateProxy(ctx, "/adapters", false)
 	if err != nil {
 		log.Errorw("Failed-to-create-adapter-proxy", log.Fields{"error": err})
 		return err
 	}
-	aMgr.deviceTypeProxy, err = aMgr.clusterDataProxy.CreateProxy(context.Background(), "/device_types", false)
+	aMgr.deviceTypeProxy, err = aMgr.clusterDataProxy.CreateProxy(ctx, "/device_types", false)
 	if err != nil {
 		log.Errorw("Failed-to-create-device-proxy", log.Fields{"error": err})
 		return err
@@ -190,7 +190,7 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() error {
 }
 
 //updateAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
-func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha.Adapter) {
+func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(ctx context.Context, adapter *voltha.Adapter) {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
 
@@ -198,7 +198,7 @@ func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha
 		if adapterAgent.getAdapter() != nil {
 			// Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
 			go func() {
-				err := aMgr.deviceMgr.adapterRestarted(adapter)
+				err := aMgr.deviceMgr.adapterRestarted(ctx, adapter)
 				if err != nil {
 					log.Errorw("unable-to-restart-adapter", log.Fields{"error": err})
 				}
@@ -208,7 +208,7 @@ func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(adapter *voltha
 	}
 
 	// Update the adapters
-	adaptersIf, err := aMgr.clusterDataProxy.List(context.Background(), "/adapters", 0, false, "")
+	adaptersIf, err := aMgr.clusterDataProxy.List(ctx, "/adapters", 0, false, "")
 	if err != nil {
 		log.Errorw("failed-to-list-adapters-from-cluster-proxy", log.Fields{"error": err})
 		return
@@ -381,7 +381,7 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 	if aMgr.getAdapter(adapter.Id) != nil {
 		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
 		go func() {
-			err := aMgr.deviceMgr.adapterRestarted(adapter)
+			err := aMgr.deviceMgr.adapterRestarted(context.Background(), adapter)
 			if err != nil {
 				log.Errorw("unable-to-restart-adapter", log.Fields{"error": err})
 			}
@@ -444,7 +444,7 @@ func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType 
 }
 
 //adapterUpdated is a callback invoked when an adapter change has been noticed
-func (aMgr *AdapterManager) adapterUpdated(args ...interface{}) interface{} {
+func (aMgr *AdapterManager) adapterUpdated(ctx context.Context, args ...interface{}) interface{} {
 	log.Debugw("updateAdapter-callback", log.Fields{"argsLen": len(args)})
 
 	var previousData *voltha.Adapters
@@ -477,7 +477,7 @@ func (aMgr *AdapterManager) adapterUpdated(args ...interface{}) interface{} {
 }
 
 //deviceTypesUpdated is a callback invoked when a device type change has been noticed
-func (aMgr *AdapterManager) deviceTypesUpdated(args ...interface{}) interface{} {
+func (aMgr *AdapterManager) deviceTypesUpdated(ctx context.Context, args ...interface{}) interface{} {
 	log.Debugw("deviceTypesUpdated-callback", log.Fields{"argsLen": len(args)})
 
 	var previousData *voltha.DeviceTypes

@@ -17,6 +17,7 @@
 package core
 
 import (
+	"context"
 	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -39,7 +40,7 @@ type DeviceState struct {
 }
 
 // TransitionHandler function type which takes device as input parameter
-type TransitionHandler func(*voltha.Device) error
+type TransitionHandler func(context.Context, *voltha.Device) error
 
 // Transition represent transition related attributes
 type Transition struct {

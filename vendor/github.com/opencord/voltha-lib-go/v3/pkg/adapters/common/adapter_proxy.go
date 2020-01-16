@@ -29,12 +29,12 @@ import (
 )
 
 type AdapterProxy struct {
-	kafkaICProxy *kafka.InterContainerProxy
+	kafkaICProxy kafka.InterContainerProxy
 	adapterTopic string
 	coreTopic    string
 }
 
-func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy, adapterTopic string, coreTopic string) *AdapterProxy {
+func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, adapterTopic string, coreTopic string) *AdapterProxy {
 	var proxy AdapterProxy
 	proxy.kafkaICProxy = kafkaProxy
 	proxy.adapterTopic = adapterTopic

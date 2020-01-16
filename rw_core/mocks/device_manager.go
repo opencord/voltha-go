@@ -27,7 +27,7 @@ type DeviceManager struct {
 }
 
 // GetDevice -
-func (dm *DeviceManager) GetDevice(deviceID string) (*voltha.Device, error) {
+func (dm *DeviceManager) GetDevice(ctx context.Context, deviceID string) (*voltha.Device, error) {
 	return nil, nil
 }
 
@@ -37,47 +37,47 @@ func (dm *DeviceManager) IsRootDevice(deviceID string) (bool, error) {
 }
 
 // NotifyInvalidTransition -
-func (dm *DeviceManager) NotifyInvalidTransition(pcDevice *voltha.Device) error {
+func (dm *DeviceManager) NotifyInvalidTransition(ctx context.Context, pcDevice *voltha.Device) error {
 	return nil
 }
 
 // SetAdminStateToEnable -
-func (dm *DeviceManager) SetAdminStateToEnable(cDevice *voltha.Device) error {
+func (dm *DeviceManager) SetAdminStateToEnable(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 
 // CreateLogicalDevice -
-func (dm *DeviceManager) CreateLogicalDevice(cDevice *voltha.Device) error {
+func (dm *DeviceManager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 
 // SetupUNILogicalPorts -
-func (dm *DeviceManager) SetupUNILogicalPorts(cDevice *voltha.Device) error {
+func (dm *DeviceManager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 
 // DisableAllChildDevices -
-func (dm *DeviceManager) DisableAllChildDevices(cDevice *voltha.Device) error {
+func (dm *DeviceManager) DisableAllChildDevices(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 
 // DeleteLogicalDevice -
-func (dm *DeviceManager) DeleteLogicalDevice(cDevice *voltha.Device) error {
+func (dm *DeviceManager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 
 // DeleteLogicalPorts -
-func (dm *DeviceManager) DeleteLogicalPorts(cDevice *voltha.Device) error {
+func (dm *DeviceManager) DeleteLogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 
 // DeleteAllChildDevices -
-func (dm *DeviceManager) DeleteAllChildDevices(cDevice *voltha.Device) error {
+func (dm *DeviceManager) DeleteAllChildDevices(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 
 // RunPostDeviceDelete -
-func (dm *DeviceManager) RunPostDeviceDelete(cDevice *voltha.Device) error {
+func (dm *DeviceManager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
 }
 

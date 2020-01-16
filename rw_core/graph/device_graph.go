@@ -17,6 +17,7 @@
 package graph
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -53,7 +54,7 @@ type ofPortLinkToPath struct {
 }
 
 // GetDeviceFunc returns device function
-type GetDeviceFunc func(id string) (*voltha.Device, error)
+type GetDeviceFunc func(ctx context.Context, id string) (*voltha.Device, error)
 
 // DeviceGraph represent device graph attributes
 type DeviceGraph struct {
@@ -120,7 +121,7 @@ func (dg *DeviceGraph) GetDeviceNodeIds() map[string]string {
 
 //ComputeRoutes creates a device graph from the logical ports and then calculates all the routes
 //between the logical ports.  This will clear up the graph and routes if there were any.
-func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
+func (dg *DeviceGraph) ComputeRoutes(ctx context.Context, lps []*voltha.LogicalPort) {
 	if dg == nil || len(lps) == 0 {
 		return
 	}
@@ -147,19 +148,19 @@ func (dg *DeviceGraph) ComputeRoutes(lps []*voltha.LogicalPort) {
 	// Build the graph
 	var device *voltha.Device
 	for _, logicalPort := range dg.logicalPorts {
-		device, _ = dg.getDevice(logicalPort.DeviceId, false)
-		dg.GGraph = dg.addDevice(device, dg.GGraph, &dg.devicesAdded, &dg.portsAdded, dg.boundaryPorts)
+		device, _ = dg.getDevice(ctx, logicalPort.DeviceId, false)
+		dg.GGraph = dg.addDevice(ctx, device, dg.GGraph, &dg.devicesAdded, &dg.portsAdded, dg.boundaryPorts)
 	}
 
 	dg.Routes = dg.buildRoutes()
 }
 
 // AddPort adds a port to the graph.  If the graph is empty it will just invoke ComputeRoutes function
-func (dg *DeviceGraph) AddPort(lp *voltha.LogicalPort) {
+func (dg *DeviceGraph) AddPort(ctx context.Context, lp *voltha.LogicalPort) {
 	log.Debugw("Addport", log.Fields{"logicalPort": lp})
 	//  If the graph does not exist invoke ComputeRoutes.
 	if len(dg.boundaryPorts) == 0 {
-		dg.ComputeRoutes([]*voltha.LogicalPort{lp})
+		dg.ComputeRoutes(ctx, []*voltha.LogicalPort{lp})
 		return
 	}
 
@@ -177,8 +178,8 @@ func (dg *DeviceGraph) AddPort(lp *voltha.LogicalPort) {
 
 	// Add the device where this port is located to the device graph. If the device is already added then
 	// only the missing port will be added
-	device, _ := dg.getDevice(lp.DeviceId, false)
-	dg.GGraph = dg.addDevice(device, dg.GGraph, &dg.devicesAdded, &dg.portsAdded, dg.boundaryPorts)
+	device, _ := dg.getDevice(ctx, lp.DeviceId, false)
+	dg.GGraph = dg.addDevice(ctx, device, dg.GGraph, &dg.devicesAdded, &dg.portsAdded, dg.boundaryPorts)
 
 	if lp.RootPort {
 		// Compute the route from this root port to all non-root ports
@@ -242,7 +243,7 @@ func (dg *DeviceGraph) IsUpToDate(ld *voltha.LogicalDevice) bool {
 //getDevice returns the device either from the local cache (default) or from the model.
 //TODO: Set a cache timeout such that we do not use invalid data.  The full device lifecycle should also
 //be taken in consideration
-func (dg *DeviceGraph) getDevice(id string, useCache bool) (*voltha.Device, error) {
+func (dg *DeviceGraph) getDevice(ctx context.Context, id string, useCache bool) (*voltha.Device, error) {
 	if useCache {
 		dg.cachedDevicesLock.RLock()
 		if d, exist := dg.cachedDevices[id]; exist {
@@ -253,7 +254,7 @@ func (dg *DeviceGraph) getDevice(id string, useCache bool) (*voltha.Device, erro
 		dg.cachedDevicesLock.RUnlock()
 	}
 	//	Not cached
-	d, err := dg.getDeviceFromModel(id)
+	d, err := dg.getDeviceFromModel(ctx, id)
 	if err != nil {
 		log.Errorw("device-not-found", log.Fields{"deviceId": id, "error": err})
 		return nil, err
@@ -267,7 +268,7 @@ func (dg *DeviceGraph) getDevice(id string, useCache bool) (*voltha.Device, erro
 }
 
 // addDevice adds a device to a device graph and setup edges that represent the device connections to its peers
-func (dg *DeviceGraph) addDevice(device *voltha.Device, g goraph.Graph, devicesAdded *map[string]string, portsAdded *map[string]string,
+func (dg *DeviceGraph) addDevice(ctx context.Context, device *voltha.Device, g goraph.Graph, devicesAdded *map[string]string, portsAdded *map[string]string,
 	boundaryPorts map[string]uint32) goraph.Graph {
 
 	if device == nil {
@@ -299,8 +300,8 @@ func (dg *DeviceGraph) addDevice(device *voltha.Device, g goraph.Graph, devicesA
 		}
 		for _, peer := range port.Peers {
 			if _, exist := (*devicesAdded)[peer.DeviceId]; !exist {
-				d, _ := dg.getDevice(peer.DeviceId, true)
-				g = dg.addDevice(d, g, devicesAdded, portsAdded, boundaryPorts)
+				d, _ := dg.getDevice(ctx, peer.DeviceId, true)
+				g = dg.addDevice(ctx, d, g, devicesAdded, portsAdded, boundaryPorts)
 			}
 			peerPortID = concatDeviceIDPortID(peer.DeviceId, peer.PortNo)
 			err := g.AddEdge(goraph.StringID(portID), goraph.StringID(peerPortID), 1)

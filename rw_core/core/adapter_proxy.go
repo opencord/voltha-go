@@ -35,11 +35,11 @@ type AdapterProxy struct {
 	TestMode              bool
 	deviceTopicRegistered bool
 	corePairTopic         string
-	kafkaICProxy          *kafka.InterContainerProxy
+	kafkaICProxy          kafka.InterContainerProxy
 }
 
 // NewAdapterProxy will return adapter proxy instance
-func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy, corePairTopic string) *AdapterProxy {
+func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, corePairTopic string) *AdapterProxy {
 	return &AdapterProxy{
 		kafkaICProxy:          kafkaProxy,
 		corePairTopic:         corePairTopic,
@@ -409,7 +409,7 @@ func (ap *AdapterProxy) SelfTestDevice(device voltha.Device) (*voltha.SelfTestRe
 	return nil, nil
 }
 
-func (ap *AdapterProxy) packetOut(deviceType string, deviceID string, outPort uint32, packet *openflow_13.OfpPacketOut) error {
+func (ap *AdapterProxy) packetOut(ctx context.Context, deviceType string, deviceID string, outPort uint32, packet *openflow_13.OfpPacketOut) error {
 	log.Debugw("packetOut", log.Fields{"deviceId": deviceID})
 	toTopic := ap.getAdapterTopic(deviceType)
 	rpc := "receive_packet_out"
@@ -432,13 +432,13 @@ func (ap *AdapterProxy) packetOut(deviceType string, deviceID string, outPort ui
 	// TODO:  Do we need to wait for an ACK on a packet Out?
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, deviceID, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, deviceID, args...)
 	log.Debugw("packetOut", log.Fields{"deviceid": deviceID, "success": success})
 	return unPackResponse(rpc, deviceID, success, result)
 }
 
 // UpdateFlowsBulk invokes update flows bulk rpc
-func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) error {
+func (ap *AdapterProxy) UpdateFlowsBulk(ctx context.Context, device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("UpdateFlowsBulk", log.Fields{"deviceId": device.Id, "flowsInUpdate": len(flows.Items), "groupsToUpdate": len(groups.Items)})
 	toTopic := ap.getAdapterTopic(device.Adapter)
 	rpc := "update_flows_bulk"
@@ -462,13 +462,13 @@ func (ap *AdapterProxy) UpdateFlowsBulk(device *voltha.Device, flows *voltha.Flo
 
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("UpdateFlowsBulk-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
 // UpdateFlowsIncremental invokes update flows incremental rpc
-func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error {
+func (ap *AdapterProxy) UpdateFlowsIncremental(ctx context.Context, device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error {
 	log.Debugw("UpdateFlowsIncremental",
 		log.Fields{
 			"deviceId":       device.Id,
@@ -500,7 +500,7 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(device *voltha.Device, flowChange
 	}
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("UpdateFlowsIncremental-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
@@ -521,7 +521,7 @@ func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Devi
 	}
 
 	replyToTopic := ap.getCoreTopic()
-	success, result := ap.kafkaICProxy.InvokeRPC(context.TODO(), rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("UpdatePmConfigs-response", log.Fields{"deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }

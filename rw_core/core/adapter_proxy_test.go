@@ -40,8 +40,8 @@ const (
 )
 
 var (
-	coreKafkaICProxy    *kafka.InterContainerProxy
-	adapterKafkaICProxy *kafka.InterContainerProxy
+	coreKafkaICProxy    kafka.InterContainerProxy
+	adapterKafkaICProxy kafka.InterContainerProxy
 	kc                  kafka.Client
 	adapterReqHandler   *com.RequestHandlerProxy
 	adapter             *cm.Adapter
@@ -60,12 +60,9 @@ func init() {
 	kc = lm.NewKafkaClient()
 
 	// Setup core inter-container proxy and core request handler
-	if coreKafkaICProxy, err = kafka.NewInterContainerProxy(
+	coreKafkaICProxy = kafka.NewInterContainerProxy(
 		kafka.MsgClient(kc),
-		kafka.DefaultTopic(&kafka.Topic{Name: coreName})); err != nil || coreKafkaICProxy == nil {
-		log.Fatalw("Failure-creating-core-intercontainerProxy", log.Fields{"error": err})
-
-	}
+		kafka.DefaultTopic(&kafka.Topic{Name: coreName}))
 	if err = coreKafkaICProxy.Start(); err != nil {
 		log.Fatalw("Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
@@ -77,12 +74,10 @@ func init() {
 	adapterCoreProxy := com.NewCoreProxy(nil, adapterName, coreName)
 	adapter = cm.NewAdapter(adapterCoreProxy)
 	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
-	if adapterKafkaICProxy, err = kafka.NewInterContainerProxy(
+	adapterKafkaICProxy = kafka.NewInterContainerProxy(
 		kafka.MsgClient(kc),
 		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}),
-		kafka.RequestHandlerInterface(adapterReqHandler)); err != nil || adapterKafkaICProxy == nil {
-		log.Fatalw("Failure-creating-adapter-intercontainerProxy", log.Fields{"error": err})
-	}
+		kafka.RequestHandlerInterface(adapterReqHandler))
 	if err = adapterKafkaICProxy.Start(); err != nil {
 		log.Fatalw("Failure-starting-adapter-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
@@ -172,18 +167,18 @@ func testPacketOut(t *testing.T) {
 	outPort := uint32(1)
 	packet, err := getRandomBytes(50)
 	assert.Nil(t, err)
-	err = ap.packetOut(adapterName, d.Id, outPort, &of.OfpPacketOut{Data: packet})
+	err = ap.packetOut(context.Background(), adapterName, d.Id, outPort, &of.OfpPacketOut{Data: packet})
 	assert.Nil(t, err)
 }
 
 func testFlowUpdates(t *testing.T) {
 	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
-	err := ap.UpdateFlowsBulk(d, &voltha.Flows{}, &voltha.FlowGroups{}, &voltha.FlowMetadata{})
+	err := ap.UpdateFlowsBulk(context.Background(), d, &voltha.Flows{}, &voltha.FlowGroups{}, &voltha.FlowMetadata{})
 	assert.Nil(t, err)
 	flowChanges := &voltha.FlowChanges{ToAdd: &voltha.Flows{Items: nil}, ToRemove: &voltha.Flows{Items: nil}}
 	groupChanges := &voltha.FlowGroupChanges{ToAdd: &voltha.FlowGroups{Items: nil}, ToRemove: &voltha.FlowGroups{Items: nil}, ToUpdate: &voltha.FlowGroups{Items: nil}}
-	err = ap.UpdateFlowsIncremental(d, flowChanges, groupChanges, &voltha.FlowMetadata{})
+	err = ap.UpdateFlowsIncremental(context.Background(), d, flowChanges, groupChanges, &voltha.FlowMetadata{})
 	assert.Nil(t, err)
 }
 
