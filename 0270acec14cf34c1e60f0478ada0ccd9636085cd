@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3557b0b5_e6743937",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-01-16T05:16:44Z",
+      "side": 1,
+      "message": "should we log here if we could not packet-out in an else condition?",
+      "revId": "0270acec14cf34c1e60f0478ada0ccd9636085cd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
