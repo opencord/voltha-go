@@ -44,7 +44,7 @@ type DeviceManager struct {
 	adapterProxy            *AdapterProxy
 	adapterMgr              *AdapterManager
 	logicalDeviceMgr        *LogicalDeviceManager
-	kafkaICProxy            *kafka.InterContainerProxy
+	kafkaICProxy            kafka.InterContainerProxy
 	stateTransitions        *TransitionMap
 	clusterDataProxy        *model.Proxy
 	coreInstanceID          string

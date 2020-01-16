@@ -124,13 +124,9 @@ func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client
 func createMockAdapter(adapterType int, kafkaClient kafka.Client, coreInstanceID string, coreName string, adapterName string) (adapters.IAdapter, error) {
 	var err error
 	var adapter adapters.IAdapter
-	adapterKafkaICProxy, err := kafka.NewInterContainerProxy(
+	adapterKafkaICProxy := kafka.NewInterContainerProxy(
 		kafka.MsgClient(kafkaClient),
 		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}))
-	if err != nil || adapterKafkaICProxy == nil {
-		log.Errorw("Failure-creating-adapter-intercontainerProxy", log.Fields{"error": err, "adapter": adapterName})
-		return nil, err
-	}
 	adapterCoreProxy := com.NewCoreProxy(adapterKafkaICProxy, adapterName, coreName)
 	var adapterReqHandler *com.RequestHandlerProxy
 	switch adapterType {

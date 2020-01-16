@@ -38,7 +38,7 @@ type LogicalDeviceManager struct {
 	core                           *Core
 	deviceMgr                      *DeviceManager
 	grpcNbiHdlr                    *APIHandler
-	kafkaICProxy                   *kafka.InterContainerProxy
+	kafkaICProxy                   kafka.InterContainerProxy
 	clusterDataProxy               *model.Proxy
 	exitChannel                    chan int
 	defaultTimeout                 int64
@@ -46,7 +46,7 @@ type LogicalDeviceManager struct {
 	logicalDeviceLoadingInProgress map[string][]chan int
 }
 
-func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy *kafka.InterContainerProxy, cdProxy *model.Proxy, timeout int64) *LogicalDeviceManager {
+func newLogicalDeviceManager(core *Core, deviceMgr *DeviceManager, kafkaICProxy kafka.InterContainerProxy, cdProxy *model.Proxy, timeout int64) *LogicalDeviceManager {
 	var logicalDeviceMgr LogicalDeviceManager
 	logicalDeviceMgr.core = core
 	logicalDeviceMgr.exitChannel = make(chan int, 1)

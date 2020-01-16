@@ -57,14 +57,14 @@ func init() {
 		kk.Host(hostIP),
 		kk.Port(9092))
 
-	coreKafkaProxy, _ = kk.NewInterContainerProxy(
+	coreKafkaProxy = kk.NewInterContainerProxy(
 		kk.InterContainerHost(hostIP),
 		kk.InterContainerPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Core"}),
 		kk.MsgClient(kafkaClient),
 		kk.DeviceDiscoveryTopic(&kk.Topic{Name: affinityRouterTopic}))
 
-	adapterKafkaProxy, _ = kk.NewInterContainerProxy(
+	adapterKafkaProxy = kk.NewInterContainerProxy(
 		kk.InterContainerHost(hostIP),
 		kk.InterContainerPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Adapter"}),
@@ -515,7 +515,7 @@ func subscribeToTopic(topic *kk.Topic, waitingChannel chan *ic.InterContainerMes
 
 func TestDeviceDiscovery(t *testing.T) {
 	// Create an intercontainer proxy - similar to the Core
-	testProxy, _ := kk.NewInterContainerProxy(
+	testProxy := kk.NewInterContainerProxy(
 		kk.InterContainerHost(hostIP),
 		kk.InterContainerPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Test"}),
