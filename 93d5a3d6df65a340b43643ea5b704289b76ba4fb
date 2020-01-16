@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8de04dd7_c7506418",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 959,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-16T16:45:28Z",
+      "side": 1,
+      "message": "hum ... since this will result in a stack traceback then we will have enough log to know that we are dropping a packet.   In practice, this situation should not happen as the Core will receive a forwardPacketOut after the Core has informed the ofagent/ofcontroller that the logical device is present and ready.",
+      "parentUuid": "d54159c1_ceb79872",
+      "range": {
+        "startLine": 959,
+        "startChar": 13,
+        "endLine": 959,
+        "endChar": 15
+      },
+      "revId": "93d5a3d6df65a340b43643ea5b704289b76ba4fb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60183b2e_2451f5ba",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c18dc030_87b1d951",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-16T16:45:28Z",
+      "side": 1,
+      "message": "Queueing in not required as this is a transient state and the only call that are made during this time is logical port creation.  And these are handled automatically when the logical device is ready.\n\nSeparating the value and the error is debatable in this case because the function calling this are more concerned whether there is an agent or not.",
+      "parentUuid": "60183b2e_2451f5ba",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 13
+      },
+      "revId": "93d5a3d6df65a340b43643ea5b704289b76ba4fb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db327bb4_b921676d",
         "filename": "rw_core/graph/device_graph.go",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2020-01-16T16:24:12Z",
       "side": 1,
       "message": "i have seen this in other parts of the code where a method is called on a nil pointer and it routed to the func based on type. Just wondering if we should find instances where a function is being called on nil and not let that happen.",
+      "range": {
+        "startLine": 124,
+        "startChar": 4,
+        "endLine": 124,
+        "endChar": 13
+      },
+      "revId": "93d5a3d6df65a340b43643ea5b704289b76ba4fb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbc4b593_f13174c5",
+        "filename": "rw_core/graph/device_graph.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-16T16:45:28Z",
+      "side": 1,
+      "message": "I think that was added as part of some test cases.   In the actual non-test code that should never happen.  Did I say never?",
+      "parentUuid": "db327bb4_b921676d",
       "range": {
         "startLine": 124,
         "startChar": 4,
