@@ -48,4 +48,6 @@ type CoreProxy interface {
 	GetChildDevices(ctx context.Context, parentDeviceID string) (*voltha.Devices, error)
 	SendPacketIn(ctx context.Context, deviceID string, port uint32, pktPayload []byte) error
 	DeviceReasonUpdate(ctx context.Context, deviceID string, deviceReason string) error
+	PortStateUpdate(ctx context.Context, deviceID string, pType voltha.Port_PortType, portNo uint32,
+		operStatus voltha.OperStatus_OperStatus) error
 }

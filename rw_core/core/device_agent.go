@@ -1072,7 +1072,7 @@ func (agent *DeviceAgent) packetOut(outPort uint32, packet *ofp.OfpPacketOut) er
 }
 
 // processUpdate is a callback invoked whenever there is a change on the device manages by this device agent
-func (agent *DeviceAgent) processUpdate(args ...interface{}) interface{} {
+func (agent *DeviceAgent) processUpdate(ctx context.Context, args ...interface{}) interface{} {
 	//// Run this callback in its own go routine
 	go func(args ...interface{}) interface{} {
 		var previous *voltha.Device

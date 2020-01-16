@@ -295,12 +295,12 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 	})
 
 	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
 			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
 			return nil, err
 		}
 		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
 			if err != nil {
 				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
 			}
@@ -349,12 +349,12 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 	})
 
 	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
 			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
 			return nil, err
 		}
 		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
 			if err != nil {
 				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
 			}
@@ -401,12 +401,12 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 	})
 
 	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
 			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
 			return nil, err
 		}
 		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
 			if err != nil {
 				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
 			}
@@ -453,12 +453,12 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface
 	})
 
 	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
 			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
 			return nil, err
 		}
 		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
 			if err != nil {
 				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
 			}
@@ -506,12 +506,12 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) (*
 	})
 
 	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
+		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
 			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
 			return nil, err
 		}
 		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(pathLock + "_")
+			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
 			if err != nil {
 				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
 			}
@@ -527,8 +527,8 @@ func (p *Proxy) OpenTransaction() *Transaction {
 }
 
 // commitTransaction will apply and merge modifications made in the transaction branch to the data model
-func (p *Proxy) commitTransaction(txid string) {
-	p.getRoot().FoldTxBranch(txid)
+func (p *Proxy) commitTransaction(ctx context.Context, txid string) {
+	p.getRoot().FoldTxBranch(ctx, txid)
 }
 
 // cancelTransaction will terminate a transaction branch along will all changes within it
@@ -537,7 +537,7 @@ func (p *Proxy) cancelTransaction(txid string) {
 }
 
 // CallbackFunction is a type used to define callback functions
-type CallbackFunction func(args ...interface{}) interface{}
+type CallbackFunction func(ctx context.Context, args ...interface{}) interface{}
 
 // CallbackTuple holds the function and arguments details of a callback
 type CallbackTuple struct {
@@ -546,14 +546,14 @@ type CallbackTuple struct {
 }
 
 // Execute will process the a callback with its provided arguments
-func (tuple *CallbackTuple) Execute(contextArgs []interface{}) interface{} {
+func (tuple *CallbackTuple) Execute(ctx context.Context, contextArgs []interface{}) interface{} {
 	args := []interface{}{}
 
 	args = append(args, tuple.args...)
 
 	args = append(args, contextArgs...)
 
-	return tuple.callback(args...)
+	return tuple.callback(ctx, args...)
 }
 
 // RegisterCallback associates a callback to the proxy
@@ -588,7 +588,7 @@ func (p *Proxy) UnregisterCallback(callbackType CallbackType, callback CallbackF
 	p.DeleteCallback(callbackType, funcHash)
 }
 
-func (p *Proxy) invoke(callback *CallbackTuple, context []interface{}) (result interface{}, err error) {
+func (p *Proxy) invoke(ctx context.Context, callback *CallbackTuple, context []interface{}) (result interface{}, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			errStr := fmt.Sprintf("callback error occurred: %+v", r)
@@ -597,13 +597,13 @@ func (p *Proxy) invoke(callback *CallbackTuple, context []interface{}) (result i
 		}
 	}()
 
-	result = callback.Execute(context)
+	result = callback.Execute(ctx, context)
 
 	return result, err
 }
 
 // InvokeCallbacks executes all callbacks associated to a specific type
-func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
+func (p *Proxy) InvokeCallbacks(ctx context.Context, args ...interface{}) (result interface{}) {
 	callbackType := args[0].(CallbackType)
 	proceedOnError := args[1].(bool)
 	context := args[2:]
@@ -613,7 +613,7 @@ func (p *Proxy) InvokeCallbacks(args ...interface{}) (result interface{}) {
 	if callbacks := p.getCallbacks(callbackType); callbacks != nil {
 		p.mutex.Lock()
 		for _, callback := range callbacks {
-			if result, err = p.invoke(callback, context); err != nil {
+			if result, err = p.invoke(ctx, callback, context); err != nil {
 				if !proceedOnError {
 					log.Info("An error occurred.  Stopping callback invocation")
 					break

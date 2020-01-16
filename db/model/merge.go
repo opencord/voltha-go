@@ -17,6 +17,7 @@
 package model
 
 import (
+	"context"
 	"github.com/opencord/voltha-lib-go/v2/pkg/log"
 )
 
@@ -86,6 +87,7 @@ func newChangeAnalysis(lst1, lst2 []Revision, keyName string) *changeAnalysis {
 
 // Merge3Way takes care of combining the revision contents of the same data set
 func Merge3Way(
+	ctx context.Context,
 	forkRev, srcRev, dstRev Revision,
 	mergeChildFunc func(Revision) Revision,
 	dryRun bool) (rev Revision, changes []ChangeTuple) {
@@ -261,7 +263,7 @@ func Merge3Way(
 
 		// FIXME: Do not discard the latest value for now
 		//dstRev.GetBranch().GetLatest().Drop("", configChanged)
-		rev = rev.UpdateAllChildren(newChildren, dstRev.GetBranch())
+		rev = rev.UpdateAllChildren(ctx, newChildren, dstRev.GetBranch())
 
 		if configChanged {
 			changes = append(changes, ChangeTuple{PostUpdate, dstRev.GetBranch().GetLatest().GetData(), rev.GetData()})
