@@ -16,6 +16,7 @@
 package graph
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -112,7 +113,7 @@ func setupDevices(numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu
 	}
 }
 
-func GetDeviceHelper(id string) (*voltha.Device, error) {
+func GetDeviceHelper(_ context.Context, id string) (*voltha.Device, error) {
 	lock.Lock()
 	numCalled++
 	lock.Unlock()
@@ -147,7 +148,7 @@ func TestGetRoutesOneShot(t *testing.T) {
 	// Create a device graph and computes Routes
 	start := time.Now()
 	dg := NewDeviceGraph(logicalDeviceID, getDevice)
-	dg.ComputeRoutes(ld.Ports)
+	dg.ComputeRoutes(context.Background(), ld.Ports)
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms  Total Routes:%d", time.Since(start)/time.Millisecond, len(dg.Routes)))
 	assert.EqualValues(t, (2 * numNNIPort * numPonPortOnOlt * numOnuPerOltPonPort * numUniPerOnu), len(dg.Routes))
@@ -172,7 +173,7 @@ func TestGetRoutesPerPort(t *testing.T) {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
 		}
-		dg.AddPort(lp)
+		dg.AddPort(context.Background(), lp)
 	}
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
@@ -198,7 +199,7 @@ func TestGetRoutesPerPortMultipleUNIs(t *testing.T) {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
 		}
-		dg.AddPort(lp)
+		dg.AddPort(context.Background(), lp)
 	}
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
@@ -225,7 +226,7 @@ func TestGetRoutesPerPortNoUNI(t *testing.T) {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
 		}
-		dg.AddPort(lp)
+		dg.AddPort(context.Background(), lp)
 	}
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
@@ -252,7 +253,7 @@ func TestGetRoutesPerPortNoONU(t *testing.T) {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
 		}
-		dg.AddPort(lp)
+		dg.AddPort(context.Background(), lp)
 	}
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))
@@ -279,7 +280,7 @@ func TestGetRoutesPerPortNoNNI(t *testing.T) {
 		if k == len(ld.Ports)-1 {
 			pt = time.Now()
 		}
-		dg.AddPort(lp)
+		dg.AddPort(context.Background(), lp)
 	}
 	assert.NotNil(t, dg.GGraph)
 	fmt.Println(fmt.Sprintf("Total Time:%dms.  Total Routes:%d. LastPort_Time:%dms", time.Since(start)/time.Millisecond, len(dg.Routes), time.Since(pt)/time.Millisecond))

@@ -502,7 +502,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the first port to FAILED
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(lda.logicalDevice.Ports[0].DeviceId, lda.logicalDevice.Ports[0].DevicePortNo, voltha.OperStatus_FAILED)
+		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[0].DeviceId, lda.logicalDevice.Ports[0].DevicePortNo, voltha.OperStatus_FAILED)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -510,7 +510,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the second port to TESTING
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(lda.logicalDevice.Ports[1].DeviceId, lda.logicalDevice.Ports[1].DevicePortNo, voltha.OperStatus_TESTING)
+		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[1].DeviceId, lda.logicalDevice.Ports[1].DevicePortNo, voltha.OperStatus_TESTING)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -518,9 +518,9 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the third port to UNKNOWN and then back to ACTIVE
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(lda.logicalDevice.Ports[2].DeviceId, lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_UNKNOWN)
+		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[2].DeviceId, lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_UNKNOWN)
 		assert.Nil(t, err)
-		err = ldAgent.updatePortState(lda.logicalDevice.Ports[2].DeviceId, lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_ACTIVE)
+		err = ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[2].DeviceId, lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_ACTIVE)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -540,7 +540,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	}
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.meterAdd(meterMod)
+		err := ldAgent.meterAdd(context.Background(), meterMod)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()

@@ -16,6 +16,7 @@
 package flowdecomposition
 
 import (
+	"context"
 	"errors"
 	"github.com/opencord/voltha-go/rw_core/graph"
 	"github.com/opencord/voltha-go/rw_core/mocks"
@@ -99,7 +100,7 @@ func newTestDeviceManager() *testDeviceManager {
 	return &tdm
 }
 
-func (tdm *testDeviceManager) GetDevice(deviceID string) (*voltha.Device, error) {
+func (tdm *testDeviceManager) GetDevice(ctx context.Context, deviceID string) (*voltha.Device, error) {
 	if d, ok := tdm.devices[deviceID]; ok {
 		return d, nil
 	}
@@ -398,8 +399,8 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	return &tfd
 }
 
-func (tfd *testFlowDecomposer) getDeviceHelper(deviceID string) (*voltha.Device, error) {
-	return tfd.dMgr.GetDevice(deviceID)
+func (tfd *testFlowDecomposer) getDeviceHelper(ctx context.Context, deviceID string) (*voltha.Device, error) {
+	return tfd.dMgr.GetDevice(ctx, deviceID)
 }
 
 func (tfd *testFlowDecomposer) GetDeviceLogicalID() string {
@@ -483,7 +484,7 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -545,7 +546,7 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -606,7 +607,7 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -667,7 +668,7 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -731,7 +732,7 @@ func TestLldpReRouteRuleDecomposition(t *testing.T) {
 	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Nil(t, onu1FlowAndGroup)
@@ -793,7 +794,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.NotNil(t, onu1FlowAndGroup)
@@ -895,7 +896,7 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -982,7 +983,7 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{fu.MkGroupStat(ga)}}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(tfd, flows, groups)
+	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())

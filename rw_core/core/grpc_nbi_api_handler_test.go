@@ -421,7 +421,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are disabled as well
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(oltDevice.Id)
+	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -453,7 +453,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are enabled as well
-	onuDevices, err = nb.core.deviceMgr.getAllChildDevices(oltDevice.Id)
+	onuDevices, err = nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -492,7 +492,7 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are disabled as well
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(oltDevice.Id)
+	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)

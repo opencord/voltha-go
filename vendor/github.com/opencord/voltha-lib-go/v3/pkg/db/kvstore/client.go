@@ -15,6 +15,8 @@
  */
 package kvstore
 
+import "context"
+
 const (
 	// Default timeout in seconds when making a kvstore request
 	defaultKVGetTimeout = 5
@@ -71,18 +73,18 @@ func NewEvent(eventType int, key interface{}, value interface{}, version int64) 
 
 // Client represents the set of APIs a KV Client must implement
 type Client interface {
-	List(key string, timeout int) (map[string]*KVPair, error)
-	Get(key string, timeout int) (*KVPair, error)
-	Put(key string, value interface{}, timeout int) error
-	Delete(key string, timeout int) error
-	Reserve(key string, value interface{}, ttl int64) (interface{}, error)
-	ReleaseReservation(key string) error
-	ReleaseAllReservations() error
-	RenewReservation(key string) error
-	Watch(key string) chan *Event
-	AcquireLock(lockName string, timeout int) error
+	List(ctx context.Context, key string) (map[string]*KVPair, error)
+	Get(ctx context.Context, key string) (*KVPair, error)
+	Put(ctx context.Context, key string, value interface{}) error
+	Delete(ctx context.Context, key string) error
+	Reserve(ctx context.Context, key string, value interface{}, ttl int64) (interface{}, error)
+	ReleaseReservation(ctx context.Context, key string) error
+	ReleaseAllReservations(ctx context.Context) error
+	RenewReservation(ctx context.Context, key string) error
+	Watch(ctx context.Context, key string) chan *Event
+	AcquireLock(ctx context.Context, lockName string, timeout int) error
 	ReleaseLock(lockName string) error
-	IsConnectionUp(timeout int) bool // timeout in second
+	IsConnectionUp(ctx context.Context) bool // timeout in second
 	CloseWatch(key string, ch chan *Event)
 	Close()
 }

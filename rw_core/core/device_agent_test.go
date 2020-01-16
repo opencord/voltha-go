@@ -169,7 +169,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globa
 		deviceToUpdate.MacAddress = macAddress
 		deviceToUpdate.Vlan = vlan
 		deviceToUpdate.Reason = reason
-		err := da.updateDeviceUsingAdapterData(deviceToUpdate)
+		err := da.updateDeviceUsingAdapterData(context.Background(), deviceToUpdate)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -177,7 +177,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globa
 	// Update the device status routine
 	localWG.Add(1)
 	go func() {
-		err := da.updateDeviceStatus(voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
+		err := da.updateDeviceStatus(context.Background(), voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -185,7 +185,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globa
 	// Add a port routine
 	localWG.Add(1)
 	go func() {
-		err := da.addPort(portToAdd)
+		err := da.addPort(context.Background(), portToAdd)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()

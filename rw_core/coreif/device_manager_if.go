@@ -20,19 +20,22 @@ time.
 
 package coreif
 
-import "github.com/opencord/voltha-protos/v3/go/voltha"
+import (
+	"context"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
+)
 
 // DeviceManager represents a generic device manager
 type DeviceManager interface {
-	GetDevice(string) (*voltha.Device, error)
+	GetDevice(context.Context, string) (*voltha.Device, error)
 	IsRootDevice(string) (bool, error)
-	NotifyInvalidTransition(*voltha.Device) error
-	SetAdminStateToEnable(*voltha.Device) error
-	CreateLogicalDevice(*voltha.Device) error
-	SetupUNILogicalPorts(*voltha.Device) error
-	DisableAllChildDevices(cDevice *voltha.Device) error
-	DeleteLogicalDevice(cDevice *voltha.Device) error
-	DeleteLogicalPorts(cDevice *voltha.Device) error
-	DeleteAllChildDevices(cDevice *voltha.Device) error
-	RunPostDeviceDelete(cDevice *voltha.Device) error
+	NotifyInvalidTransition(context.Context, *voltha.Device) error
+	SetAdminStateToEnable(context.Context, *voltha.Device) error
+	CreateLogicalDevice(context.Context, *voltha.Device) error
+	SetupUNILogicalPorts(context.Context, *voltha.Device) error
+	DisableAllChildDevices(context.Context, *voltha.Device) error
+	DeleteLogicalDevice(context.Context, *voltha.Device) error
+	DeleteLogicalPorts(context.Context, *voltha.Device) error
+	DeleteAllChildDevices(context.Context, *voltha.Device) error
+	RunPostDeviceDelete(context.Context, *voltha.Device) error
 }

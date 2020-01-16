@@ -819,11 +819,15 @@ func TestProxy_Callbacks_1_Register(t *testing.T) {
 }
 
 func TestProxy_Callbacks_2_Invoke_WithNoInterruption(t *testing.T) {
-	TestProxyRootDevice.InvokeCallbacks(PreAdd, false, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	TestProxyRootDevice.InvokeCallbacks(ctx, PreAdd, false, nil)
 }
 
 func TestProxy_Callbacks_3_Invoke_WithInterruption(t *testing.T) {
-	TestProxyRootDevice.InvokeCallbacks(PreAdd, true, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	TestProxyRootDevice.InvokeCallbacks(ctx, PreAdd, true, nil)
 }
 
 func TestProxy_Callbacks_4_Unregister(t *testing.T) {

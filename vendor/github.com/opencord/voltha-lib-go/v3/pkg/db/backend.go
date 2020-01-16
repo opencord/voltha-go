@@ -119,8 +119,8 @@ func (b *Backend) updateLiveness(alive bool) {
 
 // Perform a dummy Key Lookup on kvstore to test Connection Liveness and
 // post on Liveness channel
-func (b *Backend) PerformLivenessCheck(timeout int) bool {
-	alive := b.Client.IsConnectionUp(timeout)
+func (b *Backend) PerformLivenessCheck(ctx context.Context) bool {
+	alive := b.Client.IsConnectionUp(ctx)
 	logger.Debugw("kvstore-liveness-check-result", log.Fields{"alive": alive})
 
 	b.updateLiveness(alive)
@@ -187,14 +187,14 @@ func (b *Backend) isErrorIndicatingAliveKvstore(err error) bool {
 }
 
 // List retrieves one or more items that match the specified key
-func (b *Backend) List(key string) (map[string]*kvstore.KVPair, error) {
+func (b *Backend) List(ctx context.Context, key string) (map[string]*kvstore.KVPair, error) {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
 	logger.Debugw("listing-key", log.Fields{"key": key, "path": formattedPath})
 
-	pair, err := b.Client.List(formattedPath, b.Timeout)
+	pair, err := b.Client.List(ctx, formattedPath)
 
 	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
 
@@ -202,14 +202,14 @@ func (b *Backend) List(key string) (map[string]*kvstore.KVPair, error) {
 }
 
 // Get retrieves an item that matches the specified key
-func (b *Backend) Get(key string) (*kvstore.KVPair, error) {
+func (b *Backend) Get(ctx context.Context, key string) (*kvstore.KVPair, error) {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
 	logger.Debugw("getting-key", log.Fields{"key": key, "path": formattedPath})
 
-	pair, err := b.Client.Get(formattedPath, b.Timeout)
+	pair, err := b.Client.Get(ctx, formattedPath)
 
 	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
 
@@ -217,14 +217,14 @@ func (b *Backend) Get(key string) (*kvstore.KVPair, error) {
 }
 
 // Put stores an item value under the specifed key
-func (b *Backend) Put(key string, value interface{}) error {
+func (b *Backend) Put(ctx context.Context, key string, value interface{}) error {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
 	logger.Debugw("putting-key", log.Fields{"key": key, "value": string(value.([]byte)), "path": formattedPath})
 
-	err := b.Client.Put(formattedPath, value, b.Timeout)
+	err := b.Client.Put(ctx, formattedPath, value)
 
 	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
 
@@ -232,14 +232,14 @@ func (b *Backend) Put(key string, value interface{}) error {
 }
 
 // Delete removes an item under the specified key
-func (b *Backend) Delete(key string) error {
+func (b *Backend) Delete(ctx context.Context, key string) error {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
 	logger.Debugw("deleting-key", log.Fields{"key": key, "path": formattedPath})
 
-	err := b.Client.Delete(formattedPath, b.Timeout)
+	err := b.Client.Delete(ctx, formattedPath)
 
 	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
 
@@ -247,14 +247,14 @@ func (b *Backend) Delete(key string) error {
 }
 
 // CreateWatch starts watching events for the specified key
-func (b *Backend) CreateWatch(key string) chan *kvstore.Event {
+func (b *Backend) CreateWatch(ctx context.Context, key string) chan *kvstore.Event {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
 	logger.Debugw("creating-key-watch", log.Fields{"key": key, "path": formattedPath})
 
-	return b.Client.Watch(formattedPath)
+	return b.Client.Watch(ctx, formattedPath)
 }
 
 // DeleteWatch stops watching events for the specified key
