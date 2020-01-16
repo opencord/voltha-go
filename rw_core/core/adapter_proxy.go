@@ -35,11 +35,11 @@ type AdapterProxy struct {
 	TestMode              bool
 	deviceTopicRegistered bool
 	corePairTopic         string
-	kafkaICProxy          *kafka.InterContainerProxy
+	kafkaICProxy          kafka.InterContainerProxy
 }
 
 // NewAdapterProxy will return adapter proxy instance
-func NewAdapterProxy(kafkaProxy *kafka.InterContainerProxy, corePairTopic string) *AdapterProxy {
+func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, corePairTopic string) *AdapterProxy {
 	return &AdapterProxy{
 		kafkaICProxy:          kafkaProxy,
 		corePairTopic:         corePairTopic,

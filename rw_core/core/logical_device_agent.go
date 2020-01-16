@@ -1555,7 +1555,7 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 // portUpdated is invoked when a port is updated on the logical device.  Until
 // the POST_ADD notification is fixed, we will use the logical device to
 // update that data.
-func (agent *LogicalDeviceAgent) portUpdated(args ...interface{}) interface{} {
+func (agent *LogicalDeviceAgent) portUpdated(ctx context.Context, args ...interface{}) interface{} {
 	log.Debugw("portUpdated-callback", log.Fields{"argsLen": len(args)})
 
 	var oldLD *voltha.LogicalDevice
