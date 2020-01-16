@@ -64,19 +64,19 @@ func NewConsulClient(addr string, timeout int) (*ConsulClient, error) {
 }
 
 // IsConnectionUp returns whether the connection to the Consul KV store is up
-func (c *ConsulClient) IsConnectionUp(timeout int) bool {
+func (c *ConsulClient) IsConnectionUp(ctx context.Context) bool {
 	logger.Error("Unimplemented function")
 	return false
 }
 
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) List(key string, timeout int) (map[string]*KVPair, error) {
-	duration := GetDuration(timeout)
+func (c *ConsulClient) List(ctx context.Context, key string) (map[string]*KVPair, error) {
 
+	deadline, _ := ctx.Deadline()
 	kv := c.consul.KV()
 	var queryOptions consulapi.QueryOptions
-	queryOptions.WaitTime = duration
+	queryOptions.WaitTime = GetDuration(deadline.Second())
 	// For now we ignore meta data
 	kvps, _, err := kv.List(key, &queryOptions)
 	if err != nil {
@@ -92,13 +92,12 @@ func (c *ConsulClient) List(key string, timeout int) (map[string]*KVPair, error)
 
 // Get returns a key-value pair for a given key. Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) Get(key string, timeout int) (*KVPair, error) {
+func (c *ConsulClient) Get(ctx context.Context, key string) (*KVPair, error) {
 
-	duration := GetDuration(timeout)
-
+	deadline, _ := ctx.Deadline()
 	kv := c.consul.KV()
 	var queryOptions consulapi.QueryOptions
-	queryOptions.WaitTime = duration
+	queryOptions.WaitTime = GetDuration(deadline.Second())
 	// For now we ignore meta data
 	kvp, _, err := kv.Get(key, &queryOptions)
 	if err != nil {
@@ -115,7 +114,7 @@ func (c *ConsulClient) Get(key string, timeout int) (*KVPair, error) {
 // Put writes a key-value pair to the KV store.  Value can only be a string or []byte since the consul API
 // accepts only a []byte as a value for a put operation. Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) Put(key string, value interface{}, timeout int) error {
+func (c *ConsulClient) Put(ctx context.Context, key string, value interface{}) error {
 
 	// Validate that we can create a byte array from the value as consul API expects a byte array
 	var val []byte
@@ -141,7 +140,7 @@ func (c *ConsulClient) Put(key string, value interface{}, timeout int) error {
 
 // Delete removes a key from the KV store. Timeout defines how long the function will
 // wait for a response
-func (c *ConsulClient) Delete(key string, timeout int) error {
+func (c *ConsulClient) Delete(ctx context.Context, key string) error {
 	kv := c.consul.KV()
 	var writeOptions consulapi.WriteOptions
 	c.writeLock.Lock()
@@ -219,7 +218,7 @@ func isEqual(val1 interface{}, val2 interface{}) bool {
 // defines how long that reservation is valid.  When TTL expires the key is unreserved by the KV store itself.
 // If the key is acquired then the value returned will be the value passed in.  If the key is already acquired
 // then the value assigned to that key will be returned.
-func (c *ConsulClient) Reserve(key string, value interface{}, ttl int64) (interface{}, error) {
+func (c *ConsulClient) Reserve(ctx context.Context, key string, value interface{}, ttl int64) (interface{}, error) {
 
 	// Validate that we can create a byte array from the value as consul API expects a byte array
 	var val []byte
@@ -264,7 +263,7 @@ func (c *ConsulClient) Reserve(key string, value interface{}, ttl int64) (interf
 	logger.Debugw("key-acquired", log.Fields{"key": key, "status": result})
 
 	// Irrespective whether we were successful in acquiring the key, let's read it back and see if it's us.
-	m, err := c.Get(key, defaultKVGetTimeout)
+	m, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +285,7 @@ func (c *ConsulClient) Reserve(key string, value interface{}, ttl int64) (interf
 }
 
 // ReleaseAllReservations releases all key reservations previously made (using Reserve API)
-func (c *ConsulClient) ReleaseAllReservations() error {
+func (c *ConsulClient) ReleaseAllReservations(ctx context.Context) error {
 	kv := c.consul.KV()
 	var kvp consulapi.KVPair
 	var result bool
@@ -311,7 +310,7 @@ func (c *ConsulClient) ReleaseAllReservations() error {
 }
 
 // ReleaseReservation releases reservation for a specific key.
-func (c *ConsulClient) ReleaseReservation(key string) error {
+func (c *ConsulClient) ReleaseReservation(ctx context.Context, key string) error {
 	var ok bool
 	var reservedValue interface{}
 	c.writeLock.Lock()
@@ -337,7 +336,7 @@ func (c *ConsulClient) ReleaseReservation(key string) error {
 
 // RenewReservation renews a reservation.  A reservation will go stale after the specified TTL (Time To Live)
 // period specified when reserving the key
-func (c *ConsulClient) RenewReservation(key string) error {
+func (c *ConsulClient) RenewReservation(ctx context.Context, key string) error {
 	// In the case of Consul, renew reservation of a reserve key only require renewing the client session.
 
 	c.writeLock.Lock()
@@ -361,7 +360,7 @@ func (c *ConsulClient) RenewReservation(key string) error {
 
 // Watch provides the watch capability on a given key.  It returns a channel onto which the callee needs to
 // listen to receive Events.
-func (c *ConsulClient) Watch(key string) chan *Event {
+func (c *ConsulClient) Watch(ctx context.Context, key string) chan *Event {
 
 	// Create a new channel
 	ch := make(chan *Event, maxClientChannelBufferSize)
@@ -504,7 +503,7 @@ func (c *ConsulClient) Close() {
 	}
 }
 
-func (c *ConsulClient) AcquireLock(lockName string, timeout int) error {
+func (c *ConsulClient) AcquireLock(ctx context.Context, lockName string, timeout int) error {
 	return nil
 }
 

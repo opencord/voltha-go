@@ -22,6 +22,7 @@ import (
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/ro_core/config"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -119,6 +120,8 @@ func TestDeleteLogicalDeviceAgent(t *testing.T) {
 }
 
 func TestLdMgrGetLogicalDevice(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), kvstore.GetDuration(1))
+	defer cancel()
 	wantResult := &voltha.LogicalDevice{}
 
 	core := MakeTestNewCoreConfig()
@@ -126,7 +129,7 @@ func TestLdMgrGetLogicalDevice(t *testing.T) {
 	assert.NotNil(t, ldMgr)
 
 	/*** Case: getLogicalDevice() is NIL ***/
-	logicalDevNil, errNotNil := ldMgr.getLogicalDevice("id")
+	logicalDevNil, errNotNil := ldMgr.getLogicalDevice(ctx, "id")
 	assert.Nil(t, logicalDevNil)
 	assert.NotNil(t, errNotNil)
 
@@ -156,7 +159,7 @@ func TestLdMgrGetLogicalDevice(t *testing.T) {
 	assert.Equal(t, "id", ldAgentNotNil.logicalDeviceID)
 
 	// Verify getLogicalDevice() is NOT NIL
-	logicalDevNotNil, errNil := ldMgr.getLogicalDevice("id")
+	logicalDevNotNil, errNil := ldMgr.getLogicalDevice(ctx, "id")
 	assert.NotNil(t, logicalDevNotNil)
 	assert.Nil(t, errNil)
 	if reflect.TypeOf(logicalDevNotNil) != reflect.TypeOf(wantResult) {

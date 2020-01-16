@@ -271,7 +271,7 @@ func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 // GetLogicalDevice returns the details for a specific logical device entry
 func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	log.Debugw("GetLogicalDevice-request", log.Fields{"id": id})
-	return handler.logicalDeviceMgr.getLogicalDevice(id.Id)
+	return handler.logicalDeviceMgr.getLogicalDevice(ctx, id.Id)
 }
 
 // ListLogicalDevices returns all logical devices known to the system

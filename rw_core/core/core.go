@@ -371,7 +371,7 @@ func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRe
 	}
 	count := 0
 	for {
-		if !core.kvClient.IsConnectionUp(timeout) {
+		if !core.kvClient.IsConnectionUp(ctx) {
 			log.Info("KV-store-unreachable")
 			if maxRetries != -1 {
 				if count >= maxRetries {
@@ -495,7 +495,7 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 			// The Liveness check will push Live state to same channel which this routine is
 			// reading and processing. This, do it asynchronously to avoid blocking for
 			// backend response and avoid any possibility of deadlock
-			go core.backend.PerformLivenessCheck(core.config.KVStoreTimeout)
+			go core.backend.PerformLivenessCheck(ctx)
 		}
 	}
 }

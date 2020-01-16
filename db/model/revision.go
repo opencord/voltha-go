@@ -25,11 +25,11 @@ import (
 
 // Revision -
 type Revision interface {
-	Finalize(bool)
+	Finalize(context.Context, bool)
 	SetConfig(revision *DataRevision)
 	GetConfig() *DataRevision
 	Drop(txid string, includeConfig bool)
-	StorageDrop(txid string, includeConfig bool)
+	StorageDrop(ctx context.Context, txid string, includeConfig bool)
 	ChildDrop(childType string, childHash string)
 	ChildDropByName(childName string)
 	SetChildren(name string, children []Revision)
@@ -40,7 +40,7 @@ type Revision interface {
 	GetHash() string
 	ClearHash()
 	getVersion() int64
-	SetupWatch(key string)
+	SetupWatch(ctx context.Context, key string)
 	SetName(name string)
 	GetName() string
 	SetBranch(branch *Branch)
@@ -53,5 +53,5 @@ type Revision interface {
 	LoadFromPersistence(ctx context.Context, path string, txid string, blobs map[string]*kvstore.KVPair) ([]Revision, error)
 	UpdateData(ctx context.Context, data interface{}, branch *Branch) Revision
 	UpdateChildren(ctx context.Context, name string, children []Revision, branch *Branch) Revision
-	UpdateAllChildren(children map[string][]Revision, branch *Branch) Revision
+	UpdateAllChildren(ctx context.Context, children map[string][]Revision, branch *Branch) Revision
 }

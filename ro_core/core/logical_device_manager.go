@@ -91,10 +91,10 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDeviceAgent(logicalDeviceID stri
 }
 
 // GetLogicalDevice provides a cloned most up to date logical device
-func (ldMgr *LogicalDeviceManager) getLogicalDevice(id string) (*voltha.LogicalDevice, error) {
+func (ldMgr *LogicalDeviceManager) getLogicalDevice(ctx context.Context, id string) (*voltha.LogicalDevice, error) {
 	log.Debugw("getlogicalDevice", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
-		return agent.GetLogicalDevice()
+		return agent.GetLogicalDevice(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -151,11 +151,12 @@ func (ldMgr *LogicalDeviceManager) getLogicalPortID(device *voltha.Device) (*vol
 	// Get the logical device where this device is attached
 	var lDeviceID *string
 	var err error
+	ctx := context.Background()
 	if lDeviceID, err = ldMgr.getLogicalDeviceID(device); err != nil {
 		return nil, err
 	}
 	var lDevice *voltha.LogicalDevice
-	if lDevice, err = ldMgr.getLogicalDevice(*lDeviceID); err != nil {
+	if lDevice, err = ldMgr.getLogicalDevice(ctx, *lDeviceID); err != nil {
 		return nil, err
 	}
 	// Go over list of ports
@@ -171,7 +172,7 @@ func (ldMgr *LogicalDeviceManager) getLogicalPortID(device *voltha.Device) (*vol
 func (ldMgr *LogicalDeviceManager) ListLogicalDevicePorts(ctx context.Context, id string) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
-		return agent.ListLogicalDevicePorts()
+		return agent.ListLogicalDevicePorts(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 
@@ -181,7 +182,7 @@ func (ldMgr *LogicalDeviceManager) ListLogicalDevicePorts(ctx context.Context, i
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, id string) (*voltha.Flows, error) {
 	log.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
-		return agent.ListLogicalDeviceFlows()
+		return agent.ListLogicalDeviceFlows(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 
@@ -191,7 +192,7 @@ func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, i
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlowGroups(ctx context.Context, id string) (*voltha.FlowGroups, error) {
 	log.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(id); agent != nil {
-		return agent.ListLogicalDeviceFlowGroups()
+		return agent.ListLogicalDeviceFlowGroups(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 
@@ -201,7 +202,9 @@ func (ldMgr *LogicalDeviceManager) getLogicalPort(lPortID *voltha.LogicalPortId)
 	// Get the logical device where this device is attached
 	var err error
 	var lDevice *voltha.LogicalDevice
-	if lDevice, err = ldMgr.getLogicalDevice(lPortID.Id); err != nil {
+	ctx := context.Background()
+
+	if lDevice, err = ldMgr.getLogicalDevice(ctx, lPortID.Id); err != nil {
 		return nil, err
 	}
 	// Go over list of ports
