@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99c6c29c_60a4976a",
+        "filename": "ro_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-17T16:16:10Z",
+      "side": 1,
+      "message": "Using hardcoded value in the test will result in failures whenever the logger enum changes.   It\u0027s better to use log.FatalLevel instead of 4.  This comments applies to all hardcoded values in this file.",
+      "revId": "cf4e994dbb4bc78eb29d03504fdc8885ff85de44",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
