@@ -34,6 +34,24 @@
       "revId": "886272021beeacefe59df1333a58f8f6b7ad7c61",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e6b8a6d_016da492",
+        "filename": "db/model/root.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-01-17T16:25:24Z",
+      "side": 1,
+      "message": "Assuming that PRoot implements the Root interface, PRoot should be renamed back to root, and all public methods that currently return a PRoot should return a root cast as a Root interface type.",
+      "parentUuid": "34edd8cc_af544f53",
+      "revId": "886272021beeacefe59df1333a58f8f6b7ad7c61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
