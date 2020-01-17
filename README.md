@@ -23,8 +23,10 @@ Ideally, all vendor equipment for the same access technology should provide an i
 
 ## How can you work with Voltha?
 
-While we are still at the early phase of development, you can check out the [BUILD.md](BUILD.md) file to see how you can build it, run it, test it, etc.
+You can start by reading the published [documentation](https://docs.voltha.org/index.html).  
+Another great way is to check out the [BUILD.md](BUILD.md) file to see how you can build it, run it, test it, etc.
 
 ## How can you help?
 
 Contributions, small and large, are welcome. Minor contributions and bug fixes are always welcome in form of pull requests. For larger work, the best is to check in with the existing developers to see where help is most needed and to make sure your solution is compatible with the general philosophy of Voltha.
+Please check out the [contributing page](https://docs.voltha.org/overview/contribute.html) on the documentation.
