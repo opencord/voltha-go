@@ -70,6 +70,24 @@
       "revId": "886272021beeacefe59df1333a58f8f6b7ad7c61",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df3258f2_a4e86a72",
+        "filename": "db/model/root.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-01-20T15:06:02Z",
+      "side": 1,
+      "message": "To fix that warning, simply change NewRoot to return the interface type instead of the struct type.",
+      "parentUuid": "109a264e_6daace33",
+      "revId": "886272021beeacefe59df1333a58f8f6b7ad7c61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
