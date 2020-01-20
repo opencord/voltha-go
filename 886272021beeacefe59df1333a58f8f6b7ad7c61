@@ -52,6 +52,24 @@
       "revId": "886272021beeacefe59df1333a58f8f6b7ad7c61",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "109a264e_6daace33",
+        "filename": "db/model/root.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000614
+      },
+      "writtenOn": "2020-01-20T09:50:06Z",
+      "side": 1,
+      "message": "Since this is being returned by method \"NewRoot\" which is exported, we have to keep this struct also exported, otherwise will get lint warning for method \"NewRoot\"",
+      "parentUuid": "5e6b8a6d_016da492",
+      "revId": "886272021beeacefe59df1333a58f8f6b7ad7c61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
