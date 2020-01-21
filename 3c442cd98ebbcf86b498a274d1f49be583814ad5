@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e283e51c_d99168da",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T21:44:30Z",
+      "side": 1,
+      "message": "Not the intent - needs to clean up",
+      "parentUuid": "7fe967a9_75e218c2",
+      "revId": "3c442cd98ebbcf86b498a274d1f49be583814ad5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "869f6871_492ad006",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-21T21:22:08Z",
       "side": 1,
       "message": "Why not just use a mutex?\n\nThis implementation does not make any ordering guarantees (since requestQueue is created with zero buffer space, ordering is undefined.)",
+      "revId": "3c442cd98ebbcf86b498a274d1f49be583814ad5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e0edff3_6523542e",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T21:44:30Z",
+      "side": 1,
+      "message": "The idea is to use a buffered channel.   It\u0027s not clear whether an unbuffered channel will not guarantee ordering.  googled it but could not see much.",
+      "parentUuid": "869f6871_492ad006",
       "revId": "3c442cd98ebbcf86b498a274d1f49be583814ad5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
