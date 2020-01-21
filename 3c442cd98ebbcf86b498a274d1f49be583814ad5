@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fe967a9_75e218c2",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-01-21T21:22:08Z",
+      "side": 1,
+      "message": "This will cause threads that are waiting to write to panic, is this intended?",
+      "revId": "3c442cd98ebbcf86b498a274d1f49be583814ad5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "869f6871_492ad006",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-01-21T21:22:08Z",
+      "side": 1,
+      "message": "Why not just use a mutex?\n\nThis implementation does not make any ordering guarantees (since requestQueue is created with zero buffer space, ordering is undefined.)",
+      "revId": "3c442cd98ebbcf86b498a274d1f49be583814ad5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
