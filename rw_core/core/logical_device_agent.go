@@ -441,7 +441,7 @@ func (agent *LogicalDeviceAgent) updatePortState(ctx context.Context, deviceID s
 }
 
 // updatePortsState updates the ports state related to the device
-func (agent *LogicalDeviceAgent) updatePortsState(ctx context.Context, device *voltha.Device, state voltha.AdminState_Types) error {
+func (agent *LogicalDeviceAgent) updatePortsState(ctx context.Context, device *voltha.Device, state voltha.OperStatus_Types) error {
 	log.Infow("updatePortsState-start", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
@@ -449,16 +449,14 @@ func (agent *LogicalDeviceAgent) updatePortsState(ctx context.Context, device *v
 	cloned := agent.getLogicalDeviceWithoutLock()
 	for _, lport := range cloned.Ports {
 		if lport.DeviceId == device.Id {
-			switch state {
-			case voltha.AdminState_ENABLED:
+			if state == voltha.OperStatus_ACTIVE {
 				lport.OfpPort.Config = lport.OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 				lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
-			case voltha.AdminState_DISABLED:
+			} else {
 				lport.OfpPort.Config = lport.OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 				lport.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
-			default:
-				log.Warnw("unsupported-state-change", log.Fields{"deviceId": device.Id, "state": state})
 			}
+
 		}
 	}
 	// Updating the logical device will trigger the poprt change events to be populated to the controller

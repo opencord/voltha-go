@@ -1167,28 +1167,13 @@ func (agent *DeviceAgent) updateDeviceStatus(ctx context.Context, operStatus vol
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) enablePorts(ctx context.Context) error {
-	agent.lockDevice.Lock()
-	defer agent.lockDevice.Unlock()
-
-	cloned := agent.getDeviceWithoutLock()
-
-	for _, port := range cloned.Ports {
-		port.AdminState = voltha.AdminState_ENABLED
-		port.OperStatus = voltha.OperStatus_ACTIVE
-	}
-	// Store the device
-	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
-}
-
-func (agent *DeviceAgent) disablePorts(ctx context.Context) error {
-	log.Debugw("disablePorts", log.Fields{"deviceid": agent.deviceID})
+func (agent *DeviceAgent) updatePortsOperState(ctx context.Context, operStatus voltha.OperStatus_Types) error {
+	log.Debugw("updatePortsOperState", log.Fields{"device-id": agent.deviceID})
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	cloned := agent.getDeviceWithoutLock()
 	for _, port := range cloned.Ports {
-		port.AdminState = voltha.AdminState_DISABLED
-		port.OperStatus = voltha.OperStatus_UNKNOWN
+		port.OperStatus = operStatus
 	}
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
@@ -1208,12 +1193,6 @@ func (agent *DeviceAgent) updatePortState(ctx context.Context, portType voltha.P
 	for _, port := range cloned.Ports {
 		if port.Type == portType && port.PortNo == portNo {
 			port.OperStatus = operStatus
-			// Set the admin status to ENABLED if the operational status is ACTIVE
-			// TODO: Set by northbound system?
-			if operStatus == voltha.OperStatus_ACTIVE {
-				port.AdminState = voltha.AdminState_ENABLED
-			}
-			break
 		}
 	}
 	log.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
@@ -1263,11 +1242,8 @@ func (agent *DeviceAgent) addPort(ctx context.Context, port *voltha.Port) error 
 		}
 	}
 	cp := proto.Clone(port).(*voltha.Port)
-	// Set the admin state of the port to ENABLE if the operational state is ACTIVE
-	// TODO: Set by northbound system?
-	if cp.OperStatus == voltha.OperStatus_ACTIVE {
-		cp.AdminState = voltha.AdminState_ENABLED
-	}
+	// Set the admin state of the port to ENABLE
+	cp.AdminState = voltha.AdminState_ENABLED
 	cloned.Ports = append(cloned.Ports, cp)
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
@@ -1393,4 +1369,74 @@ func (agent *DeviceAgent) updateDeviceReason(ctx context.Context, reason string)
 	log.Debugw("updateDeviceReason", log.Fields{"deviceId": cloned.Id, "reason": cloned.Reason})
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
+}
+
+func (agent *DeviceAgent) disablePort(ctx context.Context, Port *voltha.Port) error {
+	var cp *voltha.Port
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("disablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
+	// Get the most up to date the device info
+	device := agent.getDeviceWithoutLock()
+	for _, port := range device.Ports {
+		if port.PortNo == Port.PortNo {
+			port.AdminState = voltha.AdminState_DISABLED
+			cp = proto.Clone(port).(*voltha.Port)
+			break
+
+		}
+	}
+	if cp == nil {
+		return status.Errorf(codes.InvalidArgument, "%v", Port.PortNo)
+	}
+
+	if cp.Type != voltha.Port_PON_OLT {
+		return status.Errorf(codes.InvalidArgument, "Disabling of Port Type %v unimplemented", cp.Type)
+	}
+	// Store the device
+	if err := agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
+		log.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		return err
+	}
+	//send request to adapter
+	if err := agent.adapterProxy.disablePort(ctx, device, cp); err != nil {
+		log.Debugw("DisablePort-error", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		return err
+	}
+	return nil
+}
+
+func (agent *DeviceAgent) enablePort(ctx context.Context, Port *voltha.Port) error {
+	var cp *voltha.Port
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("enablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
+	// Get the most up to date the device info
+	device := agent.getDeviceWithoutLock()
+	for _, port := range device.Ports {
+		if port.PortNo == Port.PortNo {
+			port.AdminState = voltha.AdminState_ENABLED
+			cp = proto.Clone(port).(*voltha.Port)
+			break
+		}
+	}
+
+	if cp == nil {
+		return status.Errorf(codes.InvalidArgument, "%v", Port.PortNo)
+	}
+
+	if cp.Type != voltha.Port_PON_OLT {
+		return status.Errorf(codes.InvalidArgument, "Enabling of Port Type %v unimplemented", cp.Type)
+	}
+	// Store the device
+	if err := agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
+		log.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		return err
+	}
+	//send request to adapter
+	if err := agent.adapterProxy.enablePort(ctx, device, cp); err != nil {
+		log.Debugw("EnablePort-error", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		return err
+	}
+	return nil
 }

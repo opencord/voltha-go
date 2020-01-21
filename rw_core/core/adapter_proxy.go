@@ -564,3 +564,51 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 	log.Debugw("SimulateAlarm-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
+
+func (ap *AdapterProxy) disablePort(ctx context.Context, device *voltha.Device, port *voltha.Port) error {
+	log.Debugw("disablePort", log.Fields{"device-id": device.Id, "port-no": port.PortNo})
+	rpc := "disable_port"
+	deviceID := &ic.StrType{Val: device.Id}
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "deviceId",
+		Value: deviceID,
+	}
+
+	args[1] = &kafka.KVArg{
+		Key:   "port",
+		Value: port,
+	}
+
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("disablePort-response", log.Fields{"device-id": device.Id, "port-no": port.PortNo, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
+}
+
+func (ap *AdapterProxy) enablePort(ctx context.Context, device *voltha.Device, port *voltha.Port) error {
+	log.Debugw("enablePort", log.Fields{"device-id": device.Id, "port-no": port.PortNo})
+	rpc := "enable_port"
+	deviceID := &ic.StrType{Val: device.Id}
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "deviceId",
+		Value: deviceID,
+	}
+
+	args[1] = &kafka.KVArg{
+		Key:   "port",
+		Value: port,
+	}
+
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("enablePort-response", log.Fields{"device-id": device.Id, "port-no": port.PortNo, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
+}

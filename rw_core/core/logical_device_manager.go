@@ -521,7 +521,7 @@ func (ldMgr *LogicalDeviceManager) updatePortState(ctx context.Context, deviceID
 	return nil
 }
 
-func (ldMgr *LogicalDeviceManager) updatePortsState(ctx context.Context, device *voltha.Device, state voltha.AdminState_Types) error {
+func (ldMgr *LogicalDeviceManager) updatePortsState(ctx context.Context, device *voltha.Device, state voltha.OperStatus_Types) error {
 	log.Debugw("updatePortsState", log.Fields{"deviceId": device.Id, "state": state, "current-data": device})
 
 	var ldID *string

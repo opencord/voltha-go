@@ -49,4 +49,6 @@ type IAdapter interface {
 	Cancel_image_download(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
 	Activate_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
 	Revert_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
+	Enable_port(deviceId string, port *voltha.Port) error
+	Disable_port(deviceId string, port *voltha.Port) error
 }
