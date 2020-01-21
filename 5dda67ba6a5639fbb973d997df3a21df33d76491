@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a6bc5a1_44d58e70",
+        "filename": "rw_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-21T22:56:49Z",
+      "side": 1,
+      "message": "In the case where the log level is specified incorrectly (i.e. SomeUnknownValue) StringToInt returns ErrorLevel, but does not warn, so the the log value may not be set as expected. i.e. if the operator has a typo (WANR) the log level would be set to error without any indication why.",
+      "revId": "5dda67ba6a5639fbb973d997df3a21df33d76491",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
