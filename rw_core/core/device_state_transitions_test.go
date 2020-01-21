@@ -21,8 +21,8 @@ import (
 
 	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-go/rw_core/mocks"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,7 +45,7 @@ func init() {
 	transitionMap = NewTransitionMap(tdm)
 }
 
-func getDevice(root bool, admin voltha.AdminState_AdminState, conn voltha.ConnectStatus_ConnectStatus, oper voltha.OperStatus_OperStatus) *voltha.Device {
+func getDevice(root bool, admin voltha.AdminState_Types, conn voltha.ConnectStatus_Types, oper voltha.OperStatus_Types) *voltha.Device {
 	return &voltha.Device{
 		Id:            "test",
 		Root:          root,

@@ -22,10 +22,10 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	rhp "github.com/opencord/voltha-go/rw_core/core"
-	kk "github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	kk "github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -126,7 +126,7 @@ func waitForRPCMessage(topic kk.Topic, ch <-chan *ic.InterContainerMessage, done
 //
 //func TestMultipleSubscribeUnsubscribe(t *testing.T) {
 //	// First subscribe to the specific topic
-//	//log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/v2/pkg/kafka", log.DebugLevel)
+//	//log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/v3/pkg/kafka", log.DebugLevel)
 //	var err error
 //	var ch1 <-chan *ic.InterContainerMessage
 //	var ch2 <-chan *ic.InterContainerMessage
@@ -165,7 +165,7 @@ func waitForRPCMessage(topic kk.Topic, ch <-chan *ic.InterContainerMessage, done
 //}
 
 func TestIncorrectAPI(t *testing.T) {
-	log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/v2/pkg/kafka", log.ErrorLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/v3/pkg/kafka", log.ErrorLevel)
 	trnsId := uuid.New().String()
 	protoMsg := &voltha.Device{Id: trnsId}
 	args := make([]*kk.KVArg, 1)

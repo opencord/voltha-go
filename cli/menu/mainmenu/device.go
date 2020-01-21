@@ -25,8 +25,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/cli/menu/devicemenu"
 	"github.com/opencord/voltha-go/cli/util"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 func doDevice(enterPressed bool) {

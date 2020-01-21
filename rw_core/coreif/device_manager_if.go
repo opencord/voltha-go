@@ -20,7 +20,7 @@ time.
 
 package coreif
 
-import "github.com/opencord/voltha-protos/v2/go/voltha"
+import "github.com/opencord/voltha-protos/v3/go/voltha"
 
 // DeviceManager represents a generic device manager
 type DeviceManager interface {

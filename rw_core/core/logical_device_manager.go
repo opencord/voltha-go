@@ -23,11 +23,11 @@ import (
 	"sync"
 
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
-	"github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
+	"github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -503,7 +503,7 @@ func (ldMgr *LogicalDeviceManager) deleteAllLogicalPorts(device *voltha.Device) 
 	}
 	return nil
 }
-func (ldMgr *LogicalDeviceManager) updatePortState(deviceID string, portNo uint32, state voltha.OperStatus_OperStatus) error {
+func (ldMgr *LogicalDeviceManager) updatePortState(deviceID string, portNo uint32, state voltha.OperStatus_Types) error {
 	log.Debugw("updatePortState", log.Fields{"deviceId": deviceID, "state": state, "portNo": portNo})
 
 	var ldID *string
@@ -521,7 +521,7 @@ func (ldMgr *LogicalDeviceManager) updatePortState(deviceID string, portNo uint3
 	return nil
 }
 
-func (ldMgr *LogicalDeviceManager) updatePortsState(device *voltha.Device, state voltha.AdminState_AdminState) error {
+func (ldMgr *LogicalDeviceManager) updatePortsState(device *voltha.Device, state voltha.AdminState_Types) error {
 	log.Debugw("updatePortsState", log.Fields{"deviceId": device.Id, "state": state, "current-data": device})
 
 	var ldID *string

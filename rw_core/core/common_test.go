@@ -18,23 +18,24 @@ package core
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/rw_core/config"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
-	"github.com/opencord/voltha-lib-go/v2/pkg/adapters"
-	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	lm "github.com/opencord/voltha-lib-go/v2/pkg/mocks"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
+	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/phayes/freeport"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"strconv"
-	"time"
 )
 
 const (

@@ -29,12 +29,12 @@ import (
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
-	"github.com/opencord/voltha-lib-go/v2/pkg/version"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v3/pkg/version"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 )
 
 type rwCore struct {

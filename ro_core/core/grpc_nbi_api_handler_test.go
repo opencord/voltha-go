@@ -21,9 +21,9 @@ import (
 	"testing"
 
 	"github.com/opencord/voltha-go/ro_core/config"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/common"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-protos/v3/go/common"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 )
@@ -70,15 +70,15 @@ func TestUpdateLogLevel_grpc(t *testing.T) {
 	testLogDef := &voltha.Logging{
 		ComponentName: "testing",
 		PackageName:   "default",
-		Level:         voltha.LogLevel_LogLevel(log.GetDefaultLogLevel())}
+		Level:         voltha.LogLevel_Types(log.GetDefaultLogLevel())}
 	testLogEmpty := &voltha.Logging{
 		ComponentName: "testing",
 		PackageName:   "",
-		Level:         voltha.LogLevel_LogLevel(log.GetDefaultLogLevel())}
+		Level:         voltha.LogLevel_Types(log.GetDefaultLogLevel())}
 	testLog := &voltha.Logging{
 		ComponentName: "testing",
 		PackageName:   "testing",
-		Level:         voltha.LogLevel_LogLevel(log.GetDefaultLogLevel())}
+		Level:         voltha.LogLevel_Types(log.GetDefaultLogLevel())}
 	testLog3 := &voltha.Logging{
 		ComponentName: "testing",
 		PackageName:   "github.com/opencord/voltha-go/ro_core/core",

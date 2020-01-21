@@ -27,12 +27,12 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-lib-go/v2/pkg/version"
-	"github.com/opencord/voltha-protos/v2/go/common"
-	"github.com/opencord/voltha-protos/v2/go/omci"
-	"github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/version"
+	"github.com/opencord/voltha-protos/v3/go/common"
+	"github.com/opencord/voltha-protos/v3/go/omci"
+	"github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -215,7 +215,7 @@ func (APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingComponent)
 		logLevel := &voltha.Logging{
 			ComponentName: in.ComponentName,
 			PackageName:   packageName,
-			Level:         voltha.LogLevel_LogLevel(level)}
+			Level:         voltha.LogLevel_Types(level)}
 		logLevels.Items = append(logLevels.Items, logLevel)
 	}
 
@@ -223,7 +223,7 @@ func (APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingComponent)
 	logLevel := &voltha.Logging{
 		ComponentName: in.ComponentName,
 		PackageName:   "default",
-		Level:         voltha.LogLevel_LogLevel(log.GetDefaultLogLevel())}
+		Level:         voltha.LogLevel_Types(log.GetDefaultLogLevel())}
 	logLevels.Items = append(logLevels.Items, logLevel)
 
 	return logLevels, nil

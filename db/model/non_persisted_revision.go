@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 // TODO: Cache logic will have to be revisited to cleanup unused entries in memory (disabled for now)

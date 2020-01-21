@@ -25,7 +25,7 @@ import (
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 )
 
 // Core represent core methods
