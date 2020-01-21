@@ -1484,3 +1484,29 @@ func (dMgr *DeviceManager) updateDeviceReason(deviceID string, reason string) er
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
+
+func (dMgr *DeviceManager) enablePort(ctx context.Context, port *voltha.Port, ch chan interface{}) {
+	log.Debugw("enablePort", log.Fields{"deviceid": port.DeviceId, "portNo": port.PortNo})
+	var res interface{}
+	if agent := dMgr.getDeviceAgent(port.DeviceId); agent != nil {
+		res = agent.enablePort(ctx, port)
+		log.Debugw("enablePort-result", log.Fields{"result": res})
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", port.DeviceId)
+	}
+
+	sendResponse(ctx, ch, res)
+}
+
+func (dMgr *DeviceManager) disablePort(ctx context.Context, port *voltha.Port, ch chan interface{}) {
+	log.Debugw("disablePort", log.Fields{"deviceid": port.DeviceId, "portNo": port.PortNo})
+	var res interface{}
+	if agent := dMgr.getDeviceAgent(port.DeviceId); agent != nil {
+		res = agent.disablePort(ctx, port)
+		log.Debugw("disablePort-result", log.Fields{"result": res})
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", port.DeviceId)
+	}
+
+	sendResponse(ctx, ch, res)
+}
