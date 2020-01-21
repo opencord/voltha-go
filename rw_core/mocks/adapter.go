@@ -239,3 +239,13 @@ func (ta *Adapter) Activate_image_update(device *voltha.Device, request *voltha.
 func (ta *Adapter) Revert_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
 	return nil, nil
 }
+
+// Enable_port -
+func (ta *Adapter) Enable_port(deviceId string, port *voltha.Port) error {
+	return nil
+}
+
+// Disable_port -
+func (ta *Adapter) Disable_port(deviceId string, port *voltha.Port) error {
+	return nil
+}

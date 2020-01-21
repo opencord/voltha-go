@@ -1216,3 +1216,44 @@ func (handler *APIHandler) GetMembership(context.Context, *empty.Empty) (*voltha
 func (handler *APIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return &empty.Empty{}, errors.New("UnImplemented")
 }
+
+func (handler *APIHandler) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+	log.Debugw("EnablePort-request", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
+	if isTestMode(ctx) {
+		return &empty.Empty{}, nil
+	}
+
+	if handler.competeForTransaction() {
+		txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{ID: port.DeviceId})
+		if err != nil {
+			return nil, err
+		}
+		defer txn.Close(ctx)
+	}
+
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.enablePort(ctx, port, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
+}
+
+func (handler *APIHandler) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+
+	log.Debugw("DisablePort-request", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
+	if isTestMode(ctx) {
+		return &empty.Empty{}, nil
+	}
+
+	if handler.competeForTransaction() {
+		txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{ID: port.DeviceId})
+		if err != nil {
+			return nil, err
+		}
+		defer txn.Close(ctx)
+	}
+
+	ch := make(chan interface{})
+	defer close(ch)
+	go handler.deviceMgr.disablePort(ctx, port, ch)
+	return waitForNilResponseOnSuccess(ctx, ch)
+}
