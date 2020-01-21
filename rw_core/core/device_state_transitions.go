@@ -18,8 +18,8 @@ package core
 
 import (
 	"github.com/opencord/voltha-go/rw_core/coreif"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 // DeviceType mentions type of device like parent, child
@@ -33,9 +33,9 @@ const (
 
 // DeviceState has admin, operational and connection status of device
 type DeviceState struct {
-	Admin       voltha.AdminState_AdminState
-	Connection  voltha.ConnectStatus_ConnectStatus
-	Operational voltha.OperStatus_OperStatus
+	Admin       voltha.AdminState_Types
+	Connection  voltha.ConnectStatus_Types
+	Operational voltha.OperStatus_Types
 }
 
 // TransitionHandler function type which takes device as input parameter

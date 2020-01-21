@@ -22,7 +22,7 @@ package coreif
 
 import (
 	"github.com/opencord/voltha-go/rw_core/graph"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 // LogicalDeviceAgent represents a generic agent

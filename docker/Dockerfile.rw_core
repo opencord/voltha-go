@@ -56,13 +56,13 @@ WORKDIR /go/src/rw_core
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 RUN go build -mod=vendor -o /go/bin/rw_core \
 	-ldflags \
-	"-X github.com/opencord/voltha-lib-go/v2/pkg/version.version=$org_label_schema_version \
-	 -X github.com/opencord/voltha-lib-go/v2/pkg/version.vcsRef=$org_label_schema_vcs_ref  \
-	 -X github.com/opencord/voltha-lib-go/v2/pkg/version.vcsDirty=$org_opencord_vcs_dirty \
-	 -X github.com/opencord/voltha-lib-go/v2/pkg/version.goVersion=$(go version 2>&1 | sed -E  's/.*go([0-9]+\.[0-9]+\.[0-9]+).*/\1/g') \
-	 -X github.com/opencord/voltha-lib-go/v2/pkg/version.os=$(go env GOHOSTOS) \
-	 -X github.com/opencord/voltha-lib-go/v2/pkg/version.arch=$(go env GOHOSTARCH) \
-	 -X github.com/opencord/voltha-lib-go/v2/pkg/version.buildTime=$org_label_schema_build_date"
+	"-X github.com/opencord/voltha-lib-go/v3/pkg/version.version=$org_label_schema_version \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.vcsRef=$org_label_schema_vcs_ref  \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.vcsDirty=$org_opencord_vcs_dirty \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.goVersion=$(go version 2>&1 | sed -E  's/.*go([0-9]+\.[0-9]+\.[0-9]+).*/\1/g') \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.os=$(go env GOHOSTOS) \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.arch=$(go env GOHOSTARCH) \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.buildTime=$org_label_schema_build_date"
 
 # -------------
 # Image creation stage

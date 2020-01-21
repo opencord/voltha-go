@@ -27,11 +27,11 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	fu "github.com/opencord/voltha-lib-go/v2/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
-	ofp "github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -651,7 +651,7 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	return nil
 }
 
-func (agent *DeviceAgent) updateAdminState(adminState voltha.AdminState_AdminState) error {
+func (agent *DeviceAgent) updateAdminState(adminState voltha.AdminState_Types) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	log.Debugw("updateAdminState", log.Fields{"id": agent.deviceID})
@@ -1134,18 +1134,18 @@ func (agent *DeviceAgent) updateDeviceWithoutLock(device *voltha.Device) error {
 	return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
 }
 
-func (agent *DeviceAgent) updateDeviceStatus(operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
+func (agent *DeviceAgent) updateDeviceStatus(operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 
 	cloned := agent.getDeviceWithoutLock()
 
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
-	if s, ok := voltha.ConnectStatus_ConnectStatus_value[connStatus.String()]; ok {
+	if s, ok := voltha.ConnectStatus_Types_value[connStatus.String()]; ok {
 		log.Debugw("updateDeviceStatus-conn", log.Fields{"ok": ok, "val": s})
 		cloned.ConnectStatus = connStatus
 	}
-	if s, ok := voltha.OperStatus_OperStatus_value[operStatus.String()]; ok {
+	if s, ok := voltha.OperStatus_Types_value[operStatus.String()]; ok {
 		log.Debugw("updateDeviceStatus-oper", log.Fields{"ok": ok, "val": s})
 		cloned.OperStatus = operStatus
 	}
@@ -1181,7 +1181,7 @@ func (agent *DeviceAgent) disablePorts() error {
 	return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
 }
 
-func (agent *DeviceAgent) updatePortState(portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
+func (agent *DeviceAgent) updatePortState(portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_Types) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
 	// Work only on latest data

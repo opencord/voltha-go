@@ -18,7 +18,7 @@ package core
 import (
 	"context"
 	"github.com/opencord/voltha-go/ro_core/config"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	"strconv"
