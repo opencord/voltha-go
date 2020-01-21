@@ -564,3 +564,28 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 	log.Debugw("SimulateAlarm-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
+
+// updatePort invokes disable_networkIf/enable_networkIf rpc
+func (ap *AdapterProxy) updatePort(ctx context.Context, device *voltha.Device, port *voltha.Port, action string) error {
+
+	log.Debugw("updatePort", log.Fields{"deviceId": device.Id, "portNo": port.PortNo, "action": action})
+	rpc := action
+	deviceId := &ic.StrType{Val: device.Id}
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "deviceId",
+		Value: deviceId,
+	}
+
+	args[1] = &kafka.KVArg{
+		Key:   "port",
+		Value: port,
+	}
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("updatePort-response", log.Fields{"deviceId": device.Id, "portNo": port.PortNo, "action": action, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
+}
