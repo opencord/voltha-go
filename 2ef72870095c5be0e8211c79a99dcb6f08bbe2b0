@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ab4d881_bdd2fd6b",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "It\u0027s better to have specific call (disablePort, enablePort) instead of generic one.",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7576db45_704845c3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "How does the port admin state get enabled?",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46784e2b_9dcab2ba",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1176,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "Same comments as above.",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "237c9b46_b62f7ade",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "If this is a UNI/NNI port then the corresponding logical port needs to be updated.",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "817f5582_7edfc048",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "Why not use a disablePort() request?",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "153764e0_507276e9",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1411,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "If this is a UNI/NNI port then the corresponding logical port needs to be updated.",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "220b89bb_24ac1278",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1438,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "Why not use an enable Port() request?",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "011ccacc_a7b81337",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-21T19:01:54Z",
+      "side": 1,
+      "message": "Please add comments to the function as these are new ones.   How come these APIs are not used when calling the adapters?",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
