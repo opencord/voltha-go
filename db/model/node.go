@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 // When a branch has no transaction id, everything gets stored in NONE

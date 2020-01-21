@@ -19,7 +19,7 @@ package model
 import (
 	"sync"
 
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 // Profiling is used to store performance details collected at runtime

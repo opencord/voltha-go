@@ -25,12 +25,12 @@ import (
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
-	ofp "github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -837,7 +837,7 @@ func (dMgr *DeviceManager) getPortCapability(ctx context.Context, deviceID strin
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) updateDeviceStatus(deviceID string, operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
+func (dMgr *DeviceManager) updateDeviceStatus(deviceID string, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
 	log.Debugw("updateDeviceStatus", log.Fields{"deviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
 	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
 		return agent.updateDeviceStatus(operStatus, connStatus)
@@ -845,7 +845,7 @@ func (dMgr *DeviceManager) updateDeviceStatus(deviceID string, operStatus voltha
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *DeviceManager) updateChildrenStatus(deviceID string, operStatus voltha.OperStatus_OperStatus, connStatus voltha.ConnectStatus_ConnectStatus) error {
+func (dMgr *DeviceManager) updateChildrenStatus(deviceID string, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
 	log.Debugw("updateChildrenStatus", log.Fields{"parentDeviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
 	var parentDevice *voltha.Device
 	var err error
@@ -869,7 +869,7 @@ func (dMgr *DeviceManager) updateChildrenStatus(deviceID string, operStatus volt
 	return nil
 }
 
-func (dMgr *DeviceManager) updatePortState(deviceID string, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_OperStatus) error {
+func (dMgr *DeviceManager) updatePortState(deviceID string, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_Types) error {
 	log.Debugw("updatePortState", log.Fields{"deviceid": deviceID, "portType": portType, "portNo": portNo, "operStatus": operStatus})
 	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
 		if err := agent.updatePortState(portType, portNo, operStatus); err != nil {
@@ -913,10 +913,10 @@ func (dMgr *DeviceManager) deleteAllPorts(deviceID string) error {
 }
 
 //updatePortsState updates all ports on the device
-func (dMgr *DeviceManager) updatePortsState(deviceID string, state voltha.OperStatus_OperStatus) error {
+func (dMgr *DeviceManager) updatePortsState(deviceID string, state voltha.OperStatus_Types) error {
 	log.Debugw("updatePortsState", log.Fields{"deviceid": deviceID})
 
-	var adminState voltha.AdminState_AdminState
+	var adminState voltha.AdminState_Types
 	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
 		switch state {
 		case voltha.OperStatus_ACTIVE:

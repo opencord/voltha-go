@@ -19,7 +19,7 @@ package model
 import (
 	"sync"
 
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 // TODO: implement weak references or something equivalent

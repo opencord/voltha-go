@@ -22,7 +22,7 @@ import (
 	"sync"
 
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

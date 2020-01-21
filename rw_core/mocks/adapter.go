@@ -21,10 +21,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/opencord/voltha-lib-go/v2/pkg/adapters/adapterif"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
-	of "github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
