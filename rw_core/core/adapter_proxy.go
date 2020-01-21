@@ -38,6 +38,12 @@ type AdapterProxy struct {
 	kafkaICProxy          kafka.InterContainerProxy
 }
 
+type PortState int
+const (
+        PortStateEnabled  = PortState(iota)
+        PortStateDisabled
+)
+
 // NewAdapterProxy will return adapter proxy instance
 func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, corePairTopic string) *AdapterProxy {
 	return &AdapterProxy{
@@ -562,5 +568,45 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 	ap.deviceTopicRegistered = true
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("SimulateAlarm-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
+	return unPackResponse(rpc, device.Id, success, result)
+}
+
+func (ap *AdapterProxy) disablePort(ctx context.Context, device *voltha.Device, port *voltha.Port) error {
+	return ap.updatePortState(ctx, device, port, PortStateDisabled)
+}
+
+func (ap *AdapterProxy) enablePort(ctx context.Context, device *voltha.Device, port *voltha.Port) error {
+	return ap.updatePortState(ctx, device, port, PortStateEnabled)
+}
+
+// updatePortState invokes Disable_enable_port rpc
+func (ap *AdapterProxy) updatePortState(ctx context.Context, device *voltha.Device, port *voltha.Port, state PortState) error {
+	var rpc string
+	log.Debugw("updatePortState", log.Fields{"device-id": device.Id, "port-no": port.PortNo, "action": state})
+	if state == PortStateEnabled {
+		rpc = "enable_port"
+	} else if state == PortStateDisabled {
+		rpc = "disable_port"
+	} else {
+		return status.Errorf(codes.InvalidArgument, "%d", state)
+	}
+	deviceID := &ic.StrType{Val: device.Id}
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "deviceId",
+		Value: deviceID,
+	}
+
+	args[1] = &kafka.KVArg{
+		Key:   "port",
+		Value: port,
+	}
+
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("updatePortState-response", log.Fields{"device-id": device.Id, "port-no": port.PortNo, "action": state, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }

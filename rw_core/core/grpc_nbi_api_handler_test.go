@@ -517,6 +517,92 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	err = waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 }
+func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *APIHandler) {
+	//Get an OLT device
+	var cp *voltha.Port
+	oltDevice, err := nb.getADevice(true, nbi)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+
+	for _, cp = range oltDevice.Ports {
+		if cp.Type == voltha.Port_PON_OLT {
+			break
+		}
+
+	}
+	assert.NotNil(t, cp)
+	cp.DeviceId = oltDevice.Id
+
+	// Disable the NW Port of oltDevice
+	_, err = nbi.DisablePort(getContext(), cp)
+	assert.Nil(t, err)
+	// Wait for the olt device Port  to be disabled
+	var vdFunction isDeviceConditionSatisfied = func(device *voltha.Device) bool {
+		for _, port := range device.Ports {
+			if port.PortNo == cp.PortNo {
+				return port.AdminState == voltha.AdminState_DISABLED
+			}
+		}
+		return false
+	}
+	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
+	assert.Nil(t, err)
+	// Wait for the logical device to satisfy the expected condition
+	var vlFunction = func(ld *voltha.LogicalDevice) bool {
+		for _, lp := range ld.Ports {
+			if (lp.OfpPort.Config&^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN) != lp.OfpPort.Config) ||
+				lp.OfpPort.State != uint32(ofp.OfpPortState_OFPPS_LIVE) {
+				return false
+			}
+		}
+		return true
+	}
+	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
+	assert.Nil(t, err)
+
+	// Enable the NW Port of oltDevice
+	_, err = nbi.EnablePort(getContext(), cp)
+	assert.Nil(t, err)
+
+	// Wait for the olt device Port to be enabled
+	vdFunction = func(device *voltha.Device) bool {
+		for _, port := range device.Ports {
+			if port.PortNo == cp.PortNo {
+				return port.AdminState == voltha.AdminState_ENABLED
+			}
+		}
+		return false
+	}
+	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
+	assert.Nil(t, err)
+	// Wait for the logical device to satisfy the expected condition
+	vlFunction = func(ld *voltha.LogicalDevice) bool {
+		for _, lp := range ld.Ports {
+			if (lp.OfpPort.Config&^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN) != lp.OfpPort.Config) ||
+				lp.OfpPort.State != uint32(ofp.OfpPortState_OFPPS_LIVE) {
+				return false
+			}
+		}
+		return true
+	}
+	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
+	assert.Nil(t, err)
+
+	// Disable a non-PON port
+	for _, cp = range oltDevice.Ports {
+		if cp.Type != voltha.Port_PON_OLT {
+			break
+		}
+
+	}
+	assert.NotNil(t, cp)
+	cp.DeviceId = oltDevice.Id
+
+	// Disable the NW Port of oltDevice
+	_, err = nbi.DisablePort(getContext(), cp)
+	assert.NotNil(t, err)
+
+}
 
 func TestSuite1(t *testing.T) {
 	nb := newNBTest()
@@ -549,6 +635,8 @@ func TestSuite1(t *testing.T) {
 
 		// 5. Test disable and ReEnable a root device
 		nb.testDisableAndReEnableRootDevice(t, nbi)
+		// 6. Test disable and Enable pon port of OLT device
+		nb.testDisableAndEnablePort(t, nbi)
 
 		// 6. Test disable and delete all devices
 		nb.testDisableAndDeleteAllDevice(t, nbi)
