@@ -229,3 +229,30 @@ func (oltA *OLTAdapter) Reenable_device(device *voltha.Device) error { // nolint
 	}()
 	return nil
 }
+
+// Enable_port -
+func (oltA *OLTAdapter) Enable_port(deviceId string, Port *voltha.Port) error { //nolint
+	go func() {
+
+		if Port.Type == voltha.Port_PON_OLT {
+			if err := oltA.coreProxy.PortStateUpdate(context.TODO(), deviceId, voltha.Port_PON_OLT, Port.PortNo, voltha.OperStatus_ACTIVE); err != nil {
+				log.Fatalf("updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
+			}
+		}
+
+	}()
+	return nil
+}
+
+// Disable_port -
+func (oltA *OLTAdapter) Disable_port(deviceId string, Port *voltha.Port) error { //nolint
+	go func() {
+
+		if Port.Type == voltha.Port_PON_OLT {
+			if err := oltA.coreProxy.PortStateUpdate(context.TODO(), deviceId, voltha.Port_PON_OLT, Port.PortNo, voltha.OperStatus_DISCOVERED); err != nil {
+				log.Fatalf("updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
+			}
+		}
+	}()
+	return nil
+}
