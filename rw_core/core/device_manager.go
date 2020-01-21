@@ -920,13 +920,11 @@ func (dMgr *DeviceManager) updatePortsState(deviceID string, state voltha.OperSt
 	if agent := dMgr.getDeviceAgent(deviceID); agent != nil {
 		switch state {
 		case voltha.OperStatus_ACTIVE:
-			adminState = voltha.AdminState_ENABLED
 			if err := agent.enablePorts(); err != nil {
 				log.Warnw("enable-all-ports-failed", log.Fields{"deviceId": deviceID, "error": err})
 				return err
 			}
 		case voltha.OperStatus_UNKNOWN:
-			adminState = voltha.AdminState_DISABLED
 			if err := agent.disablePorts(); err != nil {
 				log.Warnw("disable-all-ports-failed", log.Fields{"deviceId": deviceID, "error": err})
 				return err
@@ -1483,4 +1481,30 @@ func (dMgr *DeviceManager) updateDeviceReason(deviceID string, reason string) er
 		return agent.updateDeviceReason(reason)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
+}
+
+func (dMgr *DeviceManager) enablePort(ctx context.Context, port *voltha.Port, ch chan interface{}) {
+	log.Debugw("enablePort", log.Fields{"deviceid": port.DeviceId, "portNo": port.PortNo})
+	var res interface{}
+	if agent := dMgr.getDeviceAgent(port.DeviceId); agent != nil {
+		res = agent.enablePort(ctx, port)
+		log.Debugw("enablePort-result", log.Fields{"result": res})
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", port.DeviceId)
+	}
+
+	sendResponse(ctx, ch, res)
+}
+
+func (dMgr *DeviceManager) disablePort(ctx context.Context, port *voltha.Port, ch chan interface{}) {
+	log.Debugw("disablePort", log.Fields{"deviceid": port.DeviceId, "portNo": port.PortNo})
+	var res interface{}
+	if agent := dMgr.getDeviceAgent(port.DeviceId); agent != nil {
+		res = agent.disablePort(ctx, port)
+		log.Debugw("disablePort-result", log.Fields{"result": res})
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", port.DeviceId)
+	}
+
+	sendResponse(ctx, ch, res)
 }

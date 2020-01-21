@@ -385,3 +385,12 @@ func (handler *DefaultAPIHandler) ListLogicalDeviceMeters(ctx context.Context, i
 	log.Debugw("ListLogicalDeviceMeters-unimplemented", log.Fields{"id": id})
 	return nil, nil
 }
+
+func (handler *DefaultAPIHandler) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+	log.Debugw("EnablePort-unimplemented", log.Fields{"id": port.DeviceId})
+	return nil, nil
+}
+func (handler *DefaultAPIHandler) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+	log.Debugw("DisablePort-unimplemented", log.Fields{"id": port.DeviceId})
+	return nil, nil
+}
