@@ -22,10 +22,10 @@ import (
 	"testing"
 
 	"github.com/opencord/voltha-go/ro_core/config"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-lib-go/v2/pkg/mocks"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/mocks"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 )

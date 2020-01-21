@@ -18,9 +18,10 @@ package model
 
 import (
 	"encoding/json"
+
 	"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 // EventBus contains the details required to communicate with the event bus mechanism
@@ -58,7 +59,7 @@ func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	if _, ok := ignoredCallbacks[eventType]; ok {
 		log.Debugf("ignoring event - type:%s, data:%+v", eventType, data)
 	}
-	var kind voltha.ConfigEventType_ConfigEventType
+	var kind voltha.ConfigEventType_Types
 	switch eventType {
 	case POST_ADD:
 		kind = voltha.ConfigEventType_add

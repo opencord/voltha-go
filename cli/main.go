@@ -23,7 +23,7 @@ import (
 	"os/exec"
 
 	"github.com/opencord/voltha-go/cli/menu/mainmenu"
-	l "github.com/opencord/voltha-lib-go/v2/pkg/log"
+	l "github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"google.golang.org/grpc"
 )
 

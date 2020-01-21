@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

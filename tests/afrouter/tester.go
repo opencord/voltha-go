@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"io/ioutil"
 	"math"
 	"os"

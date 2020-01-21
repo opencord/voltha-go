@@ -23,8 +23,8 @@ import (
 	"sync"
 
 	"github.com/gyuho/goraph"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 func init() {
