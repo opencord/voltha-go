@@ -24,10 +24,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -586,8 +586,8 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 	}
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
 	go func() {
-		err := rhp.deviceMgr.updateDeviceStatus(deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val),
-			voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+		err := rhp.deviceMgr.updateDeviceStatus(deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+			voltha.ConnectStatus_Types(connStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-device-status", log.Fields{"error": err})
 		}
@@ -650,8 +650,8 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
 	go func() {
-		err := rhp.deviceMgr.updateChildrenStatus(deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val),
-			voltha.ConnectStatus_ConnectStatus(connStatus.Val))
+		err := rhp.deviceMgr.updateChildrenStatus(deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+			voltha.ConnectStatus_Types(connStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-children-status", log.Fields{"error": err})
 		}
@@ -710,7 +710,7 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*e
 	}
 
 	go func() {
-		err := rhp.deviceMgr.updatePortsState(deviceID.Id, voltha.OperStatus_OperStatus(operStatus.Val))
+		err := rhp.deviceMgr.updatePortsState(deviceID.Id, voltha.OperStatus_Types(operStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-ports-state", log.Fields{"error": err})
 		}
@@ -779,7 +779,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 
 	go func() {
 		err := rhp.deviceMgr.updatePortState(deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
-			voltha.OperStatus_OperStatus(operStatus.Val))
+			voltha.OperStatus_Types(operStatus.Val))
 		if err != nil {
 			log.Errorw("unable-to-update-port-state", log.Fields{"error": err})
 		}

@@ -23,8 +23,8 @@ package coreif
 import (
 	"context"
 
-	"github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 // LogicalDeviceManager represent logical device manager related methods

@@ -22,8 +22,8 @@ import (
 	"strconv"
 
 	"github.com/opencord/voltha-go/cli/util"
-	"github.com/opencord/voltha-protos/v2/go/common"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-protos/v3/go/common"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 func doShow(enterPressed bool) {

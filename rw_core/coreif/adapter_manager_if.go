@@ -19,7 +19,7 @@ package coreif
 import (
 	"context"
 
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 // AdapterManager represent adapter manager related methods
