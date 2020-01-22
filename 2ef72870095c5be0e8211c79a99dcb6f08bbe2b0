@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7e3a1082_d2c98a15",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-22T06:36:21Z",
+      "side": 1,
+      "message": "both the functions code is same , the only difference is the name of the message sent on kafka (disable_port, enable_port)\nso mad a single api to avoid code duplication.",
+      "parentUuid": "6ab4d881_bdd2fd6b",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7576db45_704845c3",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-21T19:01:54Z",
       "side": 1,
       "message": "How does the port admin state get enabled?",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77f5a994_7aaa749d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-22T06:36:21Z",
+      "side": 1,
+      "message": "The port admin state is changed from the north bound by the new apis supported as part of this patch (disablePort, enablePort), As per the existing implementation the admin state is changed based on the operation state which is not correct in my opinion.",
+      "parentUuid": "7576db45_704845c3",
       "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e4d49cd1_94c07f58",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1176,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-22T06:36:21Z",
+      "side": 1,
+      "message": "The port admin state is changed from the north bound by the new apis supported as part of this patch (disablePort, enablePort), As per the existing implementation the admin state is changed based on the operation state which is not correct in my opinion.",
+      "parentUuid": "46784e2b_9dcab2ba",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "237c9b46_b62f7ade",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2020-01-21T19:01:54Z",
       "side": 1,
       "message": "If this is a UNI/NNI port then the corresponding logical port needs to be updated.",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac1be641_d9f732e3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-22T06:36:21Z",
+      "side": 1,
+      "message": "As of now only the pon port disable is supported as currently only one NNI is supported.",
+      "parentUuid": "237c9b46_b62f7ade",
       "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "ac117f7d_f951adfb",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-22T06:36:21Z",
+      "side": 1,
+      "message": "To avoid the code duplication it is implemented as a single function, as there is no change apart form the rpc name.",
+      "parentUuid": "817f5582_7edfc048",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "153764e0_507276e9",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "8d94e8c7_ff2b7266",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1411,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-22T06:36:21Z",
+      "side": 1,
+      "message": "As of now only the pon port enable is supported as currently only one NNI is supported.",
+      "parentUuid": "153764e0_507276e9",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "220b89bb_24ac1278",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -115,6 +223,24 @@
       "writtenOn": "2020-01-21T19:01:54Z",
       "side": 1,
       "message": "Why not use an enable Port() request?",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f045e9e2_b493c3e8",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1438,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-22T06:36:21Z",
+      "side": 1,
+      "message": "To avoid the code duplication it is implemented as a single function, as there is no change apart form the rpc name.",
+      "parentUuid": "220b89bb_24ac1278",
       "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
