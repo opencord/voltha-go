@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "659543e2_24a245cf",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-22T14:35:59Z",
+      "side": 1,
+      "message": "You can still have two different APIs invoking code from a common function.  Actions taken on the different APIs can be different and it\u0027s much easier to debug issues.  Please use two functions.",
+      "parentUuid": "7e3a1082_d2c98a15",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7576db45_704845c3",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "The port admin state is changed from the north bound by the new apis supported as part of this patch (disablePort, enablePort), As per the existing implementation the admin state is changed based on the operation state which is not correct in my opinion.",
       "parentUuid": "7576db45_704845c3",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9600a48_6c40deba",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-22T14:35:59Z",
+      "side": 1,
+      "message": "Can you start a discussion on voltha-discuss or bring it to the TST meeting to ensure this is the community expectation?",
+      "parentUuid": "77f5a994_7aaa749d",
       "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -142,6 +178,24 @@
     },
     {
       "key": {
+        "uuid": "df99b9c0_075717fd",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-22T14:35:59Z",
+      "side": 1,
+      "message": "Where is the check to see whether the port a PON port?   There should be an explicit check such that later if UNI/NNI support is required it\u0027s clear that more work is required, like updating the logical port.",
+      "parentUuid": "ac1be641_d9f732e3",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "817f5582_7edfc048",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -171,6 +225,24 @@
       "side": 1,
       "message": "To avoid the code duplication it is implemented as a single function, as there is no change apart form the rpc name.",
       "parentUuid": "817f5582_7edfc048",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65a25843_3110c926",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-22T14:35:59Z",
+      "side": 1,
+      "message": "Please use different APIs.",
+      "parentUuid": "ac117f7d_f951adfb",
       "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
