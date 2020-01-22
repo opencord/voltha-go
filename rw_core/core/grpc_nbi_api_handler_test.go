@@ -538,7 +538,9 @@ func TestSuite1(t *testing.T) {
 	// 2. Test adapter registration
 	nb.testAdapterRegistration(t, nbi)
 
-	numberOfDeviceTestRuns := 2
+	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
+
+	numberOfDeviceTestRuns := 1
 	for i := 1; i <= numberOfDeviceTestRuns; i++ {
 		// 3. Test create device
 		nb.testCreateDevice(t, nbi)
