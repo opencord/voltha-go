@@ -367,6 +367,10 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(newFlows []*ofp.OfpFlowStat
 	// received
 	response := coreutils.NewResponse()
 	dType := agent.adapterMgr.getDeviceType(device.Type)
+	if dType == nil {
+		log.Errorw("non-existent device type", log.Fields{"deviceType": device.Type})
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent device type %s", device.Type)
+	}
 	if !dType.AcceptsAddRemoveFlowUpdates {
 
 		if len(updatedAllGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedAllGroups) && len(updatedAllFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedAllFlows) {
@@ -463,6 +467,10 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(flowsToDel []*ofp.OfpF
 	// Send update to adapters
 	response := coreutils.NewResponse()
 	dType := agent.adapterMgr.getDeviceType(device.Type)
+	if dType == nil {
+		log.Errorw("non-existent device type", log.Fields{"deviceType": device.Type})
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent device type %s", device.Type)
+	}
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		if len(groupsToKeep) != 0 && reflect.DeepEqual(existingGroups.Items, groupsToKeep) && len(flowsToKeep) != 0 && reflect.DeepEqual(existingFlows.Items, flowsToKeep) {
 			log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flowsToDel": flowsToDel, "groupsToDel": groupsToDel})
@@ -536,6 +544,10 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(updatedFlows []*ofp.OfpF
 
 	response := coreutils.NewResponse()
 	dType := agent.adapterMgr.getDeviceType(device.Type)
+	if dType == nil {
+		log.Errorw("non-existent device type", log.Fields{"deviceType": device.Type})
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent device type %s", device.Type)
+	}
 
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {

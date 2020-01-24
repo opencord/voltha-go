@@ -152,8 +152,11 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() error {
 	if adaptersIf != nil {
 		for _, adapterIf := range adaptersIf.([]interface{}) {
 			if adapter, ok := adapterIf.(*voltha.Adapter); ok {
-				log.Debugw("found-existing-adapter", log.Fields{"adapterId": adapter.Id})
-				return aMgr.addAdapter(adapter, false)
+				if err := aMgr.addAdapter(adapter, false); err != nil {
+					log.Errorw("failed to add adapter", log.Fields{"adapterId": adapter.Id})
+				} else {
+					log.Debugw("adapter added successfully", log.Fields{"adapterId": adapter.Id})
+				}
 			}
 		}
 	} else {
@@ -174,6 +177,8 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() error {
 			if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
 				log.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
 				dTypes.Items = append(dTypes.Items, dType)
+			} else {
+				log.Errorw("not an voltha device type", log.Fields{"interface": deviceTypeIf})
 			}
 		}
 		return aMgr.addDeviceTypes(dTypes, false)
