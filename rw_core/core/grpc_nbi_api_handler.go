@@ -1215,3 +1215,8 @@ func (handler *APIHandler) DisablePort(ctx context.Context, port *voltha.Port) (
 	go handler.deviceMgr.disablePort(ctx, port, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
+
+func (handler *APIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	log.Debugw("Omci_test_Request", log.Fields{"id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
+	return handler.deviceMgr.startOmciTest(ctx, omcitestrequest)
+}

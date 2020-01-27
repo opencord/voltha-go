@@ -342,3 +342,14 @@ func (ap *AdapterProxy) childDeviceLost(ctx context.Context, deviceType string, 
 	replyToTopic := ap.getCoreTopic()
 	return ap.sendRPC(ctx, rpc, &toTopic, &replyToTopic, true, pDeviceID, args...)
 }
+
+func (ap *AdapterProxy) startOmciTest(ctx context.Context, device *voltha.Device, omcitestrequest *voltha.OmciTestRequest) (chan *kafka.RpcResponse, error) {
+	log.Debugw("Omci_test_Request_adapter_proxy", log.Fields{"device": device, "omciTestRequest": omcitestrequest})
+	rpc := "start_omci_test"
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	// Use a device specific topic as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id,
+		&kafka.KVArg{Key: "device", Value: device},
+		&kafka.KVArg{Key: "omcitestrequest", Value: omcitestrequest})
+}
