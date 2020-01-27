@@ -642,3 +642,32 @@ func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, 
 
 	return unPackResponse(rpc, pDeviceID, success, result)
 }
+
+func (ap *AdapterProxy) startOmciTest(ctx context.Context, device *voltha.Device, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	log.Debugw("Omci_test_Request_adapter_proxy", log.Fields{"device": device, "omciTestRequest": omcitestrequest})
+	rpc := "start_omci_test"
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "omcitestrequest",
+		Value: omcitestrequest,
+	}
+	// Use a device specific topic as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("Omci_test_response", log.Fields{"deviceId": device.Id, "success": success, "result": result})
+	if success {
+		unpackResult := &voltha.TestResponse{}
+		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			log.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+		}
+		log.Debugw("Omci_test_response-adpater-proxy", log.Fields{"deviceId": device.Id, "unpackResult": unpackResult.Result, "result": result})
+		return unpackResult, nil
+	}
+	return nil, nil
+}
