@@ -388,3 +388,8 @@ func (handler *DefaultAPIHandler) DisablePort(ctx context.Context, port *voltha.
 	log.Debugw("DisablePort-unimplemented", log.Fields{"id": port.DeviceId})
 	return nil, nil
 }
+
+// on demand api for test action
+func (handler *DefaultAPIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	return nil, errors.New("UnImplemented")
+}
