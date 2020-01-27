@@ -1703,3 +1703,41 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 	go agent.waitForAdapterResponse(subCtx, cancel, "childDeviceLost", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
+
+func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return nil, err
+	}
+
+	device := agent.getDeviceWithoutLock()
+	adapterName, err := agent.adapterMgr.getAdapterName(device.Type)
+	if err != nil {
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
+
+	// Send request to the adapter
+	device.Adapter = adapterName
+	ch, err := agent.adapterProxy.startOmciTest(ctx, device, omcitestrequest)
+	agent.requestQueue.RequestComplete()
+	if err != nil {
+		return nil, err
+	}
+
+	// Wait for the adapter response
+	rpcResponse, ok := <-ch
+	if !ok {
+		return nil, status.Errorf(codes.Aborted, "channel-closed-device-id-%s", agent.deviceID)
+	}
+	if rpcResponse.Err != nil {
+		return nil, rpcResponse.Err
+	}
+
+	// Unmarshal and return the response
+	testResp := &voltha.TestResponse{}
+	if err := ptypes.UnmarshalAny(rpcResponse.Reply, testResp); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+	}
+	log.Debugw("Omci_test_Request-Success-device-agent", log.Fields{"testResp": testResp})
+	return testResp, nil
+}
