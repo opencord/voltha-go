@@ -385,3 +385,8 @@ func (handler *DefaultAPIHandler) ListLogicalDeviceMeters(ctx context.Context, i
 	log.Debugw("ListLogicalDeviceMeters-unimplemented", log.Fields{"id": id})
 	return nil, nil
 }
+
+// on demand api for test action
+func (handler *DefaultAPIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	return nil, errors.New("UnImplemented")
+}
