@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66899ad4_58d98f6a",
+        "filename": "rw_core/core/event_filter_agent.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-27T15:51:32Z",
+      "side": 1,
+      "message": "Since you are not using a syncMap then you will need to protect the map during updates.",
+      "revId": "9902fe8aeaf208fc4b0f89e9dfcaf33b2ad3fd18",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}

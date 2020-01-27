@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd2c45a4_bf246188",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-27T15:51:32Z",
+      "side": 0,
+      "message": "Please add another test specific for ReconcileDevice as you are changing the API.",
+      "revId": "e7be13387c4a38d91c3c63cd0c6d5e0002697a7c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
