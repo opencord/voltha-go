@@ -120,6 +120,12 @@ type CoreInstance = voltha.CoreInstance
 // CoreInstances from public import voltha_protos/voltha.proto
 type CoreInstances = voltha.CoreInstances
 
+// OmciTestRequest from public import voltha_protos/voltha.proto
+type OmciTestRequest = voltha.OmciTestRequest
+
+// TestResponse from public import voltha_protos/voltha.proto
+type TestResponse = voltha.TestResponse
+
 // Voltha from public import voltha_protos/voltha.proto
 type Voltha = voltha.Voltha
 
@@ -147,6 +153,15 @@ const EventFilterRuleKey_sub_category = EventFilterRuleKey_EventFilterRuleType(v
 const EventFilterRuleKey_kpi_event_type = EventFilterRuleKey_EventFilterRuleType(voltha.EventFilterRuleKey_kpi_event_type)
 const EventFilterRuleKey_config_event_type = EventFilterRuleKey_EventFilterRuleType(voltha.EventFilterRuleKey_config_event_type)
 const EventFilterRuleKey_device_event_type = EventFilterRuleKey_EventFilterRuleType(voltha.EventFilterRuleKey_device_event_type)
+
+// TestResponse_TestResponseResult from public import voltha_protos/voltha.proto
+type TestResponse_TestResponseResult = voltha.TestResponse_TestResponseResult
+
+var TestResponse_TestResponseResult_name = voltha.TestResponse_TestResponseResult_name
+var TestResponse_TestResponseResult_value = voltha.TestResponse_TestResponseResult_value
+
+const TestResponse_SUCCESS = TestResponse_TestResponseResult(voltha.TestResponse_SUCCESS)
+const TestResponse_FAILURE = TestResponse_TestResponseResult(voltha.TestResponse_FAILURE)
 
 // SelfTestResponse_SelfTestResult from public import voltha_protos/voltha.proto
 type SelfTestResponse_SelfTestResult = voltha.SelfTestResponse_SelfTestResult
