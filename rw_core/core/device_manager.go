@@ -1533,3 +1533,14 @@ func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, cDevice *voltha.
 	}
 	return status.Errorf(codes.NotFound, "%s", cDevice.Id)
 }
+
+func (dMgr *DeviceManager) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	log.Debugw("Omci_test_Request", log.Fields{"deviceid": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
+	var res *voltha.TestResponse
+	if agent := dMgr.getDeviceAgent(ctx, omcitestrequest.Id); agent != nil {
+		res, _ = agent.startOmciTest(ctx, omcitestrequest)
+		log.Debugw("Omci_test_Response_result-device-magnager", log.Fields{"result": res})
+		return res, nil
+	}
+	return &voltha.TestResponse{Result: voltha.TestResponse_FAILURE}, nil
+}
