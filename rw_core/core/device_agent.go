@@ -1393,3 +1393,25 @@ func (agent *DeviceAgent) updateDeviceReason(reason string) error {
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(cloned, false, "")
 }
+
+func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error){
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	if device, err := agent.getDeviceWithoutLock(); err != nil {
+		return &voltha.TestResponse{Result: voltha.TestResponse_FAILURE}, nil
+	} else {
+		if adapterName, err := agent.adapterMgr.getAdapterName(device.Type); err != nil {
+			log.Warnw("no-adapter-registered-for-device-type", log.Fields{"deviceType": device.Type, "deviceAdapter": device.Adapter})
+			return &voltha.TestResponse{Result: voltha.TestResponse_FAILURE}, nil
+		} else {
+			device.Adapter = adapterName
+		}
+		if resp, _ := agent.adapterProxy.startOmciTest(ctx, device, omcitestrequest); err != nil {
+			log.Debugw("Omci_test_Request-ERROR", log.Fields{"id": agent.deviceID, "error": err})
+			return &voltha.TestResponse{Result: voltha.TestResponse_FAILURE}, nil
+		} else {
+			log.Debugw("Omci_test_Request-Success-device-agent", log.Fields{"resp": resp})
+			return resp, nil
+		}
+	}
+}

@@ -1216,3 +1216,8 @@ func (handler *APIHandler) GetMembership(context.Context, *empty.Empty) (*voltha
 func (handler *APIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return &empty.Empty{}, errors.New("UnImplemented")
 }
+
+func (handler *APIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	log.Debugw("Omci_test_Request", log.Fields{"id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
+	return handler.deviceMgr.startOmciTest(ctx, omcitestrequest)
+}
