@@ -1465,5 +1465,24 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 		log.Warnw("ChildDeviceLost-error", log.Fields{"error": err})
 	}
 	return nil
+}
 
+func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	device := agent.getDeviceWithoutLock()
+	adapterName, err := agent.adapterMgr.getAdapterName(device.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	device.Adapter = adapterName
+	resp, err := agent.adapterProxy.startOmciTest(ctx, device, omcitestrequest)
+	if err != nil {
+		log.Debugw("Omci_test_Request-ERROR", log.Fields{"id": agent.deviceID, "error": err})
+		return &voltha.TestResponse{Result: voltha.TestResponse_FAILURE}, nil
+	}
+
+	log.Debugw("Omci_test_Request-Success-device-agent", log.Fields{"resp": resp})
+	return resp, nil
 }
