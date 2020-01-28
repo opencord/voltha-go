@@ -39,13 +39,6 @@ DOCKER_LABEL_VCS_REF       = $(shell git rev-parse HEAD)
 DOCKER_LABEL_BUILD_DATE    ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
 DOCKER_LABEL_COMMIT_DATE   = $(shell git show -s --format=%cd --date=iso-strict HEAD)
 
-# Default is GO111MODULE=auto, which will refuse to use go mod if running
-# go less than 1.13.0 and this repository is checked out in GOPATH. For now,
-# force module usage. This affects commands executed from this Makefile, but
-# not the environment inside the Docker build (which does not build from
-# inside a GOPATH).
-export GO111MODULE=on
-
 DOCKER_BUILD_ARGS ?= \
 	${DOCKER_EXTRA_ARGS} \
 	--build-arg org_label_schema_version="${VERSION}" \
@@ -57,6 +50,16 @@ DOCKER_BUILD_ARGS ?= \
 
 DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
 	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
+
+# tool containers
+VOLTHA_TOOLS_VERSION ?= 1.0.3
+
+GO                = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang go
+GO_JUNIT_REPORT   = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-go-junit-report go-junit-report
+GOCOVER_COBERTURA = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-gocover-cobertura gocover-cobertura
+GOFMT             = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang gofmt
+GOLANGCI_LINT     = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golangci-lint golangci-lint
+HADOLINT          = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-hadolint hadolint
 
 .PHONY: rw_core ro_core local-protos
 
@@ -118,24 +121,14 @@ docker-kind-load:
 
 ## lint and unit tests
 
-PATH:=$(GOPATH)/bin:$(PATH)
-HADOLINT=$(shell PATH=$(GOPATH):$(PATH) which hadolint)
 lint-dockerfile:
-ifeq (,$(shell PATH=$(GOPATH):$(PATH) which hadolint))
-	mkdir -p $(GOPATH)/bin
-	curl -o $(GOPATH)/bin/hadolint -sNSL https://github.com/hadolint/hadolint/releases/download/v1.17.1/hadolint-$(shell uname -s)-$(shell uname -m)
-	chmod 755 $(GOPATH)/bin/hadolint
-endif
 	@echo "Running Dockerfile lint check ..."
-	@hadolint $$(find . -name "Dockerfile.*")
+	@${HADOLINT} $$(find . -name "Dockerfile.*")
 	@echo "Dockerfile lint check OK"
 
 lint-style:
-ifeq (,$(shell which gofmt))
-	go get -u github.com/golang/go/src/cmd/gofmt
-endif
 	@echo "Running style check..."
-	@gofmt_out="$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*'))" ;\
+	@gofmt_out="$$(${GOFMT} -l $$(find . -name '*.go' -not -path './vendor/*'))" ;\
 	if [ ! -z "$$gofmt_out" ]; then \
 	  echo "$$gofmt_out" ;\
 	  echo "Style check failed on one or more files ^, run 'go fmt' to fix." ;\
@@ -145,18 +138,18 @@ endif
 
 lint-sanity:
 	@echo "Running sanity check..."
-	@go vet -mod=vendor ./...
+	@${GO} vet -mod=vendor ./...
 	@echo "Sanity check OK"
 
 lint-mod:
 	@echo "Running dependency check..."
-	@go mod verify
+	@${GO} mod verify
 	@echo "Dependency check OK. Running vendor check..."
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && echo "`git status`" && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && echo "`git status`" && exit 1)
-	go mod tidy
-	go mod vendor
+	${GO} mod tidy
+	${GO} mod vendor
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && echo "`git status`" && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && echo "`git status`" && exit 1)
@@ -165,58 +158,26 @@ lint-mod:
 
 lint: lint-style lint-sanity lint-mod lint-dockerfile
 
-# Rules to automatically install golangci-lint
-GOLANGCI_LINT_TOOL?=$(shell which golangci-lint)
-ifeq (,$(GOLANGCI_LINT_TOOL))
-GOLANGCI_LINT_TOOL=$(GOPATH)/bin/golangci-lint
-golangci_lint_tool_install:
-	# Same version as installed by Jenkins ci-management
-	# Note that install using `go get` is not recommended as per https://github.com/golangci/golangci-lint
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(GOPATH)/bin v1.17.0
-else
-golangci_lint_tool_install:
-endif
-
-# Rules to automatically install go-junit-report
-GO_JUNIT_REPORT?=$(shell which go-junit-report)
-ifeq (,$(GO_JUNIT_REPORT))
-GO_JUNIT_REPORT=$(GOPATH)/bin/go-junit-report
-go_junit_install:
-	go get -u github.com/jstemmer/go-junit-report
-else
-go_junit_install:
-endif
-
-# Rules to automatically install gocover-covertura
-GOCOVER_COBERTURA?=$(shell which gocover-cobertura)
-ifeq (,$(GOCOVER_COBERTURA))
-	@GOCOVER_COBERTURA=$(GOPATH)/bin/gocover-cobertura
-gocover_cobertura_install:
-	go get -u github.com/t-yuki/gocover-cobertura
-else
-gocover_cobertura_install:
-endif
-
-sca: golangci_lint_tool_install
-	rm -rf ./sca-report
+sca:
+	@rm -rf ./sca-report
 	@mkdir -p ./sca-report
-	$(GOLANGCI_LINT_TOOL) run --deadline=2m -E golint --out-format junit-xml ./cli/... ./rw_core/... ./ro_core/... ./tests/... ./common/... ./db/... 2>&1 | tee ./sca-report/sca-report.xml
+	@echo "Running static code analysis..."
+	@${GOLANGCI_LINT} run --deadline=2m -E golint --out-format junit-xml ./cli/... ./rw_core/... ./ro_core/... ./tests/... ./common/... ./db/... 2>&1 | tee ./sca-report/sca-report.xml
+	@echo "Static code analysis OK"
 
-test: go_junit_install gocover_cobertura_install local-lib-go
+test: local-lib-go
 	@mkdir -p ./tests/results
-	@go test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	@${GO} test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
 	RETURN=$$? ;\
-	$(GO_JUNIT_REPORT) < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
-	$(GOCOVER_COBERTURA) < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
+	${GO_JUNIT_REPORT} < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
+	${GOCOVER_COBERTURA} < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
 	exit $$RETURN
 
-clean:
+clean: distclean
 
-distclean: clean
-	rm -rf ./sca_report
+distclean:
+	rm -rf ./sca-report
 
 mod-update:
-	go mod tidy
-	go mod vendor
-
-# end file
+	${GO} mod tidy
+	${GO} mod vendor
