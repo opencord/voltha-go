@@ -935,6 +935,7 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 
 	var meters []*ofp.OfpMeterEntry
 	var flows []*ofp.OfpFlowStats
+	var flowGroups []*ofp.OfpGroupEntry
 
 	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
 		flows = lDevice.Flows.Items
@@ -943,6 +944,11 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
 		meters = lDevice.Meters.Items
 	}
+
+	if lDevice.FlowGroups != nil && lDevice.FlowGroups.Items != nil {
+		flowGroups = lDevice.FlowGroups.Items
+	}
+
 	//build a list of what to keep vs what to delete
 	toKeep := make([]*ofp.OfpFlowStats, 0)
 	toDelete := make([]*ofp.OfpFlowStats, 0)
@@ -969,7 +975,7 @@ func (agent *LogicalDeviceAgent) flowDelete(mod *ofp.OfpFlowMod) error {
 			log.Error("Meter-referred-in-flows-not-present")
 			return errors.New("Meter-referred-in-flows-not-present")
 		}
-		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: toDelete}, ofp.FlowGroups{})
+		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: toDelete}, ofp.FlowGroups{Items: flowGroups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if err := agent.deleteDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
@@ -1066,11 +1072,15 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 
 	var meters []*ofp.OfpMeterEntry
 	var flows []*ofp.OfpFlowStats
+	var flowGroups []*ofp.OfpGroupEntry
 	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
 		meters = lDevice.Meters.Items
 	}
 	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
 		flows = lDevice.Flows.Items
+	}
+	if lDevice.FlowGroups != nil && lDevice.FlowGroups.Items != nil {
+		flowGroups = lDevice.FlowGroups.Items
 	}
 
 	changedFlow := false
@@ -1104,7 +1114,7 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(mod *ofp.OfpFlowMod) error {
 			log.Error("meter-referred-in-flows-not-present")
 			return err
 		}
-		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: flowsToDelete}, ofp.FlowGroups{})
+		deviceRules := agent.flowDecomposer.DecomposeRules(agent, ofp.Flows{Items: flowsToDelete}, ofp.FlowGroups{Items: flowGroups})
 		log.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if err := agent.deleteDeviceFlowsAndGroups(deviceRules, &flowMetadata); err != nil {
