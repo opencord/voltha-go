@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "23fc6625_54157645",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "Updated the code with two separate apis for enable and disable ports.",
+      "parentUuid": "659543e2_24a245cf",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7576db45_704845c3",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "Can you start a discussion on voltha-discuss or bring it to the TST meeting to ensure this is the community expectation?",
       "parentUuid": "77f5a994_7aaa749d",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd18113f_cd47bc8e",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "I have started a discussion in voltha-discuss\nhttps://groups.google.com/a/opencord.org/forum/#!topic/voltha-discuss/hY23m4Pv57o",
+      "parentUuid": "e9600a48_6c40deba",
       "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -196,6 +232,24 @@
     },
     {
       "key": {
+        "uuid": "04be3c9a_87bac2bb",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The check is available in openOlt Adapter. From the core we are not disallowing enable/disable for  any specific type, it is up to the adapters.In the openOnu adapter we dont support disabling of any port as of today(VOL-2482 has been created to support of disabling UNIs in the future.)\n\nAs and when support of disabling of NNI and UNI are brought in the corresponding logical ports in the core should get updated as per the normal workflow of the port status change.",
+      "parentUuid": "df99b9c0_075717fd",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "817f5582_7edfc048",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -243,6 +297,24 @@
       "side": 1,
       "message": "Please use different APIs.",
       "parentUuid": "ac117f7d_f951adfb",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d70674c_78557795",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "Updated the code to use two apis",
+      "parentUuid": "65a25843_3110c926",
       "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
