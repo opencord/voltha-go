@@ -250,6 +250,24 @@
     },
     {
       "key": {
+        "uuid": "ebb2a0c8_9f03ccd8",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-30T13:48:59Z",
+      "side": 1,
+      "message": "The concern is that since we are not resetting the port to its previous state after a failure then the adapter will return an unsupported operation while the core would have disabled the port.   The check of non-PON port can be done at the NBI layer.  This way once the adapter supports NNI/UNI changes then it\u0027s a simple change in the NBI code.",
+      "parentUuid": "04be3c9a_87bac2bb",
+      "revId": "2ef72870095c5be0e8211c79a99dcb6f08bbe2b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "817f5582_7edfc048",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
