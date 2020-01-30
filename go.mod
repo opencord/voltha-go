@@ -3,7 +3,6 @@ module github.com/opencord/voltha-go
 go 1.12
 
 require (
-	github.com/bclicn/color v0.0.0-20180711051946-108f2023dc84
 	github.com/gogo/protobuf v1.3.0
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1

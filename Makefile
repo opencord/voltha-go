@@ -30,7 +30,6 @@ DOCKER_REGISTRY            ?=
 DOCKER_REPOSITORY          ?=
 DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
 RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core
-ROCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ro-core
 TYPE                       ?= minimal
 
 ## Docker labels. Only set ref and commit date if committed
@@ -58,7 +57,7 @@ DOCKER_BUILD_ARGS ?= \
 DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
 	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
 
-.PHONY: rw_core ro_core local-protos
+.PHONY: rw_core local-protos
 
 # This should to be the first and default target in this Makefile
 help:
@@ -68,7 +67,6 @@ help:
 	@echo "build                : Build the docker images."
 	@echo "                         - If this is the first time you are building, choose 'make build' option."
 	@echo "rw_core              : Build the rw_core docker image"
-	@echo "ro_core              : Build the ro_core docker image"
 	@echo "clean                : Remove files created by the build and tests"
 	@echo "distclean            : Remove sca directory and clean"
 	@echo "docker-push          : Push the docker images to an external repository"
@@ -99,22 +97,17 @@ endif
 
 build: docker-build
 
-docker-build: rw_core ro_core
+docker-build: rw_core
 
 rw_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -t ${RWCORE_IMAGENAME}:latest -f docker/Dockerfile.rw_core .
 
-ro_core: local-protos local-lib-go
-	docker build $(DOCKER_BUILD_ARGS) -t ${ROCORE_IMAGENAME}:${DOCKER_TAG} -t ${ROCORE_IMAGENAME}:latest -f docker/Dockerfile.ro_core .
-
 docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
-	docker push ${ROCORE_IMAGENAME}:${DOCKER_TAG}
 
 docker-kind-load:
 	@if [ "`kind get clusters | grep voltha-$(TYPE)`" = '' ]; then echo "no voltha-$(TYPE) cluster found" && exit 1; fi
 	kind load docker-image ${RWCORE_IMAGENAME}:${DOCKER_TAG} --name=voltha-$(TYPE) --nodes $(shell kubectl get nodes --template='{{range .items}}{{.metadata.name}},{{end}}' | rev | cut -c 2- | rev)
-	kind load docker-image ${ROCORE_IMAGENAME}:${DOCKER_TAG} --name=voltha-$(TYPE) --nodes $(shell kubectl get nodes --template='{{range .items}}{{.metadata.name}},{{end}}' | rev | cut -c 2- | rev)
 
 ## lint and unit tests
 
@@ -200,7 +193,7 @@ endif
 sca: golangci_lint_tool_install
 	rm -rf ./sca-report
 	@mkdir -p ./sca-report
-	$(GOLANGCI_LINT_TOOL) run --deadline=2m -E golint --out-format junit-xml ./cli/... ./rw_core/... ./ro_core/... ./tests/... ./common/... ./db/... 2>&1 | tee ./sca-report/sca-report.xml
+	$(GOLANGCI_LINT_TOOL) run --deadline=2m -E golint --out-format junit-xml ./rw_core/... ./tests/... ./common/... ./db/... 2>&1 | tee ./sca-report/sca-report.xml
 
 test: go_junit_install gocover_cobertura_install local-lib-go
 	@mkdir -p ./tests/results
