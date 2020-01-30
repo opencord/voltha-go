@@ -56,6 +56,3 @@ python/local_imports/**/*
 # test output
 tests/results
 sca-report
-
-# etcd mocks
-ro_core/core/voltha.lib.mocks.etcd
