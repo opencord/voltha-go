@@ -352,6 +352,24 @@
     },
     {
       "key": {
+        "uuid": "c7f99145_1a4aba9b",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-30T13:48:59Z",
+      "side": 1,
+      "message": "See comment below.",
+      "parentUuid": "c1bff418_5c8b57ea",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a95f4f24_55881223",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 7
@@ -381,6 +399,24 @@
       "side": 1,
       "message": "The mock adapter invokes the core rpc that changes the operation state of the port, so the check for operation state is added.",
       "parentUuid": "a95f4f24_55881223",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dfbf28a_0fbadfa7",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-01-30T13:48:59Z",
+      "side": 1,
+      "message": "Do the test from what we would actually expect, i.e. after a disable port we expect the port to be disabled.   The operational status here could be anything that an adapter sets.  So it\u0027s safer not to use operational status here.",
+      "parentUuid": "53264d91_8a46b7d6",
       "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
