@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "819d3ea7_816af55f",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "updated the code as per the comment.",
+      "parentUuid": "23080a90_10e98780",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1441fe2_369e5628",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-29T14:40:09Z",
       "side": 1,
       "message": "This method should be renamed to updatePortsOperState(...) and update only the operational state as provided by the adapter.",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4b09647_b560e80b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1169,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The method is updated accordingly.",
+      "parentUuid": "d1441fe2_369e5628",
       "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0ba3d8c7_7c530563",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1182,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The code is updated as per the comment",
+      "parentUuid": "82b5788b_08203db0",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83d5f032_f2edb868",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 7
@@ -64,6 +118,24 @@
       "writtenOn": "2020-01-29T14:40:09Z",
       "side": 1,
       "message": "The default behavior is to set the port admin state to enabled irrespective of the operational state",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e65497e_eebd8b43",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1259,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "Updated the code to set the port admin state to enable irrespective of the operational state.",
+      "parentUuid": "83d5f032_f2edb868",
       "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "bbbf2e10_65b035d3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1398,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "Updated the code as per the comment.",
+      "parentUuid": "2b650368_15d08c92",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "350b8b2d_c51ad384",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 7
@@ -98,6 +188,24 @@
       "writtenOn": "2020-01-29T14:40:09Z",
       "side": 1,
       "message": "If the port is already enabled, why updating the device data and sending the request to the adapters?",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f29b0ce4_3aea69bd",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1432,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "updated the code as per the comment.",
+      "parentUuid": "350b8b2d_c51ad384",
       "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "0a431d4c_03b722b7",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The port admin state is not changed in this method,The adminstate is a local variable",
+      "parentUuid": "c2130acf_5454cc32",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67b957a9_fca31c88",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 7
@@ -132,6 +258,24 @@
       "writtenOn": "2020-01-29T14:40:09Z",
       "side": 1,
       "message": "You need to try out a disable/enable on a non-PON port to ensure the correct error is received.",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "774122e5_187e03a0",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The disable of a non-PON port test is added.",
+      "parentUuid": "67b957a9_fca31c88",
       "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "99386743_70e9e5ae",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The code is modified as expected.",
+      "parentUuid": "ceef55de_c8caf5f2",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cdde2016_9814b88c",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 7
@@ -172,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "c1bff418_5c8b57ea",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The mock adapter invokes the core rpc that changes the operation state of the port, so the check for operation state is added.",
+      "parentUuid": "cdde2016_9814b88c",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a95f4f24_55881223",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 7
@@ -183,6 +363,24 @@
       "writtenOn": "2020-01-29T14:40:09Z",
       "side": 1,
       "message": "Same comment as above",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53264d91_8a46b7d6",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-01-30T00:20:45Z",
+      "side": 1,
+      "message": "The mock adapter invokes the core rpc that changes the operation state of the port, so the check for operation state is added.",
+      "parentUuid": "a95f4f24_55881223",
       "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
