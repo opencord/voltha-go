@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7e2c0dd9_6151cc8b",
+        "filename": "db/model/utils_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-01-31T10:30:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d8530c4_d90d5bb0",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 77
+      },
+      "revId": "48ceeebadb960855b43e7a87cf88079443e1e0ce",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25c30abd_bb503687",
         "filename": "db/model/utils_test.go",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "d0a93d30_8b693163",
+        "filename": "db/model/utils_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-01-31T10:30:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25c30abd_bb503687",
+      "range": {
+        "startLine": 122,
+        "startChar": 57,
+        "endLine": 122,
+        "endChar": 62
+      },
+      "revId": "48ceeebadb960855b43e7a87cf88079443e1e0ce",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "28cc8ec2_73fecf94",
         "filename": "db/model/utils_test.go",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2020-01-31T10:06:16Z",
       "side": 1,
       "message": "same applies here for the value back from the device",
+      "range": {
+        "startLine": 123,
+        "startChar": 18,
+        "endLine": 123,
+        "endChar": 23
+      },
+      "revId": "48ceeebadb960855b43e7a87cf88079443e1e0ce",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cc61784_1e9703ec",
+        "filename": "db/model/utils_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-01-31T10:30:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28cc8ec2_73fecf94",
       "range": {
         "startLine": 123,
         "startChar": 18,
