@@ -16,6 +16,24 @@
       "revId": "5dda67ba6a5639fbb973d997df3a21df33d76491",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77d9edb3_bd7eaa4b",
+        "filename": "rw_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-01-31T13:26:05Z",
+      "side": 1,
+      "message": "To clarify, which of these would resolve the issue:\n\n1. StringToInt output an error log message if passed an unsupported string.  I\u0027d also exit the whole process on misconfiguration (\"fail fast\"), but that\u0027s debatable.\n\n2. StringToInt should return a tuple that includes an err value which is handled by the caller\n\n(I\u0027d prefer #1)",
+      "parentUuid": "9a6bc5a1_44d58e70",
+      "revId": "5dda67ba6a5639fbb973d997df3a21df33d76491",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
