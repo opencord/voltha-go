@@ -189,6 +189,8 @@ func (dMgr *DeviceManager) enableDevice(ctx context.Context, id *voltha.ID, ch c
 	if agent := dMgr.getDeviceAgent(id.Id); agent != nil {
 		res = agent.enableDevice(ctx)
 		log.Debugw("EnableDevice-result", log.Fields{"result": res})
+	} else {
+		res = status.Errorf(codes.NotFound, "%s", id.Id)
 	}
 
 	sendResponse(ctx, ch, res)
