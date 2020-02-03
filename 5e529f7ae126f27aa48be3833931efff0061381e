@@ -420,6 +420,24 @@
       "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecbabb21_41c5cdb7",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-03T11:32:42Z",
+      "side": 1,
+      "message": "The comment is addressed.",
+      "parentUuid": "5dfbf28a_0fbadfa7",
+      "revId": "5e529f7ae126f27aa48be3833931efff0061381e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
