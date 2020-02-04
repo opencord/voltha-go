@@ -705,22 +705,16 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 		log.Debugw("device-already-in-deleted-state", log.Fields{"id": agent.deviceID})
 		return nil
 	}
-	if (cloned.AdminState != voltha.AdminState_DISABLED) &&
-		(cloned.AdminState != voltha.AdminState_PREPROVISIONED) {
-		log.Debugw("device-not-disabled", log.Fields{"id": agent.deviceID})
-		//TODO:  Needs customized error message
-		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceID, voltha.AdminState_DISABLED)
-	}
 	if cloned.AdminState != voltha.AdminState_PREPROVISIONED {
-		// Send the request to an Adapter only if the device is not in poreporovision state and wait for a response
 		if err := agent.adapterProxy.DeleteDevice(ctx, cloned); err != nil {
 			log.Debugw("deleteDevice-error", log.Fields{"id": agent.deviceID, "error": err})
 			return err
 		}
 	}
-	//	Set the state to deleted after we receive an Ack - this will trigger some background process to clean up
-	//	the device as well as its association with the logical device
+	//Set the state to deleted - this will trigger some background process to invoke parent adapter to delete child
+	//device and clean up the device as well as its association with the logical device
 	cloned.AdminState = voltha.AdminState_DELETED
+
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, ""); err != nil {
 		return err
 	}
@@ -1439,4 +1433,18 @@ func (agent *DeviceAgent) enablePort(ctx context.Context, Port *voltha.Port) err
 		return err
 	}
 	return nil
+}
+
+func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {
+
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("ChildDeviceLost", log.Fields{"id": device.Id})
+
+	if err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId); err != nil {
+		log.Debugw("childDeviceLost-error", log.Fields{"id": device.Id, "error": err})
+		return err
+	}
+	return nil
+
 }

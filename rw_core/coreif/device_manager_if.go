@@ -38,4 +38,5 @@ type DeviceManager interface {
 	DeleteLogicalPorts(context.Context, *voltha.Device) error
 	DeleteAllChildDevices(context.Context, *voltha.Device) error
 	RunPostDeviceDelete(context.Context, *voltha.Device) error
+	ChildDeviceLost(context.Context, *voltha.Device) error
 }
