@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -60,7 +61,11 @@ func (ep *EventProxy) formatId(eventName string) string {
 	return fmt.Sprintf("Voltha.openolt.%s.%s", eventName, strconv.FormatInt(time.Now().UnixNano(), 10))
 }
 
-func (ep *EventProxy) getEventHeader(eventName string, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, eventType adapterif.EventType, raisedTs int64) *voltha.EventHeader {
+func (ep *EventProxy) getEventHeader(eventName string,
+	category adapterif.EventCategory,
+	subCategory adapterif.EventSubCategory,
+	eventType adapterif.EventType,
+	raisedTs int64) (*voltha.EventHeader, error) {
 	var header voltha.EventHeader
 	if strings.Contains(eventName, "_") {
 		eventName = strings.Join(strings.Split(eventName, "_")[:len(strings.Split(eventName, "_"))-2], "_")
@@ -73,9 +78,21 @@ func (ep *EventProxy) getEventHeader(eventName string, category adapterif.EventC
 	header.SubCategory = subCategory
 	header.Type = eventType
 	header.TypeVersion = adapterif.EventTypeVersion
-	header.RaisedTs = float32(raisedTs)
-	header.ReportedTs = float32(time.Now().UnixNano())
-	return &header
+
+	// raisedTs is in nanoseconds
+	timestamp, err := ptypes.TimestampProto(time.Unix(0, raisedTs))
+	if err != nil {
+		return nil, err
+	}
+	header.RaisedTs = timestamp
+
+	timestamp, err = ptypes.TimestampProto(time.Now())
+	if err != nil {
+		return nil, err
+	}
+	header.ReportedTs = timestamp
+
+	return &header, nil
 }
 
 /* Send out device events*/
@@ -86,8 +103,11 @@ func (ep *EventProxy) SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category 
 	}
 	var event voltha.Event
 	var de voltha.Event_DeviceEvent
+	var err error
 	de.DeviceEvent = deviceEvent
-	event.Header = ep.getEventHeader(deviceEvent.DeviceEventName, category, subCategory, voltha.EventType_DEVICE_EVENT, raisedTs)
+	if event.Header, err = ep.getEventHeader(deviceEvent.DeviceEventName, category, subCategory, voltha.EventType_DEVICE_EVENT, raisedTs); err != nil {
+		return err
+	}
 	event.EventType = &de
 	if err := ep.sendEvent(&event); err != nil {
 		logger.Errorw("Failed to send device event to KAFKA bus", log.Fields{"device-event": deviceEvent})
@@ -110,8 +130,11 @@ func (ep *EventProxy) SendKpiEvent(id string, kpiEvent *voltha.KpiEvent2, catego
 	}
 	var event voltha.Event
 	var de voltha.Event_KpiEvent2
+	var err error
 	de.KpiEvent2 = kpiEvent
-	event.Header = ep.getEventHeader(id, category, subCategory, voltha.EventType_KPI_EVENT2, raisedTs)
+	if event.Header, err = ep.getEventHeader(id, category, subCategory, voltha.EventType_KPI_EVENT2, raisedTs); err != nil {
+		return err
+	}
 	event.EventType = &de
 	if err := ep.sendEvent(&event); err != nil {
 		logger.Errorw("Failed to send kpi event to KAFKA bus", log.Fields{"device-event": kpiEvent})
