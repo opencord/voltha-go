@@ -612,3 +612,34 @@ func (ap *AdapterProxy) enablePort(ctx context.Context, device *voltha.Device, p
 	log.Debugw("enablePort-response", log.Fields{"device-id": device.Id, "port-no": port.PortNo, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
+
+// ChildDeviceLost invokes Child device_lost rpc
+func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, pDeviceID string, pPortNo uint32, onuID uint32) error {
+	log.Debugw("ChildDeviceLost", log.Fields{"pDeviceId": pDeviceID, "pPortNo": pPortNo, "onuID": onuID})
+	rpc := "child_device_lost"
+	toTopic := ap.getAdapterTopic(deviceType)
+	dID := &ic.StrType{Val: pDeviceID}
+	PortNo := &ic.IntType{Val: int64(pPortNo)}
+	oID := &ic.IntType{Val: int64(onuID)}
+
+	args := make([]*kafka.KVArg, 3)
+	args[0] = &kafka.KVArg{
+		Key:   "pDeviceId",
+		Value: dID,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "pPortNo",
+		Value: PortNo,
+	}
+	args[2] = &kafka.KVArg{
+		Key:   "onuID",
+		Value: oID,
+	}
+
+	// Use a device specific topic as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, pDeviceID, args...)
+	log.Debugw("ChildDeviceLost-response", log.Fields{"pDeviceId": pDeviceID, "success": success})
+
+	return unPackResponse(rpc, pDeviceID, success, result)
+}

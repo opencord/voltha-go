@@ -249,3 +249,7 @@ func (ta *Adapter) Enable_port(deviceId string, port *voltha.Port) error { //nol
 func (ta *Adapter) Disable_port(deviceId string, port *voltha.Port) error { //nolint
 	return nil
 }
+
+func (ta *Adapter) Child_device_lost(pDeviceID string, pPortNo uint32, onuID uint32) error {
+	return nil
+}
