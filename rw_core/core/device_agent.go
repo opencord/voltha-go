@@ -700,18 +700,25 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 	defer agent.lockDevice.Unlock()
 	log.Debugw("deleteDevice", log.Fields{"id": agent.deviceID})
 
+	var parentDevice *voltha.Device
 	cloned := agent.getDeviceWithoutLock()
 	if cloned.AdminState == voltha.AdminState_DELETED {
 		log.Debugw("device-already-in-deleted-state", log.Fields{"id": agent.deviceID})
 		return nil
 	}
-	if (cloned.AdminState != voltha.AdminState_DISABLED) &&
-		(cloned.AdminState != voltha.AdminState_PREPROVISIONED) {
-		log.Debugw("device-not-disabled", log.Fields{"id": agent.deviceID})
-		//TODO:  Needs customized error message
-		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceID, voltha.AdminState_DISABLED)
-	}
 	if cloned.AdminState != voltha.AdminState_PREPROVISIONED {
+
+		// if this is a child device, send the request to parent adapter to delete child device and all its references
+		if !cloned.Root {
+			parentDevice = agent.deviceMgr.getParentDevice(ctx,cloned)
+			agent.deviceType = parentDevice.Adapter
+			if parentAgent := agent.deviceMgr.getDeviceAgent(ctx,parentDevice.Id); parentAgent != nil {
+				if err := parentAgent.adapterProxy.DeleteChildDevice(ctx, agent.deviceType, parentDevice.Id, cloned); err != nil {
+					log.Warnw("Delete-child-device-error", log.Fields{"id": agent.deviceID, "error": err})
+					return err
+				}
+			}
+		}
 		// Send the request to an Adapter only if the device is not in poreporovision state and wait for a response
 		if err := agent.adapterProxy.DeleteDevice(ctx, cloned); err != nil {
 			log.Debugw("deleteDevice-error", log.Fields{"id": agent.deviceID, "error": err})
