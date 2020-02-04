@@ -564,3 +564,26 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 	log.Debugw("SimulateAlarm-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
 	return unPackResponse(rpc, device.Id, success, result)
 }
+
+// DeleteChildDevice invokes delete child device rpc
+func (ap *AdapterProxy) DeleteChildDevice(ctx context.Context, deviceType string, pDeviceId string, device *voltha.Device) error {
+	log.Debugw("DeleteChildDevice", log.Fields{"deviceId": device.Id, "pDeviceId": pDeviceId})
+	rpc := "Delete_child_device"
+	toTopic := ap.getAdapterTopic(deviceType)
+	dID := &ic.StrType{Val: pDeviceId}
+	args := make([]*kafka.KVArg, 2)
+	args[0] = &kafka.KVArg{
+		Key:   "pDeviceId",
+		Value: dID,
+	}
+	args[1] = &kafka.KVArg{
+		Key:   "device",
+		Value: device,
+	}
+	// Use a device specific topic as we are the only core handling requests for this device
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("DeleteChildDevice-response", log.Fields{"deviceid": device.Id, "success": success})
+
+	return unPackResponse(rpc, device.Id, success, result)
+}
