@@ -249,3 +249,8 @@ func (ta *Adapter) Enable_port(deviceId string, port *voltha.Port) error { //nol
 func (ta *Adapter) Disable_port(deviceId string, port *voltha.Port) error { //nolint
 	return nil
 }
+
+// DeleteChildDevice -
+func (ta *Adapter) Child_device_lost(deviceID string, cDevice *voltha.Device) error {
+	return nil
+}

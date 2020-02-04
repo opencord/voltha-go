@@ -256,3 +256,8 @@ func (oltA *OLTAdapter) Disable_port(deviceId string, Port *voltha.Port) error {
 	}()
 	return nil
 }
+
+// Child_device_lost deletes ONU and its references
+func (oltA *OLTAdapter) Child_device_lost(deviceID string, device *voltha.Device) error { // nolint
+	return nil
+}
