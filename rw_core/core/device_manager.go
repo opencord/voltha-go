@@ -1509,3 +1509,13 @@ func (dMgr *DeviceManager) disablePort(ctx context.Context, port *voltha.Port, c
 
 	sendResponse(ctx, ch, res)
 }
+
+// ChildDeviceLost  calls parent adapter to delete child device and all its references
+func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, cDevice *voltha.Device) error {
+	log.Debugw("ChildDeviceLost", log.Fields{"deviceid": cDevice.Id})
+	parentDevice := dMgr.getParentDevice(ctx, cDevice)
+	if parentAgent := dMgr.getDeviceAgent(ctx, parentDevice.Id); parentAgent != nil {
+		return parentAgent.ChildDeviceLost(ctx, cDevice)
+	}
+	return status.Errorf(codes.NotFound, "%s", cDevice.Id)
+}
