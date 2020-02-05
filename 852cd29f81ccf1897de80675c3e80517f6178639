@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8791175b_f92bc11d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-05T15:18:45Z",
+      "side": 1,
+      "message": "Action on the parent device should be handled by the state machine transition.",
+      "revId": "852cd29f81ccf1897de80675c3e80517f6178639",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
