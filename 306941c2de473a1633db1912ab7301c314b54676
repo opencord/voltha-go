@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "122ad587_f9dd4c7f",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-05T05:22:17Z",
+      "side": 1,
+      "message": "i think state should be a typed value as opposed to a string, i.e. \ntype PortState int\nconst PortStateEnabled \u003d PortState(iota)\n...",
+      "range": {
+        "startLine": 577,
+        "startChar": 103,
+        "endLine": 577,
+        "endChar": 115
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab5b7c23_fdf3b3fa",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 579,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-05T05:22:17Z",
+      "side": 1,
+      "message": "even it state isn\u0027t a typed values, which it should be, the rpc is assigned a string value without checking to see if the value is valid. i understand that this is an package method, but this is still risky. again, best option, imo is for this to be a typed value.",
+      "range": {
+        "startLine": 579,
+        "startChar": 1,
+        "endLine": 579,
+        "endChar": 13
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0734119_25263e1d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-05T05:22:17Z",
+      "side": 1,
+      "message": "to be consistent with other parts of code this should be `device-id` everywhere this is logged. also portNo should be port-no or just port",
+      "range": {
+        "startLine": 1377,
+        "startChar": 39,
+        "endLine": 1377,
+        "endChar": 47
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6771e77e_d5fe53e4",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-05T05:22:17Z",
+      "side": 1,
+      "message": "device-id, this needs to be consistent across entire patchset, so i won\u0027t repeat it everywhere.",
+      "range": {
+        "startLine": 1394,
+        "startChar": 66,
+        "endLine": 1394,
+        "endChar": 68
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
