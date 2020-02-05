@@ -91,6 +91,74 @@
       "revId": "306941c2de473a1633db1912ab7301c314b54676",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0861dfdb_b49857ef",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-05T20:24:56Z",
+      "side": 1,
+      "message": "When returning error, it is safe to just `return nil, err`\n\n\u0026empty.Empty{} is only needed when returning non-err.",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91a7c1d7_4aa33f7e",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-05T20:24:56Z",
+      "side": 1,
+      "message": "Passing ctx should handle cancellation; is it necessary to run this in a separate thread?",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88f115df_1c419786",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-05T20:24:56Z",
+      "side": 1,
+      "message": "should not use nolint, fix the lint issue",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "438d498b_2fabf310",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-05T20:24:56Z",
+      "side": 1,
+      "message": "should not use nolint, fix the lint issue",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
