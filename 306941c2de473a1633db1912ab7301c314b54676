@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3ddd5a14_c7de30da",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "The comment is addressed",
+      "parentUuid": "122ad587_f9dd4c7f",
+      "range": {
+        "startLine": 577,
+        "startChar": 103,
+        "endLine": 577,
+        "endChar": 115
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab5b7c23_fdf3b3fa",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 14
@@ -36,6 +60,30 @@
       "writtenOn": "2020-02-05T05:22:17Z",
       "side": 1,
       "message": "even it state isn\u0027t a typed values, which it should be, the rpc is assigned a string value without checking to see if the value is valid. i understand that this is an package method, but this is still risky. again, best option, imo is for this to be a typed value.",
+      "range": {
+        "startLine": 579,
+        "startChar": 1,
+        "endLine": 579,
+        "endChar": 13
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b525b8b5_ce1a112a",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 579,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "The comment is addressed",
+      "parentUuid": "ab5b7c23_fdf3b3fa",
       "range": {
         "startLine": 579,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9237d710_1d0fc472",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "The comment is addressed",
+      "parentUuid": "b0734119_25263e1d",
+      "range": {
+        "startLine": 1377,
+        "startChar": 39,
+        "endLine": 1377,
+        "endChar": 47
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6771e77e_d5fe53e4",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 14
@@ -82,6 +154,30 @@
       "writtenOn": "2020-02-05T05:22:17Z",
       "side": 1,
       "message": "device-id, this needs to be consistent across entire patchset, so i won\u0027t repeat it everywhere.",
+      "range": {
+        "startLine": 1394,
+        "startChar": 66,
+        "endLine": 1394,
+        "endChar": 68
+      },
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d7f1ec8_aaf10b43",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "The comment is addressed",
+      "parentUuid": "6771e77e_d5fe53e4",
       "range": {
         "startLine": 1394,
         "startChar": 66,
@@ -111,6 +207,24 @@
     },
     {
       "key": {
+        "uuid": "488b86e3_f5f28812",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "The comment is addressed.",
+      "parentUuid": "0861dfdb_b49857ef",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91a7c1d7_4aa33f7e",
         "filename": "rw_core/core/grpc_nbi_api_handler.go",
         "patchSetId": 14
@@ -122,6 +236,24 @@
       "writtenOn": "2020-02-05T20:24:56Z",
       "side": 1,
       "message": "Passing ctx should handle cancellation; is it necessary to run this in a separate thread?",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af1e4163_e08a8f51",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "i followed the same approach like in other functions to run in separate thread, regarding the handling of cancellation\ncan you please elaborate a little because i am not understanding what is the proposed change requested.",
+      "parentUuid": "91a7c1d7_4aa33f7e",
       "revId": "306941c2de473a1633db1912ab7301c314b54676",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -145,6 +277,24 @@
     },
     {
       "key": {
+        "uuid": "76dab21b_9c7fedb7",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "The lint complains about the function signature should not have underscores, but the actual implementation of this function is in adapter, and the core is forced to use same signature to mock the adapter function,so the function signature cannot be changed at core, so \"nolint\" is used in line with the other mock functions.",
+      "parentUuid": "88f115df_1c419786",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "438d498b_2fabf310",
         "filename": "rw_core/mocks/adapter.go",
         "patchSetId": 14
@@ -156,6 +306,24 @@
       "writtenOn": "2020-02-05T20:24:56Z",
       "side": 1,
       "message": "should not use nolint, fix the lint issue",
+      "revId": "306941c2de473a1633db1912ab7301c314b54676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86ebee14_830ac649",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-06T09:51:22Z",
+      "side": 1,
+      "message": "Same as above reply",
+      "parentUuid": "438d498b_2fabf310",
       "revId": "306941c2de473a1633db1912ab7301c314b54676",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
