@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "83d43637_311f8349",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-06T17:49:41Z",
+      "side": 1,
+      "message": "It would have been simpler to have two different functions for enable and disable.  Or instead of passing state, pass in the rpc name to invoke.",
+      "revId": "486efe1f245b3c0838902959d6f51e8a92f60625",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5c7b6c6_63b815a1",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 18
@@ -42,6 +59,40 @@
         "endLine": 1414,
         "endChar": 67
       },
+      "revId": "486efe1f245b3c0838902959d6f51e8a92f60625",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33c7b128_16fd1c00",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-06T17:49:41Z",
+      "side": 1,
+      "message": "Admin state should not be changed.",
+      "revId": "486efe1f245b3c0838902959d6f51e8a92f60625",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4b15db1_0ea7442e",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-06T17:49:41Z",
+      "side": 1,
+      "message": "This function will need to change to trigger port change events based on oper status, not admin status.",
       "revId": "486efe1f245b3c0838902959d6f51e8a92f60625",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
