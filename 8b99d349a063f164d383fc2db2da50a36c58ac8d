@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45099f89_87624c1c",
+        "filename": "rw_core/main.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-02-06T18:51:07Z",
+      "side": 1,
+      "message": "Since log.StringToInt is now returning an error, I would suggest checking that error instead. Also, I think it\u0027s acceptable to panic if the program is given an incorrect argument. Better to fail loudly than to accept invalid input.",
+      "range": {
+        "startLine": 237,
+        "startChar": 1,
+        "endLine": 237,
+        "endChar": 20
+      },
+      "revId": "8b99d349a063f164d383fc2db2da50a36c58ac8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
