@@ -22,6 +22,30 @@
       "revId": "467fe7536d85d096354b60fa49346f20a9e6f7f7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "453a8cce_bdad077b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2020-02-07T09:33:51Z",
+      "side": 0,
+      "message": "when the OLT comes up, the admin state of all the ports are \"enabled\" by default irrespective of the operational status,\nThe \"updatePortState\" is invoked by an southbound event and since it is invoked from south bound only the operational status is updated in this method, the admin state should reflect the operators intended state and hence it is not updated in this method.",
+      "parentUuid": "6541e3db_767e990f",
+      "range": {
+        "startLine": 1211,
+        "startChar": 0,
+        "endLine": 1216,
+        "endChar": 8
+      },
+      "revId": "467fe7536d85d096354b60fa49346f20a9e6f7f7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
