@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6541e3db_767e990f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-02-07T09:04:14Z",
+      "side": 0,
+      "message": "this is a breaking API from the workflow perspective. it means that the ports do not come in as enabled immediately but the NB needs to enable them one by one. My suggestion would be not to include this change in this patch, leave the behaviour as is (meaning port active and enabled) and then provide a subsequent patchiest with this change and a companion to that for the tests to make sure they explicitly enable the ports.",
+      "range": {
+        "startLine": 1211,
+        "startChar": 0,
+        "endLine": 1216,
+        "endChar": 8
+      },
+      "revId": "467fe7536d85d096354b60fa49346f20a9e6f7f7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
