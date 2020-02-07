@@ -46,6 +46,30 @@
       "revId": "467fe7536d85d096354b60fa49346f20a9e6f7f7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d6722a9_f8344517",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-02-07T09:35:57Z",
+      "side": 0,
+      "message": "I see, thanks for the clarification.",
+      "parentUuid": "453a8cce_bdad077b",
+      "range": {
+        "startLine": 1211,
+        "startChar": 0,
+        "endLine": 1216,
+        "endChar": 8
+      },
+      "revId": "467fe7536d85d096354b60fa49346f20a9e6f7f7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
