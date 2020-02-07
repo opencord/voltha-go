@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d7853a5_cccdb374",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-07T15:13:23Z",
+      "side": 1,
+      "message": "why //nolint? always scares me",
+      "range": {
+        "startLine": 244,
+        "startChar": 75,
+        "endLine": 244,
+        "endChar": 83
+      },
+      "revId": "bc2d162003d5027cc39bd444dfe4e64e3cb5aadc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
