@@ -223,7 +223,7 @@ func main() {
 	} else {
 		log.Fatal("HOSTNAME not set")
 	}
-
+	realMain()
 	//Setup default logger - applies for packages that do not have specific logger set
 	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": instanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
