@@ -70,7 +70,7 @@ help:
 	@echo "build                : Build the docker images."
 	@echo "                         - If this is the first time you are building, choose 'make build' option."
 	@echo "rw_core              : Build the rw_core docker image"
-        @echo "docker-build-profile : Build the rw_core_docker image with profiling enabled"
+	@echo "docker-build-profile : Build the rw_core_docker image with profiling enabled"
 	@echo "rw_core_profile      : Build the rw_core docker image with profiling enabled"
 	@echo "clean                : Remove files created by the build and tests"
 	@echo "distclean            : Remove sca directory and clean"
