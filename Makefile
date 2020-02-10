@@ -70,6 +70,8 @@ help:
 	@echo "build                : Build the docker images."
 	@echo "                         - If this is the first time you are building, choose 'make build' option."
 	@echo "rw_core              : Build the rw_core docker image"
+	@echo "docker-build-profile : Build the rw_core_docker image with profiling enabled"
+	@echo "rw_core_profile      : Build the rw_core docker image with profiling enabled"
 	@echo "clean                : Remove files created by the build and tests"
 	@echo "distclean            : Remove sca directory and clean"
 	@echo "docker-push          : Push the docker images to an external repository"
@@ -101,9 +103,13 @@ endif
 build: docker-build
 
 docker-build: rw_core
+docker-build-profile: rw_core_profile
 
 rw_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -t ${RWCORE_IMAGENAME}:latest -f docker/Dockerfile.rw_core .
+
+rw_core_profile: local-protos local-lib-go
+	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -t ${RWCORE_IMAGENAME}:latest-profile -f docker/Dockerfile.rw_core_profile .
 
 docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
