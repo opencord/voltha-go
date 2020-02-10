@@ -1,0 +1,93 @@
+# Copyright 2016 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# -------------
+# Build stage
+
+FROM golang:1.12-alpine3.9 AS build-env
+
+# Install required packages
+RUN apk add --no-cache \
+	wget=1.20.3-r0 \
+	git=2.20.2-r0 \
+	make=4.2.1-r2 \
+	build-base=0.5-r1 \
+	protobuf=3.6.1-r1 \
+	protobuf-dev=3.6.1-r1
+
+# Golang container has GOPATH set to /go by default. Hence, need to explicitly enable
+# Go modules while using folder /go/src under GOPATH as build path; lest go modules
+# will be disabled
+ENV GO111MODULE=on
+
+# Use Standard go build directory structure
+WORKDIR /go/src
+
+# Copy common files.
+COPY common ./common
+COPY db ./db
+COPY vendor ./vendor
+
+# Copy files
+COPY rw_core ./rw_core
+COPY go.mod ./
+COPY go.sum ./
+
+ARG org_label_schema_version=unknown
+ARG org_label_schema_vcs_url=unknown
+ARG org_label_schema_vcs_ref=unknown
+ARG org_label_schema_build_date=unknown
+ARG org_opencord_vcs_commit_date=unknown
+ARG org_opencord_vcs_dirty=unknown
+
+# Build
+WORKDIR /go/src/rw_core
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+RUN go build -tags profile -mod=vendor -o /go/bin/rw_core \
+	-ldflags \
+	"-X github.com/opencord/voltha-lib-go/v3/pkg/version.version=$org_label_schema_version \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.vcsRef=$org_label_schema_vcs_ref  \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.vcsDirty=$org_opencord_vcs_dirty \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.goVersion=$(go version 2>&1 | sed -E  's/.*go([0-9]+\.[0-9]+\.[0-9]+).*/\1/g') \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.os=$(go env GOHOSTOS) \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.arch=$(go env GOHOSTARCH) \
+	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.buildTime=$org_label_schema_build_date"
+
+# -------------
+# Image creation stage
+
+FROM alpine:3.9.4
+
+# Set the working directory
+WORKDIR /app
+
+# Copy required files
+COPY --from=build-env /go/bin/rw_core /app/
+
+# Label image
+ARG org_label_schema_version=unknown
+ARG org_label_schema_vcs_url=unknown
+ARG org_label_schema_vcs_ref=unknown
+ARG org_label_schema_build_date=unknown
+ARG org_opencord_vcs_commit_date=unknown
+ARG org_opencord_vcs_dirty=unknown
+
+LABEL org.label-schema.schema-version=1.0 \
+      org.label-schema.name=voltha-rw-core \
+      org.label-schema.version=$org_label_schema_version \
+      org.label-schema.vcs-url=$org_label_schema_vcs_url \
+      org.label-schema.vcs-ref=$org_label_schema_vcs_ref \
+      org.label-schema.build-date=$org_label_schema_build_date \
+      org.opencord.vcs-commit-date=$org_opencord_vcs_commit_date \
+      org.opencord.vcs-dirty=$org_opencord_vcs_dirty
