@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "300fbb86_b8cc4936",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-13T15:49:56Z",
+      "side": 1,
+      "message": "Can just use cDevice.ParentId directly.",
+      "range": {
+        "startLine": 1517,
+        "startChar": 44,
+        "endLine": 1517,
+        "endChar": 59
+      },
+      "revId": "2bc22fc90aa18d52a91b37cbaa9586fcc097c851",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
