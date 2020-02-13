@@ -21,15 +21,16 @@
 package coreif
 
 import (
-	"github.com/opencord/voltha-go/rw_core/graph"
+	"context"
+	"github.com/opencord/voltha-go/rw_core/route"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 // LogicalDeviceAgent represents a generic agent
 type LogicalDeviceAgent interface {
 	GetLogicalDevice() *voltha.LogicalDevice
-	GetDeviceGraph() *graph.DeviceGraph
+	GetDeviceRoutes() *route.DeviceRoutes
 	GetWildcardInputPorts(excludePort ...uint32) []uint32
-	GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop
+	GetRoute(ctx context.Context, ingressPortNo uint32, egressPortNo uint32) ([]route.Hop, error)
 	GetNNIPorts() []uint32
 }
