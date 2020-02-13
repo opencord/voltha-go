@@ -18,13 +18,15 @@ package flowdecomposition
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-go/rw_core/graph"
 	"github.com/opencord/voltha-go/rw_core/mocks"
+	"github.com/opencord/voltha-go/rw_core/route"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"testing"
 )
@@ -116,9 +118,9 @@ func (tdm *testDeviceManager) IsRootDevice(deviceID string) (bool, error) {
 type testFlowDecomposer struct {
 	dMgr           *testDeviceManager
 	logicalPorts   map[uint32]*voltha.LogicalPort
-	routes         map[graph.OFPortLink][]graph.RouteHop
+	routes         map[route.OFPortLink][]route.Hop
 	defaultRules   *fu.DeviceRules
-	deviceGraph    *graph.DeviceGraph
+	deviceRoutes   *route.DeviceRoutes
 	fd             *FlowDecomposer
 	logicalPortsNo map[uint32]bool
 }
@@ -141,11 +143,11 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	tfd.logicalPortsNo[10] = false
 	tfd.logicalPortsNo[65536] = true // nni
 
-	tfd.routes = make(map[graph.OFPortLink][]graph.RouteHop)
+	tfd.routes = make(map[route.OFPortLink][]route.Hop)
 
 	//DOWNSTREAM ROUTES
 
-	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 1}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 1}] = []route.Hop{
 		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -158,7 +160,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 		},
 	}
 
-	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 2}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 2}] = []route.Hop{
 		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -170,7 +172,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["onu2"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 3}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 3}] = []route.Hop{
 		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -182,7 +184,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["onu3"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 4}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 4}] = []route.Hop{
 		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -194,7 +196,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["onu4"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 10}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -209,7 +211,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 
 	//UPSTREAM DATA PLANE
 
-	tfd.routes[graph.OFPortLink{Ingress: 1, Egress: 10}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 1, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu1",
 			Ingress:  tfd.dMgr.devices["onu1"].Ports[1].PortNo,
@@ -221,7 +223,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 2, Egress: 10}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 2, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu2",
 			Ingress:  tfd.dMgr.devices["onu2"].Ports[1].PortNo,
@@ -233,7 +235,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 3, Egress: 10}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 3, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu3",
 			Ingress:  tfd.dMgr.devices["onu3"].Ports[1].PortNo,
@@ -245,7 +247,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 4, Egress: 10}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 4, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu4",
 			Ingress:  tfd.dMgr.devices["onu4"].Ports[1].PortNo,
@@ -261,7 +263,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	//UPSTREAM NEXT TABLE BASED
 
 	// openflow port 0 means absence of a port - go/protobuf interpretation
-	tfd.routes[graph.OFPortLink{Ingress: 1, Egress: 0}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 1, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu1",
 			Ingress:  tfd.dMgr.devices["onu1"].Ports[1].PortNo,
@@ -273,7 +275,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 2, Egress: 0}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 2, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu2",
 			Ingress:  tfd.dMgr.devices["onu2"].Ports[1].PortNo,
@@ -285,7 +287,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 3, Egress: 0}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 3, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu3",
 			Ingress:  tfd.dMgr.devices["onu3"].Ports[1].PortNo,
@@ -297,7 +299,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
 		},
 	}
-	tfd.routes[graph.OFPortLink{Ingress: 4, Egress: 0}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 4, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu4",
 			Ingress:  tfd.dMgr.devices["onu4"].Ports[1].PortNo,
@@ -312,7 +314,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 
 	// DOWNSTREAM NEXT TABLE BASED
 
-	tfd.routes[graph.OFPortLink{Ingress: 10, Egress: 0}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "olt",
 			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
@@ -321,7 +323,7 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 		{}, // 2nd hop is not known yet
 	}
 
-	tfd.routes[graph.OFPortLink{Ingress: 0, Egress: 10}] = []graph.RouteHop{
+	tfd.routes[route.OFPortLink{Ingress: 0, Egress: 10}] = []route.Hop{
 		{}, // 1st hop is wildcard
 		{
 			DeviceID: "olt",
@@ -390,9 +392,9 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 	tfd.defaultRules.AddFlowsAndGroup("onu4", fg)
 
 	//Set up the device graph - flow decomposer uses it only to verify whether a port is a root port.
-	tfd.deviceGraph = graph.NewDeviceGraph("ldid", tfd.getDeviceHelper)
-	tfd.deviceGraph.RootPorts = make(map[uint32]uint32)
-	tfd.deviceGraph.RootPorts[10] = 10
+	tfd.deviceRoutes = route.NewDeviceRoutes("ldid", tfd.getDeviceHelper)
+	tfd.deviceRoutes.RootPorts = make(map[uint32]uint32)
+	tfd.deviceRoutes.RootPorts[10] = 10
 
 	tfd.fd = NewFlowDecomposer(tfd.dMgr)
 
@@ -411,8 +413,8 @@ func (tfd *testFlowDecomposer) GetLogicalDevice() *voltha.LogicalDevice {
 	return nil
 }
 
-func (tfd *testFlowDecomposer) GetDeviceGraph() *graph.DeviceGraph {
-	return tfd.deviceGraph
+func (tfd *testFlowDecomposer) GetDeviceRoutes() *route.DeviceRoutes {
+	return tfd.deviceRoutes
 }
 
 func (tfd *testFlowDecomposer) GetAllDefaultRules() *fu.DeviceRules {
@@ -433,8 +435,8 @@ func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort ...uint32) []ui
 	return lPorts
 }
 
-func (tfd *testFlowDecomposer) GetRoute(ingressPortNo uint32, egressPortNo uint32) []graph.RouteHop {
-	var portLink graph.OFPortLink
+func (tfd *testFlowDecomposer) GetRoute(ctx context.Context, ingressPortNo uint32, egressPortNo uint32) ([]route.Hop, error) {
+	var portLink route.OFPortLink
 	if egressPortNo == 0 {
 		portLink.Egress = 0
 	} else if egressPortNo&0x7fffffff == uint32(ofp.OfpPortNo_OFPP_CONTROLLER) {
@@ -449,10 +451,10 @@ func (tfd *testFlowDecomposer) GetRoute(ingressPortNo uint32, egressPortNo uint3
 	}
 	for key, val := range tfd.routes {
 		if key.Ingress == portLink.Ingress && key.Egress == portLink.Egress {
-			return val
+			return val, nil
 		}
 	}
-	return nil
+	return nil, status.Errorf(codes.FailedPrecondition, "no route from:%d to:%d", ingressPortNo, egressPortNo)
 }
 
 func (tfd *testFlowDecomposer) GetNNIPorts() []uint32 {
@@ -484,7 +486,8 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -546,7 +549,8 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -607,7 +611,8 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -668,7 +673,8 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -732,7 +738,8 @@ func TestLldpReRouteRuleDecomposition(t *testing.T) {
 	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Nil(t, onu1FlowAndGroup)
@@ -794,7 +801,8 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.NotNil(t, onu1FlowAndGroup)
@@ -896,8 +904,8 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
-
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, onu1FlowAndGroup.Flows.Len())
@@ -983,7 +991,8 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 	groups := ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{fu.MkGroupStat(ga)}}
 	tfd := newTestFlowDecomposer(newTestDeviceManager())
 
-	deviceRules := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	assert.Nil(t, err)
 	oltFlowAndGroup := deviceRules.Rules["olt"]
 	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
 	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
