@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cfc1ca5_3532361f",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-14T14:16:29Z",
+      "side": 1,
+      "message": "Should this function return an error?",
+      "revId": "b1a474d43299e49c697b605e732881258a3d228f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d1a27ea_14d9e82a",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-14T14:16:29Z",
+      "side": 1,
+      "message": "return deviceRules, err?",
+      "revId": "b1a474d43299e49c697b605e732881258a3d228f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
