@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5b0c34b5_51f2ea0e",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-14T15:22:26Z",
+      "side": 1,
+      "message": "Did not want to change existing API.  But makes sense to return an error as well.",
+      "parentUuid": "7cfc1ca5_3532361f",
+      "revId": "b1a474d43299e49c697b605e732881258a3d228f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d1a27ea_14d9e82a",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 3
