@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "db34d1fe_2310996e",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-14T19:06:18Z",
+      "side": 1,
+      "message": "I agree, just removing it is probably the best solution.",
+      "parentUuid": "0e69b5e8_b66c0b93",
+      "revId": "50f7cbf9be4d7d894fadc251a51306a540adf2ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1689763_f74d715f",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 4
