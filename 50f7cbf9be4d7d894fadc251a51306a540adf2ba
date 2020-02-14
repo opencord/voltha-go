@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "0e69b5e8_b66c0b93",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-14T18:56:58Z",
+      "side": 1,
+      "message": "Do you mean instead of using log.Error above, it may make more sense to remove it completely?",
+      "parentUuid": "a8891dc0_b3cdfe20",
+      "revId": "50f7cbf9be4d7d894fadc251a51306a540adf2ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1689763_f74d715f",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 4
