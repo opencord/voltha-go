@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5819d7a_feb37d50",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-14T18:53:53Z",
+      "side": 1,
+      "message": "This assignment can use :\u003d to save a few lines.",
+      "revId": "50f7cbf9be4d7d894fadc251a51306a540adf2ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8891dc0_b3cdfe20",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-14T18:53:53Z",
+      "side": 1,
+      "message": "If the error is returned, consider reducing the log level.",
+      "revId": "50f7cbf9be4d7d894fadc251a51306a540adf2ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1689763_f74d715f",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-14T18:53:53Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "50f7cbf9be4d7d894fadc251a51306a540adf2ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
