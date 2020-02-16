@@ -1,8 +1,8 @@
-# Quickstart VOLTHA 2.x Build Setup.
+# Development Quickstart VOLTHA 2.x Build Setup.
 
 These notes describe the checking out and building from the multiple gerrit repositories needed to run a VOLTHA 2.x environment with docker-compose.  Starting point is a basic Ubuntu 16.04 or 18.04 installation with internet access.
 
-
+These notes are intended for iterative development only.  The testing environments and production environments will run a Kubernetes Helm based deployment.
 
 
 
@@ -287,36 +287,32 @@ Creating compose_zookeeper_1       ... done
 Verify containers have continuous uptime and no restarts
 
 ```sh
-docker-compose -f compose/system-test.yml ps
-
-
-          Name                         Command               State                                             Ports                                           
+$ docker-compose -f compose/system-test.yml ps
+WARNING: The DOCKER_REGISTRY variable is not set. Defaulting to a blank string.
+WARNING: The DOCKER_REPOSITORY variable is not set. Defaulting to a blank string.
+          Name                         Command               State                                             Ports                                            
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-compose_adapter_openolt_1   /app/openolt --kafka_adapt ...   Up      0.0.0.0:50062->50062/tcp                                                                  
-compose_adapter_openonu_1   /voltha/adapters/brcm_open ...   Up                                                                                                
-compose_cli_1               /voltha/python/cli/setup.s ...   Up      0.0.0.0:5022->22/tcp                                                                      
-compose_etcd_1              etcd --name=etcd0 --advert ...   Up      0.0.0.0:2379->2379/tcp, 0.0.0.0:32773->2380/tcp, 0.0.0.0:32772->4001/tcp                  
-compose_kafka_1             start-kafka.sh                   Up      0.0.0.0:9092->9092/tcp                                                                    
-compose_ofagent_1           /ofagent/ofagent/main.py - ...   Up                                                                                                
-compose_onos_1              ./bin/onos-service server        Up      6640/tcp, 0.0.0.0:6653->6653/tcp, 0.0.0.0:8101->8101/tcp, 0.0.0.0:8181->8181/tcp, 9876/tcp
-compose_rw_core_1           /app/rw_core -kv_store_typ ...   Up      0.0.0.0:50057->50057/tcp                                                                  
-compose_zookeeper_1         /bin/sh -c /usr/sbin/sshd  ...   Up      0.0.0.0:2181->2181/tcp, 22/tcp, 2888/tcp, 3888/tcp                                        
+compose_adapter_openolt_1   /app/openolt --kafka_adapt ...   Up      0.0.0.0:50062->50062/tcp                                                                   
+compose_adapter_openonu_1   /voltha/adapters/brcm_open ...   Up                                                                                                 
+compose_etcd_1              etcd --name=etcd0 --advert ...   Up      0.0.0.0:2379->2379/tcp, 0.0.0.0:32789->2380/tcp, 0.0.0.0:32788->4001/tcp                   
+compose_kafka_1             start-kafka.sh                   Up      0.0.0.0:9092->9092/tcp                                                                     
+compose_ofagent_1           /ofagent/ofagent/main.py - ...   Up                                                                                                 
+compose_onos_1              ./bin/onos-service server        Up      6640/tcp, 0.0.0.0:6653->6653/tcp, 0.0.0.0:8101->8101/tcp, 0.0.0.0:8181->8181/tcp, 9876/tcp 
+compose_rw_core_1           /app/rw_core -kv_store_typ ...   Up      0.0.0.0:50057->50057/tcp                                                                   
+compose_zookeeper_1         /bin/sh -c /usr/sbin/sshd  ...   Up      0.0.0.0:2181->2181/tcp, 22/tcp, 2888/tcp, 3888/tcp                                   
 ```
 
 ```sh
-docker ps
-
-
+$ docker ps
 CONTAINER ID        IMAGE                           COMMAND                  CREATED             STATUS              PORTS                                                                                        NAMES
-829c3cb4c6c5        voltha-onos:latest              "./bin/onos-service …"   22 seconds ago      Up 16 seconds       0.0.0.0:6653->6653/tcp, 0.0.0.0:8101->8101/tcp, 6640/tcp, 9876/tcp, 0.0.0.0:8181->8181/tcp   compose_onos_1
-e6f2db007bea        voltha-openonu-adapter:latest   "/voltha/adapters/br…"   22 seconds ago      Up 18 seconds                                                                                                    compose_adapter_openonu_1
-11be84da6d23        voltha-rw-core:latest           "/app/rw_core -kv_st…"   22 seconds ago      Up 12 seconds       0.0.0.0:50057->50057/tcp                                                                     compose_rw_core_1
-e497985c70ac        quay.io/coreos/etcd:v3.2.9      "etcd --name=etcd0 -…"   22 seconds ago      Up 13 seconds       0.0.0.0:2379->2379/tcp, 0.0.0.0:32773->2380/tcp, 0.0.0.0:32772->4001/tcp                     compose_etcd_1
-48fc5680e947        voltha-ofagent:latest           "/ofagent/ofagent/ma…"   22 seconds ago      Up 18 seconds                                                                                                    compose_ofagent_1
-1ba37663929a        voltha-cli:latest               "/voltha/python/cli/…"   22 seconds ago      Up 17 seconds       0.0.0.0:5022->22/tcp                                                                         compose_cli_1
-34d7ea255778        wurstmeister/kafka:2.11-2.0.1   "start-kafka.sh"         22 seconds ago      Up 19 seconds       0.0.0.0:9092->9092/tcp                                                                       compose_kafka_1
-c92d2e52ad96        wurstmeister/zookeeper:latest   "/bin/sh -c '/usr/sb…"   22 seconds ago      Up 18 seconds       22/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:2181->2181/tcp                                           compose_zookeeper_1
-69d3409fdf10        voltha-openolt-adapter:latest   "/app/openolt --kafk…"   22 seconds ago      Up 14 seconds       0.0.0.0:50062->50062/tcp 
+9575dbc60e09        voltha-openolt-adapter:latest   "/app/openolt --kafk…"   36 seconds ago      Up 31 seconds       0.0.0.0:50062->50062/tcp                                                                     compose_adapter_openolt_1
+2bb235bdee37        quay.io/coreos/etcd:v3.4.1      "etcd --name=etcd0 -…"   36 seconds ago      Up 34 seconds       0.0.0.0:2379->2379/tcp, 0.0.0.0:32789->2380/tcp, 0.0.0.0:32788->4001/tcp                     compose_etcd_1
+d0a4c32169dd        voltha-ofagent:latest           "/ofagent/ofagent/ma…"   36 seconds ago      Up 33 seconds                                                                                                    compose_ofagent_1
+ec78bb0cd1ee        wurstmeister/zookeeper:latest   "/bin/sh -c '/usr/sb…"   36 seconds ago      Up 30 seconds       22/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:2181->2181/tcp                                           compose_zookeeper_1
+ca2199221a55        voltha-rw-core:latest           "/app/rw_core -kv_st…"   36 seconds ago      Up 27 seconds       0.0.0.0:50057->50057/tcp                                                                     compose_rw_core_1
+c5cd74e1cbac        voltha-onos:latest              "./bin/onos-service …"   36 seconds ago      Up 28 seconds       0.0.0.0:6653->6653/tcp, 0.0.0.0:8101->8101/tcp, 6640/tcp, 9876/tcp, 0.0.0.0:8181->8181/tcp   compose_onos_1
+1c4aac99bfd9        voltha-openonu-adapter:latest   "/voltha/adapters/br…"   36 seconds ago      Up 29 seconds                                                                                                    compose_adapter_openonu_1
+a14e042d64d8        wurstmeister/kafka:2.11-2.0.1   "start-kafka.sh"         36 seconds ago      Up 32 seconds       0.0.0.0:9092->9092/tcp                                                                       compose_kafka_1
 ```
 
 
@@ -327,9 +323,9 @@ Use `voltctl` commands to verify core and adapters are running.
 
 ```sh
 voltctl adapter list
-ID                   VENDOR            VERSION
-brcm_openomci_onu    Voltha project    2.0
-openolt              VOLTHA OpenOLT    2.2.3-dev
+ID                   VENDOR            VERSION      SINCELASTCOMMUNICATION
+brcm_openomci_onu    VOLTHA OpenONU    2.3.2-dev    UNKNOWN
+openolt              VOLTHA OpenOLT    2.3.5-dev    UNKNOWN
 ```
 
 List "devices" to verify no devices exist.
@@ -352,9 +348,10 @@ Start a physical OLT and ONU.  Tested with Edgecore OLT, Broadcom based ONU, and
 
 ```sh
 voltctl device create -t openolt -H 10.64.1.206:9191
-ce7c6fc7bf8ce675d0ce9f21
+db87c4b48843bb99567d3d94
 
-voltctl device enable ce7c6fc7bf8ce675d0ce9f21
+voltctl device enable db87c4b48843bb99567d3d94
+db87c4b48843bb99567d3d94
 ```
 
 
@@ -364,15 +361,15 @@ voltctl device enable ce7c6fc7bf8ce675d0ce9f21
 ```sh
 voltctl device list
 ID                          TYPE                 ROOT     PARENTID                    SERIALNUMBER    ADDRESS             ADMINSTATE    OPERSTATUS    CONNECTSTATUS    REASON
-ce7c6fc7bf8ce675d0ce9f21    openolt              true     a82bb53678ae                EC1721000221    10.64.1.206:9191    ENABLED       ACTIVE        REACHABLE
-1815c74841da338cb48e1034    brcm_openomci_onu    false    ce7c6fc7bf8ce675d0ce9f21    ALPHe3d1cf57    unknown             ENABLED       ACTIVE        REACHABLE        omci-flows-pushed
+db87c4b48843bb99567d3d94    openolt              true     a82bb53678ae                EC1721000221    10.64.1.206:9191    ENABLED       ACTIVE        REACHABLE        
+082d7c2e628325ccc3336275    brcm_openomci_onu    false    db87c4b48843bb99567d3d94    ALPHe3d1cf57    unknown             ENABLED       ACTIVE        REACHABLE        omci-flows-pushed
 ```
 
 ```sh
-voltctl device ports ce7c6fc7bf8ce675d0ce9f21
+voltctl device port list db87c4b48843bb99567d3d94
 PORTNO       LABEL            TYPE            ADMINSTATE    OPERSTATUS    DEVICEID    PEERS
 1048576      nni-1048576      ETHERNET_NNI    ENABLED       ACTIVE                    []
-536870912    pon-536870912    PON_OLT         ENABLED       ACTIVE                    [{1815c74841da338cb48e1034 536870912}]
+536870912    pon-536870912    PON_OLT         ENABLED       ACTIVE                    [{082d7c2e628325ccc3336275 536870912}]
 536870913    pon-536870913    PON_OLT         ENABLED       ACTIVE                    []
 536870914    pon-536870914    PON_OLT         ENABLED       ACTIVE                    []
 536870915    pon-536870915    PON_OLT         ENABLED       ACTIVE                    []
@@ -391,14 +388,14 @@ PORTNO       LABEL            TYPE            ADMINSTATE    OPERSTATUS    DEVICE
 ```
 
 ```sh
-voltctl device ports 1815c74841da338cb48e1034
+voltctl device port list 082d7c2e628325ccc3336275
 PORTNO       LABEL       TYPE            ADMINSTATE    OPERSTATUS    DEVICEID    PEERS
-32           uni-32      ETHERNET_UNI    ENABLED       ACTIVE                    []
-33           uni-33      ETHERNET_UNI    ENABLED       ACTIVE                    []
-34           uni-34      ETHERNET_UNI    ENABLED       ACTIVE                    []
-35           uni-35      ETHERNET_UNI    ENABLED       ACTIVE                    []
-36           uni-36      ETHERNET_UNI    ENABLED       ACTIVE                    []
-536870912    PON port    PON_ONU         ENABLED       ACTIVE                    [{ce7c6fc7bf8ce675d0ce9f21 536870912}]
+16           uni-16      ETHERNET_UNI    ENABLED       ACTIVE                    []
+17           uni-17      ETHERNET_UNI    ENABLED       DISCOVERED                []
+18           uni-18      ETHERNET_UNI    ENABLED       DISCOVERED                []
+19           uni-19      ETHERNET_UNI    ENABLED       DISCOVERED                []
+20           uni-20      ETHERNET_UNI    ENABLED       DISCOVERED                []
+536870912    PON port    PON_ONU         ENABLED       ACTIVE                    [{db87c4b48843bb99567d3d94 536870912}]
 ```
 
 
@@ -409,20 +406,22 @@ ssh -p 8101 karaf@localhost
 
 Display the device and ports discovered
 ```sh
-onos> ports
-id=of:0000a82bb53678ae, available=true, local-status=connected 2m18s ago, role=MASTER, type=SWITCH, mfr=VOLTHA Project, hw=open_pon, sw=open_pon, serial=EC1721000221, chassis=a82bb53678ae, driver=voltha, channelId=172.30.0.1:39080, managementAddress=172.30.0.1, protocol=OF_13
-  port=32, state=enabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:20, portName=ALPHe3d1cf57-1
-  port=33, state=enabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:21, portName=ALPHe3d1cf57-2
-  port=34, state=enabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:22, portName=ALPHe3d1cf57-3
-  port=35, state=enabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:23, portName=ALPHe3d1cf57-4
-  port=36, state=enabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:24, portName=ALPHe3d1cf57-5
+karaf@root > ports
+
+id=of:0000a82bb53678ae, available=true, local-status=connected 4m27s ago, role=MASTER, type=SWITCH, mfr=VOLTHA Project, hw=open_pon, sw=open_pon, serial=EC1721000221, chassis=a82bb53678ae, driver=voltha, channelId=172.27.0.1:59124, managementAddress=172.27.0.1, protocol=OF_13
+  port=16, state=enabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:10, portName=ALPHe3d1cf57-1
+  port=17, state=disabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:11, portName=ALPHe3d1cf57-2
+  port=18, state=disabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:12, portName=ALPHe3d1cf57-3
+  port=19, state=disabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:13, portName=ALPHe3d1cf57-4
+  port=20, state=disabled, type=fiber, speed=0 , adminState=enabled, portMac=08:00:00:00:00:14, portName=ALPHe3d1cf57-5
   port=1048576, state=enabled, type=fiber, speed=0 , adminState=enabled, portMac=a8:2b:b5:36:78:ae, portName=nni-1048576
 ```
 
 EAPoL may take up to 30 seconds to complete.
 ```sh
-onos> aaa-users
-UserName=94:CC:B9:DA:AB:D1,CurrentState=AUTHORIZED,DeviceId=of:0000a82bb53678ae,MAC=94:CC:B9:DA:AB:D1,PortNumber=32,SubscriberId=PON 1/1/3/1:2.1.1
+karaf@root > aaa-users
+
+of:0000a82bb53678ae/16: AUTHORIZED_STATE, last-changed=4m22s ago, mac=94:CC:B9:DA:AB:D1, subid=PON 1/1/3/1:2.1.1, username=94:CC:B9:DA:AB:D1
 ```
 
 
@@ -430,19 +429,18 @@ UserName=94:CC:B9:DA:AB:D1,CurrentState=AUTHORIZED,DeviceId=of:0000a82bb53678ae,
 **Provision subscriber flows**
 
 ```sh
-onos> volt-subscribers
-port=of:0000a82bb53678ae/32, svlan=13, cvlan=22
+karaf@root > volt-add-subscriber-access of:0000a82bb53678ae 16
 
-onos> volt-add-subscriber-access of:0000a82bb53678ae 32
+karaf@root > volt-programmed-subscribers
 
-onos> volt-programmed-subscribers
-location=of:of:0000a82bb53678ae/32 subscriber=[id:ALPHe3d1cf57-1,cTag:20,sTag:11,nasPortId:PON 1/1/3/1:2.1.1,uplinkPort:-1,slot:-1,hardwareIdentifier:null,ipaddress:null,nasId:null,circuitId:PON 1/1/3/1:2.1.1-CID,remoteId:ATLEDGEVOLT1-RID]
+location=of:0000a82bb53678ae/16 tagInformation=UniTagInformation{uniTagMatch=0, ponCTag=20, ponSTag=11, usPonCTagPriority=-1, usPonSTagPriority=-1, dsPonCTagPriority=-1, dsPonSTagPriority=-1, technologyProfileId=64, enableMacLearning=false, upstreamBandwidthProfile='Default', downstreamBandwidthProfile='Default', serviceName='', configuredMacAddress='A4:23:05:00:00:00', isDhcpRequired=true, isIgmpRequired=false}
 ```
 
 After about 30 seconds the RG should attempt DHCP which should be visible in onos.  At this point the RG should be able to pass database traffic via the ONU/OLT.
 ```sh
-onos> dhcpl2relay-allocations
-SubscriberId=PON 1/1/3/1:2.1.1,ConnectPoint=of:0000a82bb53678ae/32,State=DHCPACK,MAC=94:CC:B9:DA:AB:D1,CircuitId=None,IP Allocated=29.29.206.20,Allocation Timestamp=2019-11-28T18:59:05.472Z
+karaf@root > dhcpl2relay-allocations
+
+SubscriberId=ALPHe3d1cf57-1,ConnectPoint=of:0000a82bb53678ae/16,State=DHCPREQUEST,MAC=94:CC:B9:DA:AB:D1,CircuitId=PON 1/1/3/1:2.1.1,IP Allocated=29.29.206.20,Allocation Timestamp=2020-02-17T15:34:31.572746Z
 ```
 
 

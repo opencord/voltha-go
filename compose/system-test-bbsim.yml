@@ -171,6 +171,8 @@ services:
     privileged: true
     command: [
       "./bbsim",
+      "-logLevel",
+      "trace",
       "-auth",
       "-dhcp",
       "-pon",
@@ -180,6 +182,7 @@ services:
     ]
     ports:
     - "50060:50060"
+    - "50074:50074"
     networks:
     - default
     restart: unless-stopped

@@ -1,15 +1,4 @@
 {
-  "devices": {
-    "of:000000000a4001d0": {
-      "accessDevice": {
-        "uplink": "1048576",
-        "vlan": "1"
-      },
-      "basic": {
-        "driver": "voltha"
-      }
-    }
-  },
   "apps": {
     "org.opencord.dhcpl2relay": {
       "dhcpl2relay": {
@@ -41,66 +30,27 @@
         },
         "entries": [
           {
-            "id": "EC1829000885",
+            "id": "EC1721000221",
             "uplinkPort": 1048576,
-            "hardwareIdentifier": "3c:2c:99:f7:c6:82",
-            "ipAddress": "10.64.1.207",
+            "hardwareIdentifier": "00:00:0a:40:01:ce",
+            "ipAddress": "10.64.1.206",
             "nasId": "ATLEDGEVOLT1"
           },
           {
             "id": "ALPHe3d1cf57-1",
-            "cTag": 21,
-            "sTag": 13,
             "nasPortId": "PON 1/1/3/1:2.1.1",
             "circuitId": "PON 1/1/3/1:2.1.1-CID",
             "remoteId": "ATLEDGEVOLT1-RID",
-            "technologyProfileId": 64,
-            "upstreamBandwidthProfile": "Default",
-            "downstreamBandwidthProfile": "Default"
-          },
-          {
-            "id": "ALPHe3d1cf57-2",
-            "cTag": 21,
-            "sTag": 13,
-            "nasPortId": "PON 1/1/3/1:2.1.1",
-            "circuitId": "PON 1/1/3/1:2.1.1-CID",
-            "remoteId": "ATLEDGEVOLT1-RID",
-            "technologyProfileId": 64,
-            "upstreamBandwidthProfile": "Default",
-            "downstreamBandwidthProfile": "Default"
-          },
-          {
-            "id": "ALPHe3d1cf57-3",
-            "cTag": 21,
-            "sTag": 13,
-            "nasPortId": "PON 1/1/3/1:2.1.1",
-            "circuitId": "PON 1/1/3/1:2.1.1-CID",
-            "remoteId": "ATLEDGEVOLT1-RID",
-            "technologyProfileId": 64,
-            "upstreamBandwidthProfile": "Default",
-            "downstreamBandwidthProfile": "Default"
-          },
-          {
-            "id": "ALPHe3d1cf57-4",
-            "cTag": 21,
-            "sTag": 13,
-            "nasPortId": "PON 1/1/3/1:2.1.1",
-            "circuitId": "PON 1/1/3/1:2.1.1-CID",
-            "remoteId": "ATLEDGEVOLT1-RID",
-            "technologyProfileId": 64,
-            "upstreamBandwidthProfile": "Default",
-            "downstreamBandwidthProfile": "Default"
-          },
-          {
-            "id": "ALPHe3d1cf57-5",
-            "cTag": 21,
-            "sTag": 13,
-            "nasPortId": "PON 1/1/3/1:2.1.1",
-            "circuitId": "PON 1/1/3/1:2.1.1-CID",
-            "remoteId": "ATLEDGEVOLT1-RID",
-            "technologyProfileId": 64,
-            "upstreamBandwidthProfile": "Default",
-            "downstreamBandwidthProfile": "Default"
+            "uniTagList": [
+              {
+                "ponCTag": 20,
+                "ponSTag": 11,
+                "technologyProfileId": 64,
+                "downstreamBandwidthProfile": "Default",
+                "upstreamBandwidthProfile": "Default",
+                "isDhcpRequired": true
+              }
+            ]
           }
         ]
       },
