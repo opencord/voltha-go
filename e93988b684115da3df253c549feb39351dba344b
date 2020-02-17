@@ -34,6 +34,24 @@
       "revId": "e93988b684115da3df253c549feb39351dba344b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a11207a_0181ae29",
+        "filename": "compose/network-cfg-bbsim.json",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-17T20:15:39Z",
+      "side": 1,
+      "message": "ah, not sure i like that to be honest, separation of concerns and all. but that is a bbsim issue not an issue for this i suspect.",
+      "parentUuid": "d766129d_9dc36f90",
+      "revId": "e93988b684115da3df253c549feb39351dba344b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
