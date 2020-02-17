@@ -16,6 +16,24 @@
       "revId": "e93988b684115da3df253c549feb39351dba344b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d766129d_9dc36f90",
+        "filename": "compose/network-cfg-bbsim.json",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2020-02-17T20:10:45Z",
+      "side": 1,
+      "message": "by running bbsim you now get a sadis web server with all the bbsim olt and onu ready to go.  :50074 is hosted on bbsim itself.  this way you can just change the bbsim args to run 100s of onu and you do not have to generated 100s of static sadis configs.",
+      "parentUuid": "11a20317_900e3a4b",
+      "revId": "e93988b684115da3df253c549feb39351dba344b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
