@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91edb25f_3e252941",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-18T14:19:18Z",
+      "side": 1,
+      "message": "Since we are now informing the parent device that the child is lost then it makes more sense for the parent to cleanup it\u0027s peer relationship with the child on \"childdevicelost\" message instead of being triggered by the child agent.",
+      "revId": "ae476ae7c2b337295dc90718ea35f9515a0543bb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
