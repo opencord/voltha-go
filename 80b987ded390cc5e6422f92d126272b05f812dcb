@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18cc1d79_d2bf00c6",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-20T17:43:49Z",
+      "side": 1,
+      "message": "This looks like it is sort of using a heuristic to determine the state. I.e. if the label is \"\" then most likely ...\n\nIf this is the case, should a more definitive way to determine partial states be added in a future release?\n\nperhaps I am misunderstanding why a default PON port is created as opposed to always waiting until an actual PON port is created.",
+      "range": {
+        "startLine": 1240,
+        "startChar": 4,
+        "endLine": 1240,
+        "endChar": 53
+      },
+      "revId": "80b987ded390cc5e6422f92d126272b05f812dcb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b9eb43b_69955b1b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1291,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-20T17:43:49Z",
+      "side": 1,
+      "message": "nit: this could be written as \ncloned.Ports \u003d append(cloned.Ports, \u0026voltha.Port{ ... })",
+      "range": {
+        "startLine": 1284,
+        "startChar": 0,
+        "endLine": 1291,
+        "endChar": 46
+      },
+      "revId": "80b987ded390cc5e6422f92d126272b05f812dcb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
