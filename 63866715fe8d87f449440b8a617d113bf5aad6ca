@@ -45,6 +45,23 @@
       "revId": "63866715fe8d87f449440b8a617d113bf5aad6ca",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5bc52004_ca0f5223",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1439,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-20T14:04:42Z",
+      "side": 1,
+      "message": "On the TST call it was decided that the Core should \"force\" delete, i.e. anything associated with that device must be gone.    Instead of invoking \"deletePeerPorts\" in its own go routine after a successful return of ChildDeviceLost() call, first remove the peer connection (no go routine required) and then invoke the ChildDeviceLost().   It\u0027s cleaner and on errors from the adapter the data in the Core would not be corrupted.",
+      "revId": "63866715fe8d87f449440b8a617d113bf5aad6ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
