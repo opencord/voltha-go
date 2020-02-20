@@ -143,6 +143,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 		}
 		for _, rootDevicePort := range rootDevice.Ports {
 			if rootDevicePort.Type == voltha.Port_PON_OLT {
+				log.Debugw("peers", log.Fields{"root-device-id": rootDevice.Id, "port-no": rootDevicePort.PortNo, "len-peers": len(rootDevicePort.Peers)})
 				for _, rootDevicePeer := range rootDevicePort.Peers {
 					childDevice, err = dr.getDevice(ctx, rootDevicePeer.DeviceId)
 					if err != nil {

@@ -209,7 +209,7 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromdB bool) err
 	if loadFromdB {
 		go func() {
 			if err := agent.buildRoutes(context.Background()); err != nil {
-				log.Warn("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+				log.Warnw("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 			}
 		}()
 	}
@@ -1320,7 +1320,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(ctx context.Context, lPort *v
 		// Reset the logical device routes
 		go func() {
 			if err := agent.buildRoutes(context.Background()); err != nil {
-				log.Warn("device-routes-not-ready", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
+				log.Warnw("device-routes-not-ready", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 			}
 		}()
 	}
@@ -1355,7 +1355,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPorts(ctx context.Context, deviceI
 	// Reset the logical device routes
 	go func() {
 		if err := agent.buildRoutes(context.Background()); err != nil {
-			log.Warn("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+			log.Warnw("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
 
@@ -1507,7 +1507,7 @@ func (agent *LogicalDeviceAgent) GetDeviceRoutes() *route.DeviceRoutes {
 
 //rebuildRoutes rebuilds the device routes
 func (agent *LogicalDeviceAgent) buildRoutes(ctx context.Context) error {
-	log.Debugf("building-routes", log.Fields{"logical-device-id": agent.logicalDeviceID})
+	log.Debugw("building-routes", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	agent.lockLogicalDevice.Lock()
 	defer agent.lockLogicalDevice.Unlock()
 	if agent.deviceRoutes == nil {
