@@ -1226,9 +1226,10 @@ func (agent *DeviceAgent) deleteAllPorts(ctx context.Context) error {
 func (agent *DeviceAgent) addPort(ctx context.Context, port *voltha.Port) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	log.Debugw("addPort", log.Fields{"deviceId": agent.deviceID})
+	log.Debugw("addPort", log.Fields{"deviceId": agent.deviceID, "port": port})
 
 	cloned := agent.getDeviceWithoutLock()
+	updatePort := false
 	if cloned.Ports == nil {
 		//	First port
 		log.Debugw("addPort-first-port-to-add", log.Fields{"deviceId": agent.deviceID})
@@ -1236,34 +1237,59 @@ func (agent *DeviceAgent) addPort(ctx context.Context, port *voltha.Port) error 
 	} else {
 		for _, p := range cloned.Ports {
 			if p.Type == port.Type && p.PortNo == port.PortNo {
-				log.Debugw("port already exists", log.Fields{"port": *port})
+				if p.Label == "" && p.Type == voltha.Port_PON_OLT {
+					//Creation of OLT PON port is being processed after a default PON port was created.  Just update it.
+					log.Infow("update-pon-port-created-by-default", log.Fields{"default-port": p, "port-to-add": port})
+					p.Label = port.Label
+					p.OperStatus = port.OperStatus
+					updatePort = true
+					break
+				}
+				log.Debugw("port already exists", log.Fields{"port": port})
 				return nil
 			}
 		}
 	}
-	cp := proto.Clone(port).(*voltha.Port)
-	// Set the admin state of the port to ENABLE
-	cp.AdminState = voltha.AdminState_ENABLED
-	cloned.Ports = append(cloned.Ports, cp)
+	if !updatePort {
+		cp := proto.Clone(port).(*voltha.Port)
+		// Set the admin state of the port to ENABLE
+		cp.AdminState = voltha.AdminState_ENABLED
+		cloned.Ports = append(cloned.Ports, cp)
+	}
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) addPeerPort(ctx context.Context, port *voltha.Port_PeerPort) error {
+func (agent *DeviceAgent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerPort) error {
 	agent.lockDevice.Lock()
 	defer agent.lockDevice.Unlock()
-	log.Debug("addPeerPort")
+	log.Debugw("adding-peer-peerPort", log.Fields{"device-id": agent.deviceID, "peer-peerPort": peerPort})
 
 	cloned := agent.getDeviceWithoutLock()
 
-	// Get the peer port on the device based on the port no
-	for _, peerPort := range cloned.Ports {
-		if peerPort.PortNo == port.PortNo { // found port
-			cp := proto.Clone(port).(*voltha.Port_PeerPort)
-			peerPort.Peers = append(peerPort.Peers, cp)
-			log.Debugw("found-peer", log.Fields{"portNo": port.PortNo, "deviceId": agent.deviceID})
+	// Get the peer port on the device based on the peerPort no
+	found := false
+	for _, port := range cloned.Ports {
+		if port.PortNo == peerPort.PortNo { // found peerPort
+			cp := proto.Clone(peerPort).(*voltha.Port_PeerPort)
+			port.Peers = append(port.Peers, cp)
+			log.Debugw("found-peer", log.Fields{"device-id": agent.deviceID, "portNo": peerPort.PortNo, "deviceId": agent.deviceID})
+			found = true
 			break
 		}
+	}
+	if !found && agent.isRootdevice {
+		// An ONU PON port has been created before the corresponding creation of the OLT PON port.  Create the OLT PON port
+		// with default values which will be updated once the OLT PON port creation is processed.
+		ponPort := &voltha.Port{
+			PortNo:     peerPort.PortNo,
+			Type:       voltha.Port_PON_OLT,
+			AdminState: voltha.AdminState_ENABLED,
+			DeviceId:   agent.deviceID,
+			Peers:      []*voltha.Port_PeerPort{proto.Clone(peerPort).(*voltha.Port_PeerPort)},
+		}
+		cloned.Ports = append(cloned.Ports, ponPort)
+		log.Infow("adding-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
 	}
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
