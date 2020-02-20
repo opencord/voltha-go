@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "355d83f6_4da43d3b",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-20T18:36:54Z",
+      "side": 1,
+      "message": "This is not exactly a \"state-like\" scenario.  In most cases the OLT PON port gets created before the ONU PON port (the ONU port identifies its parent).   However, it is entirely possible, under OLT agent load condition, where the ONU port gets created before the OLT port.  When this occurs the relationship between the OLT and the ONU (via peer port) does not get established as it is triggered by the ONU port creation.  Hence, the need to create a default OLT PON port when the ONU PON port creation event is received to establish that relationship.",
+      "parentUuid": "18cc1d79_d2bf00c6",
+      "range": {
+        "startLine": 1240,
+        "startChar": 4,
+        "endLine": 1240,
+        "endChar": 53
+      },
+      "revId": "80b987ded390cc5e6422f92d126272b05f812dcb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b9eb43b_69955b1b",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
