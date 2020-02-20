@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75d309be_b785ae8d",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-20T01:20:54Z",
+      "side": 1,
+      "message": "could this have been done as \nargs :\u003d []*kafka.KVArg {\n \u0026kafka.KVArg{\n    Key: \"key1\",\n    Value: \"value1\",\n },\n \u0026kafka.KVArg{\n    Key: \"key1\",\n    Value: \"value1\",\n },\n \u0026kafka.KVArg{\n    Key: \"key1\",\n    Value: \"value1\",\n }}\n\njust seems a bit easier to read",
+      "range": {
+        "startLine": 625,
+        "startChar": 0,
+        "endLine": 637,
+        "endChar": 2
+      },
+      "revId": "63866715fe8d87f449440b8a617d113bf5aad6ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38fe3ce5_8ab0dc75",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1435,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-20T01:20:54Z",
+      "side": 1,
+      "message": "don\u0027t need to log if you are returning error",
+      "range": {
+        "startLine": 1435,
+        "startChar": 0,
+        "endLine": 1435,
+        "endChar": 80
+      },
+      "revId": "63866715fe8d87f449440b8a617d113bf5aad6ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
