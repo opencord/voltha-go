@@ -18,6 +18,7 @@ package flows
 import (
 	"bytes"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"github.com/cevaris/ordered_map"
 	"github.com/gogo/protobuf/proto"
@@ -678,9 +679,9 @@ func GetMetadataFlowModArgs(kw OfpFlowModArgs) uint64 {
 
 // Return unique 64-bit integer hash for flow covering the following attributes:
 // 'table_id', 'priority', 'flags', 'cookie', 'match', '_instruction_string'
-func HashFlowStats(flow *ofp.OfpFlowStats) uint64 {
+func HashFlowStats(flow *ofp.OfpFlowStats) (uint64, error) {
 	if flow == nil { // Should never happen
-		return 0
+		return 0, errors.New("hash-flow-stats-nil-flow")
 	}
 	// Create string with the instructions field first
 	var instructionString bytes.Buffer
@@ -690,19 +691,18 @@ func HashFlowStats(flow *ofp.OfpFlowStats) uint64 {
 	var flowString = fmt.Sprintf("%d%d%d%d%s%s", flow.TableId, flow.Priority, flow.Flags, flow.Cookie, flow.Match.String(), instructionString.String())
 	h := md5.New()
 	if _, err := h.Write([]byte(flowString)); err != nil {
-		logger.Errorw("hash-flow-status", log.Fields{"error": err})
-		return 0
+		return 0, fmt.Errorf("hash-flow-stats-failed-hash: %v", err)
 	}
 	hash := big.NewInt(0)
 	hash.SetBytes(h.Sum(nil))
-	return hash.Uint64()
+	return hash.Uint64(), nil
 }
 
 // flowStatsEntryFromFlowModMessage maps an ofp_flow_mod message to an ofp_flow_stats message
-func FlowStatsEntryFromFlowModMessage(mod *ofp.OfpFlowMod) *ofp.OfpFlowStats {
+func FlowStatsEntryFromFlowModMessage(mod *ofp.OfpFlowMod) (*ofp.OfpFlowStats, error) {
 	flow := &ofp.OfpFlowStats{}
 	if mod == nil {
-		return flow
+		return flow, nil
 	}
 	flow.TableId = mod.TableId
 	flow.Priority = mod.Priority
@@ -712,8 +712,12 @@ func FlowStatsEntryFromFlowModMessage(mod *ofp.OfpFlowMod) *ofp.OfpFlowStats {
 	flow.Cookie = mod.Cookie
 	flow.Match = mod.Match
 	flow.Instructions = mod.Instructions
-	flow.Id = HashFlowStats(flow)
-	return flow
+	var err error
+	if flow.Id, err = HashFlowStats(flow); err != nil {
+		return nil, err
+	}
+
+	return flow, nil
 }
 
 func GroupEntryFromGroupMod(mod *ofp.OfpGroupMod) *ofp.OfpGroupEntry {
@@ -913,7 +917,7 @@ func MkPacketIn(port uint32, packet []byte) *ofp.OfpPacketIn {
 }
 
 // MkFlowStat is a helper method to build flows
-func MkFlowStat(fa *FlowArgs) *ofp.OfpFlowStats {
+func MkFlowStat(fa *FlowArgs) (*ofp.OfpFlowStats, error) {
 	//Build the match-fields
 	matchFields := make([]*ofp.OfpOxmField, 0)
 	for _, val := range fa.MatchFields {

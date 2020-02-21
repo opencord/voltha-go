@@ -125,7 +125,7 @@ type testFlowDecomposer struct {
 	logicalPortsNo map[uint32]bool
 }
 
-func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
+func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlowDecomposer {
 	var tfd testFlowDecomposer
 	tfd.dMgr = deviceMgr
 
@@ -346,7 +346,9 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			fu.Output(1),
 		},
 	}
-	fg.AddFlow(fu.MkFlowStat(fa))
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	fg.AddFlow(fs)
 	tfd.defaultRules.AddFlowsAndGroup("onu1", fg)
 
 	fg = fu.NewFlowsAndGroups()
@@ -360,7 +362,9 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			fu.Output(1),
 		},
 	}
-	fg.AddFlow(fu.MkFlowStat(fa))
+	fs, err = fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	fg.AddFlow(fs)
 	tfd.defaultRules.AddFlowsAndGroup("onu2", fg)
 
 	fg = fu.NewFlowsAndGroups()
@@ -374,7 +378,9 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			fu.Output(1),
 		},
 	}
-	fg.AddFlow(fu.MkFlowStat(fa))
+	fs, err = fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	fg.AddFlow(fs)
 	tfd.defaultRules.AddFlowsAndGroup("onu3", fg)
 
 	fg = fu.NewFlowsAndGroups()
@@ -388,7 +394,9 @@ func newTestFlowDecomposer(deviceMgr *testDeviceManager) *testFlowDecomposer {
 			fu.Output(1),
 		},
 	}
-	fg.AddFlow(fu.MkFlowStat(fa))
+	fs, err = fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	fg.AddFlow(fs)
 	tfd.defaultRules.AddFlowsAndGroup("onu4", fg)
 
 	//Set up the device graph - flow decomposer uses it only to verify whether a port is a root port.
@@ -482,9 +490,11 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
 	groups := ofp.FlowGroups{}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
@@ -508,7 +518,8 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(faParent)
+	expectedOltFlow, err := fu.MkFlowStat(faParent)
+	assert.Nil(t, err)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
@@ -525,7 +536,8 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 			fu.Output(1),
 		},
 	}
-	expectedOnuFlow := fu.MkFlowStat(faChild)
+	expectedOnuFlow, err := fu.MkFlowStat(faChild)
+	assert.Nil(t, err)
 	derivedFlow = onu1FlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOnuFlow.String(), derivedFlow.String())
 }
@@ -545,9 +557,11 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
 	groups := ofp.FlowGroups{}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
@@ -571,7 +585,8 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(faParent)
+	expectedOltFlow, err := fu.MkFlowStat(faParent)
+	assert.Nil(t, err)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
@@ -588,7 +603,8 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 			fu.Output(1),
 		},
 	}
-	expectedOnuFlow := fu.MkFlowStat(faChild)
+	expectedOnuFlow, err := fu.MkFlowStat(faChild)
+	assert.Nil(t, err)
 	derivedFlow = onu1FlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOnuFlow.String(), derivedFlow.String())
 }
@@ -607,9 +623,11 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
 	groups := ofp.FlowGroups{}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
@@ -632,7 +650,8 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(faParent)
+	expectedOltFlow, err := fu.MkFlowStat(faParent)
+	assert.Nil(t, err)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
@@ -647,7 +666,8 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 			fu.Output(1),
 		},
 	}
-	expectedOnuFlow := fu.MkFlowStat(faChild)
+	expectedOnuFlow, err := fu.MkFlowStat(faChild)
+	assert.Nil(t, err)
 	derivedFlow = onu1FlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOnuFlow.String(), derivedFlow.String())
 }
@@ -669,9 +689,11 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
 	groups := ofp.FlowGroups{}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
@@ -699,7 +721,8 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(faParent)
+	expectedOltFlow, err := fu.MkFlowStat(faParent)
+	assert.Nil(t, err)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 
@@ -718,7 +741,8 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 			fu.Output(1),
 		},
 	}
-	expectedOnuFlow := fu.MkFlowStat(faChild)
+	expectedOnuFlow, err := fu.MkFlowStat(faChild)
+	assert.Nil(t, err)
 	derivedFlow = onu1FlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOnuFlow.String(), derivedFlow.String())
 }
@@ -735,9 +759,11 @@ func TestLldpReRouteRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
 	groups := ofp.FlowGroups{}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
@@ -756,7 +782,8 @@ func TestLldpReRouteRuleDecomposition(t *testing.T) {
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(fa)
+	expectedOltFlow, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 }
@@ -789,7 +816,11 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa), fu.MkFlowStat(fa2)}}
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	fs2, err := fu.MkFlowStat(fa2)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs, fs2}}
 	flows.Items[0].Instructions = []*ofp.OfpInstruction{{
 		Type: uint32(ofp.OfpInstructionType_OFPIT_GOTO_TABLE),
 		Data: &ofp.OfpInstruction_GotoTable{
@@ -799,7 +830,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 		}}}
 
 	groups := ofp.FlowGroups{}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
@@ -828,7 +859,8 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 
 	derivedFlow := onu1FlowAndGroup.GetFlow(0)
 	// Form the expected flow
-	expectedOnu1Flow := fu.MkFlowStat(fa)
+	expectedOnu1Flow, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
 	expectedOnu1Flow.Instructions = []*ofp.OfpInstruction{{
 		Type: uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS),
 		Data: &ofp.OfpInstruction_Actions{
@@ -860,7 +892,8 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 			fu.Output(2),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(fa)
+	expectedOltFlow, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
 	derivedFlow = oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 }
@@ -892,7 +925,11 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa1), fu.MkFlowStat(fa2)}}
+	fs1, err := fu.MkFlowStat(fa1)
+	assert.Nil(t, err)
+	fs2, err := fu.MkFlowStat(fa2)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs1, fs2}}
 	flows.Items[0].Instructions = []*ofp.OfpInstruction{{
 		Type: uint32(ofp.OfpInstructionType_OFPIT_GOTO_TABLE),
 		Data: &ofp.OfpInstruction_GotoTable{
@@ -902,7 +939,7 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 		}}}
 
 	groups := ofp.FlowGroups{}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
@@ -928,7 +965,8 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 	}
 
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
-	expectedOltFlow := fu.MkFlowStat(fa1)
+	expectedOltFlow, err := fu.MkFlowStat(fa1)
+	assert.Nil(t, err)
 	expectedOltFlow.Instructions = []*ofp.OfpInstruction{{
 		Type: uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS),
 		Data: &ofp.OfpInstruction_Actions{
@@ -956,7 +994,8 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 			fu.Output(2),
 		},
 	}
-	expectedOnu1Flow := fu.MkFlowStat(fa1)
+	expectedOnu1Flow, err := fu.MkFlowStat(fa1)
+	assert.Nil(t, err)
 	derivedFlow = onu1FlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOnu1Flow.String(), derivedFlow.String())
 }
@@ -987,9 +1026,11 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 		},
 	}
 
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fu.MkFlowStat(fa)}}
+	fs, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
+	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
 	groups := ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{fu.MkGroupStat(ga)}}
-	tfd := newTestFlowDecomposer(newTestDeviceManager())
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
 	assert.Nil(t, err)
@@ -1010,7 +1051,8 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 			fu.Group(10),
 		},
 	}
-	expectedOltFlow := fu.MkFlowStat(fa)
+	expectedOltFlow, err := fu.MkFlowStat(fa)
+	assert.Nil(t, err)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
 }
