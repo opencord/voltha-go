@@ -832,13 +832,19 @@ func (agent *LogicalDeviceAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMo
 			log.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		} else {
 			//	Add flow
-			flow = fu.FlowStatsEntryFromFlowModMessage(mod)
+			flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+			if err != nil {
+				return err
+			}
 			flows = append(flows, flow)
 			updatedFlows = append(updatedFlows, flow)
 			changed = true
 		}
 	} else {
-		flow = fu.FlowStatsEntryFromFlowModMessage(mod)
+		flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+		if err != nil {
+			return err
+		}
 		idx := fu.FindFlows(flows, flow)
 		if idx >= 0 {
 			oldFlow := flows[idx]
@@ -964,7 +970,11 @@ func (agent *LogicalDeviceAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlo
 	toDelete := make([]*ofp.OfpFlowStats, 0)
 	for _, f := range flows {
 		// Check whether the flow and the flowmod matches
-		if fu.FlowMatch(f, fu.FlowStatsEntryFromFlowModMessage(mod)) {
+		fs, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+		if err != nil {
+			return err
+		}
+		if fu.FlowMatch(f, fs) {
 			toDelete = append(toDelete, f)
 			continue
 		}
@@ -1098,7 +1108,10 @@ func (agent *LogicalDeviceAgent) flowDeleteStrict(ctx context.Context, mod *ofp.
 
 	changedFlow := false
 	changedMeter := false
-	flow := fu.FlowStatsEntryFromFlowModMessage(mod)
+	flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+	if err != nil {
+		return err
+	}
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	idx := fu.FindFlows(flows, flow)
 	if idx >= 0 {
