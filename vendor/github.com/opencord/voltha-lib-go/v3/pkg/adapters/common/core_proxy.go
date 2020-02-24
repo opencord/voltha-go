@@ -284,7 +284,7 @@ func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId str
 		volthaDevice := &voltha.Device{}
 		if err := ptypes.UnmarshalAny(result, volthaDevice); err != nil {
 			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return nil, status.Error(codes.InvalidArgument, err.Error())
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevice, nil
 	} else {
@@ -294,8 +294,8 @@ func (ap *CoreProxy) ChildDeviceDetected(ctx context.Context, parentDeviceId str
 			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
 		}
 		logger.Debugw("ChildDeviceDetected-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
-
-		return nil, status.Error(ICProxyErrorCodeToGrpcErrorCode(unpackResult.Code), unpackResult.Reason)
+		// TODO: Need to get the real error code
+		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
 
 }
@@ -361,7 +361,7 @@ func (ap *CoreProxy) GetDevice(ctx context.Context, parentDeviceId string, devic
 		volthaDevice := &voltha.Device{}
 		if err := ptypes.UnmarshalAny(result, volthaDevice); err != nil {
 			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return nil, status.Error(codes.InvalidArgument, err.Error())
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevice, nil
 	} else {
@@ -372,7 +372,7 @@ func (ap *CoreProxy) GetDevice(ctx context.Context, parentDeviceId string, devic
 		}
 		logger.Debugw("GetDevice-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
 		// TODO:  Need to get the real error code
-		return nil, status.Error(ICProxyErrorCodeToGrpcErrorCode(unpackResult.Code), unpackResult.Reason)
+		return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
 	}
 }
 
@@ -421,7 +421,7 @@ func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, 
 		volthaDevice := &voltha.Device{}
 		if err := ptypes.UnmarshalAny(result, volthaDevice); err != nil {
 			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return nil, status.Error(codes.InvalidArgument, err.Error())
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevice, nil
 	} else {
@@ -432,7 +432,13 @@ func (ap *CoreProxy) GetChildDevice(ctx context.Context, parentDeviceId string, 
 		}
 		logger.Debugw("GetChildDevice-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
 
-		return nil, status.Error(ICProxyErrorCodeToGrpcErrorCode(unpackResult.Code), unpackResult.Reason)
+		code := codes.Internal
+
+		if unpackResult.Code == ic.ErrorCode_DEADLINE_EXCEEDED {
+			code = codes.DeadlineExceeded
+		}
+
+		return nil, status.Errorf(code, "%s", unpackResult.Reason)
 	}
 }
 
@@ -457,7 +463,7 @@ func (ap *CoreProxy) GetChildDevices(ctx context.Context, parentDeviceId string)
 		volthaDevices := &voltha.Devices{}
 		if err := ptypes.UnmarshalAny(result, volthaDevices); err != nil {
 			logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
-			return nil, status.Error(codes.InvalidArgument, err.Error())
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return volthaDevices, nil
 	} else {
@@ -468,7 +474,13 @@ func (ap *CoreProxy) GetChildDevices(ctx context.Context, parentDeviceId string)
 		}
 		logger.Debugw("GetChildDevices-return", log.Fields{"deviceid": parentDeviceId, "success": success, "error": err})
 
-		return nil, status.Error(ICProxyErrorCodeToGrpcErrorCode(unpackResult.Code), unpackResult.Reason)
+		code := codes.Internal
+
+		if unpackResult.Code == ic.ErrorCode_DEADLINE_EXCEEDED {
+			code = codes.DeadlineExceeded
+		}
+
+		return nil, status.Errorf(code, "%s", unpackResult.Reason)
 	}
 }
 
