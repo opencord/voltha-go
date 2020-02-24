@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0446737f_89d6a8cf",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1464,
+      "author": {
+        "id": 1000436
+      },
+      "writtenOn": "2020-02-24T20:28:07Z",
+      "side": 0,
+      "message": "this should not return error and should just log a warning.   otherwise the inability for openolt to run this call will result in the core not being able to clean up/finish the state machine.",
+      "range": {
+        "startLine": 1464,
+        "startChar": 2,
+        "endLine": 1464,
+        "endChar": 12
+      },
+      "revId": "e935b33392e67708b83292c27480ae5258c37724",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
