@@ -290,9 +290,7 @@ func (da *DeviceOwnership) abandonAllDevices() {
 func (da *DeviceOwnership) deleteDeviceKey(id string) {
 	da.deviceToKeyMapLock.Lock()
 	defer da.deviceToKeyMapLock.Unlock()
-	if _, exist := da.deviceToKeyMap[id]; exist {
-		delete(da.deviceToKeyMap, id)
-	}
+	delete(da.deviceToKeyMap, id)
 }
 
 // getOwnershipKey returns the ownership key that the id param uses.   Ownership key is the parent

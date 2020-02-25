@@ -166,7 +166,5 @@ func (b *Branch) DeleteRevision(hash string) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	if _, ok := b.Revisions[hash]; ok {
-		delete(b.Revisions, hash)
-	}
+	delete(b.Revisions, hash)
 }
