@@ -87,7 +87,7 @@ services:
         - -rw_core_topic=rwcore
         - -kv_store_data_prefix=service/voltha
         - -in_competing_mode=false
-        - -log_level=0
+        - -log_level=INFO
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     ports:
@@ -140,7 +140,8 @@ services:
       "--kafka_cluster_port=9092",
       "--core_topic=rwcore",
       "--kv_store_host=${DOCKER_HOST_IP}",
-      "--kv_store_port=2379"
+      "--kv_store_port=2379",
+      "--log_level=INFO"
     ]
     ports:
       - "50062:50062"
@@ -172,7 +173,7 @@ services:
     command: [
       "./bbsim",
       "-logLevel",
-      "trace",
+      "debug",
       "-auth",
       "-dhcp",
       "-pon",
