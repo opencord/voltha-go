@@ -26,13 +26,15 @@ func init() {
 	}
 }
 
+type contextKey string
+
 const (
 	// DataRefreshPeriod is period to determine when data requires a refresh (in milliseconds)
 	// TODO: make this configurable?
 	DataRefreshPeriod int64 = 5000
 
 	// RequestTimestamp attribute used to store a timestamp in the context object
-	RequestTimestamp = "request-timestamp"
+	RequestTimestamp contextKey = "request-timestamp"
 
 	// ReservationTTL is time limit for a KV path reservation (in seconds)
 	ReservationTTL int64 = 180

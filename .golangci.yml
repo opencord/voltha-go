@@ -14,3 +14,12 @@
 
 run:
   modules-download-mode: vendor
+
+linters:
+  enable:
+    #- gocritic
+    - gofmt
+    - golint
+    #- unparam
+    #- gochecknoglobals
+    #- gochecknoinits

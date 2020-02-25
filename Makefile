@@ -51,12 +51,11 @@ DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
 	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
 
 # tool containers
-VOLTHA_TOOLS_VERSION ?= 1.0.3
+VOLTHA_TOOLS_VERSION ?= 2.0.0
 
 GO                = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang go
 GO_JUNIT_REPORT   = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-go-junit-report go-junit-report
 GOCOVER_COBERTURA = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-gocover-cobertura gocover-cobertura
-GOFMT             = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang gofmt
 GOLANGCI_LINT     = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golangci-lint golangci-lint
 HADOLINT          = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-hadolint hadolint
 
@@ -76,8 +75,6 @@ help:
 	@echo "distclean            : Remove sca directory and clean"
 	@echo "docker-push          : Push the docker images to an external repository"
 	@echo "lint-dockerfile      : Perform static analysis on Dockerfiles"
-	@echo "lint-style           : Verify code is properly gofmt-ed"
-	@echo "lint-sanity          : Verify that 'go vet' doesn't report any issues"
 	@echo "lint-mod             : Verify the integrity of the 'mod' files"
 	@echo "lint                 : Shorthand for lint-style & lint-sanity"
 	@echo "sca                  : Runs various SCA through golangci-lint tool"
@@ -121,47 +118,32 @@ docker-kind-load:
 ## lint and unit tests
 
 lint-dockerfile:
-	@echo "Running Dockerfile lint check ..."
+	@echo "Running Dockerfile lint check..."
 	@${HADOLINT} $$(find . -name "Dockerfile.*")
 	@echo "Dockerfile lint check OK"
-
-lint-style:
-	@echo "Running style check..."
-	@gofmt_out="$$(${GOFMT} -l $$(find . -name '*.go' -not -path './vendor/*'))" ;\
-	if [ ! -z "$$gofmt_out" ]; then \
-	  echo "$$gofmt_out" ;\
-	  echo "Style check failed on one or more files ^, run 'go fmt' to fix." ;\
-	  exit 1 ;\
-	fi
-	@echo "Style check OK"
-
-lint-sanity:
-	@echo "Running sanity check..."
-	@${GO} vet -mod=vendor ./...
-	@echo "Sanity check OK"
 
 lint-mod:
 	@echo "Running dependency check..."
 	@${GO} mod verify
 	@echo "Dependency check OK. Running vendor check..."
 	@git status > /dev/null
-	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && echo "`git status`" && exit 1)
-	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && echo "`git status`" && exit 1)
+	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && git status -- go.mod go.sum vendor && exit 1)
+	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && git status -- go.mod go.sum vendor && exit 1)
 	${GO} mod tidy
 	${GO} mod vendor
 	@git status > /dev/null
-	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && echo "`git status`" && exit 1)
-	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && echo "`git status`" && exit 1)
+	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
+	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
 	@echo "Vendor check OK."
 
 
-lint: lint-style lint-sanity lint-mod lint-dockerfile
+lint: lint-mod lint-dockerfile
 
 sca:
 	@rm -rf ./sca-report
 	@mkdir -p ./sca-report
 	@echo "Running static code analysis..."
-	@${GOLANGCI_LINT} run --deadline=4m -E golint --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
+	@${GOLANGCI_LINT} run --deadline=4m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
 	@echo ""
 	@echo "Static code analysis OK"
 
