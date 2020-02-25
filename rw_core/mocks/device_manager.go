@@ -176,3 +176,8 @@ func (dm *DeviceManager) DeletePeerPorts(fromDeviceID string, deviceID string) e
 func (dm *DeviceManager) ProcessTransition(previous *voltha.Device, current *voltha.Device) error {
 	return nil
 }
+
+// ChildDeviceLost -
+func (dm *DeviceManager) ChildDeviceLost(ctx context.Context, cDevice *voltha.Device) error {
+	return nil
+}
