@@ -193,6 +193,22 @@ func StringToLogLevel(l string) (LogLevel, error) {
 	return 0, errors.New("Given LogLevel is invalid : " + l)
 }
 
+func LogLevelToString(l LogLevel) (string, error) {
+	switch l {
+	case DebugLevel:
+		return "DEBUG", nil
+	case InfoLevel:
+		return "INFO", nil
+	case WarnLevel:
+		return "WARN", nil
+	case ErrorLevel:
+		return "ERROR", nil
+	case FatalLevel:
+		return "FATAL", nil
+	}
+	return "", errors.New("Given LogLevel is invalid " + string(l))
+}
+
 func getDefaultConfig(outputType string, level LogLevel, defaultFields Fields) zp.Config {
 	return zp.Config{
 		Level:            logLevelToAtomicLevel(level),

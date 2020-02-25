@@ -81,7 +81,7 @@ type Client interface {
 	ReleaseReservation(ctx context.Context, key string) error
 	ReleaseAllReservations(ctx context.Context) error
 	RenewReservation(ctx context.Context, key string) error
-	Watch(ctx context.Context, key string) chan *Event
+	Watch(ctx context.Context, key string, withPrefix bool) chan *Event
 	AcquireLock(ctx context.Context, lockName string, timeout int) error
 	ReleaseLock(lockName string) error
 	IsConnectionUp(ctx context.Context) bool // timeout in second

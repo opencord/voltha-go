@@ -360,7 +360,7 @@ func (c *ConsulClient) RenewReservation(ctx context.Context, key string) error {
 
 // Watch provides the watch capability on a given key.  It returns a channel onto which the callee needs to
 // listen to receive Events.
-func (c *ConsulClient) Watch(ctx context.Context, key string) chan *Event {
+func (c *ConsulClient) Watch(ctx context.Context, key string, withPrefix bool) chan *Event {
 
 	// Create a new channel
 	ch := make(chan *Event, maxClientChannelBufferSize)

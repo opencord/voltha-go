@@ -298,10 +298,15 @@ func (c *EtcdClient) RenewReservation(ctx context.Context, key string) error {
 
 // Watch provides the watch capability on a given key.  It returns a channel onto which the callee needs to
 // listen to receive Events.
-func (c *EtcdClient) Watch(ctx context.Context, key string) chan *Event {
+func (c *EtcdClient) Watch(ctx context.Context, key string, withPrefix bool) chan *Event {
 	w := v3Client.NewWatcher(c.ectdAPI)
 	ctx, cancel := context.WithCancel(ctx)
-	channel := w.Watch(ctx, key)
+	var channel v3Client.WatchChan
+	if withPrefix {
+		channel = w.Watch(ctx, key, v3Client.WithPrefix())
+	} else {
+		channel = w.Watch(ctx, key)
+	}
 
 	// Create a new channel
 	ch := make(chan *Event, maxClientChannelBufferSize)

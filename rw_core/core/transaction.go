@@ -242,7 +242,7 @@ func (c *KVTransaction) tryToReserveTxn(ctxt context.Context, durationInSecs int
 // Watch watches transaction
 func (c *KVTransaction) Watch(ctxt context.Context, durationInSecs int64) int {
 	var res int
-	events := ctx.kvClient.Watch(ctxt, c.txnKey)
+	events := ctx.kvClient.Watch(ctxt, c.txnKey, false)
 	defer ctx.kvClient.CloseWatch(c.txnKey, events)
 
 	transactionWasAcquiredByOther := false

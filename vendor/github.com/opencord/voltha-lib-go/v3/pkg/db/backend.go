@@ -247,14 +247,14 @@ func (b *Backend) Delete(ctx context.Context, key string) error {
 }
 
 // CreateWatch starts watching events for the specified key
-func (b *Backend) CreateWatch(ctx context.Context, key string) chan *kvstore.Event {
+func (b *Backend) CreateWatch(ctx context.Context, key string, withPrefix bool) chan *kvstore.Event {
 	b.Lock()
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
 	logger.Debugw("creating-key-watch", log.Fields{"key": key, "path": formattedPath})
 
-	return b.Client.Watch(ctx, formattedPath)
+	return b.Client.Watch(ctx, formattedPath, withPrefix)
 }
 
 // DeleteWatch stops watching events for the specified key

@@ -136,7 +136,7 @@ func (pr *PersistedRevision) SetupWatch(ctx context.Context, key string) {
 		log.Debugw("setting-watch-channel", log.Fields{"key": key, "revision-hash": pr.GetHash()})
 
 		pr.SetName(key)
-		pr.events = pr.kvStore.CreateWatch(ctx, key)
+		pr.events = pr.kvStore.CreateWatch(ctx, key, false)
 	}
 
 	if !pr.isWatched {
