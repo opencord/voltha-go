@@ -109,7 +109,7 @@ github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif
 github.com/opencord/voltha-lib-go/v3/pkg/adapters/common
 github.com/opencord/voltha-lib-go/v3/pkg/adapters
 github.com/opencord/voltha-lib-go/v3/pkg/mocks
-# github.com/opencord/voltha-protos/v3 v3.2.2
+# github.com/opencord/voltha-protos/v3 v3.2.3
 github.com/opencord/voltha-protos/v3/go/common
 github.com/opencord/voltha-protos/v3/go/openflow_13
 github.com/opencord/voltha-protos/v3/go/voltha
