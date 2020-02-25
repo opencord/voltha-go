@@ -517,6 +517,47 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	err = waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 }
+func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
+	//Create the device with valid data
+	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+
+	//Get an OLT device
+	oltDevice, err = nb.getADevice(true, nbi)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+
+	//Get all child devices
+	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	assert.Nil(t, err)
+
+	// Wait for the all onu devices to be enabled
+	var vdFunction isDeviceConditionSatisfied = func(device *voltha.Device) bool {
+		return device.AdminState == voltha.AdminState_ENABLED
+	}
+	for _, onu := range onuDevices.Items {
+		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
+		assert.Nil(t, err)
+	}
+
+	// Delete the onuDevice
+	for _, onu := range onuDevices.Items {
+		_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: onu.Id})
+		assert.Nil(t, err)
+	}
+
+	// Delete the oltDevice
+	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	var vFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
+		return devices != nil && len(devices.Items) == 0
+	}
+
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction)
+	assert.Nil(t, err)
+}
 func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *APIHandler) {
 	//Get an OLT device
 	var cp *voltha.Port
@@ -640,6 +681,9 @@ func TestSuite1(t *testing.T) {
 
 		// 6. Test disable and delete all devices
 		nb.testDisableAndDeleteAllDevice(t, nbi)
+
+		//7. Test enable and delete all devices
+		nb.testEnableAndDeleteAllDevice(t, nbi)
 	}
 
 	//x. TODO - More tests to come
