@@ -44,12 +44,6 @@ func NewDefaultAPIHandler() *DefaultAPIHandler {
 	return handler
 }
 
-// UpdateLogLevel updates log level
-func (handler *DefaultAPIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
-	log.Debugw("UpdateLogLevel-request", log.Fields{"newloglevel": logging.Level, "intval": int(logging.Level)})
-	return nil, errors.New("UnImplemented")
-}
-
 // GetMembership returns membership
 func (handler *DefaultAPIHandler) GetMembership(ctx context.Context, empty *empty.Empty) (*voltha.Membership, error) {
 	log.Debug("GetMembership-request")
