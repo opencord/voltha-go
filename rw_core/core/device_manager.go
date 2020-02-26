@@ -1274,6 +1274,31 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentDevi
 	return nil
 }
 
+//DeleteAllUNILogicalPorts is invoked as a callback when the parent device is deleted
+func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
+	log.Debug("DeleteAllUNILogicalPorts")
+	var childDeviceIds []string
+	var err error
+	if childDeviceIds, err = dMgr.getAllChildDeviceIds(parentDevice); err != nil {
+		return status.Errorf(codes.NotFound, "%s", parentDevice.Id)
+	}
+	if len(childDeviceIds) == 0 {
+		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
+	}
+	allUNILogicalPortsDeleted := true
+	for _, childDeviceID := range childDeviceIds {
+		// Delete associated logical ports and send PORT_REMOVED event to ONOS for clean-up
+		if err = dMgr.logicalDeviceMgr.deleteLogicalPorts(ctx, childDeviceID); err != nil {
+			log.Warnw("deleteLogical-ports-error", log.Fields{"deviceId": childDeviceID})
+			allUNILogicalPortsDeleted = false
+		}
+	}
+	if !allUNILogicalPortsDeleted {
+		return err
+	}
+	return nil
+}
+
 //getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *DeviceManager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]string, error) {
 	log.Debugw("getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id})
