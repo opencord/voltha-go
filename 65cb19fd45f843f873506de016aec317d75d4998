@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec442489_d90ef917",
+        "filename": "db/model/branch.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-26T15:26:23Z",
+      "side": 0,
+      "message": "was this because lint flagged this code?",
+      "range": {
+        "startLine": 169,
+        "startChar": 1,
+        "endLine": 171,
+        "endChar": 1
+      },
+      "revId": "65cb19fd45f843f873506de016aec317d75d4998",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "499fda71_6ab8acfc",
+        "filename": "rw_core/core/device_ownership.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-02-26T15:26:23Z",
+      "side": 0,
+      "message": "lint flagged check as redundant?",
+      "range": {
+        "startLine": 293,
+        "startChar": 0,
+        "endLine": 295,
+        "endChar": 2
+      },
+      "revId": "65cb19fd45f843f873506de016aec317d75d4998",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
