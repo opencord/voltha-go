@@ -15,21 +15,10 @@
 # -------------
 # Build stage
 
-FROM golang:1.12-alpine3.9 AS build-env
+FROM golang:1.13.8-alpine3.11 AS build-env
 
 # Install required packages
-RUN apk add --no-cache \
-	wget=1.20.3-r0 \
-	git=2.20.2-r0 \
-	make=4.2.1-r2 \
-	build-base=0.5-r1 \
-	protobuf=3.6.1-r1 \
-	protobuf-dev=3.6.1-r1
-
-# Golang container has GOPATH set to /go by default. Hence, need to explicitly enable
-# Go modules while using folder /go/src under GOPATH as build path; lest go modules
-# will be disabled
-ENV GO111MODULE=on
+RUN apk add --no-cache build-base=0.5-r1
 
 # Use Standard go build directory structure
 WORKDIR /go/src
@@ -67,7 +56,7 @@ RUN go build -tags profile -mod=vendor -o /go/bin/rw_core \
 # -------------
 # Image creation stage
 
-FROM alpine:3.9.4
+FROM alpine:3.11.3
 
 # Set the working directory
 WORKDIR /app
