@@ -519,6 +519,35 @@ func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(ctx context.Context, devi
 	return nil
 }
 
+// deleteAllUNILogicalPorts deletes all UNI logical ports associated with this parent device
+func (agent *LogicalDeviceAgent) deleteAllUNILogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
+	log.Infow("deleteAllUNILogicalPorts", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+	agent.lockLogicalDevice.Lock()
+	defer agent.lockLogicalDevice.Unlock()
+	// Get the latest logical device info
+	ld := agent.getLogicalDeviceWithoutLock()
+
+	cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
+	updateLogicalPorts := []*voltha.LogicalPort{}
+	for _, lport := range cloned.Ports {
+		// Save NNI ports only
+		if lport.DeviceId == parentDevice.Id {
+			updateLogicalPorts = append(updateLogicalPorts, lport)
+		}
+	}
+	if len(updateLogicalPorts) < len(cloned.Ports) {
+		cloned.Ports = updateLogicalPorts
+		// Updating the logical device will trigger the port change events to be populated to the controller
+		if err := agent.updateLogicalDeviceWithoutLock(ctx, cloned); err != nil {
+			log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
+			return err
+		}
+	} else {
+		log.Debugw("no-change-required", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+	}
+	return nil
+}
+
 //updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
 func (agent *LogicalDeviceAgent) updateLogicalDeviceWithoutLock(ctx context.Context, logicalDevice *voltha.LogicalDevice) error {
 	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
