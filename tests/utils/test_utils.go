@@ -196,22 +196,6 @@ func sendFlow(ctx context.Context, stub voltha.VolthaServiceClient, flow *ofp.Fl
 	}
 }
 
-// SetLogLevel sets log level to the given level
-func SetLogLevel(stub voltha.VolthaServiceClient, l voltha.Logging) error {
-	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
-	_, err := stub.UpdateLogLevel(ctx, &l)
-	return err
-}
-
-// SetAllLogLevel sets log level of all service to the given level
-func SetAllLogLevel(stub voltha.VolthaServiceClient, l voltha.Logging) error {
-	ui := uuid.New()
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(VolthaSerialNumberKey, ui.String()))
-	_, err := stub.UpdateLogLevel(ctx, &l)
-	return err
-}
-
 // SetupGrpcConnectionToCore sets up client connection to an RPC server.
 func SetupGrpcConnectionToCore(grpcHostIP string, grpcPort int) (voltha.VolthaServiceClient, error) {
 	grpcHost := fmt.Sprintf("%s:%d", grpcHostIP, grpcPort)
