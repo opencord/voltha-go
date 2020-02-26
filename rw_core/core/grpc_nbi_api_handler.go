@@ -186,49 +186,6 @@ func waitForNilResponseOnSuccess(ctx context.Context, ch chan interface{}) (*emp
 	}
 }
 
-// UpdateLogLevel dynamically sets the log level of a given package to level
-func (handler *APIHandler) UpdateLogLevel(ctx context.Context, logging *voltha.Logging) (*empty.Empty, error) {
-	log.Debugw("UpdateLogLevel-request", log.Fields{"package": logging.PackageName, "intval": int(logging.Level)})
-
-	if logging.PackageName == "" {
-		log.SetAllLogLevel(log.LogLevel(logging.Level))
-		log.SetDefaultLogLevel(log.LogLevel(logging.Level))
-	} else if logging.PackageName == "default" {
-		log.SetDefaultLogLevel(log.LogLevel(logging.Level))
-	} else {
-		log.SetPackageLogLevel(logging.PackageName, log.LogLevel(logging.Level))
-	}
-
-	return &empty.Empty{}, nil
-}
-
-// GetLogLevels returns log levels of packages
-func (APIHandler) GetLogLevels(ctx context.Context, in *voltha.LoggingComponent) (*voltha.Loggings, error) {
-	logLevels := &voltha.Loggings{}
-
-	// do the per-package log levels
-	for _, packageName := range log.GetPackageNames() {
-		level, err := log.GetPackageLogLevel(packageName)
-		if err != nil {
-			return &voltha.Loggings{}, err
-		}
-		logLevel := &voltha.Logging{
-			ComponentName: in.ComponentName,
-			PackageName:   packageName,
-			Level:         voltha.LogLevel_Types(level)}
-		logLevels.Items = append(logLevels.Items, logLevel)
-	}
-
-	// now do the default log level
-	logLevel := &voltha.Logging{
-		ComponentName: in.ComponentName,
-		PackageName:   "default",
-		Level:         voltha.LogLevel_Types(log.GetDefaultLogLevel())}
-	logLevels.Items = append(logLevels.Items, logLevel)
-
-	return logLevels, nil
-}
-
 // ListCoreInstances returns details on the running core containers
 func (handler *APIHandler) ListCoreInstances(ctx context.Context, empty *empty.Empty) (*voltha.CoreInstances, error) {
 	log.Debug("ListCoreInstances")

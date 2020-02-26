@@ -29,6 +29,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
 	"github.com/opencord/voltha-go/rw_core/utils"
+	conf "github.com/opencord/voltha-lib-go/v3/pkg/config"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -113,6 +114,8 @@ func (rw *rwCore) start(ctx context.Context, instanceID string) {
 		rw.config.KVStoreTimeout); err != nil {
 		log.Fatal(err)
 	}
+	cm := conf.NewConfigManager(rw.kvClient, rw.config.KVStoreType, rw.config.KVStoreHost, rw.config.KVStorePort, rw.config.KVStoreTimeout)
+	go conf.ProcessLogConfigChange(cm, ctx)
 
 	// Setup KV transaction context
 	if err := c.SetTransactionContext(instanceID,
