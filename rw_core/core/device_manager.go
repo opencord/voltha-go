@@ -1260,6 +1260,12 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentDevi
 	allChildDeleted := true
 	for _, childDeviceID := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
+			// Delete associated logical ports and send PORT_REMOVED event to ONOS for clean-up
+			if err = dMgr.logicalDeviceMgr.deleteLogicalPorts(ctx, childDeviceID); err != nil {
+				log.Warnw("deleteLogical-ports-error", log.Fields{"deviceId": childDeviceID})
+				return err
+			}
+
 			if err = agent.deleteDevice(ctx); err != nil {
 				log.Errorw("failure-delete-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
 				allChildDeleted = false
