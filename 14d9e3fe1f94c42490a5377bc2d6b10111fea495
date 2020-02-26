@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1ea6a92_089bac36",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-02-26T22:41:36Z",
+      "side": 1,
+      "message": "Can use if f.Id, err \u003d fu.HashFlowStats(f); err !\u003d nil {",
+      "revId": "14d9e3fe1f94c42490a5377bc2d6b10111fea495",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
