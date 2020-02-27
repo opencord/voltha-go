@@ -1748,3 +1748,31 @@ func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *vo
 	logger.Debugw("Omci_test_Request-Success-device-agent", log.Fields{"testResp": testResp})
 	return testResp, nil
 }
+func (agent *DeviceAgent) GetValue(ctx context.Context, device *voltha.Device, valueparam *voltha.ValueSpecifier ) (*voltha.ReturnValues, error) {
+	log.Debugw("getvalue", log.Fields{"device-id": agent.deviceID, "onuid": valueparam.DeviceID.Id, "valuetype":valueparam.Value})
+        if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+                return nil, err
+        }
+
+	//send request to adapter
+	ch, err := agent.adapterProxy.getValue(ctx, device, valueparam.DeviceID, valueparam.Value)
+	if err != nil {
+		return nil, err
+	}
+        // Wait for the adapter response
+        rpcResponse, ok := <-ch
+        if !ok {
+                return nil, status.Errorf(codes.Aborted, "channel-closed-device-id-%s", agent.deviceID)
+        }
+        if rpcResponse.Err != nil {
+                return nil, rpcResponse.Err
+        }
+
+        // Unmarshal and return the response
+        Resp := &voltha.ReturnValues{}
+        if err := ptypes.UnmarshalAny(rpcResponse.Reply, Resp); err != nil {
+                return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+        }
+        logger.Debugw("get_Value-Success-device-agent", log.Fields{"Resp": Resp})
+        return Resp, nil
+}
