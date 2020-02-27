@@ -31,6 +31,7 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-protos/v3/go/common"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -1518,3 +1519,18 @@ func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, cDevice *voltha.
 	}
 	return status.Errorf(codes.NotFound, "%s", cDevice.Id)
 }
+func (dMgr *DeviceManager) getOnuDistance(ctx context.Context, onuid  *common.ID)(*voltha.OnuDistance,error) {
+	var err error
+        resp := new(voltha.OnuDistance)
+        log.Debugw("getOnuDistance", log.Fields{"onuid": onuid.Id})
+        if agent := dMgr.getDeviceAgent(ctx, onuid.Id); agent != nil {
+                if resp, err = agent.getOnuDistance(ctx, onuid); err != nil {
+			return nil,err
+		}
+                log.Debugw("getOnuDistance-result", log.Fields{"result": resp})
+        } else {
+		return nil,status.Errorf(codes.NotFound, "%s", onuid)
+        }
+	return resp,nil
+}
+

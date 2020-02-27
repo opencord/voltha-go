@@ -160,6 +160,9 @@ type Membership = voltha.Membership
 // FlowMetadata from public import voltha_protos/voltha.proto
 type FlowMetadata = voltha.FlowMetadata
 
+// OnuDistance from public import voltha_protos/voltha.proto
+type OnuDistance = voltha.OnuDistance
+
 // EventFilterRuleKey_EventFilterRuleType from public import voltha_protos/voltha.proto
 type EventFilterRuleKey_EventFilterRuleType = voltha.EventFilterRuleKey_EventFilterRuleType
 
