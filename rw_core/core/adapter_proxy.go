@@ -355,3 +355,28 @@ func (ap *AdapterProxy) startOmciTest(ctx context.Context, device *voltha.Device
 		&kafka.KVArg{Key: "device", Value: device},
 		&kafka.KVArg{Key: "omcitestrequest", Value: omcitestrequest})
 }
+func (ap *AdapterProxy) getValue(ctx context.Context, device *voltha.Device, id *voltha.ID, valuetype voltha.ValueType_Type) (chan *kafka.RpcResponse, error) {
+	log.Debugw("getValue", log.Fields{"device-id": device.Id, "onuid": id})
+	rpc := "get_value"
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := []*kafka.KVArg{
+		{
+			Key:   "device",
+			Value: device,
+		},
+		{
+			Key:   "id",
+			Value: id,
+		},
+		// This will break here because valuetype is at this point an enum instead of a
+		// protobuf containing an enum. Consider trying to wrap it with &ic.IntType{...)
+		{
+			Key:   "valuetype",
+			Value: valuetype,
+		}}
+
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+}
