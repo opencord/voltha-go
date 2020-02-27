@@ -388,3 +388,8 @@ func (handler *DefaultAPIHandler) DisablePort(ctx context.Context, port *voltha.
 	log.Debugw("DisablePort-unimplemented", log.Fields{"id": port.DeviceId})
 	return nil, nil
 }
+
+func (handler *DefaultAPIHandler) GetOnuDistance(ctx context.Context, onuid *voltha.ID) (*voltha.OnuDistance, error) {
+        log.Debugw("GetOnuDistance-unimplemented", log.Fields{"onuid": onuid.Id})
+        return nil, nil
+}

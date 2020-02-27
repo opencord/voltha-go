@@ -642,3 +642,38 @@ func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, 
 
 	return unPackResponse(rpc, pDeviceID, success, result)
 }
+func (ap *AdapterProxy) getOnuDistance(ctx context.Context, device *voltha.Device, id  *voltha.ID) (*voltha.OnuDistance,error) {
+        log.Debugw("getOnuDistance", log.Fields{"device-id": device.Id, "onuid": id})
+        rpc := "get_onu_distance"
+        toTopic := ap.getAdapterTopic(device.Adapter)
+        // Use a device specific topic to send the request.  The adapter handling the device creates a device
+        // specific topic
+        args := []*kafka.KVArg{
+	{
+                Key:   "device",
+                Value: device,
+        },
+	{
+                Key:   "id",
+                Value: id,
+        }}
+
+        replyToTopic := ap.getCoreTopic()
+        success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+        log.Debugw("getOnuDistance-response", log.Fields{"device-id": device.Id, "onuid": id, "success": success})
+        if success {
+                unpackResult := &voltha.OnuDistance{}
+                if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
+                        return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+                }
+                return unpackResult, nil
+        }
+        unpackResult := &ic.Error{}
+        var err error
+        if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+        }
+        log.Debugw("GetOfpDeviceInfo-return-error", log.Fields{"deviceid": device.Id, "success": success, "error": err})
+        return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
+}
+
