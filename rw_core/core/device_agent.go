@@ -1759,3 +1759,17 @@ func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *vo
 	logger.Debugw("Omci_test_Request-Success-device-agent", log.Fields{"testResp": testResp})
 	return testResp, nil
 }
+func (agent *DeviceAgent) GetValue(ctx context.Context, device *voltha.Device, valueparam *voltha.ValueSpecifier ) (*voltha.ReturnValues, error) {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("getvalue", log.Fields{"device-id": agent.deviceID, "onuid": valueparam.DeviceID.Id, "valuetype":valueparam.Value})
+
+	//send request to adapter
+	resp, err := agent.adapterProxy.getValue(ctx, device, valueparam.DeviceID, valueparam.Value)
+	if err != nil {
+		log.Debugw("getValue-error", log.Fields{"device-id": agent.deviceID, "error": err})
+		return nil, err
+	}
+
+	return resp, nil
+}

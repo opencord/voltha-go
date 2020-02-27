@@ -353,3 +353,41 @@ func (ap *AdapterProxy) startOmciTest(ctx context.Context, device *voltha.Device
 		&kafka.KVArg{Key: "device", Value: device},
 		&kafka.KVArg{Key: "omcitestrequest", Value: omcitestrequest})
 }
+func (ap *AdapterProxy) getValue(ctx context.Context, device *voltha.Device, id *voltha.ID,valuetype *voltha.ValueType ) (*voltha.ReturnValues, error) {
+	log.Debugw("getOnuDistance", log.Fields{"device-id": device.Id, "onuid": id})
+	rpc := "get_value"
+	toTopic := ap.getAdapterTopic(device.Adapter)
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := []*kafka.KVArg{
+		{
+			Key:   "device",
+			Value: device,
+		},
+		{
+			Key:   "id",
+			Value: id,
+		},
+		{	
+			Key:  "valuetype",
+			Value: valuetype,
+		}}
+
+	replyToTopic := ap.getCoreTopic()
+	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
+	log.Debugw("getvalue-response", log.Fields{"device-id": device.Id, "onuid": id, "success": success})
+	if success {
+		unpackResult := &voltha.ReturnValues{}
+		if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+		}
+		return unpackResult, nil
+	}
+	unpackResult := &ic.Error{}
+	var err error
+	if err = ptypes.UnmarshalAny(result, unpackResult); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+	}
+	log.Debugw("GetValue-return-error", log.Fields{"deviceid": device.Id, "success": success, "error": err})
+	return nil, status.Errorf(codes.Internal, "%s", unpackResult.Reason)
+}
