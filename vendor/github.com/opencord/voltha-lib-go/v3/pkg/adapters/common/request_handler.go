@@ -735,3 +735,37 @@ func (rhp *RequestHandlerProxy) Start_omci_test(args []*ic.Argument) (*ic.TestRe
 	}
 	return result, nil
 }
+func (rhp *RequestHandlerProxy) Get_ext_value(args []*ic.Argument) (*voltha.ReturnValues, error) {
+	if len(args) < 3 {
+		logger.Warn("invalid-number-of-args", log.Fields{"args": args})
+		return nil, errors.New("invalid-number-of-args")
+	}
+
+	pDeviceId := &ic.StrType{}
+	device := &voltha.Device{}
+	valuetype := &ic.IntType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				logger.Warnw("cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "pDeviceId":
+			if err := ptypes.UnmarshalAny(arg.Value, pDeviceId); err != nil {
+				logger.Warnw("cannot-unmarshal-parent-deviceId", log.Fields{"error": err})
+				return nil, err
+			}
+		case "valuetype":
+			if err := ptypes.UnmarshalAny(arg.Value, valuetype); err != nil {
+				logger.Warnw("cannot-unmarshal-valuetype", log.Fields{"error": err})
+				return nil, err
+			}
+		default:
+			logger.Warnw("key-not-found", log.Fields{"arg.Key": arg.Key})
+		}
+	}
+
+	//Invoke the Get_value API on the adapter
+	return rhp.adapter.Get_ext_value(pDeviceId.Val, device, voltha.ValueType_Type(valuetype.Val))
+}
