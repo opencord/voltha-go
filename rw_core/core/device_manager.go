@@ -28,6 +28,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
+	"github.com/opencord/voltha-protos/v3/go/common"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -1526,4 +1527,17 @@ func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, cDevice *voltha.
 		return parentAgent.ChildDeviceLost(ctx, cDevice)
 	}
 	return status.Errorf(codes.NotFound, "%s", cDevice.Id)
+}
+func (dMgr *DeviceManager) getOnuDistance(ctx context.Context, onuID *common.ID) (*voltha.OnuDistance, error) {
+	log.Debugw("getOnuDistance", log.Fields{"onu-id": onuID.Id})
+	if agent := dMgr.getDeviceAgent(ctx, onuID.Id); agent != nil {
+		resp, err := agent.getOnuDistance(ctx, onuID)
+		if err != nil {
+			return nil, err
+		}
+		log.Debugw("getOnuDistance-result", log.Fields{"result": resp})
+		return resp, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", onuID)
+
 }
