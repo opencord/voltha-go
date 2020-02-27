@@ -16,6 +16,24 @@
       "revId": "7e17abcef033d300bd212b12e56ffdab9a78544f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d927d3e7_57cbf0ce",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-27T15:20:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b0e5e911_6ec0b602",
+      "revId": "7e17abcef033d300bd212b12e56ffdab9a78544f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
