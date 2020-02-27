@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f08ed1f7_2a128ebd",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "id *voltha.ID?",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a9e5338_3d0cc7f6",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "id *voltha.ID",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80c6a6c1_60b1daf9",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "Could all be put in one statement, i.e.\n\nargs :\u003d []*kafka.KVArg{\n      {\n                Key:   \"deviceId\",\n                Value: deviceID,\n        }\n     {\n                Key:   \"id\",\n                Value: id,\n        }\n}",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f64039bf_131f7db8",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "No need to output a log when a error is returned.",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef04cad8_a141a4a1",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "Should have an error return here",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f353849_c7c0ffc0",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "This log should be indicate that this is an  error.",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c01360a4_71ed6545",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1472,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "No need to define these variables here.  Can use \":\u003d\" below.",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16d4ccd4_32337b50",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1477,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "Use agent.GetDevice() instead of the above locks.   The request is going straight to the adapter.",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eea314d5_b73de762",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1480,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "Why storing a device when there are no changes made to it?",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "282255b5_318b8702",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1486,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "No need to output an error log.",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94e66ffe_fc895337",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1522,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "Should this be onuID?",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "075b015e_e273f952",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1525,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "use \"onu-id\"",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d90cef29_fc16c37f",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1530,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "You can return the result here and avoid the extra {...}",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "393c153b_ccae6ab6",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T19:34:34Z",
+      "side": 1,
+      "message": "use onuID and *voltha.ID instead",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
