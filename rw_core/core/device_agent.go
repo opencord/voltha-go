@@ -29,6 +29,7 @@ import (
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-protos/v3/go/common"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -1466,4 +1467,20 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 	}
 	return nil
 
+}
+func (agent *DeviceAgent) getOnuDistance(ctx context.Context, onuid *common.ID) (*voltha.OnuDistance, error) {
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+	log.Debugw("getOnuDistance", log.Fields{"device-id": agent.deviceID, "onuid": onuid.Id})
+	// Get the most up to date the device info
+	device := agent.getDevice()
+
+	//send request to adapter
+	resp, err := agent.adapterProxy.getOnuDistance(ctx, device, onuid)
+	if err != nil {
+		log.Debugw("getOnuDistance-error", log.Fields{"device-id": agent.deviceID, "error": err})
+		return nil, err
+	}
+
+	return resp, nil
 }
