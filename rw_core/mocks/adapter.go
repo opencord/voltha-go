@@ -259,3 +259,7 @@ func (ta *Adapter) Child_device_lost(pDeviceID string, pPortNo uint32, onuID uin
 func (ta *Adapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) { //nolint
 	return nil, nil
 }
+
+func (ta *Adapter) Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { //nolint
+	return nil, nil
+}

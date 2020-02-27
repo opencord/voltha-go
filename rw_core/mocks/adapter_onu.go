@@ -18,6 +18,7 @@ package mocks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -239,4 +240,11 @@ func (onuA *ONUAdapter) ClearFlows() {
 	defer onuA.lock.Unlock()
 
 	onuA.flows = map[uint64]*voltha.OfpFlowStats{}
+}
+
+func (onuA *ONUAdapter) Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { // nolint
+	_ = deviceId
+	_ = device
+	_ = valueflag
+	return nil, errors.New("get-ext-value-not-implemented")
 }

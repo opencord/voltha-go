@@ -53,4 +53,5 @@ type IAdapter interface {
 	Disable_port(deviceId string, port *voltha.Port) error
 	Child_device_lost(parentDeviceId string, parentPortNo uint32, onuID uint32) error
 	Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error)
+	Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error)
 }

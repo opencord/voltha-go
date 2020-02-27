@@ -332,3 +332,10 @@ func (oltA *OLTAdapter) ClearFlows() {
 
 	oltA.flows = map[uint64]*voltha.OfpFlowStats{}
 }
+
+func (oltA *OLTAdapter) Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { // nolint
+	_ = deviceId
+	_ = device
+	_ = valueflag
+	return nil, errors.New("get-ext-value-not-implemented")
+}
