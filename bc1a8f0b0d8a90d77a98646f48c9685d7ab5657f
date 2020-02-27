@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e7e3594_6ca93ba5",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T15:48:27Z",
+      "side": 1,
+      "message": "Getting the child deviceIds followed by removing the logicalport relevant to each child is an expensive operation.\n\nI suggest creating a specific method in the logicaldeviceAgent that just remove all the UNI logical ports directly instead.  It would be similar to func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(ctx context.Context, device *voltha.Device), except that it won\u0027t take a deviceId as param and only remove UNI ports.",
+      "revId": "bc1a8f0b0d8a90d77a98646f48c9685d7ab5657f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
