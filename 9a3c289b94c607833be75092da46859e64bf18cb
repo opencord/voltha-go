@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "322a53bc_e3af6460",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-02-27T21:50:48Z",
+      "side": 1,
+      "message": "It seems this return occurs when success\u003d\u003dFalse. Should this be an error return?",
+      "range": {
+        "startLine": 642,
+        "startChar": 1,
+        "endLine": 642,
+        "endChar": 16
+      },
+      "revId": "9a3c289b94c607833be75092da46859e64bf18cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "568205c6_2433c49c",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1482,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-02-27T21:50:48Z",
+      "side": 1,
+      "message": "Should the error returned be checked?",
+      "range": {
+        "startLine": 1482,
+        "startChar": 5,
+        "endLine": 1482,
+        "endChar": 13
+      },
+      "revId": "9a3c289b94c607833be75092da46859e64bf18cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
