@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0e5e911_6ec0b602",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T14:31:10Z",
+      "side": 1,
+      "message": "Please create a \"deleteAllUNILogicalPorts\" function to handle this.  Invoke this function via the state machine when the parent device is deleted.",
+      "revId": "7e17abcef033d300bd212b12e56ffdab9a78544f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
