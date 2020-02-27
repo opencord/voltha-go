@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "3b010d31_f8471262",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-02-27T22:06:37Z",
+      "side": 1,
+      "message": "I think we lost the closing brace on the previous function.",
+      "revId": "9a3c289b94c607833be75092da46859e64bf18cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "322a53bc_e3af6460",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 4
