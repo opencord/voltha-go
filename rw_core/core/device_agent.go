@@ -32,6 +32,7 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-protos/v3/go/common"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -1466,3 +1467,25 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 	return nil
 
 }
+func (agent *DeviceAgent) getOnuDistance(ctx context.Context, onuid *common.ID) (*voltha.OnuDistance,error) {
+	var err error
+	resp := new(voltha.OnuDistance)
+        agent.lockDevice.Lock()
+        defer agent.lockDevice.Unlock()
+        log.Debugw("getOnuDistance", log.Fields{"device-id": agent.deviceID, "onuid": onuid.Id})
+        // Get the most up to date the device info
+        device := agent.getDeviceWithoutLock()
+
+        // Store the device
+        if err = agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
+                log.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID,  "error": err})
+                return nil,err
+        }
+        //send request to adapter
+        if resp, err = agent.adapterProxy.getOnuDistance(ctx, device, onuid); err != nil {
+                log.Debugw("getOnuDistance-error", log.Fields{"device-id": agent.deviceID, "error": err})
+                return nil,err
+        }
+        return resp,nil
+}
+
