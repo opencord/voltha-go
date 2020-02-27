@@ -1214,3 +1214,20 @@ func (handler *APIHandler) DisablePort(ctx context.Context, port *voltha.Port) (
 	go handler.deviceMgr.disablePort(ctx, port, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
+
+func (handler *APIHandler) GetOnuDistance(ctx context.Context, onuID *voltha.ID) (*voltha.OnuDistance, error) {
+	log.Debugw("GetOnuDistance-request", log.Fields{"onu-id": onuID.Id})
+	if isTestMode(ctx) {
+		return nil, nil
+	}
+
+	if handler.competeForTransaction() {
+		txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{ID: onuID.Id})
+		if err != nil {
+			return nil, err
+		}
+		defer txn.Close(ctx)
+	}
+
+	return handler.deviceMgr.getOnuDistance(ctx, onuID)
+}

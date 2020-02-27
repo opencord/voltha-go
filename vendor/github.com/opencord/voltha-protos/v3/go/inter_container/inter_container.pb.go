@@ -42,6 +42,9 @@ type ConnectStatus = common.ConnectStatus
 // OperationResp from public import voltha_protos/common.proto
 type OperationResp = common.OperationResp
 
+// OnuDistance from public import voltha_protos/common.proto
+type OnuDistance = common.OnuDistance
+
 // TestModeKeys from public import voltha_protos/common.proto
 type TestModeKeys = common.TestModeKeys
 
