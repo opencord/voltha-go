@@ -393,3 +393,7 @@ func (handler *DefaultAPIHandler) DisablePort(ctx context.Context, port *voltha.
 func (handler *DefaultAPIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
 	return nil, errors.New("StartOmciTestAction-unimplemented")
 }
+func (handler *DefaultAPIHandler) GetValues(ctx context.Context,values *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
+	log.Debugw("GetOnuDistance-unimplemented", log.Fields{"onuid":values.DeviceID.Id})
+	return nil, nil
+}

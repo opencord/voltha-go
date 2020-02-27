@@ -1569,3 +1569,20 @@ func (dMgr *DeviceManager) startOmciTest(ctx context.Context, omcitestrequest *v
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", omcitestrequest.Id)
 }
+func (dMgr *DeviceManager) getValues(ctx context.Context, value *voltha.ValueSpecifier ) (*voltha.ReturnValues, error) {
+	log.Debugw("getValues", log.Fields{"onu-id": value.DeviceID.Id})
+	cDevice, err := dMgr.GetDevice(ctx, value.DeviceID.Id) 
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	if agent := dMgr.getDeviceAgent(ctx, cDevice.ParentId); agent != nil {
+		resp, err := agent.GetValue(ctx, cDevice, value)
+		if err != nil {
+			return nil, err
+		}
+		log.Debugw("getValue-result", log.Fields{"result": resp})
+		return resp, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", value.DeviceID.Id)
+
+}

@@ -1220,3 +1220,19 @@ func (handler *APIHandler) StartOmciTestAction(ctx context.Context, omcitestrequ
 	log.Debugw("Omci_test_Request", log.Fields{"id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
 	return handler.deviceMgr.startOmciTest(ctx, omcitestrequest)
 }
+func (handler *APIHandler) GetValue(ctx context.Context, valueparam  *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
+	log.Debugw("GetValue-request", log.Fields{"onu-id": valueparam.DeviceID.Id})
+	if isTestMode(ctx) {
+		return nil, nil
+	}
+
+	if handler.competeForTransaction() {
+		txn, err := handler.takeRequestOwnership(ctx, &utils.DeviceID{ID: valueparam.DeviceID.Id})
+		if err != nil {
+			return nil, err
+		}
+		defer txn.Close(ctx)
+	}
+
+	return handler.deviceMgr.getValues(ctx, valueparam)
+}
