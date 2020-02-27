@@ -822,3 +822,8 @@ func (handler *APIHandler) StartOmciTestAction(ctx context.Context, omcitestrequ
 	logger.Debugw("Omci_test_Request", log.Fields{"id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
 	return handler.deviceMgr.startOmciTest(ctx, omcitestrequest)
 }
+func (handler *APIHandler) GetValue(ctx context.Context, valueparam  *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
+	log.Debugw("GetValue-request", log.Fields{"onu-id": valueparam.DeviceID.Id})
+
+	return handler.deviceMgr.getValues(ctx, valueparam)
+}
