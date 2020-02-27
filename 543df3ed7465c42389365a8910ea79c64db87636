@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eae573d6_a4a006db",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-27T14:23:06Z",
+      "side": 1,
+      "message": "Here, you will need a check to verify that the ONU devices have actually been deleted.",
+      "revId": "543df3ed7465c42389365a8910ea79c64db87636",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
