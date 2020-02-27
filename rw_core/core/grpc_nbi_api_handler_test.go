@@ -551,11 +551,19 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
 		assert.Nil(t, err)
 	}
+
 	// Delete the onuDevice
 	for _, onu := range onuDevices.Items {
 		_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: onu.Id})
 		assert.Nil(t, err)
 	}
+	//Ensure there are no child devices for olt in core- wait until condition satisfied or timeout
+	var vdFunc isChildDevicesExist = func(onuDevices *voltha.Devices) bool {
+		return onuDevices != nil && len(onuDevices.Items) == 0
+	}
+	err = waitUntilChildDevicesCleared(oltDevice.Id, nb.maxTimeout, nbi, vdFunc)
+	assert.Nil(t, err)
+
 	// Disable the oltDevice
 	_, err = nbi.DisableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)

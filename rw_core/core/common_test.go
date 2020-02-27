@@ -57,6 +57,7 @@ type isLogicalDeviceConditionSatisfied func(ld *voltha.LogicalDevice) bool
 type isDeviceConditionSatisfied func(ld *voltha.Device) bool
 type isDevicesConditionSatisfied func(ds *voltha.Devices) bool
 type isLogicalDevicesConditionSatisfied func(lds *voltha.LogicalDevices) bool
+type isChildDevicesExist func(ds *voltha.Devices) bool
 
 func init() {
 	_, err := log.AddPackage(log.JSON, logLevel, log.Fields{"instanceId": "coreTests"})
@@ -177,6 +178,38 @@ func waitUntilDeviceReadiness(deviceID string,
 	case <-timer.C:
 		done = true
 		return fmt.Errorf("expected-states-not-reached-for-device%s", deviceID)
+	}
+}
+
+func waitUntilChildDevicesCleared(oltDeviceID string,
+	timeout time.Duration,
+	nbi *APIHandler,
+	verificationFunction isChildDevicesExist,
+) error {
+	ch := make(chan int, 1)
+	done := false
+	go func() {
+		for {
+			//Get all child devices from the olt device
+			onuDevices, _ := nbi.core.deviceMgr.getAllChildDevices(getContext(), oltDeviceID)
+			if onuDevices != nil && verificationFunction(onuDevices) {
+				ch <- 1
+				break
+			}
+			if done {
+				break
+			}
+		}
+		time.Sleep(retryInterval)
+	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-ch:
+		return nil
+	case <-timer.C:
+		done = true
+		return fmt.Errorf("timeout-waiting-for-child-devices-delete%s", oltDeviceID)
 	}
 }
 
