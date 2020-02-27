@@ -1563,3 +1563,25 @@ func (dMgr *Manager) StartOmciTest(ctx context.Context, omcitestrequest *voltha.
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", omcitestrequest.Id)
 }
+
+func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
+	log.Debugw("getExtValue", log.Fields{"onu-id": value.Id})
+	cDevice, err := dMgr.GetDevice(ctx, value.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	pDevice, err := dMgr.GetDevice(ctx, cDevice.ParentId)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	if agent := dMgr.getDeviceAgent(ctx, cDevice.ParentId); agent != nil {
+		resp, err := agent.getExtValue(ctx, pDevice, cDevice, value)
+		if err != nil {
+			return nil, err
+		}
+		log.Debugw("getExtValue-result", log.Fields{"result": resp})
+		return resp, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
+
+}
