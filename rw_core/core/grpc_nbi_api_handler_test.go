@@ -551,11 +551,19 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
 		assert.Nil(t, err)
 	}
+	// Wait for each onu device to get deleted
+	var vdFunc isDeviceConditionSatisfied = func(device *voltha.Device) bool {
+		return device == nil
+	}
+
 	// Delete the onuDevice
 	for _, onu := range onuDevices.Items {
 		_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: onu.Id})
 		assert.Nil(t, err)
+		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunc, nbi)
+		assert.Nil(t, err)
 	}
+
 	// Disable the oltDevice
 	_, err = nbi.DisableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)

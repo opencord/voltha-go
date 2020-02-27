@@ -159,7 +159,7 @@ func waitUntilDeviceReadiness(deviceID string,
 	go func() {
 		for {
 			device, _ := nbi.GetDevice(getContext(), &voltha.ID{Id: deviceID})
-			if device != nil && verificationFunction(device) {
+			if verificationFunction(device) {
 				ch <- 1
 				break
 			}
