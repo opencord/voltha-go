@@ -30,18 +30,6 @@ type ID = common.ID
 // IDs from public import voltha_protos/common.proto
 type IDs = common.IDs
 
-// LogLevel from public import voltha_protos/common.proto
-type LogLevel = common.LogLevel
-
-// Logging from public import voltha_protos/common.proto
-type Logging = common.Logging
-
-// LoggingComponent from public import voltha_protos/common.proto
-type LoggingComponent = common.LoggingComponent
-
-// Loggings from public import voltha_protos/common.proto
-type Loggings = common.Loggings
-
 // AdminState from public import voltha_protos/common.proto
 type AdminState = common.AdminState
 
@@ -54,6 +42,9 @@ type ConnectStatus = common.ConnectStatus
 // OperationResp from public import voltha_protos/common.proto
 type OperationResp = common.OperationResp
 
+// OnuDistance from public import voltha_protos/common.proto
+type OnuDistance = common.OnuDistance
+
 // TestModeKeys from public import voltha_protos/common.proto
 type TestModeKeys = common.TestModeKeys
 
@@ -61,19 +52,6 @@ var TestModeKeys_name = common.TestModeKeys_name
 var TestModeKeys_value = common.TestModeKeys_value
 
 const TestModeKeys_api_test = TestModeKeys(common.TestModeKeys_api_test)
-
-// LogLevel_Types from public import voltha_protos/common.proto
-type LogLevel_Types = common.LogLevel_Types
-
-var LogLevel_Types_name = common.LogLevel_Types_name
-var LogLevel_Types_value = common.LogLevel_Types_value
-
-const LogLevel_DEBUG = LogLevel_Types(common.LogLevel_DEBUG)
-const LogLevel_INFO = LogLevel_Types(common.LogLevel_INFO)
-const LogLevel_WARNING = LogLevel_Types(common.LogLevel_WARNING)
-const LogLevel_ERROR = LogLevel_Types(common.LogLevel_ERROR)
-const LogLevel_CRITICAL = LogLevel_Types(common.LogLevel_CRITICAL)
-const LogLevel_FATAL = LogLevel_Types(common.LogLevel_FATAL)
 
 // AdminState_Types from public import voltha_protos/common.proto
 type AdminState_Types = common.AdminState_Types
