@@ -808,5 +808,5 @@ func (handler *NBIHandler) StartOmciTestAction(ctx context.Context, omcitestrequ
 
 func (handler *NBIHandler) GetExtValue(ctx context.Context, valueparam *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
 	log.Debugw("GetValue-request", log.Fields{"onu-id": valueparam.Id})
-	return nil, errors.New("UnImplemented")
+	return handler.deviceMgr.GetExtValue(ctx, valueparam)
 }
