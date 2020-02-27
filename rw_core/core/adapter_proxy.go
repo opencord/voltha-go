@@ -60,6 +60,7 @@ func (ap *AdapterProxy) getAdapterTopic(deviceID string, adapterType string) (*k
 func (ap *AdapterProxy) sendRPC(ctx context.Context, rpc string, toTopic *kafka.Topic, replyToTopic *kafka.Topic,
 	waitForResponse bool, deviceID string, kvArgs ...*kafka.KVArg) (chan *kafka.RpcResponse, error) {
 
+	logger.Debugw("xxx-sendRPC", log.Fields{"rpc": rpc, "device-id": deviceID, "toTopic": toTopic, "replyToTopic": replyToTopic})
 	// Sent the request to kafka
 	respChnl := ap.kafkaICProxy.InvokeAsyncRPC(ctx, rpc, toTopic, replyToTopic, waitForResponse, deviceID, kvArgs...)
 
@@ -429,4 +430,36 @@ func (ap *AdapterProxy) startOmciTest(ctx context.Context, device *voltha.Device
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id,
 		&kafka.KVArg{Key: "device", Value: device},
 		&kafka.KVArg{Key: "omcitestrequest", Value: omcitestrequest})
+}
+func (ap *AdapterProxy) getValue(ctx context.Context, pdevice *voltha.Device, cdevice *voltha.Device, id *voltha.ID, valuetype voltha.ValueType_Type) (chan *kafka.RpcResponse, error) {
+	log.Debugw("getValue", log.Fields{"device-id": pdevice.Id, "onuid": id})
+	rpc := "get_value"
+	toTopic, err := ap.getAdapterTopic(pdevice.Id, pdevice.Adapter) // XXX smbaker
+	if err != nil {
+	       return nil, err
+       }
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := []*kafka.KVArg{
+                {
+                        Key:   "pDeviceId",
+			Value: &ic.StrType{Val: pdevice.Id},
+                },
+		{
+			Key:   "device",
+			Value: cdevice,
+		},
+		{
+			Key:   "id",
+			Value:  id,
+		},
+		// This will break here because valuetype is at this point an enum instead of a
+		// protobuf containing an enum. Consider trying to wrap it with &ic.IntType
+		{
+			Key:   "valuetype",
+			Value: &ic.IntType{Val: int64(valuetype)}, 
+		}}
+
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, pdevice.Id, args...)
 }
