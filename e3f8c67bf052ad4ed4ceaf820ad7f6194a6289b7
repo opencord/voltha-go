@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00b6d32d_097bb058",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:14:16Z",
+      "side": 1,
+      "message": "Reuse this function.   Remove the device !\u003d nil check.   It should be performed inside the verificationFunction.",
+      "revId": "e3f8c67bf052ad4ed4ceaf820ad7f6194a6289b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5c3bfc4_48af3771",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:14:16Z",
+      "side": 1,
+      "message": "No need for this function.  Existing functions can be used.",
+      "revId": "e3f8c67bf052ad4ed4ceaf820ad7f6194a6289b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab7e629b_d9fd6775",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:14:16Z",
+      "side": 1,
+      "message": "Instead of using isChildDevicesExist(), you can use waitUntilDeviceReadiness.  After every onu deletion invoke a verification function that test for nil device.  You will need to change the waitUntilDeviceReadiness slightly for this.  See my comments on that file.",
+      "revId": "e3f8c67bf052ad4ed4ceaf820ad7f6194a6289b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
