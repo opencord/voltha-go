@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7f2903bc_45baf8be",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T15:40:06Z",
+      "side": 1,
+      "message": "Okay.. Updating accordingly as the global comment for all my log statements.",
+      "parentUuid": "52b9e6c6_f6cd3d8a",
+      "revId": "8c392c5d4532c130bbc6383fee67309a6b260267",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef1f957f_3eed8447",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2020-02-28T15:34:36Z",
       "side": 1,
       "message": "Just remove the log and let the calling function deal with the err.",
+      "revId": "8c392c5d4532c130bbc6383fee67309a6b260267",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b689c2e_7e9bb182",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T15:40:06Z",
+      "side": 1,
+      "message": "Okay.. Updating for all my changes as global comment.",
+      "parentUuid": "ef1f957f_3eed8447",
       "revId": "8c392c5d4532c130bbc6383fee67309a6b260267",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
