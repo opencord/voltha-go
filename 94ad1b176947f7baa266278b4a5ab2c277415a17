@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5436342c_c98283bb",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T13:37:08Z",
+      "side": 1,
+      "message": "As per my understanding, there should not be any race condition. Do you think of such a scenario? Otherwise, I am fine to return error for now.",
+      "parentUuid": "453afcb5_9f32e3b1",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b41551ae_8e9fc08c",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2020-02-28T13:06:08Z",
       "side": 1,
       "message": "Adding the parent device id is helpful.",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b29c855_4a0ebaa1",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1279,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T13:37:08Z",
+      "side": 1,
+      "message": "Sure. Will do.",
+      "parentUuid": "b41551ae_8e9fc08c",
       "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "a72863e9_d7087756",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1281,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T13:37:08Z",
+      "side": 1,
+      "message": "Ohk. I don\u0027t see this anywhere yet. I will update to \"parent-device-id\" for my changes. Thanks.",
+      "parentUuid": "c3a16dc0_0f69ce3d",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da77072e_59a7c55d",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2020-02-28T13:06:08Z",
       "side": 1,
       "message": "No need for two logs",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62db9dbd_7c495fe8",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T13:37:08Z",
+      "side": 1,
+      "message": "Thanks. Will update.",
+      "parentUuid": "da77072e_59a7c55d",
       "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "bee9b2f2_bee687fb",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T13:37:08Z",
+      "side": 1,
+      "message": "I think this is how we are doing everywhere. I tried to remain consistent. If you feel like I can open another JIRA to address this globally.",
+      "parentUuid": "d51fcd33_4b58e9f3",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19e5479f_cd6073fd",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 4
@@ -98,6 +188,24 @@
       "writtenOn": "2020-02-28T13:06:08Z",
       "side": 1,
       "message": "No need to log before returning an error",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb47a5ea_4c97a3c6",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-02-28T13:37:08Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "19e5479f_cd6073fd",
       "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
