@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52b9e6c6_f6cd3d8a",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T15:34:36Z",
+      "side": 1,
+      "message": "Try to keep the msg and field names to lower case with \"-\".\n\nShould this be debug?",
+      "revId": "8c392c5d4532c130bbc6383fee67309a6b260267",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef1f957f_3eed8447",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T15:34:36Z",
+      "side": 1,
+      "message": "Just remove the log and let the calling function deal with the err.",
+      "revId": "8c392c5d4532c130bbc6383fee67309a6b260267",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
