@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "3f7e1e2e_e4e7efbb",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T14:00:40Z",
+      "side": 1,
+      "message": "I have seen various concurrent actions happening during deletion (e.g. device deleted and then receive port status change from adapter).  In this, as you said, such a condition should not occur. For now you can leave it as is.",
+      "parentUuid": "5436342c_c98283bb",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b41551ae_8e9fc08c",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 4
@@ -171,6 +189,24 @@
       "side": 1,
       "message": "I think this is how we are doing everywhere. I tried to remain consistent. If you feel like I can open another JIRA to address this globally.",
       "parentUuid": "d51fcd33_4b58e9f3",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "119f99a3_690bb06d",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T14:00:40Z",
+      "side": 1,
+      "message": "Actually, in places where this check is being done is when we are actually looking for a port for a specific device.  In these cases it does make sense.   In this scenario, you are actually looking for NNI ports. So it would be more readable if the check is against NNI port.",
+      "parentUuid": "bee9b2f2_bee687fb",
       "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
