@@ -26,7 +26,7 @@ import (
 
 func realMain() {
 	go func() {
-		log.Infoln(http.ListenAndServe("localhost:6060", nil))
+		log.Infoln(http.ListenAndServe("0.0.0.0:6060", nil))
 	}()
 
 }
