@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "453afcb5_9f32e3b1",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:06:08Z",
+      "side": 1,
+      "message": "This function is invoked as part of a callbacks pipeline.   If an error is returned then all the following callbacks in the pipeline will not be executed.  If deleting uni ports may result in expected failures, e.g. due to race conditions then an error should not be returned, instead just log it.  If the race condition should never happen at this stage of the pipeline execution then returning an error is good.",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b41551ae_8e9fc08c",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1279,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:06:08Z",
+      "side": 1,
+      "message": "Adding the parent device id is helpful.",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3a16dc0_0f69ce3d",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1281,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:06:08Z",
+      "side": 1,
+      "message": "We are now using \"parent-device-id\" in the field names.",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da77072e_59a7c55d",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:06:08Z",
+      "side": 1,
+      "message": "No need for two logs",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d51fcd33_4b58e9f3",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:06:08Z",
+      "side": 1,
+      "message": "Would it be clearer to explicitly test for NNI_PORT?",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19e5479f_cd6073fd",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-02-28T13:06:08Z",
+      "side": 1,
+      "message": "No need to log before returning an error",
+      "revId": "94ad1b176947f7baa266278b4a5ab2c277415a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
