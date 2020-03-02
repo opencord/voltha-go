@@ -384,29 +384,10 @@ func (npr *NonPersistedRevision) UpdateChildren(ctx context.Context, name string
 
 			// Does the existing list contain a child with that name?
 			if nameExists {
-				// Check if the data has changed or not
-				if existingChildren[nameIndex].GetData().(proto.Message).String() != newChild.GetData().(proto.Message).String() {
-					log.Debugw("replacing-existing-child", log.Fields{
-						"old-hash": existingChildren[nameIndex].GetHash(),
-						"old-data": existingChildren[nameIndex].GetData(),
-						"new-hash": newChild.GetHash(),
-						"new-data": newChild.GetData(),
-					})
-
-					// replace entry
-					newChild.getNode().SetRoot(existingChildren[nameIndex].getNode().GetRoot())
-					updatedChildren = append(updatedChildren, newChild)
-				} else {
-					log.Debugw("keeping-existing-child", log.Fields{
-						"old-hash": existingChildren[nameIndex].GetHash(),
-						"old-data": existingChildren[nameIndex].GetData(),
-						"new-hash": newChild.GetHash(),
-						"new-data": newChild.GetData(),
-					})
-
-					// keep existing entry
-					updatedChildren = append(updatedChildren, existingChildren[nameIndex])
-				}
+				// This function is invoked only when the data has actually changed (current Core usage).  Therefore,
+				// we need to avoid an expensive deep proto.message comparison and treat the data as an update
+				newChild.getNode().SetRoot(existingChildren[nameIndex].getNode().GetRoot())
+				updatedChildren = append(updatedChildren, newChild)
 			} else {
 				log.Debugw("adding-unknown-child", log.Fields{
 					"hash": newChild.GetHash(),

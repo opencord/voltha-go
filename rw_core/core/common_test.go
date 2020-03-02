@@ -57,6 +57,7 @@ type isLogicalDeviceConditionSatisfied func(ld *voltha.LogicalDevice) bool
 type isDeviceConditionSatisfied func(ld *voltha.Device) bool
 type isDevicesConditionSatisfied func(ds *voltha.Devices) bool
 type isLogicalDevicesConditionSatisfied func(lds *voltha.LogicalDevices) bool
+type isConditionSatisfied func() bool
 
 func init() {
 	_, err := log.AddPackage(log.JSON, logLevel, log.Fields{"instanceId": "coreTests"})
@@ -193,7 +194,7 @@ func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 			d, _ := nbi.GetDevice(getContext(), &voltha.ID{Id: oltDeviceID})
 			if d != nil && d.ParentId != "" {
 				ld, _ := nbi.GetLogicalDevice(getContext(), &voltha.ID{Id: d.ParentId})
-				if ld != nil && verificationFunction(ld) {
+				if verificationFunction(ld) {
 					ch <- 1
 					break
 				}
@@ -268,5 +269,31 @@ func waitUntilConditionForLogicalDevices(timeout time.Duration, nbi *APIHandler,
 	case <-timer.C:
 		done = true
 		return fmt.Errorf("timeout-waiting-logical-devices")
+	}
+}
+
+func waitUntilCondition(timeout time.Duration, nbi *APIHandler, verificationFunction isConditionSatisfied) error {
+	ch := make(chan int, 1)
+	done := false
+	go func() {
+		for {
+			if verificationFunction() {
+				ch <- 1
+				break
+			}
+			if done {
+				break
+			}
+			time.Sleep(retryInterval)
+		}
+	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-ch:
+		return nil
+	case <-timer.C:
+		done = true
+		return fmt.Errorf("timeout-waiting-for-condition")
 	}
 }
