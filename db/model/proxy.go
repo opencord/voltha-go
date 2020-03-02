@@ -26,7 +26,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
@@ -191,29 +190,6 @@ func (p *Proxy) SetOperation(operation ProxyOperation) {
 	p.operation = operation
 }
 
-// parseForControlledPath verifies if a proxy path matches a pattern
-// for locations that need to be access controlled.
-func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled bool) {
-	// TODO: Add other path prefixes that may need control
-	if strings.HasPrefix(path, "/devices") ||
-		strings.HasPrefix(path, "/logical_devices") ||
-		strings.HasPrefix(path, "/adapters") {
-
-		split := strings.SplitN(path, "/", -1)
-		switch len(split) {
-		case 2:
-			controlled = false
-			pathLock = ""
-		case 3:
-			fallthrough
-		default:
-			pathLock = fmt.Sprintf("%s/%s", split[1], split[2])
-			controlled = true
-		}
-	}
-	return pathLock, controlled
-}
-
 // List will retrieve information from the data model at the specified path location
 // A list operation will force access to persistence storage
 func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
@@ -224,17 +200,13 @@ func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txi
 		effectivePath = p.getFullPath() + path
 	}
 
-	pathLock, controlled := p.parseForControlledPath(effectivePath)
-
 	p.SetOperation(ProxyList)
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-list", log.Fields{
-		"path":       path,
-		"effective":  effectivePath,
-		"pathLock":   pathLock,
-		"controlled": controlled,
-		"operation":  p.GetOperation(),
+		"path":      path,
+		"effective": effectivePath,
+		"operation": p.GetOperation(),
 	})
 	return p.getRoot().List(ctx, path, "", depth, deep, txid)
 }
@@ -248,17 +220,13 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 		effectivePath = p.getFullPath() + path
 	}
 
-	pathLock, controlled := p.parseForControlledPath(effectivePath)
-
 	p.SetOperation(ProxyGet)
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-get", log.Fields{
-		"path":       path,
-		"effective":  effectivePath,
-		"pathLock":   pathLock,
-		"controlled": controlled,
-		"operation":  p.GetOperation(),
+		"path":      path,
+		"effective": effectivePath,
+		"operation": p.GetOperation(),
 	})
 
 	return p.getRoot().Get(ctx, path, "", depth, deep, txid)
@@ -280,32 +248,15 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 		effectivePath = p.getFullPath() + path
 	}
 
-	pathLock, controlled := p.parseForControlledPath(effectivePath)
-
 	p.SetOperation(ProxyUpdate)
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-update", log.Fields{
-		"path":       path,
-		"effective":  effectivePath,
-		"full":       fullPath,
-		"pathLock":   pathLock,
-		"controlled": controlled,
-		"operation":  p.GetOperation(),
+		"path":      path,
+		"effective": effectivePath,
+		"full":      fullPath,
+		"operation": p.GetOperation(),
 	})
-
-	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
-			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
-			return nil, err
-		}
-		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
-			if err != nil {
-				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
-			}
-		}()
-	}
 
 	result := p.getRoot().Update(ctx, fullPath, data, strict, txid, nil)
 
@@ -334,32 +285,15 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 		effectivePath = p.getFullPath() + path + "/" + id
 	}
 
-	pathLock, controlled := p.parseForControlledPath(effectivePath)
-
 	p.SetOperation(ProxyAdd)
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-add-with-id", log.Fields{
-		"path":       path,
-		"effective":  effectivePath,
-		"full":       fullPath,
-		"pathLock":   pathLock,
-		"controlled": controlled,
-		"operation":  p.GetOperation(),
+		"path":      path,
+		"effective": effectivePath,
+		"full":      fullPath,
+		"operation": p.GetOperation(),
 	})
-
-	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
-			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
-			return nil, err
-		}
-		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
-			if err != nil {
-				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
-			}
-		}()
-	}
 
 	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
 
@@ -386,32 +320,15 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 		effectivePath = p.getFullPath() + path
 	}
 
-	pathLock, controlled := p.parseForControlledPath(effectivePath)
-
 	p.SetOperation(ProxyAdd)
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-add", log.Fields{
-		"path":       path,
-		"effective":  effectivePath,
-		"full":       fullPath,
-		"pathLock":   pathLock,
-		"controlled": controlled,
-		"operation":  p.GetOperation(),
+		"path":      path,
+		"effective": effectivePath,
+		"full":      fullPath,
+		"operation": p.GetOperation(),
 	})
-
-	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
-			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
-			return nil, err
-		}
-		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
-			if err != nil {
-				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
-			}
-		}()
-	}
 
 	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
 
@@ -438,32 +355,15 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface
 		effectivePath = p.getFullPath() + path
 	}
 
-	pathLock, controlled := p.parseForControlledPath(effectivePath)
-
 	p.SetOperation(ProxyRemove)
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-remove", log.Fields{
-		"path":       path,
-		"effective":  effectivePath,
-		"full":       fullPath,
-		"pathLock":   pathLock,
-		"controlled": controlled,
-		"operation":  p.GetOperation(),
+		"path":      path,
+		"effective": effectivePath,
+		"full":      fullPath,
+		"operation": p.GetOperation(),
 	})
-
-	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
-			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
-			return nil, err
-		}
-		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
-			if err != nil {
-				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
-			}
-		}()
-	}
 
 	result := p.getRoot().Remove(ctx, fullPath, txid, nil)
 
@@ -491,32 +391,16 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) (*
 		effectivePath = p.getFullPath() + path
 	}
 
-	pathLock, controlled := p.parseForControlledPath(effectivePath)
-
 	p.SetOperation(ProxyCreate)
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-create", log.Fields{
-		"path":       path,
-		"effective":  effectivePath,
-		"full":       fullPath,
-		"pathLock":   pathLock,
-		"controlled": controlled,
-		"operation":  p.GetOperation(),
+		"path":      path,
+		"effective": effectivePath,
+		"full":      fullPath,
+		"operation": p.GetOperation(),
 	})
 
-	if p.getRoot().KvStore != nil {
-		if _, err := p.getRoot().KvStore.Client.Reserve(ctx, pathLock+"_", uuid.New().String(), ReservationTTL); err != nil {
-			log.Errorw("unable-to-acquire-key-from-kvstore", log.Fields{"error": err})
-			return nil, err
-		}
-		defer func() {
-			err := p.getRoot().KvStore.Client.ReleaseReservation(ctx, pathLock+"_")
-			if err != nil {
-				log.Errorw("Unable to release reservation for key", log.Fields{"error": err})
-			}
-		}()
-	}
 	return p.getRoot().CreateProxy(ctx, fullPath, exclusive)
 }
 
