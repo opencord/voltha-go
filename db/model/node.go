@@ -598,29 +598,23 @@ func (n *node) doUpdate(ctx context.Context, branch *Branch, data interface{}, s
 		return nil
 	}
 
-	// TODO: validate that this actually works
-	//if n.hasChildren(data) {
-	//	return nil
-	//}
-
 	if n.GetProxy() != nil {
 		log.Debug("invoking proxy PreUpdate Callbacks")
 		n.GetProxy().InvokeCallbacks(ctx, PreUpdate, false, branch.GetLatest(), data)
 	}
 
-	if branch.GetLatest().GetData().(proto.Message).String() != data.(proto.Message).String() {
-		if strict {
-			// TODO: checkAccessViolations(data, Branch.GetLatest.data)
-			log.Debugf("checking access violations")
-		}
-
-		rev := branch.GetLatest().UpdateData(ctx, data, branch)
-		changes := []ChangeTuple{{PostUpdate, branch.GetLatest().GetData(), rev.GetData()}}
-		n.makeLatest(branch, rev, changes)
-
-		return rev
+	if strict {
+		// TODO: checkAccessViolations(data, Branch.GetLatest.data)
+		log.Warn("access-violations-not-supported")
 	}
-	return branch.GetLatest()
+
+	// The way the model is used, this function is only invoked upon data change.  Therefore, to also
+	// avoid a deep proto.message comparison (expensive), just create a new branch regardless
+	rev := branch.GetLatest().UpdateData(ctx, data, branch)
+	changes := []ChangeTuple{{PostUpdate, branch.GetLatest().GetData(), rev.GetData()}}
+	n.makeLatest(branch, rev, changes)
+
+	return rev
 }
 
 // Add inserts a new node at the specified path with the provided data
@@ -691,7 +685,6 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 
 				updatedRev := rev.UpdateChildren(ctx, name, children, branch)
 				changes := []ChangeTuple{{PostAdd, nil, childRev.GetData()}}
-				childRev.SetupWatch(ctx, childRev.GetName())
 
 				n.makeLatest(branch, updatedRev, changes)
 
