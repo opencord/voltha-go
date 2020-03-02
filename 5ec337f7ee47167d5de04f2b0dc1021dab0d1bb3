@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dac8d423_81c376f0",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Should handle error?  Else ld might be nil.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c55f02f8_054b07e7",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "This can be done without spinning off a new thread, so long as verificationFunction() is guaranteed to return quickly.\n\nConsider documenting that the verificationFunction must return quickly, and use a single thread here.\n\nAside: There should be a solution that doesn\u0027t involve polling at all, which would be more efficient.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55beeda9_0116f337",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Consider using a regular map[] instead.  map[] doesn\u0027t require type casting, and leads to cleaner solutions overall, even if an additional mutex is required.\n\n(If sync.Map was used for optimization reasons, this is likely premature, and may actually perform worse.)",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e17da55b_1d1a0746",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Consider passing the toAdd \u0026 toRemove lists directly, to avoid checking having to check for nil pointers.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e758dfe_4d766af0",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Store will overwrite, no need to delete first.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee191f60_db6aa998",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "I believe sync.Map has a length function.\n\nIf this were a map[] instead, just use len(\u003cmap\u003e)",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cefb62c2_94a35281",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "If using map[] instead, can optionally one-line this by just creating a new map.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08cf65f9_2e8654cd",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Again, consider using basic map[] type.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b64b37c_88b0cc68",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Again, consider passing toAdd/toRemove directly.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcc562b8_e079fc18",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Same as before, delete before store is unnecessary.",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4260e5d_4131e5da",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "Same comment - easy with map[]",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98b70fb5_bd1bc6a6",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-02T22:08:07Z",
+      "side": 1,
+      "message": "same comment - easy with map[]",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
