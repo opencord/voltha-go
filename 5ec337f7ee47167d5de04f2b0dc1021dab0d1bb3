@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f2e67ed0_7c190fb6",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-02T23:18:55Z",
+      "side": 1,
+      "message": "No need.  It should be handled by the verificationfunction for which at times a nil ld is valid.",
+      "parentUuid": "dac8d423_81c376f0",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c55f02f8_054b07e7",
         "filename": "rw_core/core/common_test.go",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "2e233fbd_83ccb889",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-02T23:18:55Z",
+      "side": 1,
+      "message": "This function returns only if the condition is satisfied or there is a timeout. There is no requirement for the verificartionFunction to return quickly.",
+      "parentUuid": "c55f02f8_054b07e7",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55beeda9_0116f337",
         "filename": "rw_core/mocks/adapter_olt.go",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2020-03-02T22:08:07Z",
       "side": 1,
       "message": "Consider using a regular map[] instead.  map[] doesn\u0027t require type casting, and leads to cleaner solutions overall, even if an additional mutex is required.\n\n(If sync.Map was used for optimization reasons, this is likely premature, and may actually perform worse.)",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62749f40_e73431c3",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-02T23:18:55Z",
+      "side": 1,
+      "message": "Sync.Map is actually used to avoid having a mutex.   Both have there +ve and their -ve.",
+      "parentUuid": "55beeda9_0116f337",
       "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "c2190dd4_2f24bf72",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-02T23:18:55Z",
+      "side": 1,
+      "message": "Will update.",
+      "parentUuid": "9e758dfe_4d766af0",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee191f60_db6aa998",
         "filename": "rw_core/mocks/adapter_olt.go",
         "patchSetId": 3
@@ -98,6 +170,24 @@
       "writtenOn": "2020-03-02T22:08:07Z",
       "side": 1,
       "message": "I believe sync.Map has a length function.\n\nIf this were a map[] instead, just use len(\u003cmap\u003e)",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa9742c9_4bb6fee3",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-02T23:18:55Z",
+      "side": 1,
+      "message": "Nope, no length for sync.Map.",
+      "parentUuid": "ee191f60_db6aa998",
       "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
