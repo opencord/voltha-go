@@ -190,6 +190,29 @@ func (p *Proxy) SetOperation(operation ProxyOperation) {
 	p.operation = operation
 }
 
+// parseForControlledPath verifies if a proxy path matches a pattern
+// for locations that need to be access controlled.
+func (p *Proxy) parseForControlledPath(path string) (pathLock string, controlled bool) {
+	// TODO: Add other path prefixes that may need control
+	if strings.HasPrefix(path, "/devices") ||
+		strings.HasPrefix(path, "/logical_devices") ||
+		strings.HasPrefix(path, "/adapters") {
+
+		split := strings.SplitN(path, "/", -1)
+		switch len(split) {
+		case 2:
+			controlled = false
+			pathLock = ""
+		case 3:
+			fallthrough
+		default:
+			pathLock = fmt.Sprintf("%s/%s", split[1], split[2])
+			controlled = true
+		}
+	}
+	return pathLock, controlled
+}
+
 // List will retrieve information from the data model at the specified path location
 // A list operation will force access to persistence storage
 func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
@@ -204,9 +227,9 @@ func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txi
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-list", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"operation": p.GetOperation(),
+		"path":       path,
+		"effective":  effectivePath,
+		"operation":  p.GetOperation(),
 	})
 	return p.getRoot().List(ctx, path, "", depth, deep, txid)
 }
@@ -224,9 +247,9 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-get", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"operation": p.GetOperation(),
+		"path":       path,
+		"effective":  effectivePath,
+		"operation":  p.GetOperation(),
 	})
 
 	return p.getRoot().Get(ctx, path, "", depth, deep, txid)
@@ -289,10 +312,10 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-add-with-id", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"operation":  p.GetOperation(),
 	})
 
 	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
@@ -324,10 +347,10 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-add", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"operation":  p.GetOperation(),
 	})
 
 	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
@@ -359,10 +382,10 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-remove", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"operation":  p.GetOperation(),
 	})
 
 	result := p.getRoot().Remove(ctx, fullPath, txid, nil)
@@ -395,10 +418,10 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) (*
 	defer p.SetOperation(ProxyNone)
 
 	log.Debugw("proxy-create", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
+		"path":       path,
+		"effective":  effectivePath,
+		"full":       fullPath,
+		"operation":  p.GetOperation(),
 	})
 
 	return p.getRoot().CreateProxy(ctx, fullPath, exclusive)
