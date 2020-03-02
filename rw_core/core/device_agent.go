@@ -1457,7 +1457,8 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 
 	//Remove the associated peer ports on the parent device
 	if err := agent.deviceMgr.deletePeerPorts(ctx, device.ParentId, device.Id); err != nil {
-		return err
+		// At this stage, the parent device may also have been deleted.  Just log and keep processing.
+		log.Warnw("failure-deleting-peer-port", log.Fields{"error": err, "child-device-id": device.Id, "parent-device-id": device.ParentId})
 	}
 
 	if err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId); err != nil {
