@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
@@ -31,11 +32,14 @@ import (
 )
 
 const (
-	numONUPerOLT = 4
+	numONUPerOLT      = 4
+	startingUNIPortNo = 100
 )
 
 // OLTAdapter represent OLT adapter
 type OLTAdapter struct {
+	flows sync.Map
+
 	Adapter
 }
 
@@ -97,7 +101,7 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 		}
 
 		// Register Child devices
-		initialUniPortNo := 100
+		initialUniPortNo := startingUNIPortNo
 		for i := 0; i < numONUPerOLT; i++ {
 			go func(seqNo int) {
 				if _, err := oltA.coreProxy.ChildDeviceDetected(
@@ -166,6 +170,11 @@ func (oltA *OLTAdapter) Get_ofp_port_info(device *voltha.Device, portNo int64) (
 // GetNumONUPerOLT returns number of ONUs per OLT
 func (oltA *OLTAdapter) GetNumONUPerOLT() int {
 	return numONUPerOLT
+}
+
+// Returns the starting UNI port number
+func (oltA *OLTAdapter) GetStartingUNIPortNo() int {
+	return startingUNIPortNo
 }
 
 // Disable_device disables device
@@ -260,4 +269,38 @@ func (oltA *OLTAdapter) Disable_port(deviceId string, Port *voltha.Port) error {
 // Child_device_lost deletes ONU and its references
 func (oltA *OLTAdapter) Child_device_lost(deviceID string, pPortNo uint32, onuID uint32) error { // nolint
 	return nil
+}
+
+// Update_flows_incrementally mocks the incremental flow update
+func (oltA *OLTAdapter) Update_flows_incrementally(device *voltha.Device, flows *of.FlowChanges, groups *of.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error { // nolint
+	if flows.ToAdd != nil {
+		for _, f := range flows.ToAdd.Items {
+			oltA.flows.Delete(f.Id)
+			oltA.flows.Store(f.Id, f)
+		}
+	}
+	if flows.ToRemove != nil {
+		for _, f := range flows.ToRemove.Items {
+			oltA.flows.Delete(f.Id)
+		}
+	}
+	return nil
+}
+
+// GetFlowCount returns the total number of flows presently under this adapter
+func (oltA *OLTAdapter) GetFlowCount() int {
+	length := 0
+	oltA.flows.Range(func(_, _ interface{}) bool {
+		length++
+		return true
+	})
+	return length
+}
+
+// ClearFlows removes all flows in this adapter
+func (oltA *OLTAdapter) ClearFlows() {
+	oltA.flows.Range(func(key interface{}, value interface{}) bool {
+		oltA.flows.Delete(key)
+		return true
+	})
 }

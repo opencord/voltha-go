@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
@@ -33,6 +34,7 @@ import (
 // ONUAdapter represent ONU adapter attributes
 type ONUAdapter struct {
 	coreProxy adapterif.CoreProxy
+	flows     sync.Map
 	Adapter
 }
 
@@ -199,4 +201,38 @@ func (onuA *ONUAdapter) Reenable_device(device *voltha.Device) error { // nolint
 		}
 	}()
 	return nil
+}
+
+// Update_flows_incrementally mocks the incremental flow update
+func (onuA *ONUAdapter) Update_flows_incrementally(device *voltha.Device, flows *of.FlowChanges, groups *of.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error { // nolint
+	if flows.ToAdd != nil {
+		for _, f := range flows.ToAdd.Items {
+			onuA.flows.Delete(f.Id)
+			onuA.flows.Store(f.Id, f)
+		}
+	}
+	if flows.ToRemove != nil {
+		for _, f := range flows.ToRemove.Items {
+			onuA.flows.Delete(f.Id)
+		}
+	}
+	return nil
+}
+
+// GetFlowCount returns the total number of flows presently under this adapter
+func (onuA *ONUAdapter) GetFlowCount() int {
+	length := 0
+	onuA.flows.Range(func(_, _ interface{}) bool {
+		length++
+		return true
+	})
+	return length
+}
+
+// ClearFlows removes all flows in this adapter
+func (onuA *ONUAdapter) ClearFlows() {
+	onuA.flows.Range(func(key interface{}, value interface{}) bool {
+		onuA.flows.Delete(key)
+		return true
+	})
 }
