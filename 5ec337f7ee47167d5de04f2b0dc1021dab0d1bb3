@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "f4348d57_e8c38e39",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-02T23:30:50Z",
+      "side": 1,
+      "message": "flows.Add and flows.remove are not lists.   They contain an element that is a list.  Checking for nil is required.",
+      "parentUuid": "e17da55b_1d1a0746",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e758dfe_4d766af0",
         "filename": "rw_core/mocks/adapter_olt.go",
         "patchSetId": 3
