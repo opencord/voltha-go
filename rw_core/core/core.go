@@ -168,7 +168,8 @@ func (core *Core) Start(ctx context.Context) error {
 func (core *Core) Stop(ctx context.Context) {
 	log.Info("stopping-adaptercore")
 	if core.exitChannel != nil {
-		core.exitChannel <- 1
+		close(core.exitChannel)
+		core.exitChannel = nil
 	}
 	// Stop all the started services
 	if core.grpcServer != nil {
@@ -445,6 +446,7 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 
 	// Default state for kvstore is alive for rw_core
 	timeout := core.config.LiveProbeInterval
+loop:
 	for {
 		timeoutTimer := time.NewTimer(timeout)
 		select {
@@ -474,6 +476,9 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 			if !timeoutTimer.Stop() {
 				<-timeoutTimer.C
 			}
+
+		case <-core.exitChannel:
+			break loop
 
 		case <-timeoutTimer.C:
 			log.Info("kvstore-perform-liveness-check-on-timeout")
