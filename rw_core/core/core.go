@@ -19,6 +19,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/opencord/voltha-go/db/model"
@@ -49,7 +50,8 @@ type Core struct {
 	localDataRoot     model.Root
 	clusterDataProxy  *model.Proxy
 	localDataProxy    *model.Proxy
-	exitChannel       chan int
+	exitChannel       chan struct{}
+	stopOnce          sync.Once
 	kvClient          kvstore.Client
 	backend           db.Backend
 	kafkaClient       kafka.Client
@@ -67,7 +69,7 @@ func init() {
 func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaClient kafka.Client) *Core {
 	var core Core
 	core.instanceID = id
-	core.exitChannel = make(chan int, 1)
+	core.exitChannel = make(chan struct{})
 	core.config = cf
 	core.kvClient = kvClient
 	core.kafkaClient = kafkaClient
@@ -166,24 +168,25 @@ func (core *Core) Start(ctx context.Context) error {
 
 // Stop brings down core services
 func (core *Core) Stop(ctx context.Context) {
-	log.Info("stopping-adaptercore")
-	if core.exitChannel != nil {
-		core.exitChannel <- 1
-	}
-	// Stop all the started services
-	if core.grpcServer != nil {
-		core.grpcServer.Stop()
-	}
-	if core.logicalDeviceMgr != nil {
-		core.logicalDeviceMgr.stop(ctx)
-	}
-	if core.deviceMgr != nil {
-		core.deviceMgr.stop(ctx)
-	}
-	if core.kmp != nil {
-		core.kmp.Stop()
-	}
-	log.Info("adaptercore-stopped")
+	core.stopOnce.Do(func() {
+		log.Info("stopping-adaptercore")
+		// Signal to the KVStoreMonitor that we are stopping.
+		close(core.exitChannel)
+		// Stop all the started services
+		if core.grpcServer != nil {
+			core.grpcServer.Stop()
+		}
+		if core.logicalDeviceMgr != nil {
+			core.logicalDeviceMgr.stop(ctx)
+		}
+		if core.deviceMgr != nil {
+			core.deviceMgr.stop(ctx)
+		}
+		if core.kmp != nil {
+			core.kmp.Stop()
+		}
+		log.Info("adaptercore-stopped")
+	})
 }
 
 //startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server
@@ -445,6 +448,7 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 
 	// Default state for kvstore is alive for rw_core
 	timeout := core.config.LiveProbeInterval
+loop:
 	for {
 		timeoutTimer := time.NewTimer(timeout)
 		select {
@@ -474,6 +478,9 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 			if !timeoutTimer.Stop() {
 				<-timeoutTimer.C
 			}
+
+		case <-core.exitChannel:
+			break loop
 
 		case <-timeoutTimer.C:
 			log.Info("kvstore-perform-liveness-check-on-timeout")
