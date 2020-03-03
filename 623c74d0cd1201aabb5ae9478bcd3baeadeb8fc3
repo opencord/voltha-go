@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5047025_8bc4564f",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-03T15:11:20Z",
+      "side": 1,
+      "message": "For consistency/readability, consider:\n\nreturn \u0026OLTAdapter{\n  flows: ...\n  Adapter: Adapter{\n    coreProxy: ...\n  }\n}\n\n(Same for onu)",
+      "revId": "623c74d0cd1201aabb5ae9478bcd3baeadeb8fc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
