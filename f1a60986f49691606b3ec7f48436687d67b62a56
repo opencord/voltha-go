@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "195b1d6f_69a236b6",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-03T22:22:17Z",
+      "side": 1,
+      "message": "Waits on a nil chan will hang forever.\nIf you want to avoid double-Stop(), consider sync.Once\nAlternatively pass the chan directly to each function that needs to wait on it, or define a second variable for waiting only (one for read vs write end).",
+      "range": {
+        "startLine": 172,
+        "startChar": 2,
+        "endLine": 172,
+        "endChar": 24
+      },
+      "revId": "f1a60986f49691606b3ec7f48436687d67b62a56",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
