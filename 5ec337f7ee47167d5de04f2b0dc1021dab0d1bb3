@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "72c59cde_3ea57be3",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-03T00:14:58Z",
+      "side": 1,
+      "message": "In the general case I would agree.   However, the aim of this function is to wait for a condition for a given period of time.  If that condition is not met then it\u0027s a timeout.  The caller (test case) only cares whether it receives a success or a timeout.\n\nFor instance, a GetLogicaldevice() will return an error and a nil reference (ld) until a logical device is created.   If we return an error then the caller function will have to handle the error and keep invoking this function until a logical device is created.  That\u0027s a lot of back and forth when the caller cares only about \"success\" or timeout.   Note that the test case will fail on a timeout.",
+      "parentUuid": "0d4b604a_dcca5b01",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c55f02f8_054b07e7",
         "filename": "rw_core/core/common_test.go",
         "patchSetId": 3
