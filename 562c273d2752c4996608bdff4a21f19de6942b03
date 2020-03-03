@@ -22,6 +22,30 @@
       "revId": "562c273d2752c4996608bdff4a21f19de6942b03",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92623c73_233f3099",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-03-03T22:06:04Z",
+      "side": 1,
+      "message": "That might be a better solution, in case there are other goroutines that need to be shut down. Let me look into it.",
+      "parentUuid": "ca5addbb_8a569776",
+      "range": {
+        "startLine": 173,
+        "startChar": 7,
+        "endLine": 173,
+        "endChar": 18
+      },
+      "revId": "562c273d2752c4996608bdff4a21f19de6942b03",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
