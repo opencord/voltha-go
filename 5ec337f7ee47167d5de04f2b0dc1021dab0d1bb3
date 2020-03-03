@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0d4b604a_dcca5b01",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-03T00:01:16Z",
+      "side": 1,
+      "message": "I guess the question is, if nbi.GetLogicalDevice returns an error, then `ld` really shouldn\u0027t be referenced and the test should fail, yes? even if nil is a valid response, if there is an error then then the ld being nil doesn\u0027t mean that for d.ParentId that nil is was ld is meant to be. i.e the error returns means the result is non-deterministic in its intent. seems like a return err in this case would be appropriate.",
+      "parentUuid": "f2e67ed0_7c190fb6",
+      "revId": "5ec337f7ee47167d5de04f2b0dc1021dab0d1bb3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c55f02f8_054b07e7",
         "filename": "rw_core/core/common_test.go",
         "patchSetId": 3
