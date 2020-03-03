@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca5addbb_8a569776",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-03T21:42:27Z",
+      "side": 1,
+      "message": "If core.exitChannel was closed instead of written to, it could probably be re-used instead of defining this new channel.",
+      "range": {
+        "startLine": 173,
+        "startChar": 7,
+        "endLine": 173,
+        "endChar": 18
+      },
+      "revId": "562c273d2752c4996608bdff4a21f19de6942b03",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
