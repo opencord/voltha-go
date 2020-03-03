@@ -49,7 +49,8 @@ type Core struct {
 	localDataRoot     model.Root
 	clusterDataProxy  *model.Proxy
 	localDataProxy    *model.Proxy
-	exitChannel       chan int
+	exitChannelRead   <-chan struct{} // exitChannel, read-only
+	exitChannelWrite  chan<- struct{} // exitChannel, write-only
 	kvClient          kvstore.Client
 	backend           db.Backend
 	kafkaClient       kafka.Client
@@ -67,7 +68,9 @@ func init() {
 func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaClient kafka.Client) *Core {
 	var core Core
 	core.instanceID = id
-	core.exitChannel = make(chan int, 1)
+	exitChannel := make(chan struct{})
+	core.exitChannelWrite = exitChannel
+	core.exitChannelRead = exitChannel
 	core.config = cf
 	core.kvClient = kvClient
 	core.kafkaClient = kafkaClient
@@ -167,8 +170,10 @@ func (core *Core) Start(ctx context.Context) error {
 // Stop brings down core services
 func (core *Core) Stop(ctx context.Context) {
 	log.Info("stopping-adaptercore")
-	if core.exitChannel != nil {
-		core.exitChannel <- 1
+	if core.exitChannelWrite != nil {
+		close(core.exitChannelWrite)
+		// ensure that we can only close the exit channel once
+		core.exitChannelWrite = nil
 	}
 	// Stop all the started services
 	if core.grpcServer != nil {
@@ -445,6 +450,7 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 
 	// Default state for kvstore is alive for rw_core
 	timeout := core.config.LiveProbeInterval
+loop:
 	for {
 		timeoutTimer := time.NewTimer(timeout)
 		select {
@@ -474,6 +480,9 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 			if !timeoutTimer.Stop() {
 				<-timeoutTimer.C
 			}
+
+		case <-core.exitChannelRead:
+			break loop
 
 		case <-timeoutTimer.C:
 			log.Info("kvstore-perform-liveness-check-on-timeout")
