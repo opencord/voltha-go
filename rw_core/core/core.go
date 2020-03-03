@@ -37,23 +37,24 @@ import (
 
 // Core represent read,write core attributes
 type Core struct {
-	instanceID        string
-	deviceMgr         *DeviceManager
-	logicalDeviceMgr  *LogicalDeviceManager
-	grpcServer        *grpcserver.GrpcServer
-	grpcNBIAPIHandler *APIHandler
-	adapterMgr        *AdapterManager
-	config            *config.RWCoreFlags
-	kmp               kafka.InterContainerProxy
-	clusterDataRoot   model.Root
-	localDataRoot     model.Root
-	clusterDataProxy  *model.Proxy
-	localDataProxy    *model.Proxy
-	exitChannel       chan int
-	kvClient          kvstore.Client
-	backend           db.Backend
-	kafkaClient       kafka.Client
-	deviceOwnership   *DeviceOwnership
+	instanceID                        string
+	deviceMgr                         *DeviceManager
+	logicalDeviceMgr                  *LogicalDeviceManager
+	grpcServer                        *grpcserver.GrpcServer
+	grpcNBIAPIHandler                 *APIHandler
+	adapterMgr                        *AdapterManager
+	config                            *config.RWCoreFlags
+	kmp                               kafka.InterContainerProxy
+	clusterDataRoot                   model.Root
+	localDataRoot                     model.Root
+	clusterDataProxy                  *model.Proxy
+	localDataProxy                    *model.Proxy
+	exitChannel                       chan int
+	stopKvstoreLivenessMonitorChannel chan int
+	kvClient                          kvstore.Client
+	backend                           db.Backend
+	kafkaClient                       kafka.Client
+	deviceOwnership                   *DeviceOwnership
 }
 
 func init() {
@@ -68,6 +69,7 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags, kvClient kv
 	var core Core
 	core.instanceID = id
 	core.exitChannel = make(chan int, 1)
+	core.stopKvstoreLivenessMonitorChannel = make(chan int, 1)
 	core.config = cf
 	core.kvClient = kvClient
 	core.kafkaClient = kafkaClient
@@ -169,6 +171,9 @@ func (core *Core) Stop(ctx context.Context) {
 	log.Info("stopping-adaptercore")
 	if core.exitChannel != nil {
 		core.exitChannel <- 1
+	}
+	if core.stopKvstoreLivenessMonitorChannel != nil {
+		core.stopKvstoreLivenessMonitorChannel <- 1
 	}
 	// Stop all the started services
 	if core.grpcServer != nil {
@@ -445,6 +450,7 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 
 	// Default state for kvstore is alive for rw_core
 	timeout := core.config.LiveProbeInterval
+loop:
 	for {
 		timeoutTimer := time.NewTimer(timeout)
 		select {
@@ -474,6 +480,9 @@ func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
 			if !timeoutTimer.Stop() {
 				<-timeoutTimer.C
 			}
+
+		case <-core.stopKvstoreLivenessMonitorChannel:
+			break loop
 
 		case <-timeoutTimer.C:
 			log.Info("kvstore-perform-liveness-check-on-timeout")

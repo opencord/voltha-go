@@ -60,6 +60,8 @@ type NBTest struct {
 	maxTimeout        time.Duration
 }
 
+// superficial change
+
 func newNBTest() *NBTest {
 	test := &NBTest{}
 	// Start the embedded etcd server
@@ -73,8 +75,8 @@ func newNBTest() *NBTest {
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-nbi-test"
-	test.defaultTimeout = 50 * time.Second
-	test.maxTimeout = 300 * time.Second
+	test.defaultTimeout = 10 * time.Second
+	test.maxTimeout = 20 * time.Second
 	return test
 }
 
@@ -367,19 +369,27 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *APIHandler) {
 }
 
 func (nb *NBTest) testEnableDevice(t *testing.T, nbi *APIHandler) {
+	log.Error("A")
+
 	// Create a device that has no adapter registered
 	oltDeviceNoAdapter, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: "noAdapterRegistered", MacAddress: "aa:bb:cc:cc:ee:ff"})
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDeviceNoAdapter)
+
+	log.Error("B")
 
 	// Try to enable the oltDevice and check the error message
 	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
 	assert.NotNil(t, err)
 	assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegistered", err.Error())
 
+	log.Error("C")
+
 	//Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
 	assert.Nil(t, err)
+
+	log.Error("D")
 
 	//Ensure there are no devices in the Core now - wait until condition satisfied or timeout
 	var vdFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
@@ -388,15 +398,18 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *APIHandler) {
 	err = waitUntilConditionForDevices(5*time.Second, nbi, vdFunction)
 	assert.Nil(t, err)
 
-	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg)
+
+	log.Error("E")
 
 	//	Create the device with valid data
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
+
+	log.Error("F")
 
 	// Verify oltDevice exist in the core
 	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
@@ -404,9 +417,13 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *APIHandler) {
 	assert.Equal(t, 1, len(devices.Items))
 	assert.Equal(t, oltDevice.Id, devices.Items[0].Id)
 
+	log.Error("G")
+
 	// Enable the oltDevice
 	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)
+
+	log.Error("H")
 
 	// Wait for the logical device to be in the ready state
 	var vldFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
@@ -415,18 +432,24 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *APIHandler) {
 	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
 	assert.Nil(t, err)
 
+	log.Error("I")
+
 	// Verify that the devices have been setup correctly
 	nb.verifyDevices(t, nbi)
+
+	log.Error("J")
 
 	// Get latest oltDevice data
 	oltDevice, err = nbi.GetDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)
 
+	log.Error("K")
+
 	// Verify that the logical device has been setup correctly
 	nb.verifyLogicalDevices(t, oltDevice, nbi)
 
-	// Wait until all flows has been sent to the devices successfully
 	wg.Wait()
+	log.Error("L")
 }
 
 func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler) {

@@ -157,9 +157,10 @@ func waitUntilDeviceReadiness(deviceID string,
 	nbi *APIHandler) error {
 	ch := make(chan int, 1)
 	done := false
+	var device *voltha.Device
 	go func() {
 		for {
-			device, _ := nbi.GetDevice(getContext(), &voltha.ID{Id: deviceID})
+			device, _ = nbi.GetDevice(getContext(), &voltha.ID{Id: deviceID})
 			if verificationFunction(device) {
 				ch <- 1
 				break
@@ -177,7 +178,7 @@ func waitUntilDeviceReadiness(deviceID string,
 		return nil
 	case <-timer.C:
 		done = true
-		return fmt.Errorf("expected-states-not-reached-for-device%s", deviceID)
+		return fmt.Errorf("XXX expected-states-not-reached-for-device%s: %v", deviceID, device)
 	}
 }
 
@@ -188,10 +189,12 @@ func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 ) error {
 	ch := make(chan int, 1)
 	done := false
+	var d *voltha.Device
+	var ld *voltha.LogicalDevice
 	go func() {
 		for {
 			// Get the logical device from the olt device
-			d, _ := nbi.GetDevice(getContext(), &voltha.ID{Id: oltDeviceID})
+			d, _ = nbi.GetDevice(getContext(), &voltha.ID{Id: oltDeviceID})
 			if d != nil && d.ParentId != "" {
 				ld, _ := nbi.GetLogicalDevice(getContext(), &voltha.ID{Id: d.ParentId})
 				if verificationFunction(ld) {
@@ -212,16 +215,17 @@ func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 		return nil
 	case <-timer.C:
 		done = true
-		return fmt.Errorf("timeout-waiting-for-logical-device-readiness%s", oltDeviceID)
+		return fmt.Errorf("XXX timeout-waiting-for-logical-device-readiness%s: %v, %v", oltDeviceID, d, ld)
 	}
 }
 
 func waitUntilConditionForDevices(timeout time.Duration, nbi *APIHandler, verificationFunction isDevicesConditionSatisfied) error {
 	ch := make(chan int, 1)
 	done := false
+	var devices *voltha.Devices
 	go func() {
 		for {
-			devices, _ := nbi.ListDevices(getContext(), &empty.Empty{})
+			devices, _ = nbi.ListDevices(getContext(), &empty.Empty{})
 			if verificationFunction(devices) {
 				ch <- 1
 				break
@@ -240,16 +244,17 @@ func waitUntilConditionForDevices(timeout time.Duration, nbi *APIHandler, verifi
 		return nil
 	case <-timer.C:
 		done = true
-		return fmt.Errorf("timeout-waiting-devices")
+		return fmt.Errorf("XXX timeout-waiting-devices: %v", devices)
 	}
 }
 
 func waitUntilConditionForLogicalDevices(timeout time.Duration, nbi *APIHandler, verificationFunction isLogicalDevicesConditionSatisfied) error {
 	ch := make(chan int, 1)
 	done := false
+	var lDevices *voltha.LogicalDevices
 	go func() {
 		for {
-			lDevices, _ := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
+			lDevices, _ = nbi.ListLogicalDevices(getContext(), &empty.Empty{})
 			if verificationFunction(lDevices) {
 				ch <- 1
 				break
@@ -268,7 +273,7 @@ func waitUntilConditionForLogicalDevices(timeout time.Duration, nbi *APIHandler,
 		return nil
 	case <-timer.C:
 		done = true
-		return fmt.Errorf("timeout-waiting-logical-devices")
+		return fmt.Errorf("XXX timeout-waiting-logical-devices: %v", lDevices)
 	}
 }
 
