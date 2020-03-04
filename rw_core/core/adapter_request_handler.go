@@ -778,10 +778,13 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 	}
 
 	go func() {
-		err := rhp.deviceMgr.updatePortState(context.TODO(), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
-			voltha.OperStatus_Types(operStatus.Val))
-		if err != nil {
-			log.Errorw("unable-to-update-port-state", log.Fields{"error": err})
+		if err := rhp.deviceMgr.updatePortState(context.TODO(), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+			voltha.OperStatus_Types(operStatus.Val)); err != nil {
+			// If the error doesn't change behavior and is
+			// essentially ignored, it is not an error, it is a
+			// warning.
+			// TODO: VOL-2707
+			log.Warnw("unable-to-update-port-state", log.Fields{"error": err})
 		}
 	}()
 
