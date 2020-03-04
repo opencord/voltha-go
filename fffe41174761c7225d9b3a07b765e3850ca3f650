@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1adba66_8c87ceb3",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-04T15:40:27Z",
+      "side": 1,
+      "message": "Feels like an over-engineering. Since this channel is used only in one place would it be simpler just to have only 1 variable and just close it in stop()?",
+      "revId": "fffe41174761c7225d9b3a07b765e3850ca3f650",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "302ae849_7395a2ca",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-04T15:40:27Z",
+      "side": 1,
+      "message": "If you are worried about closing the channel more than once, it would make sense to use \"sync.Once\" to run the entire stop() function.",
+      "revId": "fffe41174761c7225d9b3a07b765e3850ca3f650",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
