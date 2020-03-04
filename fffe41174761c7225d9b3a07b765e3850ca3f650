@@ -33,6 +33,24 @@
       "revId": "fffe41174761c7225d9b3a07b765e3850ca3f650",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a74407d6_f9b64dc8",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-03-04T16:28:32Z",
+      "side": 1,
+      "message": "Will do. Let\u0027s go sync.once.",
+      "parentUuid": "302ae849_7395a2ca",
+      "revId": "fffe41174761c7225d9b3a07b765e3850ca3f650",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
