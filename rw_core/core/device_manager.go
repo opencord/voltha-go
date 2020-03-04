@@ -882,7 +882,13 @@ func (dMgr *DeviceManager) updatePortState(ctx context.Context, deviceID string,
 		go func() {
 			err := dMgr.logicalDeviceMgr.updatePortState(context.Background(), deviceID, portNo, operStatus)
 			if err != nil {
-				log.Errorw("unable-to-update-port-state", log.Fields{"error": err})
+				// While we want to handle (catch) and log when
+				// an update to a port was not able to be
+				// propagated to the logical port, we can report
+				// it as a warning and not an error because it
+				// doesn't stop or modify processing.
+				// If we get a NOT_FOUND error then the
+				log.Warnw("unable-to-update-logical-port-state", log.Fields{"error": err})
 			}
 		}()
 	}
