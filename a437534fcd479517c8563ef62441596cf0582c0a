@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b495fb07_19d3a26a",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-04T00:00:17Z",
+      "side": 1,
+      "message": "nitpick: buffer can be zero.",
+      "range": {
+        "startLine": 71,
+        "startChar": 36,
+        "endLine": 71,
+        "endChar": 37
+      },
+      "revId": "a437534fcd479517c8563ef62441596cf0582c0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
