@@ -247,6 +247,24 @@
     },
     {
       "key": {
+        "uuid": "f9979842_92cbe693",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1472,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2020-03-05T21:23:18Z",
+      "side": 1,
+      "message": "changed it found a way",
+      "parentUuid": "2fe6e38c_e1143c71",
+      "revId": "3f81dfd053ad32d5d48db20758713e9031e3ae60",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16d4ccd4_32337b50",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
