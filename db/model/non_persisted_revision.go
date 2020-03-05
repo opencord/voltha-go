@@ -307,12 +307,6 @@ func (npr *NonPersistedRevision) UpdateData(ctx context.Context, data interface{
 
 	log.Debugw("update-data", log.Fields{"hash": npr.GetHash(), "current": npr.Config.Data, "provided": data})
 
-	// Do not update the revision if data is the same
-	if npr.Config.Data != nil && npr.Config.hashData(npr.Root, data) == npr.Config.Hash {
-		log.Debugw("stored-data-matches-latest", log.Fields{"stored": npr.Config.Data, "provided": data})
-		return npr
-	}
-
 	// Construct a new revision based on the current one
 	newRev := NonPersistedRevision{}
 	newRev.Config = NewDataRevision(npr.Root, data)

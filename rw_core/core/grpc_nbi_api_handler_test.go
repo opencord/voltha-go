@@ -73,8 +73,8 @@ func newNBTest() *NBTest {
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-nbi-test"
-	test.defaultTimeout = 50 * time.Second
-	test.maxTimeout = 300 * time.Second
+	test.defaultTimeout = 10 * time.Second
+	test.maxTimeout = 20 * time.Second
 	return test
 }
 
