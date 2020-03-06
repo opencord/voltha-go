@@ -879,18 +879,21 @@ func (dMgr *DeviceManager) updatePortState(ctx context.Context, deviceID string,
 			return err
 		}
 		// Notify the logical device manager to change the port state
-		go func() {
-			err := dMgr.logicalDeviceMgr.updatePortState(context.Background(), deviceID, portNo, operStatus)
-			if err != nil {
-				// While we want to handle (catch) and log when
-				// an update to a port was not able to be
-				// propagated to the logical port, we can report
-				// it as a warning and not an error because it
-				// doesn't stop or modify processing.
-				// TODO: VOL-2707
-				log.Warnw("unable-to-update-logical-port-state", log.Fields{"error": err})
-			}
-		}()
+		// Do this for NNI and UNIs only. PON ports are not known by logical device
+		if portType == voltha.Port_ETHERNET_NNI || portType == voltha.Port_ETHERNET_UNI {
+			go func() {
+				err := dMgr.logicalDeviceMgr.updatePortState(context.Background(), deviceID, portNo, operStatus)
+				if err != nil {
+					// While we want to handle (catch) and log when
+					// an update to a port was not able to be
+					// propagated to the logical port, we can report
+					// it as a warning and not an error because it
+					// doesn't stop or modify processing.
+					// TODO: VOL-2707
+					log.Warnw("unable-to-update-logical-port-state", log.Fields{"error": err})
+				}
+			}()
+		}
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
