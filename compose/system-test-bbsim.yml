@@ -73,6 +73,13 @@ services:
 
   rw_core:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}"
+    environment:
+      JAEGER_REPORTER_LOG_SPANS: "true"
+      JAEGER_AGENT_HOST: ${DOCKER_HOST_IP}
+      JAEGER_SAMPLER_TYPE: "const"
+      JAEGER_SAMPLER_PARAM: "1"
+      JAEGER_SERVICE_NAME: "rw_core"
+
     entrypoint:
         - /app/rw_core
         - -kv_store_type=etcd
@@ -98,15 +105,18 @@ services:
 
 
   ofagent:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent:${DOCKER_TAG}"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}ofagent-go:${DOCKER_TAG}"
     command: [
-      "/ofagent/ofagent/main.py",
-      "--consul=${DOCKER_HOST_IP}:8500",
+      "/app/ofagent",
       "--controller=${DOCKER_HOST_IP}:6653",
-      "--grpc-endpoint=${DOCKER_HOST_IP}:50057",
-      "--instance-id-is-container-name",
-      "-v"
+      "--voltha=${DOCKER_HOST_IP}:50057"
     ]
+    environment:
+      JAEGER_REPORTER_LOG_SPANS: "true"
+      JAEGER_AGENT_HOST: ${DOCKER_HOST_IP}
+      JAEGER_SAMPLER_TYPE: "const"
+      JAEGER_SAMPLER_PARAM: "1"
+      JAEGER_SERVICE_NAME: "ofagent"   
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     networks:
@@ -132,6 +142,15 @@ services:
 
   adapter_openolt:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}"
+    environment:
+      JAEGER_REPORTER_LOG_SPANS: "true"
+      JAEGER_AGENT_HOST: ${DOCKER_HOST_IP}
+      JAEGER_SAMPLER_TYPE: "const"
+      JAEGER_SAMPLER_PARAM: "1"
+      JAEGER_SERVICE_NAME: "openolt"
+      JAEGER_REPORTER_MAX_QUEUE_SIZE: "100000"
+      JAEGER_REPORTER_FLUSH_INTERVAL: "10ms"
+
     command: [
       "/app/openolt",
       "--kafka_adapter_host=${DOCKER_HOST_IP}",
@@ -169,6 +188,12 @@ services:
 
   bbsim:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}"
+    environment:
+      JAEGER_REPORTER_LOG_SPANS: "true"
+      JAEGER_AGENT_HOST: ${DOCKER_HOST_IP}
+      JAEGER_SAMPLER_TYPE: "const"
+      JAEGER_SAMPLER_PARAM: "1"
+      JAEGER_SERVICE_NAME: "bbsim"
     privileged: true
     command: [
       "./bbsim",
@@ -202,6 +227,26 @@ services:
      - "1812:1812/udp"
      - "1813:1813"
      - "18120:18120"
+    networks:
+    - default
+    restart: unless-stopped
+
+  jaeger:
+    image: "jaegertracing/all-in-one:1.8"
+    command: [
+      "--sampling.strategies-file=/etc/jaeger/sampling_strategies.json",
+      "--collector.queue-size=200000",
+      "--log-level=debug",
+      "--processor.jaeger-binary.server-queue-size=100000"
+    ]    
+    ports:
+     - 5775:5775/udp
+     - 6831:6831/udp
+     - 6832:6832/udp
+     - 5778:5778
+     - 16686:16686
+     - 14268:14268
+     - 9411:9411
     networks:
     - default
     restart: unless-stopped

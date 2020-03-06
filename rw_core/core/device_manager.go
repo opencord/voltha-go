@@ -167,6 +167,7 @@ func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Devi
 		return
 	}
 	log.Debugw("createDevice", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
+	log.Infow("[hwchiu-tesst] createDevice", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
 
 	// Ensure this device is set as root
 	device.Root = true

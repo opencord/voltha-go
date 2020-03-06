@@ -384,6 +384,7 @@ func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstan
 	requestProxy := NewAdapterRequestHandlerProxy(core, coreInstanceID, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
 		core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 
+	log.Infow("hwchiu-register", log.Fields{"topic": core.config.CoreTopic})
 	// Register the broadcast topic to handle any core-bound broadcast requests
 	if err := core.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: core.config.CoreTopic}, requestProxy); err != nil {
 		log.Fatalw("Failed-registering-broadcast-handler", log.Fields{"topic": core.config.CoreTopic})

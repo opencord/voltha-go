@@ -439,6 +439,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 
 	ch := make(chan interface{})
 	defer close(ch)
+	log.Infow("[hwchiu-test] create-device", log.Fields{"device": *device})
 	go handler.deviceMgr.createDevice(ctx, device, ch)
 	select {
 	case res := <-ch:

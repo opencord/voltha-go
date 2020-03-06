@@ -28,6 +28,8 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/opentracing/opentracing-go"
 )
 
 // AdapterProxy represents adapter proxy attributes
@@ -84,8 +86,12 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 	// Use a device topic for the response as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	ap.deviceTopicRegistered = true
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AdoptDevice")
+
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("AdoptDevice-response", log.Fields{"replyTopic": replyToTopic, "deviceid": device.Id, "success": success})
+	span.Finish()
 	return unPackResponse(rpc, device.Id, success, result)
 }
 
@@ -103,6 +109,9 @@ func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device
 		Key:   "device",
 		Value: device,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DisableDevice")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	//replyToTopic := kafka.CreateSubTopic(ap.kafkaICProxy.DefaultTopic.Name, device.Id)
 	replyToTopic := ap.getCoreTopic()
@@ -121,6 +130,9 @@ func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Devic
 		Key:   "device",
 		Value: device,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReEnableDevice")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -138,6 +150,10 @@ func (ap *AdapterProxy) RebootDevice(ctx context.Context, device *voltha.Device)
 		Key:   "device",
 		Value: device,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RebootDevice")
+	defer span.Finish()
+
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -155,6 +171,9 @@ func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device)
 		Key:   "device",
 		Value: device,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DeleteDevice")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -172,6 +191,9 @@ func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Dev
 		Key:   "device",
 		Value: device,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetOfpDeviceInfo")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_device_info", &toTopic, &replyToTopic, true, device.Id, args...)
@@ -208,6 +230,9 @@ func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Devic
 		Key:   "port_no",
 		Value: pNo,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetOfpPortInfo")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, "get_ofp_port_info", &toTopic, &replyToTopic, true, device.Id, args...)
@@ -258,6 +283,9 @@ func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Devi
 	args := []*kafka.KVArg{
 		{Key: "device", Value: device},
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReconcileDevice")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -292,6 +320,9 @@ func (ap *AdapterProxy) DownloadImage(ctx context.Context, device *voltha.Device
 		Key:   "request",
 		Value: download,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DownloadImage")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -314,6 +345,9 @@ func (ap *AdapterProxy) GetImageDownloadStatus(ctx context.Context, device *volt
 		Key:   "request",
 		Value: download,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetImageDownloadStatus")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -351,6 +385,9 @@ func (ap *AdapterProxy) CancelImageDownload(ctx context.Context, device *voltha.
 		Key:   "request",
 		Value: download,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CancelImageDownload")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -373,6 +410,9 @@ func (ap *AdapterProxy) ActivateImageUpdate(ctx context.Context, device *voltha.
 		Key:   "request",
 		Value: download,
 	}
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActivateImageUpdate")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -395,6 +435,8 @@ func (ap *AdapterProxy) RevertImageUpdate(ctx context.Context, device *voltha.De
 		Key:   "request",
 		Value: download,
 	}
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RevertImageUpdate")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -428,7 +470,6 @@ func (ap *AdapterProxy) packetOut(ctx context.Context, deviceType string, device
 		Key:   "packet",
 		Value: packet,
 	}
-
 	// TODO:  Do we need to wait for an ACK on a packet Out?
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
@@ -459,7 +500,8 @@ func (ap *AdapterProxy) UpdateFlowsBulk(ctx context.Context, device *voltha.Devi
 		Key:   "flow_metadata",
 		Value: flowMetadata,
 	}
-
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateFlowsBulk")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -498,6 +540,8 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(ctx context.Context, device *volt
 		Key:   "flow_metadata",
 		Value: flowMetadata,
 	}
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateFlowsIncremental")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
@@ -519,7 +563,8 @@ func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Devi
 		Key:   "pm_configs",
 		Value: pmConfigs,
 	}
-
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdatePmConfigs")
+	defer span.Finish()
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("UpdatePmConfigs-response", log.Fields{"deviceid": device.Id, "success": success})
@@ -556,7 +601,8 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 		Key:   "request",
 		Value: simulatereq,
 	}
-
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SimulateAlarm")
+	defer span.Finish()
 	// Use a device topic for the response as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	ap.deviceTopicRegistered = true
@@ -582,7 +628,8 @@ func (ap *AdapterProxy) disablePort(ctx context.Context, device *voltha.Device, 
 		Key:   "port",
 		Value: port,
 	}
-
+	span, ctx := opentracing.StartSpanFromContext(ctx, "disablePort")
+	defer span.Finish()
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("disablePort-response", log.Fields{"device-id": device.Id, "port-no": port.PortNo, "success": success})
@@ -606,7 +653,8 @@ func (ap *AdapterProxy) enablePort(ctx context.Context, device *voltha.Device, p
 		Key:   "port",
 		Value: port,
 	}
-
+	span, ctx := opentracing.StartSpanFromContext(ctx, "enablePort")
+	defer span.Finish()
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id, args...)
 	log.Debugw("enablePort-response", log.Fields{"device-id": device.Id, "port-no": port.PortNo, "success": success})
@@ -635,6 +683,8 @@ func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, 
 			Value: oID,
 		}}
 
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ChildDeviceLost")
+	defer span.Finish()
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &toTopic, &replyToTopic, true, pDeviceID, args...)
