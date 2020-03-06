@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"strconv"
@@ -36,6 +37,10 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
 	"github.com/opencord/voltha-lib-go/v3/pkg/version"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
+	jc "github.com/uber/jaeger-client-go/config"
 )
 
 type rwCore struct {
@@ -48,6 +53,21 @@ type rwCore struct {
 	core        *c.Core
 	//For test
 	receiverChannels []<-chan *ic.InterContainerMessage
+}
+
+func initJaeger(service string) (opentracing.Tracer, io.Closer) {
+	cfg, err := jc.FromEnv()
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
+
+	tracer, closer, err := cfg.New(service, jc.Logger(jaeger.StdLogger))
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: cannot init Jager :%v\n", err))
+
+	}
+
+	return tracer, closer
 }
 
 func init() {
@@ -217,6 +237,10 @@ func main() {
 
 	cf := config.NewRWCoreFlags()
 	cf.ParseCommandArguments()
+
+	t, closer := initJaeger("rw-core")
+	defer closer.Close()
+	opentracing.SetGlobalTracer(t)
 
 	// Set the instance ID as the hostname
 	var instanceID string

@@ -426,6 +426,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 			}
 		}
 	}
+	log.Infow("[Hwchiu]GetChildDevices", log.Fields{"deviceID": pID.Id, "transactionID": transactionID.Val})
 	log.Debugw("GetChildDevices", log.Fields{"deviceID": pID.Id, "transactionID": transactionID.Val})
 
 	// Try to grab the transaction as this core may be competing with another Core

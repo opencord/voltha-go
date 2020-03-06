@@ -73,6 +73,11 @@ services:
 
   rw_core:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}"
+    environment:
+      JAEGER_REPORTER_LOG_SPANS: "true"
+      JAEGER_AGENT_HOST: ${DOCKER_HOST_IP}
+      JAEGER_SAMPLER_TYPE: "const"
+      JAEGER_SAMPLER_PARAM: 1
     entrypoint:
         - /app/rw_core
         - -kv_store_type=etcd
@@ -132,6 +137,11 @@ services:
 
   adapter_openolt:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}"
+    environment:
+      JAEGER_REPORTER_LOG_SPANS: "true"
+      JAEGER_AGENT_HOST: ${DOCKER_HOST_IP}
+      JAEGER_SAMPLER_TYPE: "const"
+      JAEGER_SAMPLER_PARAM: 1  
     command: [
       "/app/openolt",
       "--kafka_adapter_host=${DOCKER_HOST_IP}",
@@ -169,6 +179,11 @@ services:
 
   bbsim:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}"
+    environment:
+      JAEGER_REPORTER_LOG_SPANS: "true"
+      JAEGER_AGENT_HOST: ${DOCKER_HOST_IP}
+      JAEGER_SAMPLER_TYPE: "const"
+      JAEGER_SAMPLER_PARAM: 1      
     privileged: true
     command: [
       "./bbsim",
@@ -202,6 +217,20 @@ services:
      - "1812:1812/udp"
      - "1813:1813"
      - "18120:18120"
+    networks:
+    - default
+    restart: unless-stopped
+
+  jaeger:
+    image: "jaegertracing/all-in-one:1.8"
+    ports:
+     - 5775:5775/udp
+     - 6831:6831/udp
+     - 6832:6832/udp
+     - 5778:5778
+     - 16686:16686
+     - 14268:14268
+     - 9411:9411
     networks:
     - default
     restart: unless-stopped
