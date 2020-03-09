@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "46de0912_7e2c56e0",
+        "filename": "db/model/child_type.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-09T17:29:03Z",
+      "side": 1,
+      "message": "s.cache[key] defaults to the single-value form, and will not compile if passed directly.",
+      "parentUuid": "67bc3627_6d1f7511",
+      "revId": "a71a54dcffaf1d44d4c3f999ae5b9a77b66f1dcf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41d0b731_d9ce60d3",
         "filename": "db/model/child_type.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2020-03-09T17:23:30Z",
       "side": 1,
       "message": "Isn\u0027t that an issue if different cache entries are returned for the same message type?  Are they all the same value?",
+      "revId": "a71a54dcffaf1d44d4c3f999ae5b9a77b66f1dcf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acdbcabf_e310f0df",
+        "filename": "db/model/child_type.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-09T17:29:03Z",
+      "side": 1,
+      "message": "In such a case, two different maps would be returned, with the same content.  (only an issue if maps\u0027 pointers must be comparable)",
+      "parentUuid": "41d0b731_d9ce60d3",
       "revId": "a71a54dcffaf1d44d4c3f999ae5b9a77b66f1dcf",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
