@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67bc3627_6d1f7511",
+        "filename": "db/model/child_type.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-09T17:23:30Z",
+      "side": 1,
+      "message": "Why not return s.cache[key]?",
+      "revId": "a71a54dcffaf1d44d4c3f999ae5b9a77b66f1dcf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41d0b731_d9ce60d3",
+        "filename": "db/model/child_type.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-09T17:23:30Z",
+      "side": 1,
+      "message": "Isn\u0027t that an issue if different cache entries are returned for the same message type?  Are they all the same value?",
+      "revId": "a71a54dcffaf1d44d4c3f999ae5b9a77b66f1dcf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
