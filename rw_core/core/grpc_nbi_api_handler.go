@@ -23,6 +23,7 @@ import (
 	"errors"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
@@ -58,8 +59,8 @@ type APIHandler struct {
 	packetInQueueDone         chan bool
 	changeEventQueueDone      chan bool
 	coreInCompetingMode       bool
-	longRunningRequestTimeout int64
-	defaultRequestTimeout     int64
+	longRunningRequestTimeout time.Duration
+	defaultRequestTimeout     time.Duration
 	da.DefaultAPIHandler
 	core *Core
 }
@@ -138,7 +139,7 @@ func (handler *APIHandler) competeForTransaction() bool {
 // timeout value (in the event this Core dies the transaction times out in the dB causing the other Core in the
 // core-pair to proceed with the it).  If the device is not owned then this Core will just monitor the transaction
 // for potential timeouts.
-func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interface{}, maxTimeout ...int64) (*KVTransaction, error) {
+func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interface{}, maxTimeout ...time.Duration) (*KVTransaction, error) {
 	timeout := handler.defaultRequestTimeout
 	if len(maxTimeout) > 0 {
 		timeout = maxTimeout[0]
@@ -154,9 +155,9 @@ func (handler *APIHandler) takeRequestOwnership(ctx context.Context, id interfac
 			log.Warnw("getting-ownership-failed", log.Fields{"deviceId": id, "error": err})
 			return nil, errorIDNotFound
 		}
-		acquired, err = txn.Acquired(ctx, timeout, ownedByMe)
+		acquired, err = txn.Acquired(ctx, timeout.Milliseconds(), ownedByMe)
 	} else {
-		acquired, err = txn.Acquired(ctx, timeout)
+		acquired, err = txn.Acquired(ctx, timeout.Milliseconds())
 	}
 	if err == nil && acquired {
 		log.Debugw("transaction-acquired", log.Fields{"transactionId": txn.txnID})
@@ -366,7 +367,7 @@ func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.
 		if handler.isOFControllerRequest(ctx) {
 			//	Since an OF controller is only interested in the set of logical devices managed by thgis Core then return
 			//	only logical devices managed/monitored by this Core.
-			return handler.logicalDeviceMgr.listManagedLogicalDevices()
+			return handler.logicalDeviceMgr.listManagedLogicalDevices(ctx)
 		}
 	}
 	return handler.logicalDeviceMgr.listLogicalDevices(ctx)
