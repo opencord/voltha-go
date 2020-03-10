@@ -1,0 +1,418 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17a35d17_569072ab",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "is a message always guaranteed to be sent on this channel, i.e. will there be a time out if there is none set on the ctx?",
+      "range": {
+        "startLine": 59,
+        "startChar": 24,
+        "endLine": 59,
+        "endChar": 32
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "540e1931_40db2860",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "device-id",
+      "range": {
+        "startLine": 61,
+        "startChar": 68,
+        "endLine": 61,
+        "endChar": 76
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c9564fd_796aea74",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "len is very dev focused. flow-count? group-count?",
+      "range": {
+        "startLine": 245,
+        "startChar": 67,
+        "endLine": 245,
+        "endChar": 76
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7ac9601_70eed5d7",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "adapter",
+      "range": {
+        "startLine": 131,
+        "startChar": 36,
+        "endLine": 131,
+        "endChar": 43
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6011b80d_fc55d6c2",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "device-types",
+      "range": {
+        "startLine": 131,
+        "startChar": 57,
+        "endLine": 131,
+        "endChar": 68
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa10bf51_a043d32e",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "device-id",
+      "range": {
+        "startLine": 188,
+        "startChar": 45,
+        "endLine": 188,
+        "endChar": 53
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dbc4b03_f6b511ec",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "do we need the warning here. could this just return `rhp.deviceMgr.GetDevice(context.TODO(), pID.Id)`",
+      "range": {
+        "startLine": 187,
+        "startChar": 2,
+        "endLine": 189,
+        "endChar": 2
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b485fa65_c2514028",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "\u0026empty.Empty{}",
+      "range": {
+        "startLine": 235,
+        "startChar": 8,
+        "endLine": 235,
+        "endChar": 24
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30b8f9ec_b5075a4f",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "just return childDeviceDetected as opposed to print warning? let caller decide what to do in case of an error?",
+      "range": {
+        "startLine": 492,
+        "startChar": 30,
+        "endLine": 492,
+        "endChar": 49
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4c8157_0277a34c",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "no need to warn if returning error? similar comments down the page.",
+      "range": {
+        "startLine": 549,
+        "startChar": 0,
+        "endLine": 549,
+        "endChar": 71
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f65bd3ba_0488d571",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "left over debug statement?",
+      "range": {
+        "startLine": 719,
+        "startChar": 0,
+        "endLine": 719,
+        "endChar": 39
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4910c6ed_66c4fd7c",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "should this be specified as a duration and not an int?",
+      "range": {
+        "startLine": 68,
+        "startChar": 42,
+        "endLine": 68,
+        "endChar": 72
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c4ae9e8_2aaed682",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "this is squelching the error if device isn\u0027t a *voltha.Device, but then the next statement dereferenced device.Id. if d isn\u0027t a *voltha.Device want this be an invalid reference? should you capture and check ok?",
+      "range": {
+        "startLine": 409,
+        "startChar": 0,
+        "endLine": 409,
+        "endChar": 34
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e15249c_10875dfc",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "any reason not using iota?",
+      "range": {
+        "startLine": 37,
+        "startChar": 22,
+        "endLine": 37,
+        "endChar": 23
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6883fdb_e7945450",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "could be written as \ntype match struct {\n    admin, oper, conn uint8\n}",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 1
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70414980_7e43ff9a",
+        "filename": "rw_core/core/device_state_transitions_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "seems like a lot of repetitive code. could be rewritten using an anonymous struct to define input/expected outputs and then use t.Run to run each row of data as a subtest.",
+      "range": {
+        "startLine": 183,
+        "startChar": 0,
+        "endLine": 211,
+        "endChar": 109
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9a6d1e8_3856b0fd",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "ti think this should just be time.Millisecond * timeout? Or even better make the parameter timeout a time.Duration.",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 65
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c92418ca_b08a56e2",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-10T21:20:54Z",
+      "side": 1,
+      "message": "return err don\u0027t log?",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 73
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
