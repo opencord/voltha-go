@@ -101,7 +101,7 @@ func newDATest() *DATest {
 func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
-	cfg.DefaultRequestTimeout = dat.defaultTimeout.Nanoseconds() / 1000000 //TODO: change when Core changes to Duration
+	cfg.DefaultRequestTimeout = dat.defaultTimeout
 	cfg.KVStorePort = dat.kvClientPort
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
@@ -143,7 +143,8 @@ func (dat *DATest) createDeviceAgent(t *testing.T) *DeviceAgent {
 }
 
 func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globalWG *sync.WaitGroup) {
-	originalDevice := da.getDevice()
+	originalDevice, err := da.getDevice(context.Background())
+	assert.Nil(t, err)
 	assert.NotNil(t, originalDevice)
 	var localWG sync.WaitGroup
 
@@ -205,7 +206,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globa
 	expectedChange.Vlan = vlan
 	expectedChange.Reason = reason
 
-	updatedDevice := da.getDevice()
+	updatedDevice, _ := da.getDevice(context.Background())
 	assert.NotNil(t, updatedDevice)
 	assert.True(t, proto.Equal(expectedChange, updatedDevice))
 
@@ -213,22 +214,24 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globa
 }
 
 func TestConcurrentDevices(t *testing.T) {
-	da := newDATest()
-	assert.NotNil(t, da)
-	defer da.stopAll()
+	for i := 0; i < 2; i++ {
+		da := newDATest()
+		assert.NotNil(t, da)
+		defer da.stopAll()
 
-	// Start the Core
-	da.startCore(false)
+		// Start the Core
+		da.startCore(false)
 
-	var wg sync.WaitGroup
-	numConCurrentDeviceAgents := 20
-	for i := 0; i < numConCurrentDeviceAgents; i++ {
-		wg.Add(1)
-		a := da.createDeviceAgent(t)
-		go da.updateDeviceConcurrently(t, a, &wg)
+		var wg sync.WaitGroup
+		numConCurrentDeviceAgents := 20
+		for i := 0; i < numConCurrentDeviceAgents; i++ {
+			wg.Add(1)
+			a := da.createDeviceAgent(t)
+			go da.updateDeviceConcurrently(t, a, &wg)
+		}
+
+		wg.Wait()
 	}
-
-	wg.Wait()
 }
 
 func isFlowSliceEqual(a, b []*ofp.OfpFlowStats) bool {

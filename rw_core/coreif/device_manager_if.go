@@ -29,15 +29,14 @@ import (
 type DeviceManager interface {
 	GetDevice(context.Context, string) (*voltha.Device, error)
 	IsRootDevice(string) (bool, error)
-	NotifyInvalidTransition(context.Context, *voltha.Device) error
-	SetAdminStateToEnable(context.Context, *voltha.Device) error
-	CreateLogicalDevice(context.Context, *voltha.Device) error
-	SetupUNILogicalPorts(context.Context, *voltha.Device) error
-	DisableAllChildDevices(context.Context, *voltha.Device) error
-	DeleteLogicalDevice(context.Context, *voltha.Device) error
-	DeleteLogicalPorts(context.Context, *voltha.Device) error
-	DeleteAllChildDevices(context.Context, *voltha.Device) error
-	RunPostDeviceDelete(context.Context, *voltha.Device) error
-	ChildDeviceLost(context.Context, *voltha.Device) error
-	DeleteAllUNILogicalPorts(context.Context, *voltha.Device) error
+	NotifyInvalidTransition(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	CreateLogicalDevice(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	SetupUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	DisableAllChildDevices(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	DeleteLogicalDevice(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	DeleteLogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	DeleteAllChildDevices(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	RunPostDeviceDelete(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	ChildDeviceLost(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
 }
