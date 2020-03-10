@@ -62,20 +62,12 @@ func (onuA *ONUAdapter) Adopt_device(device *voltha.Device) error { // nolint
 			log.Fatalf("deviceUpdate-failed-%s", res)
 		}
 
-		// Updating the device states twice, once with oper status to discovered and followed by active may cause
-		// a failure for unit tests when these requests reaches the Core within a millisecond of each other (with real
-		// hardware will not happen as the time between these requests is much higher than 1 millisecond).  For
-		// some reasons this issue is seen on Jenkins but not when running the tests locally. The issue
-		// in the core is triggered when these requests are processed out of order (an issue in the Core that is
-		// being handled by https://jira.opencord.org/browse/VOL-2164).
-		// TODO:  Once the above change is completed then this code can be uncommented.
+		d.ConnectStatus = voltha.ConnectStatus_REACHABLE
+		d.OperStatus = voltha.OperStatus_DISCOVERED
 
-		//d.ConnectStatus = voltha.ConnectStatus_REACHABLE
-		//d.OperStatus = voltha.OperStatus_DISCOVERED
-
-		//if err := onuA.coreProxy.DeviceStateUpdate(context.TODO(), d.Id, d.ConnectStatus, d.OperStatus); err != nil {
-		//	log.Fatalf("device-state-update-failed-%s", err)
-		//}
+		if err := onuA.coreProxy.DeviceStateUpdate(context.TODO(), d.Id, d.ConnectStatus, d.OperStatus); err != nil {
+			log.Fatalf("device-state-update-failed-%s", err)
+		}
 
 		uniPortNo := uint32(2)
 		if device.ProxyAddress != nil {
@@ -163,14 +155,17 @@ func (onuA *ONUAdapter) Disable_device(device *voltha.Device) error { // nolint
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to disable
 		if err := onuA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.OperStatus_UNKNOWN); err != nil {
-			log.Fatalf("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			// Device may also have been deleted in the Core
+			log.Warnw("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			return
 		}
 		//Update the device state
 		cloned.ConnectStatus = voltha.ConnectStatus_UNREACHABLE
 		cloned.OperStatus = voltha.OperStatus_UNKNOWN
 
 		if err := onuA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
-			log.Fatalf("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			log.Warnw("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			return
 		}
 		if err := onuA.updateDevice(cloned); err != nil {
 			log.Fatalf("saving-device-failed-%s", err)

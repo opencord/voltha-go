@@ -51,9 +51,9 @@ const (
 	defaultRWCoreCA                  = "pki/voltha-CA.pem"
 	defaultAffinityRouterTopic       = "affinityRouter"
 	defaultInCompetingMode           = true
-	defaultLongRunningRequestTimeout = int64(2000)
-	defaultDefaultRequestTimeout     = int64(500)
-	defaultCoreTimeout               = int64(500)
+	defaultLongRunningRequestTimeout = 2000 * time.Millisecond
+	defaultDefaultRequestTimeout     = 1000 * time.Millisecond
+	defaultCoreTimeout               = 1000 * time.Millisecond
 	defaultCoreBindingKey            = "voltha_backend_name"
 	defaultCorePairTopic             = "rwcore_1"
 	defaultMaxConnectionRetries      = -1 // retries forever
@@ -89,9 +89,9 @@ type RWCoreFlags struct {
 	RWCoreCA                  string
 	AffinityRouterTopic       string
 	InCompetingMode           bool
-	LongRunningRequestTimeout int64
-	DefaultRequestTimeout     int64
-	DefaultCoreTimeout        int64
+	LongRunningRequestTimeout time.Duration
+	DefaultRequestTimeout     time.Duration
+	DefaultCoreTimeout        time.Duration
 	CoreBindingKey            string
 	CorePairTopic             string
 	MaxConnectionRetries      int
@@ -204,13 +204,18 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	flag.StringVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
 
 	help = fmt.Sprintf("Timeout for long running request")
-	flag.Int64Var(&(cf.LongRunningRequestTimeout), "timeout_long_request", defaultLongRunningRequestTimeout, help)
+	// TODO:  Change this code once all the params and helm charts have been changed to use the different type
+	var temp int64
+	flag.Int64Var(&temp, "timeout_long_request", defaultLongRunningRequestTimeout.Milliseconds(), help)
+	cf.LongRunningRequestTimeout = time.Duration(temp) * time.Millisecond
 
 	help = fmt.Sprintf("Default timeout for regular request")
-	flag.Int64Var(&(cf.DefaultRequestTimeout), "timeout_request", defaultDefaultRequestTimeout, help)
+	flag.Int64Var(&temp, "timeout_request", defaultDefaultRequestTimeout.Milliseconds(), help)
+	cf.DefaultRequestTimeout = time.Duration(temp) * time.Millisecond
 
 	help = fmt.Sprintf("Default Core timeout")
-	flag.Int64Var(&(cf.DefaultCoreTimeout), "core_timeout", defaultCoreTimeout, help)
+	flag.Int64Var(&temp, "core_timeout", defaultCoreTimeout.Milliseconds(), help)
+	cf.DefaultCoreTimeout = time.Duration(temp) * time.Millisecond
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&cf.Banner, "banner", defaultBanner, help)
