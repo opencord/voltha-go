@@ -19,7 +19,7 @@ package core
 import (
 	"context"
 	"errors"
-
+	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
@@ -28,13 +28,10 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // AdapterRequestHandlerProxy represent adapter request handler proxy attributes
 type AdapterRequestHandlerProxy struct {
-	TestMode                  bool
 	coreInstanceID            string
 	deviceMgr                 *DeviceManager
 	lDeviceMgr                *LogicalDeviceManager
@@ -131,7 +128,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 			}
 		}
 	}
-	log.Debugw("Register", log.Fields{"Adapter": *adapter, "DeviceTypes": deviceTypes, "transactionID": transactionID.Val, "coreID": rhp.coreInstanceID})
+	log.Debugw("Register", log.Fields{"Adapter": *adapter, "deviceTypes": deviceTypes, "transactionID": transactionID.Val, "coreID": rhp.coreInstanceID})
 
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
@@ -145,10 +142,6 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 			return nil, err
 		}
 		defer txn.Close(context.TODO())
-	}
-
-	if rhp.TestMode { // Execute only for test cases
-		return &voltha.CoreInstance{InstanceId: "CoreInstance"}, nil
 	}
 	return rhp.adapterMgr.registerAdapter(adapter, deviceTypes)
 }
@@ -189,17 +182,12 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return &voltha.Device{Id: pID.Id}, nil
-	}
-
 	// Get the device via the device manager
 	device, err := rhp.deviceMgr.GetDevice(context.TODO(), pID.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+		log.Warnw("get-device-failed", log.Fields{"deviceID": pID.Id, "error": err})
 	}
-	log.Debugw("GetDevice-response", log.Fields{"deviceID": pID.Id})
-	return device, nil
+	return device, err
 }
 
 // DeviceUpdate updates device using adapter data
@@ -239,15 +227,11 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 	}
 
 	log.Debugw("DeviceUpdate got txn", log.Fields{"deviceID": device.Id, "transactionID": transactionID.Val})
-	if rhp.TestMode { // Execute only for test cases
-		return new(empty.Empty), nil
+
+	if err := rhp.deviceMgr.updateDeviceUsingAdapterData(context.TODO(), device); err != nil {
+		log.Warnw("unable-to-update-device-using-adapter-data", log.Fields{"error": err})
+		return nil, err
 	}
-	go func() {
-		err := rhp.deviceMgr.updateDeviceUsingAdapterData(context.TODO(), device)
-		if err != nil {
-			log.Errorw("unable-to-update-device-using-adapter-data", log.Fields{"error": err})
-		}
-	}()
 	return new(empty.Empty), nil
 }
 
@@ -305,9 +289,6 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(args []*ic.Argument) (*vol
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return &voltha.Device{Id: pID.Id}, nil
-	}
 	return rhp.deviceMgr.GetChildDevice(context.TODO(), pID.Id, serialNumber.Val, onuID.Val, parentPortNo.Val)
 }
 
@@ -347,9 +328,6 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(args []*ic
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return &voltha.Device{Id: proxyAddress.DeviceId}, nil
-	}
 	return rhp.deviceMgr.GetChildDeviceWithProxyAddress(context.TODO(), proxyAddress)
 }
 
@@ -383,12 +361,7 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Po
 		}
 	}
 	log.Debugw("GetPorts", log.Fields{"deviceID": deviceID.Id, "portype": pt.Val, "transactionID": transactionID.Val})
-	if rhp.TestMode { // Execute only for test cases
-		aPort := &voltha.Port{Label: "test_port"}
-		allPorts := &voltha.Ports{}
-		allPorts.Items = append(allPorts.Items, aPort)
-		return allPorts, nil
-	}
+
 	// Try to grab the transaction as this core may be competing with another Core
 	if rhp.competeForTransaction() {
 		txn, err := rhp.takeRequestOwnership(context.TODO(), transactionID.Val, deviceID.Id)
@@ -438,15 +411,10 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return &voltha.Devices{Items: nil}, nil
-	}
-
 	return rhp.deviceMgr.getAllChildDevices(context.TODO(), pID.Id)
 }
 
-// ChildDeviceDetected is invoked when a child device is detected.  The following
-// parameters are expected:
+// ChildDeviceDetected is invoked when a child device is detected.  The following parameters are expected:
 // {parent_device_id, parent_port_no, child_device_type, channel_id, vendor_id, serial_number)
 func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) (*voltha.Device, error) {
 	if len(args) < 5 {
@@ -521,16 +489,11 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
-	}
 	device, err := rhp.deviceMgr.childDeviceDetected(context.TODO(), pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
 	if err != nil {
-		log.Errorw("child-detection-failed", log.Fields{"parentID": pID.Id, "onuID": onuID.Val, "error": err})
-		return nil, err
+		log.Warnw("child-detection-failed", log.Fields{"parentID": pID.Id, "onuID": onuID.Val, "error": err})
 	}
-
-	return device, nil
+	return device, err
 }
 
 // DeviceStateUpdate updates device status
@@ -581,18 +544,11 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.updateDeviceStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+		voltha.ConnectStatus_Types(connStatus.Val)); err != nil {
+		log.Warnw("unable-to-update-device-status", log.Fields{"error": err})
+		return nil, err
 	}
-	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	go func() {
-		err := rhp.deviceMgr.updateDeviceStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
-			voltha.ConnectStatus_Types(connStatus.Val))
-		if err != nil {
-			log.Errorw("unable-to-update-device-status", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }
 
@@ -644,23 +600,12 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
-	}
-
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	go func() {
-		err := rhp.deviceMgr.updateChildrenStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
-			voltha.ConnectStatus_Types(connStatus.Val))
-		if err != nil {
-			log.Errorw("unable-to-update-children-status", log.Fields{"error": err})
-		}
-	}()
-
-	//if err := rhp.deviceMgr.updateChildrenStatus(deviceID.ID, voltha.OperStatus_OperStatus(operStatus.Val),
-	//	voltha.ConnectStatus_ConnectStatus(connStatus.Val)); err != nil {
-	//	return nil, err
-	//}
+	if err := rhp.deviceMgr.updateChildrenStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+		voltha.ConnectStatus_Types(connStatus.Val)); err != nil {
+		log.Warnw("unable-to-update-children-status", log.Fields{"error": err})
+		return nil, err
+	}
 	return new(empty.Empty), nil
 }
 
@@ -705,17 +650,10 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*e
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.updatePortsState(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val)); err != nil {
+		log.Warnw("unable-to-update-ports-state", log.Fields{"error": err})
+		return nil, err
 	}
-
-	go func() {
-		err := rhp.deviceMgr.updatePortsState(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val))
-		if err != nil {
-			log.Errorw("unable-to-update-ports-state", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }
 
@@ -773,25 +711,15 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.updatePortState(context.TODO(), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+		voltha.OperStatus_Types(operStatus.Val)); err != nil {
+		// If the error doesn't change behavior and is essentially ignored, it is not an error, it is a
+		// warning.
+		// TODO: VOL-2707
+		fmt.Println("UPDATING PORT ...", err)
+		log.Warnw("unable-to-update-port-state", log.Fields{"error": err})
+		return nil, err
 	}
-
-	go func() {
-		if err := rhp.deviceMgr.updatePortState(context.TODO(), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
-			voltha.OperStatus_Types(operStatus.Val)); err != nil {
-			// If the error doesn't change behavior and is
-			// essentially ignored, it is not an error, it is a
-			// warning.
-			// TODO: VOL-2707
-			log.Warnw("unable-to-update-port-state", log.Fields{"error": err})
-		}
-	}()
-
-	//if err := rhp.deviceMgr.updatePortState(deviceID.ID, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
-	//	voltha.OperStatus_OperStatus(operStatus.Val)); err != nil {
-	//	return nil, err
-	//}
 	return new(empty.Empty), nil
 }
 
@@ -830,17 +758,10 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(args []*ic.Argument) (*emp
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.deleteAllPorts(context.TODO(), deviceID.Id); err != nil {
+		log.Warnw("unable-to-delete-ports", log.Fields{"error": err})
+		return nil, err
 	}
-
-	go func() {
-		err := rhp.deviceMgr.deleteAllPorts(context.TODO(), deviceID.Id)
-		if err != nil {
-			log.Errorw("unable-to-delete-ports", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }
 
@@ -880,17 +801,10 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(args []*ic.Argument) (*e
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.childDevicesLost(context.TODO(), parentDeviceID.Id); err != nil {
+		log.Warnw("unable-to-disable-child-devices", log.Fields{"error": err})
+		return nil, err
 	}
-
-	go func() {
-		err := rhp.deviceMgr.childDevicesLost(context.TODO(), parentDeviceID.Id)
-		if err != nil {
-			log.Errorw("unable-to-disable-child-devices", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }
 
@@ -930,15 +844,10 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(args []*ic.Argument)
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
-	}
-
 	if err := rhp.deviceMgr.childDevicesDetected(context.TODO(), parentDeviceID.Id); err != nil {
-		log.Errorw("child-devices-dection-failed", log.Fields{"parentID": parentDeviceID.Id, "error": err})
+		log.Warnw("child-devices-detection-failed", log.Fields{"parentID": parentDeviceID.Id, "error": err})
 		return nil, err
 	}
-
 	return new(empty.Empty), nil
 }
 
@@ -983,16 +892,10 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.addPort(context.TODO(), deviceID.Id, port); err != nil {
+		log.Warnw("unable-to-add-port", log.Fields{"error": err})
+		return nil, err
 	}
-	go func() {
-		err := rhp.deviceMgr.addPort(context.TODO(), deviceID.Id, port)
-		if err != nil {
-			log.Errorw("unable-to-add-port", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }
 
@@ -1032,17 +935,10 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.initPmConfigs(context.TODO(), pmConfigs.Id, pmConfigs); err != nil {
+		log.Warnw("unable-to-initialize-pm-configs", log.Fields{"error": err})
+		return nil, err
 	}
-
-	go func() {
-		err := rhp.deviceMgr.initPmConfigs(context.TODO(), pmConfigs.Id, pmConfigs)
-		if err != nil {
-			log.Errorw("unable-to-initialize-pm-configs", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }
 
@@ -1095,16 +991,12 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 		}
 		defer txn.Close(context.TODO())
 	}
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
-	}
-	go func() {
-		err := rhp.deviceMgr.PacketIn(context.TODO(), deviceID.Id, uint32(portNo.Val), transactionID.Val, packet.Payload)
-		if err != nil {
-			log.Errorw("unable-to-receive-packet-from-adapter", log.Fields{"error": err})
-		}
-	}()
 
+	if err := rhp.deviceMgr.PacketIn(context.TODO(), deviceID.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
+		log.Warnw("unable-to-receive-packet-from-adapter", log.Fields{"error": err})
+		return nil, err
+
+	}
 	return new(empty.Empty), nil
 }
 
@@ -1150,18 +1042,10 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.updateImageDownload(context.TODO(), deviceID.Id, img); err != nil {
+		log.Warnw("unable-to-update-image-download", log.Fields{"error": err})
+		return nil, err
 	}
-	go func() {
-		err := rhp.deviceMgr.updateImageDownload(context.TODO(), deviceID.Id, img)
-		if err != nil {
-			log.Errorw("unable-to-update-image-download", log.Fields{"error": err})
-		}
-	}()
-	//if err := rhp.deviceMgr.updateImageDownload(deviceID.ID, img); err != nil {
-	//	return nil, err
-	//}
 	return new(empty.Empty), nil
 }
 
@@ -1200,18 +1084,10 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.reconcileChildDevices(context.TODO(), parentDeviceID.Id); err != nil {
+		log.Warnw("unable-to-reconcile-child-devices", log.Fields{"error": err})
+		return nil, err
 	}
-
-	// Run it in its own routine
-	go func() {
-		err := rhp.deviceMgr.reconcileChildDevices(context.TODO(), parentDeviceID.Id)
-		if err != nil {
-			log.Errorw("unable-to-reconcile-child-devices", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }
 
@@ -1257,17 +1133,10 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(args []*ic.Argument) (
 		defer txn.Close(context.TODO())
 	}
 
-	if rhp.TestMode { // Execute only for test cases
-		return nil, nil
+	if err := rhp.deviceMgr.updateDeviceReason(context.TODO(), deviceID.Id, reason.Val); err != nil {
+		log.Warnw("unable-to-update-device-reason", log.Fields{"error": err})
+		return nil, err
+
 	}
-
-	// Run it in its own routine (w/ background context)
-	go func() {
-		err := rhp.deviceMgr.updateDeviceReason(context.TODO(), deviceID.Id, reason.Val)
-		if err != nil {
-			log.Errorw("unable-to-update-device-reason", log.Fields{"error": err})
-		}
-	}()
-
 	return new(empty.Empty), nil
 }

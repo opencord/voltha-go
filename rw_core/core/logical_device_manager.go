@@ -19,9 +19,6 @@ package core
 import (
 	"context"
 	"errors"
-	"strings"
-	"sync"
-
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -30,6 +27,8 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strings"
+	"sync"
 )
 
 // LogicalDeviceManager represent logical device manager attributes
@@ -127,7 +126,7 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDeviceAgent(logicalDeviceID stri
 func (ldMgr *LogicalDeviceManager) getLogicalDevice(ctx context.Context, id string) (*voltha.LogicalDevice, error) {
 	log.Debugw("getlogicalDevice", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, id); agent != nil {
-		return agent.GetLogicalDevice(), nil
+		return agent.GetLogicalDevice()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -137,7 +136,7 @@ func (ldMgr *LogicalDeviceManager) listManagedLogicalDevices() (*voltha.LogicalD
 	result := &voltha.LogicalDevices{}
 	ldMgr.logicalDeviceAgents.Range(func(key, value interface{}) bool {
 		agent := value.(*LogicalDeviceAgent)
-		if ld := agent.GetLogicalDevice(); ld != nil {
+		if ld, _ := agent.GetLogicalDevice(); ld != nil {
 			result.Items = append(result.Items, ld)
 		}
 		return true
@@ -192,7 +191,7 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	}
 
 	go func() {
-		err := agent.start(ctx, false)
+		err := agent.start(context.Background(), false)
 		if err != nil {
 			log.Errorw("unable-to-create-the-logical-device", log.Fields{"error": err})
 		}
@@ -363,7 +362,7 @@ func (ldMgr *LogicalDeviceManager) getLogicalPortID(ctx context.Context, device 
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, id string) (*openflow_13.Flows, error) {
 	log.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, id); agent != nil {
-		return agent.ListLogicalDeviceFlows(), nil
+		return agent.ListLogicalDeviceFlows()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -372,7 +371,7 @@ func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlows(ctx context.Context, i
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlowGroups(ctx context.Context, id string) (*openflow_13.FlowGroups, error) {
 	log.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, id); agent != nil {
-		return agent.ListLogicalDeviceFlowGroups(), nil
+		return agent.ListLogicalDeviceFlowGroups()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -381,7 +380,7 @@ func (ldMgr *LogicalDeviceManager) ListLogicalDeviceFlowGroups(ctx context.Conte
 func (ldMgr *LogicalDeviceManager) ListLogicalDevicePorts(ctx context.Context, id string) (*voltha.LogicalPorts, error) {
 	log.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, id); agent != nil {
-		return agent.ListLogicalDevicePorts(), nil
+		return agent.ListLogicalDevicePorts()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -585,7 +584,7 @@ func (ldMgr *LogicalDeviceManager) updateMeterTable(ctx context.Context, id stri
 func (ldMgr *LogicalDeviceManager) ListLogicalDeviceMeters(ctx context.Context, id string) (*openflow_13.Meters, error) {
 	log.Debugw("ListLogicalDeviceMeters", log.Fields{"logicalDeviceId": id})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, id); agent != nil {
-		return agent.ListLogicalDeviceMeters(), nil
+		return agent.ListLogicalDeviceMeters()
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }

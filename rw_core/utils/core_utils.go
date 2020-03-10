@@ -17,12 +17,16 @@
 package utils
 
 import (
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"os"
 	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// ResponseCallback is the function signature for callbacks to execute after a response is received.
+type ResponseCallback func(rpc string, response interface{}, reqArgs ...interface{})
 
 // DeviceID represent device id attribute
 type DeviceID struct {
@@ -91,9 +95,9 @@ func (r Response) Done() {
 //The error will be at the index corresponding to the order in which the channel appear in the parameter list.
 //If no errors is found then nil is returned.  This method also takes in a timeout in milliseconds. If a
 //timeout is obtained then this function will stop waiting for the remaining responses and abort.
-func WaitForNilOrErrorResponses(timeout int64, responses ...Response) []error {
+func WaitForNilOrErrorResponses(timeout time.Duration, responses ...Response) []error {
 	timedOut := make(chan struct{})
-	timer := time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() { close(timedOut) })
+	timer := time.AfterFunc(timeout, func() { close(timedOut) })
 	defer timer.Stop()
 
 	gotError := false
@@ -121,4 +125,21 @@ func WaitForNilOrErrorResponses(timeout int64, responses ...Response) []error {
 		return errors
 	}
 	return nil
+}
+
+// StartRequestSequencer starts a routine to process requests, associated with ID, sequentially
+func StartRequestSequencer(ID string, requestQueue chan chan struct{}, requestCompleteCh chan struct{}) {
+	go func() {
+		for {
+			ch, ok := <-requestQueue
+			if !ok {
+				log.Errorw("request-sequencer-queue-closed", log.Fields{"id": ID})
+				break
+			}
+			// Trigger the popped request from the queue to proceed
+			ch <- struct{}{}
+			// Wait until that request is complete before letting another request through
+			<-requestCompleteCh
+		}
+	}()
 }

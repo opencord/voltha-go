@@ -143,7 +143,7 @@ func (dat *DATest) createDeviceAgent(t *testing.T) *DeviceAgent {
 }
 
 func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globalWG *sync.WaitGroup) {
-	originalDevice := da.getDevice()
+	originalDevice, _ := da.getDevice()
 	assert.NotNil(t, originalDevice)
 	var localWG sync.WaitGroup
 
@@ -205,7 +205,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globa
 	expectedChange.Vlan = vlan
 	expectedChange.Reason = reason
 
-	updatedDevice := da.getDevice()
+	updatedDevice, _ := da.getDevice()
 	assert.NotNil(t, updatedDevice)
 	assert.True(t, proto.Equal(expectedChange, updatedDevice))
 
@@ -213,22 +213,24 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *DeviceAgent, globa
 }
 
 func TestConcurrentDevices(t *testing.T) {
-	da := newDATest()
-	assert.NotNil(t, da)
-	defer da.stopAll()
+	for i := 0; i < 2; i++ {
+		da := newDATest()
+		assert.NotNil(t, da)
+		defer da.stopAll()
 
-	// Start the Core
-	da.startCore(false)
+		// Start the Core
+		da.startCore(false)
 
-	var wg sync.WaitGroup
-	numConCurrentDeviceAgents := 20
-	for i := 0; i < numConCurrentDeviceAgents; i++ {
-		wg.Add(1)
-		a := da.createDeviceAgent(t)
-		go da.updateDeviceConcurrently(t, a, &wg)
+		var wg sync.WaitGroup
+		numConCurrentDeviceAgents := 20
+		for i := 0; i < numConCurrentDeviceAgents; i++ {
+			wg.Add(1)
+			a := da.createDeviceAgent(t)
+			go da.updateDeviceConcurrently(t, a, &wg)
+		}
+
+		wg.Wait()
 	}
-
-	wg.Wait()
 }
 
 func isFlowSliceEqual(a, b []*ofp.OfpFlowStats) bool {

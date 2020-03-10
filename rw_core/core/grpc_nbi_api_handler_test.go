@@ -287,9 +287,9 @@ func (nb *NBTest) testCoreWithoutData(t *testing.T, nbi *APIHandler) {
 	assert.NotNil(t, devices)
 	assert.Equal(t, 0, len(devices.Items))
 	adapters, err := nbi.ListAdapters(getContext(), &empty.Empty{})
+	assert.Equal(t, 0, len(adapters.Items))
 	assert.Nil(t, err)
 	assert.NotNil(t, adapters)
-	assert.Equal(t, 0, len(adapters.Items))
 }
 
 func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *APIHandler) {
@@ -362,7 +362,7 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *APIHandler) {
 	var vFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
 		return devices != nil && len(devices.Items) == 0
 	}
-	err = waitUntilConditionForDevices(5*time.Second, nbi, vFunction)
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction)
 	assert.Nil(t, err)
 }
 
@@ -385,7 +385,7 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *APIHandler) {
 	var vdFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
 		return devices != nil && len(devices.Items) == 0
 	}
-	err = waitUntilConditionForDevices(5*time.Second, nbi, vdFunction)
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vdFunction)
 	assert.Nil(t, err)
 
 	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
@@ -884,6 +884,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPort
 
 	// Listen for port events
 	processedLogicalPorts := 0
+	start := time.Now()
 	for event := range nbi.changeEventQueue {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
@@ -896,6 +897,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPort
 			}
 		}
 		if processedLogicalPorts >= numNNIPorts+numUNIPorts {
+			fmt.Println("Total time to send all flows:", time.Since(start))
 			break
 		}
 	}
@@ -929,6 +931,8 @@ func TestSuite1(t *testing.T) {
 		log.Fatalf("could not start CPU profile: %v\n", err)
 	}
 	defer pprof.StopCPUProfile()
+
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 
 	nb := newNBTest()
 	assert.NotNil(t, nb)

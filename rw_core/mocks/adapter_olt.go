@@ -207,7 +207,8 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
 
 		// Tell the Core that all child devices have been disabled (by default it's an action already taken by the Core
 		if err := oltA.coreProxy.ChildDevicesLost(context.TODO(), cloned.Id); err != nil {
-			log.Fatalf("lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+			// Device may already have been deleted in the core
+			log.Warnw("lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 	}()
 	return nil

@@ -50,7 +50,7 @@ func runFailureTask(response Response, durationRange int) {
 	response.Error(taskFailureError)
 }
 
-func runMultipleTasks(timeout, numTasks, taskDurationRange, numSuccessfulTask, numFailuretask int) []error {
+func runMultipleTasks(timeout time.Duration, numTasks, taskDurationRange, numSuccessfulTask, numFailuretask int) []error {
 	if numTasks != numSuccessfulTask+numFailuretask {
 		return []error{status.Error(codes.FailedPrecondition, "invalid-num-tasks")}
 	}
@@ -65,7 +65,7 @@ func runMultipleTasks(timeout, numTasks, taskDurationRange, numSuccessfulTask, n
 		}
 		go runFailureTask(responses[i], taskDurationRange)
 	}
-	return WaitForNilOrErrorResponses(int64(timeout), responses...)
+	return WaitForNilOrErrorResponses(timeout, responses...)
 }
 
 func getNumSuccessFailure(inputs []error) (numSuccess, numFailure, numTimeout int) {
@@ -99,12 +99,11 @@ func TestNoTimeouts(t *testing.T) {
 	for i := 0; i < numIterations; i++ {
 		totalSuccess = rand.Intn(numTasks)
 		totalFailure = numTasks - totalSuccess
-		results = runMultipleTasks(110, numTasks, 100, totalSuccess, totalFailure)
+		results = runMultipleTasks(110*time.Millisecond, numTasks, 50, totalSuccess, totalFailure)
 		nSuccess, nFailure, nTimeouts = getNumSuccessFailure(results)
 		assert.Equal(t, totalFailure, nFailure)
 		assert.Equal(t, totalSuccess, nSuccess)
 		assert.Equal(t, 0, nTimeouts)
-
 	}
 }
 
@@ -122,7 +121,7 @@ func TestSomeTasksTimeouts(t *testing.T) {
 	for i := 0; i < numIterations; i++ {
 		totalSuccess = rand.Intn(numTasks)
 		totalFailure = numTasks - totalSuccess
-		results = runMultipleTasks(50, numTasks, 100, totalSuccess, totalFailure)
+		results = runMultipleTasks(50*time.Millisecond, numTasks, 100, totalSuccess, totalFailure)
 		nSuccess, nFailure, nTimeouts = getNumSuccessFailure(results)
 		assert.True(t, nFailure >= totalFailure)
 		assert.True(t, nSuccess <= totalSuccess)

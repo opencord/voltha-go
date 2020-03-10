@@ -42,6 +42,13 @@ type InvokeRpcSpy struct {
 	Response  proto.Message
 }
 
+type InvokeAsyncRpcSpy struct {
+	CallCount int
+	Calls     map[int]InvokeRpcArgs
+	Timeout   bool
+	Response  proto.Message
+}
+
 type MockKafkaICProxy struct {
 	InvokeRpcSpy InvokeRpcSpy
 }
@@ -58,6 +65,29 @@ func (s *MockKafkaICProxy) DeviceDiscovered(deviceId string, deviceType string, 
 	return nil
 }
 func (s *MockKafkaICProxy) Stop() {}
+
+func (s *MockKafkaICProxy) InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *kafka.Topic, replyToTopic *kafka.Topic,
+	waitForResponse bool, key string, kvArgs ...*kafka.KVArg) chan *kafka.RpcResponse {
+
+	args := make(map[int]interface{}, 4)
+	for k, v := range kvArgs {
+		args[k] = v
+	}
+
+	s.InvokeRpcSpy.Calls[s.InvokeRpcSpy.CallCount] = InvokeRpcArgs{
+		Rpc:             rpc,
+		ToTopic:         toTopic,
+		ReplyToTopic:    replyToTopic,
+		WaitForResponse: waitForResponse,
+		Key:             key,
+		KvArgs:          args,
+	}
+
+	chnl := make(chan *kafka.RpcResponse)
+
+	return chnl
+}
+
 func (s *MockKafkaICProxy) InvokeRPC(ctx context.Context, rpc string, toTopic *kafka.Topic, replyToTopic *kafka.Topic, waitForResponse bool, key string, kvArgs ...*kafka.KVArg) (bool, *any.Any) {
 	s.InvokeRpcSpy.CallCount++
 

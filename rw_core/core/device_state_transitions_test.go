@@ -16,6 +16,7 @@
 package core
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -179,6 +180,36 @@ func TestValidTransitions(t *testing.T) {
 	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[4]).Pointer())
 
+	from = getDevice(true, voltha.AdminState_UNKNOWN, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	to = getDevice(true, voltha.AdminState_DELETED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 5, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.DisableAllChildDevices).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllUNILogicalPorts).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[4]).Pointer())
+
+	from = getDevice(true, voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	to = getDevice(true, voltha.AdminState_DELETED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 5, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.DisableAllChildDevices).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllUNILogicalPorts).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[4]).Pointer())
+
+	from = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	to = getDevice(true, voltha.AdminState_DELETED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 5, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.DisableAllChildDevices).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllUNILogicalPorts).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[4]).Pointer())
+
 	from = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
 	to = getDevice(true, voltha.AdminState_DELETED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
 	handlers = transitionMap.GetTransitionHandler(from, to)
@@ -209,6 +240,30 @@ func TestValidTransitions(t *testing.T) {
 
 	from = getDevice(false, voltha.AdminState_DISABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
 	to = getDevice(false, voltha.AdminState_DELETED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 3, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ChildDeviceLost).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalPorts).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+
+	from = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	to = getDevice(false, voltha.AdminState_DELETED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 3, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ChildDeviceLost).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalPorts).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+
+	from = getDevice(false, voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	to = getDevice(false, voltha.AdminState_DELETED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
+	handlers = transitionMap.GetTransitionHandler(from, to)
+	assert.Equal(t, 3, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ChildDeviceLost).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalPorts).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+
+	from = getDevice(false, voltha.AdminState_UNKNOWN, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	to = getDevice(false, voltha.AdminState_DELETED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
 	handlers = transitionMap.GetTransitionHandler(from, to)
 	assert.Equal(t, 3, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.ChildDeviceLost).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
@@ -302,4 +357,10 @@ func TestNoOpTransitions(t *testing.T) {
 	from = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_DISCOVERED)
 	to = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVATING)
 	assertNoOpTransition(t, from, to)
+}
+
+func TestMatch(t *testing.T) {
+	best := &match{admin: currPrevStateMatch, oper: currPrevStateMatch, conn: currPrevStateMatch}
+	m := &match{admin: currStateOnlyMatch, oper: currWildcardMatch, conn: currWildcardMatch}
+	fmt.Println(m.isBetterMatch(best), m.toInt(), best.toInt())
 }

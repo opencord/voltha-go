@@ -29,13 +29,13 @@ import (
 
 // EtcdClient represents the Etcd KV store client
 type EtcdClient struct {
-	ectdAPI          *v3Client.Client
-	keyReservations  map[string]*v3Client.LeaseID
-	watchedChannels  sync.Map
-	writeLock        sync.Mutex
-	lockToMutexMap   map[string]*v3Concurrency.Mutex
-	lockToSessionMap map[string]*v3Concurrency.Session
-	lockToMutexLock  sync.Mutex
+	ectdAPI             *v3Client.Client
+	keyReservations     map[string]*v3Client.LeaseID
+	watchedChannels     sync.Map
+	keyReservationsLock sync.RWMutex
+	lockToMutexMap      map[string]*v3Concurrency.Mutex
+	lockToSessionMap    map[string]*v3Concurrency.Session
+	lockToMutexLock     sync.Mutex
 }
 
 // NewEtcdClient returns a new client for the Etcd KV store
@@ -114,13 +114,13 @@ func (c *EtcdClient) Put(ctx context.Context, key string, value interface{}) err
 		return fmt.Errorf("unexpected-type-%T", value)
 	}
 
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
-
 	var err error
 	// Check if there is already a lease for this key - if there is then use it, otherwise a PUT will make
 	// that KV key permanent instead of automatically removing it after a lease expiration
-	if leaseID, ok := c.keyReservations[key]; ok {
+	c.keyReservationsLock.RLock()
+	leaseID, ok := c.keyReservations[key]
+	c.keyReservationsLock.RUnlock()
+	if ok {
 		_, err = c.ectdAPI.Put(ctx, key, val, v3Client.WithLease(*leaseID))
 	} else {
 		_, err = c.ectdAPI.Put(ctx, key, val)
@@ -145,9 +145,6 @@ func (c *EtcdClient) Put(ctx context.Context, key string, value interface{}) err
 // Delete removes a key from the KV store. Timeout defines how long the function will
 // wait for a response
 func (c *EtcdClient) Delete(ctx context.Context, key string) error {
-
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
 
 	// delete the key
 	if _, err := c.ectdAPI.Delete(ctx, key); err != nil {
@@ -177,9 +174,9 @@ func (c *EtcdClient) Reserve(ctx context.Context, key string, value interface{},
 		return nil, err
 	}
 	// Register the lease id
-	c.writeLock.Lock()
+	c.keyReservationsLock.Lock()
 	c.keyReservations[key] = &resp.ID
-	c.writeLock.Unlock()
+	c.keyReservationsLock.Unlock()
 
 	// Revoke lease if reservation is not successful
 	reservationSuccessful := false
@@ -235,8 +232,8 @@ func (c *EtcdClient) Reserve(ctx context.Context, key string, value interface{},
 
 // ReleaseAllReservations releases all key reservations previously made (using Reserve API)
 func (c *EtcdClient) ReleaseAllReservations(ctx context.Context) error {
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
+	c.keyReservationsLock.Lock()
+	defer c.keyReservationsLock.Unlock()
 
 	for key, leaseID := range c.keyReservations {
 		_, err := c.ectdAPI.Revoke(ctx, *leaseID)
@@ -255,8 +252,8 @@ func (c *EtcdClient) ReleaseReservation(ctx context.Context, key string) error {
 	logger.Debugw("Release-reservation", log.Fields{"key": key})
 	var ok bool
 	var leaseID *v3Client.LeaseID
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
+	c.keyReservationsLock.Lock()
+	defer c.keyReservationsLock.Unlock()
 	if leaseID, ok = c.keyReservations[key]; !ok {
 		return nil
 	}
@@ -278,9 +275,11 @@ func (c *EtcdClient) RenewReservation(ctx context.Context, key string) error {
 	// Get the leaseid using the key
 	var ok bool
 	var leaseID *v3Client.LeaseID
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
-	if leaseID, ok = c.keyReservations[key]; !ok {
+	c.keyReservationsLock.RLock()
+	leaseID, ok = c.keyReservations[key]
+	c.keyReservationsLock.RUnlock()
+
+	if !ok {
 		return errors.New("key-not-reserved")
 	}
 
@@ -372,8 +371,6 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 	// Get the array of channels mapping
 	var watchedChannels []map[chan *Event]v3Client.Watcher
 	var ok bool
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
 
 	if watchedChannels, ok = c.getChannelMaps(key); !ok {
 		logger.Warnw("key-has-no-watched-channels", log.Fields{"key": key})
@@ -425,8 +422,6 @@ func getEventType(event *v3Client.Event) int {
 
 // Close closes the KV store client
 func (c *EtcdClient) Close() {
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
 	if err := c.ectdAPI.Close(); err != nil {
 		logger.Errorw("error-closing-client", log.Fields{"error": err})
 	}
