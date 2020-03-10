@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/config"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
@@ -449,7 +450,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	ctx := context.Background()
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
-	cfg.DefaultRequestTimeout = lda.defaultTimeout.Nanoseconds() / 1000000 //TODO: change when Core changes to Duration
+	cfg.DefaultRequestTimeout = lda.defaultTimeout
 	cfg.KVStorePort = lda.kvClientPort
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
@@ -487,6 +488,7 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalDeviceAgent {
 	clonedLD.DatapathId = rand.Uint64()
 	lDeviceAgent := newLogicalDeviceAgent(clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.clusterDataProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
+	go coreutils.StartRequestSequencer(lDeviceAgent.logicalDeviceID, lDeviceAgent.requestQueue, lDeviceAgent.requestCompleteIndication)
 	added, err := lDeviceAgent.clusterDataProxy.AddWithID(context.Background(), "/logical_devices", clonedLD.Id, clonedLD, "")
 	assert.Nil(t, err)
 	assert.NotNil(t, added)
@@ -495,7 +497,7 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalDeviceAgent {
 }
 
 func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *LogicalDeviceAgent, globalWG *sync.WaitGroup) {
-	originalLogicalDevice := ldAgent.GetLogicalDevice()
+	originalLogicalDevice, _ := ldAgent.GetLogicalDevice(context.Background())
 	assert.NotNil(t, originalLogicalDevice)
 	var localWG sync.WaitGroup
 
@@ -557,7 +559,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	expectedChange.Ports[2].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
 	expectedChange.Meters = &voltha.Meters{Items: nil}
 	expectedChange.Meters.Items = append(expectedChange.Meters.Items, fu.MeterEntryFromMeterMod(meterMod))
-	updatedLogicalDevice := ldAgent.GetLogicalDevice()
+	updatedLogicalDevice, _ := ldAgent.GetLogicalDevice(context.Background())
 	assert.NotNil(t, updatedLogicalDevice)
 	assert.True(t, proto.Equal(expectedChange, updatedLogicalDevice))
 	globalWG.Done()
@@ -572,7 +574,7 @@ func TestConcurrentLogicalDeviceUpdate(t *testing.T) {
 	lda.startCore(false)
 
 	var wg sync.WaitGroup
-	numConCurrentLogicalDeviceAgents := 20
+	numConCurrentLogicalDeviceAgents := 3
 	for i := 0; i < numConCurrentLogicalDeviceAgents; i++ {
 		wg.Add(1)
 		a := lda.createLogicalDeviceAgent(t)

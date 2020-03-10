@@ -17,12 +17,17 @@
 package utils
 
 import (
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"os"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// ResponseCallback is the function signature for callbacks to execute after a response is received.
+type ResponseCallback func(rpc string, response interface{}, reqArgs ...interface{})
 
 // DeviceID represent device id attribute
 type DeviceID struct {
@@ -37,6 +42,63 @@ type LogicalDeviceID struct {
 // GetHostName returns host name
 func GetHostName() string {
 	return os.Getenv("HOSTNAME")
+}
+
+type ProceedWithRequestIndication chan struct{}
+
+type RequestQueue struct {
+	queue    chan chan struct{}
+	stopOnce sync.Once
+	stopped  bool
+}
+
+func NewRequestQueue(maxQueueSize int) *RequestQueue {
+	return &RequestQueue{
+		queue: make(chan chan struct{}, maxQueueSize),
+	}
+}
+
+func (rq *RequestQueue) Enqueue() (ProceedWithRequestIndication, error) {
+	if rq.stopped {
+		return nil, status.Error(codes.Unavailable, "request-queue-closed")
+	}
+	ch := make(ProceedWithRequestIndication)
+	// Queue the channel
+	rq.queue <- ch
+	// Return the channel to the caller.
+	return ch, nil
+}
+
+func (rq *RequestQueue) Stop() {
+	rq.stopOnce.Do(func() {
+		close(rq.queue)
+		rq.stopped = true
+	})
+}
+
+type RequestCompleteIndication struct {
+	channel  chan struct{}
+	stopOnce sync.Once
+	stopped  bool
+}
+
+func NewRequestCompleteIndication() *RequestCompleteIndication {
+	return &RequestCompleteIndication{
+		channel: make(chan struct{}),
+	}
+}
+
+func (rc *RequestCompleteIndication) Done() {
+	if !rc.stopped {
+		rc.channel <- struct{}{}
+	}
+}
+
+func (rc *RequestCompleteIndication) Stop() {
+	rc.stopOnce.Do(func() {
+		rc.stopped = true
+		close(rc.channel)
+	})
 }
 
 // Response -
@@ -91,9 +153,9 @@ func (r Response) Done() {
 //The error will be at the index corresponding to the order in which the channel appear in the parameter list.
 //If no errors is found then nil is returned.  This method also takes in a timeout in milliseconds. If a
 //timeout is obtained then this function will stop waiting for the remaining responses and abort.
-func WaitForNilOrErrorResponses(timeout int64, responses ...Response) []error {
+func WaitForNilOrErrorResponses(timeout time.Duration, responses ...Response) []error {
 	timedOut := make(chan struct{})
-	timer := time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() { close(timedOut) })
+	timer := time.AfterFunc(timeout, func() { close(timedOut) })
 	defer timer.Stop()
 
 	gotError := false
@@ -121,4 +183,21 @@ func WaitForNilOrErrorResponses(timeout int64, responses ...Response) []error {
 		return errors
 	}
 	return nil
+}
+
+// StartRequestSequencer starts a routine to process requests, associated with ID, sequentially
+func StartRequestSequencer(ID string, requestQueue *RequestQueue, requestComplete *RequestCompleteIndication) {
+	go func() {
+		for {
+			ch, ok := <-requestQueue.queue
+			if !ok {
+				log.Warnw("request-sequencer-queue-closed", log.Fields{"id": ID})
+				break
+			}
+			// To trigger the popped request from the queue to proceed, just close the channel
+			close(ch)
+			// Wait until that request is completed before letting another request through
+			<-requestComplete.channel
+		}
+	}()
 }

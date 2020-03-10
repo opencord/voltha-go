@@ -198,7 +198,8 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
 		cloned.OperStatus = voltha.OperStatus_UNKNOWN
 
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
-			log.Fatalf("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			// Device may already have been deleted in the core
+			log.Warnw("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
 		if err := oltA.updateDevice(cloned); err != nil {
@@ -207,7 +208,8 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
 
 		// Tell the Core that all child devices have been disabled (by default it's an action already taken by the Core
 		if err := oltA.coreProxy.ChildDevicesLost(context.TODO(), cloned.Id); err != nil {
-			log.Fatalf("lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+			// Device may already have been deleted in the core
+			log.Warnw("lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 	}()
 	return nil
@@ -262,7 +264,8 @@ func (oltA *OLTAdapter) Disable_port(deviceId string, Port *voltha.Port) error {
 
 		if Port.Type == voltha.Port_PON_OLT {
 			if err := oltA.coreProxy.PortStateUpdate(context.TODO(), deviceId, voltha.Port_PON_OLT, Port.PortNo, voltha.OperStatus_DISCOVERED); err != nil {
-				log.Fatalf("updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
+				// Corresponding device may have been deleted
+				log.Warnw("updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
 			}
 		}
 	}()
