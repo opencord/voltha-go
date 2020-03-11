@@ -216,6 +216,73 @@ func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 	}
 }
 
+func waitUntilLogicalDeviceIsDeleted(ldID string,
+	timeout time.Duration,
+	nbi *APIHandler,
+	verificationFunction isLogicalDeviceConditionSatisfied,
+) error {
+	ch := make(chan int, 1)
+	done := false
+	go func() {
+		for {
+			// Get the logical device from the olt device
+			ld, _ := nbi.GetLogicalDevice(getContext(), &voltha.ID{Id: ldID})
+			if verificationFunction(ld) {
+				ch <- 1
+				break
+			}
+			if done {
+				break
+			}
+			time.Sleep(retryInterval)
+		}
+	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-ch:
+		return nil
+	case <-timer.C:
+		done = true
+		return fmt.Errorf("timeout-waiting-for-logical-device-to-get-deleted%s", ldID)
+	}
+}
+
+func waitUntilLogicalDeviceIsCreated(oltDeviceID string,
+	timeout time.Duration,
+	nbi *APIHandler,
+	verificationFunction isLogicalDeviceConditionSatisfied,
+) error {
+	ch := make(chan int, 1)
+	done := false
+	go func() {
+		for {
+			// Get the logical device from the olt device
+			d, _ := nbi.GetDevice(getContext(), &voltha.ID{Id: oltDeviceID})
+			if d != nil && d.ParentId != "" {
+				ld, _ := nbi.GetLogicalDevice(getContext(), &voltha.ID{Id: d.ParentId})
+				if verificationFunction(ld) {
+					ch <- 1
+					break
+				}
+				if done {
+					break
+				}
+			}
+			time.Sleep(retryInterval)
+		}
+	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-ch:
+		return nil
+	case <-timer.C:
+		done = true
+		return fmt.Errorf("timeout-waiting-for-logical-device-to-get-deleted%s", oltDeviceID)
+	}
+}
+
 func waitUntilConditionForDevices(timeout time.Duration, nbi *APIHandler, verificationFunction isDevicesConditionSatisfied) error {
 	ch := make(chan int, 1)
 	done := false
