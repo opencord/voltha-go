@@ -632,6 +632,22 @@ func (agent *DeviceAgent) updateFlowsAndGroups(ctx context.Context, updatedFlows
 	return nil
 }
 
+//deleteAllFlows deletes all flows in the device table
+func (agent *DeviceAgent) deleteAllFlows(ctx context.Context) error {
+	log.Debugw("deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
+	agent.lockDevice.Lock()
+	defer agent.lockDevice.Unlock()
+
+	device := agent.getDeviceWithoutLock()
+	// purge all flows on the device by setting it to nil
+	device.Flows = &ofp.Flows{Items: nil}
+	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
+		// The caller logs the error
+		return err
+	}
+	return nil
+}
+
 //disableDevice disable a device
 func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	agent.lockDevice.Lock()
