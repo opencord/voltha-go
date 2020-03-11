@@ -71,6 +71,40 @@
     },
     {
       "key": {
+        "uuid": "0a14693a_0dc86ed2",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "Consider ctx.Err() to get an error based on cancellation reason.",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36b67c1b_783c980e",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "Best to `defer` cancel, so it is still called if the function returns early for any reason.\n\n(more like this)",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7ac9601_70eed5d7",
         "filename": "rw_core/core/adapter_request_handler.go",
         "patchSetId": 1
@@ -255,6 +289,114 @@
     },
     {
       "key": {
+        "uuid": "37628ef2_5027a7c5",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "Would it be worth using a custom queue implementation that could grow on demand?  (Possibly a separate jira.)",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18ffd107_9ecf6259",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "It may be cleaner in this case to short-circuit the function if already started.\n\nneedToStart:\u003dfalse\nif agent.startOnce.Do(func(){needToStart\u003dtrue}); !needToStart {\n  return agent.getDevice(), nil\n}\n//else run startup",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec277320_180b0fb1",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "waitForGreenLight should accept a context, and exit early (leave the queue) if canceled.\n\n(This could be a separate jira.  If so, I would be willing to take this on.)",
+      "range": {
+        "startLine": 241,
+        "startChar": 26,
+        "endLine": 241,
+        "endChar": 43
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abbff2ef_74d20e89",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "Should use ctx.Err() to return relevant info.",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80980218_c22620c9",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "ctx.Err()",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b274abb_48bffb1d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "I\u0027m seeing this pattern a lot:\n1. Create context for timeout\n2. Start process w/ context.\n2.1. Cancel context if error.\n3. Start a thread to wait for process, and run actions based on success/failure.\n\nThis seems very much redundant, a thread is being started just to wait for some process to complete?  \n\nWhy not just start a single thread, and in that thread, call the process normally (without the channel-passing), check for errors, and continue/call other tasks normally?\n\nThe only good reason I can see to do this channel-passing \u0026 waiting, is if many processes are being created \u0026 run in parallel.",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4910c6ed_66c4fd7c",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -278,6 +420,23 @@
     },
     {
       "key": {
+        "uuid": "acce39d0_ada312dc",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "ctx allows the caller to cancel the request, (for example, a ctrl-C on voltctl).  Are we sure the caller should have to wait for this?\n\nIf it\u0027s a long-running operation, it may make sense to run the load in a separate thread, so that this particular call can be cancelled \u0026 return, but still allow the load operation to continue in the background.",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c4ae9e8_2aaed682",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -295,6 +454,64 @@
         "endLine": 409,
         "endChar": 34
       },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bea3cc95_2963ef2c",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "If certain that this is always a device, use the single-value form:\n\ndevice :\u003d d.(*voltha.Device)\n\nThis will panic properly if an invalid type is found.",
+      "parentUuid": "8c4ae9e8_2aaed682",
+      "range": {
+        "startLine": 409,
+        "startChar": 0,
+        "endLine": 409,
+        "endChar": 34
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14755d9a_464d7f29",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "Again: Should ctrl-C / cancelation be broken if startup takes a long time?  Run load operation in separate thread to allow the call to return quickly if canceled?",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc3c64fd_13aff31f",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T16:59:43Z",
+      "side": 1,
+      "message": "The utils.Response type exists to avoid the complexity (and fragility) of raw channel signaling, consider changing reconcileDevice() to return a utils.Response instead of a raw channel.",
       "revId": "929f91854c624289367bb5c98224e01e77e4365c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
