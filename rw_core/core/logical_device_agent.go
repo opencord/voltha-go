@@ -500,21 +500,13 @@ func (agent *LogicalDeviceAgent) deleteAllLogicalPorts(ctx context.Context, devi
 	ld := agent.getLogicalDeviceWithoutLock()
 
 	cloned := (proto.Clone(ld)).(*voltha.LogicalDevice)
-	updateLogicalPorts := []*voltha.LogicalPort{}
-	for _, lport := range cloned.Ports {
-		if lport.DeviceId != device.Id {
-			updateLogicalPorts = append(updateLogicalPorts, lport)
-		}
-	}
-	if len(updateLogicalPorts) < len(cloned.Ports) {
-		cloned.Ports = updateLogicalPorts
-		// Updating the logical device will trigger the poprt change events to be populated to the controller
-		if err := agent.updateLogicalDeviceWithoutLock(ctx, cloned); err != nil {
-			log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
-			return err
-		}
-	} else {
-		log.Debugw("no-change-required", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+	var updateLogicalPorts []*voltha.LogicalPort
+	// Update an empty ports slice to remove all the ports
+	cloned.Ports = updateLogicalPorts
+
+	if err := agent.updateLogicalDeviceWithoutLock(ctx, cloned); err != nil {
+		log.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
+		return err
 	}
 	return nil
 }
