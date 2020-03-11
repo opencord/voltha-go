@@ -564,6 +564,29 @@
     },
     {
       "key": {
+        "uuid": "7c3f9cd7_6d7fc54c",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T17:27:37Z",
+      "side": 1,
+      "message": "If getDeviceState() returned DeviceState{} instead of *DeviceState{}, these would be comparable with \u003d\u003d.\n\nOnly getDeviceStates() \u0026 getHandler() use the pointer version currently.\n\nAlternatively, can safely compare using:\n\n`if *pState \u003d\u003d *cState {`",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 21
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70414980_7e43ff9a",
         "filename": "rw_core/core/device_state_transitions_test.go",
         "patchSetId": 1
@@ -581,6 +604,23 @@
         "endLine": 211,
         "endChar": 109
       },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f55065b6_c3e3b1e0",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T17:27:37Z",
+      "side": 1,
+      "message": "Consider moving the queuing logic into its own type, and using embedding, to avoid repeating code.",
       "revId": "929f91854c624289367bb5c98224e01e77e4365c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -610,6 +650,23 @@
     },
     {
       "key": {
+        "uuid": "8b1ba7d8_a6ebf300",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T17:27:37Z",
+      "side": 1,
+      "message": "Again: Consider just setting a flag, and exiting early if already started.",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c92418ca_b08a56e2",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -626,6 +683,69 @@
         "startChar": 0,
         "endLine": 98,
         "endChar": 73
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be76a2ec_aa990a8e",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T17:27:37Z",
+      "side": 1,
+      "message": "Set flag \u0026 exit early here as well?  (Though this is a smaller function, so may actually be less clear.)",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7419d16c_9c0b694f",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T17:27:37Z",
+      "side": 1,
+      "message": "Would it be convenient to have a small utility function `utils.PrintErr()` to allow for inline, error-handled gothreads:\n\ngo utils.PrintErr(agent.start(context.Background(), false))",
+      "range": {
+        "startLine": 193,
+        "startChar": 1,
+        "endLine": 198,
+        "endChar": 4
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a982f7c2_fa582e8b",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-11T17:27:37Z",
+      "side": 1,
+      "message": "Again: I think the queue should have its own type, to hide the internal logic \u0026 format from other parts of the code.\n\nThis type could behave like a well-ordered mutex, with a cancelable `Lock(ctx)` function.",
+      "range": {
+        "startLine": 131,
+        "startChar": 38,
+        "endLine": 131,
+        "endChar": 102
       },
       "revId": "929f91854c624289367bb5c98224e01e77e4365c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
