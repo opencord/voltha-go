@@ -193,9 +193,9 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
 			log.Warnw("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
-		//Update the device state
-		cloned.ConnectStatus = voltha.ConnectStatus_UNREACHABLE
+		//Update the device operational state
 		cloned.OperStatus = voltha.OperStatus_UNKNOWN
+		// The device is still reachable after it has been disabled, so the connection status should not be changed.
 
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
 			// Device may already have been deleted in the core
@@ -230,7 +230,6 @@ func (oltA *OLTAdapter) Reenable_device(device *voltha.Device) error { // nolint
 		}
 
 		//Update the device state
-		cloned.ConnectStatus = voltha.ConnectStatus_REACHABLE
 		cloned.OperStatus = voltha.OperStatus_ACTIVE
 
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
@@ -293,6 +292,21 @@ func (oltA *OLTAdapter) Update_flows_incrementally(device *voltha.Device, flows 
 			delete(oltA.flows, f.Id)
 		}
 	}
+	return nil
+}
+
+// Reboot_device -
+func (oltA *OLTAdapter) Reboot_device(device *voltha.Device) error { // nolint
+	log.Infow("reboot-device", log.Fields{"deviceId": device.Id})
+
+	go func() {
+		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), device.Id, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN); err != nil {
+			log.Fatalf("device-state-update-failed", log.Fields{"device-id": device.Id})
+		}
+		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), device.Id, voltha.OperStatus_UNKNOWN); err != nil {
+			log.Fatalf("port-update-failed", log.Fields{"device-id": device.Id})
+		}
+	}()
 	return nil
 }
 
