@@ -56,3 +56,6 @@ python/local_imports/**/*
 # test output
 tests/results
 sca-report
+
+# CPU profile
+**/profile.cpu
