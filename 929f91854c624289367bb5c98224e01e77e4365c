@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2722a432_b1a9108a",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Yes, a message will either be sent or an error will be produced, which could be a timeout.   At this stage all we are interested is if this message was successfully sent over sent.",
+      "parentUuid": "17a35d17_569072ab",
+      "range": {
+        "startLine": 59,
+        "startChar": 24,
+        "endLine": 59,
+        "endChar": 32
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "540e1931_40db2860",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 1
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "63bfbbf8_7b3e638f",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Sure, will change.",
+      "parentUuid": "1c9564fd_796aea74",
+      "range": {
+        "startLine": 245,
+        "startChar": 67,
+        "endLine": 245,
+        "endChar": 76
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a14693a_0dc86ed2",
         "filename": "rw_core/core/adapter_proxy_test.go",
         "patchSetId": 1
@@ -88,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "7e17dcef_c504aef3",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Will change.",
+      "parentUuid": "0a14693a_0dc86ed2",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36b67c1b_783c980e",
         "filename": "rw_core/core/adapter_proxy_test.go",
         "patchSetId": 1
@@ -99,6 +165,24 @@
       "writtenOn": "2020-03-11T16:59:43Z",
       "side": 1,
       "message": "Best to `defer` cancel, so it is still called if the function returns early for any reason.\n\n(more like this)",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "309b501a_7bf5e4f7",
+        "filename": "rw_core/core/adapter_proxy_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Sure will do",
+      "parentUuid": "36b67c1b_783c980e",
       "revId": "929f91854c624289367bb5c98224e01e77e4365c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -197,6 +281,30 @@
     },
     {
       "key": {
+        "uuid": "54891d0b_54c8f1fe",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "For troubling shooting it\u0027s beneficial since the response is going straight over kafka to the adapter and without it we may not know whether we have sent a failure response.",
+      "parentUuid": "5dbc4b03_f6b511ec",
+      "range": {
+        "startLine": 187,
+        "startChar": 2,
+        "endLine": 189,
+        "endChar": 2
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b485fa65_c2514028",
         "filename": "rw_core/core/adapter_request_handler.go",
         "patchSetId": 1
@@ -231,6 +339,30 @@
       "writtenOn": "2020-03-10T21:20:54Z",
       "side": 1,
       "message": "just return childDeviceDetected as opposed to print warning? let caller decide what to do in case of an error?",
+      "range": {
+        "startLine": 492,
+        "startChar": 30,
+        "endLine": 492,
+        "endChar": 49
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ee102a1_e61fd18a",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "See above,  Caller is an adapter in a different container.  It\u0027s helpful for debugging.",
+      "parentUuid": "30b8f9ec_b5075a4f",
       "range": {
         "startLine": 492,
         "startChar": 30,
@@ -289,6 +421,30 @@
     },
     {
       "key": {
+        "uuid": "01dc40e2_60014ad5",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Will clean.",
+      "parentUuid": "f65bd3ba_0488d571",
+      "range": {
+        "startLine": 719,
+        "startChar": 0,
+        "endLine": 719,
+        "endChar": 39
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37628ef2_5027a7c5",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -300,6 +456,24 @@
       "writtenOn": "2020-03-11T16:59:43Z",
       "side": 1,
       "message": "Would it be worth using a custom queue implementation that could grow on demand?  (Possibly a separate jira.)",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b2f1f29_672674d8",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "I don\u0027t know if that will just add complexity for limited benefits.   Something to think about.",
+      "parentUuid": "37628ef2_5027a7c5",
       "revId": "929f91854c624289367bb5c98224e01e77e4365c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -323,6 +497,24 @@
     },
     {
       "key": {
+        "uuid": "2e4a27a5_d04fa8c6",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Will try it out.",
+      "parentUuid": "18ffd107_9ecf6259",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec277320_180b0fb1",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
@@ -334,6 +526,30 @@
       "writtenOn": "2020-03-11T16:59:43Z",
       "side": 1,
       "message": "waitForGreenLight should accept a context, and exit early (leave the queue) if canceled.\n\n(This could be a separate jira.  If so, I would be willing to take this on.)",
+      "range": {
+        "startLine": 241,
+        "startChar": 26,
+        "endLine": 241,
+        "endChar": 43
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eff44f19_24d5ac25",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "I will see if I can add it in this update.",
+      "parentUuid": "ec277320_180b0fb1",
       "range": {
         "startLine": 241,
         "startChar": 26,
@@ -397,6 +613,24 @@
     },
     {
       "key": {
+        "uuid": "5bc76b76_70cb124c",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "This are async processing in the sense that the response is coming back from an adapter and during that time other requests can be made on that device, especially in the case of flows.",
+      "parentUuid": "0b274abb_48bffb1d",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4910c6ed_66c4fd7c",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -420,6 +654,30 @@
     },
     {
       "key": {
+        "uuid": "22d5911a_47a20999",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Most of the \"time\" in the config (container params) are specified as int.   This can be addressed as a separate Jira (Vol-1875).",
+      "parentUuid": "4910c6ed_66c4fd7c",
+      "range": {
+        "startLine": 68,
+        "startChar": 42,
+        "endLine": 68,
+        "endChar": 72
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "acce39d0_ada312dc",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -431,6 +689,24 @@
       "writtenOn": "2020-03-11T16:59:43Z",
       "side": 1,
       "message": "ctx allows the caller to cancel the request, (for example, a ctrl-C on voltctl).  Are we sure the caller should have to wait for this?\n\nIf it\u0027s a long-running operation, it may make sense to run the load in a separate thread, so that this particular call can be cancelled \u0026 return, but still allow the load operation to continue in the background.",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94db79de_3207c87b",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Can\u0027t remember why I removed the ctx there.  I am sure there was a reason (a test failure).  Will think about it.",
+      "parentUuid": "acce39d0_ada312dc",
       "revId": "929f91854c624289367bb5c98224e01e77e4365c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -484,6 +760,30 @@
     },
     {
       "key": {
+        "uuid": "80e30c2a_3bdfbf97",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "I will use the single-value-form and let it panic.   Should \"never\"happen.",
+      "parentUuid": "bea3cc95_2963ef2c",
+      "range": {
+        "startLine": 409,
+        "startChar": 0,
+        "endLine": 409,
+        "endChar": 34
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14755d9a_464d7f29",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -495,6 +795,24 @@
       "writtenOn": "2020-03-11T16:59:43Z",
       "side": 1,
       "message": "Again: Should ctrl-C / cancelation be broken if startup takes a long time?  Run load operation in separate thread to allow the call to return quickly if canceled?",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd91dff1_ed3cb6df",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Will need to run something in the background.  Will need to revisit this function as its an expensive operation on the Core, especially under heavy load and lots of devices",
+      "parentUuid": "14755d9a_464d7f29",
       "revId": "929f91854c624289367bb5c98224e01e77e4365c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -518,6 +836,24 @@
     },
     {
       "key": {
+        "uuid": "f40022b8_75ea6f3a",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "The adapter proxy functions returns a channel that is created by the kafka library and contains more information than utils.Response.   Changing reconcileDevice to return a utils.Response will just move this code to the adapter proxy for this function.",
+      "parentUuid": "cc3c64fd_13aff31f",
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e15249c_10875dfc",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 1
@@ -529,6 +865,30 @@
       "writtenOn": "2020-03-10T21:20:54Z",
       "side": 1,
       "message": "any reason not using iota?",
+      "range": {
+        "startLine": 37,
+        "startChar": 22,
+        "endLine": 37,
+        "endChar": 23
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd5d34cb_5cc67af8",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Nope, will change",
+      "parentUuid": "6e15249c_10875dfc",
       "range": {
         "startLine": 37,
         "startChar": 22,
@@ -564,6 +924,30 @@
     },
     {
       "key": {
+        "uuid": "1ab15cdf_dc963329",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "c6883fdb_e7945450",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 1
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c3f9cd7_6d7fc54c",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 1
@@ -587,6 +971,30 @@
     },
     {
       "key": {
+        "uuid": "6b605245_dfb8e613",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "I thought I started with that but the comparison was not working.  Let me give it a try again.",
+      "parentUuid": "7c3f9cd7_6d7fc54c",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 21
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70414980_7e43ff9a",
         "filename": "rw_core/core/device_state_transitions_test.go",
         "patchSetId": 1
@@ -598,6 +1006,30 @@
       "writtenOn": "2020-03-10T21:20:54Z",
       "side": 1,
       "message": "seems like a lot of repetitive code. could be rewritten using an anonymous struct to define input/expected outputs and then use t.Run to run each row of data as a subtest.",
+      "range": {
+        "startLine": 183,
+        "startChar": 0,
+        "endLine": 211,
+        "endChar": 109
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44629b15_5cd6d1a7",
+        "filename": "rw_core/core/device_state_transitions_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "ok, will do.",
+      "parentUuid": "70414980_7e43ff9a",
       "range": {
         "startLine": 183,
         "startChar": 0,
@@ -690,6 +1122,30 @@
     },
     {
       "key": {
+        "uuid": "14648212_60f4ace3",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "c92418ca_b08a56e2",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 73
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be76a2ec_aa990a8e",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 1
@@ -730,6 +1186,30 @@
     },
     {
       "key": {
+        "uuid": "9f23283d_02fea451",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Good idea.   If i have time will take a look.",
+      "parentUuid": "7419d16c_9c0b694f",
+      "range": {
+        "startLine": 193,
+        "startChar": 1,
+        "endLine": 198,
+        "endChar": 4
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a982f7c2_fa582e8b",
         "filename": "rw_core/utils/core_utils.go",
         "patchSetId": 1
@@ -741,6 +1221,30 @@
       "writtenOn": "2020-03-11T17:27:37Z",
       "side": 1,
       "message": "Again: I think the queue should have its own type, to hide the internal logic \u0026 format from other parts of the code.\n\nThis type could behave like a well-ordered mutex, with a cancelable `Lock(ctx)` function.",
+      "range": {
+        "startLine": 131,
+        "startChar": 38,
+        "endLine": 131,
+        "endChar": 102
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f10c8da_6f39080e",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-11T18:11:53Z",
+      "side": 1,
+      "message": "Will create its own type.",
+      "parentUuid": "a982f7c2_fa582e8b",
       "range": {
         "startLine": 131,
         "startChar": 38,
