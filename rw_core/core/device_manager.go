@@ -1292,6 +1292,29 @@ func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, parentD
 	return nil
 }
 
+//DeleteAllLogicalPorts is invoked as a callback when the parent device's connection status moves to UNREACHABLE
+func (dMgr *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
+	log.Debugw("delete-all-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})
+	if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(ctx, parentDevice); err != nil {
+		return err
+	}
+	return nil
+}
+
+//DeleteAllDeviceFlows is invoked as a callback when the parent device's connection status moves to UNREACHABLE
+func (dMgr *DeviceManager) DeleteAllDeviceFlows(ctx context.Context, parentDevice *voltha.Device) error {
+	log.Debugw("delete-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
+	if agent := dMgr.getDeviceAgent(ctx, parentDevice.Id); agent != nil {
+		if err := agent.deleteAllFlows(ctx); err != nil {
+			log.Errorw("error-deleting-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
+			return err
+		}
+	} else {
+		return status.Errorf(codes.NotFound, "%s", parentDevice.Id)
+	}
+	return nil
+}
+
 //getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *DeviceManager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]string, error) {
 	log.Debugw("getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id})
