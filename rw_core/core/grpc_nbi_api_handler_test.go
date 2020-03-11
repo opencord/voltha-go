@@ -710,6 +710,104 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *APIHandler) {
 
 }
 
+func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler) {
+	//Get an OLT device
+	oltDevice, err := nb.getADevice(true, nbi)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+	assert.Equal(t, oltDevice.ConnectStatus, voltha.ConnectStatus_REACHABLE)
+	assert.Equal(t, oltDevice.AdminState, voltha.AdminState_ENABLED)
+
+	// Verify that we have one or more ONUs to start with
+	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	assert.Nil(t, err)
+	assert.NotNil(t, onuDevices)
+	assert.Greater(t, len(onuDevices.Items), 0)
+
+	// Reboot the OLT and very that Connection Status goes to UNREACHABLE and operation status to UNKNOWN
+	_, err = nbi.RebootDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	var vlFunction0 = func(d *voltha.Device) bool {
+		return d.ConnectStatus == voltha.ConnectStatus_UNREACHABLE && d.OperStatus == voltha.OperStatus_UNKNOWN
+	}
+
+	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vlFunction0, nbi)
+	assert.Nil(t, err)
+
+	// Wait for the logical device to satisfy the expected condition
+	var vlFunction1 = func(ld *voltha.LogicalDevice) bool {
+		return ld == nil
+	}
+
+	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction1)
+	assert.Nil(t, err)
+
+	// Wait for the device to satisfy the expected condition (device does not have flows)
+	var vlFunction2 = func(d *voltha.Device) bool {
+		var deviceFlows *ofp.Flows
+		var err error
+		if deviceFlows, err = nbi.ListDeviceFlows(getContext(), &voltha.ID{Id: d.Id}); err != nil {
+			return false
+		}
+		return len(deviceFlows.Items) == 0
+	}
+
+	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vlFunction2, nbi)
+	assert.Nil(t, err)
+
+	// Wait for the device to satisfy the expected condition (there are no child devices)
+	var vlFunction3 = func(d *voltha.Device) bool {
+		var devices *voltha.Devices
+		var err error
+		if devices, err = nbi.ListDevices(getContext(), nil); err != nil {
+			return false
+		}
+		for _, device := range devices.Items {
+			if device.ParentId == d.Id {
+				// We have a child device still left
+				return false
+			}
+		}
+		return true
+	}
+
+	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vlFunction3, nbi)
+	assert.Nil(t, err)
+
+	// Update the OLT Connection Status to REACHABLE and operation status to ACTIVE
+	// Normally, in a real adapter this happens after connection regain via a heartbeat mechanism with real hardware
+	deviceAgent := nbi.deviceMgr.getDeviceAgent(getContext(), oltDevice.Id)
+	err = deviceAgent.updateDeviceStatus(getContext(), voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
+	assert.Nil(t, err)
+
+	// Verify the device connection and operation states
+	oltDevice, err = nb.getADevice(true, nbi)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+	assert.Equal(t, oltDevice.ConnectStatus, voltha.ConnectStatus_REACHABLE)
+	assert.Equal(t, oltDevice.AdminState, voltha.AdminState_ENABLED)
+
+	// Wait for the logical device to satisfy the expected condition
+	var vlFunction4 = func(ld *voltha.LogicalDevice) bool {
+		return ld != nil
+	}
+	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction4)
+	assert.Nil(t, err)
+
+	// Verify that logical device is created again
+	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
+	assert.Nil(t, err)
+	assert.NotNil(t, logicalDevices)
+	assert.Equal(t, 1, len(logicalDevices.Items))
+
+	// Verify that we have no ONUs left
+	onuDevices, err = nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	assert.Nil(t, err)
+	assert.NotNil(t, onuDevices)
+	assert.Equal(t, 0, len(onuDevices.Items))
+}
+
 func makeSimpleFlowMod(fa *flows.FlowArgs) *ofp.OfpFlowMod {
 	matchFields := make([]*ofp.OfpOxmField, 0)
 	for _, val := range fa.MatchFields {
@@ -883,20 +981,25 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPort
 	nb.sendTrapFlows(t, nbi, logicalDevice, uint64(meterID), startingVlan)
 
 	// Listen for port events
-	processedLogicalPorts := 0
 	start := time.Now()
+	processedNniLogicalPorts := 0
+	processedUniLogicalPorts := 0
+
 	for event := range nbi.changeEventQueue {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
 			if ps.Reason == ofp.OfpPortReason_OFPPR_ADD {
-				processedLogicalPorts++
 				if ps.Desc.PortNo >= uint32(nb.startingUNIPortNo) {
+					processedUniLogicalPorts++
 					nb.sendEAPFlows(t, nbi, logicalDevice.Id, ps.Desc, startingVlan, uint64(meterID))
+				} else {
+					processedNniLogicalPorts++
 				}
 			}
 		}
-		if processedLogicalPorts >= numNNIPorts+numUNIPorts {
+
+		if processedNniLogicalPorts >= numNNIPorts && processedUniLogicalPorts >= numUNIPorts {
 			fmt.Println("Total time to send all flows:", time.Since(start))
 			break
 		}
@@ -968,10 +1071,13 @@ func TestSuite1(t *testing.T) {
 		// 6. Test disable and Enable pon port of OLT device
 		nb.testDisableAndEnablePort(t, nbi)
 
-		// 6. Test disable and delete all devices
+		// 7.Test Device unreachable when OLT is enabled
+		nb.testDeviceRebootWhenOltIsEnabled(t, nbi)
+
+		// 8. Test disable and delete all devices
 		nb.testDisableAndDeleteAllDevice(t, nbi)
 
-		//7. Test enable and delete all devices
+		// 9. Test enable and delete all devices
 		nb.testEnableAndDeleteAllDevice(t, nbi)
 	}
 

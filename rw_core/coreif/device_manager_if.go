@@ -39,4 +39,6 @@ type DeviceManager interface {
 	RunPostDeviceDelete(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
 	ChildDeviceLost(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
 	DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	DeleteAllLogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
+	DeleteAllDeviceFlows(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error
 }

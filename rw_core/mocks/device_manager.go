@@ -78,6 +78,16 @@ func (dm *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, cDevice *
 	return nil
 }
 
+// DeleteAllLogicalPorts -
+func (dm *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
+	return nil
+}
+
+// DeleteAllDeviceFlows -
+func (dm *DeviceManager) DeleteAllDeviceFlows(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
+	return nil
+}
+
 // RunPostDeviceDelete -
 func (dm *DeviceManager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
 	return nil

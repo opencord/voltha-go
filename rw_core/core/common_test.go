@@ -201,6 +201,14 @@ func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 				if done {
 					break
 				}
+			} else if d != nil && d.ParentId == "" { // case where logical device deleted
+				if verificationFunction(nil) {
+					ch <- 1
+					break
+				}
+				if done {
+					break
+				}
 			}
 			time.Sleep(retryInterval)
 		}

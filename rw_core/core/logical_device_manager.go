@@ -495,7 +495,7 @@ func (ldMgr *LogicalDeviceManager) deleteAllLogicalPorts(ctx context.Context, de
 		return err
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
-		if err := agent.deleteAllLogicalPorts(ctx, device); err != nil {
+		if err := agent.deleteAllLogicalPorts(ctx); err != nil {
 			return err
 		}
 	}
