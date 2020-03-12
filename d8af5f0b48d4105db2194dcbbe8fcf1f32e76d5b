@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a197cf66_5665066f",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1293,
+      "author": {
+        "id": 1000544
+      },
+      "writtenOn": "2020-03-12T09:39:10Z",
+      "side": 1,
+      "message": "As of now DeleteAllLogicalPorts() at logical_device_agent is not deleting all logical ports i think .",
+      "range": {
+        "startLine": 1293,
+        "startChar": 27,
+        "endLine": 1293,
+        "endChar": 48
+      },
+      "revId": "d8af5f0b48d4105db2194dcbbe8fcf1f32e76d5b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92a11605_65376b43",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000544
+      },
+      "writtenOn": "2020-03-12T09:39:10Z",
+      "side": 1,
+      "message": "As of now this is getting called only when OLT gets enabled from voltcl .Need to handle creation of logical device on OLT reboot as well since we are deleting same when OLT goes down.",
+      "range": {
+        "startLine": 69,
+        "startChar": 43,
+        "endLine": 69,
+        "endChar": 62
+      },
+      "revId": "d8af5f0b48d4105db2194dcbbe8fcf1f32e76d5b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "411adee5_0b463a21",
+        "filename": "rw_core/core/device_state_transitions_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000544
+      },
+      "writtenOn": "2020-03-12T09:39:10Z",
+      "side": 1,
+      "message": "we should purge all device flows forcefully from core as route computation fails while removing OLT device flows.",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 264,
+        "endChar": 1
+      },
+      "revId": "d8af5f0b48d4105db2194dcbbe8fcf1f32e76d5b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
