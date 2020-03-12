@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"reflect"
 	"strings"
 	"sync"
@@ -34,7 +36,7 @@ import (
 
 const (
 	DefaultMaxRetries     = 3
-	DefaultRequestTimeout = 10000 // 10000 milliseconds - to handle a wider latency range
+	DefaultRequestTimeout = 60000 // 60000 milliseconds - to handle a wider latency range
 )
 
 const (
@@ -66,6 +68,7 @@ type InterContainerProxy interface {
 	GetDefaultTopic() *Topic
 	DeviceDiscovered(deviceId string, deviceType string, parentId string, publisher string) error
 	InvokeRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic, waitForResponse bool, key string, kvArgs ...*KVArg) (bool, *any.Any)
+	InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic, waitForResponse bool, key string, kvArgs ...*KVArg) chan *RpcResponse
 	SubscribeWithRequestHandlerInterface(topic Topic, handler interface{}) error
 	SubscribeWithDefaultRequestHandler(topic Topic, initialOffset int64) error
 	UnSubscribeFromRequestHandler(topic Topic) error
@@ -244,6 +247,104 @@ func (kp *interContainerProxy) DeviceDiscovered(deviceId string, deviceType stri
 		return err
 	}
 	return nil
+}
+
+// InvokeAsyncRPC is used to make an RPC request asynchronously
+func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic,
+	waitForResponse bool, key string, kvArgs ...*KVArg) chan *RpcResponse {
+
+	logger.Debugw("InvokeAsyncRPC", log.Fields{"rpc": rpc, "key": key})
+	//	If a replyToTopic is provided then we use it, otherwise just use the  default toTopic.  The replyToTopic is
+	// typically the device ID.
+	responseTopic := replyToTopic
+	if responseTopic == nil {
+		responseTopic = kp.GetDefaultTopic()
+	}
+
+	chnl := make(chan *RpcResponse)
+
+	go func() {
+
+		// once we're done,
+		// close the response channel
+		defer close(chnl)
+
+		var err error
+		var protoRequest *ic.InterContainerMessage
+
+		// Encode the request
+		protoRequest, err = encodeRequest(rpc, toTopic, responseTopic, key, kvArgs...)
+		if err != nil {
+			logger.Warnw("cannot-format-request", log.Fields{"rpc": rpc, "error": err})
+			chnl <- NewResponse(RpcFormattingError, err, nil)
+			return
+		}
+
+		// Subscribe for response, if needed, before sending request
+		var ch <-chan *ic.InterContainerMessage
+		if ch, err = kp.subscribeForResponse(*responseTopic, protoRequest.Header.Id); err != nil {
+			logger.Errorw("failed-to-subscribe-for-response", log.Fields{"error": err, "toTopic": toTopic.Name})
+			chnl <- NewResponse(RpcTransportError, err, nil)
+			return
+		}
+
+		// Send request - if the topic is formatted with a device Id then we will send the request using a
+		// specific key, hence ensuring a single partition is used to publish the request.  This ensures that the
+		// subscriber on that topic will receive the request in the order it was sent.  The key used is the deviceId.
+		logger.Debugw("sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
+
+		// if the message is not sent on kafka publish an event an close the channel
+		if err = kp.kafkaClient.Send(protoRequest, toTopic, key); err != nil {
+			chnl <- NewResponse(RpcTransportError, err, nil)
+			return
+		}
+
+		// if the client is not waiting for a response send the ack and close the channel
+		chnl <- NewResponse(RpcSent, nil, nil)
+		if !waitForResponse {
+			return
+		}
+
+		defer func() {
+			// Remove the subscription for a response on return
+			if err := kp.unSubscribeForResponse(protoRequest.Header.Id); err != nil {
+				logger.Warnw("invoke-async-rpc-unsubscriber-for-response-failed", log.Fields{"err": err})
+			}
+		}()
+
+		// Wait for response as well as timeout or cancellation
+		select {
+		case msg, ok := <-ch:
+			if !ok {
+				logger.Warnw("channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
+				chnl <- NewResponse(RpcTransportError, status.Error(codes.Aborted, "channel closed"), nil)
+			}
+			logger.Debugw("received-response", log.Fields{"rpc": rpc, "msgHeader": msg.Header})
+			if responseBody, err := decodeResponse(msg); err != nil {
+				chnl <- NewResponse(RpcReply, err, nil)
+			} else {
+				if responseBody.Success {
+					chnl <- NewResponse(RpcReply, nil, responseBody.Result)
+				} else {
+					// response body contains an error
+					unpackErr := &ic.Error{}
+					if err := ptypes.UnmarshalAny(responseBody.Result, unpackErr); err != nil {
+						chnl <- NewResponse(RpcReply, err, nil)
+					} else {
+						chnl <- NewResponse(RpcReply, status.Error(codes.Internal, unpackErr.Reason), nil)
+					}
+				}
+			}
+		case <-ctx.Done():
+			logger.Errorw("context-cancelled", log.Fields{"rpc": rpc, "ctx": ctx.Err()})
+			err := status.Error(codes.DeadlineExceeded, ctx.Err().Error())
+			chnl <- NewResponse(RpcTimeout, err, nil)
+		case <-kp.doneCh:
+			chnl <- NewResponse(RpcSystemClosing, nil, nil)
+			logger.Warnw("received-exit-signal", log.Fields{"toTopic": toTopic.Name, "rpc": rpc})
+		}
+	}()
+	return chnl
 }
 
 // InvokeRPC is used to send a request to a given topic
@@ -799,7 +900,8 @@ func (kp *interContainerProxy) subscribeForResponse(topic Topic, trnsId string) 
 
 	// Create a specific channel for this consumers.  We cannot use the channel from the kafkaclient as it will
 	// broadcast any message for this topic to all channels waiting on it.
-	ch := make(chan *ic.InterContainerMessage)
+	// Set channel size to 1 to prevent deadlock, see VOL-2708
+	ch := make(chan *ic.InterContainerMessage, 1)
 	kp.addToTransactionIdToChannelMap(trnsId, &topic, ch)
 
 	return ch, nil

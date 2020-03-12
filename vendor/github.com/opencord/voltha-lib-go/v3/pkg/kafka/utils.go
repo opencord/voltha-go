@@ -15,7 +15,10 @@
  */
 package kafka
 
-import "strings"
+import (
+	"github.com/golang/protobuf/ptypes/any"
+	"strings"
+)
 
 const (
 	TopicSeparator = "_"
@@ -34,6 +37,31 @@ type Topic struct {
 type KVArg struct {
 	Key   string
 	Value interface{}
+}
+
+type RpcMType int
+
+const (
+	RpcFormattingError RpcMType = iota
+	RpcSent
+	RpcReply
+	RpcTimeout
+	RpcTransportError
+	RpcSystemClosing
+)
+
+type RpcResponse struct {
+	MType RpcMType
+	Err   error
+	Reply *any.Any
+}
+
+func NewResponse(messageType RpcMType, err error, body *any.Any) *RpcResponse {
+	return &RpcResponse{
+		MType: messageType,
+		Err:   err,
+		Reply: body,
+	}
 }
 
 // TODO:  Remove and provide better may to get the device id

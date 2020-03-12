@@ -18,7 +18,6 @@ package adapterif
 
 import (
 	"context"
-
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
