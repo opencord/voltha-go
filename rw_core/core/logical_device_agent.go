@@ -633,9 +633,6 @@ func (agent *LogicalDeviceAgent) updateMeterTable(ctx context.Context, meterMod 
 	if meterMod == nil {
 		return nil
 	}
-	if err := agent.generateDeviceRoutesIfNeeded(ctx); err != nil {
-		return err
-	}
 	switch meterMod.GetCommand() {
 	case ofp.OfpMeterModCommand_OFPMC_ADD:
 		return agent.meterAdd(ctx, meterMod)
