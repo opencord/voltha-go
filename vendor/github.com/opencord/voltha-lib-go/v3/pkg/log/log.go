@@ -221,6 +221,7 @@ func getDefaultConfig(outputType string, level LogLevel, defaultFields Fields) z
 			LevelKey:       "level",
 			MessageKey:     "msg",
 			TimeKey:        "ts",
+			CallerKey:      "caller",
 			StacktraceKey:  "stacktrace",
 			LineEnding:     zc.DefaultLineEnding,
 			EncodeLevel:    zc.LowercaseLevelEncoder,
@@ -237,7 +238,7 @@ func SetDefaultLogger(outputType string, level LogLevel, defaultFields Fields) (
 	// Build a custom config using zap
 	cfg = getDefaultConfig(outputType, level, defaultFields)
 
-	l, err := cfg.Build()
+	l, err := cfg.Build(zp.AddCallerSkip(1))
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +283,7 @@ func AddPackage(outputType string, level LogLevel, defaultFields Fields, pkgName
 
 	cfgs[pkgName] = getDefaultConfig(outputType, level, defaultFields)
 
-	l, err := cfgs[pkgName].Build()
+	l, err := cfgs[pkgName].Build(zp.AddCallerSkip(1))
 	if err != nil {
 		return nil, err
 	}
@@ -304,16 +305,14 @@ func UpdateAllLoggers(defaultFields Fields) error {
 			}
 			cfg.InitialFields[k] = v
 		}
-		l, err := cfg.Build()
+		l, err := cfg.Build(zp.AddCallerSkip(1))
 		if err != nil {
 			return err
 		}
 
-		loggers[pkgName] = &logger{
-			log:         l.Sugar(),
-			parent:      l,
-			packageName: pkgName,
-		}
+		// Update the existing zap logger instance
+		loggers[pkgName].log = l.Sugar()
+		loggers[pkgName].parent = l
 	}
 	return nil
 }
@@ -329,19 +328,16 @@ func GetPackageNames() []string {
 	return keys
 }
 
-// UpdateLogger deletes the logger associated with a caller's package and creates a new logger with the
-// defaultFields.  If a calling package is holding on to a Logger reference obtained from AddPackage invocation, then
-// that package needs to invoke UpdateLogger if it needs to make changes to the default fields and obtain a new logger
-// reference
-func UpdateLogger(defaultFields Fields) (Logger, error) {
+// UpdateLogger updates the logger associated with a caller's package with supplied defaultFields
+func UpdateLogger(defaultFields Fields) error {
 	pkgName, _, _, _ := getCallerInfo()
 	if _, exist := loggers[pkgName]; !exist {
-		return nil, fmt.Errorf("package-%s-not-registered", pkgName)
+		return fmt.Errorf("package-%s-not-registered", pkgName)
 	}
 
 	// Build a new logger
 	if _, exist := cfgs[pkgName]; !exist {
-		return nil, fmt.Errorf("config-%s-not-registered", pkgName)
+		return fmt.Errorf("config-%s-not-registered", pkgName)
 	}
 
 	cfg := cfgs[pkgName]
@@ -351,18 +347,16 @@ func UpdateLogger(defaultFields Fields) (Logger, error) {
 		}
 		cfg.InitialFields[k] = v
 	}
-	l, err := cfg.Build()
+	l, err := cfg.Build(zp.AddCallerSkip(1))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// Set the logger
-	loggers[pkgName] = &logger{
-		log:         l.Sugar(),
-		parent:      l,
-		packageName: pkgName,
-	}
-	return loggers[pkgName], nil
+	// Update the existing zap logger instance
+	loggers[pkgName].log = l.Sugar()
+	loggers[pkgName].parent = l
+
+	return nil
 }
 
 func setLevel(cfg zp.Config, level LogLevel) {
