@@ -515,6 +515,75 @@
     },
     {
       "key": {
+        "uuid": "563620c5_e9e8c9f7",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-03-13T07:01:18Z",
+      "side": 1,
+      "message": "Should we consider if  we created the clusterDataProxy, registered callbacks and started requestSequencer successfully before?",
+      "range": {
+        "startLine": 110,
+        "startChar": 5,
+        "endLine": 110,
+        "endChar": 10
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1e9d5fc_c2d4c8c3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-03-13T07:01:18Z",
+      "side": 1,
+      "message": "isn\u0027t it already cloned from deviceToCreate. Do we need to clone it again?",
+      "range": {
+        "startLine": 146,
+        "startChar": 18,
+        "endLine": 146,
+        "endChar": 39
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "635d1de1_dac724d8",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-03-13T07:01:18Z",
+      "side": 1,
+      "message": "Device is already added to KV. Do we need to roll it back? Or how can we redo the rest.",
+      "range": {
+        "startLine": 151,
+        "startChar": 3,
+        "endLine": 151,
+        "endChar": 9
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec277320_180b0fb1",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 1
