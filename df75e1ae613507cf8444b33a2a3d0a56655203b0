@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6c6aafa0_e20c5637",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "good catch.  Will update",
+      "parentUuid": "dfd9c9c0_5e940206",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79cbe136_644aafe1",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2020-03-13T16:10:48Z",
       "side": 1,
       "message": "Consider moving these into coreutils.RequestQueue\n\n(Related observation: Is coreutils.RequestQueue just used as a very well-behaved lock?  Should it be named as such?)",
+      "range": {
+        "startLine": 234,
+        "startChar": 10,
+        "endLine": 253,
+        "endChar": 1
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "129b50cf_bb2e9f7f",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "I prefer the name request queue because we may end up eventually changing the underlying implementation as well.\n\nI will see if it\u0027s a small change to move it.  If not I will leave it as is for now.",
+      "parentUuid": "79cbe136_644aafe1",
       "range": {
         "startLine": 234,
         "startChar": 10,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "78d429d8_54521c90",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "I thought about that.  However, we may eventually have to do more processing on failure, e.g. rollback and they may be specific to each function.  For now I will leave it as is.",
+      "parentUuid": "5978f30d_9a8cffeb",
+      "range": {
+        "startLine": 691,
+        "startChar": 1,
+        "endLine": 700,
+        "endChar": 4
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f88d884_09aa44fd",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 2
@@ -76,6 +142,24 @@
       "writtenOn": "2020-03-13T16:10:48Z",
       "side": 1,
       "message": "Consider creating a type instead of using int/uint8\n\ntype MatchResult uint8\n...\n  noMatch MatchResult \u003d iota\n...\n  admin, oper, conn MatchResult",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32d735cd_3d37faf5",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "9f88d884_09aa44fd",
       "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -99,6 +183,24 @@
     },
     {
       "key": {
+        "uuid": "712b6d45_32098d49",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "Good point.",
+      "parentUuid": "c6d1109d_3033d2e9",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "554151f2_2d17bd1d",
         "filename": "rw_core/core/device_state_transitions_test.go",
         "patchSetId": 2
@@ -110,6 +212,30 @@
       "writtenOn": "2020-03-13T16:10:48Z",
       "side": 1,
       "message": "Still many cases that don\u0027t use the new build-struct-and-loop form.",
+      "range": {
+        "startLine": 71,
+        "startChar": 1,
+        "endLine": 171,
+        "endChar": 109
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ee06b35_59a257ba",
+        "filename": "rw_core/core/device_state_transitions_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "Yes, I don\u0027t plan to change those in this update as they are unrelated to my changes.",
+      "parentUuid": "554151f2_2d17bd1d",
       "range": {
         "startLine": 71,
         "startChar": 1,
@@ -145,6 +271,30 @@
     },
     {
       "key": {
+        "uuid": "82c886e6_54b23e66",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "It was getting into the nitty gritty details of device ownership and transactions watch that are specific to the core-pair deployment.  Did not want to start addressing that until actually needed.",
+      "parentUuid": "aec90ed5_74763224",
+      "range": {
+        "startLine": 158,
+        "startChar": 22,
+        "endLine": 158,
+        "endChar": 30
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66048372_5a78c9d7",
         "filename": "rw_core/mocks/adapter_olt.go",
         "patchSetId": 2
@@ -162,6 +312,24 @@
     },
     {
       "key": {
+        "uuid": "16380600_0090428a",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "66048372_5a78c9d7",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e14f5b7_1d3077ec",
         "filename": "rw_core/mocks/adapter_onu.go",
         "patchSetId": 2
@@ -173,6 +341,24 @@
       "writtenOn": "2020-03-13T16:10:48Z",
       "side": 1,
       "message": "Should this return early?",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "472773a4_7378fd3a",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "6e14f5b7_1d3077ec",
       "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -207,6 +393,30 @@
       "writtenOn": "2020-03-13T16:10:48Z",
       "side": 1,
       "message": "Should RequestQueue and RequestCompleteIndication be combined?  They are always used together.",
+      "range": {
+        "startLine": 79,
+        "startChar": 5,
+        "endLine": 79,
+        "endChar": 30
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "696b9aee_ff070ae4",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T17:55:35Z",
+      "side": 1,
+      "message": "They are used together. Let me see if I can combine them.",
+      "parentUuid": "114927b3_6958d5ca",
       "range": {
         "startLine": 79,
         "startChar": 5,
