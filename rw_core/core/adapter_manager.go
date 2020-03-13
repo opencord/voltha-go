@@ -103,9 +103,15 @@ func (aa *AdapterAgent) updateCommunicationTime(new time.Time) {
 	}
 }
 
+// AdapterAgentKey is the key to the AdapterAgent map
+type AdapterAgentKey struct {
+	adapterID         string
+	adapterInstanceID int32
+}
+
 // AdapterManager represents adapter manager attributes
 type AdapterManager struct {
-	adapterAgents               map[string]*AdapterAgent
+	adapterAgents               map[AdapterAgentKey]*AdapterAgent
 	deviceTypeToAdapterMap      map[string]string
 	clusterDataProxy            *model.Proxy
 	adapterProxy                *model.Proxy
@@ -122,11 +128,12 @@ func newAdapterManager(cdProxy *model.Proxy, coreInstanceID string, kafkaClient 
 		exitChannel:            make(chan int, 1),
 		coreInstanceID:         coreInstanceID,
 		clusterDataProxy:       cdProxy,
-		adapterAgents:          make(map[string]*AdapterAgent),
+		adapterAgents:          make(map[AdapterAgentKey]*AdapterAgent),
 		deviceTypeToAdapterMap: make(map[string]string),
 		deviceMgr:              deviceMgr,
 	}
-	kafkaClient.SubscribeForMetadata(aMgr.updateLastAdapterCommunication)
+	// TODO discuss - this implementation assumes topic = adapterId
+	//kafkaClient.SubscribeForMetadata(aMgr.updateLastAdapterCommunication)
 	return aMgr
 }
 
@@ -209,9 +216,10 @@ func (aMgr *AdapterManager) loadAdaptersAndDevicetypesInMemory() error {
 	return aMgr.addDeviceTypes(&voltha.DeviceTypes{Items: []*voltha.DeviceType{{Id: SentinelDevicetypeID, Adapter: SentinelAdapterID}}}, true)
 }
 
-func (aMgr *AdapterManager) updateLastAdapterCommunication(adapterID string, timestamp int64) {
+func (aMgr *AdapterManager) updateLastAdapterCommunication(adapterID string, currentReplica int32, timestamp int64) {
 	aMgr.lockAdaptersMap.RLock()
-	adapterAgent, have := aMgr.adapterAgents[adapterID]
+	key := AdapterAgentKey{adapterID, currentReplica}
+	adapterAgent, have := aMgr.adapterAgents[key]
 	aMgr.lockAdaptersMap.RUnlock()
 
 	if have {
@@ -219,22 +227,76 @@ func (aMgr *AdapterManager) updateLastAdapterCommunication(adapterID string, tim
 	}
 }
 
+//updateAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
+func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(ctx context.Context, adapter *voltha.Adapter) {
+	aMgr.lockAdaptersMap.Lock()
+	defer aMgr.lockAdaptersMap.Unlock()
+
+	key := AdapterAgentKey{adapter.Id, adapter.CurrentReplica}
+	if adapterAgent, ok := aMgr.adapterAgents[key]; ok {
+		if adapterAgent.getAdapter() != nil {
+			// Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
+			go func() {
+				err := aMgr.deviceMgr.adapterRestarted(ctx, adapter)
+				if err != nil {
+					log.Errorw("unable-to-restart-adapter", log.Fields{"error": err})
+				}
+			}()
+			return
+		}
+	}
+
+	// Update the adapters
+	adaptersIf, err := aMgr.clusterDataProxy.List(ctx, "/adapters", 0, false, "")
+	if err != nil {
+		log.Errorw("failed-to-list-adapters-from-cluster-proxy", log.Fields{"error": err})
+		return
+	}
+	if adaptersIf != nil {
+		for _, adapterIf := range adaptersIf.([]interface{}) {
+			if adapter, ok := adapterIf.(*voltha.Adapter); ok {
+				log.Debugw("found-existing-adapter", log.Fields{"adapterId": adapter.Id})
+				aMgr.updateAdapterWithoutLock(adapter)
+			}
+		}
+	}
+	aMgr.lockdDeviceTypeToAdapterMap.Lock()
+	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
+	// Update the device types
+	deviceTypesIf, err := aMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, "")
+	if err != nil {
+		log.Errorw("Failed-to-list-device-types-in-cluster-data-proxy", log.Fields{"error": err})
+		return
+	}
+	if deviceTypesIf != nil {
+		dTypes := &voltha.DeviceTypes{Items: []*voltha.DeviceType{}}
+		for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
+			if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
+				log.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
+				aMgr.updateDeviceTypeWithoutLock(dType)
+			}
+		}
+	}
+}
+
 func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
 	logger.Debugw("adding-adapter", log.Fields{"adapter": adapter})
-	if _, exist := aMgr.adapterAgents[adapter.Id]; !exist {
+	key := AdapterAgentKey{adapter.Id, adapter.CurrentReplica}
+	if _, exist := aMgr.adapterAgents[key]; !exist {
 		clonedAdapter := (proto.Clone(adapter)).(*voltha.Adapter)
-		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(clonedAdapter, nil)
+		aMgr.adapterAgents[key] = newAdapterAgent(clonedAdapter, nil)
 		if saveToDb {
 			// Save the adapter to the KV store - first check if it already exist
-			kvAdapter, err := aMgr.clusterDataProxy.Get(context.Background(), "/adapters/"+adapter.Id, 0, false, "")
+			id := fmt.Sprintf("%s/%d", adapter.Id, adapter.CurrentReplica)
+			kvAdapter, err := aMgr.clusterDataProxy.Get(context.Background(), "/adapters/"+id, 0, false, "")
 			if err != nil {
 				logger.Errorw("failed-to-get-adapters-from-cluster-proxy", log.Fields{"error": err})
 				return err
 			}
 			if kvAdapter == nil {
-				added, err := aMgr.clusterDataProxy.AddWithID(context.Background(), "/adapters", adapter.Id, clonedAdapter, "")
+				added, err := aMgr.clusterDataProxy.AddWithID(context.Background(), "/adapters", id, clonedAdapter, "")
 				if err != nil {
 					logger.Errorw("failed-to-save-adapter-to-cluster-proxy", log.Fields{"error": err})
 					return err
@@ -260,22 +322,23 @@ func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, save
 	defer aMgr.lockAdaptersMap.Unlock()
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
+	// Update all the adapter agents, if none of them found then do not
+	// create a new agent.
 	for _, deviceType := range deviceTypes.Items {
-		clonedDType := (proto.Clone(deviceType)).(*voltha.DeviceType)
-		if adapterAgent, exist := aMgr.adapterAgents[clonedDType.Adapter]; exist {
-			adapterAgent.updateDeviceType(clonedDType)
-		} else {
-			logger.Debugw("adapter-not-exist", log.Fields{"deviceTypes": deviceTypes, "adapterId": clonedDType.Adapter})
-			aMgr.adapterAgents[clonedDType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: clonedDType.Adapter}, deviceTypes)
+		//clonedDType := (proto.Clone(deviceType)).(*voltha.DeviceType)
+		for key := range aMgr.adapterAgents {
+			if key.adapterID == deviceType.Adapter {
+				aMgr.adapterAgents[key].updateDeviceType(deviceType)
+			}
 		}
-		aMgr.deviceTypeToAdapterMap[clonedDType.Id] = clonedDType.Adapter
+		aMgr.deviceTypeToAdapterMap[deviceType.Id] = deviceType.Adapter
 	}
 	if saveToDb {
 		// Save the device types to the KV store as well
 		for _, deviceType := range deviceTypes.Items {
 			dType, err := aMgr.clusterDataProxy.Get(context.Background(), "/device_types/"+deviceType.Id, 0, false, "")
 			if err != nil {
-				logger.Errorw("Failed-to--device-types-from-cluster-data-proxy", log.Fields{"error": err})
+				logger.Errorw("Failed-to-device-types-from-cluster-data-proxy", log.Fields{"error": err})
 				return err
 			}
 			if dType == nil {
@@ -311,10 +374,11 @@ func (aMgr *AdapterManager) listAdapters(ctx context.Context) (*voltha.Adapters,
 	return result, nil
 }
 
-func (aMgr *AdapterManager) getAdapter(adapterID string) *voltha.Adapter {
+func (aMgr *AdapterManager) getAdapter(adapterID string, currentReplica int32) *voltha.Adapter {
 	aMgr.lockAdaptersMap.RLock()
 	defer aMgr.lockAdaptersMap.RUnlock()
-	if adapterAgent, ok := aMgr.adapterAgents[adapterID]; ok {
+	key := AdapterAgentKey{adapterID, currentReplica}
+	if adapterAgent, ok := aMgr.adapterAgents[key]; ok {
 		return adapterAgent.getAdapter()
 	}
 	return nil
@@ -328,10 +392,11 @@ func (aMgr *AdapterManager) updateAdapter(adapter *voltha.Adapter) {
 }
 
 func (aMgr *AdapterManager) updateAdapterWithoutLock(adapter *voltha.Adapter) {
-	if adapterAgent, ok := aMgr.adapterAgents[adapter.Id]; ok {
+	key := AdapterAgentKey{adapter.Id, adapter.CurrentReplica}
+	if adapterAgent, ok := aMgr.adapterAgents[key]; ok {
 		adapterAgent.updateAdapter(adapter)
 	} else {
-		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(adapter, nil)
+		aMgr.adapterAgents[key] = newAdapterAgent(adapter, nil)
 	}
 }
 
@@ -345,19 +410,17 @@ func (aMgr *AdapterManager) updateDeviceType(deviceType *voltha.DeviceType) {
 }
 
 func (aMgr *AdapterManager) updateDeviceTypeWithoutLock(deviceType *voltha.DeviceType) {
-	if adapterAgent, exist := aMgr.adapterAgents[deviceType.Adapter]; exist {
-		adapterAgent.updateDeviceType(deviceType)
-	} else {
-		aMgr.adapterAgents[deviceType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: deviceType.Adapter},
-			&voltha.DeviceTypes{Items: []*voltha.DeviceType{deviceType}})
+	for key := range aMgr.adapterAgents {
+		aMgr.adapterAgents[key].updateDeviceType(deviceType)
 	}
+	// TODO Discuss do we need to create an adapter agent when there is no registered adapter
 	aMgr.deviceTypeToAdapterMap[deviceType.Id] = deviceType.Adapter
 }
 
 func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) (*voltha.CoreInstance, error) {
 	logger.Debugw("registerAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
 
-	if aMgr.getAdapter(adapter.Id) != nil {
+	if aMgr.getAdapter(adapter.Id, adapter.CurrentReplica) != nil {
 		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
 		go func() {
 			err := aMgr.deviceMgr.adapterRestarted(context.Background(), adapter)
@@ -377,7 +440,7 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 		return nil, err
 	}
 
-	logger.Debugw("adapter-registered", log.Fields{"adapter": adapter.Id})
+	logger.Debugw("adapter-registered", log.Fields{"adapterId": adapter.Id, "adapterCurrentReplica": adapter.CurrentReplica})
 
 	return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceID}, nil
 }
@@ -396,15 +459,19 @@ func (aMgr *AdapterManager) listDeviceTypes() []*voltha.DeviceType {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
-	deviceTypes := make([]*voltha.DeviceType, 0, len(aMgr.deviceTypeToAdapterMap))
-	for deviceTypeID, adapterID := range aMgr.deviceTypeToAdapterMap {
-		if adapterAgent, have := aMgr.adapterAgents[adapterID]; have {
-			if deviceType := adapterAgent.getDeviceType(deviceTypeID); deviceType != nil {
-				if deviceType.Id != SentinelDevicetypeID { // don't report the sentinel
-					deviceTypes = append(deviceTypes, deviceType)
-				}
-			}
+	// Iterate over all AdapterAgents and put all the device
+	// types to a set to create a unique list
+	deviceTypesSet := make(map[*voltha.DeviceType]struct{})
+	var void struct{}
+	for _, adapterAgent := range aMgr.adapterAgents {
+		for _, deviceType := range adapterAgent.deviceTypes {
+			deviceTypesSet[deviceType] = void
 		}
+	}
+	// Convert deviceTypeSet to a list
+	deviceTypes := []*voltha.DeviceType{}
+	for deviceType := range deviceTypesSet {
+		deviceTypes = append(deviceTypes, deviceType)
 	}
 	return deviceTypes
 }
@@ -415,8 +482,10 @@ func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType 
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
 	if adapterID, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
-		if adapterAgent := aMgr.adapterAgents[adapterID]; adapterAgent != nil {
-			return adapterAgent.getDeviceType(deviceType)
+		for _, adapterAgent := range aMgr.adapterAgents {
+			if adapterAgent.adapter.Id == adapterID {
+				return adapterAgent.getDeviceType(deviceType)
+			}
 		}
 	}
 	return nil
