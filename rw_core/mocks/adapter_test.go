@@ -25,6 +25,6 @@ func TestAdapterImplementsIAdapter(t *testing.T) {
 	adapter := NewAdapter(nil)
 
 	if _, ok := interface{}(adapter).(adapters.IAdapter); !ok {
-		t.Error("adapter does not implement voltha-lib-go/v2/pkg/adapters/IAdapter interface")
+		t.Error("adapter does not implement voltha-lib-go/v3/pkg/adapters/IAdapter interface")
 	}
 }

@@ -99,6 +99,28 @@ func (ap *CoreProxy) RegisterAdapter(ctx context.Context, adapter *voltha.Adapte
 	topic := kafka.Topic{Name: ap.coreTopic}
 	replyToTopic := ap.getAdapterTopic()
 	args := make([]*kafka.KVArg, 2)
+
+	if adapter.TotalReplicas == 0 && adapter.CurrentReplica != 0 {
+		log.Fatal("totalReplicas can't be 0, since you're here you have at least one")
+	}
+
+	if adapter.CurrentReplica == 0 && adapter.TotalReplicas != 0 {
+		log.Fatal("currentReplica can't be 0, it has to start from 1")
+	}
+
+	if adapter.CurrentReplica == 0 && adapter.TotalReplicas == 0 {
+		// if the adapter is not setting these fields they default to 0,
+		// in that case it means the adapter is not ready to be scaled and thus it defaults
+		// to a single instance
+		adapter.CurrentReplica = 1
+		adapter.TotalReplicas = 1
+	}
+
+	if adapter.CurrentReplica > adapter.TotalReplicas {
+		log.Fatalf("CurrentReplica (%d) can't be greater than TotalReplicas (%d)",
+			adapter.CurrentReplica, adapter.TotalReplicas)
+	}
+
 	args[0] = &kafka.KVArg{
 		Key:   "adapter",
 		Value: adapter,
@@ -154,7 +176,7 @@ func (ap *CoreProxy) PortCreated(ctx context.Context, deviceId string, port *vol
 }
 
 func (ap *CoreProxy) PortsStateUpdate(ctx context.Context, deviceId string, operStatus voltha.OperStatus_Types) error {
-	log.Debugw("PortsStateUpdate", log.Fields{"deviceId": deviceId})
+	logger.Debugw("PortsStateUpdate", log.Fields{"deviceId": deviceId})
 	rpc := "PortsStateUpdate"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
@@ -202,7 +224,7 @@ func (ap *CoreProxy) DeleteAllPorts(ctx context.Context, deviceId string) error 
 
 func (ap *CoreProxy) DeviceStateUpdate(ctx context.Context, deviceId string,
 	connStatus voltha.ConnectStatus_Types, operStatus voltha.OperStatus_Types) error {
-	log.Debugw("DeviceStateUpdate", log.Fields{"deviceId": deviceId})
+	logger.Debugw("DeviceStateUpdate", log.Fields{"deviceId": deviceId})
 	rpc := "DeviceStateUpdate"
 	// Use a device specific topic to send the request.  The adapter handling the device creates a device
 	// specific topic
