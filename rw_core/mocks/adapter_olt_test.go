@@ -26,6 +26,6 @@ func TestOLTAdapterImplementsIAdapter(t *testing.T) {
 	adapter := NewOLTAdapter(nil)
 
 	if _, ok := interface{}(adapter).(adapters.IAdapter); !ok {
-		t.Error("OLT adapter does not implement voltha-lib-go/v2/pkg/adapters/IAdapter interface")
+		t.Error("OLT adapter does not implement voltha-lib-go/v3/pkg/adapters/IAdapter interface")
 	}
 }
