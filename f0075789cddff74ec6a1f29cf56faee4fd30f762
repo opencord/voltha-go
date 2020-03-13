@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e0c2eaa_271bbf68",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T13:14:20Z",
+      "side": 1,
+      "message": "There is a transition when the operation state goes from unknown to active AND the connection state is reachable to create the logical device.  Why duplicating it here?",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33be0e2e_dffcba3c",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T13:14:20Z",
+      "side": 1,
+      "message": "See comments above",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b9ac12a_4a469d3e",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-13T13:14:20Z",
+      "side": 1,
+      "message": "This method removes logical ports associated with a given device, i.e it will leave logical ports that are not associated with the device.   This is a major change in behavior. Is this method used somewhere else?",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
