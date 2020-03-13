@@ -1,0 +1,238 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfd9c9c0_5e940206",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "For this to work, needToStart should be a local variable.\n(Currently, agent.needToStart will be set true the first time, and remain true, so this short-circuit will never occur.)",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79cbe136_644aafe1",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Consider moving these into coreutils.RequestQueue\n\n(Related observation: Is coreutils.RequestQueue just used as a very well-behaved lock?  Should it be named as such?)",
+      "range": {
+        "startLine": 234,
+        "startChar": 10,
+        "endLine": 253,
+        "endChar": 1
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5978f30d_9a8cffeb",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Should this be turned into a helper function?  `utils.chanToResp(ch, response)`?  I see it in a few places.",
+      "range": {
+        "startLine": 691,
+        "startChar": 1,
+        "endLine": 700,
+        "endChar": 4
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f88d884_09aa44fd",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Consider creating a type instead of using int/uint8\n\ntype MatchResult uint8\n...\n  noMatch MatchResult \u003d iota\n...\n  admin, oper, conn MatchResult",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6d1109d_3033d2e9",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Use powers of two instead of 10/50?\nThere are 4 type currently (2^2), so:\n\nreturn int(m.admin\u003c\u003c4 | m.oper \u003c\u003c2 | m.conn)\n\nNote that the int conversion occurs last, so this will overflow after only 8 bits.",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "554151f2_2d17bd1d",
+        "filename": "rw_core/core/device_state_transitions_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Still many cases that don\u0027t use the new build-struct-and-loop form.",
+      "range": {
+        "startLine": 71,
+        "startChar": 1,
+        "endLine": 171,
+        "endChar": 109
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aec90ed5_74763224",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Should this accept time.Duration?",
+      "range": {
+        "startLine": 158,
+        "startChar": 22,
+        "endLine": 158,
+        "endChar": 30
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66048372_5a78c9d7",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Should this return early?",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e14f5b7_1d3077ec",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Should this return early?",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "989731f8_17bdd9f2",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Should this return early?",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "114927b3_6958d5ca",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Should RequestQueue and RequestCompleteIndication be combined?  They are always used together.",
+      "range": {
+        "startLine": 79,
+        "startChar": 5,
+        "endLine": 79,
+        "endChar": 30
+      },
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a15a68a2_761ae01d",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T16:10:48Z",
+      "side": 1,
+      "message": "Should this be run when a RequestQueue is created, or be a function of the RequestQueue?",
+      "revId": "df75e1ae613507cf8444b33a2a3d0a56655203b0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
