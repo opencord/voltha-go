@@ -24,13 +24,6 @@ import (
 	"strings"
 )
 
-func init() {
-	_, err := log.AddPackage(log.JSON, log.FatalLevel, nil)
-	if err != nil {
-		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
-	}
-}
-
 const (
 	defaultkvStoreConfigPath = "config"
 	kvStoreDataPathPrefix    = "service/voltha"
@@ -171,7 +164,7 @@ func (c *ComponentConfig) makeConfigPath() string {
 func (c *ComponentConfig) MonitorForConfigChange(ctx context.Context) chan *ConfigChangeEvent {
 	key := c.makeConfigPath()
 
-	log.Debugw("monitoring-for-config-change", log.Fields{"key": key})
+	logger.Debugw("monitoring-for-config-change", log.Fields{"key": key})
 
 	c.changeEventChan = make(chan *ConfigChangeEvent, 1)
 
@@ -188,14 +181,14 @@ func (c *ComponentConfig) processKVStoreWatchEvents() {
 
 	ccKeyPrefix := c.makeConfigPath()
 
-	log.Debugw("processing-kvstore-event-change", log.Fields{"key-prefix": ccKeyPrefix})
+	logger.Debugw("processing-kvstore-event-change", log.Fields{"key-prefix": ccKeyPrefix})
 
 	ccPathPrefix := c.cManager.backend.PathPrefix + ccKeyPrefix + kvStorePathSeparator
 
 	for watchResp := range c.kvStoreEventChan {
 
 		if watchResp.EventType == kvstore.CONNECTIONDOWN || watchResp.EventType == kvstore.UNKNOWN {
-			log.Warnw("received-invalid-change-type-in-watch-channel-from-kvstore", log.Fields{"change-type": watchResp.EventType})
+			logger.Warnw("received-invalid-change-type-in-watch-channel-from-kvstore", log.Fields{"change-type": watchResp.EventType})
 			continue
 		}
 
@@ -215,7 +208,7 @@ func (c *ComponentConfig) processKVStoreWatchEvents() {
 func (c *ComponentConfig) Retrieve(ctx context.Context, configKey string) (string, error) {
 	key := c.makeConfigPath() + "/" + configKey
 
-	log.Debugw("retrieving-config", log.Fields{"key": key})
+	logger.Debugw("retrieving-config", log.Fields{"key": key})
 
 	if kvpair, err := c.cManager.backend.Get(ctx, key); err != nil {
 		return "", err
@@ -225,7 +218,7 @@ func (c *ComponentConfig) Retrieve(ctx context.Context, configKey string) (strin
 		}
 
 		value := strings.Trim(fmt.Sprintf("%s", kvpair.Value), "\"")
-		log.Debugw("retrieved-config", log.Fields{"key": key, "value": value})
+		logger.Debugw("retrieved-config", log.Fields{"key": key, "value": value})
 		return value, nil
 	}
 }
@@ -233,7 +226,7 @@ func (c *ComponentConfig) Retrieve(ctx context.Context, configKey string) (strin
 func (c *ComponentConfig) RetrieveAll(ctx context.Context) (map[string]string, error) {
 	key := c.makeConfigPath()
 
-	log.Debugw("retreiving-list", log.Fields{"key": key})
+	logger.Debugw("retreiving-list", log.Fields{"key": key})
 
 	data, err := c.cManager.backend.List(ctx, key)
 	if err != nil {
@@ -256,7 +249,7 @@ func (c *ComponentConfig) RetrieveAll(ctx context.Context) (map[string]string, e
 func (c *ComponentConfig) Save(ctx context.Context, configKey string, configValue string) error {
 	key := c.makeConfigPath() + "/" + configKey
 
-	log.Debugw("saving-config", log.Fields{"key": key, "value": configValue})
+	logger.Debugw("saving-config", log.Fields{"key": key, "value": configValue})
 
 	//save the data for update config
 	if err := c.cManager.backend.Put(ctx, key, configValue); err != nil {
@@ -269,7 +262,7 @@ func (c *ComponentConfig) Delete(ctx context.Context, configKey string) error {
 	//construct key using makeConfigPath
 	key := c.makeConfigPath() + "/" + configKey
 
-	log.Debugw("deleting-config", log.Fields{"key": key})
+	logger.Debugw("deleting-config", log.Fields{"key": key})
 	//delete the config
 	if err := c.cManager.backend.Delete(ctx, key); err != nil {
 		return err

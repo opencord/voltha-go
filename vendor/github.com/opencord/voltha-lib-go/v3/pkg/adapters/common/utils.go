@@ -84,7 +84,7 @@ func ICProxyErrorCodeToGrpcErrorCode(icErr ic.ErrorCodeCodes) codes.Code {
 	case ic.ErrorCode_DEADLINE_EXCEEDED:
 		return codes.DeadlineExceeded
 	default:
-		log.Warnw("cannnot-map-ic-error-code-to-grpc-error-code", log.Fields{"err": icErr})
+		logger.Warnw("cannnot-map-ic-error-code-to-grpc-error-code", log.Fields{"err": icErr})
 		return codes.Internal
 	}
 }
