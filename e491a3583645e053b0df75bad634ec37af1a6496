@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9d5c91e_a8b7163b",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T13:08:19Z",
+      "side": 1,
+      "message": "use lowercase of not used outside this package.",
+      "revId": "e491a3583645e053b0df75bad634ec37af1a6496",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1da6494_75e85962",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T13:08:19Z",
+      "side": 1,
+      "message": "remove commented code",
+      "revId": "e491a3583645e053b0df75bad634ec37af1a6496",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99230ec6_eff7ba8e",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-13T13:08:19Z",
+      "side": 1,
+      "message": "Just use struct{} inline.  `void` is more complex to trace.",
+      "range": {
+        "startLine": 467,
+        "startChar": 32,
+        "endLine": 467,
+        "endChar": 36
+      },
+      "revId": "e491a3583645e053b0df75bad634ec37af1a6496",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
