@@ -149,7 +149,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 		// Trap flow for UNI port
 		log.Debug("trap-uni")
 
-		//inPortNo is 0 for wildcard input case, do not include upstream port for 4000 flow in input
+		//inPortNo is 0 for wildcard input case, do not include upstream port for controller bound flow in input
 		var inPorts []uint32
 		if inPortNo == 0 {
 			inPorts = agent.GetWildcardInputPorts(egressHop.Egress) // exclude egress_hop.egress_port.port_no
@@ -165,8 +165,6 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 					fu.TunnelId(uint64(inputPort)),
 				},
 				Actions: []*ofp.OfpAction{
-					fu.PushVlan(0x8100),
-					fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
 					fu.Output(egressHop.Egress),
 				},
 			}

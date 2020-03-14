@@ -513,8 +513,6 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 			fu.EthType(0x888e),
 		},
 		Actions: []*ofp.OfpAction{
-			fu.PushVlan(0x8100),
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
@@ -580,8 +578,6 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 			fu.EthType(0x888e),
 		},
 		Actions: []*ofp.OfpAction{
-			fu.PushVlan(0x8100),
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
@@ -645,8 +641,6 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 			fu.EthType(0x888e),
 		},
 		Actions: []*ofp.OfpAction{
-			fu.PushVlan(0x8100),
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
@@ -716,8 +710,6 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 			fu.UdpDst(67),
 		},
 		Actions: []*ofp.OfpAction{
-			fu.PushVlan(0x8100),
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 4000)),
 			fu.Output(uint32(ofp.OfpPortNo_OFPP_CONTROLLER)),
 		},
 	}
