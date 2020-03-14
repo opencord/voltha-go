@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ae875aea_d4429148",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-03-14T00:38:19Z",
+      "side": 1,
+      "message": "Can you please point me to that transition. I do not seem to find it.",
+      "parentUuid": "5e0c2eaa_271bbf68",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33be0e2e_dffcba3c",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "418ea7d0_2c151600",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-03-14T00:38:19Z",
+      "side": 1,
+      "message": "Can you please point me to that transition. I do not seem to find it.",
+      "parentUuid": "33be0e2e_dffcba3c",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b9ac12a_4a469d3e",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2020-03-13T13:14:20Z",
       "side": 1,
       "message": "This method removes logical ports associated with a given device, i.e it will leave logical ports that are not associated with the device.   This is a major change in behavior. Is this method used somewhere else?",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed574200_89d2fa90",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-03-14T00:38:19Z",
+      "side": 1,
+      "message": "This is called only when OLT device goes to UNREACHABLE connection state. This will remove all the logical ports of the logical device as per the agreed behavior.",
+      "parentUuid": "7b9ac12a_4a469d3e",
       "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
