@@ -131,6 +131,30 @@
     },
     {
       "key": {
+        "uuid": "6768c76a_06c18fd3",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-16T16:34:21Z",
+      "side": 1,
+      "message": "Also, note that Stop() is executed after the existing processes in queue are completed.  Stop() had to wait its turn as well to get the green light.  Therefore, there is no need to abort the existing processes.",
+      "parentUuid": "6c53fb6c_f827fd1a",
+      "range": {
+        "startLine": 94,
+        "startChar": 1,
+        "endLine": 94,
+        "endChar": 7
+      },
+      "revId": "30e93ce245a4b3ff64b6a1ea5bee6d4b0ab13297",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7268e9f0_1964823e",
         "filename": "rw_core/utils/core_utils.go",
         "patchSetId": 3
