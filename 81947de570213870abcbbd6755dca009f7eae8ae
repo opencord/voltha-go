@@ -16,6 +16,24 @@
       "revId": "81947de570213870abcbbd6755dca009f7eae8ae",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43437481_c2365ad1",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-03-16T18:08:53Z",
+      "side": 1,
+      "message": "I thought including adapter_instance_id in the proto and set by the adapters while registration process. version also can be added easily as a part of this patch. \n\nYes, I see all of the instances when I list them. But the instance id is not the part of the response string. In my initial tests, I used the instance-id parameter of onu_adapter as the hostname provided by the k8s. \n// Adapter (software plugin)\nmessage Adapter {\n\n    // Unique name of adapter, matching the python package name under\n    // voltha/adapters.\n    string id \u003d 1 [(access) \u003d READ_ONLY];\n    string vendor \u003d 2 [(access) \u003d READ_ONLY];\n    string version \u003d 3 [(access) \u003d READ_ONLY];\n    string adapter_instance_id \u003d 6 [(access) \u003d READ_ONLY];\n.....",
+      "parentUuid": "52f685d1_0f0e18df",
+      "revId": "81947de570213870abcbbd6755dca009f7eae8ae",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
