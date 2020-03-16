@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9f74133_3f134873",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-16T15:19:01Z",
+      "side": 1,
+      "message": "agent.start() should call this automatically/perform cleanup when it fails, and shouldn\u0027t need to be called here.\n\nMove this logic into agent?",
+      "range": {
+        "startLine": 198,
+        "startChar": 19,
+        "endLine": 198,
+        "endChar": 23
+      },
+      "revId": "30e93ce245a4b3ff64b6a1ea5bee6d4b0ab13297",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5bcef37_7c6e166f",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-16T15:19:01Z",
+      "side": 1,
+      "message": "Will panic if rq.queue is closed while running.",
+      "revId": "30e93ce245a4b3ff64b6a1ea5bee6d4b0ab13297",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7268e9f0_1964823e",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-16T15:19:01Z",
+      "side": 1,
+      "message": "If this context is closed early (i.e. - if the operation is canceled while it\u0027s still in queue), sending a requestComplete signal will wake up the next queued process, allowing multiple to run at once.",
+      "range": {
+        "startLine": 98,
+        "startChar": 2,
+        "endLine": 98,
+        "endChar": 22
+      },
+      "revId": "30e93ce245a4b3ff64b6a1ea5bee6d4b0ab13297",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ec37afc_8720f2e2",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-16T15:19:01Z",
+      "side": 1,
+      "message": "Will panic if requestCompleteIndication is closed while running.",
+      "revId": "30e93ce245a4b3ff64b6a1ea5bee6d4b0ab13297",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2959bad_b7ed80b3",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-16T15:19:01Z",
+      "side": 1,
+      "message": "There are a few places where this will cause panics, because:\n1) There is no mutex protecting rq.stopped, so uses of rw.stopped may have old data\n2) Chan writes may run at the \"same\" time as these chans are closed.  A close followed by a write \u003d\u003e panic in the writer.",
+      "range": {
+        "startLine": 115,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 17
+      },
+      "revId": "30e93ce245a4b3ff64b6a1ea5bee6d4b0ab13297",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
