@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52f685d1_0f0e18df",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-16T17:49:59Z",
+      "side": 1,
+      "message": "Who provides the adapterInstanceID?  Is it part of the Register message or something to add to the proto?\n\nIn order to differentiate between versions, then version should also be part of the key.\n\nA List request on Adapters will need to show all the instances as well.   By augmenting the adapter key in KV, when you do a list adapters, do you see all adapters?",
+      "revId": "81947de570213870abcbbd6755dca009f7eae8ae",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
