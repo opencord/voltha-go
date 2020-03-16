@@ -329,6 +329,30 @@
     },
     {
       "key": {
+        "uuid": "88e7339e_f53e90de",
+        "filename": "rw_core/core/adapter_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-16T15:49:57Z",
+      "side": 1,
+      "message": "Sure, will update.",
+      "parentUuid": "101856e3_dfc69d1c",
+      "range": {
+        "startLine": 187,
+        "startChar": 2,
+        "endLine": 189,
+        "endChar": 2
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b485fa65_c2514028",
         "filename": "rw_core/core/adapter_request_handler.go",
         "patchSetId": 1
