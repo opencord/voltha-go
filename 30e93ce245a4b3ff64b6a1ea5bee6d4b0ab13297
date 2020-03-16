@@ -107,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "6c53fb6c_f827fd1a",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-16T16:08:37Z",
+      "side": 1,
+      "message": "In the Stop() scenario, the device is actually gone, so no more processing will happen (even if the waiting processes are invoked).   Some cleanup may be required though.",
+      "parentUuid": "50480c7e_187066f6",
+      "range": {
+        "startLine": 94,
+        "startChar": 1,
+        "endLine": 94,
+        "endChar": 7
+      },
+      "revId": "30e93ce245a4b3ff64b6a1ea5bee6d4b0ab13297",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7268e9f0_1964823e",
         "filename": "rw_core/utils/core_utils.go",
         "patchSetId": 3
