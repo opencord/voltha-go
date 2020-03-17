@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "161beeb7_8f4720e7",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-17T01:16:11Z",
+      "side": 1,
+      "message": "Actually the transition does not care about the connect state.   It only cares about the operational state. Below is the transition. Should operational state be taken into account as well?  In other words, should create logical device only be executed if the connectionstate is reachable and the operational state active? \n\t\t\nTransition{\n\t\t\tdeviceType:    parent,\n\t\t\tpreviousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},\n\t\t\tcurrentState:  DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},\n\t\t\thandlers:      []TransitionHandler{dMgr.CreateLogicalDevice}})",
+      "parentUuid": "5e0c2eaa_271bbf68",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33be0e2e_dffcba3c",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 3
