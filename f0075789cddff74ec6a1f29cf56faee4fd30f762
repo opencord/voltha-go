@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "616e04ad_b59ad53d",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-03-17T02:16:06Z",
+      "side": 1,
+      "message": "Hi Khen, thanks for the comments.\nThe transition you are referring to is applicable only when the olt is enabled for the first time. This new transition has been designed to focus only on the OLT reachability status, and when it becomes reachable, we create the logical device.\nThis has been tested on HW and unit tests.\nWithout this transition, the logical device does not get created when OLT becomes reachable again.",
+      "parentUuid": "161beeb7_8f4720e7",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33be0e2e_dffcba3c",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 3
