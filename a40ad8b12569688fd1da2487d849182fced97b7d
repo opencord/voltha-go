@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "92776b04_deda60d5",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-03-17T02:16:06Z",
+      "side": 1,
+      "message": "The OLT is already enabled. When the OLT is hard-rebooted, there is no change in admin state. We should just be creating the logical device again, which was deleted when OLT went unreachable.",
+      "parentUuid": "e4390b16_810d60e4",
+      "revId": "a40ad8b12569688fd1da2487d849182fced97b7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f341498c_79a3b66b",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 4
