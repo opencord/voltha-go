@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06f9580f_37d0e4c5",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-17T19:24:06Z",
+      "side": 1,
+      "message": "Can check \u0026 return early like in `start()` to avoid `returnErr` complexity.",
+      "range": {
+        "startLine": 169,
+        "startChar": 1,
+        "endLine": 169,
+        "endChar": 25
+      },
+      "revId": "4c75b35898d1f18a82a9bc0436802f6c733d7744",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c796210_78f0ffe8",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-17T19:24:06Z",
+      "side": 1,
+      "message": "Because request.done is not synchronized, it\u0027s possible for it be be set to true here, just after being checked on line 91.  If this occurs, \u003c-rq.requestCompleteIndication will block forever.\n\nSuggested fix:\nChange request.done to be a channel, and close it here.\nChange the above request.done check followed by \u003c-rq.requestCompleteIndication to:\n\nselect {\n  case \u003c-req.done:\n  case \u003c-rq.requestCompleteIndication:\n}",
+      "range": {
+        "startLine": 114,
+        "startChar": 2,
+        "endLine": 114,
+        "endChar": 14
+      },
+      "revId": "4c75b35898d1f18a82a9bc0436802f6c733d7744",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
