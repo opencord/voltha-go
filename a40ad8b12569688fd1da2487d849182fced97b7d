@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4390b16_810d60e4",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-17T01:16:11Z",
+      "side": 1,
+      "message": "Should we be creating a logicaldevice or initiate the enablement of the olt instead?  In the later case, the entire onus/logical device and flows will be created.   What manual actions are expected?",
+      "revId": "a40ad8b12569688fd1da2487d849182fced97b7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f341498c_79a3b66b",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-17T01:16:11Z",
+      "side": 1,
+      "message": "This test is not required as the wait above takes care of it.",
+      "revId": "a40ad8b12569688fd1da2487d849182fced97b7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
