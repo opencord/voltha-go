@@ -41,7 +41,7 @@ const (
 	defaultKVStorePort               = 2379 // Consul = 8500; Etcd = 2379
 	defaultKVTxnKeyDelTime           = 60
 	defaultKVStoreDataPrefix         = "service/voltha"
-	defaultLogLevel                  = "DEBUG"
+	defaultLogLevel                  = "WARN"
 	defaultBanner                    = false
 	defaultDisplayVersionOnly        = false
 	defaultCoreTopic                 = "rwcore"
