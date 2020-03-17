@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ed0b3ee_55f712d1",
+        "filename": "common/core/northbound/grpc/default_api_handler.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "all other messages in form \"MethodName-unimplemented\"",
+      "range": {
+        "startLine": 394,
+        "startChar": 25,
+        "endLine": 394,
+        "endChar": 38
+      },
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "223e195f_c934a1bd",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "args :\u003d []*kafka.KVArg,2 {\n    \u0026kafka.KVArg {\"device\", device},\n    \u0026kafka.KVArg({\"omcitestrequest\", omcitestrequest},\n}",
+      "range": {
+        "startLine": 650,
+        "startChar": 0,
+        "endLine": 658,
+        "endChar": 2
+      },
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe4fcea2_628c4350",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "btw, and not really for this patch I guess, but return values seem backward. go is usually value, error|ok",
+      "range": {
+        "startLine": 661,
+        "startChar": 1,
+        "endLine": 661,
+        "endChar": 16
+      },
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaaf7914_688dee88",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "could actually put the args in line as well.",
+      "range": {
+        "startLine": 661,
+        "startChar": 98,
+        "endLine": 661,
+        "endChar": 104
+      },
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb6af364_5c090ba5",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "any reason to log a warning and then return an error. is it a warning or error. if error is it the responsibility of caller to log?",
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "745606d7_bf83fa64",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "this is the non-success caser, but no error is returned?",
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "667f8802_30a606b3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1470,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "it doesn\u0027t look like the error return is ever used because if there is an error an \"failure\" instance of TestResponse is generated. This seems a little odd. \n\nIf error is never used might as well eliminate the return type or on error return an error and not a failure TestResponse?",
+      "range": {
+        "startLine": 1470,
+        "startChar": 125,
+        "endLine": 1470,
+        "endChar": 130
+      },
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06095ab9_3f91b8a3",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "never returns an error, so don\u0027t really need.",
+      "range": {
+        "startLine": 1540,
+        "startChar": 126,
+        "endLine": 1540,
+        "endChar": 131
+      },
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79335c11_a579f5f9",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1548,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-17T22:34:09Z",
+      "side": 1,
+      "message": "is this different than the const defined as `TestResponse_FAILURE`?\n\nthis same comment whereever FAILURE is referenced?",
+      "range": {
+        "startLine": 1548,
+        "startChar": 8,
+        "endLine": 1548,
+        "endChar": 65
+      },
+      "revId": "2a691580f20943276fecee0ce74260cb0205dc7a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
