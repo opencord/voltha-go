@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "73dd54ec_8722124e",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "Again I think my question was not clear.  With the transition I mention and this transition we will be creating the logical device when either the connection state is reachable or when the operational state becomes active.   Should this be an AND instead?  I.e. create the logical device when both the connection state is reachable and operational state is active?",
+      "parentUuid": "616e04ad_b59ad53d",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33be0e2e_dffcba3c",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 3
