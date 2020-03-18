@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b298af9_4afc6346",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T16:56:32Z",
+      "side": 1,
+      "message": "Need to notify requestComplete()",
+      "revId": "39ee97bd3fc019d14a4a6f87f20d202b4fc8d48f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7abe527c_6a87f2d5",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1721,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T16:56:32Z",
+      "side": 1,
+      "message": "Depending on what you need to return back, you might want to use a defer on RequestComplete() at the top.  Do you need a full response from the adapter before returning a response to the caller (NB)?",
+      "revId": "39ee97bd3fc019d14a4a6f87f20d202b4fc8d48f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
