@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f830dcb2_1e5c6849",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "Can the waitUntilLogicalDeviceReadiness() be re-used with some minor modifications?",
+      "revId": "9fe85590409a4a3b7f2c570bddf592ab17a0e0ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c52d79b_0ccd77bb",
+        "filename": "rw_core/core/common_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "We don\u0027t need these specific functions.  The goal is to use the existing wait...() functions and pass in your specific validation function.  For instance, in this case your function will test whether there are flows on a device and you will invoke waitUntilDeviceReadiness() with this custom function.",
+      "revId": "9fe85590409a4a3b7f2c570bddf592ab17a0e0ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d8b029f_4346bb07",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "With the async code in, you will need to use the waitforgreenlight() function along with requestcomplete() function.   We no longer use the lock to ensure ordering.",
+      "revId": "9fe85590409a4a3b7f2c570bddf592ab17a0e0ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea36397b_690807e1",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1311,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "You can return nil here and move the error return as the last statement.  makes it easier to read.",
+      "revId": "9fe85590409a4a3b7f2c570bddf592ab17a0e0ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e1271a3_bf5ecb0e",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "If this function is only invoked to remove all logicalports on a logical device then please renove the device parameter and also change the function comment.",
+      "revId": "9fe85590409a4a3b7f2c570bddf592ab17a0e0ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec50d084_8f0b3aff",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "Do we need a reboot scenario to mimic the entire flow?",
+      "revId": "9fe85590409a4a3b7f2c570bddf592ab17a0e0ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
