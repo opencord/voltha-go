@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "320baa06_d215ea9e",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-03-18T19:47:35Z",
+      "side": 1,
+      "message": "I have changed this transition in next commit.",
+      "parentUuid": "73dd54ec_8722124e",
+      "revId": "f0075789cddff74ec6a1f29cf56faee4fd30f762",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33be0e2e_dffcba3c",
         "filename": "rw_core/core/device_state_transitions.go",
         "patchSetId": 3
