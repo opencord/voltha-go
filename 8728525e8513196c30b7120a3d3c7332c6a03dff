@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "363a0382_be385734",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-18T17:58:58Z",
+      "side": 1,
+      "message": "out of curiosity, would it make sense to simply \"defer agent.requestQueue.RequestComplete()\"? Is anytime this func returns the request is complete?",
+      "revId": "8728525e8513196c30b7120a3d3c7332c6a03dff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
