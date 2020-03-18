@@ -46,6 +46,23 @@
       "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a425822_9714ee3d",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1476,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-18T06:58:40Z",
+      "side": 1,
+      "message": "not need to log warning if returning error?",
+      "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
