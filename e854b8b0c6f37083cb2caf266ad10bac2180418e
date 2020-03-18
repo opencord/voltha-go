@@ -22,6 +22,30 @@
       "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3219aef2_6525f77e",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1472,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-03-18T03:29:53Z",
+      "side": 1,
+      "message": "Thanks for the note, if Khen\u0027s patch goes in first, I\u0027ll remove.",
+      "parentUuid": "16993537_e0de3b14",
+      "range": {
+        "startLine": 1471,
+        "startChar": 1,
+        "endLine": 1472,
+        "endChar": 32
+      },
+      "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
