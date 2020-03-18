@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16993537_e0de3b14",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1472,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-03-18T03:23:17Z",
+      "side": 1,
+      "message": "This lock is removed in Khen\u0027s last patch about Async kafka messaging. Probablu will cause a conflict.",
+      "range": {
+        "startLine": 1471,
+        "startChar": 1,
+        "endLine": 1472,
+        "endChar": 32
+      },
+      "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
