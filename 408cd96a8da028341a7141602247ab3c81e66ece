@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b566672d_bced75bb",
+        "filename": "rw_core/mocks/adapter_olt.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T20:46:17Z",
+      "side": 1,
+      "message": "In a future update, will be interesting to have a sleep mimicking the reboot followed by setting back the state to reachable and do the device discovery.   This will exercise the entire reboot flow.",
+      "revId": "408cd96a8da028341a7141602247ab3c81e66ece",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
