@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "151bd798_0fdb7148",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:49:19Z",
+      "side": 1,
+      "message": "Some slight modifications will be required to handle the async scenario.",
+      "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16993537_e0de3b14",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 14
@@ -49,6 +66,30 @@
     },
     {
       "key": {
+        "uuid": "8b7f97a4_cd9479a6",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1472,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:49:19Z",
+      "side": 1,
+      "message": "There are other changes as well in the async patch.  The typical flow is:\n1) Send the request to the adapter\n2) Wait for a first response from kafka and use that to return a response to the caller.\n3) Wait for the complete response from the adapter (in this case it may just be that the adapter sends back an ACK that it started the test or it sends the response after completion the test.  The core will just wait for whatever response it gets from the adapter and mark it as success or failure.   For now we do nothing with it - the placeholder to put it on kafka is there but I did not want to add it as part of the async patch as it was getting too big of a patch.",
+      "parentUuid": "3219aef2_6525f77e",
+      "range": {
+        "startLine": 1471,
+        "startChar": 1,
+        "endLine": 1472,
+        "endChar": 32
+      },
+      "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a425822_9714ee3d",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 14
@@ -60,6 +101,40 @@
       "writtenOn": "2020-03-18T06:58:40Z",
       "side": 1,
       "message": "not need to log warning if returning error?",
+      "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c4abea6_64a25def",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:49:19Z",
+      "side": 1,
+      "message": "\"device-id\"",
+      "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39692ca8_1756a7fc",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1550,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:49:19Z",
+      "side": 1,
+      "message": "Should we return an actual error, i.e. device not found?",
       "revId": "e854b8b0c6f37083cb2caf266ad10bac2180418e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
