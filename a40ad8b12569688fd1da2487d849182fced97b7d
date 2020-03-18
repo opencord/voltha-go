@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0be3a115_30eeb49b",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-18T14:27:39Z",
+      "side": 1,
+      "message": "I think my question was not clear.   Once, the OLT finish rebooting, will the OLT adapter start to discover the ONUs and send the child discovery messages to the Core? If yes, then it\u0027s all good.",
+      "parentUuid": "92776b04_deda60d5",
+      "revId": "a40ad8b12569688fd1da2487d849182fced97b7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f341498c_79a3b66b",
         "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
         "patchSetId": 4
