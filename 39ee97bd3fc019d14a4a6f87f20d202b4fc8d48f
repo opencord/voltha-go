@@ -33,6 +33,24 @@
       "revId": "39ee97bd3fc019d14a4a6f87f20d202b4fc8d48f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "542a11d3_777e0450",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1721,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-03-18T16:58:12Z",
+      "side": 1,
+      "message": "Yes, we need the status from the response to return to the caller.",
+      "parentUuid": "7abe527c_6a87f2d5",
+      "revId": "39ee97bd3fc019d14a4a6f87f20d202b4fc8d48f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
