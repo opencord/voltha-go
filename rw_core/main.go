@@ -115,7 +115,7 @@ func (rw *rwCore) start(ctx context.Context, instanceID string) {
 		log.Fatal(err)
 	}
 	cm := conf.NewConfigManager(rw.kvClient, rw.config.KVStoreType, rw.config.KVStoreHost, rw.config.KVStorePort, rw.config.KVStoreTimeout)
-	go conf.ProcessLogConfigChange(cm, ctx)
+	go conf.StartLogLevelConfigProcessing(cm, ctx)
 
 	// Setup KV transaction context
 	if err := c.SetTransactionContext(instanceID,
