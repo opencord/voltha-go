@@ -66,7 +66,7 @@ func newNBTest() *NBTest {
 	var err error
 	test.etcdServer, test.kvClientPort, err = startEmbeddedEtcdServer("voltha.rwcore.nb.test", "voltha.rwcore.nb.etcd", "error")
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	// Create the kafka client
 	test.kClient = lm.NewKafkaClient()
@@ -89,7 +89,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
-		log.Fatal("Cannot get a freeport for grpc")
+		logger.Fatal("Cannot get a freeport for grpc")
 	}
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
@@ -98,7 +98,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	nb.core = NewCore(ctx, nb.coreInstanceID, cfg, client, nb.kClient)
 	err = nb.core.Start(context.Background())
 	if err != nil {
-		log.Fatal("Cannot start core")
+		logger.Fatal("Cannot start core")
 	}
 }
 
@@ -106,7 +106,7 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	// Setup the mock OLT adapter
 	oltAdapter, err := createMockAdapter(OltAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.oltAdapterName)
 	if err != nil {
-		log.Fatalw("setting-mock-olt-adapter-failed", log.Fields{"error": err})
+		logger.Fatalw("setting-mock-olt-adapter-failed", log.Fields{"error": err})
 	}
 	nb.oltAdapter = (oltAdapter).(*cm.OLTAdapter)
 	nb.numONUPerOLT = nb.oltAdapter.GetNumONUPerOLT()
@@ -121,14 +121,14 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
 	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
-		log.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
 
 	// Setup the mock ONU adapter
 	onuAdapter, err := createMockAdapter(OnuAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.onuAdapterName)
 	if err != nil {
-		log.Fatalw("setting-mock-onu-adapter-failed", log.Fields{"error": err})
+		logger.Fatalw("setting-mock-onu-adapter-failed", log.Fields{"error": err})
 	}
 	nb.onuAdapter = (onuAdapter).(*cm.ONUAdapter)
 
@@ -141,7 +141,7 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes = &voltha.DeviceTypes{Items: types}
 	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
-		log.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
 }
@@ -304,7 +304,7 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *APIHandler) {
 		case nb.onuAdapterName:
 			assert.Equal(t, "Voltha-onu", a.Vendor)
 		default:
-			log.Fatal("unregistered-adapter", a.Id)
+			logger.Fatal("unregistered-adapter", a.Id)
 		}
 	}
 	deviceTypes, err := nbi.ListDeviceTypes(getContext(), &empty.Empty{})
@@ -322,7 +322,7 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *APIHandler) {
 			assert.Equal(t, false, dt.AcceptsBulkFlowUpdate)
 			assert.Equal(t, true, dt.AcceptsAddRemoveFlowUpdates)
 		default:
-			log.Fatal("invalid-device-type", dt.Id)
+			logger.Fatal("invalid-device-type", dt.Id)
 		}
 	}
 }
@@ -1025,13 +1025,13 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPort
 func TestSuite1(t *testing.T) {
 	f, err := os.Create("profile.cpu")
 	if err != nil {
-		log.Fatalf("could not create CPU profile: %v\n ", err)
+		logger.Fatalf("could not create CPU profile: %v\n ", err)
 	}
 	defer f.Close()
 	runtime.SetBlockProfileRate(1)
 	runtime.SetMutexProfileFraction(-1)
 	if err := pprof.StartCPUProfile(f); err != nil {
-		log.Fatalf("could not start CPU profile: %v\n", err)
+		logger.Fatalf("could not start CPU profile: %v\n", err)
 	}
 	defer pprof.StopCPUProfile()
 

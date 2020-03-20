@@ -58,13 +58,6 @@ type Core struct {
 	deviceOwnership   *DeviceOwnership
 }
 
-func init() {
-	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
-	if err != nil {
-		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
-	}
-}
-
 // NewCore creates instance of rw core
 func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags, kvClient kvstore.Client, kafkaClient kafka.Client) *Core {
 	var core Core
@@ -111,11 +104,11 @@ func (core *Core) Start(ctx context.Context) error {
 		}
 	}
 
-	log.Info("starting-core-services", log.Fields{"coreId": core.instanceID})
+	logger.Info("starting-core-services", log.Fields{"coreId": core.instanceID})
 
 	// Wait until connection to KV Store is up
 	if err := core.waitUntilKVStoreReachableOrMaxTries(ctx, core.config.MaxConnectionRetries, core.config.ConnectionRetryInterval); err != nil {
-		log.Fatal("Unable-to-connect-to-KV-store")
+		logger.Fatal("Unable-to-connect-to-KV-store")
 	}
 	if p != nil {
 		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
@@ -137,7 +130,7 @@ func (core *Core) Start(ctx context.Context) error {
 	// private copies of the poiner to core.kmp.
 	core.initKafkaManager(ctx)
 
-	log.Debugw("values", log.Fields{"kmp": core.kmp})
+	logger.Debugw("values", log.Fields{"kmp": core.kmp})
 	core.deviceMgr = newDeviceManager(core)
 	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceID, core.kafkaClient, core.deviceMgr)
 	core.deviceMgr.adapterMgr = core.adapterMgr
@@ -162,14 +155,14 @@ func (core *Core) Start(ctx context.Context) error {
 	core.deviceOwnership = NewDeviceOwnership(core.instanceID, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
 		"service/voltha/owns_device", 10)
 
-	log.Info("core-services-started")
+	logger.Info("core-services-started")
 	return nil
 }
 
 // Stop brings down core services
 func (core *Core) Stop(ctx context.Context) {
 	core.stopOnce.Do(func() {
-		log.Info("stopping-adaptercore")
+		logger.Info("stopping-adaptercore")
 		// Signal to the KVStoreMonitor that we are stopping.
 		close(core.exitChannel)
 		// Stop all the started services
@@ -185,7 +178,7 @@ func (core *Core) Stop(ctx context.Context) {
 		if core.kmp != nil {
 			core.kmp.Stop()
 		}
-		log.Info("adaptercore-stopped")
+		logger.Info("adaptercore-stopped")
 	})
 }
 
@@ -193,10 +186,10 @@ func (core *Core) Stop(ctx context.Context) {
 func (core *Core) startGRPCService(ctx context.Context) {
 	//	create an insecure gserver server
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
-	log.Info("grpc-server-created")
+	logger.Info("grpc-server-created")
 
 	core.grpcNBIAPIHandler = NewAPIHandler(core)
-	log.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
+	logger.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
 	core.logicalDeviceMgr.setGrpcNbiHandler(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
@@ -207,7 +200,7 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	}
 
 	core.grpcServer.AddService(f)
-	log.Info("grpc-service-added")
+	logger.Info("grpc-service-added")
 
 	/*
 	 * Start the GRPC server
@@ -221,14 +214,14 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	 * ready, when it really isn't.
 	 */
 	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusRunning)
-	log.Info("grpc-server-started")
+	logger.Info("grpc-server-started")
 	core.grpcServer.Start(ctx)
 	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
 }
 
 // Initialize the kafka manager, but we will start it later
 func (core *Core) initKafkaManager(ctx context.Context) {
-	log.Infow("initialize-kafka-manager", log.Fields{"host": core.config.KafkaAdapterHost,
+	logger.Infow("initialize-kafka-manager", log.Fields{"host": core.config.KafkaAdapterHost,
 		"port": core.config.KafkaAdapterPort, "topic": core.config.CoreTopic})
 
 	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPreparing)
@@ -278,51 +271,51 @@ func (core *Core) initKafkaManager(ctx context.Context) {
  */
 
 func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval time.Duration, liveProbeInterval time.Duration, notLiveProbeInterval time.Duration) {
-	log.Infow("starting-kafka-manager-thread", log.Fields{"host": core.config.KafkaAdapterHost,
+	logger.Infow("starting-kafka-manager-thread", log.Fields{"host": core.config.KafkaAdapterHost,
 		"port": core.config.KafkaAdapterPort, "topic": core.config.CoreTopic})
 
 	started := false
 	for !started {
 		// If we haven't started yet, then try to start
-		log.Infow("starting-kafka-proxy", log.Fields{})
+		logger.Infow("starting-kafka-proxy", log.Fields{})
 		if err := core.kmp.Start(); err != nil {
 			// We failed to start. Delay and then try again later.
 			// Don't worry about liveness, as we can't be live until we've started.
 			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusNotReady)
-			log.Infow("error-starting-kafka-messaging-proxy", log.Fields{"error": err})
+			logger.Infow("error-starting-kafka-messaging-proxy", log.Fields{"error": err})
 			time.Sleep(startupRetryInterval)
 		} else {
 			// We started. We only need to do this once.
 			// Next we'll fall through and start checking liveness.
-			log.Infow("started-kafka-proxy", log.Fields{})
+			logger.Infow("started-kafka-proxy", log.Fields{})
 
 			// cannot do this until after the kmp is started
 			if err := core.registerAdapterRequestHandlers(ctx, core.instanceID, core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.clusterDataProxy, core.localDataProxy); err != nil {
-				log.Fatal("Failure-registering-adapterRequestHandler")
+				logger.Fatal("Failure-registering-adapterRequestHandler")
 			}
 
 			started = true
 		}
 	}
 
-	log.Info("started-kafka-message-proxy")
+	logger.Info("started-kafka-message-proxy")
 
 	livenessChannel := core.kmp.EnableLivenessChannel(true)
 
-	log.Info("enabled-kafka-liveness-channel")
+	logger.Info("enabled-kafka-liveness-channel")
 
 	timeout := liveProbeInterval
 	for {
 		timeoutTimer := time.NewTimer(timeout)
 		select {
 		case liveness := <-livenessChannel:
-			log.Infow("kafka-manager-thread-liveness-event", log.Fields{"liveness": liveness})
+			logger.Infow("kafka-manager-thread-liveness-event", log.Fields{"liveness": liveness})
 			// there was a state change in Kafka liveness
 			if !liveness {
 				probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusNotReady)
 
 				if core.grpcServer != nil {
-					log.Info("kafka-manager-thread-set-server-notready")
+					logger.Info("kafka-manager-thread-set-server-notready")
 				}
 
 				// retry frequently while life is bad
@@ -331,7 +324,7 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval ti
 				probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusRunning)
 
 				if core.grpcServer != nil {
-					log.Info("kafka-manager-thread-set-server-ready")
+					logger.Info("kafka-manager-thread-set-server-ready")
 				}
 
 				// retry infrequently while life is good
@@ -341,14 +334,14 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval ti
 				<-timeoutTimer.C
 			}
 		case <-timeoutTimer.C:
-			log.Info("kafka-proxy-liveness-recheck")
+			logger.Info("kafka-proxy-liveness-recheck")
 			// send the liveness probe in a goroutine; we don't want to deadlock ourselves as
 			// the liveness probe may wait (and block) writing to our channel.
 			go func() {
 				err := core.kmp.SendLiveness()
 				if err != nil {
 					// Catch possible error case if sending liveness after Sarama has been stopped.
-					log.Warnw("error-kafka-send-liveness", log.Fields{"error": err})
+					logger.Warnw("error-kafka-send-liveness", log.Fields{"error": err})
 				}
 			}()
 		}
@@ -357,12 +350,12 @@ func (core *Core) startKafkaManager(ctx context.Context, startupRetryInterval ti
 
 // waitUntilKVStoreReachableOrMaxTries will wait until it can connect to a KV store or until maxtries has been reached
 func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRetries int, retryInterval time.Duration) error {
-	log.Infow("verifying-KV-store-connectivity", log.Fields{"host": core.config.KVStoreHost,
+	logger.Infow("verifying-KV-store-connectivity", log.Fields{"host": core.config.KVStoreHost,
 		"port": core.config.KVStorePort, "retries": maxRetries, "retryInterval": retryInterval})
 	count := 0
 	for {
 		if !core.kvClient.IsConnectionUp(ctx) {
-			log.Info("KV-store-unreachable")
+			logger.Info("KV-store-unreachable")
 			if maxRetries != -1 {
 				if count >= maxRetries {
 					return status.Error(codes.Unavailable, "kv store unreachable")
@@ -371,13 +364,13 @@ func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRe
 			count++
 			//	Take a nap before retrying
 			time.Sleep(retryInterval)
-			log.Infow("retry-KV-store-connectivity", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
+			logger.Infow("retry-KV-store-connectivity", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
 
 		} else {
 			break
 		}
 	}
-	log.Info("KV-store-reachable")
+	logger.Info("KV-store-reachable")
 	return nil
 }
 
@@ -389,39 +382,39 @@ func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstan
 
 	// Register the broadcast topic to handle any core-bound broadcast requests
 	if err := core.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: core.config.CoreTopic}, requestProxy); err != nil {
-		log.Fatalw("Failed-registering-broadcast-handler", log.Fields{"topic": core.config.CoreTopic})
+		logger.Fatalw("Failed-registering-broadcast-handler", log.Fields{"topic": core.config.CoreTopic})
 		return err
 	}
 
 	// Register the core-pair topic to handle core-bound requests destined to the core pair
 	if err := core.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: core.config.CorePairTopic}, kafka.OffsetNewest); err != nil {
-		log.Fatalw("Failed-registering-pair-handler", log.Fields{"topic": core.config.CorePairTopic})
+		logger.Fatalw("Failed-registering-pair-handler", log.Fields{"topic": core.config.CorePairTopic})
 		return err
 	}
 
-	log.Info("request-handler-registered")
+	logger.Info("request-handler-registered")
 	return nil
 }
 
 func (core *Core) startDeviceManager(ctx context.Context) {
-	log.Info("DeviceManager-Starting...")
+	logger.Info("DeviceManager-Starting...")
 	core.deviceMgr.start(ctx, core.logicalDeviceMgr)
-	log.Info("DeviceManager-Started")
+	logger.Info("DeviceManager-Started")
 }
 
 func (core *Core) startLogicalDeviceManager(ctx context.Context) {
-	log.Info("Logical-DeviceManager-Starting...")
+	logger.Info("Logical-DeviceManager-Starting...")
 	core.logicalDeviceMgr.start(ctx)
-	log.Info("Logical-DeviceManager-Started")
+	logger.Info("Logical-DeviceManager-Started")
 }
 
 func (core *Core) startAdapterManager(ctx context.Context) {
-	log.Info("Adapter-Manager-Starting...")
+	logger.Info("Adapter-Manager-Starting...")
 	err := core.adapterMgr.start(ctx)
 	if err != nil {
-		log.Fatalf("failed-to-start-adapter-manager: error %v ", err)
+		logger.Fatalf("failed-to-start-adapter-manager: error %v ", err)
 	}
-	log.Info("Adapter-Manager-Started")
+	logger.Info("Adapter-Manager-Started")
 }
 
 /*
@@ -439,12 +432,12 @@ func (core *Core) startAdapterManager(ctx context.Context) {
 * start issuing UNAVAILABLE response while the probe is not ready.
  */
 func (core *Core) monitorKvstoreLiveness(ctx context.Context) {
-	log.Info("start-monitoring-kvstore-liveness")
+	logger.Info("start-monitoring-kvstore-liveness")
 
 	// Instruct backend to create Liveness channel for transporting state updates
 	livenessChannel := core.backend.EnableLivenessChannel()
 
-	log.Debug("enabled-kvstore-liveness-channel")
+	logger.Debug("enabled-kvstore-liveness-channel")
 
 	// Default state for kvstore is alive for rw_core
 	timeout := core.config.LiveProbeInterval
@@ -454,13 +447,13 @@ loop:
 		select {
 
 		case liveness := <-livenessChannel:
-			log.Debugw("received-liveness-change-notification", log.Fields{"liveness": liveness})
+			logger.Debugw("received-liveness-change-notification", log.Fields{"liveness": liveness})
 
 			if !liveness {
 				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
 
 				if core.grpcServer != nil {
-					log.Info("kvstore-set-server-notready")
+					logger.Info("kvstore-set-server-notready")
 				}
 
 				timeout = core.config.NotLiveProbeInterval
@@ -469,7 +462,7 @@ loop:
 				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusRunning)
 
 				if core.grpcServer != nil {
-					log.Info("kvstore-set-server-ready")
+					logger.Info("kvstore-set-server-ready")
 				}
 
 				timeout = core.config.LiveProbeInterval
@@ -483,7 +476,7 @@ loop:
 			break loop
 
 		case <-timeoutTimer.C:
-			log.Info("kvstore-perform-liveness-check-on-timeout")
+			logger.Info("kvstore-perform-liveness-check-on-timeout")
 
 			// Trigger Liveness check if no liveness update received within the timeout period.
 			// The Liveness check will push Live state to same channel which this routine is

@@ -90,7 +90,7 @@ func (b *Branch) SetLatest(latest Revision) {
 	defer b.mutex.Unlock()
 
 	if b.Latest != nil {
-		log.Debugw("updating-latest-revision", log.Fields{"current": b.Latest.GetHash(), "new": latest.GetHash()})
+		logger.Debugw("updating-latest-revision", log.Fields{"current": b.Latest.GetHash(), "new": latest.GetHash()})
 
 		// Go through list of children names in current revision and new revision
 		// and then compare the resulting outputs to ensure that we have not lost any entries.
@@ -99,20 +99,20 @@ func (b *Branch) SetLatest(latest Revision) {
 			var previousNames, latestNames, missingNames []string
 
 			if previousNames = b.retrieveChildrenNames(b.Latest); len(previousNames) > 0 {
-				log.Debugw("children-of-previous-revision", log.Fields{"hash": b.Latest.GetHash(), "names": previousNames})
+				logger.Debugw("children-of-previous-revision", log.Fields{"hash": b.Latest.GetHash(), "names": previousNames})
 			}
 
 			if latestNames = b.retrieveChildrenNames(b.Latest); len(latestNames) > 0 {
-				log.Debugw("children-of-latest-revision", log.Fields{"hash": latest.GetHash(), "names": latestNames})
+				logger.Debugw("children-of-latest-revision", log.Fields{"hash": latest.GetHash(), "names": latestNames})
 			}
 
 			if missingNames = b.findMissingChildrenNames(previousNames, latestNames); len(missingNames) > 0 {
-				log.Debugw("children-missing-in-latest-revision", log.Fields{"hash": latest.GetHash(), "names": missingNames})
+				logger.Debugw("children-missing-in-latest-revision", log.Fields{"hash": latest.GetHash(), "names": missingNames})
 			}
 		}
 
 	} else {
-		log.Debugw("setting-latest-revision", log.Fields{"new": latest.GetHash()})
+		logger.Debugw("setting-latest-revision", log.Fields{"new": latest.GetHash()})
 	}
 
 	b.Latest = latest

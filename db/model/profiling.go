@@ -18,8 +18,6 @@ package model
 
 import (
 	"sync"
-
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 // Profiling is used to store performance details collected at runtime
@@ -109,15 +107,15 @@ func (p *Profiling) Report() {
 	p.Lock()
 	defer p.Unlock()
 
-	log.Infof("[ Profiling Report ]")
-	log.Infof("Database Retrieval : %f", p.DatabaseRetrieveTime)
-	log.Infof("Database Retrieval Count : %d", p.DatabaseRetrieveCount)
-	log.Infof("Avg Database Retrieval : %f", p.DatabaseRetrieveTime/float64(p.DatabaseRetrieveCount))
-	log.Infof("In-Memory Modeling : %f", p.InMemoryModelTime)
-	log.Infof("In-Memory Modeling Count: %d", p.InMemoryModelCount)
-	log.Infof("Avg In-Memory Modeling : %f", p.InMemoryModelTime/float64(p.InMemoryModelCount))
-	log.Infof("In-Memory Locking : %f", p.InMemoryLockTime)
-	log.Infof("In-Memory Locking Count: %d", p.InMemoryLockCount)
-	log.Infof("Avg In-Memory Locking : %f", p.InMemoryLockTime/float64(p.InMemoryLockCount))
+	logger.Infof("[ Profiling Report ]")
+	logger.Infof("Database Retrieval : %f", p.DatabaseRetrieveTime)
+	logger.Infof("Database Retrieval Count : %d", p.DatabaseRetrieveCount)
+	logger.Infof("Avg Database Retrieval : %f", p.DatabaseRetrieveTime/float64(p.DatabaseRetrieveCount))
+	logger.Infof("In-Memory Modeling : %f", p.InMemoryModelTime)
+	logger.Infof("In-Memory Modeling Count: %d", p.InMemoryModelCount)
+	logger.Infof("Avg In-Memory Modeling : %f", p.InMemoryModelTime/float64(p.InMemoryModelCount))
+	logger.Infof("In-Memory Locking : %f", p.InMemoryLockTime)
+	logger.Infof("In-Memory Locking Count: %d", p.InMemoryLockCount)
+	logger.Infof("Avg In-Memory Locking : %f", p.InMemoryLockTime/float64(p.InMemoryLockCount))
 
 }

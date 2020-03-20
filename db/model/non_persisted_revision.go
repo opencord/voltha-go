@@ -305,7 +305,7 @@ func (npr *NonPersistedRevision) UpdateData(ctx context.Context, data interface{
 	npr.mutex.Lock()
 	defer npr.mutex.Unlock()
 
-	log.Debugw("update-data", log.Fields{"hash": npr.GetHash(), "current": npr.Config.Data, "provided": data})
+	logger.Debugw("update-data", log.Fields{"hash": npr.GetHash(), "current": npr.Config.Data, "provided": data})
 
 	// Construct a new revision based on the current one
 	newRev := NonPersistedRevision{}
@@ -323,7 +323,7 @@ func (npr *NonPersistedRevision) UpdateData(ctx context.Context, data interface{
 
 	newRev.Finalize(ctx, false)
 
-	log.Debugw("update-data-complete", log.Fields{"updated": newRev.Config.Data, "provided": data})
+	logger.Debugw("update-data-complete", log.Fields{"updated": newRev.Config.Data, "provided": data})
 
 	return &newRev
 }
@@ -370,7 +370,7 @@ func (npr *NonPersistedRevision) UpdateChildren(ctx context.Context, name string
 			}
 		}
 
-		log.Debugw("existing-children-names", log.Fields{"hash": npr.GetHash(), "names": existingNames})
+		logger.Debugw("existing-children-names", log.Fields{"hash": npr.GetHash(), "names": existingNames})
 
 		// Merge existing and new children
 		for _, newChild := range children {
@@ -383,7 +383,7 @@ func (npr *NonPersistedRevision) UpdateChildren(ctx context.Context, name string
 				newChild.getNode().SetRoot(existingChildren[nameIndex].getNode().GetRoot())
 				updatedChildren = append(updatedChildren, newChild)
 			} else {
-				log.Debugw("adding-unknown-child", log.Fields{
+				logger.Debugw("adding-unknown-child", log.Fields{
 					"hash": newChild.GetHash(),
 					"data": newChild.GetData(),
 				})
@@ -401,7 +401,7 @@ func (npr *NonPersistedRevision) UpdateChildren(ctx context.Context, name string
 			updatedNames[updatedChild.GetName()] = i
 		}
 
-		log.Debugw("updated-children-names", log.Fields{"hash": npr.GetHash(), "names": updatedNames})
+		logger.Debugw("updated-children-names", log.Fields{"hash": npr.GetHash(), "names": updatedNames})
 
 	} else {
 		// There are no children available, just save the provided ones
@@ -436,7 +436,7 @@ func (npr *NonPersistedRevision) UpdateAllChildren(ctx context.Context, children
 
 // Drop is used to indicate when a revision is no longer required
 func (npr *NonPersistedRevision) Drop(txid string, includeConfig bool) {
-	log.Debugw("dropping-revision", log.Fields{"hash": npr.GetHash(), "name": npr.GetName()})
+	logger.Debugw("dropping-revision", log.Fields{"hash": npr.GetHash(), "name": npr.GetName()})
 }
 
 // ChildDrop will remove a child entry matching the provided parameters from the current revision
