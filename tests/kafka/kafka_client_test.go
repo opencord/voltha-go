@@ -45,10 +45,7 @@ var totalMessageReceived int
 type sendToKafka func(interface{}, *kk.Topic, ...string) error
 
 func init() {
-	log.AddPackage(log.JSON, log.ErrorLevel, nil)
 	hostIP := os.Getenv("DOCKER_HOST_IP")
-	log.UpdateAllLoggers(log.Fields{"instanceId": "testing"})
-	log.SetAllLogLevel(log.ErrorLevel)
 	partionClient = kk.NewSaramaClient(
 		kk.ConsumerType(kk.PartitionConsumer),
 		kk.Host(hostIP),
@@ -78,7 +75,7 @@ startloop:
 				mytime = time.Now()
 			}
 			totalTime = totalTime + (time.Now().UnixNano()-msg.Header.Timestamp)/int64(time.Millisecond)
-			//log.Debugw("msg-received", log.Fields{"msg":msg})
+			//logger.Debugw("msg-received", log.Fields{"msg":msg})
 			totalMessageReceived = totalMessageReceived + 1
 			if totalMessageReceived == maxMessages {
 				doneCh <- "All received"
@@ -89,7 +86,7 @@ startloop:
 			}
 		}
 	}
-	log.Infow("Received all messages", log.Fields{"total": time.Since(mytime)})
+	logger.Infow("Received all messages", log.Fields{"total": time.Since(mytime)})
 }
 
 func sendMessages(topic *kk.Topic, numMessages int, fn sendToKafka) error {
@@ -107,7 +104,7 @@ func sendMessages(topic *kk.Topic, numMessages int, fn sendToKafka) error {
 		var err error
 		body := &ic.InterContainerRequestBody{Rpc: "testRPC", Args: []*ic.Argument{}}
 		if marshalledArg, err = ptypes.MarshalAny(body); err != nil {
-			log.Warnw("cannot-marshal-request", log.Fields{"error": err})
+			logger.Warnw("cannot-marshal-request", log.Fields{"error": err})
 			return err
 		}
 		msg.Body = marshalledArg
@@ -157,7 +154,7 @@ func TestPartitionConsumer(t *testing.T) {
 	assert.Nil(t, err)
 	partionClient.Stop()
 	assert.Equal(t, numMessageToSend, totalMessageReceived)
-	log.Infow("Partition consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
+	logger.Infow("Partition consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
 }
 
 func TestGroupConsumer(t *testing.T) {
@@ -171,7 +168,7 @@ func TestGroupConsumer(t *testing.T) {
 	assert.Nil(t, err)
 	groupClient.Stop()
 	assert.Equal(t, numMessageToSend, totalMessageReceived)
-	log.Infow("Group consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
+	logger.Infow("Group consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
 
 }
 

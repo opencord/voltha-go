@@ -19,7 +19,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +37,7 @@ func TestProfiling(t *testing.T) {
 	 * same profiling instance.
 	 */
 
-	log.Info("/***** Unit Test Begin: Profiling Report: *****/")
+	logger.Info("/***** Unit Test Begin: Profiling Report: *****/")
 	result.Report()
 
 	GetProfiling().AddToDatabaseRetrieveTime(2.0)
@@ -72,7 +71,7 @@ func TestProfiling(t *testing.T) {
 	assert.Equal(t, 5.0, GetProfiling().InMemoryLockTime)
 	assert.Equal(t, 2, GetProfiling().InMemoryLockCount)
 
-	log.Info("/***** Unit Test End: Profiling Report: *****/")
+	logger.Info("/***** Unit Test End: Profiling Report: *****/")
 	GetProfiling().Report()
 
 	result.Reset()

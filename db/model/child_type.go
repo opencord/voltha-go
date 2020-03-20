@@ -20,7 +20,6 @@ import (
 	desc "github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/common"
 	"reflect"
 	"strconv"
@@ -111,7 +110,7 @@ func ChildrenFields(cls interface{}) map[string]*ChildType {
 							return uint64(i)
 						}
 					default:
-						log.Errorf("Key type not implemented - type: %s\n", keyType.(reflect.Type))
+						logger.Errorf("Key type not implemented - type: %s\n", keyType.(reflect.Type))
 					}
 				}
 

@@ -194,11 +194,11 @@ func (kp *interContainerProxy) Stop() {
 	kp.kafkaClient.Stop()
 	err := kp.deleteAllTopicRequestHandlerChannelMap()
 	if err != nil {
-		log.Errorw("failed-delete-all-topic-request-handler-channel-map", log.Fields{"error": err})
+		logger.Errorw("failed-delete-all-topic-request-handler-channel-map", log.Fields{"error": err})
 	}
 	err = kp.deleteAllTopicResponseChannelMap()
 	if err != nil {
-		log.Errorw("failed-delete-all-topic-response-channel-map", log.Fields{"error": err})
+		logger.Errorw("failed-delete-all-topic-response-channel-map", log.Fields{"error": err})
 	}
 	kp.deleteAllTransactionIdToChannelMap()
 }

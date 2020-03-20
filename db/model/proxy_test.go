@@ -54,8 +54,6 @@ var (
 )
 
 func init() {
-	//log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"})
-	//log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
 	var err error
 	TestProxyRoot = NewRoot(&voltha.Voltha{}, nil)
 	if TestProxyRootLogicalDevice, err = TestProxyRoot.CreateProxy(context.Background(), "/", false); err != nil {
