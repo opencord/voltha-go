@@ -106,6 +106,30 @@
     },
     {
       "key": {
+        "uuid": "8ed2cf37_9ab1a705",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T20:23:27Z",
+      "side": 1,
+      "message": "Its part of a callback signature.  So can\u0027t be removed.",
+      "parentUuid": "bb02b6b7_edf34f38",
+      "range": {
+        "startLine": 1283,
+        "startChar": 115,
+        "endLine": 1283,
+        "endChar": 120
+      },
+      "revId": "e132f52763eb67dccda5d05fc2af4e0086740dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c5f4533_a64a22c3",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
