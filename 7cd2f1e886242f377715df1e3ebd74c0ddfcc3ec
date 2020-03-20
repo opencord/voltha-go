@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "847b300c_54fc133c",
+        "filename": "db/model/utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Just remove the comment.  It\u0027s in multiple places.",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad67ba18_4e58315a",
+        "filename": "rw_core/core/device_state_transitions_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Do you need to re-add the package?",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2700c9_c967c7f1",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Why not add a common.go here as well?",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c2b7631_8fbb7895",
+        "filename": "rw_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Move to common.go as there are multiple files under the main package",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0262ef8f_f17a0cf1",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Add a common.go just to be consistent with other packages.  There are also another file in this package that may eventually use the logger as well.",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7098ebef_6302803a",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Move to a common.go",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8cbd9ce_a229c4a0",
+        "filename": "tests/core/api/grpc_nbi_api_handler_client_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Move to a common.go as there are multiple files.",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a95ba8a0_96e49d1f",
+        "filename": "tests/core/concurrency/core_concurrency_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Remove once moved to common.go",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "655a3731_7d9b7831",
+        "filename": "tests/core/flow_management_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "To remove",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dc37071_92573e52",
+        "filename": "tests/core/performance_metrics_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "to remove",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70bd7a3e_07abb1e2",
+        "filename": "tests/kafka/kafka_client_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "Move to common.go",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "631c1b1b_f11a67e0",
+        "filename": "tests/kafka/kafka_inter_container_messaging_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "To remove",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb1b0d7b_37a8106b",
+        "filename": "tests/utils/test_utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T13:42:21Z",
+      "side": 1,
+      "message": "To be consistent move to common.go.   Also instead of \"instanceId\", use the package name.",
+      "revId": "7cd2f1e886242f377715df1e3ebd74c0ddfcc3ec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
