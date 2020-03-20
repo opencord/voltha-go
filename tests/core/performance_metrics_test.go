@@ -91,14 +91,6 @@ var childPmNames = []string{
 }
 
 func setup() {
-	var err error
-
-	if _, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
-	}
-	log.UpdateAllLoggers(log.Fields{"instanceId": "testing"})
-	log.SetAllLogLevel(log.ErrorLevel)
-
 	volthaSerialNumberKey = "voltha_serial_number"
 	allDevices = make(map[string]*voltha.Device)
 	allLogicalDevices = make(map[string]*voltha.LogicalDevice)

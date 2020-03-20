@@ -19,10 +19,7 @@ package config
 import (
 	"flag"
 	"fmt"
-
 	"time"
-
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 // RW Core service default constants
@@ -100,13 +97,6 @@ type RWCoreFlags struct {
 	NotLiveProbeInterval      time.Duration
 	ProbeHost                 string
 	ProbePort                 int
-}
-
-func init() {
-	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
-	if err != nil {
-		log.Errorw("unable-to-register-a-package-to-the-log-map", log.Fields{"error": err})
-	}
 }
 
 // NewRWCoreFlags returns a new RWCore config

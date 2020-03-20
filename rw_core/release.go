@@ -18,10 +18,6 @@
 
 package main
 
-import (
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-)
-
 func realMain() {
-	log.Infoln("NOT PROFILING")
+	logger.Infoln("NOT PROFILING")
 }

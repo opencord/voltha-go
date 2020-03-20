@@ -106,7 +106,7 @@ func (r *root) FoldTxBranch(ctx context.Context, txid string) {
 		r.DeleteTxBranch(txid)
 	} else {
 		if _, err = r.node.MergeBranch(ctx, txid, false); err != nil {
-			log.Errorw("Unable to integrate the contents of a transaction branch within the latest branch of a given node", log.Fields{"error": err})
+			logger.Errorw("Unable to integrate the contents of a transaction branch within the latest branch of a given node", log.Fields{"error": err})
 		}
 		r.node.GetRoot().ExecuteCallbacks(ctx)
 		r.DeleteTxBranch(txid)
@@ -272,9 +272,9 @@ func (r *root) makeLatest(ctx context.Context, branch *Branch, revision Revision
 		if blob, err := json.Marshal(data); err != nil {
 			// TODO report error
 		} else {
-			log.Debugf("Changing root to : %s", string(blob))
+			logger.Debugf("Changing root to : %s", string(blob))
 			if err := r.KvStore.Put(ctx, "root", blob); err != nil {
-				log.Errorf("failed to properly put value in kvstore - err: %s", err.Error())
+				logger.Errorf("failed to properly put value in kvstore - err: %s", err.Error())
 			}
 		}
 	}

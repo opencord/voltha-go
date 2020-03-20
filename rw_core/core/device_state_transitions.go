@@ -19,7 +19,6 @@ package core
 import (
 	"context"
 	"github.com/opencord/voltha-go/rw_core/coreif"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
@@ -296,13 +295,13 @@ func (tMap *TransitionMap) GetTransitionHandler(pDevice *voltha.Device, cDevice 
 		return nil
 	}
 
-	//log.Infow("DeviceType", log.Fields{"device": pDevice})
+	//logger.Infow("DeviceType", log.Fields{"device": pDevice})
 	deviceType := parent
 	if !pDevice.Root {
-		log.Info("device is child")
+		logger.Info("device is child")
 		deviceType = child
 	}
-	log.Infof("deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, pDevice.Id, pState, cState)
+	logger.Infof("deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, pDevice.Id, pState, cState)
 
 	//2. Go over transition array to get the right transition
 	var currentMatch []TransitionHandler

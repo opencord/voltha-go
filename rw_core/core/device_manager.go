@@ -72,18 +72,18 @@ func newDeviceManager(core *Core) *DeviceManager {
 }
 
 func (dMgr *DeviceManager) start(ctx context.Context, logicalDeviceMgr *LogicalDeviceManager) {
-	log.Info("starting-device-manager")
+	logger.Info("starting-device-manager")
 	dMgr.logicalDeviceMgr = logicalDeviceMgr
 	dMgr.stateTransitions = NewTransitionMap(dMgr)
 	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusRunning)
-	log.Info("device-manager-started")
+	logger.Info("device-manager-started")
 }
 
 func (dMgr *DeviceManager) stop(ctx context.Context) {
-	log.Info("stopping-device-manager")
+	logger.Info("stopping-device-manager")
 	dMgr.exitChannel <- 1
 	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusStopped)
-	log.Info("device-manager-stopped")
+	logger.Info("device-manager-stopped")
 }
 
 func sendResponse(ctx context.Context, ch chan interface{}, result interface{}) {
@@ -91,10 +91,10 @@ func sendResponse(ctx context.Context, ch chan interface{}, result interface{}) 
 		// Returned response only of the ctx has not been cancelled/timeout/etc
 		// Channel is automatically closed when a context is Done
 		ch <- result
-		log.Debugw("sendResponse", log.Fields{"result": result})
+		logger.Debugw("sendResponse", log.Fields{"result": result})
 	} else {
 		// Should the transaction be reverted back?
-		log.Debugw("sendResponse-context-error", log.Fields{"context-error": ctx.Err()})
+		logger.Debugw("sendResponse-context-error", log.Fields{"context-error": ctx.Err()})
 	}
 }
 
@@ -132,13 +132,13 @@ func (dMgr *DeviceManager) getDeviceAgent(ctx context.Context, deviceID string) 
 		go func() {
 			_, err = dMgr.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: deviceID})
 			if err != nil {
-				log.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
+				logger.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
 			}
 		}()
 		return agent.(*DeviceAgent)
 	}
 	//TODO: Change the return params to return an error as well
-	log.Errorw("loading-device-failed", log.Fields{"deviceId": deviceID, "error": err})
+	logger.Errorw("loading-device-failed", log.Fields{"deviceId": deviceID, "error": err})
 	return nil
 }
 
@@ -157,16 +157,16 @@ func (dMgr *DeviceManager) listDeviceIdsFromMap() *voltha.IDs {
 func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Device, ch chan interface{}) {
 	deviceExist, err := dMgr.isParentDeviceExist(ctx, device)
 	if err != nil {
-		log.Errorf("Failed to fetch parent device info")
+		logger.Errorf("Failed to fetch parent device info")
 		sendResponse(ctx, ch, err)
 		return
 	}
 	if deviceExist {
-		log.Errorf("Device is Pre-provisioned already with same IP-Port or MAC Address")
+		logger.Errorf("Device is Pre-provisioned already with same IP-Port or MAC Address")
 		sendResponse(ctx, ch, errors.New("Device is already pre-provisioned"))
 		return
 	}
-	log.Debugw("createDevice", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
+	logger.Debugw("createDevice", log.Fields{"device": device, "aproxy": dMgr.adapterProxy})
 
 	// Ensure this device is set as root
 	device.Root = true
@@ -174,7 +174,7 @@ func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Devi
 	agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 	device, err = agent.start(ctx, device)
 	if err != nil {
-		log.Errorw("Fail-to-start-device", log.Fields{"device-id": agent.deviceID, "error": err})
+		logger.Errorw("Fail-to-start-device", log.Fields{"device-id": agent.deviceID, "error": err})
 		sendResponse(ctx, ch, err)
 		return
 	}
@@ -184,11 +184,11 @@ func (dMgr *DeviceManager) createDevice(ctx context.Context, device *voltha.Devi
 }
 
 func (dMgr *DeviceManager) enableDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
-	log.Debugw("enableDevice", log.Fields{"deviceid": id})
+	logger.Debugw("enableDevice", log.Fields{"deviceid": id})
 	var res interface{}
 	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.enableDevice(ctx)
-		log.Debugw("EnableDevice-result", log.Fields{"result": res})
+		logger.Debugw("EnableDevice-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", id.Id)
 	}
@@ -197,11 +197,11 @@ func (dMgr *DeviceManager) enableDevice(ctx context.Context, id *voltha.ID, ch c
 }
 
 func (dMgr *DeviceManager) disableDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
-	log.Debugw("disableDevice", log.Fields{"deviceid": id})
+	logger.Debugw("disableDevice", log.Fields{"deviceid": id})
 	var res interface{}
 	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.disableDevice(ctx)
-		log.Debugw("disableDevice-result", log.Fields{"result": res})
+		logger.Debugw("disableDevice-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", id.Id)
 	}
@@ -210,11 +210,11 @@ func (dMgr *DeviceManager) disableDevice(ctx context.Context, id *voltha.ID, ch 
 }
 
 func (dMgr *DeviceManager) rebootDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
-	log.Debugw("rebootDevice", log.Fields{"deviceid": id})
+	logger.Debugw("rebootDevice", log.Fields{"deviceid": id})
 	var res interface{}
 	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.rebootDevice(ctx)
-		log.Debugw("rebootDevice-result", log.Fields{"result": res})
+		logger.Debugw("rebootDevice-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", id.Id)
 	}
@@ -222,11 +222,11 @@ func (dMgr *DeviceManager) rebootDevice(ctx context.Context, id *voltha.ID, ch c
 }
 
 func (dMgr *DeviceManager) deleteDevice(ctx context.Context, id *voltha.ID, ch chan interface{}) {
-	log.Debugw("deleteDevice", log.Fields{"deviceid": id})
+	logger.Debugw("deleteDevice", log.Fields{"deviceid": id})
 	var res interface{}
 	if agent := dMgr.getDeviceAgent(ctx, id.Id); agent != nil {
 		res = agent.deleteDevice(ctx)
-		log.Debugw("deleteDevice-result", log.Fields{"result": res})
+		logger.Debugw("deleteDevice-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", id.Id)
 	}
@@ -237,7 +237,7 @@ func (dMgr *DeviceManager) deleteDevice(ctx context.Context, id *voltha.ID, ch c
 // This function is called only in the Core that does not own this device.  In the Core that owns this device then a
 // deletion deletion also includes removal of any reference of this device.
 func (dMgr *DeviceManager) stopManagingDevice(ctx context.Context, id string) {
-	log.Infow("stopManagingDevice", log.Fields{"deviceId": id})
+	logger.Infow("stopManagingDevice", log.Fields{"deviceId": id})
 	if dMgr.IsDeviceInCache(id) { // Proceed only if an agent is present for this device
 		if root, _ := dMgr.IsRootDevice(id); root {
 			// stop managing the logical device
@@ -245,20 +245,20 @@ func (dMgr *DeviceManager) stopManagingDevice(ctx context.Context, id string) {
 			if ldeviceID != "" { // Can happen if logical device agent was already stopped
 				err := dMgr.core.deviceOwnership.AbandonDevice(ldeviceID)
 				if err != nil {
-					log.Errorw("unable-to-abandon-the-device", log.Fields{"error": err})
+					logger.Errorw("unable-to-abandon-the-device", log.Fields{"error": err})
 				}
 			}
 			// We do not need to stop the child devices as this is taken care by the state machine.
 		}
 		if agent := dMgr.getDeviceAgent(ctx, id); agent != nil {
 			if err := agent.stop(ctx); err != nil {
-				log.Warnw("unable-to-stop-device-agent", log.Fields{"device-id": agent.deviceID, "error": err})
+				logger.Warnw("unable-to-stop-device-agent", log.Fields{"device-id": agent.deviceID, "error": err})
 			}
 			dMgr.deleteDeviceAgentFromMap(agent)
 			// Abandon the device ownership
 			err := dMgr.core.deviceOwnership.AbandonDevice(id)
 			if err != nil {
-				log.Warnw("unable-to-abandon-device", log.Fields{"error": err})
+				logger.Warnw("unable-to-abandon-device", log.Fields{"error": err})
 			}
 		}
 	}
@@ -266,14 +266,14 @@ func (dMgr *DeviceManager) stopManagingDevice(ctx context.Context, id string) {
 
 // RunPostDeviceDelete removes any reference of this device
 func (dMgr *DeviceManager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
-	log.Infow("RunPostDeviceDelete", log.Fields{"deviceId": cDevice.Id})
+	logger.Infow("RunPostDeviceDelete", log.Fields{"deviceId": cDevice.Id})
 	dMgr.stopManagingDevice(ctx, cDevice.Id)
 	return nil
 }
 
 // GetDevice will returns a device, either from memory or from the dB, if present
 func (dMgr *DeviceManager) GetDevice(ctx context.Context, id string) (*voltha.Device, error) {
-	log.Debugw("GetDevice", log.Fields{"deviceid": id})
+	logger.Debugw("GetDevice", log.Fields{"deviceid": id})
 	if agent := dMgr.getDeviceAgent(ctx, id); agent != nil {
 		return agent.getDevice(ctx)
 	}
@@ -282,7 +282,7 @@ func (dMgr *DeviceManager) GetDevice(ctx context.Context, id string) (*voltha.De
 
 // GetChildDevice will return a device, either from memory or from the dB, if present
 func (dMgr *DeviceManager) GetChildDevice(ctx context.Context, parentDeviceID string, serialNumber string, onuID int64, parentPortNo int64) (*voltha.Device, error) {
-	log.Debugw("GetChildDevice", log.Fields{"parentDeviceid": parentDeviceID, "serialNumber": serialNumber,
+	logger.Debugw("GetChildDevice", log.Fields{"parentDeviceid": parentDeviceID, "serialNumber": serialNumber,
 		"parentPortNo": parentPortNo, "onuId": onuID})
 
 	var parentDevice *voltha.Device
@@ -295,7 +295,7 @@ func (dMgr *DeviceManager) GetChildDevice(ctx context.Context, parentDeviceID st
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
 	}
 	if len(childDeviceIds) == 0 {
-		log.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id, "serialNumber": serialNumber, "onuId": onuID})
+		logger.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id, "serialNumber": serialNumber, "onuId": onuID})
 		return nil, status.Errorf(codes.NotFound, "%s", parentDeviceID)
 	}
 
@@ -307,14 +307,14 @@ func (dMgr *DeviceManager) GetChildDevice(ctx context.Context, parentDeviceID st
 			foundOnuID := false
 			if searchDevice.ProxyAddress.OnuId == uint32(onuID) {
 				if searchDevice.ParentPortNo == uint32(parentPortNo) {
-					log.Debugw("found-child-by-onuid", log.Fields{"parentDeviceId": parentDevice.Id, "onuId": onuID})
+					logger.Debugw("found-child-by-onuid", log.Fields{"parentDeviceId": parentDevice.Id, "onuId": onuID})
 					foundOnuID = true
 				}
 			}
 
 			foundSerialNumber := false
 			if searchDevice.SerialNumber == serialNumber {
-				log.Debugw("found-child-by-serialnumber", log.Fields{"parentDeviceId": parentDevice.Id, "serialNumber": serialNumber})
+				logger.Debugw("found-child-by-serialnumber", log.Fields{"parentDeviceId": parentDevice.Id, "serialNumber": serialNumber})
 				foundSerialNumber = true
 			}
 
@@ -334,18 +334,18 @@ func (dMgr *DeviceManager) GetChildDevice(ctx context.Context, parentDeviceID st
 	}
 
 	if foundChildDevice != nil {
-		log.Debugw("child-device-found", log.Fields{"parentDeviceId": parentDevice.Id, "foundChildDevice": foundChildDevice})
+		logger.Debugw("child-device-found", log.Fields{"parentDeviceId": parentDevice.Id, "foundChildDevice": foundChildDevice})
 		return foundChildDevice, nil
 	}
 
-	log.Warnw("child-device-not-found", log.Fields{"parentDeviceId": parentDevice.Id,
+	logger.Warnw("child-device-not-found", log.Fields{"parentDeviceId": parentDevice.Id,
 		"serialNumber": serialNumber, "onuId": onuID, "parentPortNo": parentPortNo})
 	return nil, status.Errorf(codes.NotFound, "%s", parentDeviceID)
 }
 
 // GetChildDeviceWithProxyAddress will return a device based on proxy address
 func (dMgr *DeviceManager) GetChildDeviceWithProxyAddress(ctx context.Context, proxyAddress *voltha.Device_ProxyAddress) (*voltha.Device, error) {
-	log.Debugw("GetChildDeviceWithProxyAddress", log.Fields{"proxyAddress": proxyAddress})
+	logger.Debugw("GetChildDeviceWithProxyAddress", log.Fields{"proxyAddress": proxyAddress})
 
 	var parentDevice *voltha.Device
 	var err error
@@ -357,7 +357,7 @@ func (dMgr *DeviceManager) GetChildDeviceWithProxyAddress(ctx context.Context, p
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
 	}
 	if len(childDeviceIds) == 0 {
-		log.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id})
+		logger.Debugw("no-child-devices", log.Fields{"parentDeviceId": parentDevice.Id})
 		return nil, status.Errorf(codes.NotFound, "%s", proxyAddress)
 	}
 
@@ -372,11 +372,11 @@ func (dMgr *DeviceManager) GetChildDeviceWithProxyAddress(ctx context.Context, p
 	}
 
 	if foundChildDevice != nil {
-		log.Debugw("child-device-found", log.Fields{"proxyAddress": proxyAddress})
+		logger.Debugw("child-device-found", log.Fields{"proxyAddress": proxyAddress})
 		return foundChildDevice, nil
 	}
 
-	log.Warnw("child-device-not-found", log.Fields{"proxyAddress": proxyAddress})
+	logger.Warnw("child-device-not-found", log.Fields{"proxyAddress": proxyAddress})
 	return nil, status.Errorf(codes.NotFound, "%s", proxyAddress)
 }
 
@@ -398,11 +398,11 @@ func (dMgr *DeviceManager) IsRootDevice(id string) (bool, error) {
 
 // ListDevices retrieves the latest devices from the data model
 func (dMgr *DeviceManager) ListDevices(ctx context.Context) (*voltha.Devices, error) {
-	log.Debug("ListDevices")
+	logger.Debug("ListDevices")
 	result := &voltha.Devices{}
 	devices, err := dMgr.clusterDataProxy.List(ctx, "/devices", 0, false, "")
 	if err != nil {
-		log.Errorw("failed-to-list-devices-from-cluster-proxy", log.Fields{"error": err})
+		logger.Errorw("failed-to-list-devices-from-cluster-proxy", log.Fields{"error": err})
 		return nil, err
 	}
 	if devices != nil {
@@ -410,10 +410,10 @@ func (dMgr *DeviceManager) ListDevices(ctx context.Context) (*voltha.Devices, er
 			device := d.(*voltha.Device)
 			// If device is not in memory then set it up
 			if !dMgr.IsDeviceInCache(device.Id) {
-				log.Debugw("loading-device-from-Model", log.Fields{"id": device.Id})
+				logger.Debugw("loading-device-from-Model", log.Fields{"id": device.Id})
 				agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 				if _, err := agent.start(ctx, nil); err != nil {
-					log.Warnw("failure-starting-agent", log.Fields{"deviceId": device.Id})
+					logger.Warnw("failure-starting-agent", log.Fields{"deviceId": device.Id})
 				} else {
 					dMgr.addDeviceAgentToMap(agent)
 				}
@@ -421,7 +421,7 @@ func (dMgr *DeviceManager) ListDevices(ctx context.Context) (*voltha.Devices, er
 			result.Items = append(result.Items, device)
 		}
 	}
-	log.Debugw("ListDevices-end", log.Fields{"len": len(result.Items)})
+	logger.Debugw("ListDevices-end", log.Fields{"len": len(result.Items)})
 	return result, nil
 }
 
@@ -430,7 +430,7 @@ func (dMgr *DeviceManager) isParentDeviceExist(ctx context.Context, newDevice *v
 	hostPort := newDevice.GetHostAndPort()
 	devices, err := dMgr.clusterDataProxy.List(ctx, "/devices", 0, false, "")
 	if err != nil {
-		log.Errorw("Failed to list devices from cluster data proxy", log.Fields{"error": err})
+		logger.Errorw("Failed to list devices from cluster data proxy", log.Fields{"error": err})
 		return false, err
 	}
 	if devices != nil {
@@ -453,7 +453,7 @@ func (dMgr *DeviceManager) isParentDeviceExist(ctx context.Context, newDevice *v
 func (dMgr *DeviceManager) getDeviceFromModel(ctx context.Context, deviceID string) (*voltha.Device, error) {
 	device, err := dMgr.clusterDataProxy.Get(ctx, "/devices/"+deviceID, 0, false, "")
 	if err != nil {
-		log.Errorw("failed-to-get-device-info-from-cluster-proxy", log.Fields{"error": err})
+		logger.Errorw("failed-to-get-device-info-from-cluster-proxy", log.Fields{"error": err})
 		return nil, err
 	}
 	if device != nil {
@@ -478,15 +478,15 @@ func (dMgr *DeviceManager) loadDevice(ctx context.Context, deviceID string) (*De
 			dMgr.devicesLoadingLock.Unlock()
 			// Proceed with the loading only if the device exist in the Model (could have been deleted)
 			if device, err = dMgr.getDeviceFromModel(ctx, deviceID); err == nil {
-				log.Debugw("loading-device", log.Fields{"deviceId": deviceID})
+				logger.Debugw("loading-device", log.Fields{"deviceId": deviceID})
 				agent := newDeviceAgent(dMgr.adapterProxy, device, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 				if _, err = agent.start(ctx, nil); err != nil {
-					log.Warnw("Failure loading device", log.Fields{"deviceId": deviceID, "error": err})
+					logger.Warnw("Failure loading device", log.Fields{"deviceId": deviceID, "error": err})
 				} else {
 					dMgr.addDeviceAgentToMap(agent)
 				}
 			} else {
-				log.Debugw("Device not in model", log.Fields{"deviceId": deviceID})
+				logger.Debugw("Device not in model", log.Fields{"deviceId": deviceID})
 			}
 			// announce completion of task to any number of waiting channels
 			dMgr.devicesLoadingLock.Lock()
@@ -515,28 +515,28 @@ func (dMgr *DeviceManager) loadDevice(ctx context.Context, deviceID string) (*De
 
 // loadRootDeviceParentAndChildren loads the children and parents of a root device in memory
 func (dMgr *DeviceManager) loadRootDeviceParentAndChildren(ctx context.Context, device *voltha.Device) error {
-	log.Debugw("loading-parent-and-children", log.Fields{"deviceId": device.Id})
+	logger.Debugw("loading-parent-and-children", log.Fields{"deviceId": device.Id})
 	if device.Root {
 		// Scenario A
 		if device.ParentId != "" {
 			//	 Load logical device if needed.
 			if err := dMgr.logicalDeviceMgr.load(ctx, device.ParentId); err != nil {
-				log.Warnw("failure-loading-logical-device", log.Fields{"lDeviceId": device.ParentId})
+				logger.Warnw("failure-loading-logical-device", log.Fields{"lDeviceId": device.ParentId})
 			}
 		} else {
-			log.Debugw("no-parent-to-load", log.Fields{"deviceId": device.Id})
+			logger.Debugw("no-parent-to-load", log.Fields{"deviceId": device.Id})
 		}
 		//	Load all child devices, if needed
 		if childDeviceIds, err := dMgr.getAllChildDeviceIds(device); err == nil {
 			for _, childDeviceID := range childDeviceIds {
 				if _, err := dMgr.loadDevice(ctx, childDeviceID); err != nil {
-					log.Warnw("failure-loading-device", log.Fields{"deviceId": childDeviceID, "error": err})
+					logger.Warnw("failure-loading-device", log.Fields{"deviceId": childDeviceID, "error": err})
 					return err
 				}
 			}
-			log.Debugw("loaded-children", log.Fields{"deviceId": device.Id, "numChildren": len(childDeviceIds)})
+			logger.Debugw("loaded-children", log.Fields{"deviceId": device.Id, "numChildren": len(childDeviceIds)})
 		} else {
-			log.Debugw("no-child-to-load", log.Fields{"deviceId": device.Id})
+			logger.Debugw("no-child-to-load", log.Fields{"deviceId": device.Id})
 		}
 	}
 	return nil
@@ -547,7 +547,7 @@ func (dMgr *DeviceManager) loadRootDeviceParentAndChildren(ctx context.Context, 
 // acting on the device is received by the core. In such a scenario, the Core will load the device in memory first
 // and the proceed with the request.
 func (dMgr *DeviceManager) load(ctx context.Context, deviceID string) error {
-	log.Debug("load...")
+	logger.Debug("load...")
 	// First load the device - this may fail in case the device was deleted intentionally by the other core
 	var dAgent *DeviceAgent
 	var err error
@@ -569,10 +569,10 @@ func (dMgr *DeviceManager) load(ctx context.Context, deviceID string) error {
 	if device.Root {
 		// Load all children as well as the parent of this device (logical_device)
 		if err := dMgr.loadRootDeviceParentAndChildren(ctx, device); err != nil {
-			log.Warnw("failure-loading-device-parent-and-children", log.Fields{"deviceId": deviceID})
+			logger.Warnw("failure-loading-device-parent-and-children", log.Fields{"deviceId": deviceID})
 			return err
 		}
-		log.Debugw("successfully-loaded-parent-and-children", log.Fields{"deviceId": deviceID})
+		logger.Debugw("successfully-loaded-parent-and-children", log.Fields{"deviceId": deviceID})
 	} else {
 		//	Scenario B - use the parentId of that device (root device) to trigger the loading
 		if device.ParentId != "" {
@@ -584,7 +584,7 @@ func (dMgr *DeviceManager) load(ctx context.Context, deviceID string) error {
 
 // ListDeviceIds retrieves the latest device IDs information from the data model (memory data only)
 func (dMgr *DeviceManager) ListDeviceIds() (*voltha.IDs, error) {
-	log.Debug("ListDeviceIDs")
+	logger.Debug("ListDeviceIDs")
 	// Report only device IDs that are in the device agent map
 	return dMgr.listDeviceIdsFromMap(), nil
 }
@@ -592,7 +592,7 @@ func (dMgr *DeviceManager) ListDeviceIds() (*voltha.IDs, error) {
 //ReconcileDevices is a request to a voltha core to update its list of managed devices.  This will
 //trigger loading the devices along with their children and parent in memory
 func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs, ch chan interface{}) {
-	log.Debugw("ReconcileDevices", log.Fields{"numDevices": len(ids.Items)})
+	logger.Debugw("ReconcileDevices", log.Fields{"numDevices": len(ids.Items)})
 	var res interface{}
 	if ids != nil && len(ids.Items) != 0 {
 		toReconcile := len(ids.Items)
@@ -600,7 +600,7 @@ func (dMgr *DeviceManager) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 		var err error
 		for _, id := range ids.Items {
 			if err = dMgr.load(ctx, id.Id); err != nil {
-				log.Warnw("failure-reconciling-device", log.Fields{"deviceId": id.Id, "error": err})
+				logger.Warnw("failure-reconciling-device", log.Fields{"deviceId": id.Id, "error": err})
 			} else {
 				reconciled++
 			}
@@ -624,12 +624,12 @@ func isOkToReconcile(device *voltha.Device) bool {
 
 // adapterRestarted is invoked whenever an adapter is restarted
 func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha.Adapter) error {
-	log.Debugw("adapter-restarted", log.Fields{"adapter": adapter.Id})
+	logger.Debugw("adapter-restarted", log.Fields{"adapter": adapter.Id})
 
 	// Let's reconcile the device managed by this Core only
 	rootDeviceIds := dMgr.core.deviceOwnership.GetAllDeviceIdsOwnedByMe()
 	if len(rootDeviceIds) == 0 {
-		log.Debugw("nothing-to-reconcile", log.Fields{"adapterId": adapter.Id})
+		logger.Debugw("nothing-to-reconcile", log.Fields{"adapterId": adapter.Id})
 		return nil
 	}
 
@@ -638,10 +638,10 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 		if rootDevice, _ := dMgr.getDeviceFromModel(ctx, rootDeviceID); rootDevice != nil {
 			if rootDevice.Adapter == adapter.Id {
 				if isOkToReconcile(rootDevice) {
-					log.Debugw("reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
+					logger.Debugw("reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
 					responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, rootDevice))
 				} else {
-					log.Debugw("not-reconciling-root-device", log.Fields{"rootId": rootDevice.Id, "state": rootDevice.AdminState})
+					logger.Debugw("not-reconciling-root-device", log.Fields{"rootId": rootDevice.Id, "state": rootDevice.AdminState})
 				}
 			} else { // Should we be reconciling the root's children instead?
 			childManagedByAdapter:
@@ -650,10 +650,10 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 						if childDevice, _ := dMgr.getDeviceFromModel(ctx, peer.DeviceId); childDevice != nil {
 							if childDevice.Adapter == adapter.Id {
 								if isOkToReconcile(childDevice) {
-									log.Debugw("reconciling-child-device", log.Fields{"childId": childDevice.Id})
+									logger.Debugw("reconciling-child-device", log.Fields{"childId": childDevice.Id})
 									responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, childDevice))
 								} else {
-									log.Debugw("not-reconciling-child-device", log.Fields{"childId": childDevice.Id, "state": childDevice.AdminState})
+									logger.Debugw("not-reconciling-child-device", log.Fields{"childId": childDevice.Id, "state": childDevice.AdminState})
 								}
 							} else {
 								// All child devices under a parent device are typically managed by the same adapter type.
@@ -672,7 +672,7 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 			return status.Errorf(codes.Aborted, "errors-%s", res)
 		}
 	} else {
-		log.Debugw("no-managed-device-to-reconcile", log.Fields{"adapterId": adapter.Id})
+		logger.Debugw("no-managed-device-to-reconcile", log.Fields{"adapterId": adapter.Id})
 	}
 	return nil
 }
@@ -719,7 +719,7 @@ func (dMgr *DeviceManager) reconcileChildDevices(ctx context.Context, parentDevi
 }
 
 func (dMgr *DeviceManager) updateDeviceUsingAdapterData(ctx context.Context, device *voltha.Device) error {
-	log.Debugw("updateDeviceUsingAdapterData", log.Fields{"deviceid": device.Id, "device": device})
+	logger.Debugw("updateDeviceUsingAdapterData", log.Fields{"deviceid": device.Id, "device": device})
 	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
 		return agent.updateDeviceUsingAdapterData(ctx, device)
 	}
@@ -737,7 +737,7 @@ func (dMgr *DeviceManager) addPort(ctx context.Context, deviceID string, port *v
 		for _, peerPort := range port.Peers {
 			if agent := dMgr.getDeviceAgent(ctx, peerPort.DeviceId); agent != nil {
 				if err := agent.addPeerPort(ctx, meAsPeer); err != nil {
-					log.Errorw("failed-to-add-peer", log.Fields{"peer-device-id": peerPort.DeviceId})
+					logger.Errorw("failed-to-add-peer", log.Fields{"peer-device-id": peerPort.DeviceId})
 					return err
 				}
 			}
@@ -749,11 +749,11 @@ func (dMgr *DeviceManager) addPort(ctx context.Context, deviceID string, port *v
 			go func() {
 				err = dMgr.logicalDeviceMgr.updateLogicalPort(context.Background(), device, port)
 				if err != nil {
-					log.Errorw("unable-to-update-logical-port", log.Fields{"error": err})
+					logger.Errorw("unable-to-update-logical-port", log.Fields{"error": err})
 				}
 			}()
 		} else {
-			log.Errorw("failed-to-retrieve-device", log.Fields{"deviceId": deviceID})
+			logger.Errorw("failed-to-retrieve-device", log.Fields{"deviceId": deviceID})
 			return err
 		}
 		return nil
@@ -762,7 +762,7 @@ func (dMgr *DeviceManager) addPort(ctx context.Context, deviceID string, port *v
 }
 
 func (dMgr *DeviceManager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
-	log.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceID, "groups:": groups, "flowMetadata": flowMetadata})
+	logger.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceID, "groups:": groups, "flowMetadata": flowMetadata})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.addFlowsAndGroups(ctx, flows, groups, flowMetadata)
 	}
@@ -770,7 +770,7 @@ func (dMgr *DeviceManager) addFlowsAndGroups(ctx context.Context, deviceID strin
 }
 
 func (dMgr *DeviceManager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
-	log.Debugw("deleteFlowsAndGroups", log.Fields{"deviceid": deviceID})
+	logger.Debugw("deleteFlowsAndGroups", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.deleteFlowsAndGroups(ctx, flows, groups, flowMetadata)
 	}
@@ -778,7 +778,7 @@ func (dMgr *DeviceManager) deleteFlowsAndGroups(ctx context.Context, deviceID st
 }
 
 func (dMgr *DeviceManager) updateFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
-	log.Debugw("updateFlowsAndGroups", log.Fields{"deviceid": deviceID})
+	logger.Debugw("updateFlowsAndGroups", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateFlowsAndGroups(ctx, flows, groups, flowMetadata)
 	}
@@ -818,7 +818,7 @@ func (dMgr *DeviceManager) listPmConfigs(ctx context.Context, deviceID string) (
 }
 
 func (dMgr *DeviceManager) getSwitchCapability(ctx context.Context, deviceID string) (*ic.SwitchCapability, error) {
-	log.Debugw("getSwitchCapability", log.Fields{"deviceid": deviceID})
+	logger.Debugw("getSwitchCapability", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.getSwitchCapability(ctx)
 	}
@@ -826,7 +826,7 @@ func (dMgr *DeviceManager) getSwitchCapability(ctx context.Context, deviceID str
 }
 
 func (dMgr *DeviceManager) getPorts(ctx context.Context, deviceID string, portType voltha.Port_PortType) (*voltha.Ports, error) {
-	log.Debugw("getPorts", log.Fields{"deviceid": deviceID, "portType": portType})
+	logger.Debugw("getPorts", log.Fields{"deviceid": deviceID, "portType": portType})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.getPorts(ctx, portType), nil
 	}
@@ -834,7 +834,7 @@ func (dMgr *DeviceManager) getPorts(ctx context.Context, deviceID string, portTy
 }
 
 func (dMgr *DeviceManager) getPortCapability(ctx context.Context, deviceID string, portNo uint32) (*ic.PortCapability, error) {
-	log.Debugw("getPortCapability", log.Fields{"deviceid": deviceID})
+	logger.Debugw("getPortCapability", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.getPortCapability(ctx, portNo)
 	}
@@ -842,7 +842,7 @@ func (dMgr *DeviceManager) getPortCapability(ctx context.Context, deviceID strin
 }
 
 func (dMgr *DeviceManager) updateDeviceStatus(ctx context.Context, deviceID string, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
-	log.Debugw("updateDeviceStatus", log.Fields{"deviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
+	logger.Debugw("updateDeviceStatus", log.Fields{"deviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateDeviceStatus(ctx, operStatus, connStatus)
 	}
@@ -850,7 +850,7 @@ func (dMgr *DeviceManager) updateDeviceStatus(ctx context.Context, deviceID stri
 }
 
 func (dMgr *DeviceManager) updateChildrenStatus(ctx context.Context, deviceID string, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
-	log.Debugw("updateChildrenStatus", log.Fields{"parentDeviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
+	logger.Debugw("updateChildrenStatus", log.Fields{"parentDeviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
 	var parentDevice *voltha.Device
 	var err error
 	if parentDevice, err = dMgr.GetDevice(ctx, deviceID); err != nil {
@@ -861,7 +861,7 @@ func (dMgr *DeviceManager) updateChildrenStatus(ctx context.Context, deviceID st
 		return status.Errorf(codes.Aborted, "%s", err.Error())
 	}
 	if len(childDeviceIds) == 0 {
-		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
+		logger.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
 	}
 	for _, childDeviceID := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
@@ -874,10 +874,10 @@ func (dMgr *DeviceManager) updateChildrenStatus(ctx context.Context, deviceID st
 }
 
 func (dMgr *DeviceManager) updatePortState(ctx context.Context, deviceID string, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_Types) error {
-	log.Debugw("updatePortState", log.Fields{"deviceid": deviceID, "portType": portType, "portNo": portNo, "operStatus": operStatus})
+	logger.Debugw("updatePortState", log.Fields{"deviceid": deviceID, "portType": portType, "portNo": portNo, "operStatus": operStatus})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if err := agent.updatePortState(ctx, portType, portNo, operStatus); err != nil {
-			log.Errorw("updating-port-state-failed", log.Fields{"deviceid": deviceID, "portNo": portNo, "error": err})
+			logger.Errorw("updating-port-state-failed", log.Fields{"deviceid": deviceID, "portNo": portNo, "error": err})
 			return err
 		}
 		// Notify the logical device manager to change the port state
@@ -892,7 +892,7 @@ func (dMgr *DeviceManager) updatePortState(ctx context.Context, deviceID string,
 					// it as a warning and not an error because it
 					// doesn't stop or modify processing.
 					// TODO: VOL-2707
-					log.Warnw("unable-to-update-logical-port-state", log.Fields{"error": err})
+					logger.Warnw("unable-to-update-logical-port-state", log.Fields{"error": err})
 				}
 			}()
 		}
@@ -902,7 +902,7 @@ func (dMgr *DeviceManager) updatePortState(ctx context.Context, deviceID string,
 }
 
 func (dMgr *DeviceManager) deleteAllPorts(ctx context.Context, deviceID string) error {
-	log.Debugw("DeleteAllPorts", log.Fields{"deviceid": deviceID})
+	logger.Debugw("DeleteAllPorts", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if err := agent.deleteAllPorts(ctx); err != nil {
 			return err
@@ -914,11 +914,11 @@ func (dMgr *DeviceManager) deleteAllPorts(ctx context.Context, deviceID string) 
 			go func() {
 				err = dMgr.logicalDeviceMgr.deleteAllLogicalPorts(ctx, device)
 				if err != nil {
-					log.Errorw("unable-to-delete-logical-ports", log.Fields{"error": err})
+					logger.Errorw("unable-to-delete-logical-ports", log.Fields{"error": err})
 				}
 			}()
 		} else {
-			log.Warnw("failed-to-retrieve-device", log.Fields{"deviceId": deviceID})
+			logger.Warnw("failed-to-retrieve-device", log.Fields{"deviceId": deviceID})
 			return err
 		}
 		return nil
@@ -928,18 +928,18 @@ func (dMgr *DeviceManager) deleteAllPorts(ctx context.Context, deviceID string) 
 
 //updatePortsState updates all ports on the device
 func (dMgr *DeviceManager) updatePortsState(ctx context.Context, deviceID string, state voltha.OperStatus_Types) error {
-	log.Debugw("updatePortsState", log.Fields{"deviceid": deviceID})
+	logger.Debugw("updatePortsState", log.Fields{"deviceid": deviceID})
 
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		switch state {
 		case voltha.OperStatus_ACTIVE:
 			if err := agent.updatePortsOperState(ctx, state); err != nil {
-				log.Warnw("updatePortsOperState-failed", log.Fields{"deviceId": deviceID, "error": err})
+				logger.Warnw("updatePortsOperState-failed", log.Fields{"deviceId": deviceID, "error": err})
 				return err
 			}
 		case voltha.OperStatus_UNKNOWN:
 			if err := agent.updatePortsOperState(ctx, state); err != nil {
-				log.Warnw("updatePortsOperState-failed", log.Fields{"deviceId": deviceID, "error": err})
+				logger.Warnw("updatePortsOperState-failed", log.Fields{"deviceId": deviceID, "error": err})
 				return err
 			}
 		default:
@@ -948,11 +948,11 @@ func (dMgr *DeviceManager) updatePortsState(ctx context.Context, deviceID string
 		// Notify the logical device about the state change
 		device, err := dMgr.GetDevice(ctx, deviceID)
 		if err != nil {
-			log.Warnw("non-existent-device", log.Fields{"deviceId": deviceID, "error": err})
+			logger.Warnw("non-existent-device", log.Fields{"deviceId": deviceID, "error": err})
 			return err
 		}
 		if err := dMgr.logicalDeviceMgr.updatePortsState(ctx, device, state); err != nil {
-			log.Warnw("failed-updating-ports-state", log.Fields{"deviceId": deviceID, "error": err})
+			logger.Warnw("failed-updating-ports-state", log.Fields{"deviceId": deviceID, "error": err})
 			return err
 		}
 		return nil
@@ -962,13 +962,13 @@ func (dMgr *DeviceManager) updatePortsState(ctx context.Context, deviceID string
 
 func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDeviceID string, parentPortNo int64, deviceType string,
 	channelID int64, vendorID string, serialNumber string, onuID int64) (*voltha.Device, error) {
-	log.Debugw("childDeviceDetected", log.Fields{"parentDeviceId": parentDeviceID, "parentPortNo": parentPortNo, "deviceType": deviceType, "channelId": channelID, "vendorId": vendorID, "serialNumber": serialNumber, "onuId": onuID})
+	logger.Debugw("childDeviceDetected", log.Fields{"parentDeviceId": parentDeviceID, "parentPortNo": parentPortNo, "deviceType": deviceType, "channelId": channelID, "vendorId": vendorID, "serialNumber": serialNumber, "onuId": onuID})
 
 	if deviceType == "" && vendorID != "" {
-		log.Debug("device-type-is-nil-fetching-device-type")
+		logger.Debug("device-type-is-nil-fetching-device-type")
 		deviceTypesIf, err := dMgr.adapterMgr.clusterDataProxy.List(ctx, "/device_types", 0, false, "")
 		if err != nil {
-			log.Errorw("failed-to-get-device-type-info", log.Fields{"error": err})
+			logger.Errorw("failed-to-get-device-type-info", log.Fields{"error": err})
 			return nil, err
 		}
 		if deviceTypesIf != nil {
@@ -987,7 +987,7 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 	}
 	//if no match found for the vendorid,report adapter with the custom error message
 	if deviceType == "" {
-		log.Errorw("failed-to-fetch-adapter-name ", log.Fields{"vendorId": vendorID})
+		logger.Errorw("failed-to-fetch-adapter-name ", log.Fields{"vendorId": vendorID})
 		return nil, status.Errorf(codes.NotFound, "%s", vendorID)
 	}
 
@@ -1010,7 +1010,7 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 	}
 
 	if device, err := dMgr.GetChildDevice(ctx, parentDeviceID, serialNumber, onuID, parentPortNo); err == nil {
-		log.Warnw("child-device-exists", log.Fields{"parentId": parentDeviceID, "serialNumber": serialNumber})
+		logger.Warnw("child-device-exists", log.Fields{"parentId": parentDeviceID, "serialNumber": serialNumber})
 		return device, status.Errorf(codes.AlreadyExists, "%s", serialNumber)
 	}
 
@@ -1020,7 +1020,7 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 	agent := newDeviceAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.clusterDataProxy, dMgr.defaultTimeout)
 	childDevice, err := agent.start(ctx, childDevice)
 	if err != nil {
-		log.Errorw("error-starting-child-device", log.Fields{"parent-device-id": childDevice.ParentId, "child-device-id": agent.deviceID, "error": err})
+		logger.Errorw("error-starting-child-device", log.Fields{"parent-device-id": childDevice.ParentId, "child-device-id": agent.deviceID, "error": err})
 		return nil, err
 	}
 	dMgr.addDeviceAgentToMap(agent)
@@ -1029,7 +1029,7 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 	// ownership of this device to this Core
 	_, err = dMgr.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: agent.deviceID})
 	if err != nil {
-		log.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
+		logger.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
 	}
 
 	// Activate the child device
@@ -1037,7 +1037,7 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 		go func() {
 			err := agent.enableDevice(context.Background())
 			if err != nil {
-				log.Errorw("unable-to-enable-device", log.Fields{"error": err})
+				logger.Errorw("unable-to-enable-device", log.Fields{"error": err})
 			}
 		}()
 	}
@@ -1046,7 +1046,7 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 	go func() {
 		err := dMgr.kafkaICProxy.DeviceDiscovered(agent.deviceID, deviceType, parentDeviceID, dMgr.coreInstanceID)
 		if err != nil {
-			log.Errorw("unable-to-discover-the-device", log.Fields{"error": err})
+			logger.Errorw("unable-to-discover-the-device", log.Fields{"error": err})
 		}
 	}()
 
@@ -1057,14 +1057,14 @@ func (dMgr *DeviceManager) processTransition(ctx context.Context, previous *volt
 	// This will be triggered on every update to the device.
 	handlers := dMgr.stateTransitions.GetTransitionHandler(previous, current)
 	if handlers == nil {
-		log.Debugw("no-op-transition", log.Fields{"deviceId": current.Id})
+		logger.Debugw("no-op-transition", log.Fields{"deviceId": current.Id})
 		return nil
 	}
-	log.Debugw("handler-found", log.Fields{"num-expectedHandlers": len(handlers), "isParent": current.Root, "current-data": current})
+	logger.Debugw("handler-found", log.Fields{"num-expectedHandlers": len(handlers), "isParent": current.Root, "current-data": current})
 	for _, handler := range handlers {
-		log.Debugw("running-handler", log.Fields{"handler": funcName(handler)})
+		logger.Debugw("running-handler", log.Fields{"handler": funcName(handler)})
 		if err := handler(ctx, current, previous); err != nil {
-			log.Warnw("handler-failed", log.Fields{"handler": funcName(handler), "error": err})
+			logger.Warnw("handler-failed", log.Fields{"handler": funcName(handler), "error": err})
 			return err
 		}
 	}
@@ -1072,7 +1072,7 @@ func (dMgr *DeviceManager) processTransition(ctx context.Context, previous *volt
 }
 
 func (dMgr *DeviceManager) packetOut(ctx context.Context, deviceID string, outPort uint32, packet *ofp.OfpPacketOut) error {
-	log.Debugw("packetOut", log.Fields{"deviceId": deviceID, "outPort": outPort})
+	logger.Debugw("packetOut", log.Fields{"deviceId": deviceID, "outPort": outPort})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.packetOut(ctx, outPort, packet)
 	}
@@ -1081,16 +1081,16 @@ func (dMgr *DeviceManager) packetOut(ctx context.Context, deviceID string, outPo
 
 // PacketIn receives packet from adapter
 func (dMgr *DeviceManager) PacketIn(ctx context.Context, deviceID string, port uint32, transactionID string, packet []byte) error {
-	log.Debugw("PacketIn", log.Fields{"deviceId": deviceID, "port": port})
+	logger.Debugw("PacketIn", log.Fields{"deviceId": deviceID, "port": port})
 	// Get the logical device Id based on the deviceId
 	var device *voltha.Device
 	var err error
 	if device, err = dMgr.GetDevice(ctx, deviceID); err != nil {
-		log.Errorw("device-not-found", log.Fields{"deviceId": deviceID})
+		logger.Errorw("device-not-found", log.Fields{"deviceId": deviceID})
 		return err
 	}
 	if !device.Root {
-		log.Errorw("device-not-root", log.Fields{"deviceId": deviceID})
+		logger.Errorw("device-not-root", log.Fields{"deviceId": deviceID})
 		return status.Errorf(codes.FailedPrecondition, "%s", deviceID)
 	}
 
@@ -1101,7 +1101,7 @@ func (dMgr *DeviceManager) PacketIn(ctx context.Context, deviceID string, port u
 }
 
 func (dMgr *DeviceManager) setParentID(ctx context.Context, device *voltha.Device, parentID string) error {
-	log.Debugw("setParentId", log.Fields{"deviceId": device.Id, "parentId": parentID})
+	logger.Debugw("setParentId", log.Fields{"deviceId": device.Id, "parentId": parentID})
 	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
 		return agent.setParentID(ctx, device, parentID)
 	}
@@ -1110,15 +1110,15 @@ func (dMgr *DeviceManager) setParentID(ctx context.Context, device *voltha.Devic
 
 // CreateLogicalDevice creates logical device in core
 func (dMgr *DeviceManager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
-	log.Info("CreateLogicalDevice")
+	logger.Info("CreateLogicalDevice")
 	// Verify whether the logical device has already been created
 	if cDevice.ParentId != "" {
-		log.Debugw("Parent device already exist.", log.Fields{"deviceId": cDevice.Id, "logicalDeviceId": cDevice.Id})
+		logger.Debugw("Parent device already exist.", log.Fields{"deviceId": cDevice.Id, "logicalDeviceId": cDevice.Id})
 		return nil
 	}
 	var err error
 	if _, err = dMgr.logicalDeviceMgr.createLogicalDevice(ctx, cDevice); err != nil {
-		log.Warnw("createlogical-device-error", log.Fields{"device": cDevice})
+		logger.Warnw("createlogical-device-error", log.Fields{"device": cDevice})
 		return err
 	}
 	return nil
@@ -1126,10 +1126,10 @@ func (dMgr *DeviceManager) CreateLogicalDevice(ctx context.Context, cDevice *vol
 
 // DeleteLogicalDevice deletes logical device from core
 func (dMgr *DeviceManager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
-	log.Info("DeleteLogicalDevice")
+	logger.Info("DeleteLogicalDevice")
 	var err error
 	if err = dMgr.logicalDeviceMgr.deleteLogicalDevice(ctx, cDevice); err != nil {
-		log.Warnw("deleteLogical-device-error", log.Fields{"deviceId": cDevice.Id})
+		logger.Warnw("deleteLogical-device-error", log.Fields{"deviceId": cDevice.Id})
 		return err
 	}
 	// Remove the logical device Id from the parent device
@@ -1140,16 +1140,16 @@ func (dMgr *DeviceManager) DeleteLogicalDevice(ctx context.Context, cDevice *vol
 
 // DeleteLogicalPort removes the logical port associated with a device
 func (dMgr *DeviceManager) DeleteLogicalPort(ctx context.Context, device *voltha.Device) error {
-	log.Info("deleteLogicalPort")
+	logger.Info("deleteLogicalPort")
 	var err error
 	// Get the logical port associated with this device
 	var lPortID *voltha.LogicalPortId
 	if lPortID, err = dMgr.logicalDeviceMgr.getLogicalPortID(ctx, device); err != nil {
-		log.Warnw("getLogical-port-error", log.Fields{"deviceId": device.Id, "error": err})
+		logger.Warnw("getLogical-port-error", log.Fields{"deviceId": device.Id, "error": err})
 		return err
 	}
 	if err = dMgr.logicalDeviceMgr.deleteLogicalPort(ctx, lPortID); err != nil {
-		log.Warnw("deleteLogical-port-error", log.Fields{"deviceId": device.Id})
+		logger.Warnw("deleteLogical-port-error", log.Fields{"deviceId": device.Id})
 		return err
 	}
 	return nil
@@ -1157,10 +1157,10 @@ func (dMgr *DeviceManager) DeleteLogicalPort(ctx context.Context, device *voltha
 
 // DeleteLogicalPorts removes the logical ports associated with that deviceId
 func (dMgr *DeviceManager) DeleteLogicalPorts(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
-	log.Debugw("delete-all-logical-ports", log.Fields{"device-id": cDevice.Id})
+	logger.Debugw("delete-all-logical-ports", log.Fields{"device-id": cDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteLogicalPorts(ctx, cDevice.Id); err != nil {
 		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
-		log.Warnw("deleteLogical-ports-error", log.Fields{"device-id": cDevice.Id, "error": err})
+		logger.Warnw("deleteLogical-ports-error", log.Fields{"device-id": cDevice.Id, "error": err})
 	}
 	return nil
 }
@@ -1178,11 +1178,11 @@ func (dMgr *DeviceManager) getParentDevice(ctx context.Context, childDevice *vol
 //childDevicesLost is invoked by an adapter to indicate that a parent device is in a state (Disabled) where it
 //cannot manage the child devices.  This will trigger the Core to disable all the child devices.
 func (dMgr *DeviceManager) childDevicesLost(ctx context.Context, parentDeviceID string) error {
-	log.Debug("childDevicesLost")
+	logger.Debug("childDevicesLost")
 	var err error
 	var parentDevice *voltha.Device
 	if parentDevice, err = dMgr.GetDevice(ctx, parentDeviceID); err != nil {
-		log.Warnw("failed-getting-device", log.Fields{"deviceId": parentDeviceID, "error": err})
+		logger.Warnw("failed-getting-device", log.Fields{"deviceId": parentDeviceID, "error": err})
 		return err
 	}
 	return dMgr.DisableAllChildDevices(ctx, parentDevice, nil)
@@ -1191,13 +1191,13 @@ func (dMgr *DeviceManager) childDevicesLost(ctx context.Context, parentDeviceID 
 //childDevicesDetected is invoked by an adapter when child devices are found, typically after after a
 // disable/enable sequence.  This will trigger the Core to Enable all the child devices of that parent.
 func (dMgr *DeviceManager) childDevicesDetected(ctx context.Context, parentDeviceID string) error {
-	log.Debug("childDevicesDetected")
+	logger.Debug("childDevicesDetected")
 	var err error
 	var parentDevice *voltha.Device
 	var childDeviceIds []string
 
 	if parentDevice, err = dMgr.GetDevice(ctx, parentDeviceID); err != nil {
-		log.Warnw("failed-getting-device", log.Fields{"deviceId": parentDeviceID, "error": err})
+		logger.Warnw("failed-getting-device", log.Fields{"deviceId": parentDeviceID, "error": err})
 		return err
 	}
 
@@ -1205,7 +1205,7 @@ func (dMgr *DeviceManager) childDevicesDetected(ctx context.Context, parentDevic
 		return status.Errorf(codes.NotFound, "%s", parentDevice.Id)
 	}
 	if len(childDeviceIds) == 0 {
-		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
+		logger.Debugw("no-child-device", log.Fields{"parentDeviceId": parentDevice.Id})
 	}
 	allChildEnableRequestSent := true
 	for _, childDeviceID := range childDeviceIds {
@@ -1214,12 +1214,12 @@ func (dMgr *DeviceManager) childDevicesDetected(ctx context.Context, parentDevic
 			go func() {
 				err = agent.enableDevice(ctx)
 				if err != nil {
-					log.Errorw("unable-to-enable-device", log.Fields{"error": err})
+					logger.Errorw("unable-to-enable-device", log.Fields{"error": err})
 				}
 			}()
 		} else {
 			err = status.Errorf(codes.Unavailable, "no agent for child device %s", childDeviceID)
-			log.Errorw("no-child-device-agent", log.Fields{"parentDeviceId": parentDevice.Id, "childId": childDeviceID})
+			logger.Errorw("no-child-device-agent", log.Fields{"parentDeviceId": parentDevice.Id, "childId": childDeviceID})
 			allChildEnableRequestSent = false
 		}
 	}
@@ -1236,20 +1236,20 @@ therefore use the data as is without trying to get the latest from the model.
 
 //DisableAllChildDevices is invoked as a callback when the parent device is disabled
 func (dMgr *DeviceManager) DisableAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device, parentPrevDevice *voltha.Device) error {
-	log.Debug("DisableAllChildDevices")
+	logger.Debug("DisableAllChildDevices")
 	var childDeviceIds []string
 	var err error
 	if childDeviceIds, err = dMgr.getAllChildDeviceIds(parentCurrDevice); err != nil {
 		return status.Errorf(codes.NotFound, "%s", parentCurrDevice.Id)
 	}
 	if len(childDeviceIds) == 0 {
-		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentCurrDevice.Id})
+		logger.Debugw("no-child-device", log.Fields{"parentDeviceId": parentCurrDevice.Id})
 	}
 	for _, childDeviceID := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			if err = agent.disableDevice(ctx); err != nil {
 				// Just log the error - this error happens only if the child device was already in deleted state.
-				log.Errorw("failure-disable-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
+				logger.Errorw("failure-disable-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
 			}
 		}
 	}
@@ -1258,19 +1258,19 @@ func (dMgr *DeviceManager) DisableAllChildDevices(ctx context.Context, parentCur
 
 //DeleteAllChildDevices is invoked as a callback when the parent device is deleted
 func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device, parentPrevDevice *voltha.Device) error {
-	log.Debug("DeleteAllChildDevices")
+	logger.Debug("DeleteAllChildDevices")
 	var childDeviceIds []string
 	var err error
 	if childDeviceIds, err = dMgr.getAllChildDeviceIds(parentCurrDevice); err != nil {
 		return status.Errorf(codes.NotFound, "%s", parentCurrDevice.Id)
 	}
 	if len(childDeviceIds) == 0 {
-		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentCurrDevice.Id})
+		logger.Debugw("no-child-device", log.Fields{"parentDeviceId": parentCurrDevice.Id})
 	}
 	for _, childDeviceID := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			if err = agent.deleteDevice(ctx); err != nil {
-				log.Warnw("failure-delete-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
+				logger.Warnw("failure-delete-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
 			}
 			// No further action is required here.  The deleteDevice will change the device state where the resulting
 			// callback will take care of cleaning the child device agent.
@@ -1281,30 +1281,30 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentCurr
 
 //DeleteAllUNILogicalPorts is invoked as a callback when the parent device is deleted
 func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error {
-	log.Debugw("delete-all-uni-logical-ports", log.Fields{"parent-device-id": curr.Id})
+	logger.Debugw("delete-all-uni-logical-ports", log.Fields{"parent-device-id": curr.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllUNILogicalPorts(ctx, curr); err != nil {
 		// Just log the error and let the remaining pipeline proceed - ports may already have been deleted
-		log.Warnw("delete-all-uni-logical-ports-failed", log.Fields{"parent-device-id": curr.Id, "error": err})
+		logger.Warnw("delete-all-uni-logical-ports-failed", log.Fields{"parent-device-id": curr.Id, "error": err})
 	}
 	return nil
 }
 
 //DeleteAllLogicalPorts is invoked as a callback when the parent device's connection status moves to UNREACHABLE
 func (dMgr *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *voltha.Device, prev *voltha.Device) error {
-	log.Debugw("delete-all-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})
+	logger.Debugw("delete-all-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(ctx, parentDevice); err != nil {
 		// Just log error as logical device may already have been deleted
-		log.Warnw("delete-all-logical-ports-fail", log.Fields{"parent-device-id": parentDevice.Id, "error": err})
+		logger.Warnw("delete-all-logical-ports-fail", log.Fields{"parent-device-id": parentDevice.Id, "error": err})
 	}
 	return nil
 }
 
 //DeleteAllDeviceFlows is invoked as a callback when the parent device's connection status moves to UNREACHABLE
 func (dMgr *DeviceManager) DeleteAllDeviceFlows(ctx context.Context, parentDevice *voltha.Device, prev *voltha.Device) error {
-	log.Debugw("delete-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
+	logger.Debugw("delete-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
 	if agent := dMgr.getDeviceAgent(ctx, parentDevice.Id); agent != nil {
 		if err := agent.deleteAllFlows(ctx); err != nil {
-			log.Errorw("error-deleting-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
+			logger.Errorw("error-deleting-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
 			return err
 		}
 		return nil
@@ -1314,7 +1314,7 @@ func (dMgr *DeviceManager) DeleteAllDeviceFlows(ctx context.Context, parentDevic
 
 //getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *DeviceManager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]string, error) {
-	log.Debugw("getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id})
+	logger.Debugw("getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id})
 	childDeviceIds := make([]string, 0)
 	if parentDevice != nil {
 		for _, port := range parentDevice.Ports {
@@ -1322,14 +1322,14 @@ func (dMgr *DeviceManager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]
 				childDeviceIds = append(childDeviceIds, peer.DeviceId)
 			}
 		}
-		log.Debugw("returning-getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id, "childDeviceIds": childDeviceIds})
+		logger.Debugw("returning-getAllChildDeviceIds", log.Fields{"parentDeviceId": parentDevice.Id, "childDeviceIds": childDeviceIds})
 	}
 	return childDeviceIds, nil
 }
 
 //getAllChildDevices is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *DeviceManager) getAllChildDevices(ctx context.Context, parentDeviceID string) (*voltha.Devices, error) {
-	log.Debugw("getAllChildDevices", log.Fields{"parentDeviceId": parentDeviceID})
+	logger.Debugw("getAllChildDevices", log.Fields{"parentDeviceId": parentDeviceID})
 	if parentDevice, err := dMgr.GetDevice(ctx, parentDeviceID); err == nil {
 		childDevices := make([]*voltha.Device, 0)
 		if childDeviceIds, er := dMgr.getAllChildDeviceIds(parentDevice); er == nil {
@@ -1346,21 +1346,21 @@ func (dMgr *DeviceManager) getAllChildDevices(ctx context.Context, parentDeviceI
 
 // SetupUNILogicalPorts creates UNI ports on the logical device that represents a child UNI interface
 func (dMgr *DeviceManager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
-	log.Info("addUNILogicalPort")
+	logger.Info("addUNILogicalPort")
 	if err := dMgr.logicalDeviceMgr.setupUNILogicalPorts(ctx, cDevice); err != nil {
-		log.Warnw("addUNILogicalPort-error", log.Fields{"device": cDevice, "err": err})
+		logger.Warnw("addUNILogicalPort-error", log.Fields{"device": cDevice, "err": err})
 		return err
 	}
 	return nil
 }
 
 func (dMgr *DeviceManager) downloadImage(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
-	log.Debugw("downloadImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	logger.Debugw("downloadImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
 	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.downloadImage(ctx, img); err != nil {
-			log.Debugw("downloadImage-failed", log.Fields{"err": err, "imageName": img.Name})
+			logger.Debugw("downloadImage-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
 		}
 	} else {
@@ -1370,12 +1370,12 @@ func (dMgr *DeviceManager) downloadImage(ctx context.Context, img *voltha.ImageD
 }
 
 func (dMgr *DeviceManager) cancelImageDownload(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
-	log.Debugw("cancelImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	logger.Debugw("cancelImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
 	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.cancelImageDownload(ctx, img); err != nil {
-			log.Debugw("cancelImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
+			logger.Debugw("cancelImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
 		}
 	} else {
@@ -1385,12 +1385,12 @@ func (dMgr *DeviceManager) cancelImageDownload(ctx context.Context, img *voltha.
 }
 
 func (dMgr *DeviceManager) activateImage(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
-	log.Debugw("activateImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	logger.Debugw("activateImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
 	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.activateImage(ctx, img); err != nil {
-			log.Debugw("activateImage-failed", log.Fields{"err": err, "imageName": img.Name})
+			logger.Debugw("activateImage-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
 		}
 	} else {
@@ -1400,12 +1400,12 @@ func (dMgr *DeviceManager) activateImage(ctx context.Context, img *voltha.ImageD
 }
 
 func (dMgr *DeviceManager) revertImage(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
-	log.Debugw("revertImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	logger.Debugw("revertImage", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
 	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.revertImage(ctx, img); err != nil {
-			log.Debugw("revertImage-failed", log.Fields{"err": err, "imageName": img.Name})
+			logger.Debugw("revertImage-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
 		}
 	} else {
@@ -1415,12 +1415,12 @@ func (dMgr *DeviceManager) revertImage(ctx context.Context, img *voltha.ImageDow
 }
 
 func (dMgr *DeviceManager) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload, ch chan interface{}) {
-	log.Debugw("getImageDownloadStatus", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	logger.Debugw("getImageDownloadStatus", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	var res interface{}
 	var err error
 	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		if res, err = agent.getImageDownloadStatus(ctx, img); err != nil {
-			log.Debugw("getImageDownloadStatus-failed", log.Fields{"err": err, "imageName": img.Name})
+			logger.Debugw("getImageDownloadStatus-failed", log.Fields{"err": err, "imageName": img.Name})
 			res = err
 		}
 	} else {
@@ -1430,10 +1430,10 @@ func (dMgr *DeviceManager) getImageDownloadStatus(ctx context.Context, img *volt
 }
 
 func (dMgr *DeviceManager) updateImageDownload(ctx context.Context, deviceID string, img *voltha.ImageDownload) error {
-	log.Debugw("updateImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	logger.Debugw("updateImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if err := agent.updateImageDownload(ctx, img); err != nil {
-			log.Debugw("updateImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
+			logger.Debugw("updateImageDownload-failed", log.Fields{"err": err, "imageName": img.Name})
 			return err
 		}
 	} else {
@@ -1443,7 +1443,7 @@ func (dMgr *DeviceManager) updateImageDownload(ctx context.Context, deviceID str
 }
 
 func (dMgr *DeviceManager) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	log.Debugw("getImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
+	logger.Debugw("getImageDownload", log.Fields{"deviceid": img.Id, "imageName": img.Name})
 	if agent := dMgr.getDeviceAgent(ctx, img.Id); agent != nil {
 		return agent.getImageDownload(ctx, img)
 	}
@@ -1451,7 +1451,7 @@ func (dMgr *DeviceManager) getImageDownload(ctx context.Context, img *voltha.Ima
 }
 
 func (dMgr *DeviceManager) listImageDownloads(ctx context.Context, deviceID string) (*voltha.ImageDownloads, error) {
-	log.Debugw("listImageDownloads", log.Fields{"deviceID": deviceID})
+	logger.Debugw("listImageDownloads", log.Fields{"deviceID": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.listImageDownloads(ctx, deviceID)
 	}
@@ -1459,7 +1459,7 @@ func (dMgr *DeviceManager) listImageDownloads(ctx context.Context, deviceID stri
 }
 
 func (dMgr *DeviceManager) NotifyInvalidTransition(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
-	log.Errorw("NotifyInvalidTransition", log.Fields{
+	logger.Errorw("NotifyInvalidTransition", log.Fields{
 		"device":           cDevice.Id,
 		"prev-admin-state": pDevice.AdminState,
 		"prev-oper-state":  pDevice.OperStatus,
@@ -1488,27 +1488,27 @@ func (dMgr *DeviceManager) UpdateDeviceAttribute(ctx context.Context, deviceID s
 // GetParentDeviceID returns parent device id, either from memory or from the dB, if present
 func (dMgr *DeviceManager) GetParentDeviceID(ctx context.Context, deviceID string) string {
 	if device, _ := dMgr.GetDevice(ctx, deviceID); device != nil {
-		log.Infow("GetParentDeviceId", log.Fields{"deviceId": device.Id, "parentId": device.ParentId})
+		logger.Infow("GetParentDeviceId", log.Fields{"deviceId": device.Id, "parentId": device.ParentId})
 		return device.ParentId
 	}
 	return ""
 }
 
 func (dMgr *DeviceManager) simulateAlarm(ctx context.Context, simulatereq *voltha.SimulateAlarmRequest, ch chan interface{}) {
-	log.Debugw("simulateAlarm", log.Fields{"id": simulatereq.Id, "Indicator": simulatereq.Indicator, "IntfId": simulatereq.IntfId,
+	logger.Debugw("simulateAlarm", log.Fields{"id": simulatereq.Id, "Indicator": simulatereq.Indicator, "IntfId": simulatereq.IntfId,
 		"PortTypeName": simulatereq.PortTypeName, "OnuDeviceId": simulatereq.OnuDeviceId, "InverseBitErrorRate": simulatereq.InverseBitErrorRate,
 		"Drift": simulatereq.Drift, "NewEqd": simulatereq.NewEqd, "OnuSerialNumber": simulatereq.OnuSerialNumber, "Operation": simulatereq.Operation})
 	var res interface{}
 	if agent := dMgr.getDeviceAgent(ctx, simulatereq.Id); agent != nil {
 		res = agent.simulateAlarm(ctx, simulatereq)
-		log.Debugw("simulateAlarm-result", log.Fields{"result": res})
+		logger.Debugw("simulateAlarm-result", log.Fields{"result": res})
 	}
 	//TODO CLI always get successful response
 	sendResponse(ctx, ch, res)
 }
 
 func (dMgr *DeviceManager) updateDeviceReason(ctx context.Context, deviceID string, reason string) error {
-	log.Debugw("updateDeviceReason", log.Fields{"deviceid": deviceID, "reason": reason})
+	logger.Debugw("updateDeviceReason", log.Fields{"deviceid": deviceID, "reason": reason})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateDeviceReason(ctx, reason)
 	}
@@ -1516,11 +1516,11 @@ func (dMgr *DeviceManager) updateDeviceReason(ctx context.Context, deviceID stri
 }
 
 func (dMgr *DeviceManager) enablePort(ctx context.Context, port *voltha.Port, ch chan interface{}) {
-	log.Debugw("enablePort", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
+	logger.Debugw("enablePort", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	var res interface{}
 	if agent := dMgr.getDeviceAgent(ctx, port.DeviceId); agent != nil {
 		res = agent.enablePort(ctx, port)
-		log.Debugw("enablePort-result", log.Fields{"result": res})
+		logger.Debugw("enablePort-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", port.DeviceId)
 	}
@@ -1529,11 +1529,11 @@ func (dMgr *DeviceManager) enablePort(ctx context.Context, port *voltha.Port, ch
 }
 
 func (dMgr *DeviceManager) disablePort(ctx context.Context, port *voltha.Port, ch chan interface{}) {
-	log.Debugw("disablePort", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
+	logger.Debugw("disablePort", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	var res interface{}
 	if agent := dMgr.getDeviceAgent(ctx, port.DeviceId); agent != nil {
 		res = agent.disablePort(ctx, port)
-		log.Debugw("disablePort-result", log.Fields{"result": res})
+		logger.Debugw("disablePort-result", log.Fields{"result": res})
 	} else {
 		res = status.Errorf(codes.NotFound, "%s", port.DeviceId)
 	}
@@ -1543,11 +1543,11 @@ func (dMgr *DeviceManager) disablePort(ctx context.Context, port *voltha.Port, c
 
 // childDeviceLost  calls parent adapter to delete child device and all its references
 func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error {
-	log.Debugw("childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
+	logger.Debugw("childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
 	if parentAgent := dMgr.getDeviceAgent(ctx, curr.ParentId); parentAgent != nil {
 		if err := parentAgent.ChildDeviceLost(ctx, curr); err != nil {
 			// Just log the message and let the remaining pipeline proceed.
-			log.Warnw("childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId, "error": err})
+			logger.Warnw("childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId, "error": err})
 		}
 	}
 	// Do not return an error as parent device may also have been deleted.  Let the remaining pipeline proceed.
@@ -1555,13 +1555,13 @@ func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, curr *voltha.Dev
 }
 
 func (dMgr *DeviceManager) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
-	log.Debugw("Omci_test_Request", log.Fields{"device-id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
+	logger.Debugw("Omci_test_Request", log.Fields{"device-id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
 	if agent := dMgr.getDeviceAgent(ctx, omcitestrequest.Id); agent != nil {
 		res, err := agent.startOmciTest(ctx, omcitestrequest)
 		if err != nil {
 			return nil, err
 		}
-		log.Debugw("Omci_test_Response_result-device-magnager", log.Fields{"result": res})
+		logger.Debugw("Omci_test_Response_result-device-magnager", log.Fields{"result": res})
 		return res, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", omcitestrequest.Id)

@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
@@ -57,7 +56,7 @@ func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	data := args[2:]
 
 	if _, ok := ignoredCallbacks[eventType]; ok {
-		log.Debugf("ignoring event - type:%s, data:%+v", eventType, data)
+		logger.Debugf("ignoring event - type:%s, data:%+v", eventType, data)
 	}
 	var kind voltha.ConfigEventType_Types
 	switch eventType {
@@ -73,14 +72,14 @@ func (bus *EventBus) Advertise(args ...interface{}) interface{} {
 	var err error
 	if IsProtoMessage(data) {
 		if msg, err = proto.Marshal(data[0].(proto.Message)); err != nil {
-			log.Debugf("problem marshalling proto data: %+v, err:%s", data[0], err.Error())
+			logger.Debugf("problem marshalling proto data: %+v, err:%s", data[0], err.Error())
 		}
 	} else if data[0] != nil {
 		if msg, err = json.Marshal(data[0]); err != nil {
-			log.Debugf("problem marshalling json data: %+v, err:%s", data[0], err.Error())
+			logger.Debugf("problem marshalling json data: %+v, err:%s", data[0], err.Error())
 		}
 	} else {
-		log.Debugf("no data to advertise : %+v", data[0])
+		logger.Debugf("no data to advertise : %+v", data[0])
 	}
 
 	event := voltha.ConfigEvent{

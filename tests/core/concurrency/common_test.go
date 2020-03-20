@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mocks
+package concurrency
 
 import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 const (
-	logLevel = log.FatalLevel
+	logLevel = log.ErrorLevel
 )
 
-// Unit test initialization. This init() function handles all unit tests in
-// the current directory.
+var logger log.Logger
+
 func init() {
 	// Setup this package so that it's log level can be modified at run time
-	_, err := log.AddPackage(log.JSON, logLevel, log.Fields{"instanceId": "mocks"})
+	var err error
+	logger, err = log.AddPackage(log.JSON, logLevel, log.Fields{"pkg": "concurrency"})
 	if err != nil {
 		panic(err)
 	}
