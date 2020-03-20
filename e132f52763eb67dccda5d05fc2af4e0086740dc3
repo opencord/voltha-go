@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec039a5f_9bb1dca7",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-20T19:52:55Z",
+      "side": 1,
+      "message": "technically this method can now never return an error, so may not need the return value at all. Also, is there a specific error that we want to ignore, i.e. not-found, vs. ignore all errors?\n\nI think this is similar for the other changes as well.",
+      "range": {
+        "startLine": 1161,
+        "startChar": 0,
+        "endLine": 1164,
+        "endChar": 2
+      },
+      "revId": "e132f52763eb67dccda5d05fc2af4e0086740dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
