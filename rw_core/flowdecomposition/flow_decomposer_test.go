@@ -891,7 +891,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 }
 
 func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
-	log.Debugf("Starting Test Unicast Downstream")
+	logger.Debugf("Starting Test Unicast Downstream")
 	fa1 := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 0},
 		MatchFields: []*ofp.OfpOxmOfbField{

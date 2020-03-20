@@ -73,7 +73,7 @@ func TestTransaction_2_AddDevice(t *testing.T) {
 
 	added, err := addTx.Add(context.Background(), "/devices", device)
 	if err != nil {
-		log.Errorf("Failed to add device due to error %v", err)
+		logger.Errorf("Failed to add device due to error %v", err)
 		assert.NotNil(t, err)
 	}
 	if added == nil {
@@ -94,7 +94,7 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 	getDevWithPortsTx := TestTransactionRootProxy.OpenTransaction()
 	device1, err := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
 	if err != nil {
-		log.Errorf("Failed to get device with ports due to error %v", err)
+		logger.Errorf("Failed to get device with ports due to error %v", err)
 		assert.NotNil(t, err)
 	}
 	t.Logf("retrieved device with ports: %+v", device1)
@@ -105,7 +105,7 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 	getDevTx := TestTransactionRootProxy.OpenTransaction()
 	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
 	if err != nil {
-		log.Errorf("Failed to open transaction due to error %v", err)
+		logger.Errorf("Failed to open transaction due to error %v", err)
 		assert.NotNil(t, err)
 	}
 	t.Logf("retrieved device: %+v", device2)
@@ -116,7 +116,7 @@ func TestTransaction_3_GetDevice_PostAdd(t *testing.T) {
 func TestTransaction_4_UpdateDevice(t *testing.T) {
 	updateTx := TestTransactionRootProxy.OpenTransaction()
 	if retrieved, err := updateTx.Get(context.Background(), "/devices/"+TestTransactionTargetDeviceID, 1, false); err != nil {
-		log.Errorf("Failed to retrieve device info due to error %v", err)
+		logger.Errorf("Failed to retrieve device info due to error %v", err)
 		assert.NotNil(t, err)
 	} else if retrieved == nil {
 		t.Error("Failed to get device")
@@ -136,7 +136,7 @@ func TestTransaction_4_UpdateDevice(t *testing.T) {
 		// FIXME: The makeBranch passed in function is nil or not being executed properly!!!!!
 		afterUpdate, err := updateTx.Update(context.Background(), "/devices/"+TestTransactionTargetDeviceID, retrieved, false)
 		if err != nil {
-			log.Errorf("Failed to update device info due to error %v", err)
+			logger.Errorf("Failed to update device info due to error %v", err)
 			assert.NotNil(t, err)
 		}
 		if afterUpdate == nil {
@@ -157,7 +157,7 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 	getDevWithPortsTx := TestTransactionRootProxy.OpenTransaction()
 	device1, err := getDevWithPortsTx.Get(context.Background(), basePath+"/ports", 1, false)
 	if err != nil {
-		log.Errorf("Failed to device with ports info due to error %v", err)
+		logger.Errorf("Failed to device with ports info due to error %v", err)
 		assert.NotNil(t, err)
 	}
 	t.Logf("retrieved device with ports: %+v", device1)
@@ -168,7 +168,7 @@ func TestTransaction_5_GetDevice_PostUpdate(t *testing.T) {
 	getDevTx := TestTransactionRootProxy.OpenTransaction()
 	device2, err := getDevTx.Get(context.Background(), basePath, 0, false)
 	if err != nil {
-		log.Errorf("Failed to  get device info due to error %v", err)
+		logger.Errorf("Failed to  get device info due to error %v", err)
 		assert.NotNil(t, err)
 	}
 	t.Logf("retrieved device: %+v", device2)
@@ -180,7 +180,7 @@ func TestTransaction_6_RemoveDevice(t *testing.T) {
 	removeTx := TestTransactionRootProxy.OpenTransaction()
 	removed, err := removeTx.Remove(context.Background(), "/devices/"+TestTransactionDeviceID)
 	if err != nil {
-		log.Errorf("Failed to remove device due to error %v", err)
+		logger.Errorf("Failed to remove device due to error %v", err)
 		assert.NotNil(t, err)
 	}
 	if removed == nil {
@@ -200,7 +200,7 @@ func TestTransaction_7_GetDevice_PostRemove(t *testing.T) {
 	getDevTx := TestTransactionRootProxy.OpenTransaction()
 	device, err := TestTransactionRootProxy.Get(context.Background(), basePath, 0, false, "")
 	if err != nil {
-		log.Errorf("Failed to get device info post remove due to error %v", err)
+		logger.Errorf("Failed to get device info post remove due to error %v", err)
 		assert.NotNil(t, err)
 	}
 	t.Logf("retrieved device: %+v", device)

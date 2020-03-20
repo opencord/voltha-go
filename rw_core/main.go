@@ -50,16 +50,9 @@ type rwCore struct {
 	receiverChannels []<-chan *ic.InterContainerMessage
 }
 
-func init() {
-	_, err := log.AddPackage(log.JSON, log.DebugLevel, nil)
-	if err != nil {
-		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
-	}
-}
-
 func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
 
-	log.Infow("kv-store-type", log.Fields{"store": storeType})
+	logger.Infow("kv-store-type", log.Fields{"store": storeType})
 	switch storeType {
 	case "consul":
 		return kvstore.NewConsulClient(address, timeout)
@@ -71,7 +64,7 @@ func newKVClient(storeType string, address string, timeout int) (kvstore.Client,
 
 func newKafkaClient(clientType string, host string, port int, instanceID string, livenessChannelInterval time.Duration) (kafka.Client, error) {
 
-	log.Infow("kafka-client-type", log.Fields{"client": clientType})
+	logger.Infow("kafka-client-type", log.Fields{"client": clientType})
 	switch clientType {
 	case "sarama":
 		return kafka.NewSaramaClient(
@@ -103,16 +96,16 @@ func newRWCore(cf *config.RWCoreFlags) *rwCore {
 }
 
 func (rw *rwCore) start(ctx context.Context, instanceID string) {
-	log.Info("Starting RW Core components")
+	logger.Info("Starting RW Core components")
 
 	// Setup KV Client
-	log.Debugw("create-kv-client", log.Fields{"kvstore": rw.config.KVStoreType})
+	logger.Debugw("create-kv-client", log.Fields{"kvstore": rw.config.KVStoreType})
 	var err error
 	if rw.kvClient, err = newKVClient(
 		rw.config.KVStoreType,
 		rw.config.KVStoreHost+":"+strconv.Itoa(rw.config.KVStorePort),
 		rw.config.KVStoreTimeout); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	cm := conf.NewConfigManager(rw.kvClient, rw.config.KVStoreType, rw.config.KVStoreHost, rw.config.KVStorePort, rw.config.KVStoreTimeout)
 	go conf.ProcessLogConfigChange(cm, ctx)
@@ -122,7 +115,7 @@ func (rw *rwCore) start(ctx context.Context, instanceID string) {
 		rw.config.KVStoreDataPrefix+"/transactions/",
 		rw.kvClient,
 		rw.config.KVStoreTimeout); err != nil {
-		log.Fatal("creating-transaction-context-failed")
+		logger.Fatal("creating-transaction-context-failed")
 	}
 
 	// Setup Kafka Client
@@ -131,7 +124,7 @@ func (rw *rwCore) start(ctx context.Context, instanceID string) {
 		rw.config.KafkaAdapterPort,
 		instanceID,
 		rw.config.LiveProbeInterval/2); err != nil {
-		log.Fatal("Unsupported-kafka-client")
+		logger.Fatal("Unsupported-kafka-client")
 	}
 
 	// Create the core service
@@ -140,7 +133,7 @@ func (rw *rwCore) start(ctx context.Context, instanceID string) {
 	// start the core
 	err = rw.core.Start(ctx)
 	if err != nil {
-		log.Fatalf("failed-to-start-rwcore", log.Fields{"error": err})
+		logger.Fatalf("failed-to-start-rwcore", log.Fields{"error": err})
 	}
 }
 
@@ -155,7 +148,7 @@ func (rw *rwCore) stop(ctx context.Context) {
 	if rw.kvClient != nil {
 		// Release all reservations
 		if err := rw.kvClient.ReleaseAllReservations(ctx); err != nil {
-			log.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
+			logger.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
 		}
 		// Close the DB connection
 		rw.kvClient.Close()
@@ -185,10 +178,10 @@ func waitForExit() int {
 			syscall.SIGINT,
 			syscall.SIGTERM,
 			syscall.SIGQUIT:
-			log.Infow("closing-signal-received", log.Fields{"signal": s})
+			logger.Infow("closing-signal-received", log.Fields{"signal": s})
 			exitChannel <- 0
 		default:
-			log.Infow("unexpected-signal-received", log.Fields{"signal": s})
+			logger.Infow("unexpected-signal-received", log.Fields{"signal": s})
 			exitChannel <- 1
 		}
 	}()
@@ -224,7 +217,7 @@ func main() {
 	if len(hostName) > 0 {
 		instanceID = hostName
 	} else {
-		log.Fatal("HOSTNAME not set")
+		logger.Fatal("HOSTNAME not set")
 	}
 
 	realMain()
@@ -236,12 +229,12 @@ func main() {
 
 	//Setup default logger - applies for packages that do not have specific logger set
 	if _, err := log.SetDefaultLogger(log.JSON, logLevel, log.Fields{"instanceId": instanceID}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+		logger.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
 	// Update all loggers (provisioned via init) with a common field
 	if err := log.UpdateAllLoggers(log.Fields{"instanceId": instanceID}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+		logger.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
 	// Update all loggers to log level specified as input parameter
@@ -252,7 +245,7 @@ func main() {
 	defer func() {
 		err := log.CleanUp()
 		if err != nil {
-			log.Errorw("unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
+			logger.Errorw("unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
 		}
 	}()
 
@@ -267,7 +260,7 @@ func main() {
 		printBanner()
 	}
 
-	log.Infow("rw-core-config", log.Fields{"config": *cf})
+	logger.Infow("rw-core-config", log.Fields{"config": *cf})
 
 	// Create the core
 	rw := newRWCore(cf)
@@ -291,11 +284,11 @@ func main() {
 	go rw.start(probeCtx, instanceID)
 
 	code := waitForExit()
-	log.Infow("received-a-closing-signal", log.Fields{"code": code})
+	logger.Infow("received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
 	rw.stop(probeCtx)
 
 	elapsed := time.Since(start)
-	log.Infow("rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})
+	logger.Infow("rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})
 }

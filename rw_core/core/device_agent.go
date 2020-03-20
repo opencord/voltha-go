@@ -97,7 +97,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 	defer func() {
 		if !startSucceeded {
 			if err := agent.stop(ctx); err != nil {
-				log.Errorw("failed-to-cleanup-after-unsuccessful-start", log.Fields{"device-id": agent.deviceID, "error": err})
+				logger.Errorw("failed-to-cleanup-after-unsuccessful-start", log.Fields{"device-id": agent.deviceID, "error": err})
 			}
 		}
 	}()
@@ -124,7 +124,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 		} else {
 			return nil, status.Errorf(codes.NotFound, "device-%s-loading-failed", agent.deviceID)
 		}
-		log.Infow("device-loaded-from-dB", log.Fields{"device-id": agent.deviceID})
+		logger.Infow("device-loaded-from-dB", log.Fields{"device-id": agent.deviceID})
 	} else {
 		// Create a new device
 		// Assumption is that AdminState, FlowGroups, and Flows are unitialized since this
@@ -158,7 +158,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 	agent.deviceProxy.RegisterCallback(model.PostUpdate, agent.processUpdate)
 
 	startSucceeded = true
-	log.Debugw("device-agent-started", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("device-agent-started", log.Fields{"device-id": agent.deviceID})
 
 	return agent.getDevice(ctx)
 }
@@ -174,7 +174,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) error {
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	log.Infow("stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
+	logger.Infow("stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
 
 	// First unregister any callbacks
 	if agent.deviceProxy != nil {
@@ -187,7 +187,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) error {
 		return err
 	}
 	if removed == nil {
-		log.Debugw("device-already-removed", log.Fields{"device-id": agent.deviceID})
+		logger.Debugw("device-already-removed", log.Fields{"device-id": agent.deviceID})
 	}
 
 	// Stop the request queue - no more requests can be processed
@@ -197,7 +197,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) error {
 
 	agent.stopped = true
 
-	log.Infow("device-agent-stopped", log.Fields{"device-id": agent.deviceID, "parent-id": agent.parentID})
+	logger.Infow("device-agent-stopped", log.Fields{"device-id": agent.deviceID, "parent-id": agent.parentID})
 
 	return nil
 }
@@ -205,22 +205,22 @@ func (agent *DeviceAgent) stop(ctx context.Context) error {
 // Load the most recent state from the KVStore for the device.
 func (agent *DeviceAgent) reconcileWithKVStore(ctx context.Context) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		log.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "error": err})
+		logger.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "error": err})
 		return
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debug("reconciling-device-agent-devicetype")
+	logger.Debug("reconciling-device-agent-devicetype")
 	// TODO: context timeout
 	device, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 1, true, "")
 	if err != nil {
-		log.Errorw("kv-get-failed", log.Fields{"device-id": agent.deviceID, "error": err})
+		logger.Errorw("kv-get-failed", log.Fields{"device-id": agent.deviceID, "error": err})
 		return
 	}
 	if device != nil {
 		if d, ok := device.(*voltha.Device); ok {
 			agent.deviceType = d.Adapter
 			agent.device = proto.Clone(d).(*voltha.Device)
-			log.Debugw("reconciled-device-agent-devicetype", log.Fields{"device-id": agent.deviceID, "type": agent.deviceType})
+			logger.Debugw("reconciled-device-agent-devicetype", log.Fields{"device-id": agent.deviceID, "type": agent.deviceType})
 		}
 	}
 }
@@ -228,7 +228,7 @@ func (agent *DeviceAgent) reconcileWithKVStore(ctx context.Context) {
 // onSuccess is a common callback for scenarios where we receive a nil response following a request to an adapter
 // and the only action required is to publish a successful result on kafka
 func (agent *DeviceAgent) onSuccess(rpc string, response interface{}, reqArgs ...interface{}) {
-	log.Debugw("response successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
+	logger.Debugw("response successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
 	// TODO: Post success message onto kafka
 }
 
@@ -236,9 +236,9 @@ func (agent *DeviceAgent) onSuccess(rpc string, response interface{}, reqArgs ..
 // and the only action required is to publish the failed result on kafka
 func (agent *DeviceAgent) onFailure(rpc string, response interface{}, reqArgs ...interface{}) {
 	if res, ok := response.(error); ok {
-		log.Errorw("rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
+		logger.Errorw("rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
 	} else {
-		log.Errorw("rpc-failed-invalid-error", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
+		logger.Errorw("rpc-failed-invalid-error", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
 	}
 	// TODO: Post failure message onto kafka
 }
@@ -281,7 +281,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	log.Debugw("enableDevice", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("enableDevice", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -295,7 +295,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	cloned.Adapter = adapterName
 
 	if cloned.AdminState == voltha.AdminState_ENABLED {
-		log.Debugw("device-already-enabled", log.Fields{"device-id": agent.deviceID})
+		logger.Debugw("device-already-enabled", log.Fields{"device-id": agent.deviceID})
 		return nil
 	}
 
@@ -410,10 +410,10 @@ func groupsToUpdateToDelete(newGroups, existingGroups []*ofp.OfpGroupEntry) (upd
 }
 
 func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	log.Debugw("add-flows-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups, "flow-metadata": flowMetadata})
+	logger.Debugw("add-flows-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups, "flow-metadata": flowMetadata})
 
 	if (len(newFlows) | len(newGroups)) == 0 {
-		log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -439,7 +439,7 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlo
 
 	// Sanity check
 	if (len(updatedAllFlows) | len(flowsToDelete) | len(updatedAllGroups) | len(groupsToDelete)) == 0 {
-		log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -455,7 +455,7 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlo
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		if len(updatedAllGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedAllGroups) && len(updatedAllFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedAllFlows) {
-			log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
+			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
 			cancel()
 			return coreutils.DoneResponse(), nil
 		}
@@ -493,17 +493,17 @@ func (agent *DeviceAgent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp
 		return err
 	}
 	if errs := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); errs != nil {
-		log.Warnw("no-adapter-response", log.Fields{"device-id": agent.deviceID, "result": errs})
+		logger.Warnw("no-adapter-response", log.Fields{"device-id": agent.deviceID, "result": errs})
 		return status.Errorf(codes.Aborted, "flow-failure-device-%s", agent.deviceID)
 	}
 	return nil
 }
 
 func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	log.Debugw("delete-flows-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
+	logger.Debugw("delete-flows-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
 
 	if (len(flowsToDel) | len(groupsToDel)) == 0 {
-		log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -538,7 +538,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, f
 		}
 	}
 
-	log.Debugw("deleteFlowsAndGroups",
+	logger.Debugw("deleteFlowsAndGroups",
 		log.Fields{
 			"device-id":      agent.deviceID,
 			"flows-to-del":   len(flowsToDel),
@@ -549,7 +549,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, f
 
 	// Sanity check
 	if (len(flowsToKeep) | len(flowsToDel) | len(groupsToKeep) | len(groupsToDel)) == 0 {
-		log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows-to-del": flowsToDel, "groups-to-del": groupsToDel})
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows-to-del": flowsToDel, "groups-to-del": groupsToDel})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -565,7 +565,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, f
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		if len(groupsToKeep) != 0 && reflect.DeepEqual(existingGroups.Items, groupsToKeep) && len(flowsToKeep) != 0 && reflect.DeepEqual(existingFlows.Items, flowsToKeep) {
-			log.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flowsToDel": flowsToDel, "groupsToDel": groupsToDel})
+			logger.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flowsToDel": flowsToDel, "groupsToDel": groupsToDel})
 			cancel()
 			return coreutils.DoneResponse(), nil
 		}
@@ -609,10 +609,10 @@ func (agent *DeviceAgent) deleteFlowsAndGroups(ctx context.Context, flowsToDel [
 }
 
 func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	log.Debugw("updateFlowsAndGroups", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
+	logger.Debugw("updateFlowsAndGroups", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 
 	if (len(updatedFlows) | len(updatedGroups)) == 0 {
-		log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -634,11 +634,11 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, upd
 	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
 
 	if len(updatedGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedGroups) && len(updatedFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedFlows) {
-		log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 		return coreutils.DoneResponse(), nil
 	}
 
-	log.Debugw("updating-flows-and-groups",
+	logger.Debugw("updating-flows-and-groups",
 		log.Fields{
 			"device-id":      agent.deviceID,
 			"updated-flows":  updatedFlows,
@@ -692,7 +692,7 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, upd
 			}
 		}
 
-		log.Debugw("updating-flows-and-groups",
+		logger.Debugw("updating-flows-and-groups",
 			log.Fields{
 				"device-id":        agent.deviceID,
 				"flows-to-add":     flowsToAdd,
@@ -703,7 +703,7 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, upd
 
 		// Sanity check
 		if (len(flowsToAdd) | len(flowsToDelete) | len(groupsToAdd) | len(groupsToDelete) | len(updatedGroups)) == 0 {
-			log.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
+			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 			cancel()
 			return coreutils.DoneResponse(), nil
 		}
@@ -743,7 +743,7 @@ func (agent *DeviceAgent) updateFlowsAndGroups(ctx context.Context, updatedFlows
 
 //deleteAllFlows deletes all flows in the device table
 func (agent *DeviceAgent) deleteAllFlows(ctx context.Context) error {
-	log.Debugw("deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw("deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -765,12 +765,12 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("disableDevice", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("disableDevice", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 
 	if cloned.AdminState == voltha.AdminState_DISABLED {
-		log.Debugw("device-already-disabled", log.Fields{"id": agent.deviceID})
+		logger.Debugw("device-already-disabled", log.Fields{"id": agent.deviceID})
 		return nil
 	}
 	if cloned.AdminState == voltha.AdminState_PREPROVISIONED ||
@@ -801,7 +801,7 @@ func (agent *DeviceAgent) rebootDevice(ctx context.Context) error {
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("rebootDevice", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("rebootDevice", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceWithoutLock()
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
@@ -815,7 +815,7 @@ func (agent *DeviceAgent) rebootDevice(ctx context.Context) error {
 }
 
 func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
-	log.Debugw("deleteDevice", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("deleteDevice", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -852,7 +852,7 @@ func (agent *DeviceAgent) setParentID(ctx context.Context, device *voltha.Device
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	log.Debugw("setParentId", log.Fields{"device-id": device.Id, "parent-id": parentID})
+	logger.Debugw("setParentId", log.Fields{"device-id": device.Id, "parent-id": parentID})
 
 	cloned := agent.getDeviceWithoutLock()
 	cloned.ParentId = parentID
@@ -869,7 +869,7 @@ func (agent *DeviceAgent) updatePmConfigs(ctx context.Context, pmConfigs *voltha
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("updatePmConfigs", log.Fields{"device-id": pmConfigs.Id})
+	logger.Debugw("updatePmConfigs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.getDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
@@ -893,7 +893,7 @@ func (agent *DeviceAgent) initPmConfigs(ctx context.Context, pmConfigs *voltha.P
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("initPmConfigs", log.Fields{"device-id": pmConfigs.Id})
+	logger.Debugw("initPmConfigs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.getDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
@@ -913,7 +913,7 @@ func (agent *DeviceAgent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs,
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("listPmConfigs", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("listPmConfigs", log.Fields{"device-id": agent.deviceID})
 
 	return agent.getDeviceWithoutLock().PmConfigs, nil
 }
@@ -924,7 +924,7 @@ func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDo
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	log.Debugw("downloadImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("downloadImage", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceWithoutLock()
 
@@ -939,7 +939,7 @@ func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDo
 		cloned.ImageDownloads = []*voltha.ImageDownload{clonedImg}
 	} else {
 		if device.AdminState != voltha.AdminState_ENABLED {
-			log.Debugw("device-not-enabled", log.Fields{"id": agent.deviceID})
+			logger.Debugw("device-not-enabled", log.Fields{"id": agent.deviceID})
 			return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceID, voltha.AdminState_ENABLED)
 		}
 		// Save the image
@@ -983,7 +983,7 @@ func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.I
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	log.Debugw("cancelImageDownload", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("cancelImageDownload", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceWithoutLock()
 
@@ -1022,7 +1022,7 @@ func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDo
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("activateImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("activateImage", log.Fields{"device-id": agent.deviceID})
 	cloned := agent.getDeviceWithoutLock()
 
 	// Verify whether the Image is in the list of image being downloaded
@@ -1063,7 +1063,7 @@ func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDown
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("revertImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("revertImage", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -1098,7 +1098,7 @@ func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDown
 }
 
 func (agent *DeviceAgent) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	log.Debugw("getImageDownloadStatus", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("getImageDownloadStatus", log.Fields{"device-id": agent.deviceID})
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
@@ -1130,7 +1130,7 @@ func (agent *DeviceAgent) updateImageDownload(ctx context.Context, img *voltha.I
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
+	logger.Debugw("updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -1162,7 +1162,7 @@ func (agent *DeviceAgent) getImageDownload(ctx context.Context, img *voltha.Imag
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("getImageDownload", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("getImageDownload", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 	for _, image := range cloned.ImageDownloads {
@@ -1178,14 +1178,14 @@ func (agent *DeviceAgent) listImageDownloads(ctx context.Context, deviceID strin
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("listImageDownloads", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("listImageDownloads", log.Fields{"device-id": agent.deviceID})
 
 	return &voltha.ImageDownloads{Items: agent.getDeviceWithoutLock().ImageDownloads}, nil
 }
 
 // getPorts retrieves the ports information of the device based on the port type.
 func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
-	log.Debugw("getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
+	logger.Debugw("getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
 	ports := &voltha.Ports{}
 	if device, _ := agent.deviceMgr.GetDevice(ctx, agent.deviceID); device != nil {
 		for _, port := range device.Ports {
@@ -1199,7 +1199,7 @@ func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_Por
 
 // getSwitchCapability retrieves the switch capability of a parent device
 func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*ic.SwitchCapability, error) {
-	log.Debugw("getSwitchCapability", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("getSwitchCapability", log.Fields{"device-id": agent.deviceID})
 
 	cloned, err := agent.getDevice(ctx)
 	if err != nil {
@@ -1228,7 +1228,7 @@ func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*ic.SwitchCa
 
 // getPortCapability retrieves the port capability of a device
 func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) (*ic.PortCapability, error) {
-	log.Debugw("getPortCapability", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("getPortCapability", log.Fields{"device-id": agent.deviceID})
 	device, err := agent.getDevice(ctx)
 	if err != nil {
 		return nil, err
@@ -1265,7 +1265,7 @@ func (agent *DeviceAgent) onPacketFailure(rpc string, response interface{}, args
 	if err, ok := response.(error); ok {
 		errResp = err
 	}
-	log.Warnw("packet-out-error", log.Fields{
+	logger.Warnw("packet-out-error", log.Fields{
 		"device-id": agent.deviceID,
 		"error":     errResp,
 		"packet":    hex.EncodeToString(packet),
@@ -1298,20 +1298,20 @@ func (agent *DeviceAgent) processUpdate(ctx context.Context, args ...interface{}
 		var ok bool
 		if len(args) == 2 {
 			if previous, ok = args[0].(*voltha.Device); !ok {
-				log.Errorw("invalid-callback-type", log.Fields{"data": args[0]})
+				logger.Errorw("invalid-callback-type", log.Fields{"data": args[0]})
 				return nil
 			}
 			if current, ok = args[1].(*voltha.Device); !ok {
-				log.Errorw("invalid-callback-type", log.Fields{"data": args[1]})
+				logger.Errorw("invalid-callback-type", log.Fields{"data": args[1]})
 				return nil
 			}
 		} else {
-			log.Errorw("too-many-args-in-callback", log.Fields{"len": len(args)})
+			logger.Errorw("too-many-args-in-callback", log.Fields{"len": len(args)})
 			return nil
 		}
 		// Perform the state transition in it's own go routine
 		if err := agent.deviceMgr.processTransition(context.Background(), previous, current); err != nil {
-			log.Errorw("failed-process-transition", log.Fields{"device-id": previous.Id,
+			logger.Errorw("failed-process-transition", log.Fields{"device-id": previous.Id,
 				"previous-admin-state": previous.AdminState, "current-admin-state": current.AdminState})
 		}
 		return nil
@@ -1339,7 +1339,7 @@ func (agent *DeviceAgent) updateDeviceUsingAdapterData(ctx context.Context, devi
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("updateDeviceUsingAdapterData", log.Fields{"device-id": device.Id})
+	logger.Debugw("updateDeviceUsingAdapterData", log.Fields{"device-id": device.Id})
 
 	updatedDevice, err := agent.mergeDeviceInfoFromAdapter(device)
 	if err != nil {
@@ -1350,7 +1350,7 @@ func (agent *DeviceAgent) updateDeviceUsingAdapterData(ctx context.Context, devi
 }
 
 func (agent *DeviceAgent) updateDeviceWithoutLock(ctx context.Context, device *voltha.Device) error {
-	log.Debugw("updateDevice", log.Fields{"deviceId": device.Id})
+	logger.Debugw("updateDevice", log.Fields{"deviceId": device.Id})
 	//cloned := proto.Clone(device).(*voltha.Device)
 	cloned := device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
@@ -1366,20 +1366,20 @@ func (agent *DeviceAgent) updateDeviceStatus(ctx context.Context, operStatus vol
 
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
 	if s, ok := voltha.ConnectStatus_Types_value[connStatus.String()]; ok {
-		log.Debugw("updateDeviceStatus-conn", log.Fields{"ok": ok, "val": s})
+		logger.Debugw("updateDeviceStatus-conn", log.Fields{"ok": ok, "val": s})
 		cloned.ConnectStatus = connStatus
 	}
 	if s, ok := voltha.OperStatus_Types_value[operStatus.String()]; ok {
-		log.Debugw("updateDeviceStatus-oper", log.Fields{"ok": ok, "val": s})
+		logger.Debugw("updateDeviceStatus-oper", log.Fields{"ok": ok, "val": s})
 		cloned.OperStatus = operStatus
 	}
-	log.Debugw("updateDeviceStatus", log.Fields{"deviceId": cloned.Id, "operStatus": cloned.OperStatus, "connectStatus": cloned.ConnectStatus})
+	logger.Debugw("updateDeviceStatus", log.Fields{"deviceId": cloned.Id, "operStatus": cloned.OperStatus, "connectStatus": cloned.ConnectStatus})
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
 func (agent *DeviceAgent) updatePortsOperState(ctx context.Context, operStatus voltha.OperStatus_Types) error {
-	log.Debugw("updatePortsOperState", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw("updatePortsOperState", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1410,13 +1410,13 @@ func (agent *DeviceAgent) updatePortState(ctx context.Context, portType voltha.P
 			port.OperStatus = operStatus
 		}
 	}
-	log.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
+	logger.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
 func (agent *DeviceAgent) deleteAllPorts(ctx context.Context) error {
-	log.Debugw("deleteAllPorts", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw("deleteAllPorts", log.Fields{"deviceId": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1426,16 +1426,16 @@ func (agent *DeviceAgent) deleteAllPorts(ctx context.Context) error {
 
 	if cloned.AdminState != voltha.AdminState_DISABLED && cloned.AdminState != voltha.AdminState_DELETED {
 		err := status.Error(codes.FailedPrecondition, fmt.Sprintf("invalid-state-%v", cloned.AdminState))
-		log.Warnw("invalid-state-removing-ports", log.Fields{"state": cloned.AdminState, "error": err})
+		logger.Warnw("invalid-state-removing-ports", log.Fields{"state": cloned.AdminState, "error": err})
 		return err
 	}
 	if len(cloned.Ports) == 0 {
-		log.Debugw("no-ports-present", log.Fields{"deviceId": agent.deviceID})
+		logger.Debugw("no-ports-present", log.Fields{"deviceId": agent.deviceID})
 		return nil
 	}
 
 	cloned.Ports = []*voltha.Port{}
-	log.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
+	logger.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
@@ -1445,26 +1445,26 @@ func (agent *DeviceAgent) addPort(ctx context.Context, port *voltha.Port) error 
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("addPort", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw("addPort", log.Fields{"deviceId": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 	updatePort := false
 	if cloned.Ports == nil {
 		//	First port
-		log.Debugw("addPort-first-port-to-add", log.Fields{"deviceId": agent.deviceID})
+		logger.Debugw("addPort-first-port-to-add", log.Fields{"deviceId": agent.deviceID})
 		cloned.Ports = make([]*voltha.Port, 0)
 	} else {
 		for _, p := range cloned.Ports {
 			if p.Type == port.Type && p.PortNo == port.PortNo {
 				if p.Label == "" && p.Type == voltha.Port_PON_OLT {
 					//Creation of OLT PON port is being processed after a default PON port was created.  Just update it.
-					log.Infow("update-pon-port-created-by-default", log.Fields{"default-port": p, "port-to-add": port})
+					logger.Infow("update-pon-port-created-by-default", log.Fields{"default-port": p, "port-to-add": port})
 					p.Label = port.Label
 					p.OperStatus = port.OperStatus
 					updatePort = true
 					break
 				}
-				log.Debugw("port already exists", log.Fields{"port": port})
+				logger.Debugw("port already exists", log.Fields{"port": port})
 				return nil
 			}
 		}
@@ -1484,7 +1484,7 @@ func (agent *DeviceAgent) addPeerPort(ctx context.Context, peerPort *voltha.Port
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("adding-peer-peerPort", log.Fields{"device-id": agent.deviceID, "peer-peerPort": peerPort})
+	logger.Debugw("adding-peer-peerPort", log.Fields{"device-id": agent.deviceID, "peer-peerPort": peerPort})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -1494,7 +1494,7 @@ func (agent *DeviceAgent) addPeerPort(ctx context.Context, peerPort *voltha.Port
 		if port.PortNo == peerPort.PortNo { // found peerPort
 			cp := proto.Clone(peerPort).(*voltha.Port_PeerPort)
 			port.Peers = append(port.Peers, cp)
-			log.Debugw("found-peer", log.Fields{"device-id": agent.deviceID, "portNo": peerPort.PortNo, "deviceId": agent.deviceID})
+			logger.Debugw("found-peer", log.Fields{"device-id": agent.deviceID, "portNo": peerPort.PortNo, "deviceId": agent.deviceID})
 			found = true
 			break
 		}
@@ -1510,7 +1510,7 @@ func (agent *DeviceAgent) addPeerPort(ctx context.Context, peerPort *voltha.Port
 			Peers:      []*voltha.Port_PeerPort{proto.Clone(peerPort).(*voltha.Port_PeerPort)},
 		}
 		cloned.Ports = append(cloned.Ports, ponPort)
-		log.Infow("adding-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
+		logger.Infow("adding-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
 	}
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
@@ -1519,7 +1519,7 @@ func (agent *DeviceAgent) addPeerPort(ctx context.Context, peerPort *voltha.Port
 // TODO: A generic device update by attribute
 func (agent *DeviceAgent) updateDeviceAttribute(ctx context.Context, name string, value interface{}) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		log.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "name": name, "error": err})
+		logger.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "name": name, "error": err})
 		return
 	}
 	defer agent.requestQueue.RequestComplete()
@@ -1547,11 +1547,11 @@ func (agent *DeviceAgent) updateDeviceAttribute(ctx context.Context, name string
 			}
 		}
 	}
-	log.Debugw("update-field-status", log.Fields{"deviceId": cloned.Id, "name": name, "updated": updated})
+	logger.Debugw("update-field-status", log.Fields{"deviceId": cloned.Id, "name": name, "updated": updated})
 	//	Save the data
 
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, ""); err != nil {
-		log.Warnw("attribute-update-failed", log.Fields{"attribute": name, "value": value})
+		logger.Warnw("attribute-update-failed", log.Fields{"attribute": name, "value": value})
 	}
 }
 
@@ -1560,7 +1560,7 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("simulateAlarm", log.Fields{"id": agent.deviceID})
+	logger.Debugw("simulateAlarm", log.Fields{"id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -1585,7 +1585,7 @@ func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(ctx context.Context, de
 	if afterUpdate == nil {
 		return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceID)
 	}
-	log.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
+	logger.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
 
 	agent.device = proto.Clone(device).(*voltha.Device)
 
@@ -1600,7 +1600,7 @@ func (agent *DeviceAgent) updateDeviceReason(ctx context.Context, reason string)
 
 	cloned := agent.getDeviceWithoutLock()
 	cloned.Reason = reason
-	log.Debugw("updateDeviceReason", log.Fields{"deviceId": cloned.Id, "reason": cloned.Reason})
+	logger.Debugw("updateDeviceReason", log.Fields{"deviceId": cloned.Id, "reason": cloned.Reason})
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
@@ -1610,7 +1610,7 @@ func (agent *DeviceAgent) disablePort(ctx context.Context, Port *voltha.Port) er
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("disablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
+	logger.Debugw("disablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
 	var cp *voltha.Port
 	// Get the most up to date the device info
 	device := agent.getDeviceWithoutLock()
@@ -1631,7 +1631,7 @@ func (agent *DeviceAgent) disablePort(ctx context.Context, Port *voltha.Port) er
 	}
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
-		log.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		logger.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
 		return err
 	}
 
@@ -1651,7 +1651,7 @@ func (agent *DeviceAgent) enablePort(ctx context.Context, Port *voltha.Port) err
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	log.Debugw("enablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
+	logger.Debugw("enablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
 
 	var cp *voltha.Port
 	// Get the most up to date the device info
@@ -1673,7 +1673,7 @@ func (agent *DeviceAgent) enablePort(ctx context.Context, Port *voltha.Port) err
 	}
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
-		log.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		logger.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
 		return err
 	}
 	//send request to adapter
@@ -1693,7 +1693,7 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	log.Debugw("childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-ud": agent.deviceID})
+	logger.Debugw("childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-ud": agent.deviceID})
 
 	//Remove the associated peer ports on the parent device
 	parentDevice := agent.getDeviceWithoutLock()
@@ -1756,6 +1756,6 @@ func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *vo
 	if err := ptypes.UnmarshalAny(rpcResponse.Reply, testResp); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 	}
-	log.Debugw("Omci_test_Request-Success-device-agent", log.Fields{"testResp": testResp})
+	logger.Debugw("Omci_test_Request-Success-device-agent", log.Fields{"testResp": testResp})
 	return testResp, nil
 }

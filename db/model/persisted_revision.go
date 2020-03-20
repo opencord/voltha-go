@@ -74,20 +74,20 @@ func (pr *PersistedRevision) store(ctx context.Context, skipOnExist bool) {
 		return
 	}
 
-	log.Debugw("ready-to-store-revision", log.Fields{"hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetData()})
+	logger.Debugw("ready-to-store-revision", log.Fields{"hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetData()})
 
 	// clone the revision data to avoid any race conditions with processes
 	// accessing the same data
 	cloned := proto.Clone(pr.GetConfig().Data.(proto.Message))
 
 	if blob, err := proto.Marshal(cloned); err != nil {
-		log.Errorw("problem-to-marshal", log.Fields{"error": err, "hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetData()})
+		logger.Errorw("problem-to-marshal", log.Fields{"error": err, "hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetData()})
 	} else {
 		if pr.Compress {
 			var b bytes.Buffer
 			w := gzip.NewWriter(&b)
 			if _, err := w.Write(blob); err != nil {
-				log.Errorw("Unable to write a compressed form of p to the underlying io.Writer.", log.Fields{"error": err})
+				logger.Errorw("Unable to write a compressed form of p to the underlying io.Writer.", log.Fields{"error": err})
 			}
 			w.Close()
 			blob = b.Bytes()
@@ -95,9 +95,9 @@ func (pr *PersistedRevision) store(ctx context.Context, skipOnExist bool) {
 
 		getRevCache().Set(pr.GetName(), pr)
 		if err := pr.kvStore.Put(ctx, pr.GetName(), blob); err != nil {
-			log.Warnw("problem-storing-revision", log.Fields{"error": err, "hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetConfig().Data})
+			logger.Warnw("problem-storing-revision", log.Fields{"error": err, "hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetConfig().Data})
 		} else {
-			log.Debugw("storing-revision", log.Fields{"hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetConfig().Data, "version": pr.getVersion()})
+			logger.Debugw("storing-revision", log.Fields{"hash": pr.GetHash(), "name": pr.GetName(), "data": pr.GetConfig().Data, "version": pr.getVersion()})
 			pr.isStored = true
 		}
 	}
@@ -105,7 +105,7 @@ func (pr *PersistedRevision) store(ctx context.Context, skipOnExist bool) {
 
 // UpdateData modifies the information in the data model and saves it in the persistent storage
 func (pr *PersistedRevision) UpdateData(ctx context.Context, data interface{}, branch *Branch) Revision {
-	log.Debugw("updating-persisted-data", log.Fields{"hash": pr.GetHash()})
+	logger.Debugw("updating-persisted-data", log.Fields{"hash": pr.GetHash()})
 
 	newNPR := pr.Revision.UpdateData(ctx, data, branch)
 
@@ -130,7 +130,7 @@ func (pr *PersistedRevision) UpdateData(ctx context.Context, data interface{}, b
 
 // UpdateChildren modifies the children of a revision and of a specific component and saves it in the persistent storage
 func (pr *PersistedRevision) UpdateChildren(ctx context.Context, name string, children []Revision, branch *Branch) Revision {
-	log.Debugw("updating-persisted-children", log.Fields{"hash": pr.GetHash()})
+	logger.Debugw("updating-persisted-children", log.Fields{"hash": pr.GetHash()})
 
 	newNPR := pr.Revision.UpdateChildren(ctx, name, children, branch)
 
@@ -154,7 +154,7 @@ func (pr *PersistedRevision) UpdateChildren(ctx context.Context, name string, ch
 
 // UpdateAllChildren modifies the children for all components of a revision and saves it in the peristent storage
 func (pr *PersistedRevision) UpdateAllChildren(ctx context.Context, children map[string][]Revision, branch *Branch) Revision {
-	log.Debugw("updating-all-persisted-children", log.Fields{"hash": pr.GetHash()})
+	logger.Debugw("updating-all-persisted-children", log.Fields{"hash": pr.GetHash()})
 
 	newNPR := pr.Revision.UpdateAllChildren(ctx, children, branch)
 
@@ -185,21 +185,21 @@ func (pr *PersistedRevision) Drop(txid string, includeConfig bool) {
 // StorageDrop takes care of eliminating a revision hash that is no longer needed
 // and its associated config when required
 func (pr *PersistedRevision) StorageDrop(ctx context.Context, txid string, includeConfig bool) {
-	log.Debugw("dropping-revision", log.Fields{"txid": txid, "hash": pr.GetHash(), "config-hash": pr.GetConfig().Hash, "key": pr.GetName(), "isStored": pr.isStored})
+	logger.Debugw("dropping-revision", log.Fields{"txid": txid, "hash": pr.GetHash(), "config-hash": pr.GetConfig().Hash, "key": pr.GetName(), "isStored": pr.isStored})
 
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 	if pr.kvStore != nil && txid == "" {
 		if err := pr.kvStore.Delete(ctx, pr.GetName()); err != nil {
-			log.Errorw("failed-to-remove-revision", log.Fields{"hash": pr.GetHash(), "error": err.Error()})
+			logger.Errorw("failed-to-remove-revision", log.Fields{"hash": pr.GetHash(), "error": err.Error()})
 		} else {
 			pr.isStored = false
 		}
 	} else {
 		if includeConfig {
-			log.Debugw("attempted-to-remove-transacted-revision-config", log.Fields{"hash": pr.GetConfig().Hash, "txid": txid})
+			logger.Debugw("attempted-to-remove-transacted-revision-config", log.Fields{"hash": pr.GetConfig().Hash, "txid": txid})
 		}
-		log.Debugw("attempted-to-remove-transacted-revision", log.Fields{"hash": pr.GetHash(), "txid": txid})
+		logger.Debugw("attempted-to-remove-transacted-revision", log.Fields{"hash": pr.GetHash(), "txid": txid})
 	}
 
 	pr.Revision.Drop(txid, includeConfig)
@@ -221,7 +221,7 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 		// Verify if the data differs from what was retrieved from persistence
 		// Also check if we are treating a newer revision of the data or not
 		if childRev.GetData().(proto.Message).String() != data.(proto.Message).String() && childRev.getVersion() < version {
-			log.Debugw("revision-data-is-different", log.Fields{
+			logger.Debugw("revision-data-is-different", log.Fields{
 				"key":               childRev.GetHash(),
 				"name":              childRev.GetName(),
 				"data":              childRev.GetData(),
@@ -266,7 +266,7 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 			parent.GetBranch(NONE).Latest.ChildDrop(typeName, childRev.GetHash())
 
 			if updatedChildRev != nil {
-				log.Debugw("verify-persisted-entry--adding-child", log.Fields{
+				logger.Debugw("verify-persisted-entry--adding-child", log.Fields{
 					"key":  updatedChildRev.GetHash(),
 					"name": updatedChildRev.GetName(),
 					"data": updatedChildRev.GetData(),
@@ -274,7 +274,7 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 				response = updatedChildRev
 			}
 		} else {
-			log.Debugw("keeping-revision-data", log.Fields{
+			logger.Debugw("keeping-revision-data", log.Fields{
 				"key":                 childRev.GetHash(),
 				"name":                childRev.GetName(),
 				"data":                childRev.GetData(),
@@ -294,7 +294,7 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 	} else {
 		// There is no available child with that key value.
 		// Create a new child and update the parent revision.
-		log.Debugw("no-such-revision-entry", log.Fields{
+		logger.Debugw("no-such-revision-entry", log.Fields{
 			"key":     keyValue,
 			"name":    typeName,
 			"data":    data,
@@ -332,7 +332,7 @@ func (pr *PersistedRevision) verifyPersistedEntry(ctx context.Context, data inte
 
 		// Child entry is valid and can be included in the response object
 		if childRev != nil {
-			log.Debugw("adding-revision-to-response", log.Fields{
+			logger.Debugw("adding-revision-to-response", log.Fields{
 				"key":  childRev.GetHash(),
 				"name": childRev.GetName(),
 				"data": childRev.GetData(),
@@ -350,7 +350,7 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 
-	log.Debugw("loading-from-persistence", log.Fields{"path": path, "txid": txid})
+	logger.Debugw("loading-from-persistence", log.Fields{"path": path, "txid": txid})
 
 	var response []Revision
 	var err error
@@ -361,10 +361,10 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 
 	if pr.kvStore != nil && path != "" {
 		if len(blobs) == 0 {
-			log.Debugw("retrieve-from-kv", log.Fields{"path": path, "txid": txid})
+			logger.Debugw("retrieve-from-kv", log.Fields{"path": path, "txid": txid})
 
 			if blobs, err = pr.kvStore.List(ctx, path); err != nil {
-				log.Errorw("failed-to-retrieve-data-from-kvstore", log.Fields{"error": err})
+				logger.Errorw("failed-to-retrieve-data-from-kvstore", log.Fields{"error": err})
 				return nil, err
 			}
 		}
@@ -384,7 +384,7 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 		field := ChildrenFields(nodeType)[name]
 
 		if field != nil && field.IsContainer {
-			log.Debugw("parsing-data-blobs", log.Fields{
+			logger.Debugw("parsing-data-blobs", log.Fields{
 				"path": path,
 				"name": name,
 				"size": len(blobs),
@@ -396,14 +396,14 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 				data := reflect.New(field.ClassType.Elem())
 
 				if err := proto.Unmarshal(output, data.Interface().(proto.Message)); err != nil {
-					log.Errorw("failed-to-unmarshal", log.Fields{
+					logger.Errorw("failed-to-unmarshal", log.Fields{
 						"path":  path,
 						"txid":  txid,
 						"error": err,
 					})
 				} else if path == "" {
 					if field.Key != "" {
-						log.Debugw("no-path-with-container-key", log.Fields{
+						logger.Debugw("no-path-with-container-key", log.Fields{
 							"path": path,
 							"txid": txid,
 							"data": data.Interface(),
@@ -417,7 +417,7 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 							response = append(response, entry)
 						}
 					} else {
-						log.Debugw("path-with-no-container-key", log.Fields{
+						logger.Debugw("path-with-no-container-key", log.Fields{
 							"path": path,
 							"txid": txid,
 							"data": data.Interface(),
@@ -425,7 +425,7 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 					}
 
 				} else if field.Key != "" {
-					log.Debugw("path-with-container-key", log.Fields{
+					logger.Debugw("path-with-container-key", log.Fields{
 						"path": path,
 						"txid": txid,
 						"data": data.Interface(),
@@ -446,9 +446,9 @@ func (pr *PersistedRevision) LoadFromPersistence(ctx context.Context, path strin
 				}
 			}
 
-			log.Debugw("no-more-data-blobs", log.Fields{"path": path, "name": name})
+			logger.Debugw("no-more-data-blobs", log.Fields{"path": path, "name": name})
 		} else {
-			log.Debugw("cannot-process-field", log.Fields{
+			logger.Debugw("cannot-process-field", log.Fields{
 				"type": pr.GetBranch().Node.Type,
 				"name": name,
 			})

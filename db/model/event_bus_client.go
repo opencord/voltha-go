@@ -17,7 +17,6 @@
 package model
 
 import (
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
@@ -32,5 +31,5 @@ func NewEventBusClient() *EventBusClient {
 
 // Publish sends a event to the bus
 func (ebc *EventBusClient) Publish(topic string, event voltha.ConfigEvent) {
-	log.Debugf("publishing event:%+v, topic:%s\n", event, topic)
+	logger.Debugf("publishing event:%+v, topic:%s\n", event, topic)
 }

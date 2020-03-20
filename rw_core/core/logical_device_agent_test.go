@@ -22,7 +22,6 @@ import (
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -377,7 +376,7 @@ func newLDATest() *LDATest {
 	var err error
 	test.etcdServer, test.kvClientPort, err = startEmbeddedEtcdServer("voltha.rwcore.lda.test", "voltha.rwcore.lda.etcd", "error")
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	// Create the kafka client
 	test.kClient = lm.NewKafkaClient()
@@ -454,7 +453,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
-		log.Fatal("Cannot get a freeport for grpc")
+		logger.Fatal("Cannot get a freeport for grpc")
 	}
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
@@ -463,7 +462,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	lda.core = NewCore(ctx, lda.coreInstanceID, cfg, client, lda.kClient)
 	err = lda.core.Start(ctx)
 	if err != nil {
-		log.Fatal("Cannot start core")
+		logger.Fatal("Cannot start core")
 	}
 }
 

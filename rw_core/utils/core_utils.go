@@ -83,7 +83,7 @@ func (rq *RequestQueue) Start() {
 		for {
 			req, ok := <-rq.queue
 			if !ok {
-				log.Warnw("request-sequencer-queue-closed", log.Fields{"id": rq.queueID})
+				logger.Warnw("request-sequencer-queue-closed", log.Fields{"id": rq.queueID})
 				break
 			}
 			// If the request is waiting then closing the reqChnl will trigger the request to proceed.  Otherwise,

@@ -20,17 +20,16 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
 var callbackMutex sync.Mutex
 
 func commonChanCallback(ctx context.Context, args ...interface{}) interface{} {
-	log.Infof("Running common callback - arg count: %d", len(args))
+	logger.Infof("Running common callback - arg count: %d", len(args))
 
 	//for i := 0; i < len(args); i++ {
-	//	log.Infof("ARG %d : %+v", i, args[i])
+	//	logger.Infof("ARG %d : %+v", i, args[i])
 	//}
 
 	callbackMutex.Lock()
@@ -40,7 +39,7 @@ func commonChanCallback(ctx context.Context, args ...interface{}) interface{} {
 
 	// Inform the caller that the callback was executed
 	if *execDoneChan != nil {
-		log.Infof("Sending completion indication - stack:%s", string(debug.Stack()))
+		logger.Infof("Sending completion indication - stack:%s", string(debug.Stack()))
 		close(*execDoneChan)
 		*execDoneChan = nil
 	}
@@ -49,16 +48,16 @@ func commonChanCallback(ctx context.Context, args ...interface{}) interface{} {
 }
 
 func commonCallback2(ctx context.Context, args ...interface{}) interface{} {
-	log.Infof("Running common2 callback - arg count: %d %+v", len(args), args)
+	logger.Infof("Running common2 callback - arg count: %d %+v", len(args), args)
 
 	return nil
 }
 
 func commonCallbackFunc(ctx context.Context, args ...interface{}) interface{} {
-	log.Infof("Running common callback - arg count: %d", len(args))
+	logger.Infof("Running common callback - arg count: %d", len(args))
 
 	for i := 0; i < len(args); i++ {
-		log.Infof("ARG %d : %+v", i, args[i])
+		logger.Infof("ARG %d : %+v", i, args[i])
 	}
 	execStatusFunc := args[1].(func(bool))
 
@@ -71,14 +70,14 @@ func commonCallbackFunc(ctx context.Context, args ...interface{}) interface{} {
 func firstCallback(ctx context.Context, args ...interface{}) interface{} {
 	name := args[0]
 	id := args[1]
-	log.Infof("Running first callback - name: %s, id: %s\n", name, id)
+	logger.Infof("Running first callback - name: %s, id: %s\n", name, id)
 	return nil
 }
 
 func secondCallback(ctx context.Context, args ...interface{}) interface{} {
 	name := args[0].(map[string]string)
 	id := args[1]
-	log.Infof("Running second callback - name: %s, id: %f\n", name["name"], id)
+	logger.Infof("Running second callback - name: %s, id: %f\n", name["name"], id)
 	// FIXME: the panic call seem to interfere with the logging mechanism
 	//panic("Generating a panic in second callback")
 	return nil
@@ -87,6 +86,6 @@ func secondCallback(ctx context.Context, args ...interface{}) interface{} {
 func thirdCallback(ctx context.Context, args ...interface{}) interface{} {
 	name := args[0]
 	id := args[1].(*voltha.Device)
-	log.Infof("Running third callback - name: %+v, id: %s\n", name, id.Id)
+	logger.Infof("Running third callback - name: %+v, id: %s\n", name, id.Id)
 	return nil
 }

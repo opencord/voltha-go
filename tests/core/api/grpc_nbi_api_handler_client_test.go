@@ -50,29 +50,7 @@ Prerequite:  These tests require the rw_core to run prior to executing these tes
 
 var devices map[string]*voltha.Device
 
-//func init() {
-//	log.AddPackage(log.JSON, log.ErrorLevel, nil)
-//	log.UpdateAllLoggers(log.Fields{"instanceId": "testing"})
-//	log.SetAllLogLevel(log.ErrorLevel)
-//
-//	//Start kafka and Etcd
-//	startKafkaEtcd()
-//	time.Sleep(10 * time.Second) //TODO: Find a better way to ascertain they are up
-//
-//	stub = setupGrpcConnection()
-//	stub = voltha.NewVolthaServiceClient(conn)
-//	devices = make(map[string]*voltha.Device)
-//}
-
 func setup() {
-	var err error
-
-	if _, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
-	}
-	log.UpdateAllLoggers(log.Fields{"instanceId": "testing"})
-	log.SetAllLogLevel(log.ErrorLevel)
-
 	//Start kafka and Etcd
 	startKafka()
 	startEtcd()
@@ -90,7 +68,7 @@ func setupGrpcConnection() voltha.VolthaServiceClient {
 	var err error
 	conn, err = grpc.Dial(grpcHost, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %s", err)
+		logger.Fatalf("did not connect: %s", err)
 	}
 	return voltha.NewVolthaServiceClient(conn)
 }
@@ -99,7 +77,7 @@ func clearAllDevices(clearMap bool) {
 	for key, _ := range devices {
 		ctx := context.Background()
 		response, err := stub.DeleteDevice(ctx, &voltha.ID{Id: key})
-		log.Infow("response", log.Fields{"res": response, "error": err})
+		logger.Infow("response", log.Fields{"res": response, "error": err})
 		if clearMap {
 			delete(devices, key)
 		}
@@ -127,7 +105,7 @@ func startKafka() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/docker-compose-zk-kafka-test.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -136,7 +114,7 @@ func startEtcd() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/docker-compose-etcd.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -147,7 +125,7 @@ func stopKafka() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -158,7 +136,7 @@ func stopEtcd() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -167,7 +145,7 @@ func startCore() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/rw_core.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -178,7 +156,7 @@ func stopCore() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -187,7 +165,7 @@ func startSimulatedOLTAndONUAdapters() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/adapters-simulated.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -198,7 +176,7 @@ func stopSimulatedOLTAndONUAdapters() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -219,7 +197,7 @@ func TestListDeviceIds(t *testing.T) {
 		ctx := context.Background()
 		device := &voltha.Device{Type: "simulated_olt"}
 		response, err := stub.CreateDevice(ctx, device)
-		log.Infow("response", log.Fields{"res": response, "error": err})
+		logger.Infow("response", log.Fields{"res": response, "error": err})
 		assert.NotNil(t, response)
 		assert.Nil(t, err)
 		devices[response.Id] = response
@@ -228,7 +206,7 @@ func TestListDeviceIds(t *testing.T) {
 	//3. Verify devices have been added correctly
 	ctx := context.Background()
 	response, err := stub.ListDeviceIds(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.True(t, hasAllIds(response))
 
@@ -258,14 +236,14 @@ func TestReconcileDevices(t *testing.T) {
 		ctx := context.Background()
 		device := &voltha.Device{Type: "simulated_olt"}
 		response, err := stub.CreateDevice(ctx, device)
-		log.Infow("response", log.Fields{"res": response, "error": err})
+		logger.Infow("response", log.Fields{"res": response, "error": err})
 		assert.Nil(t, err)
 		devices[response.Id] = response
 	}
 	//3. Verify devices have been added correctly
 	ctx := context.Background()
 	response, err := stub.ListDeviceIds(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.True(t, hasAllIds(response))
 
@@ -282,7 +260,7 @@ func TestReconcileDevices(t *testing.T) {
 	//6. Verify there are no devices left
 	ctx = context.Background()
 	response, err = stub.ListDeviceIds(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.Equal(t, len(response.Items), 0)
 
@@ -298,7 +276,7 @@ func TestReconcileDevices(t *testing.T) {
 	//8. Verify all devices have been restored
 	ctx = context.Background()
 	response, err = stub.ListDeviceIds(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.True(t, hasAllIds(response))
 
@@ -340,7 +318,7 @@ func TestDeviceManagement(t *testing.T) {
 		randomMacAddress := strings.ToUpper(com.GetRandomMacAddress())
 		device := &voltha.Device{Type: "simulated_olt", MacAddress: randomMacAddress}
 		response, err := stub.CreateDevice(ctx, device)
-		log.Infow("response", log.Fields{"res": response, "error": err})
+		logger.Infow("response", log.Fields{"res": response, "error": err})
 		assert.Nil(t, err)
 		devices[response.Id] = response
 	}
@@ -349,7 +327,7 @@ func TestDeviceManagement(t *testing.T) {
 	for id, _ := range devices {
 		ctx := context.Background()
 		response, err := stub.EnableDevice(ctx, &common.ID{Id: id})
-		log.Infow("response", log.Fields{"res": response, "error": err})
+		logger.Infow("response", log.Fields{"res": response, "error": err})
 		assert.Nil(t, err)
 	}
 
@@ -366,7 +344,7 @@ func TestDeviceManagement(t *testing.T) {
 	//5. Verify that all devices are in enabled state
 	ctx := context.Background()
 	response, err := stub.ListDevices(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices)*2, len(response.Items))
 	for _, d := range response.Items {
@@ -377,7 +355,7 @@ func TestDeviceManagement(t *testing.T) {
 	//6. Get the logical devices
 	ctx = context.Background()
 	lresponse, lerr := stub.ListLogicalDevices(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": lerr})
+	logger.Infow("response", log.Fields{"res": response, "error": lerr})
 	assert.Nil(t, lerr)
 	assert.Equal(t, numberOfOLTDevices, len(lresponse.Items))
 	for _, ld := range lresponse.Items {
@@ -391,7 +369,7 @@ func TestDeviceManagement(t *testing.T) {
 		ctx := context.Background()
 		if d.Type == "simulated_onu" {
 			response, err := stub.DisableDevice(ctx, &common.ID{Id: id})
-			log.Infow("response", log.Fields{"res": response, "error": err})
+			logger.Infow("response", log.Fields{"res": response, "error": err})
 			assert.Nil(t, err)
 		}
 	}
@@ -401,7 +379,7 @@ func TestDeviceManagement(t *testing.T) {
 
 	ctx = context.Background()
 	response, err = stub.ListDevices(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices), len(response.Items))
 	for _, d := range response.Items {
@@ -415,7 +393,7 @@ func TestDeviceManagement(t *testing.T) {
 
 	ctx = context.Background()
 	lresponse, lerr = stub.ListLogicalDevices(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": lerr})
+	logger.Infow("response", log.Fields{"res": response, "error": lerr})
 	assert.Nil(t, lerr)
 	assert.Equal(t, numberOfOLTDevices, len(lresponse.Items))
 	for _, ld := range lresponse.Items {
@@ -429,7 +407,7 @@ func TestDeviceManagement(t *testing.T) {
 		ctx := context.Background()
 		if d.Type == "simulated_onu" {
 			response, err := stub.EnableDevice(ctx, &common.ID{Id: id})
-			log.Infow("response", log.Fields{"res": response, "error": err})
+			logger.Infow("response", log.Fields{"res": response, "error": err})
 			assert.Nil(t, err)
 		}
 	}
@@ -439,7 +417,7 @@ func TestDeviceManagement(t *testing.T) {
 
 	ctx = context.Background()
 	response, err = stub.ListDevices(ctx, &empty.Empty{})
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices), len(response.Items))
 	for _, d := range response.Items {
@@ -449,7 +427,7 @@ func TestDeviceManagement(t *testing.T) {
 
 	//ctx = context.Background()
 	//lresponse, lerr = stub.ListLogicalDevices(ctx, &empty.Empty{})
-	//log.Infow("response", log.Fields{"res": response, "error": lerr})
+	//logger.Infow("response", log.Fields{"res": response, "error": lerr})
 	//assert.Nil(t, lerr)
 	//assert.Equal(t, numberOfOLTDevices, len(lresponse.Items))
 	//for _, ld := range (lresponse.Items) {
@@ -492,7 +470,7 @@ func TestUpdateLogLevelError(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	level := voltha.Logging{PackageName: "github.com/opencord/voltha-go/rw_core/core", Level: common.LogLevel_ERROR}
 	response, err := stub.UpdateLogLevel(ctx, &level)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -509,7 +487,7 @@ func TestUpdateLogLevelDebug(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	level := voltha.Logging{PackageName: "github.com/opencord/voltha-go/rw_core/core", Level: common.LogLevel_DEBUG}
 	response, err := stub.UpdateLogLevel(ctx, &level)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -601,7 +579,7 @@ func TestCreateDevice(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	device := &voltha.Device{Id: "newdevice"}
 	response, err := stub.CreateDevice(ctx, device)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &voltha.Device{Id: "newdevice"}, response)
 	assert.Nil(t, err)
 }
@@ -610,7 +588,7 @@ func TestEnableDevice(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	id := &voltha.ID{Id: "enabledevice"}
 	response, err := stub.EnableDevice(ctx, id)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -619,7 +597,7 @@ func TestDisableDevice(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	id := &voltha.ID{Id: "DisableDevice"}
 	response, err := stub.DisableDevice(ctx, id)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -628,7 +606,7 @@ func TestRebootDevice(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	id := &voltha.ID{Id: "RebootDevice"}
 	response, err := stub.RebootDevice(ctx, id)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -637,7 +615,7 @@ func TestDeleteDevice(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	id := &voltha.ID{Id: "DeleteDevice"}
 	response, err := stub.DeleteDevice(ctx, id)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -647,9 +625,9 @@ func TestEnableLogicalDevicePort(t *testing.T) {
 	id := &voltha.LogicalPortId{Id: "EnableLogicalDevicePort"}
 	response, err := stub.EnableLogicalDevicePort(ctx, id)
 	if e, ok := status.FromError(err); ok {
-		log.Infow("response", log.Fields{"error": err, "errorcode": e.Code(), "msg": e.Message()})
+		logger.Infow("response", log.Fields{"error": err, "errorcode": e.Code(), "msg": e.Message()})
 	}
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -658,7 +636,7 @@ func TestDisableLogicalDevicePort(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	id := &voltha.LogicalPortId{Id: "DisableLogicalDevicePort"}
 	response, err := stub.DisableLogicalDevicePort(ctx, id)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }
@@ -667,7 +645,7 @@ func TestUpdateLogicalDeviceFlowGroupTable(t *testing.T) {
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs(testMode, "true"))
 	flow := &openflow_13.FlowGroupTableUpdate{Id: "UpdateLogicalDeviceFlowGroupTable"}
 	response, err := stub.UpdateLogicalDeviceFlowGroupTable(ctx, flow)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Equal(t, &empty.Empty{}, response)
 	assert.Nil(t, err)
 }

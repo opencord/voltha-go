@@ -68,10 +68,10 @@ func init() {
 		kafka.DefaultTopic(&kafka.Topic{Name: coreName}))
 
 	if err = coreKafkaICProxy.Start(); err != nil {
-		log.Fatalw("Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
+		logger.Fatalw("Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
 	if err = coreKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: coreName}, 0); err != nil {
-		log.Fatalw("Failure-subscribing-core-request-handler", log.Fields{"error": err})
+		logger.Fatalw("Failure-subscribing-core-request-handler", log.Fields{"error": err})
 	}
 
 	// Setup adapter inter-container proxy and adapter request handler
@@ -84,10 +84,10 @@ func init() {
 		kafka.RequestHandlerInterface(adapterReqHandler))
 
 	if err = adapterKafkaICProxy.Start(); err != nil {
-		log.Fatalw("Failure-starting-adapter-kafka-intercontainerProxy", log.Fields{"error": err})
+		logger.Fatalw("Failure-starting-adapter-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
 	if err = adapterKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: adapterName}, 0); err != nil {
-		log.Fatalw("Failure-subscribing-adapter-request-handler", log.Fields{"error": err})
+		logger.Fatalw("Failure-subscribing-adapter-request-handler", log.Fields{"error": err})
 	}
 }
 

@@ -88,13 +88,6 @@ var txnState = []string{
 	"ABANDONED-BY-OTHER",
 	"ABANDONED_WATCH_BY_SELF"}
 
-func init() {
-	_, err := log.AddPackage(log.JSON, log.DebugLevel, nil)
-	if err != nil {
-		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
-	}
-}
-
 // NewTransactionContext creates transaction context instance
 func NewTransactionContext(
 	owner string,
@@ -201,7 +194,7 @@ func (c *KVTransaction) Acquired(ctx context.Context, minDuration int64, ownedBy
 		if err := c.tryToReserveTxn(ctx, durationInSecs*2); err == nil {
 			res = SeizedBySelf
 		} else {
-			log.Debugw("watch-other-server",
+			logger.Debugw("watch-other-server",
 				log.Fields{"transactionId": c.txnID, "owner": currOwner, "timeout": durationInSecs})
 			res = c.Watch(ctx, durationInSecs)
 		}
@@ -214,7 +207,7 @@ func (c *KVTransaction) Acquired(ctx context.Context, minDuration int64, ownedBy
 	default:
 		acquired = false
 	}
-	log.Debugw("acquire-transaction-status", log.Fields{"transactionId": c.txnID, "acquired": acquired, "result": txnState[res]})
+	logger.Debugw("acquire-transaction-status", log.Fields{"transactionId": c.txnID, "acquired": acquired, "result": txnState[res]})
 	return acquired, nil
 }
 
@@ -225,11 +218,11 @@ func (c *KVTransaction) tryToReserveTxn(ctxt context.Context, durationInSecs int
 	value, _ := ctx.kvClient.Reserve(ctxt, c.txnKey, ctx.owner, durationInSecs)
 	if value != nil {
 		if currOwner, err = kvstore.ToString(value); err != nil { // This should never happen
-			log.Errorw("unexpected-owner-type", log.Fields{"transactionId": c.txnID, "error": err})
+			logger.Errorw("unexpected-owner-type", log.Fields{"transactionId": c.txnID, "error": err})
 			return err
 		}
 		if currOwner == ctx.owner {
-			log.Debugw("acquired-transaction", log.Fields{"transactionId": c.txnID, "result": txnState[res]})
+			logger.Debugw("acquired-transaction", log.Fields{"transactionId": c.txnID, "result": txnState[res]})
 			// Setup the monitoring channel
 			c.monitorCh = make(chan int)
 			go c.holdOnToTxnUntilProcessingCompleted(ctxt, c.txnKey, ctx.owner, durationInSecs)
@@ -256,14 +249,14 @@ func (c *KVTransaction) Watch(ctxt context.Context, durationInSecs int64) int {
 				// Do an immediate delete of the transaction in the KV Store to free up KV Storage faster
 				err = c.Delete(ctxt)
 				if err != nil {
-					log.Errorw("unable-to-delete-the-transaction", log.Fields{"error": err})
+					logger.Errorw("unable-to-delete-the-transaction", log.Fields{"error": err})
 				}
 				return res
 			}
 		} else {
 			// An unexpected value - let's get out of here as something did not go according to plan
 			res = AbandonedWatchBySelf
-			log.Debugw("cannot-read-transaction-value", log.Fields{"txn": c.txnID, "error": err})
+			logger.Debugw("cannot-read-transaction-value", log.Fields{"txn": c.txnID, "error": err})
 			return res
 		}
 	}
@@ -272,7 +265,7 @@ func (c *KVTransaction) Watch(ctxt context.Context, durationInSecs int64) int {
 		select {
 		case event := <-events:
 			transactionWasAcquiredByOther = true
-			log.Debugw("received-event", log.Fields{"txn": c.txnID, "type": event.EventType})
+			logger.Debugw("received-event", log.Fields{"txn": c.txnID, "type": event.EventType})
 			if event.EventType == kvstore.DELETE {
 				// The other core failed to process the request
 				res = AbandonedByOther
@@ -285,14 +278,14 @@ func (c *KVTransaction) Watch(ctxt context.Context, durationInSecs int64) int {
 						// Successful request completion has been detected. Remove the transaction key
 						err := c.Delete(ctxt)
 						if err != nil {
-							log.Errorw("unable-to-delete-the-transaction", log.Fields{"error": err})
+							logger.Errorw("unable-to-delete-the-transaction", log.Fields{"error": err})
 						}
 					} else {
-						log.Debugw("Ignoring-PUT-event", log.Fields{"val": val, "key": key})
+						logger.Debugw("Ignoring-PUT-event", log.Fields{"val": val, "key": key})
 						continue
 					}
 				} else {
-					log.Warnw("received-unexpected-PUT-event", log.Fields{"txn": c.txnID, "key": key, "ctxKey": c.txnKey})
+					logger.Warnw("received-unexpected-PUT-event", log.Fields{"txn": c.txnID, "key": key, "ctxKey": c.txnKey})
 				}
 			}
 		case <-time.After(time.Duration(durationInSecs) * time.Second):
@@ -303,7 +296,7 @@ func (c *KVTransaction) Watch(ctxt context.Context, durationInSecs int64) int {
 			// guarantee that the peer is actually gone instead of limiting the time the peer can get hold of a
 			// request.
 			if !transactionWasAcquiredByOther {
-				log.Debugw("timeout-no-peer", log.Fields{"txId": c.txnID})
+				logger.Debugw("timeout-no-peer", log.Fields{"txId": c.txnID})
 				res = AbandonedByOther
 			} else {
 				continue
@@ -316,14 +309,14 @@ func (c *KVTransaction) Watch(ctxt context.Context, durationInSecs int64) int {
 
 // Close closes transaction
 func (c *KVTransaction) Close(ctxt context.Context) error {
-	log.Debugw("close", log.Fields{"txn": c.txnID})
+	logger.Debugw("close", log.Fields{"txn": c.txnID})
 	// Stop monitoring the key (applies only when there has been no transaction switch over)
 	if c.monitorCh != nil {
 		close(c.monitorCh)
 		err := ctx.kvClient.Put(ctxt, c.txnKey, TransactionComplete)
 
 		if err != nil {
-			log.Errorw("unable-to-write-a-key-value-pair-to-the-KV-store", log.Fields{"error": err})
+			logger.Errorw("unable-to-write-a-key-value-pair-to-the-KV-store", log.Fields{"error": err})
 		}
 	}
 	return nil
@@ -331,7 +324,7 @@ func (c *KVTransaction) Close(ctxt context.Context) error {
 
 // Delete deletes transaction
 func (c *KVTransaction) Delete(ctxt context.Context) error {
-	log.Debugw("delete", log.Fields{"txn": c.txnID})
+	logger.Debugw("delete", log.Fields{"txn": c.txnID})
 	return ctx.kvClient.Delete(ctxt, c.txnKey)
 }
 
@@ -339,7 +332,7 @@ func (c *KVTransaction) Delete(ctxt context.Context) error {
 // is used to calculate the frequency at which the Core processing the transaction renews the lease.  This function
 // exits only when the transaction is Closed, i.e completed.
 func (c *KVTransaction) holdOnToTxnUntilProcessingCompleted(ctxt context.Context, key string, owner string, durationInSecs int64) {
-	log.Debugw("holdOnToTxnUntilProcessingCompleted", log.Fields{"txn": c.txnID})
+	logger.Debugw("holdOnToTxnUntilProcessingCompleted", log.Fields{"txn": c.txnID})
 	renewInterval := durationInSecs / NumTxnRenewalPerRequest
 	if renewInterval < MinTxnRenewalIntervalInSec {
 		renewInterval = MinTxnRenewalIntervalInSec
@@ -348,12 +341,12 @@ forLoop:
 	for {
 		select {
 		case <-c.monitorCh:
-			log.Debugw("transaction-renewal-exits", log.Fields{"txn": c.txnID})
+			logger.Debugw("transaction-renewal-exits", log.Fields{"txn": c.txnID})
 			break forLoop
 		case <-time.After(time.Duration(renewInterval) * time.Second):
 			if err := ctx.kvClient.RenewReservation(ctxt, c.txnKey); err != nil {
 				// Log and continue.
-				log.Warnw("transaction-renewal-failed", log.Fields{"txnId": c.txnKey, "error": err})
+				logger.Warnw("transaction-renewal-failed", log.Fields{"txnId": c.txnKey, "error": err})
 			}
 		}
 	}
