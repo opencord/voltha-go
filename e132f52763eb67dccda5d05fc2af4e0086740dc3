@@ -22,6 +22,30 @@
       "revId": "e132f52763eb67dccda5d05fc2af4e0086740dc3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81455d65_90668c7c",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-20T19:58:36Z",
+      "side": 1,
+      "message": "It follows the method signatures of callbacks.  So cannot remove the errors.\n\nIdeally if we have specific errors (eg. NotFoundError, etc) then the check is cleaner.  Now we have to compare strings which is not very clean.",
+      "parentUuid": "ec039a5f_9bb1dca7",
+      "range": {
+        "startLine": 1161,
+        "startChar": 0,
+        "endLine": 1164,
+        "endChar": 2
+      },
+      "revId": "e132f52763eb67dccda5d05fc2af4e0086740dc3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
