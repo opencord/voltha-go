@@ -34,7 +34,7 @@ var (
 func init() {
 	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
 	if err != nil {
-		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+		logger.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
 	}
 	timeoutError = status.Errorf(codes.Aborted, "timeout")
 	taskFailureError = status.Error(codes.Internal, "test failure task")

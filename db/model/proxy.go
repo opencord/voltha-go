@@ -110,7 +110,7 @@ func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTupl
 			return cb
 		}
 	} else {
-		log.Debugw("proxy-is-nil", log.Fields{"callback-type": callbackType.String()})
+		logger.Debugw("proxy-is-nil", log.Fields{"callback-type": callbackType.String()})
 	}
 	return nil
 }
@@ -203,7 +203,7 @@ func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txi
 	p.SetOperation(ProxyList)
 	defer p.SetOperation(ProxyNone)
 
-	log.Debugw("proxy-list", log.Fields{
+	logger.Debugw("proxy-list", log.Fields{
 		"path":      path,
 		"effective": effectivePath,
 		"operation": p.GetOperation(),
@@ -223,7 +223,7 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 	p.SetOperation(ProxyGet)
 	defer p.SetOperation(ProxyNone)
 
-	log.Debugw("proxy-get", log.Fields{
+	logger.Debugw("proxy-get", log.Fields{
 		"path":      path,
 		"effective": effectivePath,
 		"operation": p.GetOperation(),
@@ -235,7 +235,7 @@ func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid
 // Update will modify information in the data model at the specified location with the provided data
 func (p *Proxy) Update(ctx context.Context, path string, data interface{}, strict bool, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
-		log.Errorf("invalid path: %s", path)
+		logger.Errorf("invalid path: %s", path)
 		return nil, fmt.Errorf("invalid path: %s", path)
 	}
 	var fullPath string
@@ -251,7 +251,7 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 	p.SetOperation(ProxyUpdate)
 	defer p.SetOperation(ProxyNone)
 
-	log.Debugw("proxy-update", log.Fields{
+	logger.Debugw("proxy-update", log.Fields{
 		"path":      path,
 		"effective": effectivePath,
 		"full":      fullPath,
@@ -272,7 +272,7 @@ func (p *Proxy) Update(ctx context.Context, path string, data interface{}, stric
 // that access control is active while inserting the information.
 func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data interface{}, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
-		log.Errorf("invalid path: %s", path)
+		logger.Errorf("invalid path: %s", path)
 		return nil, fmt.Errorf("invalid path: %s", path)
 	}
 	var fullPath string
@@ -288,7 +288,7 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 	p.SetOperation(ProxyAdd)
 	defer p.SetOperation(ProxyNone)
 
-	log.Debugw("proxy-add-with-id", log.Fields{
+	logger.Debugw("proxy-add-with-id", log.Fields{
 		"path":      path,
 		"effective": effectivePath,
 		"full":      fullPath,
@@ -307,7 +307,7 @@ func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data inte
 // Add will insert new data at specified location.
 func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
-		log.Errorf("invalid path: %s", path)
+		logger.Errorf("invalid path: %s", path)
 		return nil, fmt.Errorf("invalid path: %s", path)
 	}
 	var fullPath string
@@ -323,7 +323,7 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 	p.SetOperation(ProxyAdd)
 	defer p.SetOperation(ProxyNone)
 
-	log.Debugw("proxy-add", log.Fields{
+	logger.Debugw("proxy-add", log.Fields{
 		"path":      path,
 		"effective": effectivePath,
 		"full":      fullPath,
@@ -342,7 +342,7 @@ func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid str
 // Remove will delete an entry at the specified location
 func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface{}, error) {
 	if !strings.HasPrefix(path, "/") {
-		log.Errorf("invalid path: %s", path)
+		logger.Errorf("invalid path: %s", path)
 		return nil, fmt.Errorf("invalid path: %s", path)
 	}
 	var fullPath string
@@ -358,7 +358,7 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface
 	p.SetOperation(ProxyRemove)
 	defer p.SetOperation(ProxyNone)
 
-	log.Debugw("proxy-remove", log.Fields{
+	logger.Debugw("proxy-remove", log.Fields{
 		"path":      path,
 		"effective": effectivePath,
 		"full":      fullPath,
@@ -377,7 +377,7 @@ func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface
 // CreateProxy to interact with specific path directly
 func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) (*Proxy, error) {
 	if !strings.HasPrefix(path, "/") {
-		log.Errorf("invalid path: %s", path)
+		logger.Errorf("invalid path: %s", path)
 		return nil, fmt.Errorf("invalid path: %s", path)
 	}
 
@@ -394,7 +394,7 @@ func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) (*
 	p.SetOperation(ProxyCreate)
 	defer p.SetOperation(ProxyNone)
 
-	log.Debugw("proxy-create", log.Fields{
+	logger.Debugw("proxy-create", log.Fields{
 		"path":      path,
 		"effective": effectivePath,
 		"full":      fullPath,
@@ -446,7 +446,7 @@ func (p *Proxy) RegisterCallback(callbackType CallbackType, callback CallbackFun
 		p.setCallbacks(callbackType, make(map[string]*CallbackTuple))
 	}
 	funcName := runtime.FuncForPC(reflect.ValueOf(callback).Pointer()).Name()
-	log.Debugf("value of function: %s", funcName)
+	logger.Debugf("value of function: %s", funcName)
 	funcHash := fmt.Sprintf("%x", md5.Sum([]byte(funcName)))[:12]
 
 	p.setCallback(callbackType, funcHash, &CallbackTuple{callback, args})
@@ -455,17 +455,17 @@ func (p *Proxy) RegisterCallback(callbackType CallbackType, callback CallbackFun
 // UnregisterCallback removes references to a callback within a proxy
 func (p *Proxy) UnregisterCallback(callbackType CallbackType, callback CallbackFunction, args ...interface{}) {
 	if p.getCallbacks(callbackType) == nil {
-		log.Errorf("no such callback type - %s", callbackType.String())
+		logger.Errorf("no such callback type - %s", callbackType.String())
 		return
 	}
 
 	funcName := runtime.FuncForPC(reflect.ValueOf(callback).Pointer()).Name()
 	funcHash := fmt.Sprintf("%x", md5.Sum([]byte(funcName)))[:12]
 
-	log.Debugf("value of function: %s", funcName)
+	logger.Debugf("value of function: %s", funcName)
 
 	if p.getCallback(callbackType, funcHash) == nil {
-		log.Errorf("function with hash value: '%s' not registered with callback type: '%s'", funcHash, callbackType)
+		logger.Errorf("function with hash value: '%s' not registered with callback type: '%s'", funcHash, callbackType)
 		return
 	}
 
@@ -477,7 +477,7 @@ func (p *Proxy) invoke(ctx context.Context, callback *CallbackTuple, context []i
 		if r := recover(); r != nil {
 			errStr := fmt.Sprintf("callback error occurred: %+v", r)
 			err = errors.New(errStr)
-			log.Error(errStr)
+			logger.Error(errStr)
 		}
 	}()
 
@@ -499,10 +499,10 @@ func (p *Proxy) InvokeCallbacks(ctx context.Context, args ...interface{}) (resul
 		for _, callback := range callbacks {
 			if result, err = p.invoke(ctx, callback, context); err != nil {
 				if !proceedOnError {
-					log.Info("An error occurred.  Stopping callback invocation")
+					logger.Info("An error occurred.  Stopping callback invocation")
 					break
 				}
-				log.Info("An error occurred.  Invoking next callback")
+				logger.Info("An error occurred.  Invoking next callback")
 			}
 		}
 		p.mutex.Unlock()

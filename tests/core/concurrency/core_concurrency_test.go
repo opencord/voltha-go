@@ -48,10 +48,12 @@ var grpcPorts []int
 
 var devices map[string]*voltha.Device
 
+var logger log.Logger
+
 func setup() {
 	var err error
 
-	if _, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
+	if logger, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	log.UpdateAllLoggers(log.Fields{"instanceId": "testing"})
@@ -70,7 +72,7 @@ func connectToCore(port int) (voltha.VolthaServiceClient, error) {
 	grpcHost := fmt.Sprintf("%s:%d", grpcHostIP, port)
 	conn, err := grpc.Dial(grpcHost, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %s", err)
+		logger.Fatalf("did not connect: %s", err)
 		return nil, errors.New("failure-to-connect")
 	}
 	conns = append(conns, conn)
@@ -82,7 +84,7 @@ func setupGrpcConnection() []voltha.VolthaServiceClient {
 	for _, port := range grpcPorts {
 		if client, err := connectToCore(port); err == nil {
 			stubs = append(stubs, client)
-			log.Infow("connected", log.Fields{"port": port})
+			logger.Infow("connected", log.Fields{"port": port})
 		}
 	}
 	return stubs
@@ -92,7 +94,7 @@ func clearAllDevices(clearMap bool) {
 	for key, _ := range devices {
 		ctx := context.Background()
 		response, err := stubs[1].DeleteDevice(ctx, &voltha.ID{Id: key})
-		log.Infow("response", log.Fields{"res": response, "error": err})
+		logger.Infow("response", log.Fields{"res": response, "error": err})
 		if clearMap {
 			delete(devices, key)
 		}
@@ -120,7 +122,7 @@ func startKafka() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/docker-compose-zk-kafka-test.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -129,7 +131,7 @@ func startEtcd() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/docker-compose-etcd.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -140,7 +142,7 @@ func stopKafka() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -151,7 +153,7 @@ func stopEtcd() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -160,7 +162,7 @@ func startCores() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/rw_core_concurrency_test.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -171,7 +173,7 @@ func stopCores() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -180,7 +182,7 @@ func startSimulatedOLTAndONUAdapters() {
 	command := "docker-compose"
 	cmd := exec.Command(command, "-f", "../../../compose/adapters-simulated.yml", "up", "-d")
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -191,7 +193,7 @@ func stopSimulatedOLTAndONUAdapters() {
 	if err := cmd.Run(); err != nil {
 		// ignore error - as this is mostly due network being left behind as its being used by other
 		// containers
-		log.Warn(err)
+		logger.Warn(err)
 	}
 }
 
@@ -350,7 +352,7 @@ func TestConcurrentRequests(t *testing.T) {
 
 	//3.  Create the devices
 	response, err := createDevice(stubs)
-	log.Infow("response", log.Fields{"res": response, "error": err})
+	logger.Infow("response", log.Fields{"res": response, "error": err})
 	assert.Nil(t, err)
 	devices[response.Id] = response
 

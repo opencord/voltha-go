@@ -27,6 +27,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var logger log.Logger
+
+func init() {
+	// Setup this package so that it's log level can be modified at run time
+	var err error
+	logger, err = log.AddPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "utils"})
+	if err != nil {
+		panic(err)
+	}
+}
+
 // ResponseCallback is the function signature for callbacks to execute after a response is received.
 type ResponseCallback func(rpc string, response interface{}, reqArgs ...interface{})
 
@@ -83,7 +94,7 @@ func (rq *RequestQueue) Start() {
 		for {
 			req, ok := <-rq.queue
 			if !ok {
-				log.Warnw("request-sequencer-queue-closed", log.Fields{"id": rq.queueID})
+				logger.Warnw("request-sequencer-queue-closed", log.Fields{"id": rq.queueID})
 				break
 			}
 			// If the request is waiting then closing the reqChnl will trigger the request to proceed.  Otherwise,

@@ -44,6 +44,16 @@ const (
 	VolthaSerialNumberKey = "voltha_serial_number"
 )
 
+var logger log.Logger
+
+func init() {
+	var err error
+	logger, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"})
+	if err != nil {
+		panic(err)
+	}
+}
+
 func startKafka(composePath string) error {
 	fmt.Println("Starting Kafka and Etcd ...")
 	command := "docker-compose"
@@ -455,19 +465,19 @@ func StartSimulatedEnv(composePath string) error {
 func StopSimulatedEnv(composePath string) error {
 	err := stopSimulatedOLTAndONUAdapters(composePath)
 	if err != nil {
-		log.Errorw("unable-to-stop-simulated-olt-onu-adapters", log.Fields{"error": err})
+		logger.Errorw("unable-to-stop-simulated-olt-onu-adapters", log.Fields{"error": err})
 	}
 	err = stopCore(composePath)
 	if err != nil {
-		log.Errorw("unable-to-stop-core", log.Fields{"error": err})
+		logger.Errorw("unable-to-stop-core", log.Fields{"error": err})
 	}
 	err = stopKafka(composePath)
 	if err != nil {
-		log.Errorw("unable-to-stop-kafka", log.Fields{"error": err})
+		logger.Errorw("unable-to-stop-kafka", log.Fields{"error": err})
 	}
 	err = stopEtcd(composePath)
 	if err != nil {
-		log.Errorw("unable-to-stop-etcd", log.Fields{"error": err})
+		logger.Errorw("unable-to-stop-etcd", log.Fields{"error": err})
 	}
 	return nil
 }

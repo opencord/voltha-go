@@ -39,7 +39,6 @@ import (
 )
 
 const (
-	logLevel              = log.FatalLevel
 	volthaSerialNumberKey = "voltha_serial_number"
 	retryInterval         = 50 * time.Millisecond
 )
@@ -117,7 +116,7 @@ func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client
 		txnPrefix,
 		client,
 		cf.KVStoreTimeout); err != nil {
-		log.Fatal("creating-transaction-context-failed")
+		logger.Fatal("creating-transaction-context-failed")
 	}
 	return client
 }
@@ -136,16 +135,16 @@ func createMockAdapter(adapterType int, kafkaClient kafka.Client, coreInstanceID
 	case OnuAdapter:
 		adapter = cm.NewONUAdapter(adapterCoreProxy)
 	default:
-		log.Fatalf("invalid-adapter-type-%d", adapterType)
+		logger.Fatalf("invalid-adapter-type-%d", adapterType)
 	}
 	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
 
 	if err = adapterKafkaICProxy.Start(); err != nil {
-		log.Errorw("Failure-starting-adapter-intercontainerProxy", log.Fields{"error": err})
+		logger.Errorw("Failure-starting-adapter-intercontainerProxy", log.Fields{"error": err})
 		return nil, err
 	}
 	if err = adapterKafkaICProxy.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: adapterName}, adapterReqHandler); err != nil {
-		log.Errorw("Failure-to-subscribe-onu-request-handler", log.Fields{"error": err})
+		logger.Errorw("Failure-to-subscribe-onu-request-handler", log.Fields{"error": err})
 		return nil, err
 	}
 	return adapter, nil

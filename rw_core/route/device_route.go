@@ -26,10 +26,13 @@ import (
 	"sync"
 )
 
+var logger log.Logger
+
 func init() {
-	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
+	var err error
+	logger, err = log.AddPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "route"})
 	if err != nil {
-		log.Fatalw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
+		panic(err)
 	}
 }
 
@@ -75,7 +78,7 @@ func NewDeviceRoutes(logicalDeviceID string, getDevice GetDeviceFunc) *DeviceRou
 	dr.RootPorts = make(map[uint32]uint32)
 	dr.Routes = make(map[PathID][]Hop)
 	dr.devicesPonPorts = make(map[string][]*voltha.Port)
-	log.Debug("new device routes created ...")
+	logger.Debug("new device routes created ...")
 	return &dr
 }
 
@@ -92,7 +95,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
 
-	log.Debugw("computing-all-routes", log.Fields{"len-logical-ports": len(lps)})
+	logger.Debugw("computing-all-routes", log.Fields{"len-logical-ports": len(lps)})
 	var err error
 	defer func() {
 		// On error, clear the routes - any flow request or a port add/delete will trigger the rebuild
@@ -143,7 +146,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 		}
 		for _, rootDevicePort := range rootDevice.Ports {
 			if rootDevicePort.Type == voltha.Port_PON_OLT {
-				log.Debugw("peers", log.Fields{"root-device-id": rootDevice.Id, "port-no": rootDevicePort.PortNo, "len-peers": len(rootDevicePort.Peers)})
+				logger.Debugw("peers", log.Fields{"root-device-id": rootDevice.Id, "port-no": rootDevicePort.PortNo, "len-peers": len(rootDevicePort.Peers)})
 				for _, rootDevicePeer := range rootDevicePort.Peers {
 					childDevice, err = dr.getDevice(ctx, rootDevicePeer.DeviceId)
 					if err != nil {
@@ -206,7 +209,7 @@ func (dr *DeviceRoutes) addPortAndVerifyPrecondition(lp *voltha.LogicalPort) err
 // AddPort augments the current set of routes with new routes corresponding to the logical port "lp".  If the routes have
 // not been built yet then use logical port "lps" to compute all current routes (lps includes lp)
 func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, lps []*voltha.LogicalPort) error {
-	log.Debugw("add-port-to-routes", log.Fields{"port": lp, "len-logical-ports": len(lps)})
+	logger.Debugw("add-port-to-routes", log.Fields{"port": lp, "len-logical-ports": len(lps)})
 
 	dr.routeBuildLock.Lock()
 	if len(dr.Routes) == 0 {
@@ -280,8 +283,8 @@ func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, lps
 
 // Print prints routes
 func (dr *DeviceRoutes) Print() error {
-	log.Debugw("Print", log.Fields{"logical-device-id": dr.logicalDeviceID, "logical-ports": dr.logicalPorts})
-	if log.V(log.DebugLevel) {
+	logger.Debugw("Print", log.Fields{"logical-device-id": dr.logicalDeviceID, "logical-ports": dr.logicalPorts})
+	if logger.V(log.DebugLevel) {
 		output := ""
 		routeNumber := 1
 		for k, v := range dr.Routes {
@@ -295,9 +298,9 @@ func (dr *DeviceRoutes) Print() error {
 			routeNumber++
 		}
 		if len(dr.Routes) == 0 {
-			log.Debugw("no-routes-found", log.Fields{"logical-device-id": dr.logicalDeviceID})
+			logger.Debugw("no-routes-found", log.Fields{"logical-device-id": dr.logicalDeviceID})
 		} else {
-			log.Debugw("graph_routes", log.Fields{"lDeviceId": dr.logicalDeviceID, "Routes": output})
+			logger.Debugw("graph_routes", log.Fields{"lDeviceId": dr.logicalDeviceID, "Routes": output})
 		}
 	}
 	return nil
@@ -342,7 +345,7 @@ func (dr *DeviceRoutes) getDevicePonPorts(deviceID string, peerDeviceID string) 
 func (dr *DeviceRoutes) getDevice(ctx context.Context, deviceID string) (*voltha.Device, error) {
 	device, err := dr.getDeviceFromModel(ctx, deviceID)
 	if err != nil {
-		log.Errorw("device-not-found", log.Fields{"deviceId": deviceID, "error": err})
+		logger.Errorw("device-not-found", log.Fields{"deviceId": deviceID, "error": err})
 		return nil, err
 	}
 	dr.devicesPonPortsLock.Lock()

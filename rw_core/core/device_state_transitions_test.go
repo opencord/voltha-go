@@ -40,7 +40,7 @@ func newTestDeviceManager() *testDeviceManager {
 
 func init() {
 	if _, err := log.AddPackage(log.JSON, log.WarnLevel, nil); err != nil {
-		log.Fatal("failure-adding-package-core")
+		logger.Fatal("failure-adding-package-core")
 	}
 	tdm = newTestDeviceManager()
 	transitionMap = NewTransitionMap(tdm)

@@ -93,7 +93,7 @@ var childPmNames = []string{
 func setup() {
 	var err error
 
-	if _, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
+	if logger, err = log.AddPackage(log.JSON, log.WarnLevel, log.Fields{"instanceId": "testing"}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 	log.UpdateAllLoggers(log.Fields{"instanceId": "testing"})

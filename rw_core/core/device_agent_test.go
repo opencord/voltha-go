@@ -21,7 +21,6 @@ import (
 	"github.com/opencord/voltha-go/rw_core/config"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -55,7 +54,7 @@ func newDATest() *DATest {
 	var err error
 	test.etcdServer, test.kvClientPort, err = startEmbeddedEtcdServer("voltha.rwcore.da.test", "voltha.rwcore.da.etcd", "error")
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	// Create the kafka client
 	test.kClient = lm.NewKafkaClient()
@@ -106,7 +105,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
-		log.Fatal("Cannot get a freeport for grpc")
+		logger.Fatal("Cannot get a freeport for grpc")
 	}
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
@@ -115,7 +114,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	dat.core = NewCore(context.Background(), dat.coreInstanceID, cfg, client, dat.kClient)
 	err = dat.core.Start(context.Background())
 	if err != nil {
-		log.Fatal("Cannot start core")
+		logger.Fatal("Cannot start core")
 	}
 }
 

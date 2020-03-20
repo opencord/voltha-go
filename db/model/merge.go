@@ -93,7 +93,7 @@ func Merge3Way(
 	mergeChildFunc func(Revision) Revision,
 	dryRun bool) (rev Revision, changes []ChangeTuple) {
 
-	log.Debugw("3-way-merge-request", log.Fields{"dryRun": dryRun})
+	logger.Debugw("3-way-merge-request", log.Fields{"dryRun": dryRun})
 
 	var configChanged bool
 	var revsToDiscard []Revision
@@ -102,7 +102,7 @@ func Merge3Way(
 		configChanged = dstRev.GetConfig() != srcRev.GetConfig()
 	} else {
 		if dstRev.GetConfig().Hash != srcRev.GetConfig().Hash {
-			log.Error("config-collision")
+			logger.Error("config-collision")
 		}
 		configChanged = true
 	}
@@ -132,7 +132,7 @@ func Merge3Way(
 		if field.Key == "" {
 			if revisionsAreEqual(dstList, forkList) {
 				if !revisionsAreEqual(srcList, forkList) {
-					log.Error("we should not be here")
+					logger.Error("we should not be here")
 				} else {
 					for _, rev := range srcList {
 						newChildren[fieldName] = append(newChildren[fieldName], mergeChildFunc(rev))
@@ -146,7 +146,7 @@ func Merge3Way(
 				}
 			} else {
 				if !revisionsAreEqual(srcList, forkList) {
-					log.Error("cannot merge - single child node or un-keyed children list has changed")
+					logger.Error("cannot merge - single child node or un-keyed children list has changed")
 				}
 			}
 		} else {
@@ -198,7 +198,7 @@ func Merge3Way(
 						if childDstRev.GetHash() == childSrcRev.GetHash() {
 							mergeChildFunc(childDstRev)
 						} else {
-							log.Error("conflict error - revision has been added is different")
+							logger.Error("conflict error - revision has been added is different")
 						}
 					} else {
 						newRev := mergeChildFunc(srcList[src.KeyMap2[key]])
@@ -208,14 +208,14 @@ func Merge3Way(
 				}
 				for key := range src.ChangedKeys {
 					if _, removed := dst.RemovedKeys[key]; removed {
-						log.Error("conflict error - revision has been removed")
+						logger.Error("conflict error - revision has been removed")
 					} else if _, changed := dst.ChangedKeys[key]; changed {
 						childDstRev := dstList[dst.KeyMap2[key]]
 						childSrcRev := srcList[src.KeyMap2[key]]
 						if childDstRev.GetHash() == childSrcRev.GetHash() {
 							mergeChildFunc(childSrcRev)
 						} else if childDstRev.GetConfig().Hash != childSrcRev.GetConfig().Hash {
-							log.Error("conflict error - revision has been changed and is different")
+							logger.Error("conflict error - revision has been changed and is different")
 						} else {
 							newRev := mergeChildFunc(srcList[src.KeyMap2[key]])
 							newList[dst.KeyMap2[key]] = newRev
@@ -229,7 +229,7 @@ func Merge3Way(
 				// TODO: how do i sort this map in reverse order?
 				for key := range src.RemovedKeys {
 					if _, changed := dst.ChangedKeys[key]; changed {
-						log.Error("conflict error - revision has changed")
+						logger.Error("conflict error - revision has changed")
 					}
 					if _, removed := dst.RemovedKeys[key]; !removed {
 						dstIdx := dst.KeyMap2[key]

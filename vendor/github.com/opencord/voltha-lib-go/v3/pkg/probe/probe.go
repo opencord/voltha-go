@@ -29,6 +29,17 @@ type ProbeContextKeyType string
 // ServiceStatus typed values for service status
 type ServiceStatus int
 
+var logger log.Logger
+
+func init() {
+	// Setup this package so that it's log level can be modified at run time
+	var err error
+	logger, err = log.AddPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "probe"})
+	if err != nil {
+		panic(err)
+	}
+}
+
 const (
 	// ServiceStatusUnknown initial state of services
 	ServiceStatusUnknown ServiceStatus = iota
@@ -118,7 +129,7 @@ func (p *Probe) RegisterService(names ...string) {
 	for _, name := range names {
 		if _, ok := p.status[name]; !ok {
 			p.status[name] = ServiceStatusUnknown
-			log.Debugw("probe-service-registered", log.Fields{"service-name": name})
+			logger.Debugw("probe-service-registered", log.Fields{"service-name": name})
 		}
 	}
 
@@ -161,7 +172,7 @@ func (p *Probe) UpdateStatus(name string, status ServiceStatus) {
 	} else {
 		p.isHealthy = defaultHealthFunc(p.status)
 	}
-	log.Debugw("probe-service-status-updated",
+	logger.Debugw("probe-service-status-updated",
 		log.Fields{
 			"service-name": name,
 			"status":       status.String(),
@@ -232,21 +243,21 @@ func (p *Probe) detailzFunc(w http.ResponseWriter, req *http.Request) {
 	defer p.mutex.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write([]byte("{")); err != nil {
-		log.Errorw("write-response", log.Fields{"error": err})
+		logger.Errorw("write-response", log.Fields{"error": err})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	comma := ""
 	for c, s := range p.status {
 		if _, err := w.Write([]byte(fmt.Sprintf("%s\"%s\": \"%s\"", comma, c, s.String()))); err != nil {
-			log.Errorw("write-response", log.Fields{"error": err})
+			logger.Errorw("write-response", log.Fields{"error": err})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		comma = ", "
 	}
 	if _, err := w.Write([]byte("}")); err != nil {
-		log.Errorw("write-response", log.Fields{"error": err})
+		logger.Errorw("write-response", log.Fields{"error": err})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -269,7 +280,7 @@ func (p *Probe) ListenAndServe(address string) {
 		Addr:    address,
 		Handler: mux,
 	}
-	log.Fatal(s.ListenAndServe())
+	logger.Fatal(s.ListenAndServe())
 }
 
 func (p *Probe) IsReady() bool {

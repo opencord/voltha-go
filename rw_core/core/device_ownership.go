@@ -30,13 +30,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func init() {
-	_, err := log.AddPackage(log.JSON, log.WarnLevel, nil)
-	if err != nil {
-		log.Errorw("unable-to-register-package-to-the-log-map", log.Fields{"error": err})
-	}
-}
-
 type ownership struct {
 	id    string
 	owned bool
@@ -79,17 +72,17 @@ func NewDeviceOwnership(id string, kvClient kvstore.Client, deviceMgr *DeviceMan
 
 // Start starts device device ownership
 func (da *DeviceOwnership) Start(ctx context.Context) {
-	log.Info("starting-deviceOwnership", log.Fields{"instanceId": da.instanceID})
-	log.Info("deviceOwnership-started")
+	logger.Info("starting-deviceOwnership", log.Fields{"instanceId": da.instanceID})
+	logger.Info("deviceOwnership-started")
 }
 
 // Stop stops device ownership
 func (da *DeviceOwnership) Stop(ctx context.Context) {
-	log.Info("stopping-deviceOwnership")
+	logger.Info("stopping-deviceOwnership")
 	da.exitChannel <- 1
 	// Need to flush all device reservations
 	da.abandonAllDevices()
-	log.Info("deviceOwnership-stopped")
+	logger.Info("deviceOwnership-stopped")
 }
 
 func (da *DeviceOwnership) tryToReserveKey(ctx context.Context, id string) bool {
@@ -98,11 +91,11 @@ func (da *DeviceOwnership) tryToReserveKey(ctx context.Context, id string) bool 
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
 	value, err := da.kvClient.Reserve(ctx, kvKey, da.instanceID, da.reservationTimeout)
 	if err != nil {
-		log.Errorw("error", log.Fields{"error": err, "id": id, "instanceId": da.instanceID})
+		logger.Errorw("error", log.Fields{"error": err, "id": id, "instanceId": da.instanceID})
 	}
 	if value != nil {
 		if currOwner, err = kvstore.ToString(value); err != nil {
-			log.Error("unexpected-owner-type")
+			logger.Error("unexpected-owner-type")
 		}
 		return currOwner == da.instanceID
 	}
@@ -113,30 +106,30 @@ func (da *DeviceOwnership) renewReservation(ctx context.Context, id string) bool
 	// Try to reserve the key
 	kvKey := fmt.Sprintf("%s_%s", da.ownershipPrefix, id)
 	if err := da.kvClient.RenewReservation(ctx, kvKey); err != nil {
-		log.Errorw("reservation-renewal-error", log.Fields{"error": err, "instance": da.instanceID})
+		logger.Errorw("reservation-renewal-error", log.Fields{"error": err, "instance": da.instanceID})
 		return false
 	}
 	return true
 }
 
 func (da *DeviceOwnership) monitorOwnership(ctx context.Context, id string, chnl chan int) {
-	log.Debugw("start-device-monitoring", log.Fields{"id": id})
+	logger.Debugw("start-device-monitoring", log.Fields{"id": id})
 	op := "starting"
 	exit := false
 	ticker := time.NewTicker(time.Duration(da.reservationTimeout) / 3 * time.Second)
 	for {
 		select {
 		case <-da.exitChannel:
-			log.Debugw("closing-monitoring", log.Fields{"Id": id})
+			logger.Debugw("closing-monitoring", log.Fields{"Id": id})
 			exit = true
 		case <-ticker.C:
-			log.Debugw(fmt.Sprintf("%s-reservation", op), log.Fields{"Id": id})
+			logger.Debugw(fmt.Sprintf("%s-reservation", op), log.Fields{"Id": id})
 		case <-chnl:
-			log.Debugw("closing-device-monitoring", log.Fields{"Id": id})
+			logger.Debugw("closing-device-monitoring", log.Fields{"Id": id})
 			exit = true
 		}
 		if exit {
-			log.Infow("exiting-device-monitoring", log.Fields{"Id": id})
+			logger.Infow("exiting-device-monitoring", log.Fields{"Id": id})
 			ticker.Stop()
 			break
 		}
@@ -145,19 +138,19 @@ func (da *DeviceOwnership) monitorOwnership(ctx context.Context, id string, chnl
 			// Device owned; renew reservation
 			op = "renew"
 			if da.renewReservation(ctx, id) {
-				log.Debugw("reservation-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
+				logger.Debugw("reservation-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
 			} else {
-				log.Debugw("reservation-not-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
+				logger.Debugw("reservation-not-renewed", log.Fields{"id": id, "instanceId": da.instanceID})
 			}
 		} else {
 			// Device not owned or not owned by me; try to seize ownership
 			op = "retry"
 			if err := da.setOwnership(id, da.tryToReserveKey(ctx, id)); err != nil {
-				log.Errorw("unexpected-error", log.Fields{"error": err})
+				logger.Errorw("unexpected-error", log.Fields{"error": err})
 			}
 		}
 	}
-	log.Debugw("device-monitoring-stopped", log.Fields{"id": id})
+	logger.Debugw("device-monitoring-stopped", log.Fields{"id": id})
 }
 
 func (da *DeviceOwnership) getOwnership(id string) (bool, bool) {
@@ -174,7 +167,7 @@ func (da *DeviceOwnership) setOwnership(id string, owner bool) error {
 	defer da.deviceMapLock.Unlock()
 	if _, exist := da.deviceMap[id]; exist {
 		if da.deviceMap[id].owned != owner {
-			log.Debugw("ownership-changed", log.Fields{"Id": id, "owner": owner})
+			logger.Debugw("ownership-changed", log.Fields{"Id": id, "owner": owner})
 		}
 		da.deviceMap[id].owned = owner
 		return nil
@@ -204,7 +197,7 @@ func (da *DeviceOwnership) OwnedByMe(ctx context.Context, id interface{}) (bool,
 	var idStr string
 	var cache bool
 	if ownershipKey, idStr, cache, err = da.getOwnershipKey(ctx, id); err != nil {
-		log.Warnw("no-ownershipkey", log.Fields{"error": err})
+		logger.Warnw("no-ownershipkey", log.Fields{"error": err})
 		return false, err
 	}
 
@@ -223,7 +216,7 @@ func (da *DeviceOwnership) OwnedByMe(ctx context.Context, id interface{}) (bool,
 
 	deviceOwned, ownedByMe := da.getOwnership(ownershipKey)
 	if deviceOwned {
-		log.Debugw("ownership", log.Fields{"Id": ownershipKey, "owned": ownedByMe})
+		logger.Debugw("ownership", log.Fields{"Id": ownershipKey, "owned": ownedByMe})
 		return ownedByMe, nil
 	}
 	// Not owned by me or maybe nobody else.  Try to reserve it
@@ -237,7 +230,7 @@ func (da *DeviceOwnership) OwnedByMe(ctx context.Context, id interface{}) (bool,
 		chnl:  myChnl}
 	da.deviceMapLock.Unlock()
 
-	log.Debugw("set-new-ownership", log.Fields{"Id": ownershipKey, "owned": reservedByMe})
+	logger.Debugw("set-new-ownership", log.Fields{"Id": ownershipKey, "owned": reservedByMe})
 	go da.monitorOwnership(context.Background(), ownershipKey, myChnl)
 	return reservedByMe, nil
 }
@@ -265,7 +258,7 @@ func (da *DeviceOwnership) AbandonDevice(id string) error {
 		// Stop the Go routine monitoring the device
 		close(o.chnl)
 		delete(da.deviceMap, id)
-		log.Debugw("abandoning-device", log.Fields{"Id": id})
+		logger.Debugw("abandoning-device", log.Fields{"Id": id})
 		return nil
 	}
 	// id is not ownership key

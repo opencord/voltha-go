@@ -99,7 +99,7 @@ func newNode(root *root, initialData interface{}, autoPrune bool, txid string) *
 		n.Type = reflect.ValueOf(initialData).Interface()
 	} else {
 		// not implemented error
-		log.Errorf("cannot process initial data - %+v", initialData)
+		logger.Errorf("cannot process initial data - %+v", initialData)
 	}
 
 	return n
@@ -128,7 +128,7 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	// If anything is new, then set the revision as the latest
 	if branch.GetLatest() == nil || revision.GetHash() != branch.GetLatest().GetHash() {
 		if revision.GetName() != "" {
-			log.Debugw("saving-latest-data", log.Fields{"hash": revision.GetHash(), "data": revision.GetData()})
+			logger.Debugw("saving-latest-data", log.Fields{"hash": revision.GetHash(), "data": revision.GetData()})
 			// Tag a timestamp to that revision
 			revision.SetLastUpdate()
 			getRevCache().Set(revision.GetName(), revision)
@@ -144,7 +144,7 @@ func (n *node) makeLatest(branch *Branch, revision Revision, changeAnnouncement 
 	if changeAnnouncement != nil && branch.Txid == "" {
 		if n.Proxy != nil {
 			for _, change := range changeAnnouncement {
-				log.Debugw("adding-callback",
+				logger.Debugw("adding-callback",
 					log.Fields{
 						"callbacks":    n.GetProxy().getCallbacks(change.Type),
 						"type":         change.Type,
@@ -197,7 +197,7 @@ func (n *node) initialize(data interface{}, txid string) {
 						//_, key := GetAttributeValue(v.Interface(), field.Key, 0)
 						//for _, k := range keysSeen {
 						//	if k == key.String() {
-						//		//log.Errorf("duplicate key - %s", k)
+						//		//logger.Errorf("duplicate key - %s", k)
 						//	}
 						//}
 						//keysSeen = append(keysSeen, key.String())
@@ -217,7 +217,7 @@ func (n *node) initialize(data interface{}, txid string) {
 				}
 			}
 		} else {
-			log.Errorf("field is invalid - %+v", fieldValue)
+			logger.Errorf("field is invalid - %+v", fieldValue)
 		}
 	}
 
@@ -255,7 +255,7 @@ func (n *node) List(ctx context.Context, path string, hash string, depth int, de
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	log.Debugw("node-list-request", log.Fields{"path": path, "hash": hash, "depth": depth, "deep": deep, "txid": txid})
+	logger.Debugw("node-list-request", log.Fields{"path": path, "hash": hash, "depth": depth, "deep": deep, "txid": txid})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -279,7 +279,7 @@ func (n *node) List(ctx context.Context, path string, hash string, depth int, de
 
 	pr, err := rev.LoadFromPersistence(ctx, path, txid, nil)
 	if err != nil {
-		log.Errorf("failed-to-load-from-persistence")
+		logger.Errorf("failed-to-load-from-persistence")
 		return nil, err
 	}
 	if pr != nil {
@@ -296,7 +296,7 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	log.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
+	logger.Debugw("node-get-request", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -326,19 +326,19 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 		if entry, exists := getRevCache().Get(path); exists && entry.(Revision) != nil {
 			entryAge := time.Since(entry.(Revision).GetLastUpdate()).Nanoseconds() / int64(time.Millisecond)
 			if entryAge < DataRefreshPeriod {
-				log.Debugw("using-cache-entry", log.Fields{
+				logger.Debugw("using-cache-entry", log.Fields{
 					"path": path,
 					"hash": hash,
 					"age":  entryAge,
 				})
 				return proto.Clone(entry.(Revision).GetData().(proto.Message)), nil
 			}
-			log.Debugw("cache-entry-expired", log.Fields{"path": path, "hash": hash, "age": entryAge})
+			logger.Debugw("cache-entry-expired", log.Fields{"path": path, "hash": hash, "age": entryAge})
 		} else if result = n.getPath(ctx, rev.GetBranch().GetLatest(), path, depth); result != nil && reflect.ValueOf(result).IsValid() && !reflect.ValueOf(result).IsNil() {
-			log.Debugw("using-rev-tree-entry", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
+			logger.Debugw("using-rev-tree-entry", log.Fields{"path": path, "hash": hash, "depth": depth, "reconcile": reconcile, "txid": txid})
 			return result, nil
 		} else {
-			log.Debugw("not-using-cache-entry", log.Fields{
+			logger.Debugw("not-using-cache-entry", log.Fields{
 				"path": path,
 				"hash": hash, "depth": depth,
 				"reconcile": reconcile,
@@ -346,7 +346,7 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 			})
 		}
 	} else {
-		log.Debugw("reconcile-requested", log.Fields{
+		logger.Debugw("reconcile-requested", log.Fields{
 			"path":      path,
 			"hash":      hash,
 			"reconcile": reconcile,
@@ -357,7 +357,7 @@ func (n *node) Get(ctx context.Context, path string, hash string, depth int, rec
 	// or we simply failed at getting information from memory
 	if n.Root.KvStore != nil {
 		if pr, err := rev.LoadFromPersistence(ctx, path, txid, nil); err != nil {
-			log.Errorf("failed-to-load-from-persistence")
+			logger.Errorf("failed-to-load-from-persistence")
 			return nil, err
 		} else if len(pr) > 0 {
 			// Did we receive a single or multiple revisions?
@@ -444,7 +444,7 @@ func (n *node) getData(ctx context.Context, rev Revision, depth int) interface{}
 	var modifiedMsg interface{}
 
 	if n.GetProxy() != nil {
-		log.Debugw("invoking-get-callbacks", log.Fields{"data": msg})
+		logger.Debugw("invoking-get-callbacks", log.Fields{"data": msg})
 		if modifiedMsg = n.GetProxy().InvokeCallbacks(ctx, Get, false, msg); modifiedMsg != nil {
 			msg = modifiedMsg
 		}
@@ -459,7 +459,7 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	log.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid": txid})
+	logger.Debugw("node-update-request", log.Fields{"path": path, "strict": strict, "txid": txid})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
@@ -473,7 +473,7 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 	}
 
 	if branch.GetLatest() != nil {
-		log.Debugf("Branch data : %+v, Passed data: %+v", branch.GetLatest().GetData(), data)
+		logger.Debugf("Branch data : %+v, Passed data: %+v", branch.GetLatest().GetData(), data)
 	}
 	if path == "" {
 		return n.doUpdate(ctx, branch, data, strict)
@@ -499,7 +499,7 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 
 	if field.IsContainer {
 		if path == "" {
-			log.Errorf("cannot update a list")
+			logger.Errorf("cannot update a list")
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]
@@ -516,7 +516,7 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 			idx, childRev := n.findRevByKey(children, field.Key, keyValue)
 
 			if childRev == nil {
-				log.Debugw("child-revision-is-nil", log.Fields{"key": keyValue})
+				logger.Debugw("child-revision-is-nil", log.Fields{"key": keyValue})
 				return branch.GetLatest()
 			}
 
@@ -532,10 +532,10 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 
 			if newChildRev.GetHash() == childRev.GetHash() {
 				if newChildRev != childRev {
-					log.Debug("clear-hash - %s %+v", newChildRev.GetHash(), newChildRev)
+					logger.Debug("clear-hash - %s %+v", newChildRev.GetHash(), newChildRev)
 					newChildRev.ClearHash()
 				}
-				log.Debugw("child-revisions-have-matching-hash", log.Fields{"hash": childRev.GetHash(), "key": keyValue})
+				logger.Debugw("child-revisions-have-matching-hash", log.Fields{"hash": childRev.GetHash(), "key": keyValue})
 				return branch.GetLatest()
 			}
 
@@ -545,7 +545,7 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 			_keyValueType := fmt.Sprintf("%s", keyValue)
 
 			if _newKeyType != _keyValueType {
-				log.Errorf("cannot change key field")
+				logger.Errorf("cannot change key field")
 			}
 
 			// Prefix the hash value with the data type (e.g. devices, logical_devices, adapters)
@@ -568,7 +568,7 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 			return newChildRev
 
 		} else {
-			log.Errorf("cannot index into container with no keys")
+			logger.Errorf("cannot index into container with no keys")
 		}
 	} else {
 		childRev := rev.GetChildren(name)[0]
@@ -590,22 +590,22 @@ func (n *node) Update(ctx context.Context, path string, data interface{}, strict
 }
 
 func (n *node) doUpdate(ctx context.Context, branch *Branch, data interface{}, strict bool) Revision {
-	log.Debugw("comparing-types", log.Fields{"expected": reflect.ValueOf(n.Type).Type(), "actual": reflect.TypeOf(data)})
+	logger.Debugw("comparing-types", log.Fields{"expected": reflect.ValueOf(n.Type).Type(), "actual": reflect.TypeOf(data)})
 
 	if reflect.TypeOf(data) != reflect.ValueOf(n.Type).Type() {
 		// TODO raise error
-		log.Errorw("types-do-not-match: %+v", log.Fields{"actual": reflect.TypeOf(data), "expected": n.Type})
+		logger.Errorw("types-do-not-match: %+v", log.Fields{"actual": reflect.TypeOf(data), "expected": n.Type})
 		return nil
 	}
 
 	if n.GetProxy() != nil {
-		log.Debug("invoking proxy PreUpdate Callbacks")
+		logger.Debug("invoking proxy PreUpdate Callbacks")
 		n.GetProxy().InvokeCallbacks(ctx, PreUpdate, false, branch.GetLatest(), data)
 	}
 
 	if strict {
 		// TODO: checkAccessViolations(data, Branch.GetLatest.data)
-		log.Warn("access-violations-not-supported")
+		logger.Warn("access-violations-not-supported")
 	}
 
 	// The way the model is used, this function is only invoked upon data change.  Therefore, to also
@@ -622,14 +622,14 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	log.Debugw("node-add-request", log.Fields{"path": path, "txid": txid})
+	logger.Debugw("node-add-request", log.Fields{"path": path, "txid": txid})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
 	if path == "" {
 		// TODO raise error
-		log.Errorf("cannot add for non-container mode")
+		logger.Errorf("cannot add for non-container mode")
 		return nil
 	}
 
@@ -659,7 +659,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 		if path == "" {
 			if field.Key != "" {
 				if n.GetProxy() != nil {
-					log.Debug("invoking proxy PreAdd Callbacks")
+					logger.Debug("invoking proxy PreAdd Callbacks")
 					n.GetProxy().InvokeCallbacks(ctx, PreAdd, false, data)
 				}
 
@@ -670,7 +670,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 
 				if _, exists := n.findRevByKey(children, field.Key, key.String()); exists != nil {
 					// TODO raise error
-					log.Warnw("duplicate-key-found", log.Fields{"key": key.String()})
+					logger.Warnw("duplicate-key-found", log.Fields{"key": key.String()})
 					return exists
 				}
 				childRev := n.MakeNode(data, "").Latest()
@@ -690,7 +690,7 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 
 				return childRev
 			}
-			log.Errorf("cannot add to non-keyed container")
+			logger.Errorf("cannot add to non-keyed container")
 
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
@@ -733,10 +733,10 @@ func (n *node) Add(ctx context.Context, path string, data interface{}, txid stri
 
 			return newChildRev
 		} else {
-			log.Errorf("cannot add to non-keyed container")
+			logger.Errorf("cannot add to non-keyed container")
 		}
 	} else {
-		log.Errorf("cannot add to non-container field")
+		logger.Errorf("cannot add to non-container field")
 	}
 
 	return nil
@@ -747,14 +747,14 @@ func (n *node) Remove(ctx context.Context, path string, txid string, makeBranch 
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	log.Debugw("node-remove-request", log.Fields{"path": path, "txid": txid, "makeBranch": makeBranch})
+	logger.Debugw("node-remove-request", log.Fields{"path": path, "txid": txid, "makeBranch": makeBranch})
 
 	for strings.HasPrefix(path, "/") {
 		path = path[1:]
 	}
 	if path == "" {
 		// TODO raise error
-		log.Errorf("cannot remove for non-container mode")
+		logger.Errorf("cannot remove for non-container mode")
 	}
 	var branch *Branch
 	if txid == "" {
@@ -779,7 +779,7 @@ func (n *node) Remove(ctx context.Context, path string, txid string, makeBranch 
 
 	if field.IsContainer {
 		if path == "" {
-			log.Errorw("cannot-remove-without-key", log.Fields{"name": name, "key": path})
+			logger.Errorw("cannot-remove-without-key", log.Fields{"name": name, "key": path})
 		} else if field.Key != "" {
 			partition := strings.SplitN(path, "/", 2)
 			key := partition[0]
@@ -841,12 +841,12 @@ func (n *node) Remove(ctx context.Context, path string, txid string, makeBranch 
 
 				return rev
 			}
-			log.Errorw("failed-to-find-revision", log.Fields{"name": name, "key": keyValue.(string)})
+			logger.Errorw("failed-to-find-revision", log.Fields{"name": name, "key": keyValue.(string)})
 		}
-		log.Errorw("cannot-add-to-non-keyed-container", log.Fields{"name": name, "path": path, "fieldKey": field.Key})
+		logger.Errorw("cannot-add-to-non-keyed-container", log.Fields{"name": name, "path": path, "fieldKey": field.Key})
 
 	} else {
-		log.Errorw("cannot-add-to-non-container-field", log.Fields{"name": name, "path": path})
+		logger.Errorw("cannot-add-to-non-container-field", log.Fields{"name": name, "path": path})
 	}
 
 	return nil
@@ -912,7 +912,7 @@ func (n *node) CreateProxy(ctx context.Context, path string, exclusive bool) (*P
 }
 
 func (n *node) createProxy(ctx context.Context, path string, fullPath string, parentNode *node, exclusive bool) (*Proxy, error) {
-	log.Debugw("node-create-proxy", log.Fields{
+	logger.Debugw("node-create-proxy", log.Fields{
 		"node-type":        reflect.ValueOf(n.Type).Type(),
 		"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 		"path":             path,
@@ -942,14 +942,14 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 
 	if field != nil {
 		if field.IsContainer {
-			log.Debugw("container-field", log.Fields{
+			logger.Debugw("container-field", log.Fields{
 				"node-type":        reflect.ValueOf(n.Type).Type(),
 				"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 				"path":             path,
 				"name":             name,
 			})
 			if path == "" {
-				log.Debugw("folder-proxy", log.Fields{
+				logger.Debugw("folder-proxy", log.Fields{
 					"node-type":        reflect.ValueOf(n.Type).Type(),
 					"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 					"fullPath":         fullPath,
@@ -958,7 +958,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 				newNode := n.MakeNode(reflect.New(field.ClassType.Elem()).Interface(), "")
 				return newNode.makeProxy(path, fullPath, parentNode, exclusive), nil
 			} else if field.Key != "" {
-				log.Debugw("key-proxy", log.Fields{
+				logger.Debugw("key-proxy", log.Fields{
 					"node-type":        reflect.ValueOf(n.Type).Type(),
 					"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 					"fullPath":         fullPath,
@@ -977,17 +977,17 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 
 				var childRev Revision
 				if _, childRev = n.findRevByKey(children, field.Key, keyValue); childRev != nil {
-					log.Debugw("found-revision-matching-key-in-memory", log.Fields{
+					logger.Debugw("found-revision-matching-key-in-memory", log.Fields{
 						"node-type":        reflect.ValueOf(n.Type).Type(),
 						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 						"fullPath":         fullPath,
 						"name":             name,
 					})
 				} else if revs, err := n.GetBranch(NONE).GetLatest().LoadFromPersistence(ctx, fullPath, "", nil); err != nil {
-					log.Errorf("failed-to-load-from-persistence")
+					logger.Errorf("failed-to-load-from-persistence")
 					return nil, err
 				} else if len(revs) > 0 {
-					log.Debugw("found-revision-matching-key-in-db", log.Fields{
+					logger.Debugw("found-revision-matching-key-in-db", log.Fields{
 						"node-type":        reflect.ValueOf(n.Type).Type(),
 						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 						"fullPath":         fullPath,
@@ -995,7 +995,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 					})
 					childRev = revs[0]
 				} else {
-					log.Debugw("no-revision-matching-key", log.Fields{
+					logger.Debugw("no-revision-matching-key", log.Fields{
 						"node-type":        reflect.ValueOf(n.Type).Type(),
 						"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 						"fullPath":         fullPath,
@@ -1007,7 +1007,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 					return childNode.createProxy(ctx, path, fullPath, n, exclusive)
 				}
 			} else {
-				log.Errorw("cannot-access-index-of-empty-container", log.Fields{
+				logger.Errorw("cannot-access-index-of-empty-container", log.Fields{
 					"node-type":        reflect.ValueOf(n.Type).Type(),
 					"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 					"path":             path,
@@ -1015,7 +1015,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 				})
 			}
 		} else {
-			log.Debugw("non-container-field", log.Fields{
+			logger.Debugw("non-container-field", log.Fields{
 				"node-type":        reflect.ValueOf(n.Type).Type(),
 				"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 				"path":             path,
@@ -1026,7 +1026,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 			return childNode.createProxy(ctx, path, fullPath, n, exclusive)
 		}
 	} else {
-		log.Debugw("field-object-is-nil", log.Fields{
+		logger.Debugw("field-object-is-nil", log.Fields{
 			"node-type":        reflect.ValueOf(n.Type).Type(),
 			"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 			"fullPath":         fullPath,
@@ -1034,7 +1034,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 		})
 	}
 
-	log.Warnw("cannot-create-proxy", log.Fields{
+	logger.Warnw("cannot-create-proxy", log.Fields{
 		"node-type":        reflect.ValueOf(n.Type).Type(),
 		"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 		"path":             path,
@@ -1045,7 +1045,7 @@ func (n *node) createProxy(ctx context.Context, path string, fullPath string, pa
 }
 
 func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusive bool) *Proxy {
-	log.Debugw("node-make-proxy", log.Fields{
+	logger.Debugw("node-make-proxy", log.Fields{
 		"node-type":        reflect.ValueOf(n.Type).Type(),
 		"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 		"path":             path,
@@ -1063,7 +1063,7 @@ func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusi
 	}
 
 	if n.Proxy == nil {
-		log.Debugw("constructing-new-proxy", log.Fields{
+		logger.Debugw("constructing-new-proxy", log.Fields{
 			"node-type":        reflect.ValueOf(n.Type).Type(),
 			"parent-node-type": reflect.ValueOf(parentNode.Type).Type(),
 			"path":             path,
@@ -1071,14 +1071,14 @@ func (n *node) makeProxy(path string, fullPath string, parentNode *node, exclusi
 		})
 		n.Proxy = NewProxy(r, n, parentNode, path, fullPath, exclusive)
 	} else {
-		log.Debugw("node-has-existing-proxy", log.Fields{
+		logger.Debugw("node-has-existing-proxy", log.Fields{
 			"node-type":        reflect.ValueOf(n.GetProxy().Node.Type).Type(),
 			"parent-node-type": reflect.ValueOf(n.GetProxy().ParentNode.Type).Type(),
 			"path":             n.GetProxy().Path,
 			"fullPath":         n.GetProxy().FullPath,
 		})
 		if n.GetProxy().Exclusive {
-			log.Error("node is already owned exclusively")
+			logger.Error("node is already owned exclusively")
 		}
 	}
 

@@ -24,7 +24,6 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
 // DataRevision stores the data associated to a revision along with its calculated checksum hash value
@@ -47,7 +46,7 @@ func (dr *DataRevision) hashData(root *root, data interface{}) string {
 
 	if IsProtoMessage(data) {
 		if pbdata, err := proto.Marshal(data.(proto.Message)); err != nil {
-			log.Debugf("problem to marshal protobuf data --> err: %s", err.Error())
+			logger.Debugf("problem to marshal protobuf data --> err: %s", err.Error())
 		} else {
 			buffer.Write(pbdata)
 			// To ensure uniqueness in case data is nil, also include data type
@@ -57,7 +56,7 @@ func (dr *DataRevision) hashData(root *root, data interface{}) string {
 	} else if reflect.ValueOf(data).IsValid() {
 		dataObj := reflect.New(reflect.TypeOf(data).Elem())
 		if json, err := json.Marshal(dataObj.Interface()); err != nil {
-			log.Debugf("problem to marshal data --> err: %s", err.Error())
+			logger.Debugf("problem to marshal data --> err: %s", err.Error())
 		} else {
 			buffer.Write(json)
 		}

@@ -91,7 +91,7 @@ func FindOwnerType(obj reflect.Value, name string, depth int, found bool) reflec
 			}
 		}
 	default:
-		//log.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
+		//logger.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
 	}
 
 	return nil
@@ -134,7 +134,7 @@ func FindKeyOwner(iface interface{}, name string, depth int) interface{} {
 			}
 		}
 	default:
-		//log.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
+		//logger.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
 	}
 
 	return nil
@@ -190,7 +190,7 @@ func GetAttributeValue(data interface{}, name string, depth int) (string, reflec
 			}
 		}
 	default:
-		//log.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
+		//logger.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
 	}
 
 	return attribName, attribValue
@@ -245,7 +245,7 @@ func GetAttributeStructure(data interface{}, name string, depth int) reflect.Str
 
 		}
 	default:
-		//log.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
+		//logger.Debugf("%s Unhandled <%+v> ... It's a %+v\n", prefix, obj, k)
 	}
 
 	return result

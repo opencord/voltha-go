@@ -16,16 +16,6 @@
 
 package model
 
-import (
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-)
-
-func init() {
-	if _, err := log.AddPackage(log.JSON, log.InfoLevel, log.Fields{"instanceId": "DB_MODEL"}); err != nil {
-		log.Errorw("Unable to register package to the log map", log.Fields{"error": err})
-	}
-}
-
 type contextKey string
 
 const (
