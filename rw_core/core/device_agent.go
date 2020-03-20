@@ -1693,7 +1693,7 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	log.Debugw("childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-ud": agent.deviceID})
+	log.Debugw("childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-id": agent.deviceID})
 
 	//Remove the associated peer ports on the parent device
 	parentDevice := agent.getDeviceWithoutLock()

@@ -1159,8 +1159,8 @@ func (dMgr *DeviceManager) DeleteLogicalPort(ctx context.Context, device *voltha
 func (dMgr *DeviceManager) DeleteLogicalPorts(ctx context.Context, cDevice *voltha.Device, pDevice *voltha.Device) error {
 	log.Debugw("delete-all-logical-ports", log.Fields{"device-id": cDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteLogicalPorts(ctx, cDevice.Id); err != nil {
-		log.Warnw("deleteLogical-ports-error", log.Fields{"deviceId": cDevice.Id})
-		return err
+		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
+		log.Warnw("deleteLogical-ports-error", log.Fields{"device-id": cDevice.Id, "error": err})
 	}
 	return nil
 }
@@ -1245,17 +1245,13 @@ func (dMgr *DeviceManager) DisableAllChildDevices(ctx context.Context, parentCur
 	if len(childDeviceIds) == 0 {
 		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentCurrDevice.Id})
 	}
-	allChildDisable := true
 	for _, childDeviceID := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			if err = agent.disableDevice(ctx); err != nil {
+				// Just log the error - this error happens only if the child device was already in deleted state.
 				log.Errorw("failure-disable-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
-				allChildDisable = false
 			}
 		}
-	}
-	if !allChildDisable {
-		return err
 	}
 	return nil
 }
@@ -1271,19 +1267,14 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentCurr
 	if len(childDeviceIds) == 0 {
 		log.Debugw("no-child-device", log.Fields{"parentDeviceId": parentCurrDevice.Id})
 	}
-	allChildDeleted := true
 	for _, childDeviceID := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			if err = agent.deleteDevice(ctx); err != nil {
-				log.Errorw("failure-delete-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
-				allChildDeleted = false
+				log.Warnw("failure-delete-device", log.Fields{"deviceId": childDeviceID, "error": err.Error()})
 			}
 			// No further action is required here.  The deleteDevice will change the device state where the resulting
 			// callback will take care of cleaning the child device agent.
 		}
-	}
-	if !allChildDeleted {
-		return err
 	}
 	return nil
 }
@@ -1292,7 +1283,8 @@ func (dMgr *DeviceManager) DeleteAllChildDevices(ctx context.Context, parentCurr
 func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error {
 	log.Debugw("delete-all-uni-logical-ports", log.Fields{"parent-device-id": curr.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllUNILogicalPorts(ctx, curr); err != nil {
-		return err
+		// Just log the error and let the remaining pipeline proceed - ports may already have been deleted
+		log.Warnw("delete-all-uni-logical-ports-failed", log.Fields{"parent-device-id": curr.Id, "error": err})
 	}
 	return nil
 }
@@ -1301,7 +1293,8 @@ func (dMgr *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, curr *v
 func (dMgr *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *voltha.Device, prev *voltha.Device) error {
 	log.Debugw("delete-all-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(ctx, parentDevice); err != nil {
-		return err
+		// Just log error as logical device may already have been deleted
+		log.Warnw("delete-all-logical-ports-fail", log.Fields{"parent-device-id": parentDevice.Id, "error": err})
 	}
 	return nil
 }
@@ -1550,11 +1543,15 @@ func (dMgr *DeviceManager) disablePort(ctx context.Context, port *voltha.Port, c
 
 // childDeviceLost  calls parent adapter to delete child device and all its references
 func (dMgr *DeviceManager) ChildDeviceLost(ctx context.Context, curr *voltha.Device, prev *voltha.Device) error {
-	log.Debugw("childDeviceLost", log.Fields{"device-id": curr.Id})
+	log.Debugw("childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
 	if parentAgent := dMgr.getDeviceAgent(ctx, curr.ParentId); parentAgent != nil {
-		return parentAgent.ChildDeviceLost(ctx, curr)
+		if err := parentAgent.ChildDeviceLost(ctx, curr); err != nil {
+			// Just log the message and let the remaining pipeline proceed.
+			log.Warnw("childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId, "error": err})
+		}
 	}
-	return status.Errorf(codes.NotFound, "%s", curr.Id)
+	// Do not return an error as parent device may also have been deleted.  Let the remaining pipeline proceed.
+	return nil
 }
 
 func (dMgr *DeviceManager) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
