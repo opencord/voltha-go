@@ -28,17 +28,17 @@ sudo curl -L "https://github.com/docker/compose/releases/download/1.25.0/docker-
 sudo chmod 755 /usr/local/bin/docker-compose
 ```
 
-Install the Golang ppa apt repository and install **golang 1.12**.
+Install the Golang ppa apt repository and install **golang 1.13**.
 ```sh
 sudo add-apt-repository ppa:longsleep/golang-backports
 sudo apt update
-sudo apt install golang-1.12
+sudo apt install golang-1.13
 ```
 
 
 ### Setup environment
 
-Setup a local Golang and docker-compose environment, verifying the golang-1.12 binaries are in your path.  Also add your local `GOPATH` bin folder to `PATH`
+Setup a local Golang and docker-compose environment, verifying the golang-1.13 binaries are in your path.  Also add your local `GOPATH` bin folder to `PATH`
 Add export statements to your `~/.profile` to persist.
 
 ```sh
@@ -47,7 +47,7 @@ mkdir $HOME/go
 export GO111MODULE=on
 export GOPATH=$HOME/go
 export DOCKER_TAG=latest
-export PATH=$PATH:/usr/lib/go-1.12/bin:$GOPATH/bin
+export PATH=$PATH:/usr/lib/go-1.13/bin:$GOPATH/bin
 go version
 ```
 
@@ -112,8 +112,8 @@ make build
 Checkout needed source from gerrit.  Build the `voltha-ofagent` docker image.
 ```sh
 cd ~/source/
-git clone https://gerrit.opencord.org/ofagent-py.git
-cd ~/source/ofagent-py/
+git clone https://gerrit.opencord.org/ofagent-go.git
+cd ~/source/ofagent-go/
 make docker-build
 ```
 
@@ -294,25 +294,25 @@ WARNING: The DOCKER_REPOSITORY variable is not set. Defaulting to a blank string
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 compose_adapter_openolt_1   /app/openolt --kafka_adapt ...   Up      0.0.0.0:50062->50062/tcp                                                                   
 compose_adapter_openonu_1   /voltha/adapters/brcm_open ...   Up                                                                                                 
-compose_etcd_1              etcd --name=etcd0 --advert ...   Up      0.0.0.0:2379->2379/tcp, 0.0.0.0:32789->2380/tcp, 0.0.0.0:32788->4001/tcp                   
+compose_etcd_1              etcd --name=etcd0 --advert ...   Up      0.0.0.0:2379->2379/tcp, 0.0.0.0:32929->2380/tcp, 0.0.0.0:32928->4001/tcp                   
 compose_kafka_1             start-kafka.sh                   Up      0.0.0.0:9092->9092/tcp                                                                     
-compose_ofagent_1           /ofagent/ofagent/main.py - ...   Up                                                                                                 
+compose_ofagent_1           /app/ofagent --controller= ...   Up                                                                                                 
 compose_onos_1              ./bin/onos-service server        Up      6640/tcp, 0.0.0.0:6653->6653/tcp, 0.0.0.0:8101->8101/tcp, 0.0.0.0:8181->8181/tcp, 9876/tcp 
 compose_rw_core_1           /app/rw_core -kv_store_typ ...   Up      0.0.0.0:50057->50057/tcp                                                                   
-compose_zookeeper_1         /bin/sh -c /usr/sbin/sshd  ...   Up      0.0.0.0:2181->2181/tcp, 22/tcp, 2888/tcp, 3888/tcp                                   
+compose_zookeeper_1         /bin/sh -c /usr/sbin/sshd  ...   Up      0.0.0.0:2181->2181/tcp, 22/tcp, 2888/tcp, 3888/tcp
 ```
 
 ```sh
 $ docker ps
 CONTAINER ID        IMAGE                           COMMAND                  CREATED             STATUS              PORTS                                                                                        NAMES
-9575dbc60e09        voltha-openolt-adapter:latest   "/app/openolt --kafk…"   36 seconds ago      Up 31 seconds       0.0.0.0:50062->50062/tcp                                                                     compose_adapter_openolt_1
-2bb235bdee37        quay.io/coreos/etcd:v3.4.1      "etcd --name=etcd0 -…"   36 seconds ago      Up 34 seconds       0.0.0.0:2379->2379/tcp, 0.0.0.0:32789->2380/tcp, 0.0.0.0:32788->4001/tcp                     compose_etcd_1
-d0a4c32169dd        voltha-ofagent:latest           "/ofagent/ofagent/ma…"   36 seconds ago      Up 33 seconds                                                                                                    compose_ofagent_1
-ec78bb0cd1ee        wurstmeister/zookeeper:latest   "/bin/sh -c '/usr/sb…"   36 seconds ago      Up 30 seconds       22/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:2181->2181/tcp                                           compose_zookeeper_1
-ca2199221a55        voltha-rw-core:latest           "/app/rw_core -kv_st…"   36 seconds ago      Up 27 seconds       0.0.0.0:50057->50057/tcp                                                                     compose_rw_core_1
-c5cd74e1cbac        voltha-onos:latest              "./bin/onos-service …"   36 seconds ago      Up 28 seconds       0.0.0.0:6653->6653/tcp, 0.0.0.0:8101->8101/tcp, 6640/tcp, 9876/tcp, 0.0.0.0:8181->8181/tcp   compose_onos_1
-1c4aac99bfd9        voltha-openonu-adapter:latest   "/voltha/adapters/br…"   36 seconds ago      Up 29 seconds                                                                                                    compose_adapter_openonu_1
-a14e042d64d8        wurstmeister/kafka:2.11-2.0.1   "start-kafka.sh"         36 seconds ago      Up 32 seconds       0.0.0.0:9092->9092/tcp                                                                       compose_kafka_1
+08a0e7a1ee5c        voltha-openolt-adapter:latest   "/app/openolt --kafk…"   31 seconds ago      Up 27 seconds       0.0.0.0:50062->50062/tcp                                                                     compose_adapter_openolt_1
+1f364cf7912d        wurstmeister/zookeeper:latest   "/bin/sh -c '/usr/sb…"   31 seconds ago      Up 27 seconds       22/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:2181->2181/tcp                                           compose_zookeeper_1
+ab1822baed41        wurstmeister/kafka:2.11-2.0.1   "start-kafka.sh"         31 seconds ago      Up 24 seconds       0.0.0.0:9092->9092/tcp                                                                       compose_kafka_1
+22a4fe4b2eb4        voltha-ofagent-go:latest        "/app/ofagent --cont…"   31 seconds ago      Up 23 seconds                                                                                                    compose_ofagent_1
+d34e1c976db5        voltha-rw-core:latest           "/app/rw_core -kv_st…"   31 seconds ago      Up 26 seconds       0.0.0.0:50057->50057/tcp                                                                     compose_rw_core_1
+f6ef52975dc0        voltha-openonu-adapter:latest   "/voltha/adapters/br…"   31 seconds ago      Up 29 seconds                                                                                                    compose_adapter_openonu_1
+7ce8bcf7436c        voltha-onos:latest              "./bin/onos-service …"   31 seconds ago      Up 25 seconds       0.0.0.0:6653->6653/tcp, 0.0.0.0:8101->8101/tcp, 6640/tcp, 9876/tcp, 0.0.0.0:8181->8181/tcp   compose_onos_1
+60ac172726f5        quay.io/coreos/etcd:v3.4.1      "etcd --name=etcd0 -…"   31 seconds ago      Up 28 seconds       0.0.0.0:2379->2379/tcp, 0.0.0.0:32931->2380/tcp, 0.0.0.0:32930->4001/tcp                     compose_etcd_1
 ```
 
 

@@ -87,7 +87,7 @@ services:
         - -rw_core_topic=rwcore
         - -kv_store_data_prefix=service/voltha
         - -in_competing_mode=false
-        - -log_level=0
+        - -log_level=DEBUG
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     ports:
@@ -97,21 +97,13 @@ services:
     restart: unless-stopped
 
 
-
   ofagent:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent:${DOCKER_TAG}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-ofagent-go:${DOCKER_TAG}"
     command: [
-      "/ofagent/ofagent/main.py",
-      "--consul=${DOCKER_HOST_IP}:8500",
+      "/app/ofagent",
       "--controller=${DOCKER_HOST_IP}:6653",
-      "--grpc-endpoint=${DOCKER_HOST_IP}:50057",
-      "--instance-id-is-container-name",
-      "-v"
+      "--voltha=${DOCKER_HOST_IP}:50057",
+      "--log_level=DEBUG"
     ]
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
@@ -146,7 +138,8 @@ services:
       "--kafka_cluster_port=9092",
       "--core_topic=rwcore",
       "--kv_store_host=${DOCKER_HOST_IP}",
-      "--kv_store_port=2379"
+      "--kv_store_port=2379",
+      "--log_level=DEBUG"
     ]
     ports:
       - "50062:50062"
@@ -159,13 +152,13 @@ services:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openonu-adapter:${DOCKER_TAG}"
     command: [
       "/voltha/adapters/brcm_openomci_onu/main.py",
-      "-v",
       "--name=brcm_openomci_onu",
       "--kafka_adapter=${DOCKER_HOST_IP}:9092",
       "--kafka_cluster=${DOCKER_HOST_IP}:9092",
       "--backend=etcd",
       "--etcd=${DOCKER_HOST_IP}:2379",
-      "--core_topic=rwcore"
+      "--core_topic=rwcore",
+      "--log_level=DEBUG"
     ]
     networks:
     - default
