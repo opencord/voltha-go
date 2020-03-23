@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1190337e_8a26acf8",
+        "filename": "db/model/common.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-23T17:28:58Z",
+      "side": 1,
+      "message": "Should this be using a \"globally\"-defined constant instead, instead of per-package defaults? (defined in voltha-lib-go/pkg/log/ ?)  (I understand if one usage needs to be different, but there\u0027s no need to re-define the same default value in may places.)\n\n(More like this.)",
+      "revId": "1acc8aeab61557436c0fdb423c471f38b59935db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
