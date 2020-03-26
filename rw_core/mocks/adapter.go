@@ -254,3 +254,8 @@ func (ta *Adapter) Disable_port(deviceId string, port *voltha.Port) error { //no
 func (ta *Adapter) Child_device_lost(pDeviceID string, pPortNo uint32, onuID uint32) error { //nolint
 	return nil
 }
+
+// Start_omci_test
+func (ta *Adapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) { //nolint
+	return nil, nil
+}
