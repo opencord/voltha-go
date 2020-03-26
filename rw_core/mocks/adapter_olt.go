@@ -18,6 +18,7 @@ package mocks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -308,6 +309,12 @@ func (oltA *OLTAdapter) Reboot_device(device *voltha.Device) error { // nolint
 		}
 	}()
 	return nil
+}
+
+// TODO: REMOVE Start_omci_test begins an omci self-test
+func (oltA *OLTAdapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*ic.TestResponse, error) {
+	_ = device
+	return nil, errors.New("start-omci-test-not-implemented")
 }
 
 // GetFlowCount returns the total number of flows presently under this adapter

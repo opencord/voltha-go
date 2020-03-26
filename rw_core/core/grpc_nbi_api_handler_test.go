@@ -808,6 +808,54 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 	assert.Equal(t, 0, len(onuDevices.Items))
 }
 
+func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *APIHandler) {
+	// Omci test action should fail due to nonexistent device id
+	request := &voltha.OmciTestRequest{Id: "123", Uuid: "456"}
+	_, err := nbi.StartOmciTestAction(getContext(), request)
+	assert.NotNil(t, err)
+	assert.Equal(t, "rpc error: code = NotFound desc = 123", err.Error())
+
+	// Create a device that has no adapter registered
+	deviceNoAdapter, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: "noAdapterRegisteredOmciTest", MacAddress: "aa:bb:cc:cc:ee:01"})
+	assert.Nil(t, err)
+	assert.NotNil(t, deviceNoAdapter)
+
+	// Omci test action should fail due to nonexistent adapter
+	request = &voltha.OmciTestRequest{Id: deviceNoAdapter.Id, Uuid: "456"}
+	_, err = nbi.StartOmciTestAction(getContext(), request)
+	assert.NotNil(t, err)
+	assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegisteredOmciTest", err.Error())
+
+	//Remove the device
+	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: deviceNoAdapter.Id})
+	assert.Nil(t, err)
+
+	//Ensure there are no devices in the Core now - wait until condition satisfied or timeout
+	var vFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
+		return devices != nil && len(devices.Items) == 0
+	}
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction)
+	assert.Nil(t, err)
+
+	//	Create an onu device
+	onuDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.onuAdapterName, MacAddress: "aa:bb:cc:cc:ee:03"})
+	assert.Nil(t, err)
+	assert.NotNil(t, onuDevice)
+
+	// Omci test action should succeed
+	request = &voltha.OmciTestRequest{Id: onuDevice.Id, Uuid: "456"}
+	resp, err := nbi.StartOmciTestAction(getContext(), request)
+	assert.Nil(t, err)
+	assert.Equal(t, resp.Result, voltha.TestResponse_SUCCESS)
+
+	//Remove the device
+	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: onuDevice.Id})
+	assert.Nil(t, err)
+	//Ensure there are no devices in the Core now - wait until condition satisfied or timeout
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction)
+	assert.Nil(t, err)
+}
+
 func makeSimpleFlowMod(fa *flows.FlowArgs) *ofp.OfpFlowMod {
 	matchFields := make([]*ofp.OfpOxmField, 0)
 	for _, val := range fa.MatchFields {
@@ -1079,6 +1127,9 @@ func TestSuite1(t *testing.T) {
 
 		// 9. Test enable and delete all devices
 		nb.testEnableAndDeleteAllDevice(t, nbi)
+
+		// 10. Test omci test
+		nb.testStartOmciTestAction(t, nbi)
 	}
 
 	//x. TODO - More tests to come
