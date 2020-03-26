@@ -808,6 +808,95 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 	assert.Equal(t, 0, len(onuDevices.Items))
 }
 
+func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *APIHandler) {
+	// Omci test action should fail due to nonexistent device id
+	request := &voltha.OmciTestRequest{Id: "123", Uuid: "456"}
+	_, err := nbi.StartOmciTestAction(getContext(), request)
+	assert.NotNil(t, err)
+	assert.Equal(t, "rpc error: code = NotFound desc = 123", err.Error())
+
+	// Create a device that has no adapter registered
+	deviceNoAdapter, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: "noAdapterRegisteredOmciTest", MacAddress: "aa:bb:cc:cc:ee:01"})
+	assert.Nil(t, err)
+	assert.NotNil(t, deviceNoAdapter)
+
+	// Omci test action should fail due to nonexistent adapter
+	request = &voltha.OmciTestRequest{Id: deviceNoAdapter.Id, Uuid: "456"}
+	_, err = nbi.StartOmciTestAction(getContext(), request)
+	assert.NotNil(t, err)
+	assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegisteredOmciTest", err.Error())
+
+	//	Create an onu device
+	onuDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.onuAdapterName, MacAddress: "aa:bb:cc:cc:ee:03"})
+	assert.Nil(t, err)
+	assert.NotNil(t, onuDevice)
+
+	// Omci test action should fail due to nonexistent adapter
+	request = &voltha.OmciTestRequest{Id: onuDevice.Id, Uuid: "456"}
+	_, err = nbi.StartOmciTestAction(getContext(), request)
+	assert.NotNil(t, err)
+	assert.Equal(t, "xrpc error: code = NotFound desc = 123", err.Error())
+
+	/*
+		func (handler *APIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+
+		// Try to enable the oltDevice and check the error message
+		_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
+		assert.NotNil(t, err)
+		assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegistered", err.Error())
+
+		//Remove the device
+		_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
+		assert.Nil(t, err)
+
+		//Ensure there are no devices in the Core now - wait until condition satisfied or timeout
+		var vdFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
+			return devices != nil && len(devices.Items) == 0
+		}
+		err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vdFunction)
+		assert.Nil(t, err)
+
+		// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg)
+
+		//	Create the device with valid data
+		oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
+		assert.Nil(t, err)
+		assert.NotNil(t, oltDevice)
+
+		// Verify oltDevice exist in the core
+		devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(devices.Items))
+		assert.Equal(t, oltDevice.Id, devices.Items[0].Id)
+
+		// Enable the oltDevice
+		_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+		assert.Nil(t, err)
+
+		// Wait for the logical device to be in the ready state
+		var vldFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
+			return ld != nil && len(ld.Ports) == nb.numONUPerOLT+1
+		}
+		err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
+		assert.Nil(t, err)
+
+		// Verify that the devices have been setup correctly
+		nb.verifyDevices(t, nbi)
+
+		// Get latest oltDevice data
+		oltDevice, err = nbi.GetDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+		assert.Nil(t, err)
+
+		// Verify that the logical device has been setup correctly
+		nb.verifyLogicalDevices(t, oltDevice, nbi)
+
+		// Wait until all flows has been sent to the devices successfully
+		wg.Wait()*/
+}
+
 func makeSimpleFlowMod(fa *flows.FlowArgs) *ofp.OfpFlowMod {
 	matchFields := make([]*ofp.OfpOxmField, 0)
 	for _, val := range fa.MatchFields {
@@ -1060,26 +1149,27 @@ func TestSuite1(t *testing.T) {
 	numberOfDeviceTestRuns := 2
 	for i := 1; i <= numberOfDeviceTestRuns; i++ {
 		//3. Test create device
-		nb.testCreateDevice(t, nbi)
+		/*		nb.testCreateDevice(t, nbi)
 
-		// 4. Test Enable a device
-		nb.testEnableDevice(t, nbi)
+				// 4. Test Enable a device
+				nb.testEnableDevice(t, nbi)
 
-		// 5. Test disable and ReEnable a root device
-		nb.testDisableAndReEnableRootDevice(t, nbi)
+				// 5. Test disable and ReEnable a root device
+				nb.testDisableAndReEnableRootDevice(t, nbi)
 
-		// 6. Test disable and Enable pon port of OLT device
-		nb.testDisableAndEnablePort(t, nbi)
+				// 6. Test disable and Enable pon port of OLT device
+				nb.testDisableAndEnablePort(t, nbi)
 
-		// 7.Test Device unreachable when OLT is enabled
-		nb.testDeviceRebootWhenOltIsEnabled(t, nbi)
+				// 7.Test Device unreachable when OLT is enabled
+				nb.testDeviceRebootWhenOltIsEnabled(t, nbi)
 
-		// 8. Test disable and delete all devices
-		nb.testDisableAndDeleteAllDevice(t, nbi)
+				// 8. Test disable and delete all devices
+				nb.testDisableAndDeleteAllDevice(t, nbi)
 
-		// 9. Test enable and delete all devices
-		nb.testEnableAndDeleteAllDevice(t, nbi)
+				// 9. Test enable and delete all devices
+				nb.testEnableAndDeleteAllDevice(t, nbi) */
 	}
 
 	//x. TODO - More tests to come
+	nb.testStartOmciTestAction(t, nbi)
 }
