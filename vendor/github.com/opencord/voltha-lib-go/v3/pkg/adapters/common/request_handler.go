@@ -701,3 +701,37 @@ func (rhp *RequestHandlerProxy) Child_device_lost(args []*ic.Argument) error {
 	}
 	return nil
 }
+
+func (rhp *RequestHandlerProxy) Start_omci_test(args []*ic.Argument) (*ic.TestResponse, error) {
+	if len(args) < 2 {
+		logger.Warn("invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+
+	// TODO: See related comment in voltha-go:adapter_proxy_go:startOmciTest()
+	//   Second argument should perhaps be uuid instead of omcitestrequest
+
+	device := &voltha.Device{}
+	request := &voltha.OmciTestRequest{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				logger.Warnw("cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "omcitestrequest":
+			if err := ptypes.UnmarshalAny(arg.Value, request); err != nil {
+				logger.Warnw("cannot-unmarshal-omcitestrequest", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	logger.Debugw("Start_omci_test", log.Fields{"device-id": device.Id, "req": request})
+	result, err := rhp.adapter.Start_omci_test(device, request)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return result, nil
+}

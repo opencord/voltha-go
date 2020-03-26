@@ -499,11 +499,11 @@ func getCallerInfo() (string, string, string, int) {
 }
 
 func getPackageLevelSugaredLogger() *zp.SugaredLogger {
-	pkgName, fileName, funcName, line := getCallerInfo()
+	pkgName, _, _, _ := getCallerInfo()
 	if _, exist := loggers[pkgName]; exist {
-		return loggers[pkgName].log.With("caller", fmt.Sprintf("%s.%s:%d", fileName, funcName, line))
+		return loggers[pkgName].log
 	}
-	return defaultLogger.log.With("caller", fmt.Sprintf("%s.%s:%d", fileName, funcName, line))
+	return defaultLogger.log
 }
 
 func getPackageLevelLogger() Logger {

@@ -219,6 +219,12 @@ func (onuA *ONUAdapter) Update_flows_incrementally(device *voltha.Device, flows 
 	return nil
 }
 
+// Start_omci_test begins an omci self-test
+func (onuA *ONUAdapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*ic.TestResponse, error) { // nolint
+	_ = device
+	return &ic.TestResponse{Result: ic.TestResponse_SUCCESS}, nil
+}
+
 // GetFlowCount returns the total number of flows presently under this adapter
 func (onuA *ONUAdapter) GetFlowCount() int {
 	onuA.lock.Lock()
