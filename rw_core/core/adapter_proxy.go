@@ -349,6 +349,8 @@ func (ap *AdapterProxy) startOmciTest(ctx context.Context, device *voltha.Device
 	toTopic := ap.getAdapterTopic(device.Adapter)
 	// Use a device specific topic as we are the only core handling requests for this device
 	replyToTopic := ap.getCoreTopic()
+	// TODO: Perhaps this should have used omcitestrequest.uuid as the second argument rather
+	//   than including the whole request, which is (deviceid, uuid)
 	return ap.sendRPC(ctx, rpc, &toTopic, &replyToTopic, true, device.Id,
 		&kafka.KVArg{Key: "device", Value: device},
 		&kafka.KVArg{Key: "omcitestrequest", Value: omcitestrequest})
