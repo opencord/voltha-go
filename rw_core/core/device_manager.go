@@ -19,6 +19,11 @@ package core
 import (
 	"context"
 	"errors"
+	"reflect"
+	"runtime"
+	"sync"
+	"time"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
@@ -29,10 +34,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
-	"runtime"
-	"sync"
-	"time"
 )
 
 // DeviceManager represent device manager attributes
@@ -128,13 +129,6 @@ func (dMgr *DeviceManager) getDeviceAgent(ctx context.Context, deviceID string) 
 		if !ok {
 			return nil
 		}
-		// Register this device for ownership tracking
-		go func() {
-			_, err = dMgr.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: deviceID})
-			if err != nil {
-				logger.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
-			}
-		}()
 		return agent.(*DeviceAgent)
 	}
 	//TODO: Change the return params to return an error as well
@@ -241,25 +235,13 @@ func (dMgr *DeviceManager) stopManagingDevice(ctx context.Context, id string) {
 	if dMgr.IsDeviceInCache(id) { // Proceed only if an agent is present for this device
 		if root, _ := dMgr.IsRootDevice(id); root {
 			// stop managing the logical device
-			ldeviceID := dMgr.logicalDeviceMgr.stopManagingLogicalDeviceWithDeviceID(ctx, id)
-			if ldeviceID != "" { // Can happen if logical device agent was already stopped
-				err := dMgr.core.deviceOwnership.AbandonDevice(ldeviceID)
-				if err != nil {
-					logger.Errorw("unable-to-abandon-the-device", log.Fields{"error": err})
-				}
-			}
-			// We do not need to stop the child devices as this is taken care by the state machine.
+			_ = dMgr.logicalDeviceMgr.stopManagingLogicalDeviceWithDeviceID(ctx, id)
 		}
 		if agent := dMgr.getDeviceAgent(ctx, id); agent != nil {
 			if err := agent.stop(ctx); err != nil {
 				logger.Warnw("unable-to-stop-device-agent", log.Fields{"device-id": agent.deviceID, "error": err})
 			}
 			dMgr.deleteDeviceAgentFromMap(agent)
-			// Abandon the device ownership
-			err := dMgr.core.deviceOwnership.AbandonDevice(id)
-			if err != nil {
-				logger.Warnw("unable-to-abandon-device", log.Fields{"error": err})
-			}
 		}
 	}
 }
@@ -438,10 +420,10 @@ func (dMgr *DeviceManager) isParentDeviceExist(ctx context.Context, newDevice *v
 			if !device.(*voltha.Device).Root {
 				continue
 			}
-			if hostPort != "" && hostPort == device.(*voltha.Device).GetHostAndPort() {
+			if hostPort != "" && hostPort == device.(*voltha.Device).GetHostAndPort() && device.(*voltha.Device).AdminState != voltha.AdminState_DELETED {
 				return true, nil
 			}
-			if newDevice.MacAddress != "" && newDevice.MacAddress == device.(*voltha.Device).MacAddress {
+			if newDevice.MacAddress != "" && newDevice.MacAddress == device.(*voltha.Device).MacAddress && device.(*voltha.Device).AdminState != voltha.AdminState_DELETED {
 				return true, nil
 			}
 		}
@@ -627,14 +609,13 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 	logger.Debugw("adapter-restarted", log.Fields{"adapter": adapter.Id})
 
 	// Let's reconcile the device managed by this Core only
-	rootDeviceIds := dMgr.core.deviceOwnership.GetAllDeviceIdsOwnedByMe()
-	if len(rootDeviceIds) == 0 {
+	if len(dMgr.rootDevices) == 0 {
 		logger.Debugw("nothing-to-reconcile", log.Fields{"adapterId": adapter.Id})
 		return nil
 	}
 
 	responses := make([]utils.Response, 0)
-	for _, rootDeviceID := range rootDeviceIds {
+	for rootDeviceID := range dMgr.rootDevices {
 		if rootDevice, _ := dMgr.getDeviceFromModel(ctx, rootDeviceID); rootDevice != nil {
 			if rootDevice.Adapter == adapter.Id {
 				if isOkToReconcile(rootDevice) {
@@ -1024,13 +1005,6 @@ func (dMgr *DeviceManager) childDeviceDetected(ctx context.Context, parentDevice
 		return nil, err
 	}
 	dMgr.addDeviceAgentToMap(agent)
-
-	// Since this Core has handled this request then it therefore owns this child device.  Set the
-	// ownership of this device to this Core
-	_, err = dMgr.core.deviceOwnership.OwnedByMe(ctx, &utils.DeviceID{ID: agent.deviceID})
-	if err != nil {
-		logger.Errorw("unable-to-find-core-instance-active-owns-this-device", log.Fields{"error": err})
-	}
 
 	// Activate the child device
 	if agent = dMgr.getDeviceAgent(ctx, agent.deviceID); agent != nil {
