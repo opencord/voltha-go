@@ -19,6 +19,10 @@ package core
 import (
 	"context"
 	"errors"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -27,9 +31,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
-	"sync"
-	"time"
 )
 
 // LogicalDeviceManager represent logical device manager attributes
@@ -130,20 +131,6 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(ctx context.Context, id stri
 		return agent.GetLogicalDevice(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
-}
-
-func (ldMgr *LogicalDeviceManager) listManagedLogicalDevices(ctx context.Context) (*voltha.LogicalDevices, error) {
-	logger.Debug("listManagedLogicalDevices")
-	result := &voltha.LogicalDevices{}
-	ldMgr.logicalDeviceAgents.Range(func(key, value interface{}) bool {
-		agent := value.(*LogicalDeviceAgent)
-		if ld, _ := agent.GetLogicalDevice(ctx); ld != nil {
-			result.Items = append(result.Items, ld)
-		}
-		return true
-	})
-
-	return result, nil
 }
 
 //listLogicalDevices returns the list of all logical devices
@@ -303,10 +290,6 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, devi
 		}
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
-		err := ldMgr.core.deviceOwnership.AbandonDevice(logDeviceID)
-		if err != nil {
-			logger.Errorw("unable-to-abandon-the-device", log.Fields{"error": err})
-		}
 	}
 
 	logger.Debug("deleting-logical-device-ends")

@@ -55,7 +55,6 @@ type Core struct {
 	kvClient          kvstore.Client
 	backend           db.Backend
 	kafkaClient       kafka.Client
-	deviceOwnership   *DeviceOwnership
 }
 
 // NewCore creates instance of rw core
@@ -150,10 +149,6 @@ func (core *Core) Start(ctx context.Context) error {
 	go core.startGRPCService(ctx)
 	go core.startAdapterManager(ctx)
 	go core.monitorKvstoreLiveness(ctx)
-
-	// Setup device ownership context
-	core.deviceOwnership = NewDeviceOwnership(core.instanceID, core.kvClient, core.deviceMgr, core.logicalDeviceMgr,
-		"service/voltha/owns_device", 10)
 
 	logger.Info("core-services-started")
 	return nil
@@ -378,7 +373,7 @@ func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstan
 	ldMgr *LogicalDeviceManager, aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy,
 ) error {
 	requestProxy := NewAdapterRequestHandlerProxy(core, coreInstanceID, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
-		core.config.InCompetingMode, core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
+		core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 
 	// Register the broadcast topic to handle any core-bound broadcast requests
 	if err := core.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: core.config.CoreTopic}, requestProxy); err != nil {
