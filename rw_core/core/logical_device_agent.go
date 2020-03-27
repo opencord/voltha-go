@@ -21,6 +21,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
 	fd "github.com/opencord/voltha-go/rw_core/flowdecomposition"
@@ -33,9 +37,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
-	"sync"
-	"time"
 )
 
 const (
@@ -45,6 +46,7 @@ const (
 // LogicalDeviceAgent represent attributes of logical device agent
 type LogicalDeviceAgent struct {
 	logicalDeviceID    string
+	serialNumber       string
 	rootDeviceID       string
 	deviceMgr          *DeviceManager
 	ldeviceMgr         *LogicalDeviceManager
@@ -67,12 +69,12 @@ type LogicalDeviceAgent struct {
 	stopOnce           sync.Once
 }
 
-func newLogicalDeviceAgent(id string, deviceID string, ldeviceMgr *LogicalDeviceManager,
-	deviceMgr *DeviceManager,
-	cdProxy *model.Proxy, timeout time.Duration) *LogicalDeviceAgent {
+func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalDeviceManager,
+	deviceMgr *DeviceManager, cdProxy *model.Proxy, timeout time.Duration) *LogicalDeviceAgent {
 	var agent LogicalDeviceAgent
 	agent.exitChannel = make(chan int, 1)
 	agent.logicalDeviceID = id
+	agent.serialNumber = sn
 	agent.rootDeviceID = deviceID
 	agent.deviceMgr = deviceMgr
 	agent.clusterDataProxy = cdProxy
@@ -81,7 +83,7 @@ func newLogicalDeviceAgent(id string, deviceID string, ldeviceMgr *LogicalDevice
 	agent.portProxies = make(map[string]*model.Proxy)
 	agent.logicalPortsNo = make(map[uint32]bool)
 	agent.defaultTimeout = timeout
-	agent.requestQueue = coreutils.NewRequestQueue(agent.logicalDeviceID, maxOrderedLogicalDeviceRequestQueueSize)
+	agent.requestQueue = coreutils.NewRequestQueue(agent.serialNumber, maxOrderedLogicalDeviceRequestQueueSize)
 	return &agent
 }
 
@@ -118,7 +120,7 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDB bool) err
 
 		// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
 		var datapathID uint64
-		if datapathID, err = CreateDataPathID(agent.logicalDeviceID); err != nil {
+		if datapathID, err = CreateDataPathID(agent.serialNumber); err != nil {
 			return err
 		}
 		ld.DatapathId = datapathID
