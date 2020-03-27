@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df1c762c_e344946e",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-27T00:10:45Z",
+      "side": 1,
+      "message": "This will actually create an OLT device, i.e. a root device.  It may not matter for the this.\n\nTo mimic creation of an onu device, you will need to create an olt device and some onu devices will be created as well (all mocks)",
+      "revId": "cf9c559794cbd56948fb321a7a890cd67a05aedf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
