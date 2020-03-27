@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8f4cd106_febfff68",
+        "filename": "rw_core/core/grpc_nbi_api_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-27T16:33:46Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "ff193b8f_e9147086",
+      "revId": "8f42479c0f8d1514f856afda51f52bfe0f6d9f62",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9958af7e_583097db",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "71353295_7b164bdd",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-27T16:33:46Z",
+      "side": 1,
+      "message": "The MAC seems important for communication between the adapter and core where the adapter needs to map from the physical device to the voltha objects. In particular the kafka context uses this, which is why i came up with the `sn` as that is the \"minimized mac\" that is used for the linkage from adapter.",
+      "parentUuid": "9958af7e_583097db",
+      "revId": "8f42479c0f8d1514f856afda51f52bfe0f6d9f62",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e5d0fe7_156e2c3c",
         "filename": "rw_core/core/transaction.go",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2020-03-27T13:42:13Z",
       "side": 1,
       "message": "Should this file also be removed?",
+      "revId": "8f42479c0f8d1514f856afda51f52bfe0f6d9f62",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f53c3d2_231c6368",
+        "filename": "rw_core/core/transaction.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-27T16:33:46Z",
+      "side": 1,
+      "message": "it appears it can be. gone.",
+      "parentUuid": "5e5d0fe7_156e2c3c",
       "revId": "8f42479c0f8d1514f856afda51f52bfe0f6d9f62",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
