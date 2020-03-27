@@ -110,14 +110,6 @@ func (rw *rwCore) start(ctx context.Context, instanceID string) {
 	cm := conf.NewConfigManager(rw.kvClient, rw.config.KVStoreType, rw.config.KVStoreHost, rw.config.KVStorePort, rw.config.KVStoreTimeout)
 	go conf.StartLogLevelConfigProcessing(cm, ctx)
 
-	// Setup KV transaction context
-	if err := c.SetTransactionContext(instanceID,
-		rw.config.KVStoreDataPrefix+"/transactions/",
-		rw.kvClient,
-		rw.config.KVStoreTimeout); err != nil {
-		logger.Fatal("creating-transaction-context-failed")
-	}
-
 	// Setup Kafka Client
 	if rw.kafkaClient, err = newKafkaClient("sarama",
 		rw.config.KafkaAdapterHost,

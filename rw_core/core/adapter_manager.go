@@ -19,11 +19,12 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/golang/protobuf/ptypes"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
@@ -215,57 +216,6 @@ func (aMgr *AdapterManager) updateLastAdapterCommunication(adapterID string, tim
 
 	if have {
 		adapterAgent.updateCommunicationTime(time.Unix(timestamp/1000, timestamp%1000*1000))
-	}
-}
-
-//updateAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
-func (aMgr *AdapterManager) updateAdaptersAndDevicetypesInMemory(ctx context.Context, adapter *voltha.Adapter) {
-	aMgr.lockAdaptersMap.Lock()
-	defer aMgr.lockAdaptersMap.Unlock()
-
-	if adapterAgent, ok := aMgr.adapterAgents[adapter.Id]; ok {
-		if adapterAgent.getAdapter() != nil {
-			// Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
-			go func() {
-				err := aMgr.deviceMgr.adapterRestarted(ctx, adapter)
-				if err != nil {
-					logger.Errorw("unable-to-restart-adapter", log.Fields{"error": err})
-				}
-			}()
-			return
-		}
-	}
-
-	// Update the adapters
-	adaptersIf, err := aMgr.clusterDataProxy.List(ctx, "/adapters", 0, false, "")
-	if err != nil {
-		logger.Errorw("failed-to-list-adapters-from-cluster-proxy", log.Fields{"error": err})
-		return
-	}
-	if adaptersIf != nil {
-		for _, adapterIf := range adaptersIf.([]interface{}) {
-			if adapter, ok := adapterIf.(*voltha.Adapter); ok {
-				logger.Debugw("found-existing-adapter", log.Fields{"adapterId": adapter.Id})
-				aMgr.updateAdapterWithoutLock(adapter)
-			}
-		}
-	}
-	aMgr.lockdDeviceTypeToAdapterMap.Lock()
-	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
-	// Update the device types
-	deviceTypesIf, err := aMgr.clusterDataProxy.List(context.Background(), "/device_types", 0, false, "")
-	if err != nil {
-		logger.Errorw("Failed-to-list-device-types-in-cluster-data-proxy", log.Fields{"error": err})
-		return
-	}
-	if deviceTypesIf != nil {
-		dTypes := &voltha.DeviceTypes{Items: []*voltha.DeviceType{}}
-		for _, deviceTypeIf := range deviceTypesIf.([]interface{}) {
-			if dType, ok := deviceTypeIf.(*voltha.DeviceType); ok {
-				logger.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
-				aMgr.updateDeviceTypeWithoutLock(dType)
-			}
-		}
 	}
 }
 

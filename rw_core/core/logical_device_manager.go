@@ -19,6 +19,10 @@ package core
 import (
 	"context"
 	"errors"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -27,9 +31,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
-	"sync"
-	"time"
 )
 
 // LogicalDeviceManager represent logical device manager attributes
@@ -132,20 +133,6 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(ctx context.Context, id stri
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
-func (ldMgr *LogicalDeviceManager) listManagedLogicalDevices(ctx context.Context) (*voltha.LogicalDevices, error) {
-	logger.Debug("listManagedLogicalDevices")
-	result := &voltha.LogicalDevices{}
-	ldMgr.logicalDeviceAgents.Range(func(key, value interface{}) bool {
-		agent := value.(*LogicalDeviceAgent)
-		if ld, _ := agent.GetLogicalDevice(ctx); ld != nil {
-			result.Items = append(result.Items, ld)
-		}
-		return true
-	})
-
-	return result, nil
-}
-
 //listLogicalDevices returns the list of all logical devices
 func (ldMgr *LogicalDeviceManager) listLogicalDevices(ctx context.Context) (*voltha.LogicalDevices, error) {
 	logger.Debug("ListAllLogicalDevices")
@@ -174,15 +161,16 @@ func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, devi
 	// For now use the serial number - it may contain any combination of alphabetic characters and numbers,
 	// with length varying from eight characters to a maximum of 14 characters.   Mac Address is part of oneof
 	// in the Device model.  May need to be moved out.
-	macAddress := device.MacAddress
-	id := strings.Replace(macAddress, ":", "", -1)
+	id := CreateLogicalDeviceID()
+	sn := strings.Replace(device.MacAddress, ":", "", -1)
 	if id == "" {
-		logger.Errorw("mac-address-not-set", log.Fields{"deviceId": device.Id})
+		logger.Errorw("mac-address-not-set", log.Fields{"deviceId": device.Id, "serial-number": sn})
 		return nil, errors.New("mac-address-not-set")
 	}
+
 	logger.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
-	agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
+	agent := newLogicalDeviceAgent(id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 
 	// Update the root device with the logical device Id reference
@@ -255,7 +243,7 @@ func (ldMgr *LogicalDeviceManager) load(ctx context.Context, lDeviceID string) e
 			ldMgr.logicalDevicesLoadingLock.Unlock()
 			if _, err := ldMgr.getLogicalDeviceFromModel(ctx, lDeviceID); err == nil {
 				logger.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceID})
-				agent := newLogicalDeviceAgent(lDeviceID, "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
+				agent := newLogicalDeviceAgent(lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
 				if err := agent.start(ctx, true); err != nil {
 					return err
 				}
@@ -303,10 +291,6 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, devi
 		}
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
-		err := ldMgr.core.deviceOwnership.AbandonDevice(logDeviceID)
-		if err != nil {
-			logger.Errorw("unable-to-abandon-the-device", log.Fields{"error": err})
-		}
 	}
 
 	logger.Debug("deleting-logical-device-ends")
