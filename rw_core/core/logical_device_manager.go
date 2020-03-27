@@ -19,6 +19,10 @@ package core
 import (
 	"context"
 	"errors"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -27,9 +31,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
-	"sync"
-	"time"
 )
 
 // LogicalDeviceManager represent logical device manager attributes
@@ -303,10 +304,6 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalDevice(ctx context.Context, devi
 		}
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
-		err := ldMgr.core.deviceOwnership.AbandonDevice(logDeviceID)
-		if err != nil {
-			logger.Errorw("unable-to-abandon-the-device", log.Fields{"error": err})
-		}
 	}
 
 	logger.Debug("deleting-logical-device-ends")
