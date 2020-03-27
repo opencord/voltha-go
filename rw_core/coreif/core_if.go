@@ -40,5 +40,4 @@ type Core interface {
 	StartGRPCService(ctx context.Context)
 	GetDeviceManager() DeviceManager
 	GetLogicalDeviceManager() LogicalDeviceManager
-	GetDeviceOwnerShip() DeviceOwnership
 }
