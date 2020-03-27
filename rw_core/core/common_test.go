@@ -103,14 +103,6 @@ func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client
 	if err != nil {
 		panic("no kv client")
 	}
-	// Setup KV transaction context
-	txnPrefix := cf.KVStoreDataPrefix + "/transactions/"
-	if err = SetTransactionContext(coreInstanceID,
-		txnPrefix,
-		client,
-		cf.KVStoreTimeout); err != nil {
-		logger.Fatal("creating-transaction-context-failed")
-	}
 	return client
 }
 
