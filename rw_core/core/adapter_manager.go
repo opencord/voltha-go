@@ -94,7 +94,7 @@ func newAdapterManager(cdProxy *model.Proxy, coreInstanceID string, kafkaClient 
 		clusterDataProxy: cdProxy,
 		deviceTypes:      make(map[string]*voltha.DeviceType),
 		adapterAgents:    make(map[string]*AdapterAgent),
-		deviceMgr: deviceMgr,
+		deviceMgr:        deviceMgr,
 	}
 	kafkaClient.SubscribeForMetadata(aMgr.updateLastAdapterCommunication)
 	return aMgr
