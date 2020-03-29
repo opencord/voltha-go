@@ -1770,10 +1770,7 @@ func (agent *LogicalDeviceAgent) portUpdated(ctx context.Context, args ...interf
 // scenario. This also applies to the case where the port was already added.
 func (agent *LogicalDeviceAgent) addNNILogicalPort(ctx context.Context, device *voltha.Device, port *voltha.Port) (bool, error) {
 	logger.Debugw("addNNILogicalPort", log.Fields{"NNI": port})
-	if device.AdminState != voltha.AdminState_ENABLED || device.OperStatus != voltha.OperStatus_ACTIVE {
-		logger.Infow("device-not-ready", log.Fields{"deviceId": device.Id, "admin": device.AdminState, "oper": device.OperStatus})
-		return false, nil
-	}
+
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return false, err
 	}
