@@ -18,495 +18,149 @@ package model
 
 import (
 	"context"
-	"crypto/md5"
 	"errors"
 	"fmt"
-	"reflect"
-	"runtime"
-	"strings"
-	"sync"
-
+	"github.com/gogo/protobuf/proto"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"reflect"
 )
 
-// OperationContext holds details on the information used during an operation
-type OperationContext struct {
-	Path      string
-	Data      interface{}
-	FieldName string
-	ChildKey  string
-}
+// RequestTimestamp attribute used to store a timestamp in the context object
+const RequestTimestamp contextKey = "request-timestamp"
 
-// NewOperationContext instantiates a new OperationContext structure
-func NewOperationContext(path string, data interface{}, fieldName string, childKey string) *OperationContext {
-	oc := &OperationContext{
-		Path:      path,
-		Data:      data,
-		FieldName: fieldName,
-		ChildKey:  childKey,
-	}
-	return oc
-}
-
-// Update applies new data to the context structure
-func (oc *OperationContext) Update(data interface{}) *OperationContext {
-	oc.Data = data
-	return oc
-}
+type contextKey string
 
 // Proxy holds the information for a specific location with the data model
 type Proxy struct {
-	mutex      sync.RWMutex
-	Root       *root
-	Node       *node
-	ParentNode *node
-	Path       string
-	FullPath   string
-	Exclusive  bool
-	Callbacks  map[CallbackType]map[string]*CallbackTuple
-	operation  ProxyOperation
+	kvStore *db.Backend
+	path    string
 }
 
 // NewProxy instantiates a new proxy to a specific location
-func NewProxy(root *root, node *node, parentNode *node, path string, fullPath string, exclusive bool) *Proxy {
-	callbacks := make(map[CallbackType]map[string]*CallbackTuple)
-	if fullPath == "/" {
-		fullPath = ""
+func NewProxy(kvStore *db.Backend, path string) *Proxy {
+	if path == "/" {
+		path = ""
 	}
-	p := &Proxy{
-		Root:       root,
-		Node:       node,
-		ParentNode: parentNode,
-		Exclusive:  exclusive,
-		Path:       path,
-		FullPath:   fullPath,
-		Callbacks:  callbacks,
+	return &Proxy{
+		kvStore: kvStore,
+		path:    path,
 	}
-	return p
-}
-
-// getRoot returns the root attribute of the proxy
-func (p *Proxy) getRoot() *root {
-	return p.Root
-}
-
-// getPath returns the path attribute of the proxy
-func (p *Proxy) getPath() string {
-	return p.Path
-}
-
-// getFullPath returns the full path attribute of the proxy
-func (p *Proxy) getFullPath() string {
-	return p.FullPath
-}
-
-// getCallbacks returns the full list of callbacks associated to the proxy
-func (p *Proxy) getCallbacks(callbackType CallbackType) map[string]*CallbackTuple {
-	p.mutex.RLock()
-	defer p.mutex.RUnlock()
-
-	if p != nil {
-		if cb, exists := p.Callbacks[callbackType]; exists {
-			return cb
-		}
-	} else {
-		logger.Debugw("proxy-is-nil", log.Fields{"callback-type": callbackType.String()})
-	}
-	return nil
-}
-
-// getCallback returns a specific callback matching the type and function hash
-func (p *Proxy) getCallback(callbackType CallbackType, funcHash string) *CallbackTuple {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	if tuple, exists := p.Callbacks[callbackType][funcHash]; exists {
-		return tuple
-	}
-	return nil
-}
-
-// setCallbacks applies a callbacks list to a type
-func (p *Proxy) setCallbacks(callbackType CallbackType, callbacks map[string]*CallbackTuple) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	p.Callbacks[callbackType] = callbacks
-}
-
-// setCallback applies a callback to a type and hash value
-func (p *Proxy) setCallback(callbackType CallbackType, funcHash string, tuple *CallbackTuple) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	p.Callbacks[callbackType][funcHash] = tuple
-}
-
-// DeleteCallback removes a callback matching the type and hash
-func (p *Proxy) DeleteCallback(callbackType CallbackType, funcHash string) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	delete(p.Callbacks[callbackType], funcHash)
-}
-
-// ProxyOperation callbackType is an enumerated value to express when a callback should be executed
-type ProxyOperation uint8
-
-// Enumerated list of callback types
-const (
-	ProxyNone ProxyOperation = iota
-	ProxyGet
-	ProxyList
-	ProxyAdd
-	ProxyUpdate
-	ProxyRemove
-	ProxyCreate
-	ProxyWatch
-)
-
-var proxyOperationTypes = []string{
-	"PROXY_NONE",
-	"PROXY_GET",
-	"PROXY_LIST",
-	"PROXY_ADD",
-	"PROXY_UPDATE",
-	"PROXY_REMOVE",
-	"PROXY_CREATE",
-	"PROXY_WATCH",
-}
-
-func (t ProxyOperation) String() string {
-	return proxyOperationTypes[t]
-}
-
-// GetOperation -
-func (p *Proxy) GetOperation() ProxyOperation {
-	p.mutex.RLock()
-	defer p.mutex.RUnlock()
-	return p.operation
-}
-
-// SetOperation -
-func (p *Proxy) SetOperation(operation ProxyOperation) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	p.operation = operation
 }
 
 // List will retrieve information from the data model at the specified path location
-// A list operation will force access to persistence storage
-func (p *Proxy) List(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
-	var effectivePath string
-	if path == "/" {
-		effectivePath = p.getFullPath()
-	} else {
-		effectivePath = p.getFullPath() + path
-	}
-
-	p.SetOperation(ProxyList)
-	defer p.SetOperation(ProxyNone)
+// target must be a type of the form *[]<proto.Message Type>  For example: *[]*voltha.Device
+func (p *Proxy) List(ctx context.Context, path string, target interface{}) error {
+	completePath := p.path + path
 
 	logger.Debugw("proxy-list", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"operation": p.GetOperation(),
+		"path": completePath,
 	})
-	return p.getRoot().List(ctx, path, "", depth, deep, txid)
-}
 
-// Get will retrieve information from the data model at the specified path location
-func (p *Proxy) Get(ctx context.Context, path string, depth int, deep bool, txid string) (interface{}, error) {
-	var effectivePath string
-	if path == "/" {
-		effectivePath = p.getFullPath()
-	} else {
-		effectivePath = p.getFullPath() + path
+	// verify type of target is *[]*<type>
+	pointerType := reflect.TypeOf(target) // *[]*<type>
+	if pointerType.Kind() != reflect.Ptr {
+		return errors.New("target is not of type *[]*<type>")
+	}
+	sliceType := pointerType.Elem() // []*type
+	if sliceType.Kind() != reflect.Slice {
+		return errors.New("target is not of type *[]*<type>")
+	}
+	elemType := sliceType.Elem() // *type
+	if sliceType.Implements(reflect.TypeOf((*proto.Message)(nil)).Elem()) {
+		return errors.New("target slice does not contain elements of type proto.Message")
+	}
+	dataType := elemType.Elem() // type
+
+	blobs, err := p.kvStore.List(ctx, completePath)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve %s from kvstore: %s", path, err)
 	}
 
-	p.SetOperation(ProxyGet)
-	defer p.SetOperation(ProxyNone)
-
-	logger.Debugw("proxy-get", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"operation": p.GetOperation(),
+	logger.Debugw("parsing-data-blobs", log.Fields{
+		"path": path,
+		"size": len(blobs),
 	})
 
-	return p.getRoot().Get(ctx, path, "", depth, deep, txid)
+	ret := reflect.MakeSlice(sliceType, len(blobs), len(blobs))
+	i := 0
+	for _, blob := range blobs {
+		data := reflect.New(dataType)
+		if err := proto.Unmarshal(blob.Value.([]byte), data.Interface().(proto.Message)); err != nil {
+			return fmt.Errorf("failed to unmarshal %s: %s", blob.Key, err)
+		}
+		ret.Index(i).Set(data)
+		i++
+	}
+	reflect.ValueOf(target).Elem().Set(ret)
+	return nil
+}
+
+// Get will retrieve information from the data model at the specified path location, or false if the key doesn't exist
+func (p *Proxy) Get(ctx context.Context, path string, target proto.Message) (bool, error) {
+	completePath := p.path + path
+
+	logger.Debugw("proxy-get", log.Fields{
+		"path": completePath,
+	})
+
+	blob, err := p.kvStore.Get(ctx, completePath)
+	if err != nil {
+		return false, fmt.Errorf("failed to retrieve %s from kvstore: %s", path, err)
+	} else if blob == nil {
+		return false, nil // this blob does not exist
+	}
+
+	logger.Debugw("parsing-data-blobs", log.Fields{
+		"path": path,
+	})
+
+	if err := proto.Unmarshal(blob.Value.([]byte), target); err != nil {
+		return false, fmt.Errorf("failed to unmarshal %s: %s", blob.Key, err)
+	}
+	return true, nil
 }
 
 // Update will modify information in the data model at the specified location with the provided data
-func (p *Proxy) Update(ctx context.Context, path string, data interface{}, strict bool, txid string) (interface{}, error) {
-	if !strings.HasPrefix(path, "/") {
-		logger.Errorf("invalid path: %s", path)
-		return nil, fmt.Errorf("invalid path: %s", path)
-	}
-	var fullPath string
-	var effectivePath string
-	if path == "/" {
-		fullPath = p.getPath()
-		effectivePath = p.getFullPath()
-	} else {
-		fullPath = p.getPath() + path
-		effectivePath = p.getFullPath() + path
-	}
-
-	p.SetOperation(ProxyUpdate)
-	defer p.SetOperation(ProxyNone)
-
-	logger.Debugw("proxy-update", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
-	})
-
-	result := p.getRoot().Update(ctx, fullPath, data, strict, txid, nil)
-
-	if result != nil {
-		return result.GetData(), nil
-	}
-
-	return nil, nil
+func (p *Proxy) Update(ctx context.Context, path string, data proto.Message) error {
+	return p.add(ctx, path, data)
 }
 
 // AddWithID will insert new data at specified location.
-// This method also allows the user to specify the ID of the data entry to ensure
-// that access control is active while inserting the information.
-func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data interface{}, txid string) (interface{}, error) {
-	if !strings.HasPrefix(path, "/") {
-		logger.Errorf("invalid path: %s", path)
-		return nil, fmt.Errorf("invalid path: %s", path)
-	}
-	var fullPath string
-	var effectivePath string
-	if path == "/" {
-		fullPath = p.getPath()
-		effectivePath = p.getFullPath()
-	} else {
-		fullPath = p.getPath() + path
-		effectivePath = p.getFullPath() + path + "/" + id
-	}
-
-	p.SetOperation(ProxyAdd)
-	defer p.SetOperation(ProxyNone)
-
-	logger.Debugw("proxy-add-with-id", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
-	})
-
-	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
-
-	if result != nil {
-		return result.GetData(), nil
-	}
-
-	return nil, nil
+// This method also allows the user to specify the ID.
+func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data proto.Message) error {
+	return p.add(ctx, path+"/"+id, data)
 }
 
-// Add will insert new data at specified location.
-func (p *Proxy) Add(ctx context.Context, path string, data interface{}, txid string) (interface{}, error) {
-	if !strings.HasPrefix(path, "/") {
-		logger.Errorf("invalid path: %s", path)
-		return nil, fmt.Errorf("invalid path: %s", path)
-	}
-	var fullPath string
-	var effectivePath string
-	if path == "/" {
-		fullPath = p.getPath()
-		effectivePath = p.getFullPath()
-	} else {
-		fullPath = p.getPath() + path
-		effectivePath = p.getFullPath() + path
-	}
-
-	p.SetOperation(ProxyAdd)
-	defer p.SetOperation(ProxyNone)
+// add will insert new data at specified location.
+func (p *Proxy) add(ctx context.Context, path string, data proto.Message) error {
+	completePath := p.path + path
 
 	logger.Debugw("proxy-add", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
+		"path": completePath,
 	})
 
-	result := p.getRoot().Add(ctx, fullPath, data, txid, nil)
-
-	if result != nil {
-		return result.GetData(), nil
+	blob, err := proto.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("unable to save to kvStore, error marshalling: %s", err)
 	}
 
-	return nil, nil
+	if err := p.kvStore.Put(ctx, completePath, blob); err != nil {
+		return fmt.Errorf("unable to write to kvStore: %s", err)
+	}
+	return nil
 }
 
 // Remove will delete an entry at the specified location
-func (p *Proxy) Remove(ctx context.Context, path string, txid string) (interface{}, error) {
-	if !strings.HasPrefix(path, "/") {
-		logger.Errorf("invalid path: %s", path)
-		return nil, fmt.Errorf("invalid path: %s", path)
-	}
-	var fullPath string
-	var effectivePath string
-	if path == "/" {
-		fullPath = p.getPath()
-		effectivePath = p.getFullPath()
-	} else {
-		fullPath = p.getPath() + path
-		effectivePath = p.getFullPath() + path
-	}
-
-	p.SetOperation(ProxyRemove)
-	defer p.SetOperation(ProxyNone)
+func (p *Proxy) Remove(ctx context.Context, path string) error {
+	completePath := p.path + path
 
 	logger.Debugw("proxy-remove", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
+		"path": completePath,
 	})
 
-	result := p.getRoot().Remove(ctx, fullPath, txid, nil)
-
-	if result != nil {
-		return result.GetData(), nil
+	if err := p.kvStore.Delete(ctx, completePath); err != nil {
+		return fmt.Errorf("unable to delete %s in kvStore: %s", completePath, err)
 	}
-
-	return nil, nil
-}
-
-// CreateProxy to interact with specific path directly
-func (p *Proxy) CreateProxy(ctx context.Context, path string, exclusive bool) (*Proxy, error) {
-	if !strings.HasPrefix(path, "/") {
-		logger.Errorf("invalid path: %s", path)
-		return nil, fmt.Errorf("invalid path: %s", path)
-	}
-
-	var fullPath string
-	var effectivePath string
-	if path == "/" {
-		fullPath = p.getPath()
-		effectivePath = p.getFullPath()
-	} else {
-		fullPath = p.getPath() + path
-		effectivePath = p.getFullPath() + path
-	}
-
-	p.SetOperation(ProxyCreate)
-	defer p.SetOperation(ProxyNone)
-
-	logger.Debugw("proxy-create", log.Fields{
-		"path":      path,
-		"effective": effectivePath,
-		"full":      fullPath,
-		"operation": p.GetOperation(),
-	})
-
-	return p.getRoot().CreateProxy(ctx, fullPath, exclusive)
-}
-
-// OpenTransaction creates a new transaction branch to isolate operations made to the data model
-func (p *Proxy) OpenTransaction() *Transaction {
-	txid := p.getRoot().MakeTxBranch()
-	return NewTransaction(p, txid)
-}
-
-// commitTransaction will apply and merge modifications made in the transaction branch to the data model
-func (p *Proxy) commitTransaction(ctx context.Context, txid string) {
-	p.getRoot().FoldTxBranch(ctx, txid)
-}
-
-// cancelTransaction will terminate a transaction branch along will all changes within it
-func (p *Proxy) cancelTransaction(txid string) {
-	p.getRoot().DeleteTxBranch(txid)
-}
-
-// CallbackFunction is a type used to define callback functions
-type CallbackFunction func(ctx context.Context, args ...interface{}) interface{}
-
-// CallbackTuple holds the function and arguments details of a callback
-type CallbackTuple struct {
-	callback CallbackFunction
-	args     []interface{}
-}
-
-// Execute will process the a callback with its provided arguments
-func (tuple *CallbackTuple) Execute(ctx context.Context, contextArgs []interface{}) interface{} {
-	args := []interface{}{}
-
-	args = append(args, tuple.args...)
-
-	args = append(args, contextArgs...)
-
-	return tuple.callback(ctx, args...)
-}
-
-// RegisterCallback associates a callback to the proxy
-func (p *Proxy) RegisterCallback(callbackType CallbackType, callback CallbackFunction, args ...interface{}) {
-	if p.getCallbacks(callbackType) == nil {
-		p.setCallbacks(callbackType, make(map[string]*CallbackTuple))
-	}
-	funcName := runtime.FuncForPC(reflect.ValueOf(callback).Pointer()).Name()
-	logger.Debugf("value of function: %s", funcName)
-	funcHash := fmt.Sprintf("%x", md5.Sum([]byte(funcName)))[:12]
-
-	p.setCallback(callbackType, funcHash, &CallbackTuple{callback, args})
-}
-
-// UnregisterCallback removes references to a callback within a proxy
-func (p *Proxy) UnregisterCallback(callbackType CallbackType, callback CallbackFunction, args ...interface{}) {
-	if p.getCallbacks(callbackType) == nil {
-		logger.Errorf("no such callback type - %s", callbackType.String())
-		return
-	}
-
-	funcName := runtime.FuncForPC(reflect.ValueOf(callback).Pointer()).Name()
-	funcHash := fmt.Sprintf("%x", md5.Sum([]byte(funcName)))[:12]
-
-	logger.Debugf("value of function: %s", funcName)
-
-	if p.getCallback(callbackType, funcHash) == nil {
-		logger.Errorf("function with hash value: '%s' not registered with callback type: '%s'", funcHash, callbackType)
-		return
-	}
-
-	p.DeleteCallback(callbackType, funcHash)
-}
-
-func (p *Proxy) invoke(ctx context.Context, callback *CallbackTuple, context []interface{}) (result interface{}, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			errStr := fmt.Sprintf("callback error occurred: %+v", r)
-			err = errors.New(errStr)
-			logger.Error(errStr)
-		}
-	}()
-
-	result = callback.Execute(ctx, context)
-
-	return result, err
-}
-
-// InvokeCallbacks executes all callbacks associated to a specific type
-func (p *Proxy) InvokeCallbacks(ctx context.Context, args ...interface{}) (result interface{}) {
-	callbackType := args[0].(CallbackType)
-	proceedOnError := args[1].(bool)
-	context := args[2:]
-
-	var err error
-
-	if callbacks := p.getCallbacks(callbackType); callbacks != nil {
-		p.mutex.Lock()
-		for _, callback := range callbacks {
-			if result, err = p.invoke(ctx, callback, context); err != nil {
-				if !proceedOnError {
-					logger.Info("An error occurred.  Stopping callback invocation")
-					break
-				}
-				logger.Info("An error occurred.  Invoking next callback")
-			}
-		}
-		p.mutex.Unlock()
-	}
-
-	return result
+	return nil
 }
