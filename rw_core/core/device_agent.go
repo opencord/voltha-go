@@ -108,21 +108,17 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 	var device *voltha.Device
 	if deviceToCreate == nil {
 		// Load the existing device
-		loadedDevice, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 1, true, "")
+		device := &voltha.Device{}
+		have, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, device)
 		if err != nil {
 			return nil, err
+		} else if !have {
+			return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
 		}
-		if loadedDevice != nil {
-			var ok bool
-			if device, ok = loadedDevice.(*voltha.Device); ok {
-				agent.deviceType = device.Adapter
-				agent.device = proto.Clone(device).(*voltha.Device)
-			} else {
-				return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
-			}
-		} else {
-			return nil, status.Errorf(codes.NotFound, "device-%s-loading-failed", agent.deviceID)
-		}
+
+		agent.deviceType = device.Adapter
+		agent.device = proto.Clone(device).(*voltha.Device)
+
 		logger.Infow("device-loaded-from-dB", log.Fields{"device-id": agent.deviceID})
 	} else {
 		// Create a new device
@@ -141,12 +137,8 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 		}
 
 		// Add the initial device to the local model
-		added, err := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceID, device, "")
-		if err != nil {
-			return nil, err
-		}
-		if added == nil {
-			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s", agent.deviceID)
+		if err := agent.clusterDataProxy.AddWithID(ctx, "/devices", agent.deviceID, device); err != nil {
+			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s: %s", agent.deviceID, err)
 		}
 		agent.device = device
 	}
@@ -171,12 +163,8 @@ func (agent *DeviceAgent) stop(ctx context.Context) error {
 	logger.Infow("stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
 
 	//	Remove the device from the KV store
-	removed, err := agent.clusterDataProxy.Remove(ctx, "/devices/"+agent.deviceID, "")
-	if err != nil {
+	if err := agent.clusterDataProxy.Remove(ctx, "/devices/"+agent.deviceID); err != nil {
 		return err
-	}
-	if removed == nil {
-		logger.Debugw("device-already-removed", log.Fields{"device-id": agent.deviceID})
 	}
 
 	// Stop the request queue - no more requests can be processed
@@ -200,18 +188,17 @@ func (agent *DeviceAgent) reconcileWithKVStore(ctx context.Context) {
 	defer agent.requestQueue.RequestComplete()
 	logger.Debug("reconciling-device-agent-devicetype")
 	// TODO: context timeout
-	device, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, 1, true, "")
-	if err != nil {
+	device := &voltha.Device{}
+	if have, err := agent.clusterDataProxy.Get(ctx, "/devices/"+agent.deviceID, device); err != nil {
 		logger.Errorw("kv-get-failed", log.Fields{"device-id": agent.deviceID, "error": err})
 		return
+	} else if !have {
+		return // not found in kv
 	}
-	if device != nil {
-		if d, ok := device.(*voltha.Device); ok {
-			agent.deviceType = d.Adapter
-			agent.device = proto.Clone(d).(*voltha.Device)
-			logger.Debugw("reconciled-device-agent-devicetype", log.Fields{"device-id": agent.deviceID, "type": agent.deviceType})
-		}
-	}
+
+	agent.deviceType = device.Adapter
+	agent.device = device
+	logger.Debugw("reconciled-device-agent-devicetype", log.Fields{"device-id": agent.deviceID, "type": agent.deviceType})
 }
 
 // onSuccess is a common callback for scenarios where we receive a nil response following a request to an adapter
@@ -1539,12 +1526,8 @@ func (agent *DeviceAgent) updateDeviceStateInStoreWithoutLock(
 // It is an internal helper function.
 func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(ctx context.Context, device *voltha.Device, strict bool, txid string) error {
 	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceID, device, strict, txid)
-	if err != nil {
+	if err := agent.clusterDataProxy.Update(updateCtx, "/devices/"+agent.deviceID, device); err != nil {
 		return status.Errorf(codes.Internal, "failed-update-device:%s: %s", agent.deviceID, err)
-	}
-	if afterUpdate == nil {
-		return status.Errorf(codes.Internal, "failed-update-device:%s", agent.deviceID)
 	}
 	logger.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
 

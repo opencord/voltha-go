@@ -18,7 +18,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -46,8 +45,6 @@ type Core struct {
 	adapterMgr        *AdapterManager
 	config            *config.RWCoreFlags
 	kmp               kafka.InterContainerProxy
-	clusterDataRoot   model.Root
-	localDataRoot     model.Root
 	clusterDataProxy  *model.Proxy
 	localDataProxy    *model.Proxy
 	exitChannel       chan struct{}
@@ -80,8 +77,6 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags, kvClient kv
 		Timeout:                 cf.KVStoreTimeout,
 		LivenessChannelInterval: livenessChannelInterval,
 		PathPrefix:              cf.KVStoreDataPrefix}
-	core.clusterDataRoot = model.NewRoot(&voltha.Voltha{}, &core.backend)
-	core.localDataRoot = model.NewRoot(&voltha.CoreInstance{}, &core.backend)
 	return &core
 }
 
@@ -113,18 +108,9 @@ func (core *Core) Start(ctx context.Context) error {
 	if p != nil {
 		p.UpdateStatus("kv-store", probe.ServiceStatusRunning)
 	}
-	var err error
 
-	core.clusterDataProxy, err = core.clusterDataRoot.CreateProxy(ctx, "/", false)
-	if err != nil {
-		probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
-		return fmt.Errorf("Failed to create cluster data proxy")
-	}
-	core.localDataProxy, err = core.localDataRoot.CreateProxy(ctx, "/", false)
-	if err != nil {
-		probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
-		return fmt.Errorf("Failed to create local data proxy")
-	}
+	core.clusterDataProxy = model.NewProxy(&core.backend, "/")
+	core.localDataProxy = model.NewProxy(&core.backend, "/")
 
 	// core.kmp must be created before deviceMgr and adapterMgr, as they will make
 	// private copies of the poiner to core.kmp.
