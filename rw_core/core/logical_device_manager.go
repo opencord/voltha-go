@@ -136,18 +136,13 @@ func (ldMgr *LogicalDeviceManager) getLogicalDevice(ctx context.Context, id stri
 //listLogicalDevices returns the list of all logical devices
 func (ldMgr *LogicalDeviceManager) listLogicalDevices(ctx context.Context) (*voltha.LogicalDevices, error) {
 	logger.Debug("ListAllLogicalDevices")
-	result := &voltha.LogicalDevices{}
-	logicalDevices, err := ldMgr.clusterDataProxy.List(ctx, "/logical_devices", 0, true, "")
-	if err != nil {
+
+	var logicalDevices []*voltha.LogicalDevice
+	if err := ldMgr.clusterDataProxy.List(ctx, "/logical_devices", &logicalDevices); err != nil {
 		logger.Errorw("failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
 		return nil, err
 	}
-	if logicalDevices != nil {
-		for _, logicalDevice := range logicalDevices.([]interface{}) {
-			result.Items = append(result.Items, logicalDevice.(*voltha.LogicalDevice))
-		}
-	}
-	return result, nil
+	return &voltha.LogicalDevices{Items: logicalDevices}, nil
 }
 
 func (ldMgr *LogicalDeviceManager) createLogicalDevice(ctx context.Context, device *voltha.Device) (*string, error) {
@@ -217,17 +212,15 @@ func (ldMgr *LogicalDeviceManager) stopManagingLogicalDeviceWithDeviceID(ctx con
 
 //getLogicalDeviceFromModel retrieves the logical device data from the model.
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceFromModel(ctx context.Context, lDeviceID string) (*voltha.LogicalDevice, error) {
-	logicalDevice, err := ldMgr.clusterDataProxy.Get(ctx, "/logical_devices/"+lDeviceID, 0, false, "")
-	if err != nil {
+	logicalDevice := &voltha.LogicalDevice{}
+	if have, err := ldMgr.clusterDataProxy.Get(ctx, "/logical_devices/"+lDeviceID, logicalDevice); err != nil {
 		logger.Errorw("failed-to-get-logical-devices-from-cluster-proxy", log.Fields{"error": err})
 		return nil, err
+	} else if !have {
+		return nil, status.Error(codes.NotFound, lDeviceID)
 	}
-	if logicalDevice != nil {
-		if lDevice, ok := logicalDevice.(*voltha.LogicalDevice); ok {
-			return lDevice, nil
-		}
-	}
-	return nil, status.Error(codes.NotFound, lDeviceID)
+
+	return logicalDevice, nil
 }
 
 // load loads a logical device manager in memory

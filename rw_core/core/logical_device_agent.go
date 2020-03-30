@@ -47,7 +47,7 @@ type LogicalDeviceAgent struct {
 	deviceMgr          *DeviceManager
 	ldeviceMgr         *LogicalDeviceManager
 	clusterDataProxy   *model.Proxy
-	exitChannel        chan int
+	stopped            bool
 	deviceRoutes       *route.DeviceRoutes
 	lockDeviceRoutes   sync.RWMutex
 	logicalPortsNo     map[uint32]bool //value is true for NNI port
@@ -63,7 +63,6 @@ type LogicalDeviceAgent struct {
 func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalDeviceManager,
 	deviceMgr *DeviceManager, cdProxy *model.Proxy, timeout time.Duration) *LogicalDeviceAgent {
 	var agent LogicalDeviceAgent
-	agent.exitChannel = make(chan int, 1)
 	agent.logicalDeviceID = id
 	agent.serialNumber = sn
 	agent.rootDeviceID = deviceID
@@ -119,12 +118,9 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDB bool) err
 		ld.Ports = []*voltha.LogicalPort{}
 
 		// Save the logical device
-		added, err := agent.clusterDataProxy.AddWithID(ctx, "/logical_devices", ld.Id, ld, "")
-		if err != nil {
-			return err
-		}
-		if added == nil {
+		if err := agent.clusterDataProxy.AddWithID(ctx, "/logical_devices", ld.Id, ld); err != nil {
 			logger.Errorw("failed-to-add-logical-device", log.Fields{"logical-device-id": agent.logicalDeviceID})
+			return err
 		} else {
 			logger.Debugw("logicaldevice-created", log.Fields{"logical-device-id": agent.logicalDeviceID, "root-id": ld.RootDeviceId})
 		}
@@ -141,14 +137,14 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDB bool) err
 	} else {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
-		logicalDevice, err := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceID, 0, true, "")
+		ld := &voltha.LogicalDevice{}
+		have, err := agent.clusterDataProxy.Get(ctx, "/logical_devices/"+agent.logicalDeviceID, ld)
 		if err != nil {
 			return err
-		}
-		ld, ok := logicalDevice.(*voltha.LogicalDevice)
-		if !ok {
+		} else if !have {
 			return status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
 		}
+
 		// Update the root device Id
 		agent.rootDeviceID = ld.RootDeviceId
 
@@ -186,15 +182,13 @@ func (agent *LogicalDeviceAgent) stop(ctx context.Context) error {
 		defer agent.requestQueue.RequestComplete()
 
 		//Remove the logical device from the model
-		if removed, err := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceID, ""); err != nil {
+		if err := agent.clusterDataProxy.Remove(ctx, "/logical_devices/"+agent.logicalDeviceID); err != nil {
 			returnErr = err
-		} else if removed == nil {
-			returnErr = status.Errorf(codes.Aborted, "failed-to-remove-logical-ldevice-%s", agent.logicalDeviceID)
 		} else {
 			logger.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		}
 
-		close(agent.exitChannel)
+		agent.stopped = true
 
 		logger.Info("logical_device-agent-stopped")
 	})
@@ -539,16 +533,16 @@ func (agent *LogicalDeviceAgent) updateLogicalDevicePortsWithoutLock(ctx context
 
 //updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
 func (agent *LogicalDeviceAgent) updateLogicalDeviceWithoutLock(ctx context.Context, logicalDevice *voltha.LogicalDevice) error {
+	if agent.stopped {
+		return errors.New("logical device agent stopped")
+	}
+
 	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-	afterUpdate, err := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceID, logicalDevice, false, "")
-	if err != nil {
+	if err := agent.clusterDataProxy.Update(updateCtx, "/logical_devices/"+agent.logicalDeviceID, logicalDevice); err != nil {
 		logger.Errorw("failed-to-update-logical-devices-to-cluster-proxy", log.Fields{"error": err})
 		return err
 	}
-	if afterUpdate == nil {
-		return status.Errorf(codes.Internal, "failed-updating-logical-device:%s", agent.logicalDeviceID)
-	}
-	//agent.logicalDevice = (proto.Clone(logicalDevice)).(*voltha.LogicalDevice)
+
 	agent.logicalDevice = logicalDevice
 
 	return nil
