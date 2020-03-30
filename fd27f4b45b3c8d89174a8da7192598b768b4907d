@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a63128e_7d7611d7",
+        "filename": ".gitreview",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-30T14:30:39Z",
+      "side": 1,
+      "message": "Was this intended?",
+      "revId": "fd27f4b45b3c8d89174a8da7192598b768b4907d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
