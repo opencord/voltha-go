@@ -38,10 +38,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	maxOrderedDeviceRequestQueueSize = 1000
-)
-
 // DeviceAgent represents device agent attributes
 type DeviceAgent struct {
 	deviceID         string
@@ -81,7 +77,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 	agent.clusterDataProxy = cdProxy
 	agent.defaultTimeout = timeout
 	agent.device = proto.Clone(device).(*voltha.Device)
-	agent.requestQueue = coreutils.NewRequestQueue(agent.deviceID, maxOrderedDeviceRequestQueueSize)
+	agent.requestQueue = coreutils.NewRequestQueue()
 	return &agent
 }
 
@@ -101,10 +97,6 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 			}
 		}
 	}()
-
-	// Start the request queue.  If this start fails then stop will be invoked and it requires
-	// that the request sequencer is present
-	agent.requestQueue.Start()
 
 	var device *voltha.Device
 	if deviceToCreate == nil {
@@ -189,9 +181,6 @@ func (agent *DeviceAgent) stop(ctx context.Context) error {
 	if removed == nil {
 		logger.Debugw("device-already-removed", log.Fields{"device-id": agent.deviceID})
 	}
-
-	// Stop the request queue - no more requests can be processed
-	agent.requestQueue.Stop()
 
 	close(agent.exitChannel)
 
