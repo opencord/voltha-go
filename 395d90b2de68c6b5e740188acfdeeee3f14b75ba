@@ -16,6 +16,24 @@
       "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f4fbfd3_1eb3dfac",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T17:36:57Z",
+      "side": 1,
+      "message": "This lock is only held for a moment, while this thread\u0027s request is added to the queue.  (And again later when it is removed from the queue.)\n\nSince the queue actually implements the request ordering, and this lock is only held for a moment, it doesn\u0027t need to guarantee order.",
+      "parentUuid": "64de8288_48aa5395",
+      "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
