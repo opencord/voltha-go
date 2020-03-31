@@ -70,6 +70,24 @@
       "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28813567_1109e6ed",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-31T18:06:00Z",
+      "side": 1,
+      "message": "I disagree.   This implementation does not guarantee the same ordering as before.  Here there is a lock, in the previous one it was a buffered channel.\n\nIf there are 20 requests coming at the same time, then with a lock these may be put in a queue not in FIFO order.  With a buffered channel, it will.",
+      "parentUuid": "82e74dc9_63e0ddc1",
+      "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
