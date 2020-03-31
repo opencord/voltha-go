@@ -34,6 +34,24 @@
       "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2e7bd44_0b03e5d4",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-31T17:48:16Z",
+      "side": 1,
+      "message": "Even if it\u0027s held a brief moment there is still a chance of two requests being processed out of order.    Ordering is extremely important as out of order events may result in incorrect state transition.   We saw it multiple times before and these are very hard to track down.  If there is a way to keep the requests in order before adding them into the queue then I would strongly recommend doing so.",
+      "parentUuid": "4f4fbfd3_1eb3dfac",
+      "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
