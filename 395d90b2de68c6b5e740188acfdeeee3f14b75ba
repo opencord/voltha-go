@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64de8288_48aa5395",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-03-31T17:30:08Z",
+      "side": 1,
+      "message": "Under load condition, a number of requests may be waiting for the lock to be released.   Once it is released, the order of requests may no longer be respected.  That\u0027s one of the main reason I move away from using locks.",
+      "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
