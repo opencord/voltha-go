@@ -88,6 +88,24 @@
       "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22930eb5_d23276a2",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-31T18:20:26Z",
+      "side": 1,
+      "message": "Do we need to do something more fundamental, i.e., receive requests on a buffered channel and have a routine process that channel into an in-memory list (double linked) which is then processed in order?",
+      "parentUuid": "28813567_1109e6ed",
+      "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
