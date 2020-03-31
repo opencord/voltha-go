@@ -487,7 +487,6 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalDeviceAgent {
 	clonedLD.DatapathId = rand.Uint64()
 	lDeviceAgent := newLogicalDeviceAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.clusterDataProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
-	lDeviceAgent.requestQueue.Start()
 	added, err := lDeviceAgent.clusterDataProxy.AddWithID(context.Background(), "/logical_devices", clonedLD.Id, clonedLD, "")
 	assert.Nil(t, err)
 	assert.NotNil(t, added)
