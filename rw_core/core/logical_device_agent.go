@@ -39,10 +39,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	maxOrderedLogicalDeviceRequestQueueSize = 1000
-)
-
 // LogicalDeviceAgent represent attributes of logical device agent
 type LogicalDeviceAgent struct {
 	logicalDeviceID    string
@@ -83,7 +79,7 @@ func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *Lo
 	agent.portProxies = make(map[string]*model.Proxy)
 	agent.logicalPortsNo = make(map[uint32]bool)
 	agent.defaultTimeout = timeout
-	agent.requestQueue = coreutils.NewRequestQueue(agent.serialNumber, maxOrderedLogicalDeviceRequestQueueSize)
+	agent.requestQueue = coreutils.NewRequestQueue()
 	return &agent
 }
 
@@ -104,9 +100,6 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDB bool) err
 			}
 		}
 	}()
-
-	// Launch the request queue - it will launch a go routine
-	agent.requestQueue.Start()
 
 	var ld *voltha.LogicalDevice
 	if !loadFromDB {
@@ -245,9 +238,6 @@ func (agent *LogicalDeviceAgent) stop(ctx context.Context) error {
 		} else {
 			logger.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		}
-
-		// Stop the request queue and request complete indication
-		agent.requestQueue.Stop()
 
 		close(agent.exitChannel)
 
