@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3be773d3_e0157c40",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-03-31T17:17:40Z",
+      "side": 1,
+      "message": "Do you also need to update rq.last.next ?",
+      "range": {
+        "startLine": 80,
+        "startChar": 1,
+        "endLine": 80,
+        "endChar": 17
+      },
+      "revId": "063ad68bfddecab0b2ebc652f842f397a6cfd646",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
