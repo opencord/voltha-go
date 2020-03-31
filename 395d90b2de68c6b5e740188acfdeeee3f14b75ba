@@ -52,6 +52,24 @@
       "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82e74dc9_63e0ddc1",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T18:00:18Z",
+      "side": 1,
+      "message": "Whether requests are serialized by a channel or a mutex, neither can guarantee the order in which request arrive.\n\nIf such ordering needs to be guaranteed, there are more fundamental issues with the design that need to be addressed.\n\nEven if such is the case, it\u0027s no reason not to merge this change.  This version makes the same ordering guarantees as the previous implementation - that once requests have arrived, their ordering will remain the same.",
+      "parentUuid": "d2e7bd44_0b03e5d4",
+      "revId": "395d90b2de68c6b5e740188acfdeeee3f14b75ba",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
