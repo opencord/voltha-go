@@ -1,0 +1,187 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "671fa418_2cda803d",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "Since this is not used outside the package, use lowercase: `adapterAgentKey`.",
+      "range": {
+        "startLine": 107,
+        "startChar": 5,
+        "endLine": 107,
+        "endChar": 20
+      },
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64056726_979b3939",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "Since this is in a new gothread, and is not tied to the lifetime of the caller, use context.Background()",
+      "range": {
+        "startLine": 240,
+        "startChar": 43,
+        "endLine": 240,
+        "endChar": 46
+      },
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8182aac4_1dad6c03",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "use `if err:\u003dfoo(); err!\u003dnil{` form.",
+      "range": {
+        "startLine": 241,
+        "startChar": 5,
+        "endLine": 241,
+        "endChar": 19
+      },
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4297dee2_54b84ae8",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "This error should be returned?\n\ni.e. - This function should return an error?",
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23341b4f_101920ea",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "Use `key, adapterAgent :\u003d` to avoid the lookup on line 331.",
+      "range": {
+        "startLine": 329,
+        "startChar": 6,
+        "endLine": 329,
+        "endChar": 9
+      },
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c616ac4e_68056006",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "By convention, handle the !ok case first.",
+      "range": {
+        "startLine": 396,
+        "startChar": 49,
+        "endLine": 396,
+        "endChar": 51
+      },
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a119aad6_eb9e38d1",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "Use `for _, adapterAgent :\u003d range aMgr.adapterAgents {` to get the agents directly.",
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15a453f9_9e9d596b",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "Can this list be generated directly, instead of generating a map then converting to a list?  (or would this cause duplicates?)",
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d0eb1df_8147237a",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-31T22:11:12Z",
+      "side": 1,
+      "message": "is it possible to index into this map rather than ranging over it?  \n\nIf not, should it be using a map-of-maps (`map[string]map[int32]*AdapterAgent`) in order to allow this?",
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
