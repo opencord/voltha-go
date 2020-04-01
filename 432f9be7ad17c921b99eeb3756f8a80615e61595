@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3dbd17ce_d7d796f7",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1146,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-01T13:15:32Z",
+      "side": 1,
+      "message": "Was changing this to \"1\" intentional?",
+      "range": {
+        "startLine": 1146,
+        "startChar": 27,
+        "endLine": 1146,
+        "endChar": 33
+      },
+      "revId": "432f9be7ad17c921b99eeb3756f8a80615e61595",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
