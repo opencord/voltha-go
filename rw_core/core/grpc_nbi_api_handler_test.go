@@ -1143,7 +1143,7 @@ func TestSuite1(t *testing.T) {
 	// 2. Test adapter registration
 	nb.testAdapterRegistration(t, nbi)
 
-	numberOfDeviceTestRuns := 1 // 2
+	numberOfDeviceTestRuns := 2
 	for i := 1; i <= numberOfDeviceTestRuns; i++ {
 		//3. Test create device
 		nb.testCreateDevice(t, nbi)
