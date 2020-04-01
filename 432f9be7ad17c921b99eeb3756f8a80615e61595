@@ -22,6 +22,30 @@
       "revId": "432f9be7ad17c921b99eeb3756f8a80615e61595",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17bb974f_bd78727c",
+        "filename": "rw_core/core/grpc_nbi_api_handler_test.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1146,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-04-01T16:55:45Z",
+      "side": 1,
+      "message": "Not that wasn\u0027t intentional, I\u0027ll submit a fix.",
+      "parentUuid": "3dbd17ce_d7d796f7",
+      "range": {
+        "startLine": 1146,
+        "startChar": 27,
+        "endLine": 1146,
+        "endChar": 33
+      },
+      "revId": "432f9be7ad17c921b99eeb3756f8a80615e61595",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
