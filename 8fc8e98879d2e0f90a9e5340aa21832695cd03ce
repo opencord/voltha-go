@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80b6c6e7_85e0f49f",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-01T20:55:20Z",
+      "side": 1,
+      "message": "this could be \"for key, agent :\u003d range aMgr.adapterAgents\"",
+      "range": {
+        "startLine": 276,
+        "startChar": 2,
+        "endLine": 276,
+        "endChar": 37
+      },
+      "revId": "8fc8e98879d2e0f90a9e5340aa21832695cd03ce",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9c2ba61_b607b56c",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-01T20:55:20Z",
+      "side": 1,
+      "message": "is changed as per above this could be:\n\"agent.updateDeviceType\"\n\nIt will save a lookup in the adapterAgent map",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 27
+      },
+      "revId": "8fc8e98879d2e0f90a9e5340aa21832695cd03ce",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
