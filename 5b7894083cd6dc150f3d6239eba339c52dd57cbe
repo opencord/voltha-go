@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e7326ce5_8e6f77f6",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-01T20:55:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "671fa418_2cda803d",
+      "range": {
+        "startLine": 107,
+        "startChar": 5,
+        "endLine": 107,
+        "endChar": 20
+      },
+      "revId": "5b7894083cd6dc150f3d6239eba339c52dd57cbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64056726_979b3939",
         "filename": "rw_core/core/adapter_manager.go",
         "patchSetId": 4
