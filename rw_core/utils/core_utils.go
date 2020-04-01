@@ -90,7 +90,13 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 		rq.mutex.Lock()
 		defer rq.mutex.Unlock()
 
-		if _, notified := <-waitingOn; !notified {
+		select {
+		case <-waitingOn:
+			// chan has been closed, so the lock has been acquired
+			// context is canceled, so just release the lock immediately
+			rq.current = r
+			rq.releaseWithoutLock()
+		default:
 			// on abort, skip our position in the queue
 			r.prev.notifyOnComplete = r.notifyOnComplete
 			// and remove ourselves from the queue
@@ -101,11 +107,6 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 				rq.last = r.prev
 				r.prev.next = nil
 			}
-
-		} else {
-			// context is canceled, but lock has been acquired, so just release the lock immediately
-			rq.current = r
-			rq.releaseWithoutLock()
 		}
 		return ctx.Err()
 
