@@ -1449,6 +1449,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(ctx context.Context, lPort *v
 
 // deleteLogicalPorts removes the logical ports associated with that deviceId
 func (agent *LogicalDeviceAgent) deleteLogicalPorts(ctx context.Context, deviceID string) error {
+	logger.Debugw("deleting-logical-ports", log.Fields{"device-id": deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1466,9 +1467,9 @@ func (agent *LogicalDeviceAgent) deleteLogicalPorts(ctx context.Context, deviceI
 	}
 	logicalDevice.Ports = lPortstoKeep
 
-	logger.Debugw("updated-logical-ports", log.Fields{"ports": lPortstoKeep})
+	logger.Debugw("deleted-logical-ports", log.Fields{"ports": lPortstoKeep})
 	if err := agent.updateLogicalDeviceWithoutLock(ctx, logicalDevice); err != nil {
-		logger.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		logger.Errorw("logical-device-update-failed", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		return err
 	}
 	// Remove the port from the cached logical ports set
