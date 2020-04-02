@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "56b5c4ab_b97f9bbb",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1451,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-02T13:59:07Z",
+      "side": 1,
+      "message": "Should this be renamed to \"deleteAllLogicalPorts\" to match?",
+      "range": {
+        "startLine": 1451,
+        "startChar": 33,
+        "endLine": 1451,
+        "endChar": 51
+      },
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3fcf1d12_c3cc0959",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 3
@@ -47,6 +70,52 @@
       "writtenOn": "2020-04-02T13:44:11Z",
       "side": 1,
       "message": "should be \"logical-device-id\" in the field",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "381157a8_c95a0584",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-02T13:59:07Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem to have anything to do with deleting logical ports.  Is this log line intended?",
+      "range": {
+        "startLine": 101,
+        "startChar": 16,
+        "endLine": 101,
+        "endChar": 42
+      },
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12b77307_d072bb8e",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-02T13:59:07Z",
+      "side": 1,
+      "message": "Should this function be renamed to \"deleteAllLogicalPorts\"?",
+      "range": {
+        "startLine": 430,
+        "startChar": 35,
+        "endLine": 430,
+        "endChar": 53
+      },
       "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
