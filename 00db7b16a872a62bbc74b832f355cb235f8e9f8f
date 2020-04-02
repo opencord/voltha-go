@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "51ec0193_7fbedb22",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1451,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-02T14:02:07Z",
+      "side": 1,
+      "message": "same, avoid in this bug fix, tackle in the jira for 2.4",
+      "parentUuid": "56b5c4ab_b97f9bbb",
+      "range": {
+        "startLine": 1451,
+        "startChar": 33,
+        "endLine": 1451,
+        "endChar": 51
+      },
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3fcf1d12_c3cc0959",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 3
@@ -153,6 +177,30 @@
     },
     {
       "key": {
+        "uuid": "42357d43_c6119f70",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-02T14:02:07Z",
+      "side": 1,
+      "message": "correct, actually adjusted",
+      "parentUuid": "381157a8_c95a0584",
+      "range": {
+        "startLine": 101,
+        "startChar": 16,
+        "endLine": 101,
+        "endChar": 42
+      },
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12b77307_d072bb8e",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 3
@@ -164,6 +212,30 @@
       "writtenOn": "2020-04-02T13:59:07Z",
       "side": 1,
       "message": "Should this function be renamed to \"deleteAllLogicalPorts\"?",
+      "range": {
+        "startLine": 430,
+        "startChar": 35,
+        "endLine": 430,
+        "endChar": 53
+      },
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a7c13f1_1dd75ce2",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-02T14:02:07Z",
+      "side": 1,
+      "message": "I woudl avoid this change in this bug fix, I opened a jira to revisit all this process",
+      "parentUuid": "12b77307_d072bb8e",
       "range": {
         "startLine": 430,
         "startChar": 35,
