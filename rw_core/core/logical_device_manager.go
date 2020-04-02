@@ -98,6 +98,7 @@ func (ldMgr *LogicalDeviceManager) addLogicalDeviceAgentToMap(agent *LogicalDevi
 // getLogicalDeviceAgent returns the logical device agent.  If the device is not in memory then the device will
 // be loaded from dB and a logical device agent created to managed it.
 func (ldMgr *LogicalDeviceManager) getLogicalDeviceAgent(ctx context.Context, logicalDeviceID string) *LogicalDeviceAgent {
+	logger.Debugw("get-logical-device-agent", log.Fields{"logical-device-id": logicalDeviceID})
 	agent, ok := ldMgr.logicalDeviceAgents.Load(logicalDeviceID)
 	if ok {
 		lda := agent.(*LogicalDeviceAgent)
@@ -427,7 +428,7 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalPort(ctx context.Context, lPortI
 
 // deleteLogicalPort removes the logical port associated with a child device
 func (ldMgr *LogicalDeviceManager) deleteLogicalPorts(ctx context.Context, deviceID string) error {
-	logger.Debugw("deleting-logical-ports", log.Fields{"deviceId": deviceID})
+	logger.Debugw("deleting-all-logical-ports", log.Fields{"device-id": deviceID})
 	// Get logical port
 	ldID, err := ldMgr.getLogicalDeviceIDFromDeviceID(ctx, deviceID)
 	if err != nil {
@@ -439,7 +440,7 @@ func (ldMgr *LogicalDeviceManager) deleteLogicalPorts(ctx context.Context, devic
 			return err
 		}
 	}
-	logger.Debug("deleting-logical-port-ends")
+	logger.Debug("deleting-logical-ports-ends")
 	return nil
 }
 
