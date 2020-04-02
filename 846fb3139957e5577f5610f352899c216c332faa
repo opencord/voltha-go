@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3273817_9f56f901",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1452,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-04-02T14:32:20Z",
+      "side": 1,
+      "message": "Suggestion: delete-logical-ports. And please update the other logs as well in this method.",
+      "revId": "846fb3139957e5577f5610f352899c216c332faa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b2b14df_24845455",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-04-02T14:32:20Z",
+      "side": 1,
+      "message": "Suggestion: delete-logical-ports. Since there is a similar method deleteAllLogicalPorts. Also, please update all the log statements in this method as per the latest log style convention.",
+      "revId": "846fb3139957e5577f5610f352899c216c332faa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
