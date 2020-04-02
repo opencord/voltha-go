@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8dcccd6e_aa5dc390",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-02T13:59:20Z",
+      "side": 1,
+      "message": "No, I\u0027ve not tried that, I think that as a bug fix this is ok, it simply add an operation. I aslo feel this is \"safer\" because it does deletion in the proper order for all objects. I have though opened a jira to revisit this https://jira.opencord.org/browse/VOL-2865",
+      "parentUuid": "d7d9daad_b7b2e2cc",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56b5c4ab_b97f9bbb",
         "filename": "rw_core/core/logical_device_agent.go",
         "patchSetId": 3
@@ -53,6 +71,24 @@
       "writtenOn": "2020-04-02T13:44:11Z",
       "side": 1,
       "message": "We are using the format of \"device-id\" in the fields.",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9026abc6_069b8add",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1452,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-02T13:59:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3fcf1d12_c3cc0959",
       "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -99,6 +135,24 @@
     },
     {
       "key": {
+        "uuid": "a3a8e536_fddedba7",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-02T13:59:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ac04aa6_7b0881c6",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12b77307_d072bb8e",
         "filename": "rw_core/core/logical_device_manager.go",
         "patchSetId": 3
@@ -133,6 +187,24 @@
       "writtenOn": "2020-04-02T13:44:11Z",
       "side": 1,
       "message": "As you are here, please change to \"device-id\".   It\u0027s the latest adoption so we will eventually need to change across board.",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f497fb4f_2292c981",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-02T13:59:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3296f595_2f57c571",
       "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
