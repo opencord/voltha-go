@@ -1449,6 +1449,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(ctx context.Context, lPort *v
 
 // deleteLogicalPorts removes the logical ports associated with that deviceId
 func (agent *LogicalDeviceAgent) deleteLogicalPorts(ctx context.Context, deviceID string) error {
+	logger.Debugw("deleting-all-logical-ports", log.Fields{"deviceId": deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1458,9 +1459,12 @@ func (agent *LogicalDeviceAgent) deleteLogicalPorts(ctx context.Context, deviceI
 	lPortstoKeep := []*voltha.LogicalPort{}
 	lPortsNoToDelete := []uint32{}
 	for _, logicalPort := range logicalDevice.Ports {
+		logger.Debugw("@@@-logical-port", log.Fields{"logical-port": logicalPort})
 		if logicalPort.DeviceId != deviceID {
+			logger.Debugw("@@@-logical-port-to-keep", log.Fields{"logical-port": logicalPort})
 			lPortstoKeep = append(lPortstoKeep, logicalPort)
 		} else {
+			logger.Debugw("@@@-logical-ports-to-delete", log.Fields{"logical-port": logicalPort})
 			lPortsNoToDelete = append(lPortsNoToDelete, logicalPort.DevicePortNo)
 		}
 	}
