@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7d9daad_b7b2e2cc",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-02T13:44:11Z",
+      "side": 1,
+      "message": "Since deleteAllLogicalPorts encompass deleteAllUNIPorts did you try replacing deleteAllUNIPorts with deleteAllLogicalPorts?    We may eventually need to revisit the order in this pipeline, i.e. deletealllogicalports, deletelogicaldevice, deleteallchilddevice, runpostdelete.",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fcf1d12_c3cc0959",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1452,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-02T13:44:11Z",
+      "side": 1,
+      "message": "We are using the format of \"device-id\" in the fields.",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ac04aa6_7b0881c6",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-02T13:44:11Z",
+      "side": 1,
+      "message": "should be \"logical-device-id\" in the field",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3296f595_2f57c571",
+        "filename": "rw_core/core/logical_device_manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-02T13:44:11Z",
+      "side": 1,
+      "message": "As you are here, please change to \"device-id\".   It\u0027s the latest adoption so we will eventually need to change across board.",
+      "revId": "00db7b16a872a62bbc74b832f355cb235f8e9f8f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
