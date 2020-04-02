@@ -1449,6 +1449,7 @@ func (agent *LogicalDeviceAgent) deleteLogicalPort(ctx context.Context, lPort *v
 
 // deleteLogicalPorts removes the logical ports associated with that deviceId
 func (agent *LogicalDeviceAgent) deleteLogicalPorts(ctx context.Context, deviceID string) error {
+	logger.Debugw("deleting-all-logical-ports", log.Fields{"deviceId": deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
