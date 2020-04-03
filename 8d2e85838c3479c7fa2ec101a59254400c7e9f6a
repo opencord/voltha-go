@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7f32a7f_082773d6",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-04-03T11:37:19Z",
+      "side": 1,
+      "message": "if the path which is sent to her starts with \"/\" then backend will try to put the data to path \"service/voltha//...\". For ex. if the path is \"/devices/123\" then the etcd key will be \"service/voltha//devices/123\".   \"//\" (double /) is inserted to path in my tests.",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 2
+      },
+      "revId": "8d2e85838c3479c7fa2ec101a59254400c7e9f6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
