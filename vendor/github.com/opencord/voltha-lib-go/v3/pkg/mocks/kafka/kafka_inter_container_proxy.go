@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package mocks
+package kafka
 
 import (
 	"context"
