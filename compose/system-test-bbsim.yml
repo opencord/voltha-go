@@ -72,7 +72,8 @@ services:
 
 
   rw_core:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}"
+#    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}"
+    image: matteoscandolo/voltha-rw-core:replica
     entrypoint:
         - /app/rw_core
         - -kv_store_type=etcd
@@ -129,7 +130,8 @@ services:
 
 
   adapter_openolt:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}"
+#    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}"
+    image: matteoscandolo/voltha-openolt-adapter:replica
     command: [
       "/app/openolt",
       "--kafka_adapter_host=${DOCKER_HOST_IP}",
@@ -149,7 +151,8 @@ services:
 
 
   adapter_openonu:
-    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openonu-adapter:${DOCKER_TAG}"
+#    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openonu-adapter:${DOCKER_TAG}"
+    image: matteoscandolo/voltha-openonu-adapter:replica
     command: [
       "/voltha/adapters/brcm_openomci_onu/main.py",
       "--name=brcm_openomci_onu",
@@ -158,7 +161,28 @@ services:
       "--backend=etcd",
       "--etcd=${DOCKER_HOST_IP}:2379",
       "--core_topic=rwcore",
-      "--log_level=DEBUG"
+      "--log_level=DEBUG",
+      "--totalReplicas=2",
+      "--currentReplica=1"
+    ]
+    networks:
+    - default
+    restart: unless-stopped
+
+  adapter_openonu_foo:
+#    image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openonu-adapter:${DOCKER_TAG}"
+    image: matteoscandolo/voltha-openonu-adapter:replica
+    command: [
+      "/voltha/adapters/brcm_openomci_onu/main.py",
+      "--name=brcm_openomci_onu",
+      "--kafka_adapter=${DOCKER_HOST_IP}:9092",
+      "--kafka_cluster=${DOCKER_HOST_IP}:9092",
+      "--backend=etcd",
+      "--etcd=${DOCKER_HOST_IP}:2379",
+      "--core_topic=rwcore",
+      "--log_level=DEBUG",
+      "--totalReplicas=2",
+      "--currentReplica=2"
     ]
     networks:
     - default

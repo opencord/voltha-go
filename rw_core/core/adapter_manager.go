@@ -238,12 +238,14 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) e
 		if saveToDb {
 			// Save the adapter to the KV store - first check if it already exist
 			id := fmt.Sprintf("%s/%d", adapter.Id, adapter.CurrentReplica)
-			kvAdapter, err := aMgr.clusterDataProxy.Get(context.Background(), "/adapters/"+id, 0, false, "")
+			logger.Debugw("adding-adapter-search-in-DB", log.Fields{"adapter": adapter, "id": id})
+			kvAdapter, err := aMgr.clusterDataProxy.Get(context.Background(), "/adapters/"+id, 0, true, "")
 			if err != nil {
 				logger.Errorw("failed-to-get-adapters-from-cluster-proxy", log.Fields{"error": err})
 				return err
 			}
 			if kvAdapter == nil {
+				logger.Debugw("adding-adapter-storing-in-DB", log.Fields{"adapter": adapter, "id": id})
 				added, err := aMgr.clusterDataProxy.AddWithID(context.Background(), "/adapters", id, clonedAdapter, "")
 				if err != nil {
 					logger.Errorw("failed-to-save-adapter-to-cluster-proxy", log.Fields{"error": err})
@@ -251,10 +253,16 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) e
 				}
 				if added == nil {
 					//TODO:  Errors when saving to KV would require a separate go routine to be launched and try the saving again
-					logger.Errorw("failed-to-save-adapter", log.Fields{"adapter": adapter})
+					logger.Errorw("failed-to-save-adapter", log.Fields{"adapter": adapter.Id, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				} else {
-					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapter": adapter})
+					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapter": adapter.Id, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				}
+			} else {
+				log.Warnw("adding-adapter-already-there", log.Fields{
+					"kvAdapter": kvAdapter,
+					"adapterName": adapter.Id,
+					"adapterReplica": adapter.CurrentReplica,
+				})
 			}
 		}
 	}
@@ -395,8 +403,8 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
-	if adapterID, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
-		return adapterID, nil
+	if adapterType, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
+		return adapterType, nil
 	}
 	return "", fmt.Errorf("Adapter-not-registered-for-device-type %s", deviceType)
 }
