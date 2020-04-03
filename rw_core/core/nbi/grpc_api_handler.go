@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package core
+package nbi
 
 import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"io"
-	"sync"
-	"time"
-
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-lib-go/v3/pkg/version"
 	"github.com/opencord/voltha-protos/v3/go/common"
@@ -35,6 +33,8 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
+	"sync"
 )
 
 // Image related constants
@@ -47,36 +47,27 @@ const (
 
 // APIHandler represent attributes of API handler
 type APIHandler struct {
-	deviceMgr                 *DeviceManager
-	logicalDeviceMgr          *LogicalDeviceManager
-	adapterMgr                *AdapterManager
-	packetInQueue             chan openflow_13.PacketIn
-	changeEventQueue          chan openflow_13.ChangeEvent
-	packetInQueueDone         chan bool
-	changeEventQueueDone      chan bool
-	coreInCompetingMode       bool
-	longRunningRequestTimeout time.Duration
-	defaultRequestTimeout     time.Duration
+	deviceMgr            *device.Manager
+	logicalDeviceMgr     *device.LogicalManager
+	adapterMgr           *adapter.Manager
+	packetInQueue        chan openflow_13.PacketIn
+	changeEventQueue     chan openflow_13.ChangeEvent
+	packetInQueueDone    chan bool
+	changeEventQueueDone chan bool
 	da.DefaultAPIHandler
-	core *Core
 }
 
 // NewAPIHandler creates API handler instance
-func NewAPIHandler(core *Core) *APIHandler {
-	handler := &APIHandler{
-		deviceMgr:                 core.deviceMgr,
-		logicalDeviceMgr:          core.logicalDeviceMgr,
-		adapterMgr:                core.adapterMgr,
-		coreInCompetingMode:       core.config.InCompetingMode,
-		longRunningRequestTimeout: core.config.LongRunningRequestTimeout,
-		defaultRequestTimeout:     core.config.DefaultRequestTimeout,
-		packetInQueue:             make(chan openflow_13.PacketIn, 100),
-		changeEventQueue:          make(chan openflow_13.ChangeEvent, 100),
-		packetInQueueDone:         make(chan bool, 1),
-		changeEventQueueDone:      make(chan bool, 1),
-		core:                      core,
+func NewAPIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalManager, adapterMgr *adapter.Manager) *APIHandler {
+	return &APIHandler{
+		deviceMgr:            deviceMgr,
+		logicalDeviceMgr:     logicalDeviceMgr,
+		adapterMgr:           adapterMgr,
+		packetInQueue:        make(chan openflow_13.PacketIn, 100),
+		changeEventQueue:     make(chan openflow_13.ChangeEvent, 100),
+		packetInQueueDone:    make(chan bool, 1),
+		changeEventQueueDone: make(chan bool, 1),
 	}
-	return handler
 }
 
 // waitForNilResponseOnSuccess is a helper function to wait for a response on channel monitorCh where an nil
@@ -117,7 +108,7 @@ func (handler *APIHandler) GetCoreInstance(ctx context.Context, id *voltha.ID) (
 func (handler *APIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
 	logger.Debugw("GetLogicalDevicePort-request", log.Fields{"id": *id})
 
-	return handler.logicalDeviceMgr.getLogicalPort(ctx, id)
+	return handler.logicalDeviceMgr.GetLogicalPort(ctx, id)
 }
 
 // EnableLogicalDevicePort enables logical device port
@@ -126,7 +117,7 @@ func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *volt
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.enableLogicalPort(ctx, id, ch)
+	go handler.logicalDeviceMgr.EnableLogicalPort(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -136,7 +127,7 @@ func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *vol
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.disableLogicalPort(ctx, id, ch)
+	go handler.logicalDeviceMgr.DisableLogicalPort(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -146,7 +137,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flo
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
+	go handler.logicalDeviceMgr.UpdateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -155,7 +146,7 @@ func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context
 	logger.Debugw("UpdateLogicalDeviceFlowGroupTable-request", log.Fields{"flow": flow, "test": common.TestModeKeys_api_test.String()})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
+	go handler.logicalDeviceMgr.UpdateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -197,19 +188,19 @@ func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 // GetLogicalDevice provides a cloned most up to date logical device
 func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	logger.Debugw("GetLogicalDevice-request", log.Fields{"id": id})
-	return handler.logicalDeviceMgr.getLogicalDevice(ctx, id.Id)
+	return handler.logicalDeviceMgr.GetLogicalDevice(ctx, id.Id)
 }
 
 // ListLogicalDevices returns the list of all logical devices
 func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
 	logger.Debug("ListLogicalDevices-request")
-	return handler.logicalDeviceMgr.listLogicalDevices(ctx)
+	return handler.logicalDeviceMgr.ListLogicalDevices(ctx)
 }
 
 // ListAdapters returns the contents of all adapters known to the system
 func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
 	logger.Debug("ListAdapters")
-	return handler.adapterMgr.listAdapters(ctx)
+	return handler.adapterMgr.ListAdapters(ctx)
 }
 
 // ListLogicalDeviceFlows returns the flows of logical device
@@ -240,7 +231,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.createDevice(ctx, device, ch)
+	go handler.deviceMgr.CreateDevice(ctx, device, ch)
 	select {
 	case res := <-ch:
 		if res != nil {
@@ -267,7 +258,7 @@ func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*em
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.enableDevice(ctx, id, ch)
+	go handler.deviceMgr.EnableDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -277,7 +268,7 @@ func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*e
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.disableDevice(ctx, id, ch)
+	go handler.deviceMgr.DisableDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -287,7 +278,7 @@ func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*em
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.rebootDevice(ctx, id, ch)
+	go handler.deviceMgr.RebootDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -297,7 +288,7 @@ func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*em
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.deleteDevice(ctx, id, ch)
+	go handler.deviceMgr.DeleteDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -352,14 +343,14 @@ func (handler *APIHandler) GetDeviceGroup(ctx context.Context, id *voltha.ID) (*
 func (handler *APIHandler) ListDeviceTypes(ctx context.Context, _ *empty.Empty) (*voltha.DeviceTypes, error) {
 	logger.Debug("ListDeviceTypes")
 
-	return &voltha.DeviceTypes{Items: handler.adapterMgr.listDeviceTypes()}, nil
+	return &voltha.DeviceTypes{Items: handler.adapterMgr.ListDeviceTypes()}, nil
 }
 
 // GetDeviceType returns the device type for a specific device entry
 func (handler *APIHandler) GetDeviceType(ctx context.Context, id *voltha.ID) (*voltha.DeviceType, error) {
 	logger.Debugw("GetDeviceType", log.Fields{"typeid": id})
 
-	if deviceType := handler.adapterMgr.getDeviceType(id.Id); deviceType != nil {
+	if deviceType := handler.adapterMgr.GetDeviceType(id.Id); deviceType != nil {
 		return deviceType, nil
 	}
 	return &voltha.DeviceType{}, status.Errorf(codes.NotFound, "device_type-%s", id.Id)
@@ -398,13 +389,13 @@ func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.
 	defer close(ch)
 	switch requestType {
 	case ImageDownload:
-		go handler.deviceMgr.downloadImage(ctx, img, ch)
+		go handler.deviceMgr.DownloadImage(ctx, img, ch)
 	case CancelImageDownload:
-		go handler.deviceMgr.cancelImageDownload(ctx, img, ch)
+		go handler.deviceMgr.CancelImageDownload(ctx, img, ch)
 	case ActivateImage:
-		go handler.deviceMgr.activateImage(ctx, img, ch)
+		go handler.deviceMgr.ActivateImage(ctx, img, ch)
 	case RevertImage:
-		go handler.deviceMgr.revertImage(ctx, img, ch)
+		go handler.deviceMgr.RevertImage(ctx, img, ch)
 	default:
 		logger.Warn("invalid-request-type", log.Fields{"requestType": requestType})
 		return failedresponse, status.Errorf(codes.InvalidArgument, "%d", requestType)
@@ -460,7 +451,7 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.getImageDownloadStatus(ctx, img, ch)
+	go handler.deviceMgr.GetImageDownloadStatus(ctx, img, ch)
 
 	select {
 	case res := <-ch:
@@ -484,7 +475,7 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	logger.Debugw("GetImageDownload-request", log.Fields{"img": *img})
 
-	download, err := handler.deviceMgr.getImageDownload(ctx, img)
+	download, err := handler.deviceMgr.GetImageDownload(ctx, img)
 	if err != nil {
 		return &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}, err
 	}
@@ -495,7 +486,7 @@ func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.Ima
 func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
 	logger.Debugw("ListImageDownloads-request", log.Fields{"deviceId": id.Id})
 
-	downloads, err := handler.deviceMgr.listImageDownloads(ctx, id.Id)
+	downloads, err := handler.deviceMgr.ListImageDownloads(ctx, id.Id)
 	if err != nil {
 		failedResp := &voltha.ImageDownloads{
 			Items: []*voltha.ImageDownload{
@@ -523,14 +514,14 @@ func (handler *APIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *v
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.updatePmConfigs(ctx, configs, ch)
+	go handler.deviceMgr.UpdatePmConfigs(ctx, configs, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // ListDevicePmConfigs returns pm configs of device
 func (handler *APIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*voltha.PmConfigs, error) {
 	logger.Debugw("ListDevicePmConfigs-request", log.Fields{"deviceId": *id})
-	return handler.deviceMgr.listPmConfigs(ctx, id.Id)
+	return handler.deviceMgr.ListPmConfigs(ctx, id.Id)
 }
 
 func (handler *APIHandler) CreateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
@@ -565,18 +556,6 @@ func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha
 	return &voltha.SelfTestResponse{}, errors.New("UnImplemented")
 }
 
-func (handler *APIHandler) forwardPacketOut(ctx context.Context, packet *openflow_13.PacketOut) {
-	logger.Debugw("forwardPacketOut-request", log.Fields{"packet": packet})
-	//TODO: Update this logic once the OF Controller (OFAgent in this case) can include a transaction Id in its
-	// request.  For performance reason we can let both Cores in a Core-Pair forward the Packet to the adapters and
-	// let once of the shim layer (kafka proxy or adapter request handler filters out the duplicate packet)
-	if agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(ctx, packet.Id); agent != nil {
-		agent.packetOut(ctx, packet.PacketOut)
-	} else {
-		logger.Errorf("No logical device agent present", log.Fields{"logicaldeviceID": packet.Id})
-	}
-}
-
 // StreamPacketsOut sends packets to adapter
 func (handler *APIHandler) StreamPacketsOut(packets voltha.VolthaService_StreamPacketsOutServer) error {
 	logger.Debugw("StreamPacketsOut-request", log.Fields{"packets": packets})
@@ -601,17 +580,17 @@ loop:
 			continue
 		}
 
-		handler.forwardPacketOut(packets.Context(), packet)
+		handler.logicalDeviceMgr.PacketOut(packets.Context(), packet)
 	}
 
 	logger.Debugw("StreamPacketsOut-request-done", log.Fields{"packets": packets})
 	return nil
 }
 
-func (handler *APIHandler) sendPacketIn(deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
+func (handler *APIHandler) SendPacketIn(deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
 	// TODO: Augment the OF PacketIn to include the transactionId
 	packetIn := openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
-	logger.Debugw("sendPacketIn", log.Fields{"packetIn": packetIn})
+	logger.Debugw("SendPacketIn", log.Fields{"packetIn": packetIn})
 	handler.packetInQueue <- packetIn
 }
 
@@ -690,12 +669,12 @@ loop:
 	return nil
 }
 
-func (handler *APIHandler) sendChangeEvent(deviceID string, portStatus *openflow_13.OfpPortStatus) {
+func (handler *APIHandler) SendChangeEvent(deviceID string, portStatus *openflow_13.OfpPortStatus) {
 	// TODO: validate the type of portStatus parameter
 	//if _, ok := portStatus.(*openflow_13.OfpPortStatus); ok {
 	//}
 	event := openflow_13.ChangeEvent{Id: deviceID, Event: &openflow_13.ChangeEvent_PortStatus{PortStatus: portStatus}}
-	logger.Debugw("sendChangeEvent", log.Fields{"event": event})
+	logger.Debugw("SendChangeEvent", log.Fields{"event": event})
 	handler.changeEventQueue <- event
 }
 
@@ -732,6 +711,10 @@ loop:
 	}
 
 	return nil
+}
+
+func (handler *APIHandler) GetChangeEventsQueueForTest() <-chan openflow_13.ChangeEvent {
+	return handler.changeEventQueue
 }
 
 // Subscribe subscribing request of ofagent
@@ -777,7 +760,7 @@ func (handler *APIHandler) SimulateAlarm(
 	successResp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.simulateAlarm(ctx, in, ch)
+	go handler.deviceMgr.SimulateAlarm(ctx, in, ch)
 	return successResp, nil
 }
 
@@ -787,7 +770,7 @@ func (handler *APIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, me
 		log.Fields{"meter": meter, "test": common.TestModeKeys_api_test.String()})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
+	go handler.logicalDeviceMgr.UpdateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -805,7 +788,7 @@ func (handler *APIHandler) EnablePort(ctx context.Context, port *voltha.Port) (*
 	logger.Debugw("EnablePort-request", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.enablePort(ctx, port, ch)
+	go handler.deviceMgr.EnablePort(ctx, port, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
@@ -814,11 +797,11 @@ func (handler *APIHandler) DisablePort(ctx context.Context, port *voltha.Port) (
 	logger.Debugw("DisablePort-request", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.disablePort(ctx, port, ch)
+	go handler.deviceMgr.DisablePort(ctx, port, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 func (handler *APIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
 	logger.Debugw("Omci_test_Request", log.Fields{"id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
-	return handler.deviceMgr.startOmciTest(ctx, omcitestrequest)
+	return handler.deviceMgr.StartOmciTest(ctx, omcitestrequest)
 }
