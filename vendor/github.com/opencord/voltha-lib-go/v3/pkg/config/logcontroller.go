@@ -15,7 +15,7 @@
  */
 
 // Package Config provides dynamic logging configuration for specific Voltha component with loglevel lookup
-// from etcd kvstore implemented using backend.
+// from etcd kvstore implemented using Backend.
 // Any Voltha component can start utilizing dynamic logging by starting goroutine of StartLogLevelConfigProcessing after
 // starting kvClient for the component.
 
@@ -121,8 +121,8 @@ func (c *ComponentLogController) persistInitialDefaultLogConfigs(ctx context.Con
 }
 
 // ProcessLogConfig will first load and apply log config and then start waiting on component config and global config
-// channels for any changes. Event channel will be recieved from backend for valid change type
-// Then data for componentn log config and global log config will be retrieved from backend and stored in updatedLogConfig in precedence order
+// channels for any changes. Event channel will be recieved from Backend for valid change type
+// Then data for componentn log config and global log config will be retrieved from Backend and stored in updatedLogConfig in precedence order
 // If any changes in updatedLogConfig will be applied on component
 func (c *ComponentLogController) processLogConfig(ctx context.Context) {
 
@@ -247,7 +247,7 @@ func (c *ComponentLogController) getComponentLogConfig(ctx context.Context, glob
 	return componentLogConfig, nil
 }
 
-// buildUpdatedLogConfig retrieve the global logConfig and component logConfig  from backend
+// buildUpdatedLogConfig retrieve the global logConfig and component logConfig  from Backend
 // component logConfig stores the log config with precedence order
 // For example, If the global logConfig is set and component logConfig is set only for specific package then
 // component logConfig is stored with global logConfig  and component logConfig of specific package
