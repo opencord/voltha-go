@@ -26,9 +26,9 @@ services:
     environment:
       SERVICE_2181_NAME: "zookeeper"
     ports:
-    - 2181:2181
+      - 2181:2181
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
@@ -43,9 +43,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-     - 9092:9092
+      - 9092:9092
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
@@ -63,37 +63,37 @@ services:
       "--initial-cluster-state=new"
     ]
     ports:
-    - "2379:2379"
-    - 2380
-    - 4001
+      - "2379:2379"
+      - 2380
+      - 4001
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
   rw_core:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}"
     entrypoint:
-        - /app/rw_core
-        - -kv_store_type=etcd
-        - -kv_store_host=${DOCKER_HOST_IP}
-        - -kv_store_port=2379
-        - -grpc_port=50057
-        - -banner=true
-        - -kafka_adapter_host=${DOCKER_HOST_IP}
-        - -kafka_adapter_port=9092
-        - -kafka_cluster_host=${DOCKER_HOST_IP}
-        - -kafka_cluster_port=9092
-        - -rw_core_topic=rwcore
-        - -kv_store_data_prefix=service/voltha
-        - -in_competing_mode=false
-        - -log_level=DEBUG
+      - /app/rw_core
+      - -kv_store_type=etcd
+      - -kv_store_host=${DOCKER_HOST_IP}
+      - -kv_store_port=2379
+      - -grpc_port=50057
+      - -banner=true
+      - -kafka_adapter_host=${DOCKER_HOST_IP}
+      - -kafka_adapter_port=9092
+      - -kafka_cluster_host=${DOCKER_HOST_IP}
+      - -kafka_cluster_port=9092
+      - -rw_core_topic=rwcore
+      - -kv_store_data_prefix=service/voltha
+      - -in_competing_mode=false
+      - -log_level=DEBUG
     volumes:
-    - "/var/run/docker.sock:/tmp/docker.sock"
+      - "/var/run/docker.sock:/tmp/docker.sock"
     ports:
       - 50057:50057
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
@@ -108,23 +108,23 @@ services:
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
   onos:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-onos:${DOCKER_TAG}"
     ports:
-    - "8101:8101" # ssh
-    - "6653:6653" # OF
-    - "8181:8181" # UI
+      - "8101:8101" # ssh
+      - "6653:6653" # OF
+      - "8181:8181" # UI
     environment:
       ONOS_APPS: 'drivers,openflow-base'
     volumes:
-    - "/var/run/docker.sock:/tmp/docker.sock"
-    - "./network-cfg-bbsim.json:/root/onos/config/network-cfg.json"
+      - "/var/run/docker.sock:/tmp/docker.sock"
+      - "./network-cfg-bbsim.json:/root/onos/config/network-cfg.json"
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
@@ -144,7 +144,7 @@ services:
     ports:
       - "50062:50062"
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
@@ -161,7 +161,7 @@ services:
       "--log_level=DEBUG"
     ]
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
@@ -180,10 +180,10 @@ services:
       "1"
     ]
     ports:
-    - "50060:50060"
-    - "50074:50074"
+      - "50060:50060"
+      - "50074:50074"
     networks:
-    - default
+      - default
     restart: unless-stopped
 
 
@@ -197,9 +197,9 @@ services:
       - "./radius-clients.conf:/etc/raddb/clients.conf"
       - "./radius-users.conf:/etc/raddb/users"
     ports:
-     - "1812:1812/udp"
-     - "1813:1813"
-     - "18120:18120"
+      - "1812:1812/udp"
+      - "1813:1813"
+      - "18120:18120"
     networks:
-    - default
+      - default
     restart: unless-stopped
