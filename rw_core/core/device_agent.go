@@ -284,8 +284,9 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	cloned.Adapter = adapterName
 
 	if cloned.AdminState == voltha.AdminState_ENABLED {
-		logger.Debugw("device-already-enabled", log.Fields{"device-id": agent.deviceID})
-		return nil
+		logger.Warnw("device-already-enabled", log.Fields{"device-id": agent.deviceID})
+		err = status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s ", cloned.Id))
+		return err
 	}
 
 	if cloned.AdminState == voltha.AdminState_DELETED {

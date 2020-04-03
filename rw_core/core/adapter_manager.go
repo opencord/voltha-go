@@ -19,7 +19,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"sync"
 	"time"
 
@@ -105,8 +104,9 @@ func (aa *AdapterAgent) updateCommunicationTime(new time.Time) {
 
 // AdapterManager represents adapter manager attributes
 type AdapterManager struct {
+	//deviceTypeToAdapterMap      map[string]string
 	adapterAgents               map[string]*AdapterAgent
-	deviceTypeToAdapterMap      map[string]string
+	deviceTypes                 map[string]*voltha.DeviceType
 	clusterDataProxy            *model.Proxy
 	adapterProxy                *model.Proxy
 	deviceTypeProxy             *model.Proxy
@@ -119,12 +119,13 @@ type AdapterManager struct {
 
 func newAdapterManager(cdProxy *model.Proxy, coreInstanceID string, kafkaClient kafka.Client, deviceMgr *DeviceManager) *AdapterManager {
 	aMgr := &AdapterManager{
-		exitChannel:            make(chan int, 1),
-		coreInstanceID:         coreInstanceID,
-		clusterDataProxy:       cdProxy,
-		adapterAgents:          make(map[string]*AdapterAgent),
-		deviceTypeToAdapterMap: make(map[string]string),
-		deviceMgr:              deviceMgr,
+		exitChannel:      make(chan int, 1),
+		coreInstanceID:   coreInstanceID,
+		clusterDataProxy: cdProxy,
+		deviceTypes:      make(map[string]*voltha.DeviceType),
+		adapterAgents:    make(map[string]*AdapterAgent),
+		//deviceTypeToAdapterMap: make(map[string]string),
+		deviceMgr: deviceMgr,
 	}
 	kafkaClient.SubscribeForMetadata(aMgr.updateLastAdapterCommunication)
 	return aMgr
@@ -154,8 +155,8 @@ func (aMgr *AdapterManager) start(ctx context.Context) error {
 	}
 
 	// Register the callbacks
-	aMgr.adapterProxy.RegisterCallback(model.PostUpdate, aMgr.adapterUpdated)
-	aMgr.deviceTypeProxy.RegisterCallback(model.PostUpdate, aMgr.deviceTypesUpdated)
+	//aMgr.adapterProxy.RegisterCallback(model.PostUpdate, aMgr.adapterUpdated)
+	//aMgr.deviceTypeProxy.RegisterCallback(model.PostUpdate, aMgr.deviceTypesUpdated)
 	probe.UpdateStatusFromContext(ctx, "adapter-manager", probe.ServiceStatusRunning)
 	logger.Info("adapter-manager-started")
 	return nil
@@ -222,7 +223,8 @@ func (aMgr *AdapterManager) updateLastAdapterCommunication(adapterID string, tim
 func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
-	logger.Debugw("adding-adapter", log.Fields{"adapter": adapter})
+	logger.Debugw("adding-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint})
 	if _, exist := aMgr.adapterAgents[adapter.Id]; !exist {
 		clonedAdapter := (proto.Clone(adapter)).(*voltha.Adapter)
 		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(clonedAdapter, nil)
@@ -241,10 +243,18 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) e
 				}
 				if added == nil {
 					//TODO:  Errors when saving to KV would require a separate go routine to be launched and try the saving again
-					logger.Errorw("failed-to-save-adapter", log.Fields{"adapter": adapter})
+					logger.Errorw("failed-to-save-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+						"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				} else {
-					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapter": adapter})
+					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+						"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				}
+			} else {
+				log.Warnw("adding-adapter-already-there", log.Fields{
+					"kvAdapter":      kvAdapter,
+					"adapterName":    adapter.Id,
+					"adapterReplica": adapter.CurrentReplica,
+				})
 			}
 		}
 	}
@@ -260,16 +270,12 @@ func (aMgr *AdapterManager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, save
 	defer aMgr.lockAdaptersMap.Unlock()
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
+
+	// create an in memory map to fetch the entire voltha.DeviceType from a device.Type string
 	for _, deviceType := range deviceTypes.Items {
-		clonedDType := (proto.Clone(deviceType)).(*voltha.DeviceType)
-		if adapterAgent, exist := aMgr.adapterAgents[clonedDType.Adapter]; exist {
-			adapterAgent.updateDeviceType(clonedDType)
-		} else {
-			logger.Debugw("adapter-not-exist", log.Fields{"deviceTypes": deviceTypes, "adapterId": clonedDType.Adapter})
-			aMgr.adapterAgents[clonedDType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: clonedDType.Adapter}, deviceTypes)
-		}
-		aMgr.deviceTypeToAdapterMap[clonedDType.Id] = clonedDType.Adapter
+		aMgr.deviceTypes[deviceType.Id] = deviceType
 	}
+
 	if saveToDb {
 		// Save the device types to the KV store as well
 		for _, deviceType := range deviceTypes.Items {
@@ -335,27 +341,9 @@ func (aMgr *AdapterManager) updateAdapterWithoutLock(adapter *voltha.Adapter) {
 	}
 }
 
-//updateDeviceType updates an adapter if it exist.  Otherwise, it creates it.
-func (aMgr *AdapterManager) updateDeviceType(deviceType *voltha.DeviceType) {
-	aMgr.lockAdaptersMap.Lock()
-	defer aMgr.lockAdaptersMap.Unlock()
-	aMgr.lockdDeviceTypeToAdapterMap.Lock()
-	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
-	aMgr.updateDeviceTypeWithoutLock(deviceType)
-}
-
-func (aMgr *AdapterManager) updateDeviceTypeWithoutLock(deviceType *voltha.DeviceType) {
-	if adapterAgent, exist := aMgr.adapterAgents[deviceType.Adapter]; exist {
-		adapterAgent.updateDeviceType(deviceType)
-	} else {
-		aMgr.adapterAgents[deviceType.Adapter] = newAdapterAgent(&voltha.Adapter{Id: deviceType.Adapter},
-			&voltha.DeviceTypes{Items: []*voltha.DeviceType{deviceType}})
-	}
-	aMgr.deviceTypeToAdapterMap[deviceType.Id] = deviceType.Adapter
-}
-
 func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) (*voltha.CoreInstance, error) {
-	logger.Debugw("registerAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
+	logger.Debugw("registerAdapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "deviceTypes": deviceTypes.Items})
 
 	if aMgr.getAdapter(adapter.Id) != nil {
 		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
@@ -377,17 +365,25 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 		return nil, err
 	}
 
-	logger.Debugw("adapter-registered", log.Fields{"adapter": adapter.Id})
+	logger.Debugw("adapter-registered", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint})
 
 	return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceID}, nil
 }
 
-//getAdapterName returns the name of the device adapter that service this device type
+// getAdapterName returns the name of the device adapter that service this device type
+// FIXME this method is actually returning the adapter.Id not the Name
+// (Adapters don't even have a name)
+//
+// NOTE as now this will always return the Id of the first adapter,
+// what happens when multiple are present? should we retrieve this from the Endpoint manager?
 func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
-	if adapterID, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
-		return adapterID, nil
+	for adapterId, adapterAgent := range aMgr.adapterAgents {
+		if deviceType == adapterAgent.adapter.Type {
+			return adapterId, nil
+		}
 	}
 	return "", fmt.Errorf("Adapter-not-registered-for-device-type %s", deviceType)
 }
@@ -396,16 +392,12 @@ func (aMgr *AdapterManager) listDeviceTypes() []*voltha.DeviceType {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
-	deviceTypes := make([]*voltha.DeviceType, 0, len(aMgr.deviceTypeToAdapterMap))
-	for deviceTypeID, adapterID := range aMgr.deviceTypeToAdapterMap {
-		if adapterAgent, have := aMgr.adapterAgents[adapterID]; have {
-			if deviceType := adapterAgent.getDeviceType(deviceTypeID); deviceType != nil {
-				if deviceType.Id != SentinelDevicetypeID { // don't report the sentinel
-					deviceTypes = append(deviceTypes, deviceType)
-				}
-			}
-		}
+	deviceTypes := make([]*voltha.DeviceType, 0, len(aMgr.deviceTypes))
+
+	for _, deviceType := range aMgr.deviceTypes {
+		deviceTypes = append(deviceTypes, deviceType)
 	}
+
 	return deviceTypes
 }
 
@@ -414,76 +406,81 @@ func (aMgr *AdapterManager) getDeviceType(deviceType string) *voltha.DeviceType 
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
-	if adapterID, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
-		if adapterAgent := aMgr.adapterAgents[adapterID]; adapterAgent != nil {
-			return adapterAgent.getDeviceType(deviceType)
-		}
+	if deviceType, exist := aMgr.deviceTypes[deviceType]; exist {
+		return deviceType
 	}
+
+	//if adapterID, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
+	//	if adapterAgent := aMgr.adapterAgents[adapterID]; adapterAgent != nil {
+	//		return adapterAgent.getDeviceType(deviceType)
+	//	}
+	//}
+	logger.Fatalw("getDeviceType not implemented", log.Fields{"deviceType": deviceType})
 	return nil
 }
 
-//adapterUpdated is a callback invoked when an adapter change has been noticed
-func (aMgr *AdapterManager) adapterUpdated(ctx context.Context, args ...interface{}) interface{} {
-	logger.Debugw("updateAdapter-callback", log.Fields{"argsLen": len(args)})
-
-	var previousData *voltha.Adapters
-	var latestData *voltha.Adapters
-
-	var ok bool
-	if previousData, ok = args[0].(*voltha.Adapters); !ok {
-		logger.Errorw("invalid-args", log.Fields{"args0": args[0]})
-		return nil
-	}
-	if latestData, ok = args[1].(*voltha.Adapters); !ok {
-		logger.Errorw("invalid-args", log.Fields{"args1": args[1]})
-		return nil
-	}
-
-	if previousData != nil && latestData != nil {
-		if reflect.DeepEqual(previousData.Items, latestData.Items) {
-			logger.Debug("update-not-required")
-			return nil
-		}
-	}
-
-	if latestData != nil {
-		for _, adapter := range latestData.Items {
-			aMgr.updateAdapter(adapter)
-		}
-	}
-
-	return nil
-}
-
-//deviceTypesUpdated is a callback invoked when a device type change has been noticed
-func (aMgr *AdapterManager) deviceTypesUpdated(ctx context.Context, args ...interface{}) interface{} {
-	logger.Debugw("deviceTypesUpdated-callback", log.Fields{"argsLen": len(args)})
-
-	var previousData *voltha.DeviceTypes
-	var latestData *voltha.DeviceTypes
-
-	var ok bool
-	if previousData, ok = args[0].(*voltha.DeviceTypes); !ok {
-		logger.Errorw("invalid-args", log.Fields{"args0": args[0]})
-		return nil
-	}
-
-	if latestData, ok = args[1].(*voltha.DeviceTypes); !ok {
-		logger.Errorw("invalid-args", log.Fields{"args1": args[1]})
-		return nil
-	}
-
-	if previousData != nil && latestData != nil {
-		if reflect.DeepEqual(previousData.Items, latestData.Items) {
-			logger.Debug("update-not-required")
-			return nil
-		}
-	}
-
-	if latestData != nil {
-		for _, dType := range latestData.Items {
-			aMgr.updateDeviceType(dType)
-		}
-	}
-	return nil
-}
+////adapterUpdated is a callback invoked when an adapter change has been noticed
+//func (aMgr *AdapterManager) adapterUpdated(ctx context.Context, args ...interface{}) interface{} {
+//	logger.Debugw("updateAdapter-callback", log.Fields{"argsLen": len(args)})
+//
+//	var previousData *voltha.Adapters
+//	var latestData *voltha.Adapters
+//
+//	var ok bool
+//	if previousData, ok = args[0].(*voltha.Adapters); !ok {
+//		logger.Errorw("invalid-args", log.Fields{"args0": args[0]})
+//		return nil
+//	}
+//	if latestData, ok = args[1].(*voltha.Adapters); !ok {
+//		logger.Errorw("invalid-args", log.Fields{"args1": args[1]})
+//		return nil
+//	}
+//
+//	if previousData != nil && latestData != nil {
+//		if reflect.DeepEqual(previousData.Items, latestData.Items) {
+//			logger.Debug("update-not-required")
+//			return nil
+//		}
+//	}
+//
+//	if latestData != nil {
+//		for _, adapter := range latestData.Items {
+//			aMgr.updateAdapter(adapter)
+//		}
+//	}
+//
+//	return nil
+//}
+//
+////deviceTypesUpdated is a callback invoked when a device type change has been noticed
+//func (aMgr *AdapterManager) deviceTypesUpdated(ctx context.Context, args ...interface{}) interface{} {
+//	logger.Debugw("deviceTypesUpdated-callback", log.Fields{"argsLen": len(args)})
+//
+//	var previousData *voltha.DeviceTypes
+//	var latestData *voltha.DeviceTypes
+//
+//	var ok bool
+//	if previousData, ok = args[0].(*voltha.DeviceTypes); !ok {
+//		logger.Errorw("invalid-args", log.Fields{"args0": args[0]})
+//		return nil
+//	}
+//
+//	if latestData, ok = args[1].(*voltha.DeviceTypes); !ok {
+//		logger.Errorw("invalid-args", log.Fields{"args1": args[1]})
+//		return nil
+//	}
+//
+//	if previousData != nil && latestData != nil {
+//		if reflect.DeepEqual(previousData.Items, latestData.Items) {
+//			logger.Debug("update-not-required")
+//			return nil
+//		}
+//	}
+//
+//	if latestData != nil {
+//		for _, dType := range latestData.Items {
+//			aMgr.updateDeviceType(dType)
+//		}
+//	}
+//	return nil
+//}
