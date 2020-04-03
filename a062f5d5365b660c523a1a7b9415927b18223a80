@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e55120e9_d9c26e7b",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-03T16:42:47Z",
+      "side": 1,
+      "message": "The pDeviceID is actually the deviceID in this case.",
+      "revId": "a062f5d5365b660c523a1a7b9415927b18223a80",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f2efb37_5437e327",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1705,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-03T16:42:47Z",
+      "side": 1,
+      "message": "No need to change as yje agent.deviceID \u003d\u003d device.id",
+      "revId": "a062f5d5365b660c523a1a7b9415927b18223a80",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
