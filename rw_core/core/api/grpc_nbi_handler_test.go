@@ -13,13 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-package core
+package api
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"math/rand"
 	"os"
 	"runtime"
@@ -30,8 +29,13 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
+	"github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
@@ -45,9 +49,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	coreName = "rw_core"
+)
+
 type NBTest struct {
 	etcdServer        *mock_etcd.EtcdServer
-	core              *Core
+	deviceMgr         *device.Manager
+	logicalDeviceMgr  *device.LogicalManager
+	adapterMgr        *adapter.Manager
+	kmp               kafka.InterContainerProxy
 	kClient           kafka.Client
 	kvClientPort      int
 	numONUPerOLT      int
@@ -96,10 +107,40 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.GrpcHost = "127.0.0.1"
 	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, nb.coreInstanceID)
-	nb.core = NewCore(ctx, nb.coreInstanceID, cfg, client, nb.kClient)
-	err = nb.core.Start(context.Background())
-	if err != nil {
-		logger.Fatal("Cannot start core")
+	backend := &db.Backend{
+		Client:                  client,
+		StoreType:               cfg.KVStoreType,
+		Host:                    cfg.KVStoreHost,
+		Port:                    cfg.KVStorePort,
+		Timeout:                 cfg.KVStoreTimeout,
+		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
+		PathPrefix:              cfg.KVStoreDataPrefix}
+	nb.kmp = kafka.NewInterContainerProxy(
+		kafka.InterContainerHost(cfg.KafkaAdapterHost),
+		kafka.InterContainerPort(cfg.KafkaAdapterPort),
+		kafka.MsgClient(nb.kClient),
+		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+
+	endpointMgr := kafka.NewEndpointManager(backend)
+	proxy := model.NewProxy(backend, "/")
+	nb.adapterMgr = adapter.NewAdapterManager(proxy, nb.coreInstanceID, nb.kClient)
+	nb.deviceMgr, nb.logicalDeviceMgr = device.NewDeviceManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
+	if err = nb.adapterMgr.Start(ctx); err != nil {
+		logger.Fatalf("Cannot start adapterMgr: %s", err)
+	}
+	nb.deviceMgr.Start(ctx)
+	nb.logicalDeviceMgr.Start(ctx)
+
+	if err = nb.kmp.Start(); err != nil {
+		logger.Fatalf("Cannot start InterContainerProxy: %s", err)
+	}
+	requestProxy := NewAdapterRequestHandlerProxy(nb.coreInstanceID, nb.deviceMgr, nb.adapterMgr, proxy, proxy, cfg.LongRunningRequestTimeout, cfg.DefaultRequestTimeout)
+	if err := nb.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
+		logger.Fatalf("Cannot add request handler: %s", err)
+	}
+	if err := nb.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: cfg.CorePairTopic}, kafka.OffsetNewest); err != nil {
+		logger.Fatalf("Cannot add default request handler: %s", err)
 	}
 }
 
@@ -125,7 +166,7 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	}
 	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
-	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
@@ -149,7 +190,7 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	}
 	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes = &voltha.DeviceTypes{Items: types}
-	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
@@ -159,15 +200,21 @@ func (nb *NBTest) stopAll() {
 	if nb.kClient != nil {
 		nb.kClient.Stop()
 	}
-	if nb.core != nil {
-		nb.core.Stop(context.Background())
+	if nb.logicalDeviceMgr != nil {
+		nb.logicalDeviceMgr.Stop(context.Background())
+	}
+	if nb.deviceMgr != nil {
+		nb.deviceMgr.Stop(context.Background())
+	}
+	if nb.kmp != nil {
+		nb.kmp.Stop()
 	}
 	if nb.etcdServer != nil {
 		stopEmbeddedEtcdServer(nb.etcdServer)
 	}
 }
 
-func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, nbi *APIHandler) {
+func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, nbi *NBIHandler) {
 	// Get the latest set of logical devices
 	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
@@ -207,7 +254,7 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 	}
 }
 
-func (nb *NBTest) verifyDevices(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) verifyDevices(t *testing.T, nbi *NBIHandler) {
 	// Get the latest set of devices
 	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
@@ -273,7 +320,7 @@ func (nb *NBTest) verifyDevices(t *testing.T, nbi *APIHandler) {
 	wg.Wait()
 }
 
-func (nb *NBTest) getADevice(rootDevice bool, nbi *APIHandler) (*voltha.Device, error) {
+func (nb *NBTest) getADevice(rootDevice bool, nbi *NBIHandler) (*voltha.Device, error) {
 	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
 	if err != nil {
 		return nil, err
@@ -286,7 +333,7 @@ func (nb *NBTest) getADevice(rootDevice bool, nbi *APIHandler) (*voltha.Device, 
 	return nil, status.Errorf(codes.NotFound, "%v device not found", rootDevice)
 }
 
-func (nb *NBTest) testCoreWithoutData(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testCoreWithoutData(t *testing.T, nbi *NBIHandler) {
 	lds, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, lds)
@@ -301,7 +348,7 @@ func (nb *NBTest) testCoreWithoutData(t *testing.T, nbi *APIHandler) {
 	assert.NotNil(t, adapters)
 }
 
-func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *NBIHandler) {
 	adapters, err := nbi.ListAdapters(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, adapters)
@@ -336,7 +383,7 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *APIHandler) {
 	}
 }
 
-func (nb *NBTest) testCreateDevice(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testCreateDevice(t *testing.T, nbi *NBIHandler) {
 	//	Create a valid device
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
 	assert.Nil(t, err)
@@ -375,7 +422,7 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *APIHandler) {
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) testEnableDevice(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testEnableDevice(t *testing.T, nbi *NBIHandler) {
 	// Create a device that has no adapter registered
 	oltDeviceNoAdapter, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: "noAdapterRegistered", MacAddress: "aa:bb:cc:cc:ee:ff"})
 	assert.Nil(t, err)
@@ -438,7 +485,7 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *APIHandler) {
 	wg.Wait()
 }
 
-func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *NBIHandler) {
 	//Get an OLT device
 	oltDevice, err := nb.getADevice(true, nbi)
 	assert.Nil(t, err)
@@ -456,7 +503,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are disabled as well
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -491,7 +538,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are enabled as well
-	onuDevices, err = nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err = nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -515,7 +562,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *NBIHandler) {
 	//Get an OLT device
 	oltDevice, err := nb.getADevice(true, nbi)
 	assert.Nil(t, err)
@@ -533,7 +580,7 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are disabled as well
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -558,7 +605,7 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	err = waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 }
-func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *NBIHandler) {
 	//Create the device with valid data
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
 	assert.Nil(t, err)
@@ -581,7 +628,7 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	assert.Nil(t, err)
 
 	//Get all child devices
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 
 	// Wait for the all onu devices to be enabled
@@ -626,7 +673,7 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunc)
 	assert.Nil(t, err)
 }
-func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 	//Get an OLT device
 	var cp *voltha.Port
 	oltDevice, err := nb.getADevice(true, nbi)
@@ -719,7 +766,7 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *APIHandler) {
 
 }
 
-func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *NBIHandler) {
 	//Get an OLT device
 	oltDevice, err := nb.getADevice(true, nbi)
 	assert.Nil(t, err)
@@ -728,7 +775,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 	assert.Equal(t, oltDevice.AdminState, voltha.AdminState_ENABLED)
 
 	// Verify that we have one or more ONUs to start with
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	assert.NotNil(t, onuDevices)
 	assert.Greater(t, len(onuDevices.Items), 0)
@@ -786,8 +833,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 
 	// Update the OLT Connection Status to REACHABLE and operation status to ACTIVE
 	// Normally, in a real adapter this happens after connection regain via a heartbeat mechanism with real hardware
-	deviceAgent := nbi.deviceMgr.getDeviceAgent(getContext(), oltDevice.Id)
-	err = deviceAgent.updateDeviceStatus(getContext(), voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
+	err = nbi.deviceMgr.UpdateDeviceStatus(getContext(), oltDevice.Id, voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
 	assert.Nil(t, err)
 
 	// Verify the device connection and operation states
@@ -811,13 +857,13 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 	assert.Equal(t, 1, len(logicalDevices.Items))
 
 	// Verify that we have no ONUs left
-	onuDevices, err = nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err = nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	assert.NotNil(t, onuDevices)
 	assert.Equal(t, 0, len(onuDevices.Items))
 }
 
-func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *APIHandler) {
+func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *NBIHandler) {
 	// -----------------------------------------------------------------------
 	// SubTest 1: Omci test action should fail due to nonexistent device id
 
@@ -883,7 +929,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *APIHandler) {
 	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
 	assert.Nil(t, err)
 
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	assert.Greater(t, len(onuDevices.Items), 0)
 
@@ -918,7 +964,7 @@ func createMetadata(cTag int, techProfile int, port int) uint64 {
 	return uint64(md | (port & 0xFFFFFFFF))
 }
 
-func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *APIHandler, numNNIPorts int, numUNIPorts int) {
+func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int) {
 	expectedNumFlows := numNNIPorts*3 + numNNIPorts*numUNIPorts
 	// Wait for logical device to have all the flows
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
@@ -929,7 +975,7 @@ func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *APIHandler, nu
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *APIHandler, logicalDevice *voltha.LogicalDevice, meterID uint64, startingVlan int) (numNNIPorts, numUNIPorts int) {
+func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *voltha.LogicalDevice, meterID uint64, startingVlan int) (numNNIPorts, numUNIPorts int) {
 	// Send flows for the parent device
 	var nniPorts []*voltha.LogicalPort
 	var uniPorts []*voltha.LogicalPort
@@ -997,7 +1043,7 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *APIHandler, logicalDevice *vo
 	return len(nniPorts), len(uniPorts)
 }
 
-func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *APIHandler, logicalDeviceID string, port *ofp.OfpPort, vlan int, meterID uint64) {
+func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *NBIHandler, logicalDeviceID string, port *ofp.OfpPort, vlan int, meterID uint64) {
 	maxInt32 := uint64(0xFFFFFFFF)
 	controllerPortMask := uint32(4294967293) // will result in 4294967293&0x7fffffff => 2147483645 which is the actual controller port
 	fa := &flows.FlowArgs{
@@ -1016,11 +1062,9 @@ func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *APIHandler, logicalDeviceID st
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup) {
+func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup) {
 	defer wg.Done()
-	if nb.core.logicalDeviceMgr.grpcNbiHdlr != nbi {
-		nb.core.logicalDeviceMgr.setGrpcNbiHandler(nbi)
-	}
+	nb.logicalDeviceMgr.SetEventCallbacks(nbi)
 
 	// Clear any existing flows on the adapters
 	nb.oltAdapter.ClearFlows()
@@ -1118,7 +1162,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPort
 }
 
 func TestSuiteNbiApiHandler(t *testing.T) {
-	f, err := os.Create("profile.cpu")
+	f, err := os.Create("../../../tests/results/profile.cpu")
 	if err != nil {
 		logger.Fatalf("could not create CPU profile: %v\n ", err)
 	}
@@ -1141,7 +1185,7 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 	nb.startCore(false)
 
 	// Set the grpc API interface - no grpc server is running in unit test
-	nbi := NewAPIHandler(nb.core)
+	nbi := NewAPIHandler(nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr)
 
 	// 1. Basic test with no data in Core
 	nb.testCoreWithoutData(t, nbi)
