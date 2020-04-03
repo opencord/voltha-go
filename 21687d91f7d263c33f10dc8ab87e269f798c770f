@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "048a65d4_0774b399",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-03T16:37:53Z",
+      "side": 1,
+      "message": "Does this make all adapters support this device type?",
+      "revId": "21687d91f7d263c33f10dc8ab87e269f798c770f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
