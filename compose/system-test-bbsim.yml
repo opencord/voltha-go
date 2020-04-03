@@ -41,9 +41,9 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       SERVICE_9092_NAME: "kafka"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    - /var/run/docker.sock:/var/run/docker.sock
     ports:
-     - 9092:9092
+    - 9092:9092
     networks:
     - default
     restart: unless-stopped
@@ -74,24 +74,24 @@ services:
   rw_core:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core:${DOCKER_TAG}"
     entrypoint:
-        - /app/rw_core
-        - -kv_store_type=etcd
-        - -kv_store_host=${DOCKER_HOST_IP}
-        - -kv_store_port=2379
-        - -grpc_port=50057
-        - -banner=true
-        - -kafka_adapter_host=${DOCKER_HOST_IP}
-        - -kafka_adapter_port=9092
-        - -kafka_cluster_host=${DOCKER_HOST_IP}
-        - -kafka_cluster_port=9092
-        - -rw_core_topic=rwcore
-        - -kv_store_data_prefix=service/voltha
-        - -in_competing_mode=false
-        - -log_level=DEBUG
+    - /app/rw_core
+    - -kv_store_type=etcd
+    - -kv_store_host=${DOCKER_HOST_IP}
+    - -kv_store_port=2379
+    - -grpc_port=50057
+    - -banner=true
+    - -kafka_adapter_host=${DOCKER_HOST_IP}
+    - -kafka_adapter_port=9092
+    - -kafka_cluster_host=${DOCKER_HOST_IP}
+    - -kafka_cluster_port=9092
+    - -rw_core_topic=rwcore
+    - -kv_store_data_prefix=service/voltha
+    - -in_competing_mode=false
+    - -log_level=DEBUG
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     ports:
-      - 50057:50057
+    - 50057:50057
     networks:
     - default
     restart: unless-stopped
@@ -142,7 +142,7 @@ services:
       "--log_level=DEBUG"
     ]
     ports:
-      - "50062:50062"
+    - "50062:50062"
     networks:
     - default
     restart: unless-stopped
@@ -194,12 +194,12 @@ services:
       USERS_FILE: "/etc/raddb/users"
       RADIUS_CLIENTS: "SECRET@0.0.0.0/0"
     volumes:
-      - "./radius-clients.conf:/etc/raddb/clients.conf"
-      - "./radius-users.conf:/etc/raddb/users"
+    - "./radius-clients.conf:/etc/raddb/clients.conf"
+    - "./radius-users.conf:/etc/raddb/users"
     ports:
-     - "1812:1812/udp"
-     - "1813:1813"
-     - "18120:18120"
+    - "1812:1812/udp"
+    - "1813:1813"
+    - "18120:18120"
     networks:
     - default
     restart: unless-stopped
