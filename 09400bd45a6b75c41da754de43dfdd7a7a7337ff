@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cf9182c_53e6ab8a",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-03T23:22:03Z",
+      "side": 0,
+      "message": "if we don\u0027t set this to \"true\" we get a wrong result the second time an adapter of the same type tries to register",
+      "range": {
+        "startLine": 231,
+        "startChar": 97,
+        "endLine": 231,
+        "endChar": 102
+      },
+      "revId": "09400bd45a6b75c41da754de43dfdd7a7a7337ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94146f76_7a1a6cc7",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-03T23:22:03Z",
+      "side": 0,
+      "message": "we should add an else and log that the adapter was already there",
+      "range": {
+        "startLine": 236,
+        "startChar": 3,
+        "endLine": 236,
+        "endChar": 24
+      },
+      "revId": "09400bd45a6b75c41da754de43dfdd7a7a7337ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e79e8c9c_33c10cd8",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-03T23:22:03Z",
+      "side": 0,
+      "message": "I suspect we should add a transactionID otherwise concurrent requests will override each other (still investigating it)",
+      "range": {
+        "startLine": 237,
+        "startChar": 112,
+        "endLine": 237,
+        "endChar": 114
+      },
+      "revId": "09400bd45a6b75c41da754de43dfdd7a7a7337ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
