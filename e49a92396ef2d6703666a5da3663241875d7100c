@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b336fbff_f7e37e8d",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-03T15:19:55Z",
+      "side": 1,
+      "message": "This needs to be changed to:\n\nfunc (ap *AdapterProxy) getAdapterTopic(deviceId, adapterName string ) (kafka.Topic, error) {\n\tendpoint, err :\u003d ap.endpointMgr.GetEndpointByService(deviceId, adapterName)\n\tif err !\u003d nil {\n\t\treturn nil, err\n\t}\n\treturn kafka.Topic{Name: string(endpoint)}, nil\n}",
+      "revId": "e49a92396ef2d6703666a5da3663241875d7100c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
