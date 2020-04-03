@@ -266,15 +266,16 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
 	// with the adapter then we need to know the adapter that will handle this request
-	adapterName, err := agent.adapterMgr.getAdapterName(cloned.Type)
+	adapterName, err := agent.adapterMgr.getAdapterType(cloned.Type)
 	if err != nil {
 		return err
 	}
 	cloned.Adapter = adapterName
 
 	if cloned.AdminState == voltha.AdminState_ENABLED {
-		logger.Debugw("device-already-enabled", log.Fields{"device-id": agent.deviceID})
-		return nil
+		logger.Warnw("device-already-enabled", log.Fields{"device-id": agent.deviceID})
+		err = status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s ", cloned.Id))
+		return err
 	}
 
 	if cloned.AdminState == voltha.AdminState_DELETED {
@@ -1677,7 +1678,7 @@ func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *vo
 	}
 
 	device := agent.getDeviceWithoutLock()
-	adapterName, err := agent.adapterMgr.getAdapterName(device.Type)
+	adapterName, err := agent.adapterMgr.getAdapterType(device.Type)
 	if err != nil {
 		agent.requestQueue.RequestComplete()
 		return nil, err
