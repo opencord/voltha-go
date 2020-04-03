@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mocks
+package kafka
 
 import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
