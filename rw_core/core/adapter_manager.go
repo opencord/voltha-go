@@ -222,7 +222,8 @@ func (aMgr *AdapterManager) updateLastAdapterCommunication(adapterID string, tim
 func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
-	logger.Debugw("adding-adapter", log.Fields{"adapter": adapter})
+	logger.Debugw("adding-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint})
 	if _, exist := aMgr.adapterAgents[adapter.Id]; !exist {
 		clonedAdapter := (proto.Clone(adapter)).(*voltha.Adapter)
 		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(clonedAdapter, nil)
@@ -241,10 +242,18 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) e
 				}
 				if added == nil {
 					//TODO:  Errors when saving to KV would require a separate go routine to be launched and try the saving again
-					logger.Errorw("failed-to-save-adapter", log.Fields{"adapter": adapter})
+					logger.Errorw("failed-to-save-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+						"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				} else {
-					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapter": adapter})
+					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+						"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				}
+			} else {
+				log.Warnw("adding-adapter-already-there", log.Fields{
+					"kvAdapter":      kvAdapter,
+					"adapterName":    adapter.Id,
+					"adapterReplica": adapter.CurrentReplica,
+				})
 			}
 		}
 	}
@@ -355,7 +364,8 @@ func (aMgr *AdapterManager) updateDeviceTypeWithoutLock(deviceType *voltha.Devic
 }
 
 func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) (*voltha.CoreInstance, error) {
-	logger.Debugw("registerAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
+	logger.Debugw("registerAdapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "deviceTypes": deviceTypes.Items})
 
 	if aMgr.getAdapter(adapter.Id) != nil {
 		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
@@ -377,7 +387,8 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 		return nil, err
 	}
 
-	logger.Debugw("adapter-registered", log.Fields{"adapter": adapter.Id})
+	logger.Debugw("adapter-registered", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint})
 
 	return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceID}, nil
 }
@@ -386,8 +397,8 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
-	if adapterID, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
-		return adapterID, nil
+	if adapterType, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
+		return adapterType, nil
 	}
 	return "", fmt.Errorf("Adapter-not-registered-for-device-type %s", deviceType)
 }
