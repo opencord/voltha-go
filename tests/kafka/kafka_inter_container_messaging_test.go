@@ -21,7 +21,7 @@ import (
 	"context"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
-	rhp "github.com/opencord/voltha-go/rw_core/core"
+	"github.com/opencord/voltha-go/rw_core/core/nbi"
 	kk "github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
@@ -82,7 +82,7 @@ func init() {
 
 func subscribeTarget(kmp *kk.InterContainerProxy) {
 	topic := kk.Topic{Name: "Core"}
-	requestProxy := &rhp.AdapterRequestHandlerProxy{TestMode: true}
+	requestProxy := &nbi.AdapterRequestHandlerProxy{TestMode: true}
 	kmp.SubscribeWithRequestHandlerInterface(topic, requestProxy)
 }
 

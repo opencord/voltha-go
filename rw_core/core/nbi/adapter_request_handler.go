@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package core
+package nbi
 
 import (
 	"context"
 	"errors"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -33,25 +35,21 @@ import (
 // AdapterRequestHandlerProxy represent adapter request handler proxy attributes
 type AdapterRequestHandlerProxy struct {
 	coreInstanceID            string
-	deviceMgr                 *DeviceManager
-	lDeviceMgr                *LogicalDeviceManager
-	adapterMgr                *AdapterManager
+	deviceMgr                 *device.Manager
+	adapterMgr                *adapter.Manager
 	localDataProxy            *model.Proxy
 	clusterDataProxy          *model.Proxy
 	defaultRequestTimeout     time.Duration
 	longRunningRequestTimeout time.Duration
-	core                      *Core
 }
 
 // NewAdapterRequestHandlerProxy assigns values for adapter request handler proxy attributes and returns the new instance
-func NewAdapterRequestHandlerProxy(core *Core, coreInstanceID string, dMgr *DeviceManager, ldMgr *LogicalDeviceManager,
-	aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy, longRunningRequestTimeout time.Duration,
+func NewAdapterRequestHandlerProxy(coreInstanceID string, dMgr *device.Manager,
+	aMgr *adapter.Manager, cdProxy *model.Proxy, ldProxy *model.Proxy, longRunningRequestTimeout time.Duration,
 	defaultRequestTimeout time.Duration) *AdapterRequestHandlerProxy {
 	var proxy AdapterRequestHandlerProxy
-	proxy.core = core
 	proxy.coreInstanceID = coreInstanceID
 	proxy.deviceMgr = dMgr
-	proxy.lDeviceMgr = ldMgr
 	proxy.clusterDataProxy = cdProxy
 	proxy.localDataProxy = ldProxy
 	proxy.adapterMgr = aMgr
@@ -71,9 +69,9 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 	transactionID := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
-		case "adapter":
+		case "mockAdapter":
 			if err := ptypes.UnmarshalAny(arg.Value, adapter); err != nil {
-				logger.Warnw("cannot-unmarshal-adapter", log.Fields{"error": err})
+				logger.Warnw("cannot-unmarshal-mockAdapter", log.Fields{"error": err})
 				return nil, err
 			}
 		case "deviceTypes":
@@ -88,9 +86,9 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 			}
 		}
 	}
-	logger.Debugw("Register", log.Fields{"adapter": *adapter, "device-types": deviceTypes, "transaction-id": transactionID.Val, "core-id": rhp.coreInstanceID})
+	logger.Debugw("Register", log.Fields{"mockAdapter": *adapter, "device-types": deviceTypes, "transaction-id": transactionID.Val, "core-id": rhp.coreInstanceID})
 
-	return rhp.adapterMgr.registerAdapter(adapter, deviceTypes)
+	return rhp.adapterMgr.RegisterAdapter(adapter, deviceTypes)
 }
 
 // GetDevice returns device info
@@ -153,8 +151,8 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(args []*ic.Argument) (*empty
 	}
 	logger.Debugw("DeviceUpdate", log.Fields{"deviceID": device.Id, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.updateDeviceUsingAdapterData(context.TODO(), device); err != nil {
-		logger.Debugw("unable-to-update-device-using-adapter-data", log.Fields{"error": err})
+	if err := rhp.deviceMgr.UpdateDeviceUsingAdapterData(context.TODO(), device); err != nil {
+		logger.Debugw("unable-to-update-device-using-mockAdapter-data", log.Fields{"error": err})
 		return nil, err
 	}
 	return &empty.Empty{}, nil
@@ -267,7 +265,7 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(args []*ic.Argument) (*voltha.Po
 	}
 	logger.Debugw("GetPorts", log.Fields{"deviceID": deviceID.Id, "portype": pt.Val, "transactionID": transactionID.Val})
 
-	return rhp.deviceMgr.getPorts(context.TODO(), deviceID.Id, voltha.Port_PortType(pt.Val))
+	return rhp.deviceMgr.GetPorts(context.TODO(), deviceID.Id, voltha.Port_PortType(pt.Val))
 }
 
 // GetChildDevices gets all the child device IDs from the device passed as parameter
@@ -296,7 +294,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(args []*ic.Argument) (*vo
 	}
 	logger.Debugw("GetChildDevices", log.Fields{"deviceID": pID.Id, "transactionID": transactionID.Val})
 
-	return rhp.deviceMgr.getAllChildDevices(context.TODO(), pID.Id)
+	return rhp.deviceMgr.GetAllChildDevices(context.TODO(), pID.Id)
 }
 
 // ChildDeviceDetected is invoked when a child device is detected.  The following parameters are expected:
@@ -364,7 +362,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(args []*ic.Argument) 
 		"deviceType": dt.Val, "channelID": chnlID.Val, "serialNumber": serialNumber.Val,
 		"vendorID": vendorID.Val, "onuID": onuID.Val, "transactionID": transactionID.Val})
 
-	device, err := rhp.deviceMgr.childDeviceDetected(context.TODO(), pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
+	device, err := rhp.deviceMgr.ChildDeviceDetected(context.TODO(), pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
 	if err != nil {
 		logger.Debugw("child-detection-failed", log.Fields{"parentID": pID.Id, "onuID": onuID.Val, "error": err})
 	}
@@ -409,7 +407,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(args []*ic.Argument) (*
 	logger.Debugw("DeviceStateUpdate", log.Fields{"deviceID": deviceID.Id, "oper-status": operStatus,
 		"conn-status": connStatus, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.updateDeviceStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+	if err := rhp.deviceMgr.UpdateDeviceStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
 		voltha.ConnectStatus_Types(connStatus.Val)); err != nil {
 		logger.Debugw("unable-to-update-device-status", log.Fields{"error": err})
 		return nil, err
@@ -456,7 +454,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(args []*ic.Argument) 
 		"conn-status": connStatus, "transactionID": transactionID.Val})
 
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	if err := rhp.deviceMgr.updateChildrenStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+	if err := rhp.deviceMgr.UpdateChildrenStatus(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
 		voltha.ConnectStatus_Types(connStatus.Val)); err != nil {
 		logger.Debugw("unable-to-update-children-status", log.Fields{"error": err})
 		return nil, err
@@ -495,7 +493,7 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(args []*ic.Argument) (*e
 	}
 	logger.Debugw("PortsStateUpdate", log.Fields{"deviceID": deviceID.Id, "operStatus": operStatus, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.updatePortsState(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val)); err != nil {
+	if err := rhp.deviceMgr.UpdatePortsState(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val)); err != nil {
 		logger.Debugw("unable-to-update-ports-state", log.Fields{"error": err})
 		return nil, err
 	}
@@ -546,7 +544,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(args []*ic.Argument) (*em
 	logger.Debugw("PortStateUpdate", log.Fields{"deviceID": deviceID.Id, "operStatus": operStatus,
 		"portType": portType, "portNo": portNo, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.updatePortState(context.TODO(), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+	if err := rhp.deviceMgr.UpdatePortState(context.TODO(), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
 		voltha.OperStatus_Types(operStatus.Val)); err != nil {
 		// If the error doesn't change behavior and is essentially ignored, it is not an error, it is a
 		// warning.
@@ -582,7 +580,7 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(args []*ic.Argument) (*emp
 	}
 	logger.Debugw("DeleteAllPorts", log.Fields{"deviceID": deviceID.Id, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.deleteAllPorts(context.TODO(), deviceID.Id); err != nil {
+	if err := rhp.deviceMgr.DeleteAllPorts(context.TODO(), deviceID.Id); err != nil {
 		logger.Debugw("unable-to-delete-ports", log.Fields{"error": err})
 		return nil, err
 	}
@@ -615,7 +613,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(args []*ic.Argument) (*e
 	}
 	logger.Debugw("ChildDevicesLost", log.Fields{"deviceID": parentDeviceID.Id, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.childDevicesLost(context.TODO(), parentDeviceID.Id); err != nil {
+	if err := rhp.deviceMgr.ChildDevicesLost(context.TODO(), parentDeviceID.Id); err != nil {
 		logger.Debugw("unable-to-disable-child-devices", log.Fields{"error": err})
 		return nil, err
 	}
@@ -648,7 +646,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(args []*ic.Argument)
 	}
 	logger.Debugw("ChildDevicesDetected", log.Fields{"deviceID": parentDeviceID.Id, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.childDevicesDetected(context.TODO(), parentDeviceID.Id); err != nil {
+	if err := rhp.deviceMgr.ChildDevicesDetected(context.TODO(), parentDeviceID.Id); err != nil {
 		logger.Debugw("child-devices-detection-failed", log.Fields{"parentID": parentDeviceID.Id, "error": err})
 		return nil, err
 	}
@@ -686,7 +684,7 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(args []*ic.Argument) (*empty.
 	}
 	logger.Debugw("PortCreated", log.Fields{"deviceID": deviceID.Id, "port": port, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.addPort(context.TODO(), deviceID.Id, port); err != nil {
+	if err := rhp.deviceMgr.AddPort(context.TODO(), deviceID.Id, port); err != nil {
 		logger.Debugw("unable-to-add-port", log.Fields{"error": err})
 		return nil, err
 	}
@@ -719,7 +717,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(args []*ic.Argument)
 	logger.Debugw("DevicePMConfigUpdate", log.Fields{"deviceID": pmConfigs.Id, "configs": pmConfigs,
 		"transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.initPmConfigs(context.TODO(), pmConfigs.Id, pmConfigs); err != nil {
+	if err := rhp.deviceMgr.InitPmConfigs(context.TODO(), pmConfigs.Id, pmConfigs); err != nil {
 		logger.Debugw("unable-to-initialize-pm-configs", log.Fields{"error": err})
 		return nil, err
 	}
@@ -765,7 +763,7 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(args []*ic.Argument) (*empty.Emp
 		"transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.PacketIn(context.TODO(), deviceID.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
-		logger.Debugw("unable-to-receive-packet-from-adapter", log.Fields{"error": err})
+		logger.Debugw("unable-to-receive-packet-from-mockAdapter", log.Fields{"error": err})
 		return nil, err
 
 	}
@@ -804,7 +802,7 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(args []*ic.Argument) 
 	logger.Debugw("UpdateImageDownload", log.Fields{"deviceID": deviceID.Id, "image-download": img,
 		"transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.updateImageDownload(context.TODO(), deviceID.Id, img); err != nil {
+	if err := rhp.deviceMgr.UpdateImageDownload(context.TODO(), deviceID.Id, img); err != nil {
 		logger.Debugw("unable-to-update-image-download", log.Fields{"error": err})
 		return nil, err
 	}
@@ -836,7 +834,7 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(args []*ic.Argument
 	}
 	logger.Debugw("ReconcileChildDevices", log.Fields{"deviceID": parentDeviceID.Id, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.reconcileChildDevices(context.TODO(), parentDeviceID.Id); err != nil {
+	if err := rhp.deviceMgr.ReconcileChildDevices(context.TODO(), parentDeviceID.Id); err != nil {
 		logger.Debugw("unable-to-reconcile-child-devices", log.Fields{"error": err})
 		return nil, err
 	}
@@ -875,7 +873,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(args []*ic.Argument) (
 	logger.Debugw("DeviceReasonUpdate", log.Fields{"deviceId": deviceID.Id, "reason": reason.Val,
 		"transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.updateDeviceReason(context.TODO(), deviceID.Id, reason.Val); err != nil {
+	if err := rhp.deviceMgr.UpdateDeviceReason(context.TODO(), deviceID.Id, reason.Val); err != nil {
 		logger.Debugw("unable-to-update-device-reason", log.Fields{"error": err})
 		return nil, err
 
