@@ -17,28 +17,31 @@ package common
 
 import (
 	"context"
-	"time"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	"time"
 )
 
 type AdapterProxy struct {
 	kafkaICProxy kafka.InterContainerProxy
 	adapterTopic string
 	coreTopic    string
+	endpointMgr  kafka.EndpointManager
 }
 
-func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, adapterTopic string, coreTopic string) *AdapterProxy {
-	var proxy AdapterProxy
-	proxy.kafkaICProxy = kafkaProxy
-	proxy.adapterTopic = adapterTopic
-	proxy.coreTopic = coreTopic
+func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, adapterTopic string, coreTopic string, backend *db.Backend) *AdapterProxy {
+	proxy := AdapterProxy{
+		kafkaICProxy: kafkaProxy,
+		adapterTopic: adapterTopic,
+		coreTopic:    coreTopic,
+		endpointMgr:  kafka.NewEndpointManager(backend),
+	}
 	logger.Debugw("TOPICS", log.Fields{"core": proxy.coreTopic, "adapter": proxy.adapterTopic})
 	return &proxy
 }
@@ -87,7 +90,11 @@ func (ap *AdapterProxy) SendInterAdapterMessage(ctx context.Context,
 	}
 
 	// Set up the required rpc arguments
-	topic := kafka.Topic{Name: toAdapter}
+	endpoint, err := ap.endpointMgr.GetEndpointByService(toDeviceId, toAdapter)
+	if err != nil {
+		return err
+	}
+	topic := kafka.Topic{Name: string(endpoint)}
 	replyToTopic := kafka.Topic{Name: fromAdapter}
 	rpc := "process_inter_adapter_message"
 
