@@ -1,5 +1,7 @@
 # How to Build and Develop VOLTHA
 
+Please refer to this guide: https://docs.voltha.org/master/overview/dev_virtual.html
+
 ## Building natively on MAC OS X
 
 For advanced developers this may provide a more comfortable developer environment

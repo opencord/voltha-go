@@ -27,7 +27,8 @@ import (
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
+	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
+	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/phayes/freeport"
@@ -357,7 +358,7 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 }
 
 type LDATest struct {
-	etcdServer     *lm.EtcdServer
+	etcdServer     *mock_etcd.EtcdServer
 	core           *Core
 	kClient        kafka.Client
 	kvClientPort   int
@@ -380,7 +381,7 @@ func newLDATest() *LDATest {
 		logger.Fatal(err)
 	}
 	// Create the kafka client
-	test.kClient = lm.NewKafkaClient()
+	test.kClient = mock_kafka.NewKafkaClient()
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-da-test"
