@@ -34,7 +34,8 @@ import (
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
+	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
+	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/version"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -45,7 +46,7 @@ import (
 )
 
 type NBTest struct {
-	etcdServer        *lm.EtcdServer
+	etcdServer        *mock_etcd.EtcdServer
 	core              *Core
 	kClient           kafka.Client
 	kvClientPort      int
@@ -69,7 +70,7 @@ func newNBTest() *NBTest {
 		logger.Fatal(err)
 	}
 	// Create the kafka client
-	test.kClient = lm.NewKafkaClient()
+	test.kClient = mock_kafka.NewKafkaClient()
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-nbi-test"
@@ -114,9 +115,13 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 
 	//	Register the adapter
 	registrationData := &voltha.Adapter{
-		Id:      nb.oltAdapterName,
-		Vendor:  "Voltha-olt",
-		Version: version.VersionInfo.Version,
+		Id:             nb.oltAdapterName,
+		Vendor:         "Voltha-olt",
+		Version:        version.VersionInfo.Version,
+		Type:           nb.oltAdapterName,
+		CurrentReplica: 1,
+		TotalReplicas:  1,
+		Endpoint:       nb.oltAdapterName,
 	}
 	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
@@ -134,9 +139,13 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 
 	//	Register the adapter
 	registrationData = &voltha.Adapter{
-		Id:      nb.onuAdapterName,
-		Vendor:  "Voltha-onu",
-		Version: version.VersionInfo.Version,
+		Id:             nb.onuAdapterName,
+		Vendor:         "Voltha-onu",
+		Version:        version.VersionInfo.Version,
+		Type:           nb.onuAdapterName,
+		CurrentReplica: 1,
+		TotalReplicas:  1,
+		Endpoint:       nb.onuAdapterName,
 	}
 	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes = &voltha.DeviceTypes{Items: types}
@@ -1108,7 +1117,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPort
 	assert.Nil(t, err)
 }
 
-func TestSuite1(t *testing.T) {
+func TestSuiteNbiApiHandler(t *testing.T) {
 	f, err := os.Create("profile.cpu")
 	if err != nil {
 		logger.Fatalf("could not create CPU profile: %v\n ", err)
