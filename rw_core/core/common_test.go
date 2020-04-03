@@ -30,7 +30,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
+	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/phayes/freeport"
 	"google.golang.org/grpc/codes"
@@ -75,7 +75,7 @@ func getContext() context.Context {
 }
 
 //startEmbeddedEtcdServer creates and starts an Embedded etcd server locally.
-func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*lm.EtcdServer, int, error) {
+func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*mock_etcd.EtcdServer, int, error) {
 	kvClientPort, err := freeport.GetFreePort()
 	if err != nil {
 		return nil, 0, err
@@ -84,14 +84,14 @@ func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*lm.EtcdS
 	if err != nil {
 		return nil, 0, err
 	}
-	etcdServer := lm.StartEtcdServer(lm.MKConfig(configName, kvClientPort, peerPort, storageDir, logLevel))
+	etcdServer := mock_etcd.StartEtcdServer(mock_etcd.MKConfig(configName, kvClientPort, peerPort, storageDir, logLevel))
 	if etcdServer == nil {
 		return nil, 0, status.Error(codes.Internal, "Embedded server failed to start")
 	}
 	return etcdServer, kvClientPort, nil
 }
 
-func stopEmbeddedEtcdServer(server *lm.EtcdServer) {
+func stopEmbeddedEtcdServer(server *mock_etcd.EtcdServer) {
 	if server != nil {
 		server.Stop()
 	}

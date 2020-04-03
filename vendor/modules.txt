@@ -8,6 +8,10 @@ github.com/armon/go-metrics
 github.com/beorn7/perks/quantile
 # github.com/bsm/sarama-cluster v2.1.15+incompatible
 github.com/bsm/sarama-cluster
+# github.com/buraksezer/consistent v0.0.0-20191006190839-693edf70fd72
+github.com/buraksezer/consistent
+# github.com/cespare/xxhash v1.1.0
+github.com/cespare/xxhash
 # github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73
 github.com/cevaris/ordered_map
 # github.com/coreos/go-semver v0.2.0
@@ -95,7 +99,7 @@ github.com/mitchellh/mapstructure
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
-# github.com/opencord/voltha-lib-go/v3 v3.1.0
+# github.com/opencord/voltha-lib-go/v3 v3.1.2
 github.com/opencord/voltha-lib-go/v3/pkg/adapters
 github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif
 github.com/opencord/voltha-lib-go/v3/pkg/adapters/common
@@ -106,10 +110,11 @@ github.com/opencord/voltha-lib-go/v3/pkg/flows
 github.com/opencord/voltha-lib-go/v3/pkg/grpc
 github.com/opencord/voltha-lib-go/v3/pkg/kafka
 github.com/opencord/voltha-lib-go/v3/pkg/log
-github.com/opencord/voltha-lib-go/v3/pkg/mocks
+github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd
+github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka
 github.com/opencord/voltha-lib-go/v3/pkg/probe
 github.com/opencord/voltha-lib-go/v3/pkg/version
-# github.com/opencord/voltha-protos/v3 v3.2.8
+# github.com/opencord/voltha-protos/v3 v3.3.0
 github.com/opencord/voltha-protos/v3/go/common
 github.com/opencord/voltha-protos/v3/go/inter_container
 github.com/opencord/voltha-protos/v3/go/omci
