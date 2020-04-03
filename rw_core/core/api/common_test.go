@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core
+package api
 
 import (
 	"context"
@@ -138,7 +138,7 @@ func createMockAdapter(adapterType int, kafkaClient kafka.Client, coreInstanceID
 func waitUntilDeviceReadiness(deviceID string,
 	timeout time.Duration,
 	verificationFunction isDeviceConditionSatisfied,
-	nbi *APIHandler) error {
+	nbi *NBIHandler) error {
 	ch := make(chan int, 1)
 	done := false
 	go func() {
@@ -167,7 +167,7 @@ func waitUntilDeviceReadiness(deviceID string,
 
 func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 	timeout time.Duration,
-	nbi *APIHandler,
+	nbi *NBIHandler,
 	verificationFunction isLogicalDeviceConditionSatisfied,
 ) error {
 	ch := make(chan int, 1)
@@ -208,7 +208,7 @@ func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 	}
 }
 
-func waitUntilConditionForDevices(timeout time.Duration, nbi *APIHandler, verificationFunction isDevicesConditionSatisfied) error {
+func waitUntilConditionForDevices(timeout time.Duration, nbi *NBIHandler, verificationFunction isDevicesConditionSatisfied) error {
 	ch := make(chan int, 1)
 	done := false
 	go func() {
@@ -236,7 +236,7 @@ func waitUntilConditionForDevices(timeout time.Duration, nbi *APIHandler, verifi
 	}
 }
 
-func waitUntilConditionForLogicalDevices(timeout time.Duration, nbi *APIHandler, verificationFunction isLogicalDevicesConditionSatisfied) error {
+func waitUntilConditionForLogicalDevices(timeout time.Duration, nbi *NBIHandler, verificationFunction isLogicalDevicesConditionSatisfied) error {
 	ch := make(chan int, 1)
 	done := false
 	go func() {
@@ -264,7 +264,7 @@ func waitUntilConditionForLogicalDevices(timeout time.Duration, nbi *APIHandler,
 	}
 }
 
-func waitUntilCondition(timeout time.Duration, nbi *APIHandler, verificationFunction isConditionSatisfied) error {
+func waitUntilCondition(timeout time.Duration, nbi *NBIHandler, verificationFunction isConditionSatisfied) error {
 	ch := make(chan int, 1)
 	done := false
 	go func() {

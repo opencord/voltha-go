@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package core
+package device
 
 import (
 	"context"
@@ -22,6 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"reflect"
 	"sync"
@@ -39,15 +41,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// DeviceAgent represents device agent attributes
-type DeviceAgent struct {
+// Agent represents device agent attributes
+type Agent struct {
 	deviceID         string
 	parentID         string
 	deviceType       string
 	isRootdevice     bool
-	adapterProxy     *AdapterProxy
-	adapterMgr       *AdapterManager
-	deviceMgr        *DeviceManager
+	adapterProxy     *remote.AdapterProxy
+	adapterMgr       *adapter.Manager
+	deviceMgr        *Manager
 	clusterDataProxy *model.Proxy
 	exitChannel      chan int
 	device           *voltha.Device
@@ -58,12 +60,12 @@ type DeviceAgent struct {
 	stopped          bool
 }
 
-//newDeviceAgent creates a new device agent. The device will be initialized when start() is called.
-func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceManager, cdProxy *model.Proxy, timeout time.Duration) *DeviceAgent {
-	var agent DeviceAgent
+//newAgent creates a new device agent. The device will be initialized when start() is called.
+func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager, cdProxy *model.Proxy, timeout time.Duration) *Agent {
+	var agent Agent
 	agent.adapterProxy = ap
 	if device.Id == "" {
-		agent.deviceID = CreateDeviceID()
+		agent.deviceID = coreutils.CreateDeviceID()
 	} else {
 		agent.deviceID = device.Id
 	}
@@ -84,7 +86,7 @@ func newDeviceAgent(ap *AdapterProxy, device *voltha.Device, deviceMgr *DeviceMa
 // start() saves the device to the data model and registers for callbacks on that device if deviceToCreate!=nil.
 // Otherwise, it will load the data from the dB and setup the necessary callbacks and proxies. Returns the device that
 // was started.
-func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Device) (*voltha.Device, error) {
+func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*voltha.Device, error) {
 	needToStart := false
 	if agent.startOnce.Do(func() { needToStart = true }); !needToStart {
 		return agent.getDevice(ctx)
@@ -117,7 +119,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 		// Create a new device
 		// Assumption is that AdminState, FlowGroups, and Flows are unitialized since this
 		// is a new device, so populate them here before passing the device to clusterDataProxy.AddWithId.
-		// agent.deviceId will also have been set during newDeviceAgent().
+		// agent.deviceId will also have been set during newAgent().
 		device = (proto.Clone(deviceToCreate)).(*voltha.Device)
 		device.Id = agent.deviceID
 		device.AdminState = voltha.AdminState_PREPROVISIONED
@@ -143,7 +145,7 @@ func (agent *DeviceAgent) start(ctx context.Context, deviceToCreate *voltha.Devi
 }
 
 // stop stops the device agent.  Not much to do for now
-func (agent *DeviceAgent) stop(ctx context.Context) error {
+func (agent *Agent) stop(ctx context.Context) error {
 	needToStop := false
 	if agent.stopOnce.Do(func() { needToStop = true }); !needToStop {
 		return nil
@@ -170,7 +172,7 @@ func (agent *DeviceAgent) stop(ctx context.Context) error {
 }
 
 // Load the most recent state from the KVStore for the device.
-func (agent *DeviceAgent) reconcileWithKVStore(ctx context.Context) {
+func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		logger.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "error": err})
 		return
@@ -193,14 +195,14 @@ func (agent *DeviceAgent) reconcileWithKVStore(ctx context.Context) {
 
 // onSuccess is a common callback for scenarios where we receive a nil response following a request to an adapter
 // and the only action required is to publish a successful result on kafka
-func (agent *DeviceAgent) onSuccess(rpc string, response interface{}, reqArgs ...interface{}) {
+func (agent *Agent) onSuccess(rpc string, response interface{}, reqArgs ...interface{}) {
 	logger.Debugw("response successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
 	// TODO: Post success message onto kafka
 }
 
 // onFailure is a common callback for scenarios where we receive an error response following a request to an adapter
 // and the only action required is to publish the failed result on kafka
-func (agent *DeviceAgent) onFailure(rpc string, response interface{}, reqArgs ...interface{}) {
+func (agent *Agent) onFailure(rpc string, response interface{}, reqArgs ...interface{}) {
 	if res, ok := response.(error); ok {
 		logger.Errorw("rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
 	} else {
@@ -209,7 +211,7 @@ func (agent *DeviceAgent) onFailure(rpc string, response interface{}, reqArgs ..
 	// TODO: Post failure message onto kafka
 }
 
-func (agent *DeviceAgent) waitForAdapterResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
 	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
 	defer cancel()
 	select {
@@ -227,7 +229,7 @@ func (agent *DeviceAgent) waitForAdapterResponse(ctx context.Context, cancel con
 }
 
 // getDevice returns the device data from cache
-func (agent *DeviceAgent) getDevice(ctx context.Context) (*voltha.Device, error) {
+func (agent *Agent) getDevice(ctx context.Context) (*voltha.Device, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -236,12 +238,12 @@ func (agent *DeviceAgent) getDevice(ctx context.Context) (*voltha.Device, error)
 }
 
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
-func (agent *DeviceAgent) getDeviceWithoutLock() *voltha.Device {
+func (agent *Agent) getDeviceWithoutLock() *voltha.Device {
 	return proto.Clone(agent.device).(*voltha.Device)
 }
 
 // enableDevice activates a preprovisioned or a disable device
-func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
+func (agent *Agent) enableDevice(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -254,7 +256,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
 	// with the adapter then we need to know the adapter that will handle this request
-	adapterName, err := agent.adapterMgr.getAdapterType(cloned.Type)
+	adapterName, err := agent.adapterMgr.GetAdapterType(cloned.Type)
 	if err != nil {
 		return err
 	}
@@ -285,9 +287,9 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	var ch chan *kafka.RpcResponse
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	if previousAdminState == voltha.AdminState_PREPROVISIONED {
-		ch, err = agent.adapterProxy.adoptDevice(subCtx, device)
+		ch, err = agent.adapterProxy.AdoptDevice(subCtx, device)
 	} else {
-		ch, err = agent.adapterProxy.reEnableDevice(subCtx, device)
+		ch, err = agent.adapterProxy.ReEnableDevice(subCtx, device)
 	}
 	if err != nil {
 		cancel()
@@ -298,7 +300,7 @@ func (agent *DeviceAgent) enableDevice(ctx context.Context) error {
 	return nil
 }
 
-func (agent *DeviceAgent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, ch chan *kafka.RpcResponse, response coreutils.Response) {
+func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, ch chan *kafka.RpcResponse, response coreutils.Response) {
 	defer cancel()
 	select {
 	case rpcResponse, ok := <-ch:
@@ -373,7 +375,7 @@ func groupsToUpdateToDelete(newGroups, existingGroups []*ofp.OfpGroupEntry) (upd
 	return newGroups, groupsToDelete, updatedAllGroups
 }
 
-func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw("add-flows-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups, "flow-metadata": flowMetadata})
 
 	if (len(newFlows) | len(newGroups)) == 0 {
@@ -387,7 +389,7 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlo
 	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceWithoutLock()
-	dType := agent.adapterMgr.getDeviceType(device.Type)
+	dType := agent.adapterMgr.GetDeviceType(device.Type)
 	if dType == nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
@@ -423,7 +425,7 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlo
 			cancel()
 			return coreutils.DoneResponse(), nil
 		}
-		rpcResponse, err := agent.adapterProxy.updateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedAllFlows}, &voltha.FlowGroups{Items: updatedAllGroups}, flowMetadata)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedAllFlows}, &voltha.FlowGroups{Items: updatedAllGroups}, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -439,7 +441,7 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlo
 			ToRemove: &voltha.FlowGroups{Items: groupsToDelete},
 			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
-		rpcResponse, err := agent.adapterProxy.updateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -451,7 +453,7 @@ func (agent *DeviceAgent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlo
 
 //addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
 //adapters
-func (agent *DeviceAgent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	response, err := agent.addFlowsAndGroupsToAdapter(ctx, newFlows, newGroups, flowMetadata)
 	if err != nil {
 		return err
@@ -463,7 +465,7 @@ func (agent *DeviceAgent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp
 	return nil
 }
 
-func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw("delete-flows-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
 
 	if (len(flowsToDel) | len(groupsToDel)) == 0 {
@@ -477,7 +479,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, f
 	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceWithoutLock()
-	dType := agent.adapterMgr.getDeviceType(device.Type)
+	dType := agent.adapterMgr.GetDeviceType(device.Type)
 	if dType == nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
@@ -533,7 +535,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, f
 			cancel()
 			return coreutils.DoneResponse(), nil
 		}
-		rpcResponse, err := agent.adapterProxy.updateFlowsBulk(subCtx, device, &voltha.Flows{Items: flowsToKeep}, &voltha.FlowGroups{Items: groupsToKeep}, flowMetadata)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: flowsToKeep}, &voltha.FlowGroups{Items: groupsToKeep}, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -549,7 +551,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, f
 			ToRemove: &voltha.FlowGroups{Items: groupsToDel},
 			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
-		rpcResponse, err := agent.adapterProxy.updateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -561,7 +563,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, f
 
 //deleteFlowsAndGroups removes the "flowsToDel" and "groupsToDel" from the existing flows/groups and sends the update to the
 //adapters
-func (agent *DeviceAgent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	response, err := agent.deleteFlowsAndGroupsFromAdapter(ctx, flowsToDel, groupsToDel, flowMetadata)
 	if err != nil {
 		return err
@@ -572,7 +574,7 @@ func (agent *DeviceAgent) deleteFlowsAndGroups(ctx context.Context, flowsToDel [
 	return nil
 }
 
-func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw("updateFlowsAndGroups", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 
 	if (len(updatedFlows) | len(updatedGroups)) == 0 {
@@ -589,7 +591,7 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, upd
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states")
 	}
-	dType := agent.adapterMgr.getDeviceType(device.Type)
+	dType := agent.adapterMgr.GetDeviceType(device.Type)
 	if dType == nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
@@ -620,7 +622,7 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, upd
 	response := coreutils.NewResponse()
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.updateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedFlows}, &voltha.FlowGroups{Items: updatedGroups}, nil)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedFlows}, &voltha.FlowGroups{Items: updatedGroups}, nil)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -681,7 +683,7 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, upd
 			ToRemove: &voltha.FlowGroups{Items: groupsToDelete},
 			ToUpdate: &voltha.FlowGroups{Items: updatedGroups},
 		}
-		rpcResponse, err := agent.adapterProxy.updateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -694,7 +696,7 @@ func (agent *DeviceAgent) updateFlowsAndGroupsToAdapter(ctx context.Context, upd
 
 //updateFlowsAndGroups replaces the existing flows and groups with "updatedFlows" and "updatedGroups" respectively. It
 //also sends the updates to the adapters
-func (agent *DeviceAgent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	response, err := agent.updateFlowsAndGroupsToAdapter(ctx, updatedFlows, updatedGroups, flowMetadata)
 	if err != nil {
 		return err
@@ -706,7 +708,7 @@ func (agent *DeviceAgent) updateFlowsAndGroups(ctx context.Context, updatedFlows
 }
 
 //deleteAllFlows deletes all flows in the device table
-func (agent *DeviceAgent) deleteAllFlows(ctx context.Context) error {
+func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 	logger.Debugw("deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
@@ -724,7 +726,7 @@ func (agent *DeviceAgent) deleteAllFlows(ctx context.Context) error {
 }
 
 //disableDevice disable a device
-func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
+func (agent *Agent) disableDevice(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -748,7 +750,7 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	}
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.disableDevice(subCtx, proto.Clone(cloned).(*voltha.Device))
+	ch, err := agent.adapterProxy.DisableDevice(subCtx, proto.Clone(cloned).(*voltha.Device))
 	if err != nil {
 		cancel()
 		return err
@@ -758,7 +760,7 @@ func (agent *DeviceAgent) disableDevice(ctx context.Context) error {
 	return nil
 }
 
-func (agent *DeviceAgent) rebootDevice(ctx context.Context) error {
+func (agent *Agent) rebootDevice(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -767,7 +769,7 @@ func (agent *DeviceAgent) rebootDevice(ctx context.Context) error {
 
 	device := agent.getDeviceWithoutLock()
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.rebootDevice(subCtx, device)
+	ch, err := agent.adapterProxy.RebootDevice(subCtx, device)
 	if err != nil {
 		cancel()
 		return err
@@ -776,7 +778,7 @@ func (agent *DeviceAgent) rebootDevice(ctx context.Context) error {
 	return nil
 }
 
-func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
+func (agent *Agent) deleteDevice(ctx context.Context) error {
 	logger.Debugw("deleteDevice", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
@@ -797,7 +799,7 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 	// adapter
 	if previousState != ic.AdminState_PREPROVISIONED {
 		subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-		ch, err := agent.adapterProxy.deleteDevice(subCtx, cloned)
+		ch, err := agent.adapterProxy.DeleteDevice(subCtx, cloned)
 		if err != nil {
 			cancel()
 			return err
@@ -807,7 +809,7 @@ func (agent *DeviceAgent) deleteDevice(ctx context.Context) error {
 	return nil
 }
 
-func (agent *DeviceAgent) setParentID(ctx context.Context, device *voltha.Device, parentID string) error {
+func (agent *Agent) setParentID(ctx context.Context, device *voltha.Device, parentID string) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -825,7 +827,7 @@ func (agent *DeviceAgent) setParentID(ctx context.Context, device *voltha.Device
 	return nil
 }
 
-func (agent *DeviceAgent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
+func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -840,7 +842,7 @@ func (agent *DeviceAgent) updatePmConfigs(ctx context.Context, pmConfigs *voltha
 	}
 	// Send the request to the adapter
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.updatePmConfigs(subCtx, cloned, pmConfigs)
+	ch, err := agent.adapterProxy.UpdatePmConfigs(subCtx, cloned, pmConfigs)
 	if err != nil {
 		cancel()
 		return err
@@ -849,7 +851,7 @@ func (agent *DeviceAgent) updatePmConfigs(ctx context.Context, pmConfigs *voltha
 	return nil
 }
 
-func (agent *DeviceAgent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
+func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -862,7 +864,7 @@ func (agent *DeviceAgent) initPmConfigs(ctx context.Context, pmConfigs *voltha.P
 	return agent.updateDeviceInStoreWithoutLock(updateCtx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error) {
+func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -872,7 +874,7 @@ func (agent *DeviceAgent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs,
 	return agent.getDeviceWithoutLock().PmConfigs, nil
 }
 
-func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
+func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -910,7 +912,7 @@ func (agent *DeviceAgent) downloadImage(ctx context.Context, img *voltha.ImageDo
 
 		// Send the request to the adapter
 		subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-		ch, err := agent.adapterProxy.downloadImage(ctx, cloned, clonedImg)
+		ch, err := agent.adapterProxy.DownloadImage(ctx, cloned, clonedImg)
 		if err != nil {
 			cancel()
 			return nil, err
@@ -930,7 +932,7 @@ func isImageRegistered(img *voltha.ImageDownload, device *voltha.Device) bool {
 	return false
 }
 
-func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
+func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -958,7 +960,7 @@ func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.I
 			return nil, err
 		}
 		subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-		ch, err := agent.adapterProxy.cancelImageDownload(subCtx, device, img)
+		ch, err := agent.adapterProxy.CancelImageDownload(subCtx, device, img)
 		if err != nil {
 			cancel()
 			return nil, err
@@ -968,7 +970,7 @@ func (agent *DeviceAgent) cancelImageDownload(ctx context.Context, img *voltha.I
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
 }
 
-func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
+func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -996,7 +998,7 @@ func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDo
 	}
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.activateImageUpdate(subCtx, proto.Clone(cloned).(*voltha.Device), img)
+	ch, err := agent.adapterProxy.ActivateImageUpdate(subCtx, proto.Clone(cloned).(*voltha.Device), img)
 	if err != nil {
 		cancel()
 		return nil, err
@@ -1008,7 +1010,7 @@ func (agent *DeviceAgent) activateImage(ctx context.Context, img *voltha.ImageDo
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
 }
 
-func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
+func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -1037,7 +1039,7 @@ func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDown
 	}
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.revertImageUpdate(subCtx, proto.Clone(cloned).(*voltha.Device), img)
+	ch, err := agent.adapterProxy.RevertImageUpdate(subCtx, proto.Clone(cloned).(*voltha.Device), img)
 	if err != nil {
 		cancel()
 		return nil, err
@@ -1047,14 +1049,14 @@ func (agent *DeviceAgent) revertImage(ctx context.Context, img *voltha.ImageDown
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
 }
 
-func (agent *DeviceAgent) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	logger.Debugw("getImageDownloadStatus", log.Fields{"device-id": agent.deviceID})
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
 	device := agent.getDeviceWithoutLock()
-	ch, err := agent.adapterProxy.getImageDownloadStatus(ctx, device, img)
+	ch, err := agent.adapterProxy.GetImageDownloadStatus(ctx, device, img)
 	agent.requestQueue.RequestComplete()
 	if err != nil {
 		return nil, err
@@ -1075,7 +1077,7 @@ func (agent *DeviceAgent) getImageDownloadStatus(ctx context.Context, img *volth
 	return imgDownload, nil
 }
 
-func (agent *DeviceAgent) updateImageDownload(ctx context.Context, img *voltha.ImageDownload) error {
+func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDownload) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1103,7 +1105,7 @@ func (agent *DeviceAgent) updateImageDownload(ctx context.Context, img *voltha.I
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -1119,7 +1121,7 @@ func (agent *DeviceAgent) getImageDownload(ctx context.Context, img *voltha.Imag
 	return nil, status.Errorf(codes.NotFound, "image-not-found:%s", img.Name)
 }
 
-func (agent *DeviceAgent) listImageDownloads(ctx context.Context, deviceID string) (*voltha.ImageDownloads, error) {
+func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*voltha.ImageDownloads, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -1130,7 +1132,7 @@ func (agent *DeviceAgent) listImageDownloads(ctx context.Context, deviceID strin
 }
 
 // getPorts retrieves the ports information of the device based on the port type.
-func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
+func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
 	logger.Debugw("getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
 	ports := &voltha.Ports{}
 	if device, _ := agent.deviceMgr.GetDevice(ctx, agent.deviceID); device != nil {
@@ -1144,14 +1146,14 @@ func (agent *DeviceAgent) getPorts(ctx context.Context, portType voltha.Port_Por
 }
 
 // getSwitchCapability retrieves the switch capability of a parent device
-func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*ic.SwitchCapability, error) {
+func (agent *Agent) getSwitchCapability(ctx context.Context) (*ic.SwitchCapability, error) {
 	logger.Debugw("getSwitchCapability", log.Fields{"device-id": agent.deviceID})
 
 	cloned, err := agent.getDevice(ctx)
 	if err != nil {
 		return nil, err
 	}
-	ch, err := agent.adapterProxy.getOfpDeviceInfo(ctx, cloned)
+	ch, err := agent.adapterProxy.GetOfpDeviceInfo(ctx, cloned)
 	if err != nil {
 		return nil, err
 	}
@@ -1173,13 +1175,13 @@ func (agent *DeviceAgent) getSwitchCapability(ctx context.Context) (*ic.SwitchCa
 }
 
 // getPortCapability retrieves the port capability of a device
-func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) (*ic.PortCapability, error) {
+func (agent *Agent) getPortCapability(ctx context.Context, portNo uint32) (*ic.PortCapability, error) {
 	logger.Debugw("getPortCapability", log.Fields{"device-id": agent.deviceID})
 	device, err := agent.getDevice(ctx)
 	if err != nil {
 		return nil, err
 	}
-	ch, err := agent.adapterProxy.getOfpPortInfo(ctx, device, portNo)
+	ch, err := agent.adapterProxy.GetOfpPortInfo(ctx, device, portNo)
 	if err != nil {
 		return nil, err
 	}
@@ -1199,7 +1201,7 @@ func (agent *DeviceAgent) getPortCapability(ctx context.Context, portNo uint32) 
 	return portCap, nil
 }
 
-func (agent *DeviceAgent) onPacketFailure(rpc string, response interface{}, args ...interface{}) {
+func (agent *Agent) onPacketFailure(rpc string, response interface{}, args ...interface{}) {
 	// packet data is encoded in the args param as the first parameter
 	var packet []byte
 	if len(args) >= 1 {
@@ -1218,7 +1220,7 @@ func (agent *DeviceAgent) onPacketFailure(rpc string, response interface{}, args
 	})
 }
 
-func (agent *DeviceAgent) packetOut(ctx context.Context, outPort uint32, packet *ofp.OfpPacketOut) error {
+func (agent *Agent) packetOut(ctx context.Context, outPort uint32, packet *ofp.OfpPacketOut) error {
 	// If deviceType=="" then we must have taken ownership of this device.
 	// Fixes VOL-2226 where a core would take ownership and have stale data
 	if agent.deviceType == "" {
@@ -1226,7 +1228,7 @@ func (agent *DeviceAgent) packetOut(ctx context.Context, outPort uint32, packet 
 	}
 	//	Send packet to adapter
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.packetOut(subCtx, agent.deviceType, agent.deviceID, outPort, packet)
+	ch, err := agent.adapterProxy.PacketOut(subCtx, agent.deviceType, agent.deviceID, outPort, packet)
 	if err != nil {
 		cancel()
 		return nil
@@ -1237,7 +1239,7 @@ func (agent *DeviceAgent) packetOut(ctx context.Context, outPort uint32, packet 
 
 // updatePartialDeviceData updates a subset of a device that an Adapter can update.
 // TODO:  May need a specific proto to handle only a subset of a device that can be changed by an adapter
-func (agent *DeviceAgent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
+func (agent *Agent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
 	cloned := agent.getDeviceWithoutLock()
 	cloned.Root = device.Root
 	cloned.Vendor = device.Vendor
@@ -1249,7 +1251,7 @@ func (agent *DeviceAgent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*vo
 	return cloned, nil
 }
 
-func (agent *DeviceAgent) updateDeviceUsingAdapterData(ctx context.Context, device *voltha.Device) error {
+func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *voltha.Device) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1264,14 +1266,14 @@ func (agent *DeviceAgent) updateDeviceUsingAdapterData(ctx context.Context, devi
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) updateDeviceWithoutLock(ctx context.Context, device *voltha.Device) error {
+func (agent *Agent) updateDeviceWithoutLock(ctx context.Context, device *voltha.Device) error {
 	logger.Debugw("updateDevice", log.Fields{"deviceId": device.Id})
 	//cloned := proto.Clone(device).(*voltha.Device)
 	cloned := device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) updateDeviceStatus(ctx context.Context, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
+func (agent *Agent) updateDeviceStatus(ctx context.Context, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1294,7 +1296,7 @@ func (agent *DeviceAgent) updateDeviceStatus(ctx context.Context, operStatus vol
 	return agent.updateDeviceStateInStoreWithoutLock(ctx, cloned, cloned.AdminState, newConnStatus, newOperStatus)
 }
 
-func (agent *DeviceAgent) updatePortsOperState(ctx context.Context, operStatus voltha.OperStatus_Types) error {
+func (agent *Agent) updatePortsOperState(ctx context.Context, operStatus voltha.OperStatus_Types) error {
 	logger.Debugw("updatePortsOperState", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
@@ -1308,7 +1310,7 @@ func (agent *DeviceAgent) updatePortsOperState(ctx context.Context, operStatus v
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) updatePortState(ctx context.Context, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_Types) error {
+func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_PortType, portNo uint32, operStatus voltha.OperStatus_Types) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1331,7 +1333,7 @@ func (agent *DeviceAgent) updatePortState(ctx context.Context, portType voltha.P
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) deleteAllPorts(ctx context.Context) error {
+func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 	logger.Debugw("deleteAllPorts", log.Fields{"deviceId": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
@@ -1356,7 +1358,7 @@ func (agent *DeviceAgent) deleteAllPorts(ctx context.Context) error {
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) addPort(ctx context.Context, port *voltha.Port) error {
+func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1395,7 +1397,7 @@ func (agent *DeviceAgent) addPort(ctx context.Context, port *voltha.Port) error 
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerPort) error {
+func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerPort) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1433,7 +1435,7 @@ func (agent *DeviceAgent) addPeerPort(ctx context.Context, peerPort *voltha.Port
 }
 
 // TODO: A generic device update by attribute
-func (agent *DeviceAgent) updateDeviceAttribute(ctx context.Context, name string, value interface{}) {
+func (agent *Agent) updateDeviceAttribute(ctx context.Context, name string, value interface{}) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		logger.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "name": name, "error": err})
 		return
@@ -1471,7 +1473,7 @@ func (agent *DeviceAgent) updateDeviceAttribute(ctx context.Context, name string
 	}
 }
 
-func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha.SimulateAlarmRequest) error {
+func (agent *Agent) simulateAlarm(ctx context.Context, simulatereq *voltha.SimulateAlarmRequest) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1481,7 +1483,7 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 	cloned := agent.getDeviceWithoutLock()
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.simulateAlarm(subCtx, cloned, simulatereq)
+	ch, err := agent.adapterProxy.SimulateAlarm(subCtx, cloned, simulatereq)
 	if err != nil {
 		cancel()
 		return err
@@ -1490,7 +1492,7 @@ func (agent *DeviceAgent) simulateAlarm(ctx context.Context, simulatereq *voltha
 	return nil
 }
 
-func (agent *DeviceAgent) updateDeviceStateInStoreWithoutLock(
+func (agent *Agent) updateDeviceStateInStoreWithoutLock(
 	ctx context.Context,
 	device *voltha.Device,
 	adminState voltha.AdminState_Types,
@@ -1515,7 +1517,7 @@ func (agent *DeviceAgent) updateDeviceStateInStoreWithoutLock(
 
 //This is an update operation to model without Lock.This function must never be invoked by another function unless the latter holds a lock on the device.
 // It is an internal helper function.
-func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(ctx context.Context, device *voltha.Device, strict bool, txid string) error {
+func (agent *Agent) updateDeviceInStoreWithoutLock(ctx context.Context, device *voltha.Device, strict bool, txid string) error {
 	if agent.stopped {
 		return errors.New("device agent stopped")
 	}
@@ -1530,7 +1532,7 @@ func (agent *DeviceAgent) updateDeviceInStoreWithoutLock(ctx context.Context, de
 	return nil
 }
 
-func (agent *DeviceAgent) updateDeviceReason(ctx context.Context, reason string) error {
+func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1543,7 +1545,7 @@ func (agent *DeviceAgent) updateDeviceReason(ctx context.Context, reason string)
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
-func (agent *DeviceAgent) disablePort(ctx context.Context, Port *voltha.Port) error {
+func (agent *Agent) disablePort(ctx context.Context, Port *voltha.Port) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1575,7 +1577,7 @@ func (agent *DeviceAgent) disablePort(ctx context.Context, Port *voltha.Port) er
 
 	//send request to adapter
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.disablePort(ctx, device, cp)
+	ch, err := agent.adapterProxy.DisablePort(ctx, device, cp)
 	if err != nil {
 		cancel()
 		return err
@@ -1584,7 +1586,7 @@ func (agent *DeviceAgent) disablePort(ctx context.Context, Port *voltha.Port) er
 	return nil
 }
 
-func (agent *DeviceAgent) enablePort(ctx context.Context, Port *voltha.Port) error {
+func (agent *Agent) enablePort(ctx context.Context, Port *voltha.Port) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1616,7 +1618,7 @@ func (agent *DeviceAgent) enablePort(ctx context.Context, Port *voltha.Port) err
 	}
 	//send request to adapter
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.enablePort(ctx, device, cp)
+	ch, err := agent.adapterProxy.EnablePort(ctx, device, cp)
 	if err != nil {
 		cancel()
 		return err
@@ -1625,7 +1627,7 @@ func (agent *DeviceAgent) enablePort(ctx context.Context, Port *voltha.Port) err
 	return nil
 }
 
-func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {
+func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1651,7 +1653,7 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 
 	//send request to adapter
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.childDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
+	ch, err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
 	if err != nil {
 		cancel()
 		return err
@@ -1660,7 +1662,7 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 	return nil
 }
 
-func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
@@ -1668,17 +1670,16 @@ func (agent *DeviceAgent) startOmciTest(ctx context.Context, omcitestrequest *vo
 	device := agent.getDeviceWithoutLock()
 
 	if device.Adapter == "" {
-		adapterName, err := agent.adapterMgr.getAdapterType(device.Type)
+		adapterName, err := agent.adapterMgr.GetAdapterType(device.Type)
 		if err != nil {
 			agent.requestQueue.RequestComplete()
 			return nil, err
 		}
-
 		device.Adapter = adapterName
 	}
 
 	// Send request to the adapter
-	ch, err := agent.adapterProxy.startOmciTest(ctx, device, omcitestrequest)
+	ch, err := agent.adapterProxy.StartOmciTest(ctx, device, omcitestrequest)
 	agent.requestQueue.RequestComplete()
 	if err != nil {
 		return nil, err

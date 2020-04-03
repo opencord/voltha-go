@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package core
+package api
 
 import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"io"
-	"sync"
-	"time"
-
 	"github.com/golang/protobuf/ptypes/empty"
 	da "github.com/opencord/voltha-go/common/core/northbound/grpc"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-lib-go/v3/pkg/version"
 	"github.com/opencord/voltha-protos/v3/go/common"
@@ -35,6 +33,8 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
+	"sync"
 )
 
 // Image related constants
@@ -45,38 +45,29 @@ const (
 	RevertImage         = iota
 )
 
-// APIHandler represent attributes of API handler
-type APIHandler struct {
-	deviceMgr                 *DeviceManager
-	logicalDeviceMgr          *LogicalDeviceManager
-	adapterMgr                *AdapterManager
-	packetInQueue             chan openflow_13.PacketIn
-	changeEventQueue          chan openflow_13.ChangeEvent
-	packetInQueueDone         chan bool
-	changeEventQueueDone      chan bool
-	coreInCompetingMode       bool
-	longRunningRequestTimeout time.Duration
-	defaultRequestTimeout     time.Duration
+// NBIHandler represent attributes of API handler
+type NBIHandler struct {
+	deviceMgr            *device.Manager
+	logicalDeviceMgr     *device.LogicalManager
+	adapterMgr           *adapter.Manager
+	packetInQueue        chan openflow_13.PacketIn
+	changeEventQueue     chan openflow_13.ChangeEvent
+	packetInQueueDone    chan bool
+	changeEventQueueDone chan bool
 	da.DefaultAPIHandler
-	core *Core
 }
 
 // NewAPIHandler creates API handler instance
-func NewAPIHandler(core *Core) *APIHandler {
-	handler := &APIHandler{
-		deviceMgr:                 core.deviceMgr,
-		logicalDeviceMgr:          core.logicalDeviceMgr,
-		adapterMgr:                core.adapterMgr,
-		coreInCompetingMode:       core.config.InCompetingMode,
-		longRunningRequestTimeout: core.config.LongRunningRequestTimeout,
-		defaultRequestTimeout:     core.config.DefaultRequestTimeout,
-		packetInQueue:             make(chan openflow_13.PacketIn, 100),
-		changeEventQueue:          make(chan openflow_13.ChangeEvent, 100),
-		packetInQueueDone:         make(chan bool, 1),
-		changeEventQueueDone:      make(chan bool, 1),
-		core:                      core,
+func NewAPIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalManager, adapterMgr *adapter.Manager) *NBIHandler {
+	return &NBIHandler{
+		deviceMgr:            deviceMgr,
+		logicalDeviceMgr:     logicalDeviceMgr,
+		adapterMgr:           adapterMgr,
+		packetInQueue:        make(chan openflow_13.PacketIn, 100),
+		changeEventQueue:     make(chan openflow_13.ChangeEvent, 100),
+		packetInQueueDone:    make(chan bool, 1),
+		changeEventQueueDone: make(chan bool, 1),
 	}
-	return handler
 }
 
 // waitForNilResponseOnSuccess is a helper function to wait for a response on channel monitorCh where an nil
@@ -100,67 +91,67 @@ func waitForNilResponseOnSuccess(ctx context.Context, ch chan interface{}) (*emp
 }
 
 // ListCoreInstances returns details on the running core containers
-func (handler *APIHandler) ListCoreInstances(ctx context.Context, empty *empty.Empty) (*voltha.CoreInstances, error) {
+func (handler *NBIHandler) ListCoreInstances(ctx context.Context, empty *empty.Empty) (*voltha.CoreInstances, error) {
 	logger.Debug("ListCoreInstances")
 	// TODO: unused stub
 	return &voltha.CoreInstances{}, status.Errorf(codes.NotFound, "no-core-instances")
 }
 
 // GetCoreInstance returns the details of a specific core container
-func (handler *APIHandler) GetCoreInstance(ctx context.Context, id *voltha.ID) (*voltha.CoreInstance, error) {
+func (handler *NBIHandler) GetCoreInstance(ctx context.Context, id *voltha.ID) (*voltha.CoreInstance, error) {
 	logger.Debugw("GetCoreInstance", log.Fields{"id": id})
 	//TODO: unused stub
 	return &voltha.CoreInstance{}, status.Errorf(codes.NotFound, "core-instance-%s", id.Id)
 }
 
 // GetLogicalDevicePort returns logical device port details
-func (handler *APIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
+func (handler *NBIHandler) GetLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
 	logger.Debugw("GetLogicalDevicePort-request", log.Fields{"id": *id})
 
-	return handler.logicalDeviceMgr.getLogicalPort(ctx, id)
+	return handler.logicalDeviceMgr.GetLogicalPort(ctx, id)
 }
 
 // EnableLogicalDevicePort enables logical device port
-func (handler *APIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
+func (handler *NBIHandler) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
 	logger.Debugw("EnableLogicalDevicePort-request", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.enableLogicalPort(ctx, id, ch)
+	go handler.logicalDeviceMgr.EnableLogicalPort(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // DisableLogicalDevicePort disables logical device port
-func (handler *APIHandler) DisableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
+func (handler *NBIHandler) DisableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
 	logger.Debugw("DisableLogicalDevicePort-request", log.Fields{"id": id, "test": common.TestModeKeys_api_test.String()})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.disableLogicalPort(ctx, id, ch)
+	go handler.logicalDeviceMgr.DisableLogicalPort(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // UpdateLogicalDeviceFlowTable updates logical device flow table
-func (handler *APIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flow *openflow_13.FlowTableUpdate) (*empty.Empty, error) {
+func (handler *NBIHandler) UpdateLogicalDeviceFlowTable(ctx context.Context, flow *openflow_13.FlowTableUpdate) (*empty.Empty, error) {
 	logger.Debugw("UpdateLogicalDeviceFlowTable-request", log.Fields{"flow": flow, "test": common.TestModeKeys_api_test.String()})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
+	go handler.logicalDeviceMgr.UpdateFlowTable(ctx, flow.Id, flow.FlowMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // UpdateLogicalDeviceFlowGroupTable updates logical device flow group table
-func (handler *APIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context, flow *openflow_13.FlowGroupTableUpdate) (*empty.Empty, error) {
+func (handler *NBIHandler) UpdateLogicalDeviceFlowGroupTable(ctx context.Context, flow *openflow_13.FlowGroupTableUpdate) (*empty.Empty, error) {
 	logger.Debugw("UpdateLogicalDeviceFlowGroupTable-request", log.Fields{"flow": flow, "test": common.TestModeKeys_api_test.String()})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
+	go handler.logicalDeviceMgr.UpdateGroupTable(ctx, flow.Id, flow.GroupMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // GetDevice must be implemented in the read-only containers - should it also be implemented here?
-func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
+func (handler *NBIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
 	logger.Debugw("GetDevice-request", log.Fields{"id": id})
 	return handler.deviceMgr.GetDevice(ctx, id.Id)
 }
@@ -168,7 +159,7 @@ func (handler *APIHandler) GetDevice(ctx context.Context, id *voltha.ID) (*volth
 // GetDevice must be implemented in the read-only containers - should it also be implemented here?
 
 // ListDevices retrieves the latest devices from the data model
-func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
+func (handler *NBIHandler) ListDevices(ctx context.Context, empty *empty.Empty) (*voltha.Devices, error) {
 	logger.Debug("ListDevices")
 	devices, err := handler.deviceMgr.ListDevices(ctx)
 	if err != nil {
@@ -179,13 +170,13 @@ func (handler *APIHandler) ListDevices(ctx context.Context, empty *empty.Empty) 
 }
 
 // ListDeviceIds returns the list of device ids managed by a voltha core
-func (handler *APIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty) (*voltha.IDs, error) {
+func (handler *NBIHandler) ListDeviceIds(ctx context.Context, empty *empty.Empty) (*voltha.IDs, error) {
 	logger.Debug("ListDeviceIDs")
 	return handler.deviceMgr.ListDeviceIds()
 }
 
 //ReconcileDevices is a request to a voltha core to managed a list of devices  based on their IDs
-func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
+func (handler *NBIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
 	logger.Debug("ReconcileDevices")
 
 	ch := make(chan interface{})
@@ -195,43 +186,43 @@ func (handler *APIHandler) ReconcileDevices(ctx context.Context, ids *voltha.IDs
 }
 
 // GetLogicalDevice provides a cloned most up to date logical device
-func (handler *APIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
+func (handler *NBIHandler) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	logger.Debugw("GetLogicalDevice-request", log.Fields{"id": id})
-	return handler.logicalDeviceMgr.getLogicalDevice(ctx, id.Id)
+	return handler.logicalDeviceMgr.GetLogicalDevice(ctx, id.Id)
 }
 
 // ListLogicalDevices returns the list of all logical devices
-func (handler *APIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
+func (handler *NBIHandler) ListLogicalDevices(ctx context.Context, empty *empty.Empty) (*voltha.LogicalDevices, error) {
 	logger.Debug("ListLogicalDevices-request")
-	return handler.logicalDeviceMgr.listLogicalDevices(ctx)
+	return handler.logicalDeviceMgr.ListLogicalDevices(ctx)
 }
 
 // ListAdapters returns the contents of all adapters known to the system
-func (handler *APIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
+func (handler *NBIHandler) ListAdapters(ctx context.Context, empty *empty.Empty) (*voltha.Adapters, error) {
 	logger.Debug("ListAdapters")
-	return handler.adapterMgr.listAdapters(ctx)
+	return handler.adapterMgr.ListAdapters(ctx)
 }
 
 // ListLogicalDeviceFlows returns the flows of logical device
-func (handler *APIHandler) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
+func (handler *NBIHandler) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
 	logger.Debugw("ListLogicalDeviceFlows", log.Fields{"id": *id})
 	return handler.logicalDeviceMgr.ListLogicalDeviceFlows(ctx, id.Id)
 }
 
 // ListLogicalDeviceFlowGroups returns logical device flow groups
-func (handler *APIHandler) ListLogicalDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*openflow_13.FlowGroups, error) {
+func (handler *NBIHandler) ListLogicalDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*openflow_13.FlowGroups, error) {
 	logger.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"id": *id})
 	return handler.logicalDeviceMgr.ListLogicalDeviceFlowGroups(ctx, id.Id)
 }
 
 // ListLogicalDevicePorts returns ports of logical device
-func (handler *APIHandler) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
+func (handler *NBIHandler) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
 	logger.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id})
 	return handler.logicalDeviceMgr.ListLogicalDevicePorts(ctx, id.Id)
 }
 
 // CreateDevice creates a new parent device in the data model
-func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
+func (handler *NBIHandler) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
 	if device.MacAddress == "" && device.GetHostAndPort() == "" {
 		logger.Errorf("No Device Info Present")
 		return &voltha.Device{}, errors.New("no-device-info-present; MAC or HOSTIP&PORT")
@@ -240,7 +231,7 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.createDevice(ctx, device, ch)
+	go handler.deviceMgr.CreateDevice(ctx, device, ch)
 	select {
 	case res := <-ch:
 		if res != nil {
@@ -262,47 +253,47 @@ func (handler *APIHandler) CreateDevice(ctx context.Context, device *voltha.Devi
 }
 
 // EnableDevice activates a device by invoking the adopt_device API on the appropriate adapter
-func (handler *APIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (handler *NBIHandler) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	logger.Debugw("enabledevice", log.Fields{"id": id})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.enableDevice(ctx, id, ch)
+	go handler.deviceMgr.EnableDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // DisableDevice disables a device along with any child device it may have
-func (handler *APIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (handler *NBIHandler) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	logger.Debugw("disabledevice-request", log.Fields{"id": id})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.disableDevice(ctx, id, ch)
+	go handler.deviceMgr.DisableDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 //RebootDevice invoked the reboot API to the corresponding adapter
-func (handler *APIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (handler *NBIHandler) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	logger.Debugw("rebootDevice-request", log.Fields{"id": id})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.rebootDevice(ctx, id, ch)
+	go handler.deviceMgr.RebootDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // DeleteDevice removes a device from the data model
-func (handler *APIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (handler *NBIHandler) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	logger.Debugw("deletedevice-request", log.Fields{"id": id})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.deleteDevice(ctx, id, ch)
+	go handler.deviceMgr.DeleteDevice(ctx, id, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // ListDevicePorts returns the ports details for a specific device entry
-func (handler *APIHandler) ListDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.Ports, error) {
+func (handler *NBIHandler) ListDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.Ports, error) {
 	logger.Debugw("listdeviceports-request", log.Fields{"id": id})
 	device, err := handler.deviceMgr.GetDevice(ctx, id.Id)
 	if err != nil {
@@ -314,7 +305,7 @@ func (handler *APIHandler) ListDevicePorts(ctx context.Context, id *voltha.ID) (
 }
 
 // ListDeviceFlows returns the flow details for a specific device entry
-func (handler *APIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
+func (handler *NBIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
 	logger.Debugw("listdeviceflows-request", log.Fields{"id": id})
 
 	device, err := handler.deviceMgr.GetDevice(ctx, id.Id)
@@ -327,7 +318,7 @@ func (handler *APIHandler) ListDeviceFlows(ctx context.Context, id *voltha.ID) (
 }
 
 // ListDeviceFlowGroups returns the flow group details for a specific device entry
-func (handler *APIHandler) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
+func (handler *NBIHandler) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
 	logger.Debugw("ListDeviceFlowGroups", log.Fields{"deviceid": id})
 
 	if device, _ := handler.deviceMgr.GetDevice(ctx, id.Id); device != nil {
@@ -337,36 +328,36 @@ func (handler *APIHandler) ListDeviceFlowGroups(ctx context.Context, id *voltha.
 }
 
 // ListDeviceGroups returns all the device groups known to the system
-func (handler *APIHandler) ListDeviceGroups(ctx context.Context, empty *empty.Empty) (*voltha.DeviceGroups, error) {
+func (handler *NBIHandler) ListDeviceGroups(ctx context.Context, empty *empty.Empty) (*voltha.DeviceGroups, error) {
 	logger.Debug("ListDeviceGroups")
 	return &voltha.DeviceGroups{}, errors.New("UnImplemented")
 }
 
 // GetDeviceGroup returns a specific device group entry
-func (handler *APIHandler) GetDeviceGroup(ctx context.Context, id *voltha.ID) (*voltha.DeviceGroup, error) {
+func (handler *NBIHandler) GetDeviceGroup(ctx context.Context, id *voltha.ID) (*voltha.DeviceGroup, error) {
 	logger.Debug("GetDeviceGroup")
 	return &voltha.DeviceGroup{}, errors.New("UnImplemented")
 }
 
 // ListDeviceTypes returns all the device types known to the system
-func (handler *APIHandler) ListDeviceTypes(ctx context.Context, _ *empty.Empty) (*voltha.DeviceTypes, error) {
+func (handler *NBIHandler) ListDeviceTypes(ctx context.Context, _ *empty.Empty) (*voltha.DeviceTypes, error) {
 	logger.Debug("ListDeviceTypes")
 
-	return &voltha.DeviceTypes{Items: handler.adapterMgr.listDeviceTypes()}, nil
+	return &voltha.DeviceTypes{Items: handler.adapterMgr.ListDeviceTypes()}, nil
 }
 
 // GetDeviceType returns the device type for a specific device entry
-func (handler *APIHandler) GetDeviceType(ctx context.Context, id *voltha.ID) (*voltha.DeviceType, error) {
+func (handler *NBIHandler) GetDeviceType(ctx context.Context, id *voltha.ID) (*voltha.DeviceType, error) {
 	logger.Debugw("GetDeviceType", log.Fields{"typeid": id})
 
-	if deviceType := handler.adapterMgr.getDeviceType(id.Id); deviceType != nil {
+	if deviceType := handler.adapterMgr.GetDeviceType(id.Id); deviceType != nil {
 		return deviceType, nil
 	}
 	return &voltha.DeviceType{}, status.Errorf(codes.NotFound, "device_type-%s", id.Id)
 }
 
 // GetVoltha returns the contents of all components (i.e. devices, logical_devices, ...)
-func (handler *APIHandler) GetVoltha(ctx context.Context, empty *empty.Empty) (*voltha.Voltha, error) {
+func (handler *NBIHandler) GetVoltha(ctx context.Context, empty *empty.Empty) (*voltha.Voltha, error) {
 
 	logger.Debug("GetVoltha")
 	/*
@@ -389,7 +380,7 @@ func (handler *APIHandler) GetVoltha(ctx context.Context, empty *empty.Empty) (*
 }
 
 // processImageRequest is a helper method to execute an image download request
-func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.ImageDownload, requestType int) (*common.OperationResp, error) {
+func (handler *NBIHandler) processImageRequest(ctx context.Context, img *voltha.ImageDownload, requestType int) (*common.OperationResp, error) {
 	logger.Debugw("processImageDownload", log.Fields{"img": *img, "requestType": requestType})
 
 	failedresponse := &common.OperationResp{Code: voltha.OperationResp_OPERATION_FAILURE}
@@ -398,13 +389,13 @@ func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.
 	defer close(ch)
 	switch requestType {
 	case ImageDownload:
-		go handler.deviceMgr.downloadImage(ctx, img, ch)
+		go handler.deviceMgr.DownloadImage(ctx, img, ch)
 	case CancelImageDownload:
-		go handler.deviceMgr.cancelImageDownload(ctx, img, ch)
+		go handler.deviceMgr.CancelImageDownload(ctx, img, ch)
 	case ActivateImage:
-		go handler.deviceMgr.activateImage(ctx, img, ch)
+		go handler.deviceMgr.ActivateImage(ctx, img, ch)
 	case RevertImage:
-		go handler.deviceMgr.revertImage(ctx, img, ch)
+		go handler.deviceMgr.RevertImage(ctx, img, ch)
 	default:
 		logger.Warn("invalid-request-type", log.Fields{"requestType": requestType})
 		return failedresponse, status.Errorf(codes.InvalidArgument, "%d", requestType)
@@ -428,39 +419,39 @@ func (handler *APIHandler) processImageRequest(ctx context.Context, img *voltha.
 }
 
 // DownloadImage execute an image download request
-func (handler *APIHandler) DownloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+func (handler *NBIHandler) DownloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	logger.Debugw("DownloadImage-request", log.Fields{"img": *img})
 
 	return handler.processImageRequest(ctx, img, ImageDownload)
 }
 
 // CancelImageDownload cancels image download request
-func (handler *APIHandler) CancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+func (handler *NBIHandler) CancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	logger.Debugw("cancelImageDownload-request", log.Fields{"img": *img})
 	return handler.processImageRequest(ctx, img, CancelImageDownload)
 }
 
 // ActivateImageUpdate activates image update request
-func (handler *APIHandler) ActivateImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+func (handler *NBIHandler) ActivateImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	logger.Debugw("activateImageUpdate-request", log.Fields{"img": *img})
 	return handler.processImageRequest(ctx, img, ActivateImage)
 }
 
 // RevertImageUpdate reverts image update
-func (handler *APIHandler) RevertImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+func (handler *NBIHandler) RevertImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	logger.Debugw("revertImageUpdate-request", log.Fields{"img": *img})
 	return handler.processImageRequest(ctx, img, RevertImage)
 }
 
 // GetImageDownloadStatus returns status of image download
-func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+func (handler *NBIHandler) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	logger.Debugw("getImageDownloadStatus-request", log.Fields{"img": *img})
 
 	failedresponse := &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.getImageDownloadStatus(ctx, img, ch)
+	go handler.deviceMgr.GetImageDownloadStatus(ctx, img, ch)
 
 	select {
 	case res := <-ch:
@@ -481,10 +472,10 @@ func (handler *APIHandler) GetImageDownloadStatus(ctx context.Context, img *volt
 }
 
 // GetImageDownload returns image download
-func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+func (handler *NBIHandler) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	logger.Debugw("GetImageDownload-request", log.Fields{"img": *img})
 
-	download, err := handler.deviceMgr.getImageDownload(ctx, img)
+	download, err := handler.deviceMgr.GetImageDownload(ctx, img)
 	if err != nil {
 		return &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}, err
 	}
@@ -492,10 +483,10 @@ func (handler *APIHandler) GetImageDownload(ctx context.Context, img *voltha.Ima
 }
 
 // ListImageDownloads returns image downloads
-func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
+func (handler *NBIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
 	logger.Debugw("ListImageDownloads-request", log.Fields{"deviceId": id.Id})
 
-	downloads, err := handler.deviceMgr.listImageDownloads(ctx, id.Id)
+	downloads, err := handler.deviceMgr.ListImageDownloads(ctx, id.Id)
 	if err != nil {
 		failedResp := &voltha.ImageDownloads{
 			Items: []*voltha.ImageDownload{
@@ -508,7 +499,7 @@ func (handler *APIHandler) ListImageDownloads(ctx context.Context, id *voltha.ID
 }
 
 // GetImages returns all images for a specific device entry
-func (handler *APIHandler) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
+func (handler *NBIHandler) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
 	logger.Debugw("GetImages", log.Fields{"deviceid": id.Id})
 	device, err := handler.deviceMgr.GetDevice(ctx, id.Id)
 	if err != nil {
@@ -518,67 +509,55 @@ func (handler *APIHandler) GetImages(ctx context.Context, id *voltha.ID) (*volth
 }
 
 // UpdateDevicePmConfigs updates the PM configs
-func (handler *APIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
+func (handler *NBIHandler) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
 	logger.Debugw("UpdateDevicePmConfigs-request", log.Fields{"configs": *configs})
 
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.updatePmConfigs(ctx, configs, ch)
+	go handler.deviceMgr.UpdatePmConfigs(ctx, configs, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // ListDevicePmConfigs returns pm configs of device
-func (handler *APIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*voltha.PmConfigs, error) {
+func (handler *NBIHandler) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*voltha.PmConfigs, error) {
 	logger.Debugw("ListDevicePmConfigs-request", log.Fields{"deviceId": *id})
-	return handler.deviceMgr.listPmConfigs(ctx, id.Id)
+	return handler.deviceMgr.ListPmConfigs(ctx, id.Id)
 }
 
-func (handler *APIHandler) CreateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
+func (handler *NBIHandler) CreateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
 	logger.Debugw("CreateEventFilter-request", log.Fields{"filter": *filter})
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *APIHandler) UpdateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
+func (handler *NBIHandler) UpdateEventFilter(ctx context.Context, filter *voltha.EventFilter) (*voltha.EventFilter, error) {
 	logger.Debugw("UpdateEventFilter-request", log.Fields{"filter": *filter})
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *APIHandler) DeleteEventFilter(ctx context.Context, filterInfo *voltha.EventFilter) (*empty.Empty, error) {
+func (handler *NBIHandler) DeleteEventFilter(ctx context.Context, filterInfo *voltha.EventFilter) (*empty.Empty, error) {
 	logger.Debugw("DeleteEventFilter-request", log.Fields{"device-id": filterInfo.DeviceId, "filter-id": filterInfo.Id})
 	return nil, errors.New("UnImplemented")
 }
 
 // GetEventFilter returns all the filters present for a device
-func (handler *APIHandler) GetEventFilter(ctx context.Context, id *voltha.ID) (*voltha.EventFilters, error) {
+func (handler *NBIHandler) GetEventFilter(ctx context.Context, id *voltha.ID) (*voltha.EventFilters, error) {
 	logger.Debugw("GetEventFilter-request", log.Fields{"device-id": id})
 	return nil, errors.New("UnImplemented")
 }
 
 // ListEventFilters returns all the filters known to the system
-func (handler *APIHandler) ListEventFilters(ctx context.Context, empty *empty.Empty) (*voltha.EventFilters, error) {
+func (handler *NBIHandler) ListEventFilters(ctx context.Context, empty *empty.Empty) (*voltha.EventFilters, error) {
 	logger.Debug("ListEventFilter-request")
 	return nil, errors.New("UnImplemented")
 }
 
-func (handler *APIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
+func (handler *NBIHandler) SelfTest(ctx context.Context, id *voltha.ID) (*voltha.SelfTestResponse, error) {
 	logger.Debugw("SelfTest-request", log.Fields{"id": id})
 	return &voltha.SelfTestResponse{}, errors.New("UnImplemented")
 }
 
-func (handler *APIHandler) forwardPacketOut(ctx context.Context, packet *openflow_13.PacketOut) {
-	logger.Debugw("forwardPacketOut-request", log.Fields{"packet": packet})
-	//TODO: Update this logic once the OF Controller (OFAgent in this case) can include a transaction Id in its
-	// request.  For performance reason we can let both Cores in a Core-Pair forward the Packet to the adapters and
-	// let once of the shim layer (kafka proxy or adapter request handler filters out the duplicate packet)
-	if agent := handler.logicalDeviceMgr.getLogicalDeviceAgent(ctx, packet.Id); agent != nil {
-		agent.packetOut(ctx, packet.PacketOut)
-	} else {
-		logger.Errorf("No logical device agent present", log.Fields{"logicaldeviceID": packet.Id})
-	}
-}
-
 // StreamPacketsOut sends packets to adapter
-func (handler *APIHandler) StreamPacketsOut(packets voltha.VolthaService_StreamPacketsOutServer) error {
+func (handler *NBIHandler) StreamPacketsOut(packets voltha.VolthaService_StreamPacketsOutServer) error {
 	logger.Debugw("StreamPacketsOut-request", log.Fields{"packets": packets})
 loop:
 	for {
@@ -601,17 +580,17 @@ loop:
 			continue
 		}
 
-		handler.forwardPacketOut(packets.Context(), packet)
+		handler.logicalDeviceMgr.PacketOut(packets.Context(), packet)
 	}
 
 	logger.Debugw("StreamPacketsOut-request-done", log.Fields{"packets": packets})
 	return nil
 }
 
-func (handler *APIHandler) sendPacketIn(deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
+func (handler *NBIHandler) SendPacketIn(deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
 	// TODO: Augment the OF PacketIn to include the transactionId
 	packetIn := openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
-	logger.Debugw("sendPacketIn", log.Fields{"packetIn": packetIn})
+	logger.Debugw("SendPacketIn", log.Fields{"packetIn": packetIn})
 	handler.packetInQueue <- packetIn
 }
 
@@ -625,7 +604,7 @@ type streamTracker struct {
 
 var streamingTracker = &streamTracker{calls: make(map[string]*callTracker)}
 
-func (handler *APIHandler) getStreamingTracker(method string, done chan<- bool) *callTracker {
+func (handler *NBIHandler) getStreamingTracker(method string, done chan<- bool) *callTracker {
 	streamingTracker.Lock()
 	defer streamingTracker.Unlock()
 	if _, ok := streamingTracker.calls[method]; ok {
@@ -639,7 +618,7 @@ func (handler *APIHandler) getStreamingTracker(method string, done chan<- bool) 
 	return streamingTracker.calls[method]
 }
 
-func (handler *APIHandler) flushFailedPackets(tracker *callTracker) error {
+func (handler *NBIHandler) flushFailedPackets(tracker *callTracker) error {
 	if tracker.failedPacket != nil {
 		switch tracker.failedPacket.(type) {
 		case openflow_13.PacketIn:
@@ -654,7 +633,7 @@ func (handler *APIHandler) flushFailedPackets(tracker *callTracker) error {
 }
 
 // ReceivePacketsIn receives packets from adapter
-func (handler *APIHandler) ReceivePacketsIn(empty *empty.Empty, packetsIn voltha.VolthaService_ReceivePacketsInServer) error {
+func (handler *NBIHandler) ReceivePacketsIn(empty *empty.Empty, packetsIn voltha.VolthaService_ReceivePacketsInServer) error {
 	var streamingTracker = handler.getStreamingTracker("ReceivePacketsIn", handler.packetInQueueDone)
 	logger.Debugw("ReceivePacketsIn-request", log.Fields{"packetsIn": packetsIn})
 
@@ -690,17 +669,17 @@ loop:
 	return nil
 }
 
-func (handler *APIHandler) sendChangeEvent(deviceID string, portStatus *openflow_13.OfpPortStatus) {
+func (handler *NBIHandler) SendChangeEvent(deviceID string, portStatus *openflow_13.OfpPortStatus) {
 	// TODO: validate the type of portStatus parameter
 	//if _, ok := portStatus.(*openflow_13.OfpPortStatus); ok {
 	//}
 	event := openflow_13.ChangeEvent{Id: deviceID, Event: &openflow_13.ChangeEvent_PortStatus{PortStatus: portStatus}}
-	logger.Debugw("sendChangeEvent", log.Fields{"event": event})
+	logger.Debugw("SendChangeEvent", log.Fields{"event": event})
 	handler.changeEventQueue <- event
 }
 
 // ReceiveChangeEvents receives change in events
-func (handler *APIHandler) ReceiveChangeEvents(empty *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
+func (handler *NBIHandler) ReceiveChangeEvents(empty *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
 	var streamingTracker = handler.getStreamingTracker("ReceiveChangeEvents", handler.changeEventQueueDone)
 	logger.Debugw("ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
 
@@ -734,8 +713,12 @@ loop:
 	return nil
 }
 
+func (handler *NBIHandler) GetChangeEventsQueueForTest() <-chan openflow_13.ChangeEvent {
+	return handler.changeEventQueue
+}
+
 // Subscribe subscribing request of ofagent
-func (handler *APIHandler) Subscribe(
+func (handler *NBIHandler) Subscribe(
 	ctx context.Context,
 	ofAgent *voltha.OfAgentSubscriber,
 ) (*voltha.OfAgentSubscriber, error) {
@@ -744,32 +727,32 @@ func (handler *APIHandler) Subscribe(
 }
 
 // GetAlarmDeviceData @TODO useless stub, what should this actually do?
-func (handler *APIHandler) GetAlarmDeviceData(ctx context.Context, in *common.ID) (*omci.AlarmDeviceData, error) {
+func (handler *NBIHandler) GetAlarmDeviceData(ctx context.Context, in *common.ID) (*omci.AlarmDeviceData, error) {
 	logger.Debug("GetAlarmDeviceData-stub")
 	return &omci.AlarmDeviceData{}, errors.New("UnImplemented")
 }
 
 // ListLogicalDeviceMeters returns logical device meters
-func (handler *APIHandler) ListLogicalDeviceMeters(ctx context.Context, id *voltha.ID) (*openflow_13.Meters, error) {
+func (handler *NBIHandler) ListLogicalDeviceMeters(ctx context.Context, id *voltha.ID) (*openflow_13.Meters, error) {
 
 	logger.Debugw("ListLogicalDeviceMeters", log.Fields{"id": *id})
 	return handler.logicalDeviceMgr.ListLogicalDeviceMeters(ctx, id.Id)
 }
 
 // GetMeterStatsOfLogicalDevice @TODO useless stub, what should this actually do?
-func (handler *APIHandler) GetMeterStatsOfLogicalDevice(ctx context.Context, in *common.ID) (*openflow_13.MeterStatsReply, error) {
+func (handler *NBIHandler) GetMeterStatsOfLogicalDevice(ctx context.Context, in *common.ID) (*openflow_13.MeterStatsReply, error) {
 	logger.Debug("GetMeterStatsOfLogicalDevice")
 	return &openflow_13.MeterStatsReply{}, errors.New("UnImplemented")
 }
 
 // GetMibDeviceData @TODO useless stub, what should this actually do?
-func (handler *APIHandler) GetMibDeviceData(ctx context.Context, in *common.ID) (*omci.MibDeviceData, error) {
+func (handler *NBIHandler) GetMibDeviceData(ctx context.Context, in *common.ID) (*omci.MibDeviceData, error) {
 	logger.Debug("GetMibDeviceData")
 	return &omci.MibDeviceData{}, errors.New("UnImplemented")
 }
 
 // SimulateAlarm sends simulate alarm request
-func (handler *APIHandler) SimulateAlarm(
+func (handler *NBIHandler) SimulateAlarm(
 	ctx context.Context,
 	in *voltha.SimulateAlarmRequest,
 ) (*common.OperationResp, error) {
@@ -777,48 +760,48 @@ func (handler *APIHandler) SimulateAlarm(
 	successResp := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.simulateAlarm(ctx, in, ch)
+	go handler.deviceMgr.SimulateAlarm(ctx, in, ch)
 	return successResp, nil
 }
 
 // UpdateLogicalDeviceMeterTable - This function sends meter mod request to logical device manager and waits for response
-func (handler *APIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, meter *openflow_13.MeterModUpdate) (*empty.Empty, error) {
+func (handler *NBIHandler) UpdateLogicalDeviceMeterTable(ctx context.Context, meter *openflow_13.MeterModUpdate) (*empty.Empty, error) {
 	logger.Debugw("UpdateLogicalDeviceMeterTable-request",
 		log.Fields{"meter": meter, "test": common.TestModeKeys_api_test.String()})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.logicalDeviceMgr.updateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
+	go handler.logicalDeviceMgr.UpdateMeterTable(ctx, meter.Id, meter.MeterMod, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
 // GetMembership returns membership
-func (handler *APIHandler) GetMembership(context.Context, *empty.Empty) (*voltha.Membership, error) {
+func (handler *NBIHandler) GetMembership(context.Context, *empty.Empty) (*voltha.Membership, error) {
 	return &voltha.Membership{}, errors.New("UnImplemented")
 }
 
 // UpdateMembership updates membership
-func (handler *APIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
+func (handler *NBIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return &empty.Empty{}, errors.New("UnImplemented")
 }
 
-func (handler *APIHandler) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+func (handler *NBIHandler) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
 	logger.Debugw("EnablePort-request", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.enablePort(ctx, port, ch)
+	go handler.deviceMgr.EnablePort(ctx, port, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
-func (handler *APIHandler) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+func (handler *NBIHandler) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
 
 	logger.Debugw("DisablePort-request", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	ch := make(chan interface{})
 	defer close(ch)
-	go handler.deviceMgr.disablePort(ctx, port, ch)
+	go handler.deviceMgr.DisablePort(ctx, port, ch)
 	return waitForNilResponseOnSuccess(ctx, ch)
 }
 
-func (handler *APIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+func (handler *NBIHandler) StartOmciTestAction(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
 	logger.Debugw("Omci_test_Request", log.Fields{"id": omcitestrequest.Id, "uuid": omcitestrequest.Uuid})
-	return handler.deviceMgr.startOmciTest(ctx, omcitestrequest)
+	return handler.deviceMgr.StartOmciTest(ctx, omcitestrequest)
 }
