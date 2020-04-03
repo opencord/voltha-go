@@ -241,10 +241,16 @@ func (aMgr *AdapterManager) addAdapter(adapter *voltha.Adapter, saveToDb bool) e
 				}
 				if added == nil {
 					//TODO:  Errors when saving to KV would require a separate go routine to be launched and try the saving again
-					logger.Errorw("failed-to-save-adapter", log.Fields{"adapter": adapter})
+					logger.Errorw("failed-to-save-adapter", log.Fields{"adapter": adapter.Id, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				} else {
-					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapter": adapter})
+					logger.Debugw("adapter-saved-to-KV-Store", log.Fields{"adapter": adapter.Id, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 				}
+			} else {
+				log.Warnw("adding-adapter-already-there", log.Fields{
+					"kvAdapter": kvAdapter,
+					"adapterName": adapter.Id,
+					"adapterReplica": adapter.CurrentReplica,
+				})
 			}
 		}
 	}
@@ -386,8 +392,8 @@ func (aMgr *AdapterManager) registerAdapter(adapter *voltha.Adapter, deviceTypes
 func (aMgr *AdapterManager) getAdapterName(deviceType string) (string, error) {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
-	if adapterID, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
-		return adapterID, nil
+	if adapterType, exist := aMgr.deviceTypeToAdapterMap[deviceType]; exist {
+		return adapterType, nil
 	}
 	return "", fmt.Errorf("Adapter-not-registered-for-device-type %s", deviceType)
 }
