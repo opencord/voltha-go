@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core
+package nbi
 
 import (
 	"context"
@@ -120,12 +120,12 @@ func createMockAdapter(adapterType int, kafkaClient kafka.Client, coreInstanceID
 	case OnuAdapter:
 		adapter = cm.NewONUAdapter(adapterCoreProxy)
 	default:
-		logger.Fatalf("invalid-adapter-type-%d", adapterType)
+		logger.Fatalf("invalid-mockAdapter-type-%d", adapterType)
 	}
 	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
 
 	if err = adapterKafkaICProxy.Start(); err != nil {
-		logger.Errorw("Failure-starting-adapter-intercontainerProxy", log.Fields{"error": err})
+		logger.Errorw("Failure-starting-mockAdapter-intercontainerProxy", log.Fields{"error": err})
 		return nil, err
 	}
 	if err = adapterKafkaICProxy.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: adapterName}, adapterReqHandler); err != nil {

@@ -13,13 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-package core
+package nbi
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"math/rand"
 	"os"
 	"runtime"
@@ -30,8 +29,13 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
+	"github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
@@ -44,9 +48,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	coreName = "rw_core"
+)
+
 type NBTest struct {
 	etcdServer        *lm.EtcdServer
-	core              *Core
+	deviceMgr         *device.Manager
+	logicalDeviceMgr  *device.LogicalManager
+	adapterMgr        *adapter.Manager
+	kmp               kafka.InterContainerProxy
 	kClient           kafka.Client
 	kvClientPort      int
 	numONUPerOLT      int
@@ -95,10 +106,39 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.GrpcHost = "127.0.0.1"
 	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, nb.coreInstanceID)
-	nb.core = NewCore(ctx, nb.coreInstanceID, cfg, client, nb.kClient)
-	err = nb.core.Start(context.Background())
-	if err != nil {
-		logger.Fatal("Cannot start core")
+	backend := &db.Backend{
+		Client:                  client,
+		StoreType:               cfg.KVStoreType,
+		Host:                    cfg.KVStoreHost,
+		Port:                    cfg.KVStorePort,
+		Timeout:                 cfg.KVStoreTimeout,
+		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
+		PathPrefix:              cfg.KVStoreDataPrefix}
+	nb.kmp = kafka.NewInterContainerProxy(
+		kafka.InterContainerHost(cfg.KafkaAdapterHost),
+		kafka.InterContainerPort(cfg.KafkaAdapterPort),
+		kafka.MsgClient(nb.kClient),
+		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+
+	proxy := model.NewProxy(backend, "/")
+	nb.adapterMgr = adapter.NewAdapterManager(proxy, nb.coreInstanceID, nb.kClient)
+	nb.deviceMgr, nb.logicalDeviceMgr = device.NewDeviceManagers(proxy, nb.adapterMgr, nb.kmp, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
+	if err = nb.adapterMgr.Start(ctx); err != nil {
+		logger.Fatalf("Cannot start adapterMgr: %s", err)
+	}
+	nb.deviceMgr.Start(ctx)
+	nb.logicalDeviceMgr.Start(ctx)
+
+	if err = nb.kmp.Start(); err != nil {
+		logger.Fatalf("Cannot start InterContainerProxy: %s", err)
+	}
+	requestProxy := NewAdapterRequestHandlerProxy(nb.coreInstanceID, nb.deviceMgr, nb.adapterMgr, proxy, proxy, cfg.LongRunningRequestTimeout, cfg.DefaultRequestTimeout)
+	if err := nb.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
+		logger.Fatalf("Cannot add request handler: %s", err)
+	}
+	if err := nb.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: cfg.CorePairTopic}, kafka.OffsetNewest); err != nil {
+		logger.Fatalf("Cannot add default request handler: %s", err)
 	}
 }
 
@@ -120,7 +160,7 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	}
 	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
-	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
@@ -140,7 +180,7 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	}
 	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes = &voltha.DeviceTypes{Items: types}
-	if _, err := nb.core.adapterMgr.registerAdapter(registrationData, deviceTypes); err != nil {
+	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
@@ -150,8 +190,14 @@ func (nb *NBTest) stopAll() {
 	if nb.kClient != nil {
 		nb.kClient.Stop()
 	}
-	if nb.core != nil {
-		nb.core.Stop(context.Background())
+	if nb.logicalDeviceMgr != nil {
+		nb.logicalDeviceMgr.Stop(context.Background())
+	}
+	if nb.deviceMgr != nil {
+		nb.deviceMgr.Stop(context.Background())
+	}
+	if nb.kmp != nil {
+		nb.kmp.Stop()
 	}
 	if nb.etcdServer != nil {
 		stopEmbeddedEtcdServer(nb.etcdServer)
@@ -447,7 +493,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are disabled as well
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -482,7 +528,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *APIHandler
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are enabled as well
-	onuDevices, err = nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err = nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -524,7 +570,7 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	assert.Nil(t, err)
 
 	// Verify that all onu devices are disabled as well
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	for _, onu := range onuDevices.Items {
 		err = waitUntilDeviceReadiness(onu.Id, nb.maxTimeout, vdFunction, nbi)
@@ -572,7 +618,7 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *APIHandler) {
 	assert.Nil(t, err)
 
 	//Get all child devices
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 
 	// Wait for the all onu devices to be enabled
@@ -719,7 +765,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 	assert.Equal(t, oltDevice.AdminState, voltha.AdminState_ENABLED)
 
 	// Verify that we have one or more ONUs to start with
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	assert.NotNil(t, onuDevices)
 	assert.Greater(t, len(onuDevices.Items), 0)
@@ -777,8 +823,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 
 	// Update the OLT Connection Status to REACHABLE and operation status to ACTIVE
 	// Normally, in a real adapter this happens after connection regain via a heartbeat mechanism with real hardware
-	deviceAgent := nbi.deviceMgr.getDeviceAgent(getContext(), oltDevice.Id)
-	err = deviceAgent.updateDeviceStatus(getContext(), voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
+	err = nbi.deviceMgr.UpdateDeviceStatus(getContext(), oltDevice.Id, voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
 	assert.Nil(t, err)
 
 	// Verify the device connection and operation states
@@ -802,7 +847,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *APIHandler
 	assert.Equal(t, 1, len(logicalDevices.Items))
 
 	// Verify that we have no ONUs left
-	onuDevices, err = nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err = nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	assert.NotNil(t, onuDevices)
 	assert.Equal(t, 0, len(onuDevices.Items))
@@ -874,7 +919,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *APIHandler) {
 	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
 	assert.Nil(t, err)
 
-	onuDevices, err := nb.core.deviceMgr.getAllChildDevices(getContext(), oltDevice.Id)
+	onuDevices, err := nb.deviceMgr.GetAllChildDevices(getContext(), oltDevice.Id)
 	assert.Nil(t, err)
 	assert.Greater(t, len(onuDevices.Items), 0)
 
@@ -1009,9 +1054,7 @@ func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *APIHandler, logicalDeviceID st
 
 func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *APIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup) {
 	defer wg.Done()
-	if nb.core.logicalDeviceMgr.grpcNbiHdlr != nbi {
-		nb.core.logicalDeviceMgr.setGrpcNbiHandler(nbi)
-	}
+	nb.logicalDeviceMgr.SetEventCallbacks(nbi)
 
 	// Clear any existing flows on the adapters
 	nb.oltAdapter.ClearFlows()
@@ -1132,7 +1175,7 @@ func TestSuite1(t *testing.T) {
 	nb.startCore(false)
 
 	// Set the grpc API interface - no grpc server is running in unit test
-	nbi := NewAPIHandler(nb.core)
+	nbi := NewAPIHandler(nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr)
 
 	// 1. Basic test with no data in Core
 	nb.testCoreWithoutData(t, nbi)

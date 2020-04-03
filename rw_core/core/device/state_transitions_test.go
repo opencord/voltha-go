@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core
+package device
 
 import (
 	"fmt"
@@ -52,21 +52,21 @@ func getDevice(root bool, admin voltha.AdminState_Types, conn voltha.ConnectStat
 	}
 }
 
-func getDeviceState(admin voltha.AdminState_Types, conn voltha.ConnectStatus_Types, oper voltha.OperStatus_Types) *DeviceState {
-	return &DeviceState{
+func getDeviceState(admin voltha.AdminState_Types, conn voltha.ConnectStatus_Types, oper voltha.OperStatus_Types) *deviceState {
+	return &deviceState{
 		Admin:       admin,
 		Connection:  conn,
 		Operational: oper,
 	}
 }
 
-func assertInvalidTransition(t *testing.T, device *voltha.Device, previousState *DeviceState) {
+func assertInvalidTransition(t *testing.T, device *voltha.Device, previousState *deviceState) {
 	handlers, isInvalid := transitionMap.GetTransitionHandler(device, previousState)
 	assert.True(t, isInvalid)
 	assert.Nil(t, handlers)
 }
 
-func assertNoOpTransition(t *testing.T, device *voltha.Device, previousState *DeviceState) {
+func assertNoOpTransition(t *testing.T, device *voltha.Device, previousState *deviceState) {
 	handlers, isInvalid := transitionMap.GetTransitionHandler(device, previousState)
 	assert.False(t, isInvalid)
 	assert.Equal(t, 0, len(handlers))
@@ -218,12 +218,12 @@ func TestValidTransitions(t *testing.T) {
 	assert.True(t, reflect.ValueOf(tdm.CreateLogicalDevice).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
 	var deleteDeviceTest = struct {
-		previousStates         []*DeviceState
+		previousStates         []*deviceState
 		devices                []*voltha.Device
 		expectedParentHandlers []TransitionHandler
 		expectedChildHandlers  []TransitionHandler
 	}{
-		previousStates: []*DeviceState{
+		previousStates: []*deviceState{
 			getDeviceState(voltha.AdminState_DISABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_FAILED),
 			getDeviceState(voltha.AdminState_UNKNOWN, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN),
 			getDeviceState(voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN),
