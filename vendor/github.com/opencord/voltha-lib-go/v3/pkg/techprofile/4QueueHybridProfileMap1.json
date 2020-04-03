@@ -1,0 +1,141 @@
+ {
+  "name": "4QueueHybridProfileMap1",
+  "profile_type": "XPON",
+  "version": 1,
+  "num_gem_ports": 4,
+  "instance_control": {
+    "onu": "multi-instance",
+    "uni": "single-instance",
+    "max_gem_payload_size": "auto"
+  },
+  "us_scheduler": {
+    "additional_bw": "AdditionalBW_Auto",
+    "direction": "UPSTREAM",
+    "priority": 0,
+    "weight": 0,
+    "q_sched_policy": "Hybrid"
+  },
+  "ds_scheduler": {
+    "additional_bw": "AdditionalBW_Auto",
+    "direction": "DOWNSTREAM",
+    "priority": 0,
+    "weight": 0,
+    "q_sched_policy": "Hybrid"
+  },
+  "upstream_gem_port_attribute_list": [
+    {
+      "pbit_map": "0b00000101",
+      "aes_encryption": "True",
+      "scheduling_policy": "WRR",
+      "priority_q": 4,
+      "weight": 25,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "max_threshold": 0,
+        "min_threshold": 0,
+        "max_probability": 0
+      }
+    },
+    {
+      "pbit_map": "0b00011010",
+      "aes_encryption": "True",
+      "scheduling_policy": "WRR",
+      "priority_q": 3,
+      "weight": 75,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "min_threshold": 0,
+        "max_threshold": 0,
+        "max_probability": 0
+      }
+    },
+    {
+      "pbit_map": "0b00100000",
+      "aes_encryption": "True",
+      "scheduling_policy": "StrictPriority",
+      "priority_q": 2,
+      "weight": 0,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "min_threshold": 0,
+        "max_threshold": 0,
+        "max_probability": 0
+      }
+    },
+    {
+      "pbit_map": "0b11000000",
+      "aes_encryption": "True",
+      "scheduling_policy": "StrictPriority",
+      "priority_q": 1,
+      "weight": 25,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "min_threshold": 0,
+        "max_threshold": 0,
+        "max_probability": 0
+      }
+    }
+  ],
+  "downstream_gem_port_attribute_list": [
+    {
+      "pbit_map": "0b00000101",
+      "aes_encryption": "True",
+      "scheduling_policy": "WRR",
+      "priority_q": 4,
+      "weight": 10,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "min_threshold": 0,
+        "max_threshold": 0,
+        "max_probability": 0
+      }
+    },
+    {
+      "pbit_map": "0b00011010",
+      "aes_encryption": "True",
+      "scheduling_policy": "WRR",
+      "priority_q": 3,
+      "weight": 90,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "min_threshold": 0,
+        "max_threshold": 0,
+        "max_probability": 0
+      }
+    },
+    {
+      "pbit_map": "0b00100000",
+      "aes_encryption": "True",
+      "scheduling_policy": "StrictPriority",
+      "priority_q": 2,
+      "weight": 0,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "min_threshold": 0,
+        "max_threshold": 0,
+        "max_probability": 0
+      }
+    },
+    {
+      "pbit_map": "0b11000000",
+      "aes_encryption": "True",
+      "scheduling_policy": "StrictPriority",
+      "priority_q": 1,
+      "weight": 25,
+      "discard_policy": "TailDrop",
+      "max_q_size": "auto",
+      "discard_config": {
+        "min_threshold": 0,
+        "max_threshold": 0,
+        "max_probability": 0
+      }
+    }
+  ]
+}

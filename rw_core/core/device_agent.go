@@ -1702,7 +1702,7 @@ func (agent *DeviceAgent) ChildDeviceLost(ctx context.Context, device *voltha.De
 
 	//send request to adapter
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.childDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
+	ch, err := agent.adapterProxy.childDeviceLost(ctx, device.Id, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
 	if err != nil {
 		cancel()
 		return err
