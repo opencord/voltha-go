@@ -24,7 +24,7 @@ import (
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
+	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -60,7 +60,7 @@ func init() {
 	var err error
 
 	// Create the KV client
-	kc = lm.NewKafkaClient()
+	kc = mock_kafka.NewKafkaClient()
 
 	// Setup core inter-container proxy and core request handler
 	coreKafkaICProxy = kafka.NewInterContainerProxy(
@@ -98,7 +98,7 @@ func getRandomBytes(size int) (bytes []byte, err error) {
 }
 
 func TestCreateAdapterProxy(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
+	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	assert.NotNil(t, ap)
 }
 
@@ -119,7 +119,7 @@ func waitForResponse(ctx context.Context, ch chan *kafka.RpcResponse) (*any2.Any
 
 func testSimpleRequests(t *testing.T) {
 	type simpleRequest func(context.Context, *voltha.Device) (chan *kafka.RpcResponse, error)
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
+	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	simpleRequests := []simpleRequest{
 		ap.adoptDevice,
 		ap.disableDevice,
@@ -162,7 +162,7 @@ func testSimpleRequests(t *testing.T) {
 }
 
 func testGetSwitchCapabilityFromAdapter(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
+	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -179,7 +179,7 @@ func testGetSwitchCapabilityFromAdapter(t *testing.T) {
 }
 
 func testGetPortInfoFromAdapter(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
+	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -197,7 +197,7 @@ func testGetPortInfoFromAdapter(t *testing.T) {
 }
 
 func testPacketOut(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
+	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	outPort := uint32(1)
 	packet, err := getRandomBytes(50)
@@ -211,7 +211,7 @@ func testPacketOut(t *testing.T) {
 }
 
 func testFlowUpdates(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
+	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	_, err := ap.updateFlowsBulk(context.Background(), d, &voltha.Flows{}, &voltha.FlowGroups{}, &voltha.FlowMetadata{})
 	assert.Nil(t, err)
@@ -226,7 +226,7 @@ func testFlowUpdates(t *testing.T) {
 }
 
 func testPmUpdates(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName)
+	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -236,7 +236,7 @@ func testPmUpdates(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestSuite(t *testing.T) {
+func TestSuiteAdapterProxy(t *testing.T) {
 	//1. Test the simple requests first
 	testSimpleRequests(t)
 
