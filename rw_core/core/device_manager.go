@@ -56,12 +56,15 @@ type DeviceManager struct {
 }
 
 func newDeviceManager(core *Core) *DeviceManager {
+
+	endpointManager := kafka.NewEndpointManager(&core.backend)
+
 	var deviceMgr DeviceManager
 	deviceMgr.core = core
 	deviceMgr.exitChannel = make(chan int, 1)
 	deviceMgr.rootDevices = make(map[string]bool)
 	deviceMgr.kafkaICProxy = core.kmp
-	deviceMgr.adapterProxy = NewAdapterProxy(core.kmp, core.config.CorePairTopic)
+	deviceMgr.adapterProxy = NewAdapterProxy(core.kmp, core.config.CorePairTopic, endpointManager)
 	deviceMgr.coreInstanceID = core.instanceID
 	deviceMgr.clusterDataProxy = core.clusterDataProxy
 	deviceMgr.adapterMgr = core.adapterMgr
@@ -606,7 +609,8 @@ func isOkToReconcile(device *voltha.Device) bool {
 
 // adapterRestarted is invoked whenever an adapter is restarted
 func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha.Adapter) error {
-	logger.Debugw("adapter-restarted", log.Fields{"adapter": adapter.Id})
+	logger.Debugw("adapter-restarted", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint.Id})
 
 	// Let's reconcile the device managed by this Core only
 	if len(dMgr.rootDevices) == 0 {
