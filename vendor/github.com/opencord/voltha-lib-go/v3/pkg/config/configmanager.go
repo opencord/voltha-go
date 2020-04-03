@@ -63,10 +63,10 @@ type ConfigChangeEvent struct {
 	ConfigAttribute string
 }
 
-// ConfigManager is a wrapper over backend to maintain Configuration of voltha components
+// ConfigManager is a wrapper over Backend to maintain Configuration of voltha components
 // in kvstore based persistent storage
 type ConfigManager struct {
-	backend             *db.Backend
+	Backend             *db.Backend
 	KvStoreConfigPrefix string
 }
 
@@ -95,7 +95,7 @@ func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreHost string, 
 
 	return &ConfigManager{
 		KvStoreConfigPrefix: defaultkvStoreConfigPath,
-		backend: &db.Backend{
+		Backend: &db.Backend{
 			Client:     kvClient,
 			StoreType:  kvStoreType,
 			Host:       kvStoreHost,
@@ -108,12 +108,12 @@ func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreHost string, 
 
 // RetrieveComponentList list the component Names for which loglevel is stored in kvstore
 func (c *ConfigManager) RetrieveComponentList(ctx context.Context, configType ConfigType) ([]string, error) {
-	data, err := c.backend.List(ctx, c.KvStoreConfigPrefix)
+	data, err := c.Backend.List(ctx, c.KvStoreConfigPrefix)
 	if err != nil {
 		return nil, err
 	}
 
-	// Looping through the data recieved from the backend for config
+	// Looping through the data recieved from the Backend for config
 	// Trimming and Splitting the required key and value from data and  storing as componentName,PackageName and Level
 	// For Example, recieved key would be <Backend Prefix Path>/<Config Prefix>/<Component Name>/<Config Type>/default and value \"DEBUG\"
 	// Then in default will be stored as PackageName,componentName as <Component Name> and DEBUG will be stored as value in List struct
@@ -168,14 +168,14 @@ func (c *ComponentConfig) MonitorForConfigChange(ctx context.Context) chan *Conf
 
 	c.changeEventChan = make(chan *ConfigChangeEvent, 1)
 
-	c.kvStoreEventChan = c.cManager.backend.CreateWatch(ctx, key, true)
+	c.kvStoreEventChan = c.cManager.Backend.CreateWatch(ctx, key, true)
 
 	go c.processKVStoreWatchEvents()
 
 	return c.changeEventChan
 }
 
-// processKVStoreWatchEvents process event channel recieved from the backend for any ChangeType
+// processKVStoreWatchEvents process event channel recieved from the Backend for any ChangeType
 // It checks for the EventType is valid or not.For the valid EventTypes creates ConfigChangeEvent and send it on channel
 func (c *ComponentConfig) processKVStoreWatchEvents() {
 
@@ -183,7 +183,7 @@ func (c *ComponentConfig) processKVStoreWatchEvents() {
 
 	logger.Debugw("processing-kvstore-event-change", log.Fields{"key-prefix": ccKeyPrefix})
 
-	ccPathPrefix := c.cManager.backend.PathPrefix + ccKeyPrefix + kvStorePathSeparator
+	ccPathPrefix := c.cManager.Backend.PathPrefix + ccKeyPrefix + kvStorePathSeparator
 
 	for watchResp := range c.kvStoreEventChan {
 
@@ -210,7 +210,7 @@ func (c *ComponentConfig) Retrieve(ctx context.Context, configKey string) (strin
 
 	logger.Debugw("retrieving-config", log.Fields{"key": key})
 
-	if kvpair, err := c.cManager.backend.Get(ctx, key); err != nil {
+	if kvpair, err := c.cManager.Backend.Get(ctx, key); err != nil {
 		return "", err
 	} else {
 		if kvpair == nil {
@@ -228,17 +228,17 @@ func (c *ComponentConfig) RetrieveAll(ctx context.Context) (map[string]string, e
 
 	logger.Debugw("retreiving-list", log.Fields{"key": key})
 
-	data, err := c.cManager.backend.List(ctx, key)
+	data, err := c.cManager.Backend.List(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	// Looping through the data recieved from the backend for the given key
+	// Looping through the data recieved from the Backend for the given key
 	// Trimming the required key and value from data and  storing as key/value pair
 	// For Example, recieved key would be <Backend Prefix Path>/<Config Prefix>/<Component Name>/<Config Type>/default and value \"DEBUG\"
 	// Then in default will be stored as key and DEBUG will be stored as value in map[string]string
 	res := make(map[string]string)
-	ccPathPrefix := c.cManager.backend.PathPrefix + kvStorePathSeparator + key + kvStorePathSeparator
+	ccPathPrefix := c.cManager.Backend.PathPrefix + kvStorePathSeparator + key + kvStorePathSeparator
 	for attr, val := range data {
 		res[strings.TrimPrefix(attr, ccPathPrefix)] = strings.Trim(fmt.Sprintf("%s", val.Value), "\"")
 	}
@@ -252,7 +252,7 @@ func (c *ComponentConfig) Save(ctx context.Context, configKey string, configValu
 	logger.Debugw("saving-config", log.Fields{"key": key, "value": configValue})
 
 	//save the data for update config
-	if err := c.cManager.backend.Put(ctx, key, configValue); err != nil {
+	if err := c.cManager.Backend.Put(ctx, key, configValue); err != nil {
 		return err
 	}
 	return nil
@@ -264,7 +264,7 @@ func (c *ComponentConfig) Delete(ctx context.Context, configKey string) error {
 
 	logger.Debugw("deleting-config", log.Fields{"key": key})
 	//delete the config
-	if err := c.cManager.backend.Delete(ctx, key); err != nil {
+	if err := c.cManager.Backend.Delete(ctx, key); err != nil {
 		return err
 	}
 	return nil
