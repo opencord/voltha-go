@@ -22,6 +22,30 @@
       "revId": "8d2e85838c3479c7fa2ec101a59254400c7e9f6a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca644cdc_ad0bc1f0",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-03T16:50:48Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "e7f32a7f_082773d6",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 2
+      },
+      "revId": "8d2e85838c3479c7fa2ec101a59254400c7e9f6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
