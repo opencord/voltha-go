@@ -18,6 +18,9 @@ package core
 
 import (
 	"context"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device"
+	"github.com/opencord/voltha-go/rw_core/core/nbi"
 	"sync"
 	"time"
 
@@ -38,11 +41,11 @@ import (
 // Core represent read,write core attributes
 type Core struct {
 	instanceID        string
-	deviceMgr         *DeviceManager
-	logicalDeviceMgr  *LogicalDeviceManager
+	deviceMgr         *device.DeviceManager
+	logicalDeviceMgr  *device.LogicalDeviceManager
 	grpcServer        *grpcserver.GrpcServer
-	grpcNBIAPIHandler *APIHandler
-	adapterMgr        *AdapterManager
+	grpcNBIAPIHandler *nbi.APIHandler
+	adapterMgr        *adapter.Manager
 	config            *config.RWCoreFlags
 	kmp               kafka.InterContainerProxy
 	clusterDataProxy  *model.Proxy
@@ -92,7 +95,7 @@ func (core *Core) Start(ctx context.Context) error {
 				"kv-store",
 				"device-manager",
 				"logical-device-manager",
-				"adapter-manager",
+				"mockAdapter-manager",
 				"grpc-service",
 			)
 		}
@@ -116,10 +119,8 @@ func (core *Core) Start(ctx context.Context) error {
 	core.initKafkaManager(ctx)
 
 	logger.Debugw("values", log.Fields{"kmp": core.kmp})
-	core.deviceMgr = newDeviceManager(core)
-	core.adapterMgr = newAdapterManager(core.clusterDataProxy, core.instanceID, core.kafkaClient, core.deviceMgr)
-	core.deviceMgr.adapterMgr = core.adapterMgr
-	core.logicalDeviceMgr = newLogicalDeviceManager(core, core.deviceMgr, core.kmp, core.clusterDataProxy, core.config.DefaultCoreTimeout)
+	core.adapterMgr = adapter.NewAdapterManager(core.clusterDataProxy, core.instanceID, core.kafkaClient)
+	core.deviceMgr, core.logicalDeviceMgr = device.NewDeviceManagers(core.clusterDataProxy, core.adapterMgr, core.kmp, core.config.CorePairTopic, core.instanceID, core.config.DefaultCoreTimeout)
 
 	// Start the KafkaManager. This must be done after the deviceMgr, adapterMgr, and
 	// logicalDeviceMgr have been created, as once the kmp is started, it will register
@@ -151,10 +152,10 @@ func (core *Core) Stop(ctx context.Context) {
 			core.grpcServer.Stop()
 		}
 		if core.logicalDeviceMgr != nil {
-			core.logicalDeviceMgr.stop(ctx)
+			core.logicalDeviceMgr.Stop(ctx)
 		}
 		if core.deviceMgr != nil {
-			core.deviceMgr.stop(ctx)
+			core.deviceMgr.Stop(ctx)
 		}
 		if core.kmp != nil {
 			core.kmp.Stop()
@@ -169,9 +170,9 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
 	logger.Info("grpc-server-created")
 
-	core.grpcNBIAPIHandler = NewAPIHandler(core)
+	core.grpcNBIAPIHandler = nbi.NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr)
 	logger.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
-	core.logicalDeviceMgr.setGrpcNbiHandler(core.grpcNBIAPIHandler)
+	core.logicalDeviceMgr.SetEventCallbacks(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
 		voltha.RegisterVolthaServiceServer(
@@ -355,10 +356,10 @@ func (core *Core) waitUntilKVStoreReachableOrMaxTries(ctx context.Context, maxRe
 	return nil
 }
 
-func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstanceID string, dMgr *DeviceManager,
-	ldMgr *LogicalDeviceManager, aMgr *AdapterManager, cdProxy *model.Proxy, ldProxy *model.Proxy,
+func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstanceID string, dMgr *device.DeviceManager,
+	ldMgr *device.LogicalDeviceManager, aMgr *adapter.Manager, cdProxy *model.Proxy, ldProxy *model.Proxy,
 ) error {
-	requestProxy := NewAdapterRequestHandlerProxy(core, coreInstanceID, dMgr, ldMgr, aMgr, cdProxy, ldProxy,
+	requestProxy := nbi.NewAdapterRequestHandlerProxy(coreInstanceID, dMgr, aMgr, cdProxy, ldProxy,
 		core.config.LongRunningRequestTimeout, core.config.DefaultRequestTimeout)
 
 	// Register the broadcast topic to handle any core-bound broadcast requests
@@ -379,21 +380,21 @@ func (core *Core) registerAdapterRequestHandlers(ctx context.Context, coreInstan
 
 func (core *Core) startDeviceManager(ctx context.Context) {
 	logger.Info("DeviceManager-Starting...")
-	core.deviceMgr.start(ctx, core.logicalDeviceMgr)
+	core.deviceMgr.Start(ctx)
 	logger.Info("DeviceManager-Started")
 }
 
 func (core *Core) startLogicalDeviceManager(ctx context.Context) {
 	logger.Info("Logical-DeviceManager-Starting...")
-	core.logicalDeviceMgr.start(ctx)
+	core.logicalDeviceMgr.Start(ctx)
 	logger.Info("Logical-DeviceManager-Started")
 }
 
 func (core *Core) startAdapterManager(ctx context.Context) {
 	logger.Info("Adapter-Manager-Starting...")
-	err := core.adapterMgr.start(ctx)
+	err := core.adapterMgr.Start(ctx)
 	if err != nil {
-		logger.Fatalf("failed-to-start-adapter-manager: error %v ", err)
+		logger.Fatalf("failed-to-start-mockAdapter-manager: error %v ", err)
 	}
 	logger.Info("Adapter-Manager-Started")
 }

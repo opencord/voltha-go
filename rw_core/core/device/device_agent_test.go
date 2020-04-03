@@ -13,21 +13,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-package core
+package device
 
 import (
 	"context"
 	"github.com/gogo/protobuf/proto"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	lm "github.com/opencord/voltha-lib-go/v3/pkg/mocks"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"math/rand"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -35,17 +42,19 @@ import (
 )
 
 type DATest struct {
-	etcdServer     *lm.EtcdServer
-	core           *Core
-	kClient        kafka.Client
-	kvClientPort   int
-	oltAdapterName string
-	onuAdapterName string
-	coreInstanceID string
-	defaultTimeout time.Duration
-	maxTimeout     time.Duration
-	device         *voltha.Device
-	done           chan int
+	etcdServer       *lm.EtcdServer
+	deviceMgr        *DeviceManager
+	logicalDeviceMgr *LogicalDeviceManager
+	kmp              kafka.InterContainerProxy
+	kClient          kafka.Client
+	kvClientPort     int
+	oltAdapterName   string
+	onuAdapterName   string
+	coreInstanceID   string
+	defaultTimeout   time.Duration
+	maxTimeout       time.Duration
+	device           *voltha.Device
+	done             chan int
 }
 
 func newDATest() *DATest {
@@ -93,9 +102,13 @@ func newDATest() *DATest {
 				OperStatus: voltha.OperStatus_ACTIVE},
 		},
 	}
-
 	return test
 }
+
+type fakeEventCallbacks struct{}
+
+func (fakeEventCallbacks) SendChangeEvent(_ string, _ *ofp.OfpPortStatus)      {}
+func (fakeEventCallbacks) SendPacketIn(_ string, _ string, _ *ofp.OfpPacketIn) {}
 
 func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
@@ -109,29 +122,89 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	}
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
-	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, dat.coreInstanceID)
-	dat.core = NewCore(context.Background(), dat.coreInstanceID, cfg, client, dat.kClient)
-	err = dat.core.Start(context.Background())
-	if err != nil {
-		logger.Fatal("Cannot start core")
+	backend := &db.Backend{
+		Client:                  client,
+		StoreType:               cfg.KVStoreType,
+		Host:                    cfg.KVStoreHost,
+		Port:                    cfg.KVStorePort,
+		Timeout:                 cfg.KVStoreTimeout,
+		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
+		PathPrefix:              cfg.KVStoreDataPrefix}
+	dat.kmp = kafka.NewInterContainerProxy(
+		kafka.InterContainerHost(cfg.KafkaAdapterHost),
+		kafka.InterContainerPort(cfg.KafkaAdapterPort),
+		kafka.MsgClient(dat.kClient),
+		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+
+	proxy := model.NewProxy(backend, "/")
+	adapterMgr := adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
+
+	dat.deviceMgr, dat.logicalDeviceMgr = NewDeviceManagers(proxy, adapterMgr, dat.kmp, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	dat.logicalDeviceMgr.SetEventCallbacks(fakeEventCallbacks{})
+	if err = dat.kmp.Start(); err != nil {
+		logger.Fatal("Cannot start InterContainerProxy")
 	}
+	if err = adapterMgr.Start(context.Background()); err != nil {
+		logger.Fatal("Cannot start adapterMgr")
+	}
+	dat.deviceMgr.Start(context.Background())
+	dat.logicalDeviceMgr.Start(context.Background())
 }
 
 func (dat *DATest) stopAll() {
 	if dat.kClient != nil {
 		dat.kClient.Stop()
 	}
-	if dat.core != nil {
-		dat.core.Stop(context.Background())
+	if dat.logicalDeviceMgr != nil {
+		dat.logicalDeviceMgr.Stop(context.Background())
+	}
+	if dat.deviceMgr != nil {
+		dat.deviceMgr.Stop(context.Background())
+	}
+	if dat.kmp != nil {
+		dat.kmp.Stop()
 	}
 	if dat.etcdServer != nil {
 		stopEmbeddedEtcdServer(dat.etcdServer)
 	}
 }
 
+//startEmbeddedEtcdServer creates and starts an Embedded etcd server locally.
+func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*lm.EtcdServer, int, error) {
+	kvClientPort, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, 0, err
+	}
+	peerPort, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, 0, err
+	}
+	etcdServer := lm.StartEtcdServer(lm.MKConfig(configName, kvClientPort, peerPort, storageDir, logLevel))
+	if etcdServer == nil {
+		return nil, 0, status.Error(codes.Internal, "Embedded server failed to start")
+	}
+	return etcdServer, kvClientPort, nil
+}
+
+func stopEmbeddedEtcdServer(server *lm.EtcdServer) {
+	if server != nil {
+		server.Stop()
+	}
+}
+
+func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
+	addr := cf.KVStoreHost + ":" + strconv.Itoa(cf.KVStorePort)
+	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout)
+	if err != nil {
+		panic("no kv client")
+	}
+	return client
+}
+
 func (dat *DATest) createDeviceAgent(t *testing.T) *DeviceAgent {
-	deviceMgr := dat.core.deviceMgr
+	deviceMgr := dat.deviceMgr
 	clonedDevice := proto.Clone(dat.device).(*voltha.Device)
 	deviceAgent := newDeviceAgent(deviceMgr.adapterProxy, clonedDevice, deviceMgr, deviceMgr.clusterDataProxy, deviceMgr.defaultTimeout)
 	d, err := deviceAgent.start(context.TODO(), clonedDevice)

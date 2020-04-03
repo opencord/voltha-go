@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core
+package device
 
 import (
 	"context"
+	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"math/rand"
 	"sync"
 	"testing"
@@ -357,18 +360,20 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 }
 
 type LDATest struct {
-	etcdServer     *lm.EtcdServer
-	core           *Core
-	kClient        kafka.Client
-	kvClientPort   int
-	oltAdapterName string
-	onuAdapterName string
-	coreInstanceID string
-	defaultTimeout time.Duration
-	maxTimeout     time.Duration
-	logicalDevice  *voltha.LogicalDevice
-	deviceIds      []string
-	done           chan int
+	etcdServer       *lm.EtcdServer
+	deviceMgr        *DeviceManager
+	kmp              kafka.InterContainerProxy
+	logicalDeviceMgr *LogicalDeviceManager
+	kClient          kafka.Client
+	kvClientPort     int
+	oltAdapterName   string
+	onuAdapterName   string
+	coreInstanceID   string
+	defaultTimeout   time.Duration
+	maxTimeout       time.Duration
+	logicalDevice    *voltha.LogicalDevice
+	deviceIds        []string
+	done             chan int
 }
 
 func newLDATest() *LDATest {
@@ -446,7 +451,6 @@ func newLDATest() *LDATest {
 }
 
 func (lda *LDATest) startCore(inCompeteMode bool) {
-	ctx := context.Background()
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
 	cfg.DefaultRequestTimeout = lda.defaultTimeout
@@ -458,21 +462,49 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	}
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
-	setCoreCompeteMode(inCompeteMode)
 	client := setupKVClient(cfg, lda.coreInstanceID)
-	lda.core = NewCore(ctx, lda.coreInstanceID, cfg, client, lda.kClient)
-	err = lda.core.Start(ctx)
-	if err != nil {
-		logger.Fatal("Cannot start core")
+	backend := &db.Backend{
+		Client:                  client,
+		StoreType:               cfg.KVStoreType,
+		Host:                    cfg.KVStoreHost,
+		Port:                    cfg.KVStorePort,
+		Timeout:                 cfg.KVStoreTimeout,
+		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
+		PathPrefix:              cfg.KVStoreDataPrefix}
+	lda.kmp = kafka.NewInterContainerProxy(
+		kafka.InterContainerHost(cfg.KafkaAdapterHost),
+		kafka.InterContainerPort(cfg.KafkaAdapterPort),
+		kafka.MsgClient(lda.kClient),
+		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+
+	proxy := model.NewProxy(backend, "/")
+	adapterMgr := adapter.NewAdapterManager(proxy, lda.coreInstanceID, lda.kClient)
+
+	lda.deviceMgr, lda.logicalDeviceMgr = NewDeviceManagers(proxy, adapterMgr, lda.kmp, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
+	lda.logicalDeviceMgr.SetEventCallbacks(fakeEventCallbacks{})
+	if err = lda.kmp.Start(); err != nil {
+		logger.Fatal("Cannot start InterContainerProxy")
 	}
+	if err = adapterMgr.Start(context.Background()); err != nil {
+		logger.Fatal("Cannot start adapterMgr")
+	}
+	lda.deviceMgr.Start(context.Background())
+	lda.logicalDeviceMgr.Start(context.Background())
 }
 
 func (lda *LDATest) stopAll() {
 	if lda.kClient != nil {
 		lda.kClient.Stop()
 	}
-	if lda.core != nil {
-		lda.core.Stop(context.Background())
+	if lda.logicalDeviceMgr != nil {
+		lda.logicalDeviceMgr.Stop(context.Background())
+	}
+	if lda.deviceMgr != nil {
+		lda.deviceMgr.Stop(context.Background())
+	}
+	if lda.kmp != nil {
+		lda.kmp.Stop()
 	}
 	if lda.etcdServer != nil {
 		stopEmbeddedEtcdServer(lda.etcdServer)
@@ -480,8 +512,8 @@ func (lda *LDATest) stopAll() {
 }
 
 func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalDeviceAgent {
-	lDeviceMgr := lda.core.logicalDeviceMgr
-	deviceMgr := lda.core.deviceMgr
+	lDeviceMgr := lda.logicalDeviceMgr
+	deviceMgr := lda.deviceMgr
 	clonedLD := proto.Clone(lda.logicalDevice).(*voltha.LogicalDevice)
 	clonedLD.Id = com.GetRandomString(10)
 	clonedLD.DatapathId = rand.Uint64()
