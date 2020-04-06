@@ -46,6 +46,30 @@
       "revId": "8d2e85838c3479c7fa2ec101a59254400c7e9f6a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "568e1232_10aeeedf",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-06T21:25:52Z",
+      "side": 1,
+      "message": "Should be fixed in latest patch.",
+      "parentUuid": "ca644cdc_ad0bc1f0",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 2
+      },
+      "revId": "8d2e85838c3479c7fa2ec101a59254400c7e9f6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
