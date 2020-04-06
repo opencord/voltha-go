@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8bfce8d3_ce0649f7",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2020-04-06T17:52:00Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "c3c3c9a8_243e2364",
+      "revId": "e242b5f8d48af1f6f4902ae2bbf8e569bea28591",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "78d326fe_dc230d52",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 17
@@ -30,6 +48,24 @@
       "writtenOn": "2020-04-06T16:33:33Z",
       "side": 1,
       "message": "You will need to invoke agent.requestQueue.RequestComplete() to indicate that this request is complete.  Please do so right after sending a request to the adapter.",
+      "revId": "e242b5f8d48af1f6f4902ae2bbf8e569bea28591",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae329cc0_6ad0f091",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1756,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2020-04-06T17:52:00Z",
+      "side": 1,
+      "message": "Added thank you",
+      "parentUuid": "78d326fe_dc230d52",
       "revId": "e242b5f8d48af1f6f4902ae2bbf8e569bea28591",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
