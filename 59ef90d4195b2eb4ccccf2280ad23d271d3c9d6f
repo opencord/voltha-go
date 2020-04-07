@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d082db6_21b2d2b9",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:56:29Z",
+      "side": 1,
+      "message": "The previous model had the ability of compressing the data before storing it in the KV store.  This has the benefit of reducing the data size in KV as well as having a faster data sync amongst the etcd servers in a cluster.  Should that option be added here?",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a55285b2_3e423fcf",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:56:29Z",
+      "side": 1,
+      "message": "The comment may need to mention that the target will contain the List result since usually a List/Get request will have the result in the return params instead of the passed-in param.",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4b16686_a65acc19",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:56:29Z",
+      "side": 1,
+      "message": "Since the Update/AddWith invokes the Add method is there a risk where an update request passes in an incorrect path leading to an existing data being overwritten?   Should there be additional checks in place in these methods?",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
