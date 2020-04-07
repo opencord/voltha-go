@@ -33,6 +33,8 @@ COPY rw_core ./rw_core
 COPY go.mod ./
 COPY go.sum ./
 
+ARG EXTRA_GO_BUILD_TAGS=""
+
 ARG org_label_schema_version=unknown
 ARG org_label_schema_vcs_url=unknown
 ARG org_label_schema_vcs_ref=unknown
@@ -43,7 +45,7 @@ ARG org_opencord_vcs_dirty=unknown
 # Build
 WORKDIR /go/src/rw_core
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
-RUN go build -mod=vendor -o /go/bin/rw_core \
+RUN go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /go/bin/rw_core \
 	-ldflags \
 	"-X github.com/opencord/voltha-lib-go/v3/pkg/version.version=$org_label_schema_version \
 	 -X github.com/opencord/voltha-lib-go/v3/pkg/version.vcsRef=$org_label_schema_vcs_ref  \
