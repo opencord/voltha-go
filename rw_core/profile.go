@@ -19,7 +19,6 @@
 package main
 
 import (
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"net/http"
 	_ "net/http/pprof"
 )
