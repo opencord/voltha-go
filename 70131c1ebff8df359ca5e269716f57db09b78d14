@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "420f8a74_f15a3850",
+        "filename": "Makefile",
+        "patchSetId": 17
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:41:30Z",
+      "side": 1,
+      "message": "I\u0027ve seen this timing out occasionally on recent patchsets, don\u0027t think it\u0027s specific to this patch.",
+      "parentUuid": "657b7cb6_b4ff1677",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "492df5e2_005ae517",
         "filename": "rw_core/core/adapter_manager.go",
         "patchSetId": 17
@@ -30,6 +48,24 @@
       "writtenOn": "2020-04-07T18:31:56Z",
       "side": 1,
       "message": "The adapter is already added above.   There are no changes to the adapter since that.  Should the above addition be removed and happen only here?",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0ff9dda_103502fe",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:41:30Z",
+      "side": 1,
+      "message": "Done, moved local memory write after DB write.",
+      "parentUuid": "492df5e2_005ae517",
       "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c1fa9589_a17819b7",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:41:30Z",
+      "side": 1,
+      "message": "Done, moved all local memory writes after DB writes.",
+      "parentUuid": "3b6a894d_95a41a18",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc13ff5b_d957a241",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 17
@@ -64,6 +118,24 @@
       "writtenOn": "2020-04-07T18:31:56Z",
       "side": 1,
       "message": "Since the cached data is being updated in the updateDeviceStateInStoreWithoutLock(), here we are still using the older data that we are sending to the adapter.   We need to grab the latest cache data and use that instead.\n\nComments apply a few places.",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f34c526_145cf6fb",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:41:30Z",
+      "side": 1,
+      "message": "If you look at the implementation for updateDeviceStateInStoreWithoutLock() you\u0027ll see that it applies the changes to the device that\u0027s passed in.  \n\nSo after the call, \"cloned\" will contain the latest.",
+      "parentUuid": "dc13ff5b_d957a241",
       "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "4d7c1ed7_6994f169",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:41:30Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "1b01bea1_dcf3f441",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb8695a0_17f507ee",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 17
@@ -98,6 +188,24 @@
       "writtenOn": "2020-04-07T18:31:56Z",
       "side": 1,
       "message": "Not having access to the previous data will make it impossible to know what is the transition attempted.  Is there a way to still log the previous data, maybe before invoking this method?",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07e6cec6_f74c07ae",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1436,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:41:30Z",
+      "side": 1,
+      "message": "Changed GetTransitionHandler() to return an `invalid` flag, which can be used to detect, log, or handle invalid transitions.  (currently logged)",
+      "parentUuid": "fb8695a0_17f507ee",
       "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
