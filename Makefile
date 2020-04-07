@@ -106,7 +106,7 @@ rw_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -t ${RWCORE_IMAGENAME}:latest -f docker/Dockerfile.rw_core .
 
 rw_core_profile: local-protos local-lib-go
-	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -t ${RWCORE_IMAGENAME}:latest-profile -f docker/Dockerfile.rw_core_profile .
+	docker build $(DOCKER_BUILD_ARGS) --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -t ${RWCORE_IMAGENAME}:latest-profile -f docker/Dockerfile.rw_core .
 
 docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
