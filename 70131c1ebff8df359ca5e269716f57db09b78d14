@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "657b7cb6_b4ff1677",
+        "filename": "Makefile",
+        "patchSetId": 17
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:31:56Z",
+      "side": 1,
+      "message": "Does lint takes more times on jenkins?",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "492df5e2_005ae517",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:31:56Z",
+      "side": 1,
+      "message": "The adapter is already added above.   There are no changes to the adapter since that.  Should the above addition be removed and happen only here?",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b6a894d_95a41a18",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:31:56Z",
+      "side": 1,
+      "message": "Same comment as above",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc13ff5b_d957a241",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:31:56Z",
+      "side": 1,
+      "message": "Since the cached data is being updated in the updateDeviceStateInStoreWithoutLock(), here we are still using the older data that we are sending to the adapter.   We need to grab the latest cache data and use that instead.\n\nComments apply a few places.",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b01bea1_dcf3f441",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:31:56Z",
+      "side": 1,
+      "message": "Can the previous states be logged as well to facitate debugging?",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb8695a0_17f507ee",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 1436,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-07T18:31:56Z",
+      "side": 1,
+      "message": "Not having access to the previous data will make it impossible to know what is the transition attempted.  Is there a way to still log the previous data, maybe before invoking this method?",
+      "revId": "70131c1ebff8df359ca5e269716f57db09b78d14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
