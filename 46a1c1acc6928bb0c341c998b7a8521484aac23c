@@ -46,6 +46,30 @@
       "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f38180d_4517635e",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-07T07:43:39Z",
+      "side": 1,
+      "message": "Good, but please make sure to test this occurrence.",
+      "parentUuid": "58316ea5_d0b9d855",
+      "range": {
+        "startLine": 158,
+        "startChar": 3,
+        "endLine": 158,
+        "endChar": 65
+      },
+      "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
