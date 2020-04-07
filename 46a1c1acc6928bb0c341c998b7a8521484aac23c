@@ -22,6 +22,30 @@
       "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58316ea5_d0b9d855",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000544
+      },
+      "writtenOn": "2020-04-07T07:28:35Z",
+      "side": 1,
+      "message": "As we are suppressing al the indications from agent (including discovery indication for ONU), ONU device wont be discovered. So no need to add explicit handler here I think .",
+      "parentUuid": "153dbdd6_a2f8c76d",
+      "range": {
+        "startLine": 158,
+        "startChar": 3,
+        "endLine": 158,
+        "endChar": 65
+      },
+      "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
