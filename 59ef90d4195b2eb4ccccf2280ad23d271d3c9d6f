@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a7308d26_0565fd05",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:58:25Z",
+      "side": 1,
+      "message": "Though gzip compression existed in the code, it was always disabled (the flag gating it had no writes).  \nThis functionality could be added, but should probably be considered in a separate Jira.",
+      "parentUuid": "2d082db6_21b2d2b9",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a55285b2_3e423fcf",
         "filename": "db/model/proxy.go",
         "patchSetId": 7
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f43f7349_5460acde",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:58:25Z",
+      "side": 1,
+      "message": "Sure, will update.",
+      "parentUuid": "a55285b2_3e423fcf",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4b16686_a65acc19",
         "filename": "db/model/proxy.go",
         "patchSetId": 7
@@ -47,6 +83,24 @@
       "writtenOn": "2020-04-07T18:56:29Z",
       "side": 1,
       "message": "Since the Update/AddWith invokes the Add method is there a risk where an update request passes in an incorrect path leading to an existing data being overwritten?   Should there be additional checks in place in these methods?",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e74ab932_92d19fc3",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-07T20:58:25Z",
+      "side": 1,
+      "message": "The current AddWithID/Update terminology is confusing, I would like to improve this in a future patch.  Paths should really be defined using a hierarchy of proxies.\n\nThere\u0027s always the possibility that this could be used incorrectly, but I think that possibility is minimal.\n\n(TL;DR: will fix in a future patch.)",
+      "parentUuid": "d4b16686_a65acc19",
       "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
