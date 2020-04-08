@@ -70,6 +70,30 @@
       "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4affcdeb_caa24e3f",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000544
+      },
+      "writtenOn": "2020-04-08T07:38:33Z",
+      "side": 1,
+      "message": "yeah ..sure",
+      "parentUuid": "9f38180d_4517635e",
+      "range": {
+        "startLine": 158,
+        "startChar": 3,
+        "endLine": 158,
+        "endChar": 65
+      },
+      "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
