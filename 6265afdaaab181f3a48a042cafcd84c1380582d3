@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8aa3f40c_e6e82662",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-08T15:06:47Z",
+      "side": 1,
+      "message": "There is a small subtlety between returning an invalid transition and a nil handler.   A invalid transition implies that it\u0027s possible to see such a transition (on all kind of failures from adapters) and we need to mark them as invalid and flag them (eventually sending an event on kafka).  A nil handler is a no-op transition (i.e. if a transition is not in this state machine then it is a nil handler, i.e. no-op).   Therefore, we still need to have the invalid transition here.",
+      "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
