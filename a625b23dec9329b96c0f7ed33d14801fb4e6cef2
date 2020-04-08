@@ -34,6 +34,24 @@
       "revId": "a625b23dec9329b96c0f7ed33d14801fb4e6cef2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3c8ad14_339ebe3f",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-08T19:07:37Z",
+      "side": 1,
+      "message": "I saw that in device_manager.go:processTransition(), you have access to the previous state.   While, ideally it\u0027s better for the transition handler to know the previous state( i.e. option 2), I would be ok if you use (1) and log the previous state in processTransition().",
+      "parentUuid": "e12c15da_4923596a",
+      "revId": "a625b23dec9329b96c0f7ed33d14801fb4e6cef2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
