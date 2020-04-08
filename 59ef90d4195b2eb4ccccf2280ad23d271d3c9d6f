@@ -158,6 +158,24 @@
       "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f41260fd_443f875d",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-08T16:01:26Z",
+      "side": 1,
+      "message": "I\u0027d prefer to keep these changes separate for documentation purposes.  \n\nHaving the minimal number of changes in one patch, and separating unrelated changes where feasible.\n\nThere\u0027s the model simplification changes (this patch), and the proxy usability changes (future patch).\n\nI\u0027d rather not conflate these issues.  They are distinct, even if they touch similar code.",
+      "parentUuid": "a7d75244_d1219b00",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
