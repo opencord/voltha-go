@@ -16,6 +16,24 @@
       "revId": "a625b23dec9329b96c0f7ed33d14801fb4e6cef2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e12c15da_4923596a",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-08T18:59:23Z",
+      "side": 1,
+      "message": "This was all added in order to be able to log the previous \u0026 current state whenever there\u0027s an invalid transition.  \nI would rather not pass in previous state to every transition handler (a lot of cloning to manage, as well as exposing the \"DeviceState\" struct outside the package (DeviceState is changed to a private struct in one of my future/WIP patches.)\n\nCan either:\n1. Forgo logging of previous state on invalid transition.\n2. Pass a \"prev\" DeviceState to every transition handler (forcing DeviceState to be exposed outside the package)\n3. Have a dedicated \"invalid\" marker on invalid transitions.\n\n\nCurrently implemented is \u00273\u0027, was previously \u00271\u0027.\n\nIf another invalid transition handler is required in the future, we could implement it at that time.  Until we have such a requirement, there\u0027s no real need to support it.\n\nThoughts?",
+      "parentUuid": "cde8fd91_2881f02b",
+      "revId": "a625b23dec9329b96c0f7ed33d14801fb4e6cef2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
