@@ -16,6 +16,24 @@
       "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39f30b34_94d1f35d",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-08T15:26:37Z",
+      "side": 1,
+      "message": "I\u0027m using the difference between \n\n`handlers: []TransitionHandler{}`\n(a zero-length slice)\n\nand \n\n`handlers: nil`\n(a nil slice)\n\nto differentiate between these two cases.  nil is considered as invalid, while a zero-length slice is a no-op.",
+      "parentUuid": "8aa3f40c_e6e82662",
+      "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
