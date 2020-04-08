@@ -70,6 +70,24 @@
       "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d0c06e2_e0ea080d",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-08T16:41:33Z",
+      "side": 1,
+      "message": "Done.  Added \"invalid\" boolean to the struct.",
+      "parentUuid": "ef0210e2_ebfd1cac",
+      "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
