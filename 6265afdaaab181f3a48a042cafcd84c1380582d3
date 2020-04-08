@@ -34,6 +34,24 @@
       "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "210d68e2_b12ab303",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-08T15:33:18Z",
+      "side": 1,
+      "message": "I understand.  I prefer an invalid transition be be explicit rather than implicit.",
+      "parentUuid": "39f30b34_94d1f35d",
+      "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
