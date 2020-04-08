@@ -104,6 +104,24 @@
       "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e61f9dcb_972ca566",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-08T15:12:16Z",
+      "side": 1,
+      "message": "I suggest that any change that needs to happen in the Core with respect to interacting with the model gets done in this update.   There are a number of features/bug fixes that need to happen in the Core.  If we keep refactoring then we will end up with lots of retests and possible regressions.",
+      "parentUuid": "e74ab932_92d19fc3",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
