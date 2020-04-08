@@ -52,6 +52,24 @@
       "revId": "a625b23dec9329b96c0f7ed33d14801fb4e6cef2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f741bca_aeaca5d6",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-08T19:50:52Z",
+      "side": 1,
+      "message": "I\u0027ll go back to (1) for now, and we can switch to (2) in the future if required.",
+      "parentUuid": "c3c8ad14_339ebe3f",
+      "revId": "a625b23dec9329b96c0f7ed33d14801fb4e6cef2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
