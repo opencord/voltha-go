@@ -140,6 +140,24 @@
       "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7d75244_d1219b00",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-08T15:35:36Z",
+      "side": 1,
+      "message": "Is there a way for these Core changes to be made and within the model for now just point to the same proxy and then later on any major changes limited to the model?",
+      "parentUuid": "0b7e0f08_3a2e80f1",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
