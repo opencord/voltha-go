@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cde8fd91_2881f02b",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 19
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-08T18:36:03Z",
+      "side": 1,
+      "message": "Using an invalid flag implies that all invalid transitions are to be handled the same way.   While currently we are, it does not mean that in the future will will all invalid cases the same way.   Assigning an InvalidTransition handler is a better option I think.",
+      "revId": "a625b23dec9329b96c0f7ed33d14801fb4e6cef2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
