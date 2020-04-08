@@ -52,6 +52,24 @@
       "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef0210e2_ebfd1cac",
+        "filename": "rw_core/core/device_state_transitions.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-08T15:40:00Z",
+      "side": 1,
+      "message": "I was considering adding an \"isInvalid\" field to the Transition struct, let me see if that leads to a cleaner implementation...",
+      "parentUuid": "210d68e2_b12ab303",
+      "revId": "6265afdaaab181f3a48a042cafcd84c1380582d3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
