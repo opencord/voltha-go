@@ -122,6 +122,24 @@
       "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b7e0f08_3a2e80f1",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-08T15:25:20Z",
+      "side": 1,
+      "message": "Doing everything in this one patch is impractical.  \n\nMany of the changes that should be made [to the model] touch more code outside the model (for example, a hierarchy of proxies will require changes everywhere proxies are used.)\n\nI would rather submit byte-sized changes instead of trying to merge a massive change all at once.  This is easier to review \u0026 reduces rebasing.  Other contributors should be doing the same.\n\n(As it is, I\u0027m already dealing with constant rebasing to keep this patch (\u0026 dependent patches) up to date w/ master.)",
+      "parentUuid": "e61f9dcb_972ca566",
+      "revId": "59ef90d4195b2eb4ccccf2280ad23d271d3c9d6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
