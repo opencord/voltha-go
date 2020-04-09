@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87ca3a25_6d771278",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T20:09:52Z",
+      "side": 1,
+      "message": "References to sentinel should be removed with the removal of proxy callbacks.",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "960094c9_88fed0f1",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T20:09:52Z",
+      "side": 1,
+      "message": "Is this a good go practice where a New on a struct returns two different Structs?",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f389a47_a869f66d",
+        "filename": "rw_core/core/nbi/adapter_request_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T20:09:52Z",
+      "side": 1,
+      "message": "mock?  This will fail exisiing test.",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e0c6e22_06995fc4",
+        "filename": "rw_core/core/nbi/common.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T20:09:52Z",
+      "side": 1,
+      "message": "Since you are combining the north bound and south bound  interfaces together, should this package actually be named something other than nbi. eg. api?",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
