@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ff9b813_21c43ab0",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T18:14:29Z",
+      "side": 1,
+      "message": "This else code can be removed that that we are not using any callbacks proxy.",
+      "revId": "ad7b49ec47333ddc1277e995b0075e6800d071da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56691ae4_48edb990",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T18:14:29Z",
+      "side": 1,
+      "message": "use device.Adapter instead.   The getAdapterTopic() along with the library is expecting Adapter.Type (device.Adapter).",
+      "revId": "ad7b49ec47333ddc1277e995b0075e6800d071da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
