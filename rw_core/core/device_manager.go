@@ -615,7 +615,12 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 	responses := make([]utils.Response, 0)
 	for rootDeviceID := range dMgr.rootDevices {
 		if rootDevice, _ := dMgr.getDeviceFromModel(ctx, rootDeviceID); rootDevice != nil {
-			if rootDevice.Adapter == adapter.Id {
+			isDeviceOwnedByService, err := dMgr.adapterProxy.endpointManager.IsDeviceOwnedByService(rootDeviceID, adapter.Type, adapter.CurrentReplica)
+			if err != nil {
+				logger.Warnw("is-device-owned-by-service", log.Fields{"error": err, "root-device-id": rootDeviceID, "adapterType": adapter.Type, "replica-number": adapter.CurrentReplica})
+				continue
+			}
+			if isDeviceOwnedByService {
 				if isOkToReconcile(rootDevice) {
 					logger.Debugw("reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
 					responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, rootDevice))
@@ -627,12 +632,16 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 				for _, port := range rootDevice.Ports {
 					for _, peer := range port.Peers {
 						if childDevice, _ := dMgr.getDeviceFromModel(ctx, peer.DeviceId); childDevice != nil {
-							if childDevice.Adapter == adapter.Id {
+							isDeviceOwnedByService, err := dMgr.adapterProxy.endpointManager.IsDeviceOwnedByService(childDevice.Id, adapter.Type, adapter.CurrentReplica)
+							if err != nil {
+								logger.Warnw("is-device-owned-by-service", log.Fields{"error": err, "child-device-id": childDevice.Id, "adapterType": adapter.Type, "replica-number": adapter.CurrentReplica})
+							}
+							if isDeviceOwnedByService {
 								if isOkToReconcile(childDevice) {
-									logger.Debugw("reconciling-child-device", log.Fields{"childId": childDevice.Id})
+									logger.Debugw("reconciling-child-device", log.Fields{"child-device-id": childDevice.Id})
 									responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, childDevice))
 								} else {
-									logger.Debugw("not-reconciling-child-device", log.Fields{"childId": childDevice.Id, "state": childDevice.AdminState})
+									logger.Debugw("not-reconciling-child-device", log.Fields{"child-device-id": childDevice.Id, "state": childDevice.AdminState})
 								}
 							} else {
 								// All child devices under a parent device are typically managed by the same adapter type.
