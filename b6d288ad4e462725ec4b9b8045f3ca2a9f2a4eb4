@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba6b18c0_ceb5abc4",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T20:51:21Z",
+      "side": 1,
+      "message": "Instead of rootDevice.Adapter, should this be adapter.Type?  Same comment below.",
+      "revId": "b6d288ad4e462725ec4b9b8045f3ca2a9f2a4eb4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a709e0a2_0b6a24e3",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T20:51:21Z",
+      "side": 1,
+      "message": "Maybe add some more fields to the log, like the rootdeviceId, adapterinfo.  Same comment below.",
+      "revId": "b6d288ad4e462725ec4b9b8045f3ca2a9f2a4eb4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
