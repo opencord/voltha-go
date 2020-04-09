@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0d2e373a_a22466fb",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-09T14:07:21Z",
+      "side": 1,
+      "message": "we should discuss this today, the way I understood the reconcile device.Adapter should specify the adapter this device belongs to (via deviceId)",
+      "parentUuid": "b9eac78e_2d4ab398",
+      "revId": "5fdfd60df050cfe78f65469ddc99380574f09159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "321ab57a_949bc7a3",
         "filename": "rw_core/core/device_agent.go",
         "patchSetId": 9
