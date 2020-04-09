@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a22ba38_9aa5375e",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-09T22:56:23Z",
+      "side": 1,
+      "message": "should this be lowecase-with-dashes?\n\nalso this seems a proper error more that an warning",
+      "range": {
+        "startLine": 625,
+        "startChar": 18,
+        "endLine": 625,
+        "endChar": 40
+      },
+      "revId": "764929363619151e4ff2b0c41f3e5fc13a9f0aa6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
