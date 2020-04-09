@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1a43369f_919199a1",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-04-09T21:01:29Z",
+      "side": 1,
+      "message": "ok, make sense.",
+      "parentUuid": "ba6b18c0_ceb5abc4",
+      "revId": "b6d288ad4e462725ec4b9b8045f3ca2a9f2a4eb4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a709e0a2_0b6a24e3",
         "filename": "rw_core/core/device_manager.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2020-04-09T20:51:21Z",
       "side": 1,
       "message": "Maybe add some more fields to the log, like the rootdeviceId, adapterinfo.  Same comment below.",
+      "revId": "b6d288ad4e462725ec4b9b8045f3ca2a9f2a4eb4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80a88d05_6a55c108",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-04-09T21:01:29Z",
+      "side": 1,
+      "message": "IsDeviceOwnedByService already debug like this: logger.Debugw(\"device-ownership\", log.Fields{\"device-id\": deviceID, \"service\": serviceType, \"replica-number\": replicaNumber})\nBut if the log level is Error, then it might be beneficial to have this info logged. Will do.",
+      "parentUuid": "a709e0a2_0b6a24e3",
       "revId": "b6d288ad4e462725ec4b9b8045f3ca2a9f2a4eb4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
