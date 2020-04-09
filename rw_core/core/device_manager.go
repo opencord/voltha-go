@@ -620,7 +620,12 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 	responses := make([]utils.Response, 0)
 	for rootDeviceID := range dMgr.rootDevices {
 		if rootDevice, _ := dMgr.getDeviceFromModel(ctx, rootDeviceID); rootDevice != nil {
-			if rootDevice.Adapter == adapter.Id {
+			isDeviceOwnedByService, err := dMgr.adapterProxy.endpointManager.IsDeviceOwnedByService(rootDeviceID, rootDevice.Adapter, adapter.CurrentReplica)
+			if err != nil {
+				logger.Warnw("isDeviceOwnedByService", log.Fields{"error": err})
+				continue
+			}
+			if isDeviceOwnedByService {
 				if isOkToReconcile(rootDevice) {
 					logger.Debugw("reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
 					responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, rootDevice))
@@ -632,7 +637,11 @@ func (dMgr *DeviceManager) adapterRestarted(ctx context.Context, adapter *voltha
 				for _, port := range rootDevice.Ports {
 					for _, peer := range port.Peers {
 						if childDevice, _ := dMgr.getDeviceFromModel(ctx, peer.DeviceId); childDevice != nil {
-							if childDevice.Adapter == adapter.Id {
+							isDeviceOwnedByService, err := dMgr.adapterProxy.endpointManager.IsDeviceOwnedByService(childDevice.Id, rootDevice.Adapter, adapter.CurrentReplica)
+							if err != nil {
+								logger.Warnw("isDeviceOwnedByService", log.Fields{"error": err})
+							}
+							if isDeviceOwnedByService {
 								if isOkToReconcile(childDevice) {
 									logger.Debugw("reconciling-child-device", log.Fields{"childId": childDevice.Id})
 									responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, childDevice))
