@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "256b7661_d55d89dc",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T13:21:04Z",
+      "side": 1,
+      "message": "You mean debug?",
+      "revId": "43c09f504b63d5450e00a9fb5c0956bb66a09351",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
