@@ -94,6 +94,23 @@
       "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a55b40f8_34879c04",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1766,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T19:52:34Z",
+      "side": 1,
+      "message": "There was an issue a while back when NNI ports were added to a logical device which was not ready (i.e. it was waiting for switch capabilities and OLT NNI port capability from the olt adapter) and that was causing Flow failures.   I can\u0027t remember the exact scenario.   Please ensure you run tests with all possible scenarios to ensure we do not run into flow issues.",
+      "revId": "46a1c1acc6928bb0c341c998b7a8521484aac23c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
