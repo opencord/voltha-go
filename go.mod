@@ -12,5 +12,3 @@ require (
 	github.com/stretchr/testify v1.4.0
 	google.golang.org/grpc v1.24.0
 )
-
-replace github.com/opencord/voltha-lib-go/v3 => /Users/teone/Sites/go/src/github.com/opencord/voltha-lib-go

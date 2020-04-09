@@ -20,7 +20,6 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 )
 
-<<<<<<< HEAD
 type EndpointManager struct{}
 
 func NewEndpointManager() kafka.EndpointManager {
@@ -34,31 +33,10 @@ func (em *EndpointManager) GetEndpoint(deviceID string, serviceType string) (kaf
 }
 
 func (em *EndpointManager) IsDeviceOwnedByService(deviceID string, serviceType string, replicaNumber int32) (bool, error) {
-=======
-type endpointManagerMock struct {}
-
-func NewEndpointManager() kafka.EndpointManager {
-	mock := &endpointManagerMock{}
-	return mock
-}
-
-func (em *endpointManagerMock) GetEndpoint(deviceID string, serviceType string) (kafka.Endpoint, error) {
-	// TODO add mocks call and args
-	return "mock-endpoint", nil
-}
-
-func (em *endpointManagerMock) IsDeviceOwnedByService(deviceID string, serviceType string, replicaNumber int32) (bool, error) {
->>>>>>> [VOL-2835] Using different topic per ONU device
 	// TODO add mocks call and args
 	return true, nil
 }
 
-<<<<<<< HEAD
 func (em *EndpointManager) GetReplicaAssignment(deviceID string, serviceType string) (kafka.ReplicaID, error) {
 	return kafka.ReplicaID(1), nil
 }
-=======
-func (em *endpointManagerMock) getReplicaAssignment(deviceID string, serviceType string) (kafka.ReplicaID, error) {
-	return kafka.ReplicaID(0), nil
-}
->>>>>>> [VOL-2835] Using different topic per ONU device

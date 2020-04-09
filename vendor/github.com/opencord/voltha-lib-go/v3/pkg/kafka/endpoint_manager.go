@@ -56,15 +56,9 @@ type EndpointManager interface {
 	// devices owned by that service need to be reconciled
 	IsDeviceOwnedByService(deviceID string, serviceType string, replicaNumber int32) (bool, error)
 
-<<<<<<< HEAD
 	// GetReplicaAssignment returns the replica number of the service that owns the deviceID.  This is used by the
 	// test only
 	GetReplicaAssignment(deviceID string, serviceType string) (ReplicaID, error)
-=======
-	// getReplicaAssignment returns the replica number of the service that owns the deviceID.  This is used by the
-	// test only
-	getReplicaAssignment(deviceID string, serviceType string) (ReplicaID, error)
->>>>>>> [VOL-2835] Using different topic per ONU device
 }
 
 type service struct {
@@ -156,11 +150,7 @@ func (ep *endpointManager) IsDeviceOwnedByService(deviceID string, serviceType s
 	return m.getReplica() == ReplicaID(replicaNumber), nil
 }
 
-<<<<<<< HEAD
 func (ep *endpointManager) GetReplicaAssignment(deviceID string, serviceType string) (ReplicaID, error) {
-=======
-func (ep *endpointManager) getReplicaAssignment(deviceID string, serviceType string) (ReplicaID, error) {
->>>>>>> [VOL-2835] Using different topic per ONU device
 	owner, err := ep.getOwner(deviceID, serviceType)
 	if err != nil {
 		return 0, nil
