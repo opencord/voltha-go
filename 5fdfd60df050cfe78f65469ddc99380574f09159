@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9eac78e_2d4ab398",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T13:44:14Z",
+      "side": 1,
+      "message": "We can\u0027t assume that there is a 1:1 relationship between a device.Type and device.Adapter.   While currently they are set to the same values, device.Adapter should be used as that field specifies the class of adapter supporting that device.",
+      "revId": "5fdfd60df050cfe78f65469ddc99380574f09159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "321ab57a_949bc7a3",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T13:44:14Z",
+      "side": 1,
+      "message": "This is not deem an error.  It\u0027s a no-op.",
+      "revId": "5fdfd60df050cfe78f65469ddc99380574f09159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1af0cb38_c9574d58",
+        "filename": "rw_core/core/device_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-09T13:44:14Z",
+      "side": 1,
+      "message": "No need or this check.  sendResponse(...) below takes care of error handling.",
+      "revId": "5fdfd60df050cfe78f65469ddc99380574f09159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
