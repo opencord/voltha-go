@@ -21,7 +21,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"reflect"
 	"sync"
 	"time"
 
@@ -873,7 +872,7 @@ func (agent *LogicalDeviceAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMo
 				flow.ByteCount = oldFlow.ByteCount
 				flow.PacketCount = oldFlow.PacketCount
 			}
-			if !reflect.DeepEqual(oldFlow, flow) {
+			if !proto.Equal(oldFlow, flow) {
 				flows[idx] = flow
 				updatedFlows = append(updatedFlows, flow)
 				changed = true
@@ -885,7 +884,7 @@ func (agent *LogicalDeviceAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMo
 			changed = true
 		}
 	}
-	logger.Debugw("flowAdd-changed", log.Fields{"changed": changed})
+	logger.Debugw("flowAdd-changed", log.Fields{"changed": changed, "updated": updated})
 
 	if changed {
 		var flowMetadata voltha.FlowMetadata
@@ -1658,7 +1657,7 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 		changed := false
 		for _, o := range oldList {
 			if o.Id == n.Id {
-				changed = !reflect.DeepEqual(o, n)
+				changed = !proto.Equal(o, n)
 				found = true
 				break
 			}
@@ -1677,13 +1676,12 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 // the POST_ADD notification is fixed, we will use the logical device to
 // update that data.
 func (agent *LogicalDeviceAgent) portUpdated(oldPorts, newPorts []*voltha.LogicalPort) interface{} {
-	if reflect.DeepEqual(oldPorts, newPorts) {
+	// Get the difference between the two list
+	newPorts, changedPorts, deletedPorts := diff(oldPorts, newPorts)
+	if (len(newPorts) | len(changedPorts) | len(deletedPorts)) == 0 {
 		logger.Debug("ports-have-not-changed")
 		return nil
 	}
-
-	// Get the difference between the two list
-	newPorts, changedPorts, deletedPorts := diff(oldPorts, newPorts)
 
 	// Send the port change events to the OF controller
 	for _, newP := range newPorts {
