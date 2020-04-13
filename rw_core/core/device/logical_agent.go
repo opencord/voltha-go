@@ -374,7 +374,7 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 	var err error
 
 	var device *voltha.Device
-	if device, err = agent.deviceMgr.GetDevice(ctx, deviceID); err != nil {
+	if device, err = agent.deviceMgr.getDevice(ctx, deviceID); err != nil {
 		logger.Errorw("error-retrieving-device", log.Fields{"error": err, "deviceId": deviceID})
 		return err
 	}
@@ -1601,7 +1601,7 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 	defer agent.requestQueue.RequestComplete()
 
 	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.GetDevice)
+		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	// Get all the logical ports on that logical device
 	lDevice := agent.getLogicalDeviceWithoutLock()
@@ -1625,7 +1625,7 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, lp *voltha.LogicalP
 	defer agent.requestQueue.RequestComplete()
 
 	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.GetDevice)
+		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	if err := agent.deviceRoutes.AddPort(ctx, lp, agent.logicalDevice.Ports); err != nil {
 		return err
@@ -1687,15 +1687,15 @@ func (agent *LogicalAgent) portUpdated(oldPorts, newPorts []*voltha.LogicalPort)
 
 	// Send the port change events to the OF controller
 	for _, newP := range newPorts {
-		go agent.ldeviceMgr.eventCallbacks.SendChangeEvent(agent.logicalDeviceID,
+		go agent.ldeviceMgr.eventMgr.SendChangeEvent(agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_ADD, Desc: newP.OfpPort})
 	}
 	for _, change := range changedPorts {
-		go agent.ldeviceMgr.eventCallbacks.SendChangeEvent(agent.logicalDeviceID,
+		go agent.ldeviceMgr.eventMgr.SendChangeEvent(agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_MODIFY, Desc: change.OfpPort})
 	}
 	for _, del := range deletedPorts {
-		go agent.ldeviceMgr.eventCallbacks.SendChangeEvent(agent.logicalDeviceID,
+		go agent.ldeviceMgr.eventMgr.SendChangeEvent(agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_DELETE, Desc: del.OfpPort})
 	}
 
@@ -1865,7 +1865,7 @@ func (agent *LogicalAgent) packetIn(port uint32, transactionID string, packet []
 		"transactionId": transactionID,
 	})
 	packetIn := fu.MkPacketIn(port, packet)
-	agent.ldeviceMgr.eventCallbacks.SendPacketIn(agent.logicalDeviceID, transactionID, packetIn)
+	agent.ldeviceMgr.eventMgr.SendPacketIn(agent.logicalDeviceID, transactionID, packetIn)
 	logger.Debugw("sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
 }
 
