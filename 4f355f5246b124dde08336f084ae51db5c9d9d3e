@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7aec7b1a_8d56dc1a",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-13T16:11:03Z",
+      "side": 0,
+      "message": "While the logical device filters out duplicate logical flows, removal of these lines imply that we won\u0027t get in a scenario where a decomposed logical flow will end up with non-existing flows on the device.    Is this a correct assumption?   I remember having to add this additional checks here because adapters were receiving duplicate flows.",
+      "revId": "4f355f5246b124dde08336f084ae51db5c9d9d3e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
