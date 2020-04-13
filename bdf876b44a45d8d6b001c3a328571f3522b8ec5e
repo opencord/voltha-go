@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "71a002d9_b4e7c7bc",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-13T16:40:43Z",
+      "side": 1,
+      "message": "That will never be different from adapter.Type, \n\nI would it\u0027s part of the general cleanup we were talking about last week",
+      "parentUuid": "5af52243_d19e3060",
+      "revId": "bdf876b44a45d8d6b001c3a328571f3522b8ec5e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd749b3e_2660819a",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 20
@@ -30,6 +48,24 @@
       "writtenOn": "2020-04-13T15:53:24Z",
       "side": 1,
       "message": "The library check for \"\" as well.  It will return an error for \"\".",
+      "revId": "bdf876b44a45d8d6b001c3a328571f3522b8ec5e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6edfcf4_827c9369",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-13T16:40:43Z",
+      "side": 1,
+      "message": "Agreed this was needed with the first draft of the library",
+      "parentUuid": "bd749b3e_2660819a",
       "revId": "bdf876b44a45d8d6b001c3a328571f3522b8ec5e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
