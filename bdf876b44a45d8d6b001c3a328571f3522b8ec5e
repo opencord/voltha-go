@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5af52243_d19e3060",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-13T15:53:24Z",
+      "side": 1,
+      "message": "Should this go over the list of deviceTypes and return the adapter from the deviceType.Adapter?",
+      "revId": "bdf876b44a45d8d6b001c3a328571f3522b8ec5e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd749b3e_2660819a",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-13T15:53:24Z",
+      "side": 1,
+      "message": "The library check for \"\" as well.  It will return an error for \"\".",
+      "revId": "bdf876b44a45d8d6b001c3a328571f3522b8ec5e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04d438af_bfd4e039",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1669,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-13T15:53:24Z",
+      "side": 1,
+      "message": "Device.Adapter should already have been set here.  You may want to check for device.Adapter \u003d\u003d \"\"",
+      "revId": "bdf876b44a45d8d6b001c3a328571f3522b8ec5e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
