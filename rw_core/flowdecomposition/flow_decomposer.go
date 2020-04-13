@@ -490,7 +490,7 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.Logica
 	} else {
 		var ingressDevice *voltha.Device
 		var err error
-		if ingressDevice, err = fd.deviceMgr.GetDevice(ctx, path[0].DeviceID); err != nil {
+		if ingressDevice, err = fd.deviceMgr.GetDevice(ctx, &voltha.ID{Id: path[0].DeviceID}); err != nil {
 			// This can happen in a race condition where a device is deleted right after we obtain a
 			// route involving the device (GetRoute() above).  Handle it as a no route event as well.
 			return deviceRules, fmt.Errorf("get-device-error :%v :%w", err, route.ErrNoRoute)

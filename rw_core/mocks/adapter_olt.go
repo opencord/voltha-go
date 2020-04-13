@@ -302,10 +302,10 @@ func (oltA *OLTAdapter) Reboot_device(device *voltha.Device) error { // nolint
 
 	go func() {
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), device.Id, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN); err != nil {
-			logger.Fatalf("device-state-update-failed", log.Fields{"device-id": device.Id})
+			logger.Fatalf("device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), device.Id, voltha.OperStatus_UNKNOWN); err != nil {
-			logger.Fatalf("port-update-failed", log.Fields{"device-id": device.Id})
+			logger.Fatalf("port-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 	}()
 	return nil

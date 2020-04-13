@@ -483,8 +483,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	proxy := model.NewProxy(backend, "/")
 	adapterMgr := adapter.NewAdapterManager(proxy, lda.coreInstanceID, lda.kClient)
 
-	lda.deviceMgr, lda.logicalDeviceMgr = NewDeviceManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
-	lda.logicalDeviceMgr.SetEventCallbacks(fakeEventCallbacks{})
+	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
 	if err = lda.kmp.Start(); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}

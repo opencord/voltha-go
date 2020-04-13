@@ -19,18 +19,18 @@ package adapter
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"sync"
 	"time"
 
-	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-
 	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Manager represents adapter manager attributes
@@ -197,7 +197,8 @@ func (aMgr *Manager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bo
 	return nil
 }
 
-func (aMgr *Manager) ListAdapters(ctx context.Context) (*voltha.Adapters, error) {
+// ListAdapters returns the contents of all adapters known to the system
+func (aMgr *Manager) ListAdapters(_ context.Context, _ *empty.Empty) (*voltha.Adapters, error) {
 	result := &voltha.Adapters{Items: []*voltha.Adapter{}}
 	aMgr.lockAdaptersMap.RLock()
 	defer aMgr.lockAdaptersMap.RUnlock()
@@ -266,30 +267,31 @@ func (aMgr *Manager) GetAdapterType(deviceType string) (string, error) {
 			return adapterAgent.adapter.Type, nil
 		}
 	}
-	return "", fmt.Errorf("Adapter-not-registered-for-device-type %s", deviceType)
+	return "", fmt.Errorf("adapter-not-registered-for-device-type %s", deviceType)
 }
 
-func (aMgr *Manager) ListDeviceTypes() []*voltha.DeviceType {
+// ListDeviceTypes returns all the device types known to the system
+func (aMgr *Manager) ListDeviceTypes(_ context.Context, _ *empty.Empty) (*voltha.DeviceTypes, error) {
+	logger.Debug("ListDeviceTypes")
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
 	deviceTypes := make([]*voltha.DeviceType, 0, len(aMgr.deviceTypes))
-
 	for _, deviceType := range aMgr.deviceTypes {
 		deviceTypes = append(deviceTypes, deviceType)
 	}
-
-	return deviceTypes
+	return &voltha.DeviceTypes{Items: deviceTypes}, nil
 }
 
-// getDeviceType returns the device type proto definition given the name of the device type
-func (aMgr *Manager) GetDeviceType(deviceType string) *voltha.DeviceType {
+// GetDeviceType returns the device type proto definition given the name of the device type
+func (aMgr *Manager) GetDeviceType(_ context.Context, deviceType *voltha.ID) (*voltha.DeviceType, error) {
+	logger.Debugw("GetDeviceType", log.Fields{"typeid": deviceType.Id})
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
-	if deviceType, exist := aMgr.deviceTypes[deviceType]; exist {
-		return deviceType
+	dType, exist := aMgr.deviceTypes[deviceType.Id]
+	if !exist {
+		return nil, status.Errorf(codes.NotFound, "device_type-%s", deviceType.Id)
 	}
-
-	return nil
+	return dType, nil
 }
