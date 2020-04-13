@@ -490,7 +490,7 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.Logica
 	} else {
 		var ingressDevice *voltha.Device
 		var err error
-		if ingressDevice, err = fd.deviceMgr.GetDevice(ctx, path[0].DeviceID); err != nil {
+		if ingressDevice, err = fd.deviceMgr.GetDevice(ctx, &voltha.ID{Id: path[0].DeviceID}); err != nil {
 			return deviceRules, err
 		}
 		isUpstream := !ingressDevice.Root

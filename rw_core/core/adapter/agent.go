@@ -44,13 +44,11 @@ func newAdapterAgent(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *
 	return &adapterAgent
 }
 
-func (aa *agent) getDeviceType(deviceType string) *voltha.DeviceType {
+func (aa *agent) getDeviceType(deviceType string) (*voltha.DeviceType, bool) {
 	aa.lock.RLock()
 	defer aa.lock.RUnlock()
-	if _, exist := aa.deviceTypes[deviceType]; exist {
-		return aa.deviceTypes[deviceType]
-	}
-	return nil
+	dType, have := aa.deviceTypes[deviceType]
+	return dType, have
 }
 
 func (aa *agent) getAdapter() *voltha.Adapter {

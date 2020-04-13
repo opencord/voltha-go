@@ -33,6 +33,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
+	event "github.com/opencord/voltha-go/rw_core/core/event"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/flows"
@@ -386,7 +387,7 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *NBIHandler) {
 	// Try to create the same device
 	_, err = nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
 	assert.NotNil(t, err)
-	assert.Equal(t, "Device is already pre-provisioned", err.Error())
+	assert.Equal(t, "device is already pre-provisioned", err.Error())
 
 	// Try to create a device with invalid data
 	_, err = nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName})
@@ -421,7 +422,7 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *NBIHandler) {
 	// Try to enable the oltDevice and check the error message
 	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
 	assert.NotNil(t, err)
-	assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegistered", err.Error())
+	assert.Equal(t, "adapter-not-registered-for-device-type noAdapterRegistered", err.Error())
 
 	//Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
@@ -823,7 +824,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *NBIHandler
 
 	// Update the OLT Connection Status to REACHABLE and operation status to ACTIVE
 	// Normally, in a real adapter this happens after connection regain via a heartbeat mechanism with real hardware
-	err = nbi.deviceMgr.UpdateDeviceStatus(getContext(), oltDevice.Id, voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
+	err = nbi.UpdateDeviceStatus(getContext(), oltDevice.Id, voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
 	assert.Nil(t, err)
 
 	// Verify the device connection and operation states
@@ -874,7 +875,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *NBIHandler) {
 	request = &voltha.OmciTestRequest{Id: deviceNoAdapter.Id, Uuid: "456"}
 	_, err = nbi.StartOmciTestAction(getContext(), request)
 	assert.NotNil(t, err)
-	assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegisteredOmciTest", err.Error())
+	assert.Equal(t, "adapter-not-registered-for-device-type noAdapterRegisteredOmciTest", err.Error())
 
 	//Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: deviceNoAdapter.Id})
@@ -1114,7 +1115,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
-	for event := range nbi.changeEventQueue {
+	for event := range nbi.GetChangeEventsQueueForTest() {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
@@ -1175,7 +1176,7 @@ func TestSuite1(t *testing.T) {
 	nb.startCore(false)
 
 	// Set the grpc API interface - no grpc server is running in unit test
-	nbi := NewAPIHandler(nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr)
+	nbi := NewNBIHandler(nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr, event.New())
 
 	// 1. Basic test with no data in Core
 	nb.testCoreWithoutData(t, nbi)
