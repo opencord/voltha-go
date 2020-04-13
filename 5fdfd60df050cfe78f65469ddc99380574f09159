@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "466d0f37_c21def8c",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-13T16:40:43Z",
+      "side": 1,
+      "message": "what if two different adapter tries to register with the same ID (eg: different adapter vendors?)",
+      "range": {
+        "startLine": 348,
+        "startChar": 1,
+        "endLine": 357,
+        "endChar": 2
+      },
+      "revId": "5fdfd60df050cfe78f65469ddc99380574f09159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7baa0d7_a2207b9a",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-13T16:40:43Z",
+      "side": 1,
+      "message": "this should return the Adapter.Type",
+      "range": {
+        "startLine": 380,
+        "startChar": 28,
+        "endLine": 380,
+        "endChar": 42
+      },
+      "revId": "5fdfd60df050cfe78f65469ddc99380574f09159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9eac78e_2d4ab398",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 9
