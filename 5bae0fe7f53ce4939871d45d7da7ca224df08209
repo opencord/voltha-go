@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04ba0b2f_55dc08f9",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-04-13T19:31:33Z",
+      "side": 1,
+      "message": "please remove the commented lines.",
+      "revId": "5bae0fe7f53ce4939871d45d7da7ca224df08209",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "053dfa62_6b38a2f4",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-04-13T19:31:33Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "5bae0fe7f53ce4939871d45d7da7ca224df08209",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56ea69d2_6d50d2b0",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-04-13T19:31:33Z",
+      "side": 1,
+      "message": "it\u0027s better to log something here.",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 3
+      },
+      "revId": "5bae0fe7f53ce4939871d45d7da7ca224df08209",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
