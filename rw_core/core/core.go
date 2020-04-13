@@ -18,6 +18,7 @@ package core
 
 import (
 	"context"
+	"github.com/opencord/voltha-go/rw_core/core/event"
 	"sync"
 	"time"
 
@@ -45,6 +46,7 @@ type Core struct {
 	logicalDeviceMgr  *device.LogicalManager
 	grpcServer        *grpcserver.GrpcServer
 	grpcNBIAPIHandler *api.NBIHandler
+	eventMgr          *event.Manager
 	adapterMgr        *adapter.Manager
 	config            *config.RWCoreFlags
 	kmp               kafka.InterContainerProxy
@@ -121,8 +123,9 @@ func (core *Core) Start(ctx context.Context) error {
 	core.initKafkaManager(ctx)
 
 	logger.Debugw("values", log.Fields{"kmp": core.kmp})
+	core.eventMgr = event.NewManager()
 	core.adapterMgr = adapter.NewAdapterManager(core.clusterDataProxy, core.instanceID, core.kafkaClient)
-	core.deviceMgr, core.logicalDeviceMgr = device.NewDeviceManagers(core.clusterDataProxy, core.adapterMgr, core.kmp, endpointMgr, core.config.CorePairTopic, core.instanceID, core.config.DefaultCoreTimeout)
+	core.deviceMgr, core.logicalDeviceMgr = device.NewManagers(core.clusterDataProxy, core.adapterMgr, core.eventMgr, core.kmp, endpointMgr, core.config.CorePairTopic, core.instanceID, core.config.DefaultCoreTimeout)
 
 	// Start the KafkaManager. This must be done after the deviceMgr, adapterMgr, and
 	// logicalDeviceMgr have been created, as once the kmp is started, it will register
@@ -172,9 +175,8 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
 	logger.Info("grpc-server-created")
 
-	core.grpcNBIAPIHandler = api.NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr)
+	core.grpcNBIAPIHandler = api.NewNBIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, core.eventMgr)
 	logger.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
-	core.logicalDeviceMgr.SetEventCallbacks(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
 		voltha.RegisterVolthaServiceServer(
