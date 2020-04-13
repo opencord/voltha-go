@@ -28,8 +28,8 @@ import (
 type DeviceManager struct {
 }
 
-// GetDevice -
-func (dm *DeviceManager) GetDevice(ctx context.Context, deviceID string) (*voltha.Device, error) {
+// getDevice -
+func (dm *DeviceManager) GetDevice(ctx context.Context, deviceID *voltha.ID) (*voltha.Device, error) {
 	return nil, nil
 }
 

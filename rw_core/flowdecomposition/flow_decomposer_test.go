@@ -102,8 +102,8 @@ func newTestDeviceManager() *testDeviceManager {
 	return &tdm
 }
 
-func (tdm *testDeviceManager) GetDevice(ctx context.Context, deviceID string) (*voltha.Device, error) {
-	if d, ok := tdm.devices[deviceID]; ok {
+func (tdm *testDeviceManager) GetDevice(ctx context.Context, deviceID *voltha.ID) (*voltha.Device, error) {
+	if d, ok := tdm.devices[deviceID.Id]; ok {
 		return d, nil
 	}
 	return nil, errors.New("ABSENT")
@@ -410,7 +410,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 }
 
 func (tfd *testFlowDecomposer) getDeviceHelper(ctx context.Context, deviceID string) (*voltha.Device, error) {
-	return tfd.dMgr.GetDevice(ctx, deviceID)
+	return tfd.dMgr.GetDevice(ctx, &voltha.ID{Id: deviceID})
 }
 
 func (tfd *testFlowDecomposer) GetDeviceLogicalID() string {
