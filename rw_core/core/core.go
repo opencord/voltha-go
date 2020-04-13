@@ -18,6 +18,7 @@ package core
 
 import (
 	"context"
+	"github.com/opencord/voltha-go/rw_core/core/event"
 	"sync"
 	"time"
 
@@ -172,7 +173,7 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
 	logger.Info("grpc-server-created")
 
-	core.grpcNBIAPIHandler = api.NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr)
+	core.grpcNBIAPIHandler = api.NewNBIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr, event.New())
 	logger.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
 	core.logicalDeviceMgr.SetEventCallbacks(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server

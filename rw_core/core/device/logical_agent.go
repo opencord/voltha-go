@@ -374,7 +374,7 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 	var err error
 
 	var device *voltha.Device
-	if device, err = agent.deviceMgr.GetDevice(ctx, deviceID); err != nil {
+	if device, err = agent.deviceMgr.getDevice(ctx, deviceID); err != nil {
 		logger.Errorw("error-retrieving-device", log.Fields{"error": err, "deviceId": deviceID})
 		return err
 	}
@@ -1601,7 +1601,7 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 	defer agent.requestQueue.RequestComplete()
 
 	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.GetDevice)
+		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	// Get all the logical ports on that logical device
 	lDevice := agent.getLogicalDeviceWithoutLock()
@@ -1625,7 +1625,7 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, lp *voltha.LogicalP
 	defer agent.requestQueue.RequestComplete()
 
 	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.GetDevice)
+		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	if err := agent.deviceRoutes.AddPort(ctx, lp, agent.logicalDevice.Ports); err != nil {
 		return err
