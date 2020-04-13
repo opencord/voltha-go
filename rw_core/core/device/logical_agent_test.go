@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/event"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"math/rand"
 	"sync"
@@ -481,10 +482,10 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewProxy(backend, "/")
+	eventMgr := event.New()
 	adapterMgr := adapter.NewAdapterManager(proxy, lda.coreInstanceID, lda.kClient)
 
-	lda.deviceMgr, lda.logicalDeviceMgr = NewDeviceManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
-	lda.logicalDeviceMgr.SetEventCallbacks(fakeEventCallbacks{})
+	lda.deviceMgr, lda.logicalDeviceMgr = NewDeviceManagers(proxy, adapterMgr, eventMgr, lda.kmp, endpointMgr, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
 	if err = lda.kmp.Start(); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}

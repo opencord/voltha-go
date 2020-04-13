@@ -115,10 +115,10 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 			}
 		}
 	}
-	logger.Debugw("GetDevice", log.Fields{"deviceID": pID.Id, "transactionID": transactionID.Val})
+	logger.Debugw("getDevice", log.Fields{"deviceID": pID.Id, "transactionID": transactionID.Val})
 
 	// Get the device via the device manager
-	device, err := rhp.deviceMgr.GetDevice(context.TODO(), pID.Id)
+	device, err := rhp.deviceMgr.GetDevice(context.TODO(), pID)
 	if err != nil {
 		logger.Debugw("get-device-failed", log.Fields{"deviceID": pID.Id, "error": err})
 	}

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-// Package grpc Common Logger initialization
-package grpc
+// Package core Common Logger initialization
+package event
 
 import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -26,7 +26,7 @@ var logger log.Logger
 func init() {
 	// Setup this package so that it's log level can be modified at run time
 	var err error
-	logger, err = log.AddPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "grpc"})
+	logger, err = log.AddPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "queue"})
 	if err != nil {
 		panic(err)
 	}
