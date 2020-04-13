@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1ad64f62_be02dd2f",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-13T17:10:28Z",
+      "side": 1,
+      "message": "Should probably be fixed in a separate patch.\n\nI created VOL-2921 to track this issue.",
+      "parentUuid": "87ca3a25_6d771278",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "960094c9_88fed0f1",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2020-04-09T20:09:52Z",
       "side": 1,
       "message": "Is this a good go practice where a New on a struct returns two different Structs?",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "382e33e2_8308e7e8",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-13T17:10:28Z",
+      "side": 1,
+      "message": "It\u0027s arguable whether these structs should be returned together.\n\nHowever, device.Manager and device.LogicalManager are heavily inter-connected, and must refer to each other.  They could/should arguably be merged into a single implementation.\n\nCreating both managers together seemed like the cleanest solution, at least for now.",
+      "parentUuid": "960094c9_88fed0f1",
       "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "173df500_77fc4924",
+        "filename": "rw_core/core/nbi/adapter_request_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-13T17:10:28Z",
+      "side": 1,
+      "message": "Good catch!  This explains the test failures.\n\n(This is a case of too-powerful find-and-replace.  ;)",
+      "parentUuid": "4f389a47_a869f66d",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e0c6e22_06995fc4",
         "filename": "rw_core/core/nbi/common.go",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2020-04-09T20:09:52Z",
       "side": 1,
       "message": "Since you are combining the north bound and south bound  interfaces together, should this package actually be named something other than nbi. eg. api?",
+      "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d72b6da7_a34ea9e2",
+        "filename": "rw_core/core/nbi/common.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-13T17:10:28Z",
+      "side": 1,
+      "message": "Changed to api.",
+      "parentUuid": "1e0c6e22_06995fc4",
       "revId": "3a151dd0eb705f81a28274e5977871318df582c3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
