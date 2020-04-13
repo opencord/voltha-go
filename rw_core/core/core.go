@@ -122,7 +122,7 @@ func (core *Core) Start(ctx context.Context) error {
 
 	logger.Debugw("values", log.Fields{"kmp": core.kmp})
 	core.adapterMgr = adapter.NewAdapterManager(core.clusterDataProxy, core.instanceID, core.kafkaClient)
-	core.deviceMgr, core.logicalDeviceMgr = device.NewDeviceManagers(core.clusterDataProxy, core.adapterMgr, core.kmp, endpointMgr, core.config.CorePairTopic, core.instanceID, core.config.DefaultCoreTimeout)
+	core.deviceMgr, core.logicalDeviceMgr = device.NewManagers(core.clusterDataProxy, core.adapterMgr, core.kmp, endpointMgr, core.config.CorePairTopic, core.instanceID, core.config.DefaultCoreTimeout)
 
 	// Start the KafkaManager. This must be done after the deviceMgr, adapterMgr, and
 	// logicalDeviceMgr have been created, as once the kmp is started, it will register
@@ -172,9 +172,8 @@ func (core *Core) startGRPCService(ctx context.Context) {
 	core.grpcServer = grpcserver.NewGrpcServer(core.config.GrpcHost, core.config.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
 	logger.Info("grpc-server-created")
 
-	core.grpcNBIAPIHandler = api.NewAPIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr)
+	core.grpcNBIAPIHandler = api.NewNBIHandler(core.deviceMgr, core.logicalDeviceMgr, core.adapterMgr)
 	logger.Infow("grpc-handler", log.Fields{"core_binding_key": core.config.CoreBindingKey})
-	core.logicalDeviceMgr.SetEventCallbacks(core.grpcNBIAPIHandler)
 	//	Create a function to register the core GRPC service with the GRPC server
 	f := func(gs *grpc.Server) {
 		voltha.RegisterVolthaServiceServer(

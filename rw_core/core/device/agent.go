@@ -389,8 +389,8 @@ func (agent *Agent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*
 	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceWithoutLock()
-	dType := agent.adapterMgr.GetDeviceType(device.Type)
-	if dType == nil {
+	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
+	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
@@ -479,8 +479,8 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceWithoutLock()
-	dType := agent.adapterMgr.GetDeviceType(device.Type)
-	if dType == nil {
+	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
+	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
@@ -621,8 +621,8 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states")
 	}
-	dType := agent.adapterMgr.GetDeviceType(device.Type)
-	if dType == nil {
+	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
+	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
@@ -1165,7 +1165,7 @@ func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*v
 func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
 	logger.Debugw("getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
 	ports := &voltha.Ports{}
-	if device, _ := agent.deviceMgr.GetDevice(ctx, agent.deviceID); device != nil {
+	if device, _ := agent.deviceMgr.getDevice(ctx, agent.deviceID); device != nil {
 		for _, port := range device.Ports {
 			if port.Type == portType {
 				ports.Items = append(ports.Items, port)
@@ -1503,7 +1503,7 @@ func (agent *Agent) updateDeviceAttribute(ctx context.Context, name string, valu
 	}
 }
 
-func (agent *Agent) simulateAlarm(ctx context.Context, simulatereq *voltha.SimulateAlarmRequest) error {
+func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.SimulateAlarmRequest) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -1513,7 +1513,7 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulatereq *voltha.Simul
 	cloned := agent.getDeviceWithoutLock()
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.SimulateAlarm(subCtx, cloned, simulatereq)
+	ch, err := agent.adapterProxy.SimulateAlarm(subCtx, cloned, simulateReq)
 	if err != nil {
 		cancel()
 		return err

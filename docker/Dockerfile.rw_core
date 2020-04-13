@@ -24,7 +24,6 @@ RUN apk add --no-cache build-base=0.5-r1
 WORKDIR /go/src
 
 # Copy common files.
-COPY common ./common
 COPY db ./db
 COPY vendor ./vendor
 

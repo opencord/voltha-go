@@ -1,18 +1,19 @@
 /*
-* Copyright 2019-present Open Networking Foundation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
+ * Copyright 2019-present Open Networking Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package api
 
 import (
@@ -125,7 +126,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewProxy(backend, "/")
 	nb.adapterMgr = adapter.NewAdapterManager(proxy, nb.coreInstanceID, nb.kClient)
-	nb.deviceMgr, nb.logicalDeviceMgr = device.NewDeviceManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
+	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
 	if err = nb.adapterMgr.Start(ctx); err != nil {
 		logger.Fatalf("Cannot start adapterMgr: %s", err)
 	}
@@ -396,7 +397,7 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *NBIHandler) {
 	// Try to create the same device
 	_, err = nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
 	assert.NotNil(t, err)
-	assert.Equal(t, "Device is already pre-provisioned", err.Error())
+	assert.Equal(t, "device is already pre-provisioned", err.Error())
 
 	// Try to create a device with invalid data
 	_, err = nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName})
@@ -431,7 +432,7 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *NBIHandler) {
 	// Try to enable the oltDevice and check the error message
 	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
 	assert.NotNil(t, err)
-	assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegistered", err.Error())
+	assert.Equal(t, "adapter-not-registered-for-device-type noAdapterRegistered", err.Error())
 
 	//Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
@@ -833,7 +834,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi *NBIHandler
 
 	// Update the OLT Connection Status to REACHABLE and operation status to ACTIVE
 	// Normally, in a real adapter this happens after connection regain via a heartbeat mechanism with real hardware
-	err = nbi.deviceMgr.UpdateDeviceStatus(getContext(), oltDevice.Id, voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
+	err = nbi.UpdateDeviceStatus(getContext(), oltDevice.Id, voltha.OperStatus_ACTIVE, voltha.ConnectStatus_REACHABLE)
 	assert.Nil(t, err)
 
 	// Verify the device connection and operation states
@@ -884,7 +885,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *NBIHandler) {
 	request = &voltha.OmciTestRequest{Id: deviceNoAdapter.Id, Uuid: "456"}
 	_, err = nbi.StartOmciTestAction(getContext(), request)
 	assert.NotNil(t, err)
-	assert.Equal(t, "Adapter-not-registered-for-device-type noAdapterRegisteredOmciTest", err.Error())
+	assert.Equal(t, "adapter-not-registered-for-device-type noAdapterRegisteredOmciTest", err.Error())
 
 	//Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: deviceNoAdapter.Id})
@@ -1064,7 +1065,6 @@ func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *NBIHandler, logicalDeviceID st
 
 func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup) {
 	defer wg.Done()
-	nb.logicalDeviceMgr.SetEventCallbacks(nbi)
 
 	// Clear any existing flows on the adapters
 	nb.oltAdapter.ClearFlows()
@@ -1124,7 +1124,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
-	for event := range nbi.changeEventQueue {
+	for event := range nbi.GetChangeEventsQueueForTest() {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
@@ -1185,7 +1185,7 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 	nb.startCore(false)
 
 	// Set the grpc API interface - no grpc server is running in unit test
-	nbi := NewAPIHandler(nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr)
+	nbi := NewNBIHandler(nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr)
 
 	// 1. Basic test with no data in Core
 	nb.testCoreWithoutData(t, nbi)
