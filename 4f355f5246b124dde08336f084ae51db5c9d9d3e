@@ -34,6 +34,24 @@
       "revId": "4f355f5246b124dde08336f084ae51db5c9d9d3e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76673c63_1c04fbce",
+        "filename": "rw_core/core/device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-13T20:14:15Z",
+      "side": 0,
+      "message": "They are actually different checks.\n\nFor sure there were adapters before that supported only bulk flows (tibit?).   We can keep this option just in case.",
+      "parentUuid": "726be2de_4d89d51b",
+      "revId": "4f355f5246b124dde08336f084ae51db5c9d9d3e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
