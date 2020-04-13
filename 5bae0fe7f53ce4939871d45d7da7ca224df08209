@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9a1b2a3c_e1164078",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-13T19:48:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "04ba0b2f_55dc08f9",
+      "revId": "5bae0fe7f53ce4939871d45d7da7ca224df08209",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "053dfa62_6b38a2f4",
         "filename": "rw_core/core/adapter_manager.go",
         "patchSetId": 21
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "bb796ae6_4258a82a",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-13T19:48:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "053dfa62_6b38a2f4",
+      "revId": "5bae0fe7f53ce4939871d45d7da7ca224df08209",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56ea69d2_6d50d2b0",
         "filename": "rw_core/core/adapter_manager.go",
         "patchSetId": 21
@@ -47,6 +83,30 @@
       "writtenOn": "2020-04-13T19:31:33Z",
       "side": 1,
       "message": "it\u0027s better to log something here.",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 3
+      },
+      "revId": "5bae0fe7f53ce4939871d45d7da7ca224df08209",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29268990_6c957cae",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-13T19:48:57Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s an error if there are no adapters in memory, that will happen anytime you bring up rw-core on a clean ETCD before the apaters connect",
+      "parentUuid": "56ea69d2_6d50d2b0",
       "range": {
         "startLine": 136,
         "startChar": 2,
