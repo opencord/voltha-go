@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f3bcf77_0a881f4d",
+        "filename": "rw_core/core/adapter_manager.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-04-13T19:31:33Z",
+      "side": 1,
+      "message": "better to log else case as a warning.",
+      "revId": "8d0349e14aa094e0a64e07faad78b0e099f7b255",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
