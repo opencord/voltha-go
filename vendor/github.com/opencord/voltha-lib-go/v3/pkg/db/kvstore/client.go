@@ -15,11 +15,14 @@
  */
 package kvstore
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 const (
 	// Default timeout in seconds when making a kvstore request
-	defaultKVGetTimeout = 5
+	defaultKVGetTimeout = 5 * time.Second
 	// Maximum channel buffer between publisher/subscriber goroutines
 	maxClientChannelBufferSize = 10
 )
@@ -77,12 +80,12 @@ type Client interface {
 	Get(ctx context.Context, key string) (*KVPair, error)
 	Put(ctx context.Context, key string, value interface{}) error
 	Delete(ctx context.Context, key string) error
-	Reserve(ctx context.Context, key string, value interface{}, ttl int64) (interface{}, error)
+	Reserve(ctx context.Context, key string, value interface{}, ttl time.Duration) (interface{}, error)
 	ReleaseReservation(ctx context.Context, key string) error
 	ReleaseAllReservations(ctx context.Context) error
 	RenewReservation(ctx context.Context, key string) error
 	Watch(ctx context.Context, key string, withPrefix bool) chan *Event
-	AcquireLock(ctx context.Context, lockName string, timeout int) error
+	AcquireLock(ctx context.Context, lockName string, timeout time.Duration) error
 	ReleaseLock(lockName string) error
 	IsConnectionUp(ctx context.Context) bool // timeout in second
 	CloseWatch(key string, ch chan *Event)

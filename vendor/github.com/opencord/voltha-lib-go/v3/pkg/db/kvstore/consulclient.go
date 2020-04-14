@@ -44,13 +44,11 @@ type ConsulClient struct {
 }
 
 // NewConsulClient returns a new client for the Consul KV store
-func NewConsulClient(addr string, timeout int) (*ConsulClient, error) {
-
-	duration := GetDuration(timeout)
+func NewConsulClient(addr string, timeout time.Duration) (*ConsulClient, error) {
 
 	config := consulapi.DefaultConfig()
 	config.Address = addr
-	config.WaitTime = duration
+	config.WaitTime = timeout
 	consul, err := consulapi.NewClient(config)
 	if err != nil {
 		logger.Error(err)
@@ -76,7 +74,9 @@ func (c *ConsulClient) List(ctx context.Context, key string) (map[string]*KVPair
 	deadline, _ := ctx.Deadline()
 	kv := c.consul.KV()
 	var queryOptions consulapi.QueryOptions
-	queryOptions.WaitTime = GetDuration(deadline.Second())
+	// Substract current time from deadline to get the waitTime duration
+	queryOptions.WaitTime = time.Until(deadline)
+
 	// For now we ignore meta data
 	kvps, _, err := kv.List(key, &queryOptions)
 	if err != nil {
@@ -97,7 +97,9 @@ func (c *ConsulClient) Get(ctx context.Context, key string) (*KVPair, error) {
 	deadline, _ := ctx.Deadline()
 	kv := c.consul.KV()
 	var queryOptions consulapi.QueryOptions
-	queryOptions.WaitTime = GetDuration(deadline.Second())
+	// Substract current time from deadline to get the waitTime duration
+	queryOptions.WaitTime = time.Until(deadline)
+
 	// For now we ignore meta data
 	kvp, _, err := kv.Get(key, &queryOptions)
 	if err != nil {
@@ -166,11 +168,11 @@ func (c *ConsulClient) deleteSession() {
 	c.session = nil
 }
 
-func (c *ConsulClient) createSession(ttl int64, retries int) (*consulapi.Session, string, error) {
+func (c *ConsulClient) createSession(ttl time.Duration, retries int) (*consulapi.Session, string, error) {
 	session := c.consul.Session()
 	entry := &consulapi.SessionEntry{
 		Behavior: consulapi.SessionBehaviorDelete,
-		TTL:      "10s", // strconv.FormatInt(ttl, 10) + "s", // disable ttl
+		TTL:      ttl.String(),
 	}
 
 	for {
@@ -218,7 +220,7 @@ func isEqual(val1 interface{}, val2 interface{}) bool {
 // defines how long that reservation is valid.  When TTL expires the key is unreserved by the KV store itself.
 // If the key is acquired then the value returned will be the value passed in.  If the key is already acquired
 // then the value assigned to that key will be returned.
-func (c *ConsulClient) Reserve(ctx context.Context, key string, value interface{}, ttl int64) (interface{}, error) {
+func (c *ConsulClient) Reserve(ctx context.Context, key string, value interface{}, ttl time.Duration) (interface{}, error) {
 
 	// Validate that we can create a byte array from the value as consul API expects a byte array
 	var val []byte
@@ -432,10 +434,9 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 	logger.Debugw("start-watching-channel", log.Fields{"key": key, "channel": ch})
 
 	defer c.CloseWatch(key, ch)
-	duration := GetDuration(defaultKVGetTimeout)
 	kv := c.consul.KV()
 	var queryOptions consulapi.QueryOptions
-	queryOptions.WaitTime = duration
+	queryOptions.WaitTime = defaultKVGetTimeout
 
 	// Get the existing value, if any
 	previousKVPair, meta, err := kv.Get(key, &queryOptions)
@@ -503,7 +504,7 @@ func (c *ConsulClient) Close() {
 	}
 }
 
-func (c *ConsulClient) AcquireLock(ctx context.Context, lockName string, timeout int) error {
+func (c *ConsulClient) AcquireLock(ctx context.Context, lockName string, timeout time.Duration) error {
 	return nil
 }
 
