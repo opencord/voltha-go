@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d22d6f8_8ed3de0b",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-14T14:58:01Z",
+      "side": 1,
+      "message": "This check \u0026 early return is unnecessary.  The for loops below simply won\u0027t execute if these are all empty.",
+      "revId": "5959bff4d3fc036414264cf7887e6e277b73e05a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
