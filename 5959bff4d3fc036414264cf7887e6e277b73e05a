@@ -16,6 +16,24 @@
       "revId": "5959bff4d3fc036414264cf7887e6e277b73e05a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4725cca9_542ea0ea",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-04-14T16:05:29Z",
+      "side": 1,
+      "message": "Right, but I didn\u0027t intend to make  changes to logic with this patch. If nobody writes comments against removing this, I can remove.",
+      "parentUuid": "4d22d6f8_8ed3de0b",
+      "revId": "5959bff4d3fc036414264cf7887e6e277b73e05a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
