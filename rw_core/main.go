@@ -50,7 +50,7 @@ type rwCore struct {
 	receiverChannels []<-chan *ic.InterContainerMessage
 }
 
-func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
+func newKVClient(storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
 
 	logger.Infow("kv-store-type", log.Fields{"store": storeType})
 	switch storeType {
