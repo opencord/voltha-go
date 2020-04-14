@@ -33,7 +33,7 @@ const (
 	defaultKafkaClusterHost          = "127.0.0.1"
 	defaultKafkaClusterPort          = 9094
 	defaultKVStoreType               = EtcdStoreName
-	defaultKVStoreTimeout            = 5 //in seconds
+	defaultKVStoreTimeout            = 5 * time.Second
 	defaultKVStoreHost               = "127.0.0.1"
 	defaultKVStorePort               = 2379 // Consul = 8500; Etcd = 2379
 	defaultKVTxnKeyDelTime           = 60
@@ -72,7 +72,7 @@ type RWCoreFlags struct {
 	KafkaClusterHost          string
 	KafkaClusterPort          int
 	KVStoreType               string
-	KVStoreTimeout            int // in seconds
+	KVStoreTimeout            time.Duration
 	KVStoreHost               string
 	KVStorePort               int
 	KVTxnKeyDelTime           int
@@ -176,7 +176,7 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	flag.StringVar(&(cf.KVStoreType), "kv_store_type", defaultKVStoreType, help)
 
 	help = fmt.Sprintf("The default timeout when making a kv store request")
-	flag.IntVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", defaultKVStoreTimeout, help)
+	flag.DurationVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", defaultKVStoreTimeout, help)
 
 	help = fmt.Sprintf("KV store host")
 	flag.StringVar(&(cf.KVStoreHost), "kv_store_host", defaultKVStoreHost, help)
@@ -194,18 +194,13 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	flag.StringVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
 
 	help = fmt.Sprintf("Timeout for long running request")
-	// TODO:  Change this code once all the params and helm charts have been changed to use the different type
-	var temp int64
-	flag.Int64Var(&temp, "timeout_long_request", defaultLongRunningRequestTimeout.Milliseconds(), help)
-	cf.LongRunningRequestTimeout = time.Duration(temp) * time.Millisecond
+	flag.DurationVar(&(cf.LongRunningRequestTimeout), "timeout_long_request", defaultLongRunningRequestTimeout, help)
 
 	help = fmt.Sprintf("Default timeout for regular request")
-	flag.Int64Var(&temp, "timeout_request", defaultDefaultRequestTimeout.Milliseconds(), help)
-	cf.DefaultRequestTimeout = time.Duration(temp) * time.Millisecond
+	flag.DurationVar(&(cf.DefaultRequestTimeout), "timeout_request", defaultDefaultRequestTimeout, help)
 
 	help = fmt.Sprintf("Default Core timeout")
-	flag.Int64Var(&temp, "core_timeout", defaultCoreTimeout.Milliseconds(), help)
-	cf.DefaultCoreTimeout = time.Duration(temp) * time.Millisecond
+	flag.DurationVar(&(cf.DefaultCoreTimeout), "core_timeout", defaultCoreTimeout, help)
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&cf.Banner, "banner", defaultBanner, help)
