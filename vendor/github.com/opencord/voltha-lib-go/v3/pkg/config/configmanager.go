@@ -22,6 +22,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"strings"
+	"time"
 )
 
 const (
@@ -92,7 +93,7 @@ type ComponentConfig struct {
 	kvStoreEventChan chan *kvstore.Event
 }
 
-func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreHost string, kvStorePort, kvStoreTimeout int) *ConfigManager {
+func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreHost string, kvStorePort int, kvStoreTimeout time.Duration) *ConfigManager {
 
 	return &ConfigManager{
 		KvStoreConfigPrefix: defaultkvStoreConfigPath,

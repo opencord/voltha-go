@@ -29,7 +29,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func newKVClient(storeType string, address string, timeout int) (kvstore.Client, error) {
+func newKVClient(storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
 	logger.Infow("kv-store-type", log.Fields{"store": storeType})
 	switch storeType {
 	case "consul":

@@ -552,7 +552,9 @@ func (l logger) Debugf(format string, args ...interface{}) {
 // Debugw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func (l logger) Debugw(msg string, keysAndValues Fields) {
-	l.log.Debugw(msg, serializeMap(keysAndValues)...)
+	if l.V(DebugLevel) {
+		l.log.Debugw(msg, serializeMap(keysAndValues)...)
+	}
 }
 
 // Info logs a message at level Info on the standard logger.
@@ -575,7 +577,9 @@ func (l logger) Infof(format string, args ...interface{}) {
 // Infow logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func (l logger) Infow(msg string, keysAndValues Fields) {
-	l.log.Infow(msg, serializeMap(keysAndValues)...)
+	if l.V(InfoLevel) {
+		l.log.Infow(msg, serializeMap(keysAndValues)...)
+	}
 }
 
 // Warn logs a message at level Warn on the standard logger.
@@ -596,7 +600,9 @@ func (l logger) Warnf(format string, args ...interface{}) {
 // Warnw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func (l logger) Warnw(msg string, keysAndValues Fields) {
-	l.log.Warnw(msg, serializeMap(keysAndValues)...)
+	if l.V(WarnLevel) {
+		l.log.Warnw(msg, serializeMap(keysAndValues)...)
+	}
 }
 
 // Error logs a message at level Error on the standard logger.
@@ -617,7 +623,9 @@ func (l logger) Errorf(format string, args ...interface{}) {
 // Errorw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func (l logger) Errorw(msg string, keysAndValues Fields) {
-	l.log.Errorw(msg, serializeMap(keysAndValues)...)
+	if l.V(ErrorLevel) {
+		l.log.Errorw(msg, serializeMap(keysAndValues)...)
+	}
 }
 
 // Fatal logs a message at level Fatal on the standard logger.
@@ -638,7 +646,9 @@ func (l logger) Fatalf(format string, args ...interface{}) {
 // Fatalw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
 func (l logger) Fatalw(msg string, keysAndValues Fields) {
-	l.log.Fatalw(msg, serializeMap(keysAndValues)...)
+	if l.V(FatalLevel) {
+		l.log.Fatalw(msg, serializeMap(keysAndValues)...)
+	}
 }
 
 // Warning logs a message at level Warn on the standard logger.
