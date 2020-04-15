@@ -706,21 +706,22 @@ func (agent *DeviceAgent) updateFlowsAndGroups(ctx context.Context, updatedFlows
 }
 
 //deleteAllFlows deletes all flows in the device table
-func (agent *DeviceAgent) deleteAllFlows(ctx context.Context) error {
+func (agent *DeviceAgent) deleteAllFlows(ctx context.Context) (*ofp.Flows, error) {
 	logger.Debugw("deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
+		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceWithoutLock()
+	removedFlows := device.Flows
 	// purge all flows on the device by setting it to nil
 	device.Flows = &ofp.Flows{Items: nil}
 	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
 		// The caller logs the error
-		return err
+		return nil, err
 	}
-	return nil
+	return removedFlows, nil
 }
 
 //disableDevice disable a device

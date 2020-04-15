@@ -1287,11 +1287,42 @@ func (dMgr *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, parentDevi
 
 //DeleteAllDeviceFlows is invoked as a callback when the parent device's connection status moves to UNREACHABLE
 func (dMgr *DeviceManager) DeleteAllDeviceFlows(ctx context.Context, parentDevice *voltha.Device) error {
-	logger.Debugw("delete-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
+	logger.Infow("delete-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
 	if agent := dMgr.getDeviceAgent(ctx, parentDevice.Id); agent != nil {
-		if err := agent.deleteAllFlows(ctx); err != nil {
+		deletedDeviceFlows, err := agent.deleteAllFlows(ctx)
+		if err != nil {
 			logger.Errorw("error-deleting-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
 			return err
+		}
+		ldID, err := dMgr.logicalDeviceMgr.getLogicalDeviceIDFromDeviceID(ctx, parentDevice.Id)
+		if err != nil {
+			return err
+		}
+
+		//flowsToDelete :=  make([]*ofp.OfpFlowStats, 0)
+
+		if agent := dMgr.logicalDeviceMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
+			logicalDevice := agent.getLogicalDeviceWithoutLock()
+			lFlowsToKeep := &ofp.Flows{
+				Items: logicalDevice.Flows.Items,
+			}
+			logger.Infow("logicalDevice", log.Fields{"logicalDevice": logicalDevice})
+			logger.Infow("flows", log.Fields{"logicalFlow": logicalDevice.Flows.Items, "flowstoDelete": deletedDeviceFlows})
+			for _, logicalFlow := range logicalDevice.Flows.Items {
+				for i, deletedFlow := range deletedDeviceFlows.Items {
+					logger.Infow("cookies", log.Fields{"logicalFlow": logicalFlow.Cookie, "deviceFlow": deletedFlow.Cookie})
+					if logicalFlow.Cookie == deletedFlow.Cookie {
+						logger.Infow("deleting flow", log.Fields{"logicalFlow": logicalFlow.Cookie})
+						lFlowsToKeep.Items = append(lFlowsToKeep.Items[:i], lFlowsToKeep.Items[i+1:]...)
+						//flowsToDelete := append(flowsToDelete, logicalFlow)
+					}
+				}
+			}
+			logger.Infow("flowsToKeep", log.Fields{"flowstokeep": lFlowsToKeep})
+			if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, lFlowsToKeep); err != nil {
+				logger.Errorw("logical-device-update-failed", log.Fields{"logical-device-id": agent.logicalDeviceID})
+				return err
+			}
 		}
 		return nil
 	}

@@ -161,13 +161,13 @@ func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
 			deviceType:    child,
 			previousState: DeviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_DELETED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
+			handlers:      []TransitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteAllDeviceFlows, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    child,
 			previousState: DeviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  DeviceState{Admin: voltha.AdminState_DELETED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
+			handlers:      []TransitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteAllDeviceFlows, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		Transition{
 			deviceType:    any,
