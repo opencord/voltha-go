@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cfdf896_39c1e2be",
+        "filename": "rw_core/core/logical_device_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-16T16:02:21Z",
+      "side": 1,
+      "message": "Might as well remove this if statement.",
+      "revId": "9df9a556ac817ff200772cccd24ee71ca637f282",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
