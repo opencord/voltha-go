@@ -18,6 +18,7 @@ package flowdecomposition
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-go/rw_core/route"
@@ -468,17 +469,16 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.Logica
 	deviceRules := fu.NewDeviceRules()
 	path, err := agent.GetRoute(ctx, inPortNo, outPortNo)
 	if err != nil {
-		logger.Errorw("no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "error": err})
 		return deviceRules, err
 	}
 
 	switch len(path) {
 	case 0:
-		return deviceRules, status.Errorf(codes.FailedPrecondition, "no route from:%d to:%d", inPortNo, outPortNo)
+		return deviceRules, fmt.Errorf("no route from:%d to:%d :%w", inPortNo, outPortNo, route.ErrNoRoute)
 	case 2:
 		logger.Debugw("route-found", log.Fields{"ingressHop": path[0], "egressHop": path[1]})
 	default:
-		return deviceRules, status.Errorf(codes.Aborted, "invalid route length %d", len(path))
+		return deviceRules, fmt.Errorf("invalid route length %d :%w", len(path), route.ErrNoRoute)
 	}
 
 	// Process controller bound flow
@@ -491,7 +491,9 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.Logica
 		var ingressDevice *voltha.Device
 		var err error
 		if ingressDevice, err = fd.deviceMgr.GetDevice(ctx, path[0].DeviceID); err != nil {
-			return deviceRules, err
+			// This can happen in a race condition where a device is deleted right after we obtain a
+			// route involving the device (GetRoute() above).  Handle it as a no route event as well.
+			return deviceRules, fmt.Errorf("get-device-error :%v :%w", err, route.ErrNoRoute)
 		}
 		isUpstream := !ingressDevice.Root
 		if isUpstream { // Unicast OLT and ONU UL

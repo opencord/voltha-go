@@ -563,7 +563,10 @@ func (agent *LogicalAgent) generateDeviceRoutesIfNeeded(ctx context.Context) err
 	}
 	logger.Debug("Generation of device route required")
 	if err := agent.buildRoutes(ctx); err != nil {
-		return err
+		// No Route is not an error
+		if !errors.Is(err, route.ErrNoRoute) {
+			return err
+		}
 	}
 	return nil
 }
@@ -1023,19 +1026,32 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 			logger.Error("Meter-referred-in-flows-not-present")
 			return errors.New("Meter-referred-in-flows-not-present")
 		}
+
+		var respChnls []coreutils.Response
+		var partialRoute bool
 		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: toDelete}, ofp.FlowGroups{Items: flowGroups})
 		if err != nil {
-			return err
+			// A no route error means no route exists between the ports specified in the flow. This can happen when the
+			// child device is deleted and a request to delete flows from the parent device is received
+			if !errors.Is(err, route.ErrNoRoute) {
+				logger.Errorw("unexpected-error-received", log.Fields{"flows-to-delete": toDelete, "error": err})
+				return err
+			}
+			partialRoute = true
 		}
-		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
+		// Update the dB
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: toKeep}); err != nil {
 			logger.Errorw("cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 
 		// Update the devices
-		respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
+		if partialRoute {
+			respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: toDelete}, &flowMetadata)
+		} else {
+			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
+		}
 
 		// Wait for the responses
 		go func() {
@@ -1083,7 +1099,7 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
 			if err := agent.deviceMgr.deleteFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Error("flow-delete-failed", log.Fields{"deviceID": deviceId, "error": err})
+				logger.Errorw("flow-delete-failed", log.Fields{"deviceID": deviceId, "error": err})
 				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s", deviceId))
 			}
 			response.Done()
@@ -1103,11 +1119,54 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
 			if err := agent.deviceMgr.updateFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Error("flow-update-failed", log.Fields{"deviceID": deviceId, "error": err})
+				logger.Errorw("flow-update-failed", log.Fields{"deviceID": deviceId, "error": err})
 				response.Error(status.Errorf(codes.Internal, "flow-update-failed: %s", deviceId))
 			}
 			response.Done()
 		}(deviceID, value)
+	}
+	return responses
+}
+
+// getUNILogicalPortNo returns the UNI logical port number specified in the flow
+func (agent *LogicalAgent) getUNILogicalPortNo(flow *ofp.OfpFlowStats) (uint32, error) {
+	var uniPort uint32
+	inPortNo := fu.GetInPort(flow)
+	outPortNo := fu.GetOutPort(flow)
+	if agent.isNNIPort(inPortNo) {
+		uniPort = outPortNo
+	} else if agent.isNNIPort(outPortNo) {
+		uniPort = inPortNo
+	}
+	if uniPort != 0 {
+		return uniPort, nil
+	}
+	return 0, status.Errorf(codes.NotFound, "no-uni-port: %v", flow)
+}
+
+func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flows ofp.Flows, metadata *voltha.FlowMetadata) []coreutils.Response {
+	logger.Debugw("deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "flows": flows})
+	responses := make([]coreutils.Response, 0)
+	for _, flow := range flows.Items {
+		response := coreutils.NewResponse()
+		responses = append(responses, response)
+		uniPort, err := agent.getUNILogicalPortNo(flow)
+		if err != nil {
+			logger.Error("no-uni-port-in-flow", log.Fields{"deviceID": agent.rootDeviceID, "flow": flow, "error": err})
+			response.Error(err)
+			response.Done()
+			continue
+		}
+		logger.Debugw("uni-port", log.Fields{"flows": flows, "uni-port": uniPort})
+		go func(uniPort uint32, metadata *voltha.FlowMetadata) {
+			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+			defer cancel()
+			if err := agent.deviceMgr.deleteParentFlows(ctx, agent.rootDeviceID, uniPort, metadata); err != nil {
+				logger.Error("flow-delete-failed", log.Fields{"device-id": agent.rootDeviceID, "error": err})
+				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s %v", agent.rootDeviceID, err))
+			}
+			response.Done()
+		}(uniPort, metadata)
 	}
 	return responses
 }
@@ -1172,19 +1231,31 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 			logger.Error("meter-referred-in-flows-not-present")
 			return err
 		}
+		var respChnls []coreutils.Response
+		var partialRoute bool
 		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: flowsToDelete}, ofp.FlowGroups{Items: flowGroups})
 		if err != nil {
-			return err
+			// A no route error means no route exists between the ports specified in the flow. This can happen when the
+			// child device is deleted and a request to delete flows from the parent device is received
+			if !errors.Is(err, route.ErrNoRoute) {
+				logger.Errorw("unexpected-error-received", log.Fields{"flows-to-delete": flowsToDelete, "error": err})
+				return err
+			}
+			partialRoute = true
 		}
-		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
+		// Update the dB
 		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}); err != nil {
 			logger.Errorw("cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 
 		// Update the devices
-		respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
+		if partialRoute {
+			respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: flowsToDelete}, &flowMetadata)
+		} else {
+			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
+		}
 
 		// Wait for completion
 		go func() {
@@ -1530,7 +1601,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 					return routes, nil
 				}
 			}
-			return nil, status.Errorf(codes.FailedPrecondition, "no upstream route from:%d to:%d", ingressPortNo, egressPortNo)
+			return nil, fmt.Errorf("no upstream route from:%d to:%d :%w", ingressPortNo, egressPortNo, route.ErrNoRoute)
 		}
 		//treat it as if the output port is the first NNI of the OLT
 		var err error
@@ -1552,7 +1623,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 				return routes, nil
 			}
 		}
-		return nil, status.Errorf(codes.FailedPrecondition, "no upstream route from:%d to:%d", ingressPortNo, egressPortNo)
+		return nil, fmt.Errorf("no upstream route from:%d to:%d :%w", ingressPortNo, egressPortNo, route.ErrNoRoute)
 	}
 	//If egress port is not specified (nil), we can also can return a "half" route
 	if egressPortNo == 0 {
@@ -1563,7 +1634,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 				return routes, nil
 			}
 		}
-		return nil, status.Errorf(codes.FailedPrecondition, "no downstream route from:%d to:%d", ingressPortNo, egressPortNo)
+		return nil, fmt.Errorf("no downstream route from:%d to:%d :%w", ingressPortNo, egressPortNo, route.ErrNoRoute)
 	}
 	//	Return the pre-calculated route
 	return agent.getPreCalculatedRoute(ingressPortNo, egressPortNo)

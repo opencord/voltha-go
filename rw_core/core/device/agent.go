@@ -574,6 +574,36 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 	return nil
 }
 
+//filterOutFlows removes flows from a device using the uni-port as filter
+func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMetadata *voltha.FlowMetadata) error {
+	device, err := agent.getDevice(ctx)
+	if err != nil {
+		return err
+	}
+	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
+	var flowsToDelete []*ofp.OfpFlowStats
+
+	// If an existing flow has the uniPort as an InPort or OutPort or as a Tunnel ID then it needs to be removed
+	for _, flow := range existingFlows.Items {
+		if fu.GetInPort(flow) == uniPort || fu.GetOutPort(flow) == uniPort || fu.GetTunnelId(flow) == uint64(uniPort) {
+			flowsToDelete = append(flowsToDelete, flow)
+		}
+	}
+	logger.Debugw("flows-to-delete", log.Fields{"device-id": agent.deviceID, "uni-port": uniPort, "flows": flowsToDelete})
+	if len(flowsToDelete) == 0 {
+		return nil
+	}
+
+	response, err := agent.deleteFlowsAndGroupsFromAdapter(ctx, flowsToDelete, []*ofp.OfpGroupEntry{}, flowMetadata)
+	if err != nil {
+		return err
+	}
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); res != nil {
+		return status.Errorf(codes.Aborted, "errors-%s", res)
+	}
+	return nil
+}
+
 func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw("updateFlowsAndGroups", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 
