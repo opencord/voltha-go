@@ -18,6 +18,7 @@ package route
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -25,6 +26,8 @@ import (
 	"google.golang.org/grpc/status"
 	"sync"
 )
+
+var ErrNoRoute = errors.New("no route")
 
 // Hop represent a route hop
 type Hop struct {
@@ -95,7 +98,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 	}()
 
 	if len(lps) < 2 {
-		return status.Error(codes.FailedPrecondition, "not-enough-logical-ports")
+		return fmt.Errorf("not enough logical port :%w", ErrNoRoute)
 	}
 
 	dr.reset()
@@ -112,8 +115,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 		}
 	}
 	if len(nniPorts) == 0 {
-		err = status.Error(codes.FailedPrecondition, "no nni port")
-		return err
+		return fmt.Errorf("no nni port :%w", ErrNoRoute)
 	}
 	var rootDevice *voltha.Device
 	var childDevice *voltha.Device

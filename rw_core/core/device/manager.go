@@ -764,6 +764,18 @@ func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flo
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
+// deleteParentFlows removes flows from the parent device based on  specific attributes
+func (dMgr *Manager) deleteParentFlows(ctx context.Context, deviceID string, uniPort uint32, metadata *voltha.FlowMetadata) error {
+	logger.Debugw("deleteParentFlows", log.Fields{"device-id": deviceID, "uni-port": uniPort, "metadata": metadata})
+	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
+		if !agent.isRootdevice {
+			return status.Errorf(codes.FailedPrecondition, "not-a-parent-device-%s", deviceID)
+		}
+		return agent.filterOutFlows(ctx, uniPort, metadata)
+	}
+	return status.Errorf(codes.NotFound, "%s", deviceID)
+}
+
 func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	logger.Debugw("deleteFlowsAndGroups", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
