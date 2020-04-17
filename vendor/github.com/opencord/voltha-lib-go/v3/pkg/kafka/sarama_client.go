@@ -27,6 +27,7 @@ import (
 	scc "github.com/bsm/sarama-cluster"
 	"github.com/eapache/go-resiliency/breaker"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
@@ -68,7 +69,7 @@ type SaramaClient struct {
 	numReplicas                   int
 	autoCreateTopic               bool
 	doneCh                        chan int
-	metadataCallback              func(fromTopic string, timestamp int64)
+	metadataCallback              func(fromTopic string, timestamp time.Time)
 	topicToConsumerChannelMap     map[string]*consumerChannels
 	lockTopicToConsumerChannelMap sync.RWMutex
 	topicLockMap                  map[string]*sync.RWMutex
@@ -461,7 +462,7 @@ func (sc *SaramaClient) UnSubscribe(topic *Topic, ch <-chan *ic.InterContainerMe
 	return err
 }
 
-func (sc *SaramaClient) SubscribeForMetadata(callback func(fromTopic string, timestamp int64)) {
+func (sc *SaramaClient) SubscribeForMetadata(callback func(fromTopic string, timestamp time.Time)) {
 	sc.metadataCallback = callback
 }
 
@@ -917,7 +918,8 @@ func (sc *SaramaClient) dispatchToConsumers(consumerCh *consumerChannels, protoM
 	sc.lockTopicToConsumerChannelMap.RUnlock()
 
 	if callback := sc.metadataCallback; callback != nil {
-		callback(protoMessage.Header.FromTopic, protoMessage.Header.Timestamp)
+		ts, _ := ptypes.Timestamp(protoMessage.Header.Timestamp)
+		callback(protoMessage.Header.FromTopic, ts)
 	}
 }
 

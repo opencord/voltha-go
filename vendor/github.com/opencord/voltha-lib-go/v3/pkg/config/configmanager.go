@@ -36,11 +36,12 @@ type ConfigType int
 
 const (
 	ConfigTypeLogLevel ConfigType = iota
+	ConfigTypeMetadata
 	ConfigTypeKafka
 )
 
 func (c ConfigType) String() string {
-	return [...]string{"loglevel", "kafka"}[c]
+	return [...]string{"loglevel", "metadata", "kafka"}[c]
 }
 
 // ChangeEvent represents the event recieved from watch

@@ -119,13 +119,13 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
 	return nil
 }
 
-func (aMgr *Manager) updateLastAdapterCommunication(adapterID string, timestamp int64) {
+func (aMgr *Manager) updateLastAdapterCommunication(adapterID string, timestamp time.Time) {
 	aMgr.lockAdaptersMap.RLock()
 	adapterAgent, have := aMgr.adapterAgents[adapterID]
 	aMgr.lockAdaptersMap.RUnlock()
 
 	if have {
-		adapterAgent.updateCommunicationTime(time.Unix(timestamp/1000, timestamp%1000*1000))
+		adapterAgent.updateCommunicationTime(timestamp)
 	}
 }
 

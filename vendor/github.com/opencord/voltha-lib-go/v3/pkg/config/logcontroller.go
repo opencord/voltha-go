@@ -28,13 +28,15 @@ import (
 	"errors"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"os"
+	"sort"
 	"strings"
 )
 
 const (
-	defaultLogLevelKey                = "default" // kvstore key containing default loglevel
-	globalConfigRootNode              = "global"  // Root Node in kvstore containing global config
-	initialGlobalDefaultLogLevelValue = "WARN"    // Hard-coded Global Default loglevel pushed at PoD startup
+	defaultLogLevelKey                = "default"          // kvstore key containing default loglevel
+	globalConfigRootNode              = "global"           // Root Node in kvstore containing global config
+	initialGlobalDefaultLogLevelValue = "WARN"             // Hard-coded Global Default loglevel pushed at PoD startup
+	logPackagesListKey                = "log_package_list" // kvstore key containing list of allowed log packages
 )
 
 // ComponentLogController represents a Configuration for Logging Config of specific Voltha component type
@@ -92,6 +94,8 @@ func StartLogLevelConfigProcessing(cm *ConfigManager, ctx context.Context) {
 
 	cc.persistInitialDefaultLogConfigs(ctx)
 
+	cc.persistRegisteredLogPackageList(ctx)
+
 	cc.processLogConfig(ctx)
 }
 
@@ -117,6 +121,28 @@ func (c *ComponentLogController) persistInitialDefaultLogConfigs(ctx context.Con
 		if err != nil {
 			logger.Errorw("failed-to-persist-component-default-log-config-at-startup", log.Fields{"error": err, "loglevel": c.initialLogLevel})
 		}
+	}
+}
+
+// Method to save list of all registered packages for component into config kvstore. A single string
+// is constructed with comma-separated package names in sorted order and persisted
+func (c *ComponentLogController) persistRegisteredLogPackageList(ctx context.Context) {
+
+	componentMetadataConfig := c.configManager.InitComponentConfig(c.ComponentName, ConfigTypeMetadata)
+	logger.Debugw("component-metadata-config", log.Fields{"component-metadata-config": componentMetadataConfig})
+
+	packageList := log.GetPackageNames()
+	packageList = append(packageList, defaultLogLevelKey)
+	sort.Strings(packageList)
+
+	packageNames, err := json.Marshal(packageList)
+	if err != nil {
+		logger.Errorw("failed-to-marshal-log-package-list-for-storage", log.Fields{"error": err, "packageList": packageList})
+		return
+	}
+
+	if err := componentMetadataConfig.Save(ctx, logPackagesListKey, string(packageNames)); err != nil {
+		logger.Errorw("failed-to-persist-component-registered-log-package-list-at-startup", log.Fields{"error": err, "packageNames": packageNames})
 	}
 }
 

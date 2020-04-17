@@ -18,7 +18,6 @@ package common
 import (
 	"context"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -79,7 +78,7 @@ func (ap *AdapterProxy) SendInterAdapterMessage(ctx context.Context,
 	} else {
 		header.Id = uuid.New().String()
 	}
-	header.Timestamp = time.Now().Unix()
+	header.Timestamp = ptypes.TimestampNow()
 	iaMsg := &ic.InterAdapterMessage{
 		Header: header,
 		Body:   marshalledMsg,
