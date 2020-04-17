@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1741ccd1_bacbc7d4",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-17T13:58:31Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "36da6b8a_17acd6ca",
+      "range": {
+        "startLine": 1155,
+        "startChar": 3,
+        "endLine": 1155,
+        "endChar": 36
+      },
+      "revId": "275ba7a12ea9ffddc103fdd9c164548ec7944029",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b8b98fe_52bcd73e",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2020-04-17T08:12:46Z",
       "side": 1,
       "message": "I\u0027m wondering if we can avoid some of the computation here and in the agent.GetRoute, by inserting a check of the existence of the device that holds the port the flow is referring to.",
+      "range": {
+        "startLine": 458,
+        "startChar": 0,
+        "endLine": 473,
+        "endChar": 2
+      },
+      "revId": "275ba7a12ea9ffddc103fdd9c164548ec7944029",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35d4ee67_b85e14d9",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-17T13:58:31Z",
+      "side": 1,
+      "message": "We will still need the ports from the flows and the routes (from getRoutes) in order to determine if a device exist.  Not sure whether we can optimize here.  Worth a check in another Jira.",
+      "parentUuid": "0b8b98fe_52bcd73e",
       "range": {
         "startLine": 458,
         "startChar": 0,
