@@ -221,7 +221,7 @@ func (kp *interContainerProxy) DeviceDiscovered(deviceId string, deviceType stri
 		Type:      ic.MessageType_DEVICE_DISCOVERED,
 		FromTopic: kp.defaultTopic.Name,
 		ToTopic:   kp.deviceDiscoveryTopic.Name,
-		Timestamp: time.Now().UnixNano(),
+		Timestamp: ptypes.TimestampNow(),
 	}
 	body := &ic.DeviceDiscovered{
 		Id:         deviceId,
@@ -664,7 +664,7 @@ func encodeDefaultFailedResponse(request *ic.InterContainerMessage) *ic.InterCon
 		Type:      ic.MessageType_RESPONSE,
 		FromTopic: request.Header.ToTopic,
 		ToTopic:   request.Header.FromTopic,
-		Timestamp: time.Now().UnixNano(),
+		Timestamp: ptypes.TimestampNow(),
 	}
 	responseBody := &ic.InterContainerResponseBody{
 		Success: false,
@@ -694,7 +694,7 @@ func encodeResponse(request *ic.InterContainerMessage, success bool, returnedVal
 		FromTopic: request.Header.ToTopic,
 		ToTopic:   request.Header.FromTopic,
 		KeyTopic:  request.Header.KeyTopic,
-		Timestamp: time.Now().UnixNano(),
+		Timestamp: ptypes.TimestampNow(),
 	}
 
 	// Go over all returned values
@@ -934,7 +934,7 @@ func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kv
 		FromTopic: replyTopic.Name,
 		ToTopic:   toTopic.Name,
 		KeyTopic:  key,
-		Timestamp: time.Now().UnixNano(),
+		Timestamp: ptypes.TimestampNow(),
 	}
 	requestBody := &ic.InterContainerRequestBody{
 		Rpc:              rpc,

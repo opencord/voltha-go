@@ -82,7 +82,7 @@ func (b *Backend) newClient(address string, timeout int) (kvstore.Client, error)
 	case "consul":
 		return kvstore.NewConsulClient(address, timeout)
 	case "etcd":
-		return kvstore.NewEtcdClient(address, timeout)
+		return kvstore.NewEtcdClient(address, timeout, log.WarnLevel)
 	}
 	return nil, errors.New("unsupported-kv-store")
 }
@@ -222,7 +222,7 @@ func (b *Backend) Put(ctx context.Context, key string, value interface{}) error 
 	defer b.Unlock()
 
 	formattedPath := b.makePath(key)
-	logger.Debugw("putting-key", log.Fields{"key": key, "value": value, "path": formattedPath})
+	logger.Debugw("putting-key", log.Fields{"key": key, "path": formattedPath})
 
 	err := b.Client.Put(ctx, formattedPath, value)
 
