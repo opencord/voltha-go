@@ -18,6 +18,7 @@ package kafka
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -111,7 +112,7 @@ func (kc *KafkaClient) UnSubscribe(topic *kafka.Topic, ch <-chan *ic.InterContai
 	return nil
 }
 
-func (kc *KafkaClient) SubscribeForMetadata(_ func(fromTopic string, timestamp int64)) {
+func (kc *KafkaClient) SubscribeForMetadata(_ func(fromTopic string, timestamp time.Time)) {
 	logger.Debug("SubscribeForMetadata - unimplemented")
 }
 
