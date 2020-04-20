@@ -25,6 +25,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
 	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -198,7 +199,7 @@ func stopEmbeddedEtcdServer(server *mock_etcd.EtcdServer) {
 
 func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
 	addr := cf.KVStoreHost + ":" + strconv.Itoa(cf.KVStorePort)
-	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout)
+	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout, log.WarnLevel)
 	if err != nil {
 		panic("no kv client")
 	}
