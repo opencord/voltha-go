@@ -48,6 +48,52 @@
     },
     {
       "key": {
+        "uuid": "c1f07b57_392c68ce",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-04-20T17:35:45Z",
+      "side": 1,
+      "message": "consider adding some comments to describe each of these fields:\npDeviceId \u003d parent (OLT) device id\ndevice \u003d child (ONU) device structure\nvalueType \u003d bit field describing values to retreive",
+      "range": {
+        "startLine": 445,
+        "startChar": 32,
+        "endLine": 445,
+        "endChar": 43
+      },
+      "revId": "f6ea60442ed79a1a1ecfad9fbe5eb576dafcaa40",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d7cc60f_237f0511",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-04-20T17:35:45Z",
+      "side": 1,
+      "message": "verify whether passing the ONU id is necessary (see corresponding comment in the voltha-openolt-adapter patch) or if it is redundant with the `device` parameter which is being passed.",
+      "range": {
+        "startLine": 453,
+        "startChar": 3,
+        "endLine": 453,
+        "endChar": 14
+      },
+      "revId": "f6ea60442ed79a1a1ecfad9fbe5eb576dafcaa40",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d32975f9_708d7dbe",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 22
