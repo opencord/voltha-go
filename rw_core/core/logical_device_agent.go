@@ -197,6 +197,12 @@ func (agent *LogicalDeviceAgent) start(ctx context.Context, loadFromDB bool) err
 		logger.Errorw("failed-to-create-logical-device-proxy", log.Fields{"error": err})
 		return err
 	}
+	// TODO:  Use a port proxy once the POST_ADD is fixed
+	if agent.ldProxy != nil {
+		agent.ldProxy.RegisterCallback(model.PostUpdate, agent.portUpdated)
+	} else {
+		return status.Error(codes.Internal, "logical-device-proxy-null")
+	}
 
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
 	if loadFromDB {
@@ -568,12 +574,12 @@ func clonePorts(ports []*voltha.LogicalPort) []*voltha.LogicalPort {
 
 //updateLogicalDevicePortsWithoutLock updates the
 func (agent *LogicalDeviceAgent) updateLogicalDevicePortsWithoutLock(ctx context.Context, device *voltha.LogicalDevice, newPorts []*voltha.LogicalPort) error {
-	oldPorts := device.Ports
+	//oldPorts := device.Ports
 	device.Ports = newPorts
 	if err := agent.updateLogicalDeviceWithoutLock(ctx, device); err != nil {
 		return err
 	}
-	go agent.portUpdated(oldPorts, newPorts)
+	//go agent.portUpdated(oldPorts, newPorts)
 	return nil
 }
 
@@ -1721,14 +1727,29 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 // portUpdated is invoked when a port is updated on the logical device.  Until
 // the POST_ADD notification is fixed, we will use the logical device to
 // update that data.
-func (agent *LogicalDeviceAgent) portUpdated(oldPorts, newPorts []*voltha.LogicalPort) interface{} {
-	if reflect.DeepEqual(oldPorts, newPorts) {
+func (agent *LogicalDeviceAgent) portUpdated(ctx context.Context, args ...interface{}) interface{} {
+	logger.Debugw("portUpdated-callback", log.Fields{"argsLen": len(args)})
+
+	var oldLD *voltha.LogicalDevice
+	var newlD *voltha.LogicalDevice
+
+	var ok bool
+	if oldLD, ok = args[0].(*voltha.LogicalDevice); !ok {
+		logger.Errorw("invalid-args", log.Fields{"args0": args[0]})
+		return nil
+	}
+	if newlD, ok = args[1].(*voltha.LogicalDevice); !ok {
+		logger.Errorw("invalid-args", log.Fields{"args1": args[1]})
+		return nil
+	}
+
+	if reflect.DeepEqual(oldLD.Ports, newlD.Ports) {
 		logger.Debug("ports-have-not-changed")
 		return nil
 	}
 
 	// Get the difference between the two list
-	newPorts, changedPorts, deletedPorts := diff(oldPorts, newPorts)
+	newPorts, changedPorts, deletedPorts := diff(oldLD.Ports, newlD.Ports)
 
 	// Send the port change events to the OF controller
 	for _, newP := range newPorts {
