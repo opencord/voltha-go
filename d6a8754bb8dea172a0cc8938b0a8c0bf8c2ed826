@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b6b9b0c_a5f7286a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 1744,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-21T13:51:33Z",
+      "side": 1,
+      "message": "Is this function meant to be a synchronous call, i.e. the core sends a request to the adapter and waits (without releasing the request \"lock) until a response is received?   This also means that the NBI caller will wait until a response is received.  I thought it was supposed to be asynchronous as sometimes getValue may take a longer time.\n\nThere are two ways to handle async calls:\n\n1) Create a customized function to handle an adapter response for getvalue.  It will be similar to agent.OnSuccess except that it will extract the return value.\n\n2) In this function you wait for the response asynchronously (check getSwitchCapability()).\n\nAfter a request has been sent to the adapter release the \"lock\", i.e. invoke agent.requestQueue.RequestComplete() to let other requests in the queue for that device to proceed.   Invoking this function means that the core has sent the request to the adapter.\n\nIn the above code, the agent.waitForAdapterResponse() should not be invoked as it is creating a situation where the subsequent code is getting a response and closing the channel while there is a go routine waiting for the response separately on a closed channel.\n\nPlease take a look at other functions in this file to have a good understanding on how to invoke the getValue on an adapter.",
+      "revId": "d6a8754bb8dea172a0cc8938b0a8c0bf8c2ed826",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
