@@ -162,8 +162,8 @@ func TestLogicalDeviceAgent_diff_add(t *testing.T) {
 	assert.Equal(t, 2, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
-	assert.Equal(t, updatedLogicalPorts[0], newPorts[0])
-	assert.Equal(t, updatedLogicalPorts[1], newPorts[1])
+	assert.Equal(t, updatedLogicalPorts[0], newPorts[updatedLogicalPorts[0].Id])
+	assert.Equal(t, updatedLogicalPorts[1], newPorts[updatedLogicalPorts[1].Id])
 }
 
 func TestLogicalDeviceAgent_diff_delete(t *testing.T) {
@@ -186,7 +186,7 @@ func TestLogicalDeviceAgent_diff_delete(t *testing.T) {
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 1, len(deletedPorts))
-	assert.Equal(t, currentLogicalPorts[0], deletedPorts[0])
+	assert.Equal(t, currentLogicalPorts[0], deletedPorts[currentLogicalPorts[0].Id])
 }
 
 func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
@@ -270,8 +270,8 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 2, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
-	assert.Equal(t, updatedLogicalPorts[0], changedPorts[0])
-	assert.Equal(t, updatedLogicalPorts[1], changedPorts[1])
+	assert.Equal(t, updatedLogicalPorts[0], changedPorts[updatedLogicalPorts[0].Id])
+	assert.Equal(t, updatedLogicalPorts[1], changedPorts[updatedLogicalPorts[1].Id])
 }
 
 func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
@@ -355,9 +355,9 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 	assert.Equal(t, 1, len(newPorts))
 	assert.Equal(t, 2, len(changedPorts))
 	assert.Equal(t, 1, len(deletedPorts))
-	assert.Equal(t, updatedLogicalPorts[0], changedPorts[0])
-	assert.Equal(t, updatedLogicalPorts[1], changedPorts[1])
-	assert.Equal(t, currentLogicalPorts[2], deletedPorts[0])
+	assert.Equal(t, updatedLogicalPorts[0], changedPorts[updatedLogicalPorts[0].Id])
+	assert.Equal(t, updatedLogicalPorts[1], changedPorts[updatedLogicalPorts[1].Id])
+	assert.Equal(t, currentLogicalPorts[2], deletedPorts[currentLogicalPorts[2].Id])
 }
 
 type LDATest struct {

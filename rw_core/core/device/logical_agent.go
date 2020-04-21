@@ -1707,48 +1707,34 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, lp *voltha.LogicalP
 }
 
 // diff go over two lists of logical ports and return what's new, what's changed and what's removed.
-func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, deletedPorts []*voltha.LogicalPort) {
-	newPorts = make([]*voltha.LogicalPort, 0)
-	changedPorts = make([]*voltha.LogicalPort, 0)
-	deletedPorts = make([]*voltha.LogicalPort, 0)
-	for _, o := range oldList {
-		found := false
-		for _, n := range newList {
-			if o.Id == n.Id {
-				found = true
-				break
-			}
-		}
-		if !found {
-			deletedPorts = append(deletedPorts, o)
-		}
-	}
+func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, deletedPorts map[string]*voltha.LogicalPort) {
+	newPorts = make(map[string]*voltha.LogicalPort, len(newList))
+	changedPorts = make(map[string]*voltha.LogicalPort, len(oldList))
+	deletedPorts = make(map[string]*voltha.LogicalPort, len(oldList))
+
 	for _, n := range newList {
-		found := false
-		changed := false
-		for _, o := range oldList {
-			if o.Id == n.Id {
-				changed = !proto.Equal(o, n)
-				found = true
-				break
+		newPorts[n.Id] = n
+	}
+
+	for _, o := range oldList {
+		if n, have := newPorts[o.Id]; have {
+			delete(newPorts, o.Id) // not new
+			if !proto.Equal(n, o) {
+				changedPorts[n.Id] = n // changed
 			}
-		}
-		if !found {
-			newPorts = append(newPorts, n)
-		}
-		if changed {
-			changedPorts = append(changedPorts, n)
+		} else {
+			deletedPorts[o.Id] = o // deleted
 		}
 	}
-	return
+
+	return newPorts, changedPorts, deletedPorts
 }
 
-// portUpdated is invoked when a port is updated on the logical device.  Until
-// the POST_ADD notification is fixed, we will use the logical device to
-// update that data.
-func (agent *LogicalAgent) portUpdated(oldPorts, newPorts []*voltha.LogicalPort) interface{} {
+// portUpdated is invoked when a port is updated on the logical device
+func (agent *LogicalAgent) portUpdated(prevPorts, currPorts []*voltha.LogicalPort) interface{} {
 	// Get the difference between the two list
-	newPorts, changedPorts, deletedPorts := diff(oldPorts, newPorts)
+	newPorts, changedPorts, deletedPorts := diff(prevPorts, currPorts)
+
 	// Send the port change events to the OF controller
 	for _, newP := range newPorts {
 		go agent.ldeviceMgr.eventCallbacks.SendChangeEvent(agent.logicalDeviceID,
