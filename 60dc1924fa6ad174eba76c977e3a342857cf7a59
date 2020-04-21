@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "128d0bff_b3ff7861",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-21T15:53:14Z",
+      "side": 1,
+      "message": "Remove comment?",
+      "revId": "60dc1924fa6ad174eba76c977e3a342857cf7a59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
