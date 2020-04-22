@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e0190589_04f6f4dc",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-22T16:55:19Z",
+      "side": 1,
+      "message": "This is currently under core/device/event.  All public functions are exposed by the device.LogicalManager using struct embedding, and subsequently exposed by the NBIHandler using a second layer of struct embedding.\n\nI considered creating at a higher level, and passing it to both the device.LogicalManager \u0026 the NBIHandler, but this seemed like a cleaner solution, since it avoids having yet another manager at the top level.",
+      "parentUuid": "cf494fdf_2cb99ae5",
+      "revId": "7b795c1e60eab14a439e345ad15fdf99020362fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7a95183_9b198499",
         "filename": "rw_core/core/device/event/event.go",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2020-04-22T16:37:15Z",
       "side": 1,
       "message": "This name is referred in other managers as Manager and it can be confusing.   Maybe another name?",
+      "revId": "7b795c1e60eab14a439e345ad15fdf99020362fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5931a25a_cccc972f",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-22T16:55:19Z",
+      "side": 1,
+      "message": "Although this is used in the device.LogicalManager, it is never called directly, (i.e. - there\u0027s no calls of the form `ldMan.Manager.foo()`)\n\nInstead, all calls to embedded structs are of the form `ldMan.foo()`\n\nOnce created, embedded structs don\u0027t need to be referred to directly, so I don\u0027t expect this to cause confusion.",
+      "parentUuid": "f7a95183_9b198499",
       "revId": "7b795c1e60eab14a439e345ad15fdf99020362fd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
