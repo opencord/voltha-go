@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c849539_7a4384dd",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-22T18:33:21Z",
+      "side": 1,
+      "message": "nit: can return `nil, errors.New()`",
+      "revId": "b17c71c10b1627f8b753ce0743d3ea2cb3849e8c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
