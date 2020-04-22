@@ -43,6 +43,15 @@ type ConnectStatus = common.ConnectStatus
 // OperationResp from public import voltha_protos/common.proto
 type OperationResp = common.OperationResp
 
+// ValueType from public import voltha_protos/common.proto
+type ValueType = common.ValueType
+
+// ValueSpecifier from public import voltha_protos/common.proto
+type ValueSpecifier = common.ValueSpecifier
+
+// ReturnValues from public import voltha_protos/common.proto
+type ReturnValues = common.ReturnValues
+
 // TestModeKeys from public import voltha_protos/common.proto
 type TestModeKeys = common.TestModeKeys
 
@@ -96,6 +105,15 @@ var OperationResp_OperationReturnCode_value = common.OperationResp_OperationRetu
 const OperationResp_OPERATION_SUCCESS = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_SUCCESS)
 const OperationResp_OPERATION_FAILURE = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_FAILURE)
 const OperationResp_OPERATION_UNSUPPORTED = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_UNSUPPORTED)
+
+// ValueType_Type from public import voltha_protos/common.proto
+type ValueType_Type = common.ValueType_Type
+
+var ValueType_Type_name = common.ValueType_Type_name
+var ValueType_Type_value = common.ValueType_Type_value
+
+const ValueType_EMPTY = ValueType_Type(common.ValueType_EMPTY)
+const ValueType_DISTANCE = ValueType_Type(common.ValueType_DISTANCE)
 
 // DeviceGroup from public import voltha_protos/voltha.proto
 type DeviceGroup = voltha.DeviceGroup
