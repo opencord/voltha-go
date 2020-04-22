@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bec9c16_f81f3014",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1743,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-22T20:16:19Z",
+      "side": 1,
+      "message": "This line along with line 1745 (go ..) can be safely removed.   Right after invoking agent.adapterProxy.GetExtValue(), agent.requestQueue.RequestComplete() should be called.   This will allow other requests to be executed with this one waiting for a response from the adapter.",
+      "revId": "2025346e5236a26e00b5906e775fc49d6371cd2e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
