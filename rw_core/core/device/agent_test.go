@@ -144,22 +144,12 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	if err = dat.kmp.Start(); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}
-	if err = adapterMgr.Start(context.Background()); err != nil {
-		logger.Fatal("Cannot start adapterMgr")
-	}
-	dat.deviceMgr.Start(context.Background())
-	dat.logicalDeviceMgr.Start(context.Background())
+	adapterMgr.Start(context.Background())
 }
 
 func (dat *DATest) stopAll() {
 	if dat.kClient != nil {
 		dat.kClient.Stop()
-	}
-	if dat.logicalDeviceMgr != nil {
-		dat.logicalDeviceMgr.Stop(context.Background())
-	}
-	if dat.deviceMgr != nil {
-		dat.deviceMgr.Stop(context.Background())
 	}
 	if dat.kmp != nil {
 		dat.kmp.Stop()
