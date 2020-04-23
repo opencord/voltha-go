@@ -487,22 +487,12 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	if err = lda.kmp.Start(); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}
-	if err = adapterMgr.Start(context.Background()); err != nil {
-		logger.Fatal("Cannot start adapterMgr")
-	}
-	lda.deviceMgr.Start(context.Background())
-	lda.logicalDeviceMgr.Start(context.Background())
+	adapterMgr.Start(context.Background())
 }
 
 func (lda *LDATest) stopAll() {
 	if lda.kClient != nil {
 		lda.kClient.Stop()
-	}
-	if lda.logicalDeviceMgr != nil {
-		lda.logicalDeviceMgr.Stop(context.Background())
-	}
-	if lda.deviceMgr != nil {
-		lda.deviceMgr.Stop(context.Background())
 	}
 	if lda.kmp != nil {
 		lda.kmp.Stop()
