@@ -40,14 +40,12 @@ type Manager struct {
 	clusterDataProxy            *model.Proxy
 	onAdapterRestart            adapterRestartedHandler
 	coreInstanceID              string
-	exitChannel                 chan int
 	lockAdaptersMap             sync.RWMutex
 	lockdDeviceTypeToAdapterMap sync.RWMutex
 }
 
 func NewAdapterManager(cdProxy *model.Proxy, coreInstanceID string, kafkaClient kafka.Client) *Manager {
 	aMgr := &Manager{
-		exitChannel:      make(chan int, 1),
 		coreInstanceID:   coreInstanceID,
 		clusterDataProxy: cdProxy,
 		deviceTypes:      make(map[string]*voltha.DeviceType),
@@ -65,20 +63,19 @@ func (aMgr *Manager) SetAdapterRestartedCallback(onAdapterRestart adapterRestart
 	aMgr.onAdapterRestart = onAdapterRestart
 }
 
-func (aMgr *Manager) Start(ctx context.Context) error {
+func (aMgr *Manager) Start(ctx context.Context) {
+	probe.UpdateStatusFromContext(ctx, "adapter-manager", probe.ServiceStatusPreparing)
 	logger.Info("starting-adapter-manager")
 
 	// Load the existing adapterAgents and device types - this will also ensure the correct paths have been
 	// created if there are no data in the dB to start
 	err := aMgr.loadAdaptersAndDevicetypesInMemory()
 	if err != nil {
-		logger.Errorw("Failed-to-load-adapters-and-device-types-in-memeory", log.Fields{"error": err})
-		return err
+		logger.Fatalf("failed-to-load-adapters-and-device-types-in-memory: %s", err)
 	}
 
 	probe.UpdateStatusFromContext(ctx, "adapter-manager", probe.ServiceStatusRunning)
 	logger.Info("adapter-manager-started")
-	return nil
 }
 
 //loadAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory

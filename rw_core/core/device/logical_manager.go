@@ -30,7 +30,6 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -44,23 +43,9 @@ type LogicalManager struct {
 	deviceMgr                      *Manager
 	kafkaICProxy                   kafka.InterContainerProxy
 	clusterDataProxy               *model.Proxy
-	exitChannel                    chan int
 	defaultTimeout                 time.Duration
 	logicalDevicesLoadingLock      sync.RWMutex
 	logicalDeviceLoadingInProgress map[string][]chan int
-}
-
-func (ldMgr *LogicalManager) Start(ctx context.Context) {
-	logger.Info("starting-logical-device-manager")
-	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusRunning)
-	logger.Info("logical-device-manager-started")
-}
-
-func (ldMgr *LogicalManager) Stop(ctx context.Context) {
-	logger.Info("stopping-logical-device-manager")
-	ldMgr.exitChannel <- 1
-	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusStopped)
-	logger.Info("logical-device-manager-stopped")
 }
 
 func (ldMgr *LogicalManager) addLogicalDeviceAgentToMap(agent *LogicalAgent) {

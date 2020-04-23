@@ -32,7 +32,6 @@ import (
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
 	"github.com/opencord/voltha-protos/v3/go/common"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -53,7 +52,6 @@ type Manager struct {
 	stateTransitions        *TransitionMap
 	clusterDataProxy        *model.Proxy
 	coreInstanceID          string
-	exitChannel             chan int
 	defaultTimeout          time.Duration
 	devicesLoadingLock      sync.RWMutex
 	deviceLoadingInProgress map[string][]chan int
@@ -61,7 +59,6 @@ type Manager struct {
 
 func NewManagers(proxy *model.Proxy, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, corePairTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
-		exitChannel:             make(chan int, 1),
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
 		adapterProxy:            remote.NewAdapterProxy(kmp, corePairTopic, endpointMgr),
@@ -71,9 +68,10 @@ func NewManagers(proxy *model.Proxy, adapterMgr *adapter.Manager, kmp kafka.Inte
 		defaultTimeout:          defaultCoreTimeout * time.Millisecond,
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
+	deviceMgr.stateTransitions = NewTransitionMap(deviceMgr)
+
 	logicalDeviceMgr := &LogicalManager{
 		Manager:                        event.NewManager(),
-		exitChannel:                    make(chan int, 1),
 		deviceMgr:                      deviceMgr,
 		kafkaICProxy:                   kmp,
 		clusterDataProxy:               proxy,
@@ -85,20 +83,6 @@ func NewManagers(proxy *model.Proxy, adapterMgr *adapter.Manager, kmp kafka.Inte
 	adapterMgr.SetAdapterRestartedCallback(deviceMgr.adapterRestarted)
 
 	return deviceMgr, logicalDeviceMgr
-}
-
-func (dMgr *Manager) Start(ctx context.Context) {
-	logger.Info("starting-device-manager")
-	dMgr.stateTransitions = NewTransitionMap(dMgr)
-	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusRunning)
-	logger.Info("device-manager-started")
-}
-
-func (dMgr *Manager) Stop(ctx context.Context) {
-	logger.Info("stopping-device-manager")
-	dMgr.exitChannel <- 1
-	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusStopped)
-	logger.Info("device-manager-stopped")
 }
 
 func (dMgr *Manager) addDeviceAgentToMap(agent *Agent) {
