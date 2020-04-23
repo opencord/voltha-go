@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "648a375a_eef85caa",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 34
+      },
+      "lineNbr": 1756,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-04-23T21:48:52Z",
+      "side": 1,
+      "message": "how is a timeout captured in around this (i.e. is something closing the channel on a context timeout?)",
+      "range": {
+        "startLine": 1750,
+        "startChar": 0,
+        "endLine": 1756,
+        "endChar": 2
+      },
+      "revId": "0887a50586c31704d0f14970d4a2a04ef8d8de14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
