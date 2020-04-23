@@ -19,13 +19,10 @@ package api
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-go/rw_core/core/adapter"
-	"github.com/opencord/voltha-go/rw_core/core/device"
-	"time"
-
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
@@ -34,28 +31,16 @@ import (
 
 // AdapterRequestHandlerProxy represent adapter request handler proxy attributes
 type AdapterRequestHandlerProxy struct {
-	coreInstanceID            string
-	deviceMgr                 *device.Manager
-	adapterMgr                *adapter.Manager
-	localDataProxy            *model.Proxy
-	clusterDataProxy          *model.Proxy
-	defaultRequestTimeout     time.Duration
-	longRunningRequestTimeout time.Duration
+	deviceMgr  *device.Manager
+	adapterMgr *adapter.Manager
 }
 
 // NewAdapterRequestHandlerProxy assigns values for adapter request handler proxy attributes and returns the new instance
-func NewAdapterRequestHandlerProxy(coreInstanceID string, dMgr *device.Manager,
-	aMgr *adapter.Manager, cdProxy *model.Proxy, ldProxy *model.Proxy, longRunningRequestTimeout time.Duration,
-	defaultRequestTimeout time.Duration) *AdapterRequestHandlerProxy {
-	var proxy AdapterRequestHandlerProxy
-	proxy.coreInstanceID = coreInstanceID
-	proxy.deviceMgr = dMgr
-	proxy.clusterDataProxy = cdProxy
-	proxy.localDataProxy = ldProxy
-	proxy.adapterMgr = aMgr
-	proxy.defaultRequestTimeout = defaultRequestTimeout
-	proxy.longRunningRequestTimeout = longRunningRequestTimeout
-	return &proxy
+func NewAdapterRequestHandlerProxy(dMgr *device.Manager, aMgr *adapter.Manager) *AdapterRequestHandlerProxy {
+	return &AdapterRequestHandlerProxy{
+		deviceMgr:  dMgr,
+		adapterMgr: aMgr,
+	}
 }
 
 func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.CoreInstance, error) {
@@ -86,7 +71,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 			}
 		}
 	}
-	logger.Debugw("Register", log.Fields{"adapter": *adapter, "device-types": deviceTypes, "transaction-id": transactionID.Val, "core-id": rhp.coreInstanceID})
+	logger.Debugw("Register", log.Fields{"adapter": *adapter, "device-types": deviceTypes, "transaction-id": transactionID.Val})
 
 	return rhp.adapterMgr.RegisterAdapter(adapter, deviceTypes)
 }

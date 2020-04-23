@@ -127,16 +127,12 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	proxy := model.NewProxy(backend, "/")
 	nb.adapterMgr = adapter.NewAdapterManager(proxy, nb.coreInstanceID, nb.kClient)
 	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
-	if err = nb.adapterMgr.Start(ctx); err != nil {
-		logger.Fatalf("Cannot start adapterMgr: %s", err)
-	}
-	nb.deviceMgr.Start(ctx)
-	nb.logicalDeviceMgr.Start(ctx)
+	nb.adapterMgr.Start(ctx)
 
-	if err = nb.kmp.Start(); err != nil {
+	if err := nb.kmp.Start(); err != nil {
 		logger.Fatalf("Cannot start InterContainerProxy: %s", err)
 	}
-	requestProxy := NewAdapterRequestHandlerProxy(nb.coreInstanceID, nb.deviceMgr, nb.adapterMgr, proxy, proxy, cfg.LongRunningRequestTimeout, cfg.DefaultRequestTimeout)
+	requestProxy := NewAdapterRequestHandlerProxy(nb.deviceMgr, nb.adapterMgr)
 	if err := nb.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
 		logger.Fatalf("Cannot add request handler: %s", err)
 	}
@@ -200,12 +196,6 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 func (nb *NBTest) stopAll() {
 	if nb.kClient != nil {
 		nb.kClient.Stop()
-	}
-	if nb.logicalDeviceMgr != nil {
-		nb.logicalDeviceMgr.Stop(context.Background())
-	}
-	if nb.deviceMgr != nil {
-		nb.deviceMgr.Stop(context.Background())
 	}
 	if nb.kmp != nil {
 		nb.kmp.Stop()
