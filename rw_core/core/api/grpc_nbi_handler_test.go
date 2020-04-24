@@ -448,7 +448,7 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *NBIHandler) {
 	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg)
+	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg, false, false)
 
 	//	Create the device with valid data
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
@@ -606,6 +606,33 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *NBIHandler) {
 	err = waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 }
+
+func (nb *NBTest) deleteAllDevices(t *testing.T, nbi *NBIHandler) {
+	//Get an OLT device
+	oltDevice, err := nb.getADevice(true, nbi)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+
+	// Delete the oltDevice
+	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	// Wait for all devices to be deleted
+	var vFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
+		return devices != nil && len(devices.Items) == 0
+	}
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction)
+	assert.Nil(t, err)
+
+	// Wait for absence of logical device
+	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
+		return lds != nil && len(lds.Items) == 0
+	}
+
+	err = waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
+	assert.Nil(t, err)
+}
+
 func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *NBIHandler) {
 	//Create the device with valid data
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
@@ -965,9 +992,12 @@ func createMetadata(cTag int, techProfile int, port int) uint64 {
 	return uint64(md | (port & 0xFFFFFFFF))
 }
 
-func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int) {
+func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, flowAddFail bool) {
 	expectedNumFlows := numNNIPorts*3 + numNNIPorts*numUNIPorts
-	// Wait for logical device to have all the flows
+	if flowAddFail {
+		expectedNumFlows = 0
+	}
+	// Wait for logical device to have the flows (or none
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
 		return lds != nil && len(lds.Items) == 1 && len(lds.Items[0].Flows.Items) == expectedNumFlows
 	}
@@ -1063,12 +1093,16 @@ func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *NBIHandler, logicalDeviceID st
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup) {
+func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup, flowAddFail bool, flowDelete bool) {
 	defer wg.Done()
 
-	// Clear any existing flows on the adapters
+	// Clear any existing flows on the adapters and
 	nb.oltAdapter.ClearFlows()
 	nb.onuAdapter.ClearFlows()
+
+	// Set the adapter actions on flow addition/deletion
+	nb.oltAdapter.SetFlowAction(flowAddFail, flowDelete)
+	nb.onuAdapter.SetFlowAction(flowAddFail, flowDelete)
 
 	// Wait until a logical device is ready
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
@@ -1144,21 +1178,72 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 		}
 	}
 	//Verify the flow count on the logical device
-	nb.verifyLogicalDeviceFlowCount(t, nbi, numNNIPorts, numUNIPorts)
+	nb.verifyLogicalDeviceFlowCount(t, nbi, numNNIPorts, numUNIPorts, flowAddFail)
 
-	// Wait until all flows have been sent to the OLT adapters
+	// Wait until all flows have been sent to the OLT adapters (or all failed)
+	expectedFlowCount := (numNNIPorts * 3) + numNNIPorts*numUNIPorts
+	if flowAddFail {
+		expectedFlowCount = 0
+	}
 	var oltVFunc isConditionSatisfied = func() bool {
-		return nb.oltAdapter.GetFlowCount() >= (numNNIPorts*3)+numNNIPorts*numUNIPorts
+		return nb.oltAdapter.GetFlowCount() >= expectedFlowCount
 	}
 	err = waitUntilCondition(nb.maxTimeout, nbi, oltVFunc)
 	assert.Nil(t, err)
 
-	// Wait until all flows have been sent to the ONU adapters
+	// Wait until all flows have been sent to the ONU adapters (or all failed)
+	expectedFlowCount = numUNIPorts
+	if flowAddFail {
+		expectedFlowCount = 0
+	}
 	var onuVFunc isConditionSatisfied = func() bool {
-		return nb.onuAdapter.GetFlowCount() == numUNIPorts
+		return nb.onuAdapter.GetFlowCount() == expectedFlowCount
 	}
 	err = waitUntilCondition(nb.maxTimeout, nbi, onuVFunc)
 	assert.Nil(t, err)
+}
+
+func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
+
+	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg, true, true)
+
+	//	Create the device with valid data
+	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+
+	// Verify oltDevice exist in the core
+	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(devices.Items))
+	assert.Equal(t, oltDevice.Id, devices.Items[0].Id)
+
+	// Enable the oltDevice
+	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	// Wait for the logical device to be in the ready state
+	var vldFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
+		return ld != nil && len(ld.Ports) == nb.numONUPerOLT+1
+	}
+	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
+	assert.Nil(t, err)
+
+	// Verify that the devices have been setup correctly
+	nb.verifyDevices(t, nbi)
+
+	// Get latest oltDevice data
+	oltDevice, err = nbi.GetDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	// Verify that the logical device has been setup correctly
+	nb.verifyLogicalDevices(t, oltDevice, nbi)
+
+	// Wait until all flows has been sent to the devices successfully
+	wg.Wait()
 }
 
 func TestSuiteNbiApiHandler(t *testing.T) {
@@ -1196,8 +1281,8 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 	// 2. Test adapter registration
 	nb.testAdapterRegistration(t, nbi)
 
-	numberOfDeviceTestRuns := 2
-	for i := 1; i <= numberOfDeviceTestRuns; i++ {
+	numberOfTestRuns := 2
+	for i := 1; i <= numberOfTestRuns; i++ {
 		//3. Test create device
 		nb.testCreateDevice(t, nbi)
 
@@ -1221,7 +1306,11 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 
 		// 10. Test omci test
 		nb.testStartOmciTestAction(t, nbi)
-	}
 
-	//x. TODO - More tests to come
+		// 11. Test flow add failure
+		nb.testFlowAddFailure(t, nbi)
+
+		// 12.  Clean up
+		nb.deleteAllDevices(t, nbi)
+	}
 }
