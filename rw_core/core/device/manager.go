@@ -334,7 +334,7 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, parentDeviceID string, 
 		return foundChildDevice, nil
 	}
 
-	logger.Warnw("child-device-not-found", log.Fields{"parentDeviceId": parentDevice.Id,
+	logger.Debugw("child-device-not-found", log.Fields{"parentDeviceId": parentDevice.Id,
 		"serialNumber": serialNumber, "onuId": onuID, "parentPortNo": parentPortNo})
 	return nil, status.Errorf(codes.NotFound, "%s", parentDeviceID)
 }
