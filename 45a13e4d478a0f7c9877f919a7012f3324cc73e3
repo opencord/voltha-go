@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db33580c_a23f1d64",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-24T14:55:46Z",
+      "side": 1,
+      "message": "I know it was not present before, but should we now have error checking for nil?   Can be done in a different Jira.  Applies to lots of places in the \"api\" package.",
+      "revId": "45a13e4d478a0f7c9877f919a7012f3324cc73e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
