@@ -21,7 +21,6 @@ import (
 	"github.com/opencord/voltha-go/rw_core/mocks"
 	"github.com/opencord/voltha-go/rw_core/route"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
@@ -30,21 +29,6 @@ import (
 
 	"testing"
 )
-
-func init() {
-	// Setup default logger - applies for packages that do not have specific logger set
-	if _, err := log.SetDefaultLogger(log.JSON, 0, log.Fields{"instanceId": 1}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
-	}
-
-	// Update all loggers (provisioned via init) with a common field
-	if err := log.UpdateAllLoggers(log.Fields{"instanceId": 1}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
-	}
-
-	// Update all loggers to log level specified as input parameter
-	log.SetAllLogLevel(0)
-}
 
 type testDeviceManager struct {
 	mocks.DeviceManager

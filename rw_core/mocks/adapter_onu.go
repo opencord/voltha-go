@@ -20,9 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
-	"sync"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
@@ -30,22 +27,18 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"strings"
 )
 
 // ONUAdapter represent ONU adapter attributes
 type ONUAdapter struct {
-	flows map[uint64]*voltha.OfpFlowStats
-	lock  sync.Mutex
-	Adapter
+	*Adapter
 }
 
 // NewONUAdapter creates ONU adapter
 func NewONUAdapter(cp adapterif.CoreProxy) *ONUAdapter {
 	return &ONUAdapter{
-		flows: map[uint64]*voltha.OfpFlowStats{},
-		Adapter: Adapter{
-			coreProxy: cp,
-		},
+		Adapter: NewAdapter(cp),
 	}
 }
 
@@ -116,9 +109,7 @@ func (onuA *ONUAdapter) Adopt_device(device *voltha.Device) error { // nolint
 			logger.Fatalf("getting-device-failed-%s", err)
 		}
 
-		if err = onuA.updateDevice(d); err != nil {
-			logger.Fatalf("saving-device-failed-%s", err)
-		}
+		onuA.updateDevice(d)
 	}()
 	return nil
 }
@@ -168,9 +159,7 @@ func (onuA *ONUAdapter) Disable_device(device *voltha.Device) error { // nolint
 			logger.Warnw("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
 			return
 		}
-		if err := onuA.updateDevice(cloned); err != nil {
-			logger.Fatalf("saving-device-failed-%s", err)
-		}
+		onuA.updateDevice(cloned)
 	}()
 	return nil
 }
@@ -195,28 +184,9 @@ func (onuA *ONUAdapter) Reenable_device(device *voltha.Device) error { // nolint
 		if err := onuA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
 			logger.Fatalf("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
-		if err := onuA.updateDevice(cloned); err != nil {
-			logger.Fatalf("saving-device-failed-%s", err)
-		}
+
+		onuA.updateDevice(cloned)
 	}()
-	return nil
-}
-
-// Update_flows_incrementally mocks the incremental flow update
-func (onuA *ONUAdapter) Update_flows_incrementally(device *voltha.Device, flows *of.FlowChanges, groups *of.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error { // nolint
-	onuA.lock.Lock()
-	defer onuA.lock.Unlock()
-
-	if flows.ToAdd != nil {
-		for _, f := range flows.ToAdd.Items {
-			onuA.flows[f.Id] = f
-		}
-	}
-	if flows.ToRemove != nil {
-		for _, f := range flows.ToRemove.Items {
-			delete(onuA.flows, f.Id)
-		}
-	}
 	return nil
 }
 
@@ -224,22 +194,6 @@ func (onuA *ONUAdapter) Update_flows_incrementally(device *voltha.Device, flows 
 func (onuA *ONUAdapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*ic.TestResponse, error) { // nolint
 	_ = device
 	return &ic.TestResponse{Result: ic.TestResponse_SUCCESS}, nil
-}
-
-// GetFlowCount returns the total number of flows presently under this adapter
-func (onuA *ONUAdapter) GetFlowCount() int {
-	onuA.lock.Lock()
-	defer onuA.lock.Unlock()
-
-	return len(onuA.flows)
-}
-
-// ClearFlows removes all flows in this adapter
-func (onuA *ONUAdapter) ClearFlows() {
-	onuA.lock.Lock()
-	defer onuA.lock.Unlock()
-
-	onuA.flows = map[uint64]*voltha.OfpFlowStats{}
 }
 
 func (onuA *ONUAdapter) Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { // nolint
