@@ -20,9 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
-	"sync"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
@@ -30,6 +27,7 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"strings"
 )
 
 const (
@@ -39,18 +37,13 @@ const (
 
 // OLTAdapter represent OLT adapter
 type OLTAdapter struct {
-	flows map[uint64]*voltha.OfpFlowStats
-	lock  sync.Mutex
-	Adapter
+	*Adapter
 }
 
 // NewOLTAdapter - creates OLT adapter instance
 func NewOLTAdapter(cp adapterif.CoreProxy) *OLTAdapter {
 	return &OLTAdapter{
-		flows: map[uint64]*voltha.OfpFlowStats{},
-		Adapter: Adapter{
-			coreProxy: cp,
-		},
+		Adapter: NewAdapter(cp),
 	}
 }
 
@@ -100,9 +93,7 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 			logger.Fatalf("getting-device-failed-%s", err)
 		}
 
-		if err = oltA.updateDevice(d); err != nil {
-			logger.Fatalf("saving-device-failed-%s", err)
-		}
+		oltA.updateDevice(d)
 
 		// Register Child devices
 		initialUniPortNo := startingUNIPortNo
@@ -204,9 +195,7 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
 			return
 		}
 
-		if err := oltA.updateDevice(cloned); err != nil {
-			logger.Fatalf("saving-device-failed-%s", err)
-		}
+		oltA.updateDevice(cloned)
 
 		// Tell the Core that all child devices have been disabled (by default it's an action already taken by the Core
 		if err := oltA.coreProxy.ChildDevicesLost(context.TODO(), cloned.Id); err != nil {
@@ -278,24 +267,6 @@ func (oltA *OLTAdapter) Child_device_lost(deviceID string, pPortNo uint32, onuID
 	return nil
 }
 
-// Update_flows_incrementally mocks the incremental flow update
-func (oltA *OLTAdapter) Update_flows_incrementally(device *voltha.Device, flows *of.FlowChanges, groups *of.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error { // nolint
-	oltA.lock.Lock()
-	defer oltA.lock.Unlock()
-
-	if flows.ToAdd != nil {
-		for _, f := range flows.ToAdd.Items {
-			oltA.flows[f.Id] = f
-		}
-	}
-	if flows.ToRemove != nil {
-		for _, f := range flows.ToRemove.Items {
-			delete(oltA.flows, f.Id)
-		}
-	}
-	return nil
-}
-
 // Reboot_device -
 func (oltA *OLTAdapter) Reboot_device(device *voltha.Device) error { // nolint
 	logger.Infow("reboot-device", log.Fields{"deviceId": device.Id})
@@ -315,22 +286,6 @@ func (oltA *OLTAdapter) Reboot_device(device *voltha.Device) error { // nolint
 func (oltA *OLTAdapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*ic.TestResponse, error) { // nolint
 	_ = device
 	return nil, errors.New("start-omci-test-not-implemented")
-}
-
-// GetFlowCount returns the total number of flows presently under this adapter
-func (oltA *OLTAdapter) GetFlowCount() int {
-	oltA.lock.Lock()
-	defer oltA.lock.Unlock()
-
-	return len(oltA.flows)
-}
-
-// ClearFlows removes all flows in this adapter
-func (oltA *OLTAdapter) ClearFlows() {
-	oltA.lock.Lock()
-	defer oltA.lock.Unlock()
-
-	oltA.flows = map[uint64]*voltha.OfpFlowStats{}
 }
 
 func (oltA *OLTAdapter) Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { // nolint
