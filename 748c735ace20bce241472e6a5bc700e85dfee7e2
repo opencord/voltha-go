@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea8c1a4a_c6223aa7",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-27T15:12:23Z",
+      "side": 1,
+      "message": "It may be worth using \"defer\" for cleanup, so that cleanup can occur even if a test fails.  (Probably a separate change.)",
+      "revId": "748c735ace20bce241472e6a5bc700e85dfee7e2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
