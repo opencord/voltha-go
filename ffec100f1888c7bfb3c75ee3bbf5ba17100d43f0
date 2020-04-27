@@ -34,6 +34,24 @@
       "revId": "ffec100f1888c7bfb3c75ee3bbf5ba17100d43f0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8f07f7f_954b46ea",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-27T15:37:12Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "90ce1391_b1509687",
+      "revId": "ffec100f1888c7bfb3c75ee3bbf5ba17100d43f0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
