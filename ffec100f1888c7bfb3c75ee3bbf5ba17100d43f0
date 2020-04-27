@@ -78,6 +78,30 @@
     },
     {
       "key": {
+        "uuid": "ca20d237_9421ed07",
+        "filename": "rw_core/core/kv.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-27T21:31:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "657598a1_9c720ae4",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 3
+      },
+      "revId": "ffec100f1888c7bfb3c75ee3bbf5ba17100d43f0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0acbacac_0550db63",
         "filename": "rw_core/main.go",
         "patchSetId": 4
@@ -89,6 +113,30 @@
       "writtenOn": "2020-04-27T21:16:57Z",
       "side": 1,
       "message": "since you are in here doing \"readability\" clean up. What about changing this to use `` quotes and removing all the escaping ?",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 60
+      },
+      "revId": "ffec100f1888c7bfb3c75ee3bbf5ba17100d43f0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a184889e_78ff5299",
+        "filename": "rw_core/main.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-27T21:31:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0acbacac_0550db63",
       "range": {
         "startLine": 57,
         "startChar": 0,
