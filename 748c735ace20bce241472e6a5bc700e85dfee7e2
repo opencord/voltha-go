@@ -16,6 +16,24 @@
       "revId": "748c735ace20bce241472e6a5bc700e85dfee7e2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16288c92_371301ca",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-28T13:41:15Z",
+      "side": 1,
+      "message": "This cleanup happens on every looping cycle.   The \"defer\" for cleanup happens above with nb.stopAll().",
+      "parentUuid": "ea8c1a4a_c6223aa7",
+      "revId": "748c735ace20bce241472e6a5bc700e85dfee7e2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
