@@ -2,6 +2,144 @@
   "comments": [
     {
       "key": {
+        "uuid": "5f3771e6_aa4c1de9",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-30T14:39:30Z",
+      "side": 1,
+      "message": "Just use regular map[keyType]valType instead of sync.Map\n\nAnd use the `sync.RWMutex`es to synchronize access instead.",
+      "range": {
+        "startLine": 61,
+        "startChar": 23,
+        "endLine": 65,
+        "endChar": 31
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85d8c291_e932ae10",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-30T14:39:30Z",
+      "side": 1,
+      "message": "I don\u0027t see uses of RLock/RUnlock.\n\nIt there aren\u0027t any, use sync.Mutex instead.",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 85,
+        "endChar": 19
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f93968db_650d0f97",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-30T14:39:30Z",
+      "side": 1,
+      "message": "Don\u0027t initialize sync.RWMutex\n\nZero value is already valid.",
+      "range": {
+        "startLine": 106,
+        "startChar": 19,
+        "endLine": 106,
+        "endChar": 31
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15c3758e_b37e7f2e",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-30T14:39:30Z",
+      "side": 1,
+      "message": "can return inline, like:\n\nreturn \u0026ofp.Flows{Items: flowStats}, nil\n\n(more like this)",
+      "range": {
+        "startLine": 252,
+        "startChar": 1,
+        "endLine": 255,
+        "endChar": 17
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ce7bb46_2896e262",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-30T14:39:30Z",
+      "side": 1,
+      "message": "There is no lock invoked anymore, remove `WithoutLock`?\n\n(more like this)",
+      "range": {
+        "startLine": 306,
+        "startChar": 51,
+        "endLine": 306,
+        "endChar": 62
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee744c80_d6f39ed2",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-30T14:39:30Z",
+      "side": 1,
+      "message": "deleted here, but not set in `Update` calls?\n\n(more like this)",
+      "range": {
+        "startLine": 334,
+        "startChar": 7,
+        "endLine": 334,
+        "endChar": 24
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c7eada7_68625f2d",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 2
@@ -13,6 +151,29 @@
       "writtenOn": "2020-04-30T14:11:42Z",
       "side": 1,
       "message": "This was required in cases where the routes were not fully populated by the time a flow is received for that port.   I am experimenting with on demand route creation.   Not sure if we will get much benefit if the PON system is being discovered at that time.",
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28d79b18_a664a141",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1390,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-04-30T14:39:30Z",
+      "side": 1,
+      "message": "no need to initialize sync types.",
+      "range": {
+        "startLine": 1390,
+        "startChar": 2,
+        "endLine": 1390,
+        "endChar": 24
+      },
       "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
