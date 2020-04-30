@@ -121,7 +121,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	// defer kafkaClient.Stop()
 
 	// create kv proxy
-	proxy := model.NewProxy(backend, "/")
+	proxy := model.NewProxy(backend)
 
 	// load adapters & device types while other things are starting
 	adapterMgr := adapter.NewAdapterManager(proxy, id, kafkaClient)

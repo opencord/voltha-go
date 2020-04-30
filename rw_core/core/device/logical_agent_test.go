@@ -17,17 +17,17 @@ package device
 
 import (
 	"context"
-	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-go/rw_core/core/adapter"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"math/rand"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
@@ -480,7 +480,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
 
 	endpointMgr := kafka.NewEndpointManager(backend)
-	proxy := model.NewProxy(backend, "/")
+	proxy := model.NewProxy(backend)
 	adapterMgr := adapter.NewAdapterManager(proxy, lda.coreInstanceID, lda.kClient)
 
 	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
@@ -508,9 +508,9 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 	clonedLD := proto.Clone(lda.logicalDevice).(*voltha.LogicalDevice)
 	clonedLD.Id = com.GetRandomString(10)
 	clonedLD.DatapathId = rand.Uint64()
-	lDeviceAgent := newLogicalDeviceAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.clusterDataProxy, lDeviceMgr.defaultTimeout)
+	lDeviceAgent := newLogicalAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
-	err := lDeviceAgent.clusterDataProxy.AddWithID(context.Background(), "logical_devices", clonedLD.Id, clonedLD)
+	err := lDeviceAgent.ldProxy.Set(context.Background(), clonedLD.Id, clonedLD)
 	assert.Nil(t, err)
 	lDeviceMgr.addLogicalDeviceAgentToMap(lDeviceAgent)
 	return lDeviceAgent

@@ -37,7 +37,8 @@ import (
 type Manager struct {
 	adapterAgents               map[string]*agent
 	deviceTypes                 map[string]*voltha.DeviceType
-	clusterDataProxy            *model.Proxy
+	adapterDBProxy              *model.Proxy
+	deviceTypeDBProxy           *model.Proxy
 	onAdapterRestart            adapterRestartedHandler
 	coreInstanceID              string
 	lockAdaptersMap             sync.RWMutex
@@ -46,10 +47,11 @@ type Manager struct {
 
 func NewAdapterManager(cdProxy *model.Proxy, coreInstanceID string, kafkaClient kafka.Client) *Manager {
 	aMgr := &Manager{
-		coreInstanceID:   coreInstanceID,
-		clusterDataProxy: cdProxy,
-		deviceTypes:      make(map[string]*voltha.DeviceType),
-		adapterAgents:    make(map[string]*agent),
+		coreInstanceID:    coreInstanceID,
+		adapterDBProxy:    cdProxy.SubProxy("adapters"),
+		deviceTypeDBProxy: cdProxy.SubProxy("device_types"),
+		deviceTypes:       make(map[string]*voltha.DeviceType),
+		adapterAgents:     make(map[string]*agent),
 	}
 	kafkaClient.SubscribeForMetadata(aMgr.updateLastAdapterCommunication)
 	return aMgr
@@ -82,7 +84,7 @@ func (aMgr *Manager) Start(ctx context.Context) {
 func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
 	// Load the adapters
 	var adapters []*voltha.Adapter
-	if err := aMgr.clusterDataProxy.List(context.Background(), "adapters", &adapters); err != nil {
+	if err := aMgr.adapterDBProxy.List(context.Background(), &adapters); err != nil {
 		logger.Errorw("Failed-to-list-adapters-from-cluster-data-proxy", log.Fields{"error": err})
 		return err
 	}
@@ -98,7 +100,7 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
 
 	// Load the device types
 	var deviceTypes []*voltha.DeviceType
-	if err := aMgr.clusterDataProxy.List(context.Background(), "device_types", &deviceTypes); err != nil {
+	if err := aMgr.deviceTypeDBProxy.List(context.Background(), &deviceTypes); err != nil {
 		logger.Errorw("Failed-to-list-device-types-from-cluster-data-proxy", log.Fields{"error": err})
 		return err
 	}
@@ -134,11 +136,11 @@ func (aMgr *Manager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
 	if _, exist := aMgr.adapterAgents[adapter.Id]; !exist {
 		if saveToDb {
 			// Save the adapter to the KV store - first check if it already exist
-			if have, err := aMgr.clusterDataProxy.Get(context.Background(), "adapters/"+adapter.Id, &voltha.Adapter{}); err != nil {
+			if have, err := aMgr.adapterDBProxy.Get(context.Background(), adapter.Id, &voltha.Adapter{}); err != nil {
 				logger.Errorw("failed-to-get-adapters-from-cluster-proxy", log.Fields{"error": err})
 				return err
 			} else if !have {
-				if err := aMgr.clusterDataProxy.AddWithID(context.Background(), "adapters", adapter.Id, adapter); err != nil {
+				if err := aMgr.adapterDBProxy.Set(context.Background(), adapter.Id, adapter); err != nil {
 					logger.Errorw("failed-to-save-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
 						"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 					return err
@@ -176,13 +178,13 @@ func (aMgr *Manager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bo
 	if saveToDb {
 		// Save the device types to the KV store
 		for _, deviceType := range deviceTypes.Items {
-			if have, err := aMgr.clusterDataProxy.Get(context.Background(), "device_types/"+deviceType.Id, &voltha.DeviceType{}); err != nil {
+			if have, err := aMgr.deviceTypeDBProxy.Get(context.Background(), deviceType.Id, &voltha.DeviceType{}); err != nil {
 				logger.Errorw("Failed-to--device-types-from-cluster-data-proxy", log.Fields{"error": err})
 				return err
 			} else if !have {
 				//	Does not exist - save it
 				clonedDType := (proto.Clone(deviceType)).(*voltha.DeviceType)
-				if err := aMgr.clusterDataProxy.AddWithID(context.Background(), "device_types", deviceType.Id, clonedDType); err != nil {
+				if err := aMgr.deviceTypeDBProxy.Set(context.Background(), deviceType.Id, clonedDType); err != nil {
 					logger.Errorw("Failed-to-add-device-types-to-cluster-data-proxy", log.Fields{"error": err})
 					return err
 				}

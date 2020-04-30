@@ -20,10 +20,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"reflect"
 )
 
 // RequestTimestamp attribute used to store a timestamp in the context object
@@ -38,23 +40,24 @@ type Proxy struct {
 }
 
 // NewProxy instantiates a new proxy to a specific location
-func NewProxy(kvStore *db.Backend, path string) *Proxy {
-	if path == "/" {
-		path = ""
-	}
+func NewProxy(kvStore *db.Backend) *Proxy {
+	return &Proxy{kvStore: kvStore}
+}
+
+// SubProxy returns a proxy which points to a more specific path
+func (p *Proxy) SubProxy(path string) *Proxy {
+	path = strings.TrimRight(strings.TrimLeft(path, "/"), "/")
 	return &Proxy{
-		kvStore: kvStore,
-		path:    path,
+		kvStore: p.kvStore,
+		path:    p.path + path + "/",
 	}
 }
 
 // List will retrieve information from the data model at the specified path location, and write it to the target slice
 // target must be a type of the form *[]<proto.Message Type>  For example: *[]*voltha.Device
-func (p *Proxy) List(ctx context.Context, path string, target interface{}) error {
-	completePath := p.path + path
-
+func (p *Proxy) List(ctx context.Context, target interface{}) error {
 	logger.Debugw("proxy-list", log.Fields{
-		"path": completePath,
+		"path": p.path,
 	})
 
 	// verify type of target is *[]*<type>
@@ -72,13 +75,13 @@ func (p *Proxy) List(ctx context.Context, path string, target interface{}) error
 	}
 	dataType := elemType.Elem() // type
 
-	blobs, err := p.kvStore.List(ctx, completePath)
+	blobs, err := p.kvStore.List(ctx, p.path)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve %s from kvstore: %s", path, err)
+		return fmt.Errorf("failed to retrieve %s from kvstore: %s", p.path, err)
 	}
 
 	logger.Debugw("parsing-data-blobs", log.Fields{
-		"path": path,
+		"path": p.path,
 		"size": len(blobs),
 	})
 
@@ -97,8 +100,8 @@ func (p *Proxy) List(ctx context.Context, path string, target interface{}) error
 }
 
 // Get will retrieve information from the data model at the specified path location, and write it to target
-func (p *Proxy) Get(ctx context.Context, path string, target proto.Message) (bool, error) {
-	completePath := p.path + path
+func (p *Proxy) Get(ctx context.Context, id string, target proto.Message) (bool, error) {
+	completePath := p.path + id
 
 	logger.Debugw("proxy-get", log.Fields{
 		"path": completePath,
@@ -106,13 +109,13 @@ func (p *Proxy) Get(ctx context.Context, path string, target proto.Message) (boo
 
 	blob, err := p.kvStore.Get(ctx, completePath)
 	if err != nil {
-		return false, fmt.Errorf("failed to retrieve %s from kvstore: %s", path, err)
+		return false, fmt.Errorf("failed to retrieve %s from kvstore: %s", completePath, err)
 	} else if blob == nil {
 		return false, nil // this blob does not exist
 	}
 
 	logger.Debugw("parsing-data-blobs", log.Fields{
-		"path": path,
+		"path": completePath,
 	})
 
 	if err := proto.Unmarshal(blob.Value.([]byte), target); err != nil {
@@ -121,20 +124,9 @@ func (p *Proxy) Get(ctx context.Context, path string, target proto.Message) (boo
 	return true, nil
 }
 
-// Update will modify information in the data model at the specified location with the provided data
-func (p *Proxy) Update(ctx context.Context, path string, data proto.Message) error {
-	return p.add(ctx, path, data)
-}
-
-// AddWithID will insert new data at specified location.
-// This method also allows the user to specify the ID.
-func (p *Proxy) AddWithID(ctx context.Context, path string, id string, data proto.Message) error {
-	return p.add(ctx, path+"/"+id, data)
-}
-
-// add will insert new data at specified location.
-func (p *Proxy) add(ctx context.Context, path string, data proto.Message) error {
-	completePath := p.path + path
+// Set will insert new data at specified location.
+func (p *Proxy) Set(ctx context.Context, id string, data proto.Message) error {
+	completePath := p.path + id
 
 	logger.Debugw("proxy-add", log.Fields{
 		"path": completePath,
@@ -152,8 +144,8 @@ func (p *Proxy) add(ctx context.Context, path string, data proto.Message) error 
 }
 
 // Remove will delete an entry at the specified location
-func (p *Proxy) Remove(ctx context.Context, path string) error {
-	completePath := p.path + path
+func (p *Proxy) Remove(ctx context.Context, id string) error {
+	completePath := p.path + id
 
 	logger.Debugw("proxy-remove", log.Fields{
 		"path": completePath,

@@ -137,7 +137,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
 
 	endpointMgr := kafka.NewEndpointManager(backend)
-	proxy := model.NewProxy(backend, "/")
+	proxy := model.NewProxy(backend)
 	adapterMgr := adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
 
 	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, adapterMgr, dat.kmp, endpointMgr, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
@@ -194,7 +194,7 @@ func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client
 func (dat *DATest) createDeviceAgent(t *testing.T) *Agent {
 	deviceMgr := dat.deviceMgr
 	clonedDevice := proto.Clone(dat.device).(*voltha.Device)
-	deviceAgent := newAgent(deviceMgr.adapterProxy, clonedDevice, deviceMgr, deviceMgr.clusterDataProxy, deviceMgr.defaultTimeout)
+	deviceAgent := newAgent(deviceMgr.adapterProxy, clonedDevice, deviceMgr, deviceMgr.dbProxy, deviceMgr.defaultTimeout)
 	d, err := deviceAgent.start(context.TODO(), clonedDevice)
 	assert.Nil(t, err)
 	assert.NotNil(t, d)

@@ -45,7 +45,7 @@ type LogicalAgent struct {
 	rootDeviceID       string
 	deviceMgr          *Manager
 	ldeviceMgr         *LogicalManager
-	clusterDataProxy   *model.Proxy
+	ldProxy            *model.Proxy
 	stopped            bool
 	deviceRoutes       *route.DeviceRoutes
 	lockDeviceRoutes   sync.RWMutex
@@ -59,14 +59,14 @@ type LogicalAgent struct {
 	stopOnce           sync.Once
 }
 
-func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
-	deviceMgr *Manager, cdProxy *model.Proxy, timeout time.Duration) *LogicalAgent {
+func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
+	deviceMgr *Manager, logicalDeviceProxy *model.Proxy, timeout time.Duration) *LogicalAgent {
 	var agent LogicalAgent
 	agent.logicalDeviceID = id
 	agent.serialNumber = sn
 	agent.rootDeviceID = deviceID
 	agent.deviceMgr = deviceMgr
-	agent.clusterDataProxy = cdProxy
+	agent.ldProxy = logicalDeviceProxy
 	agent.ldeviceMgr = ldeviceMgr
 	agent.flowDecomposer = fd.NewFlowDecomposer(agent.deviceMgr)
 	agent.logicalPortsNo = make(map[uint32]bool)
@@ -117,7 +117,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		ld.Ports = []*voltha.LogicalPort{}
 
 		// Save the logical device
-		if err := agent.clusterDataProxy.AddWithID(ctx, "logical_devices", ld.Id, ld); err != nil {
+		if err := agent.ldProxy.Set(ctx, ld.Id, ld); err != nil {
 			logger.Errorw("failed-to-add-logical-device", log.Fields{"logical-device-id": agent.logicalDeviceID})
 			return err
 		}
@@ -136,7 +136,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
 		// will destroy this agent.
 		ld := &voltha.LogicalDevice{}
-		have, err := agent.clusterDataProxy.Get(ctx, "logical_devices/"+agent.logicalDeviceID, ld)
+		have, err := agent.ldProxy.Get(ctx, agent.logicalDeviceID, ld)
 		if err != nil {
 			return err
 		} else if !have {
@@ -180,7 +180,7 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 		defer agent.requestQueue.RequestComplete()
 
 		//Remove the logical device from the model
-		if err := agent.clusterDataProxy.Remove(ctx, "logical_devices/"+agent.logicalDeviceID); err != nil {
+		if err := agent.ldProxy.Remove(ctx, agent.logicalDeviceID); err != nil {
 			returnErr = err
 		} else {
 			logger.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
@@ -544,7 +544,7 @@ func (agent *LogicalAgent) updateLogicalDeviceWithoutLock(ctx context.Context, l
 	}
 
 	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-	if err := agent.clusterDataProxy.Update(updateCtx, "logical_devices/"+agent.logicalDeviceID, logicalDevice); err != nil {
+	if err := agent.ldProxy.Set(updateCtx, agent.logicalDeviceID, logicalDevice); err != nil {
 		logger.Errorw("failed-to-update-logical-devices-to-cluster-proxy", log.Fields{"error": err})
 		return err
 	}

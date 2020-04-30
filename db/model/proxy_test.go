@@ -19,6 +19,11 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
@@ -27,10 +32,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"strings"
-	"sync"
-	"testing"
 )
 
 var (
@@ -66,9 +67,10 @@ func init() {
 	}
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
 
-	TestProxyRootLogicalDevice = NewProxy(mockBackend, "/")
-	TestProxyRootDevice = NewProxy(mockBackend, "/")
-	TestProxyRootAdapter = NewProxy(mockBackend, "/")
+	proxy := NewProxy(mockBackend)
+	TestProxyRootLogicalDevice = proxy.SubProxy("logical_devices")
+	TestProxyRootDevice = proxy.SubProxy("device")
+	TestProxyRootAdapter = proxy.SubProxy("adapters")
 
 	TestProxyLogicalPorts = []*voltha.LogicalPort{
 		{
@@ -169,7 +171,7 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 	TestProxyDeviceID = "0001" + hex.EncodeToString(devIDBin)[:12]
 	TestProxyDevice.Id = TestProxyDeviceID
 
-	if err := TestProxyRootDevice.AddWithID(context.Background(), "devices", TestProxyDeviceID, TestProxyDevice); err != nil {
+	if err := TestProxyRootDevice.Set(context.Background(), TestProxyDeviceID, TestProxyDevice); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to add test proxy device due to error: %v", err)
 		t.Errorf("failed to add device: %s", err)
 	}
@@ -177,7 +179,7 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 
 	// Verify that the added device can now be retrieved
 	d := &voltha.Device{}
-	if have, err := TestProxyRootDevice.Get(context.Background(), "devices/"+TestProxyDeviceID, d); err != nil {
+	if have, err := TestProxyRootDevice.Get(context.Background(), TestProxyDeviceID, d); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed get device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -191,13 +193,13 @@ func TestProxy_1_1_1_Add_NewDevice(t *testing.T) {
 func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
 	TestProxyDevice.Id = TestProxyDeviceID
 
-	if err := TestProxyRootDevice.add(context.Background(), "devices", TestProxyDevice); err != nil {
+	if err := TestProxyRootDevice.Set(context.Background(), "devices", TestProxyDevice); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to add device to test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
 
 	d := &voltha.Device{}
-	if have, err := TestProxyRootDevice.Get(context.Background(), "devices/"+TestProxyDeviceID, d); err != nil {
+	if have, err := TestProxyRootDevice.Get(context.Background(), TestProxyDeviceID, d); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed get device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -217,7 +219,7 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 	TestProxyAdapter.Id = TestProxyAdapterID
 
 	// Add the adapter
-	if err := TestProxyRootAdapter.AddWithID(context.Background(), "adapters", TestProxyAdapterID, TestProxyAdapter); err != nil {
+	if err := TestProxyRootAdapter.Set(context.Background(), TestProxyAdapterID, TestProxyAdapter); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to add adapter to test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else {
@@ -226,7 +228,7 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 
 	// Verify that the added device can now be retrieved
 	d := &voltha.Device{}
-	if have, err := TestProxyRootAdapter.Get(context.Background(), "adapters/"+TestProxyAdapterID, d); err != nil {
+	if have, err := TestProxyRootAdapter.Get(context.Background(), TestProxyAdapterID, d); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to retrieve device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -240,7 +242,7 @@ func TestProxy_1_1_3_Add_NewAdapter(t *testing.T) {
 
 func TestProxy_1_2_1_Get_AllDevices(t *testing.T) {
 	var devices []*voltha.Device
-	if err := TestProxyRootDevice.List(context.Background(), "devices", &devices); err != nil {
+	if err := TestProxyRootDevice.List(context.Background(), &devices); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get all devices info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
@@ -255,7 +257,7 @@ func TestProxy_1_2_1_Get_AllDevices(t *testing.T) {
 
 func TestProxy_1_2_2_Get_SingleDevice(t *testing.T) {
 	d := &voltha.Device{}
-	if have, err := TestProxyRootDevice.Get(context.Background(), "devices/"+TestProxyTargetDeviceID, d); err != nil {
+	if have, err := TestProxyRootDevice.Get(context.Background(), TestProxyTargetDeviceID, d); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get single device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -270,7 +272,7 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 	var fwVersion int
 
 	retrieved := &voltha.Device{}
-	if have, err := TestProxyRootDevice.Get(context.Background(), "devices/"+TestProxyTargetDeviceID, retrieved); err != nil {
+	if have, err := TestProxyRootDevice.Get(context.Background(), TestProxyTargetDeviceID, retrieved); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -287,12 +289,12 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 
 		retrieved.FirmwareVersion = strconv.Itoa(fwVersion)
 
-		if err := TestProxyRootDevice.Update(context.Background(), "devices/"+TestProxyTargetDeviceID, retrieved); err != nil {
+		if err := TestProxyRootDevice.Set(context.Background(), TestProxyTargetDeviceID, retrieved); err != nil {
 			BenchmarkProxyLogger.Errorf("Failed to update device info test proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		}
 		afterUpdate := &voltha.Device{}
-		if have, err := TestProxyRootDevice.Get(context.Background(), "devices/"+TestProxyTargetDeviceID, afterUpdate); err != nil {
+		if have, err := TestProxyRootDevice.Get(context.Background(), TestProxyTargetDeviceID, afterUpdate); err != nil {
 			BenchmarkProxyLogger.Errorf("Failed to get device info from test proxy due to error: %v", err)
 		} else if !have {
 			t.Error("Failed to update device")
@@ -301,7 +303,7 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 		}
 
 		d := &voltha.Device{}
-		if have, err := TestProxyRootDevice.Get(context.Background(), "devices/"+TestProxyTargetDeviceID, d); err != nil {
+		if have, err := TestProxyRootDevice.Get(context.Background(), TestProxyTargetDeviceID, d); err != nil {
 			BenchmarkProxyLogger.Errorf("Failed to get device info from test proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		} else if !have {
@@ -315,10 +317,10 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 
 func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 
-	adaptersProxy := NewProxy(mockBackend, "/adapters")
+	adaptersProxy := NewProxy(mockBackend).SubProxy("adapters")
 
 	retrieved := &voltha.Adapter{}
-	if have, err := TestProxyRootAdapter.Get(context.Background(), "adapters/"+TestProxyAdapterID, retrieved); err != nil {
+	if have, err := TestProxyRootAdapter.Get(context.Background(), TestProxyAdapterID, retrieved); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to retrieve adapter info from adapters proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -328,7 +330,7 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 
 		retrieved.Version = "test-adapter-version-2"
 
-		if err := adaptersProxy.Update(context.Background(), TestProxyAdapterID, retrieved); err != nil {
+		if err := adaptersProxy.Set(context.Background(), TestProxyAdapterID, retrieved); err != nil {
 			BenchmarkProxyLogger.Errorf("Failed to update adapter info in adapters proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		} else {
@@ -336,7 +338,7 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 		}
 
 		d := &voltha.Adapter{}
-		if have, err := TestProxyRootAdapter.Get(context.Background(), "adapters/"+TestProxyAdapterID, d); err != nil {
+		if have, err := TestProxyRootAdapter.Get(context.Background(), TestProxyAdapterID, d); err != nil {
 			BenchmarkProxyLogger.Errorf("Failed to get updated adapter info from adapters proxy due to error: %v", err)
 			assert.NotNil(t, err)
 		} else if !have {
@@ -349,7 +351,7 @@ func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
 }
 
 func TestProxy_1_4_1_Remove_Device(t *testing.T) {
-	if err := TestProxyRootDevice.Remove(context.Background(), "devices/"+TestProxyDeviceID); err != nil {
+	if err := TestProxyRootDevice.Remove(context.Background(), TestProxyDeviceID); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to remove device from devices proxy due to error: %v", err)
 		t.Errorf("failed to remove device: %s", err)
 	} else {
@@ -357,7 +359,7 @@ func TestProxy_1_4_1_Remove_Device(t *testing.T) {
 	}
 
 	d := &voltha.Device{}
-	have, err := TestProxyRootDevice.Get(context.Background(), "devices/"+TestProxyDeviceID, d)
+	have, err := TestProxyRootDevice.Get(context.Background(), TestProxyDeviceID, d)
 	if err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get device info from devices proxy due to error: %v", err)
 		assert.NotNil(t, err)
@@ -375,7 +377,7 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 	TestProxyLogicalDeviceID = "0001" + hex.EncodeToString(ldIDBin)[:12]
 	TestProxyLogicalDevice.Id = TestProxyLogicalDeviceID
 
-	if err := TestProxyRootLogicalDevice.AddWithID(context.Background(), "logical_devices", TestProxyLogicalDeviceID, TestProxyLogicalDevice); err != nil {
+	if err := TestProxyRootLogicalDevice.Set(context.Background(), TestProxyLogicalDeviceID, TestProxyLogicalDevice); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to add new logical device into proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else {
@@ -383,7 +385,7 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 	}
 
 	ld := &voltha.LogicalDevice{}
-	if have, err := TestProxyRootLogicalDevice.Get(context.Background(), "logical_devices/"+TestProxyLogicalDeviceID, ld); err != nil {
+	if have, err := TestProxyRootLogicalDevice.Get(context.Background(), TestProxyLogicalDeviceID, ld); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get logical device info from logical device proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -397,7 +399,7 @@ func TestProxy_2_1_1_Add_NewLogicalDevice(t *testing.T) {
 func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
 	TestProxyLogicalDevice.Id = TestProxyLogicalDeviceID
 
-	if err := TestProxyRootLogicalDevice.add(context.Background(), "logical_devices", TestProxyLogicalDevice); err != nil {
+	if err := TestProxyRootLogicalDevice.Set(context.Background(), "logical_devices", TestProxyLogicalDevice); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to add logical device due to error: %v", err)
 		assert.NotNil(t, err)
 	}
@@ -417,7 +419,7 @@ func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
 
 func TestProxy_2_2_1_Get_AllLogicalDevices(t *testing.T) {
 	var logicalDevices []*voltha.LogicalDevice
-	if err := TestProxyRootLogicalDevice.List(context.Background(), "logical_devices", &logicalDevices); err != nil {
+	if err := TestProxyRootLogicalDevice.List(context.Background(), &logicalDevices); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get all logical devices from proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	}
@@ -432,7 +434,7 @@ func TestProxy_2_2_1_Get_AllLogicalDevices(t *testing.T) {
 
 func TestProxy_2_2_2_Get_SingleLogicalDevice(t *testing.T) {
 	ld := &voltha.LogicalDevice{}
-	if have, err := TestProxyRootLogicalDevice.Get(context.Background(), "logical_devices/"+TestProxyTargetLogicalDeviceID, ld); err != nil {
+	if have, err := TestProxyRootLogicalDevice.Get(context.Background(), TestProxyTargetLogicalDeviceID, ld); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get single logical device from proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -448,7 +450,7 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 	var fwVersion int
 
 	retrieved := &voltha.LogicalDevice{}
-	if have, err := TestProxyRootLogicalDevice.Get(context.Background(), "logical_devices/"+TestProxyTargetLogicalDeviceID, retrieved); err != nil {
+	if have, err := TestProxyRootLogicalDevice.Get(context.Background(), TestProxyTargetLogicalDeviceID, retrieved); err != nil {
 		BenchmarkProxyLogger.Errorf("Failed to get logical devices due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -465,7 +467,7 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 
 		retrieved.RootDeviceId = strconv.Itoa(fwVersion)
 
-		if err := TestProxyRootLogicalDevice.Update(context.Background(), "logical_devices/"+TestProxyTargetLogicalDeviceID, retrieved); err != nil {
+		if err := TestProxyRootLogicalDevice.Set(context.Background(), TestProxyTargetLogicalDeviceID, retrieved); err != nil {
 			BenchmarkProxyLogger.Errorf("Faield to update logical device info due to error: %v", err)
 			assert.NotNil(t, err)
 		} else {
@@ -473,7 +475,7 @@ func TestProxy_2_3_1_Update_LogicalDevice(t *testing.T) {
 		}
 
 		d := &voltha.LogicalDevice{}
-		if have, err := TestProxyRootLogicalDevice.Get(context.Background(), "logical_devices/"+TestProxyTargetLogicalDeviceID, d); err != nil {
+		if have, err := TestProxyRootLogicalDevice.Get(context.Background(), TestProxyTargetLogicalDeviceID, d); err != nil {
 			BenchmarkProxyLogger.Errorf("Failed to get logical device info due to error: %v", err)
 			assert.NotNil(t, err)
 		} else if !have {
