@@ -19,7 +19,6 @@ package meter
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"sync"
 
 	"github.com/opencord/voltha-go/db/model"
@@ -35,8 +34,7 @@ type Loader struct {
 	lock   sync.RWMutex
 	meters map[uint32]*chunk
 
-	dbProxy         *model.Proxy
-	logicalDeviceID string // TODO: dbProxy should already have the logicalDeviceID component of the path internally
+	dbProxy *model.Proxy
 }
 
 // chunk keeps a meter and the lock for this meter
@@ -48,11 +46,10 @@ type chunk struct {
 	meter *ofp.OfpMeterEntry
 }
 
-func NewLoader(dataProxy *model.Proxy, logicalDeviceID string) *Loader {
+func NewLoader(dbProxy *model.Proxy) *Loader {
 	return &Loader{
-		meters:          make(map[uint32]*chunk),
-		dbProxy:         dataProxy,
-		logicalDeviceID: logicalDeviceID,
+		meters:  make(map[uint32]*chunk),
+		dbProxy: dbProxy,
 	}
 }
 
@@ -63,7 +60,7 @@ func (loader *Loader) Load(ctx context.Context) {
 	defer loader.lock.Unlock()
 
 	var meters []*ofp.OfpMeterEntry
-	if err := loader.dbProxy.List(ctx, "logical_meters/"+loader.logicalDeviceID, &meters); err != nil {
+	if err := loader.dbProxy.List(ctx, &meters); err != nil {
 		logger.Errorw("failed-to-list-meters-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
@@ -88,9 +85,8 @@ func (loader *Loader) LockOrCreate(ctx context.Context, meter *ofp.OfpMeterEntry
 		entry.lock.Lock()
 		loader.lock.Unlock()
 
-		meterID := strconv.FormatUint(uint64(meter.Config.MeterId), 10)
-		if err := loader.dbProxy.AddWithID(ctx, "logical_meters/"+loader.logicalDeviceID, meterID, meter); err != nil {
-			logger.Errorw("failed-adding-meter-to-db", log.Fields{"deviceID": loader.logicalDeviceID, "meterID": meterID, "err": err})
+		if err := loader.dbProxy.Set(ctx, fmt.Sprint(meter.Config.MeterId), meter); err != nil {
+			logger.Errorw("failed-adding-meter-to-db", log.Fields{"meterID": meter.Config.MeterId, "err": err})
 
 			// revert the map
 			loader.lock.Lock()
@@ -147,9 +143,8 @@ func (h *Handle) GetReadOnly() *ofp.OfpMeterEntry {
 // Update updates an existing meter in the kv.
 // The provided "meter" must not be modified afterwards.
 func (h *Handle) Update(ctx context.Context, meter *ofp.OfpMeterEntry) error {
-	path := fmt.Sprintf("logical_meters/%s/%d", h.loader.logicalDeviceID, meter.Config.MeterId)
-	if err := h.loader.dbProxy.Update(ctx, path, meter); err != nil {
-		return status.Errorf(codes.Internal, "failed-update-meter:%s:%d %s", h.loader.logicalDeviceID, meter.Config.MeterId, err)
+	if err := h.loader.dbProxy.Set(ctx, fmt.Sprint(meter.Config.MeterId), meter); err != nil {
+		return status.Errorf(codes.Internal, "failed-update-meter-%v: %s", meter.Config.MeterId, err)
 	}
 	h.chunk.meter = meter
 	return nil
@@ -157,9 +152,8 @@ func (h *Handle) Update(ctx context.Context, meter *ofp.OfpMeterEntry) error {
 
 // Delete removes the device from the kv
 func (h *Handle) Delete(ctx context.Context) error {
-	path := fmt.Sprintf("logical_meters/%s/%d", h.loader.logicalDeviceID, h.chunk.meter.Config.MeterId)
-	if err := h.loader.dbProxy.Remove(ctx, path); err != nil {
-		return fmt.Errorf("couldnt-delete-meter-from-store-%s", path)
+	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.meter.Config.MeterId)); err != nil {
+		return fmt.Errorf("couldnt-delete-meter-from-store-%v", h.chunk.meter.Config.MeterId)
 	}
 	h.chunk.deleted = true
 

@@ -19,7 +19,6 @@ package group
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"sync"
 
 	"github.com/opencord/voltha-go/db/model"
@@ -35,8 +34,7 @@ type Loader struct {
 	lock   sync.RWMutex
 	groups map[uint32]*chunk
 
-	dbProxy         *model.Proxy
-	logicalDeviceID string // TODO: dbProxy should already have the logicalDeviceID component of the path internally
+	dbProxy *model.Proxy
 }
 
 // chunk keeps a group and the lock for this group
@@ -48,11 +46,10 @@ type chunk struct {
 	group *ofp.OfpGroupEntry
 }
 
-func NewLoader(dataProxy *model.Proxy, logicalDeviceID string) *Loader {
+func NewLoader(dbProxy *model.Proxy) *Loader {
 	return &Loader{
-		groups:          make(map[uint32]*chunk),
-		dbProxy:         dataProxy,
-		logicalDeviceID: logicalDeviceID,
+		groups:  make(map[uint32]*chunk),
+		dbProxy: dbProxy,
 	}
 }
 
@@ -63,7 +60,7 @@ func (loader *Loader) Load(ctx context.Context) {
 	defer loader.lock.Unlock()
 
 	var groups []*ofp.OfpGroupEntry
-	if err := loader.dbProxy.List(ctx, "logical_groups/"+loader.logicalDeviceID, &groups); err != nil {
+	if err := loader.dbProxy.List(ctx, &groups); err != nil {
 		logger.Errorw("failed-to-list-groups-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
@@ -88,9 +85,8 @@ func (loader *Loader) LockOrCreate(ctx context.Context, group *ofp.OfpGroupEntry
 		entry.lock.Lock()
 		loader.lock.Unlock()
 
-		groupID := strconv.FormatUint(uint64(group.Desc.GroupId), 10)
-		if err := loader.dbProxy.AddWithID(ctx, "logical_groups/"+loader.logicalDeviceID, groupID, group); err != nil {
-			logger.Errorw("failed-adding-group-to-db", log.Fields{"deviceID": loader.logicalDeviceID, "groupID": groupID, "err": err})
+		if err := loader.dbProxy.Set(ctx, fmt.Sprint(group.Desc.GroupId), group); err != nil {
+			logger.Errorw("failed-adding-group-to-db", log.Fields{"groupID": group.Desc.GroupId, "err": err})
 
 			// revert the map
 			loader.lock.Lock()
@@ -147,9 +143,8 @@ func (h *Handle) GetReadOnly() *ofp.OfpGroupEntry {
 // Update updates an existing group in the kv.
 // The provided "group" must not be modified afterwards.
 func (h *Handle) Update(ctx context.Context, group *ofp.OfpGroupEntry) error {
-	path := fmt.Sprintf("logical_groups/%s/%d", h.loader.logicalDeviceID, group.Desc.GroupId)
-	if err := h.loader.dbProxy.Update(ctx, path, group); err != nil {
-		return status.Errorf(codes.Internal, "failed-update-group:%s:%d %s", h.loader.logicalDeviceID, group.Desc.GroupId, err)
+	if err := h.loader.dbProxy.Set(ctx, fmt.Sprint(group.Desc.GroupId), group); err != nil {
+		return status.Errorf(codes.Internal, "failed-update-group-%v: %s", group.Desc.GroupId, err)
 	}
 	h.chunk.group = group
 	return nil
@@ -157,9 +152,8 @@ func (h *Handle) Update(ctx context.Context, group *ofp.OfpGroupEntry) error {
 
 // Delete removes the device from the kv
 func (h *Handle) Delete(ctx context.Context) error {
-	path := fmt.Sprintf("logical_groups/%s/%d", h.loader.logicalDeviceID, h.chunk.group.Desc.GroupId)
-	if err := h.loader.dbProxy.Remove(ctx, path); err != nil {
-		return fmt.Errorf("couldnt-delete-group-from-store-%s", path)
+	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.group.Desc.GroupId)); err != nil {
+		return fmt.Errorf("couldnt-delete-group-from-store-%v", h.chunk.group.Desc.GroupId)
 	}
 	h.chunk.deleted = true
 
