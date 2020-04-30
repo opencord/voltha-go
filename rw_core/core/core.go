@@ -120,11 +120,11 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	)
 	// defer kafkaClient.Stop()
 
-	// create kv proxy
-	proxy := model.NewProxy(backend, "/")
+	// create kv path
+	dbPath := model.NewDBPath(backend)
 
 	// load adapters & device types while other things are starting
-	adapterMgr := adapter.NewAdapterManager(proxy, id, kafkaClient)
+	adapterMgr := adapter.NewAdapterManager(dbPath, id, kafkaClient)
 	go adapterMgr.Start(ctx)
 
 	// connect to kafka, then wait until reachable and publisher/consumer created
@@ -139,7 +139,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(proxy, adapterMgr, kmp, endpointMgr, cf.CorePairTopic, id, cf.DefaultCoreTimeout)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CorePairTopic, id, cf.DefaultCoreTimeout)
 
 	// register kafka RPC handler
 	registerAdapterRequestHandlers(kmp, deviceMgr, adapterMgr, cf.CoreTopic, cf.CorePairTopic)
