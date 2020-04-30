@@ -44,25 +44,25 @@ import (
 
 // Agent represents device agent attributes
 type Agent struct {
-	deviceID         string
-	parentID         string
-	deviceType       string
-	isRootdevice     bool
-	adapterProxy     *remote.AdapterProxy
-	adapterMgr       *adapter.Manager
-	deviceMgr        *Manager
-	clusterDataProxy *model.Proxy
-	exitChannel      chan int
-	device           *voltha.Device
-	requestQueue     *coreutils.RequestQueue
-	defaultTimeout   time.Duration
-	startOnce        sync.Once
-	stopOnce         sync.Once
-	stopped          bool
+	deviceID       string
+	parentID       string
+	deviceType     string
+	isRootdevice   bool
+	adapterProxy   *remote.AdapterProxy
+	adapterMgr     *adapter.Manager
+	deviceMgr      *Manager
+	dbProxy        *model.Proxy
+	exitChannel    chan int
+	device         *voltha.Device
+	requestQueue   *coreutils.RequestQueue
+	defaultTimeout time.Duration
+	startOnce      sync.Once
+	stopOnce       sync.Once
+	stopped        bool
 }
 
 //newAgent creates a new device agent. The device will be initialized when start() is called.
-func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager, cdProxy *model.Proxy, timeout time.Duration) *Agent {
+func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager, deviceProxy *model.Proxy, timeout time.Duration) *Agent {
 	var agent Agent
 	agent.adapterProxy = ap
 	if device.Id == "" {
@@ -77,7 +77,7 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 	agent.deviceMgr = deviceMgr
 	agent.adapterMgr = deviceMgr.adapterMgr
 	agent.exitChannel = make(chan int, 1)
-	agent.clusterDataProxy = cdProxy
+	agent.dbProxy = deviceProxy
 	agent.defaultTimeout = timeout
 	agent.device = proto.Clone(device).(*voltha.Device)
 	agent.requestQueue = coreutils.NewRequestQueue()
@@ -105,7 +105,7 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 	if deviceToCreate == nil {
 		// Load the existing device
 		device := &voltha.Device{}
-		have, err := agent.clusterDataProxy.Get(ctx, "devices/"+agent.deviceID, device)
+		have, err := agent.dbProxy.Get(ctx, agent.deviceID, device)
 		if err != nil {
 			return nil, err
 		} else if !have {
@@ -118,8 +118,8 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 		logger.Infow("device-loaded-from-dB", log.Fields{"device-id": agent.deviceID})
 	} else {
 		// Create a new device
-		// Assumption is that AdminState, FlowGroups, and Flows are unitialized since this
-		// is a new device, so populate them here before passing the device to clusterDataProxy.AddWithId.
+		// Assumption is that AdminState, FlowGroups, and Flows are uninitialized since this
+		// is a new device, so populate them here before passing the device to ldProxy.Set.
 		// agent.deviceId will also have been set during newAgent().
 		device = (proto.Clone(deviceToCreate)).(*voltha.Device)
 		device.Id = agent.deviceID
@@ -133,7 +133,7 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 		}
 
 		// Add the initial device to the local model
-		if err := agent.clusterDataProxy.AddWithID(ctx, "devices", agent.deviceID, device); err != nil {
+		if err := agent.dbProxy.Set(ctx, agent.deviceID, device); err != nil {
 			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s: %s", agent.deviceID, err)
 		}
 		agent.device = device
@@ -159,7 +159,7 @@ func (agent *Agent) stop(ctx context.Context) error {
 	logger.Infow("stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
 
 	//	Remove the device from the KV store
-	if err := agent.clusterDataProxy.Remove(ctx, "devices/"+agent.deviceID); err != nil {
+	if err := agent.dbProxy.Remove(ctx, agent.deviceID); err != nil {
 		return err
 	}
 
@@ -182,7 +182,7 @@ func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 	logger.Debug("reconciling-device-agent-devicetype")
 	// TODO: context timeout
 	device := &voltha.Device{}
-	if have, err := agent.clusterDataProxy.Get(ctx, "devices/"+agent.deviceID, device); err != nil {
+	if have, err := agent.dbProxy.Get(ctx, agent.deviceID, device); err != nil {
 		logger.Errorw("kv-get-failed", log.Fields{"device-id": agent.deviceID, "error": err})
 		return
 	} else if !have {
@@ -1553,7 +1553,7 @@ func (agent *Agent) updateDeviceInStoreWithoutLock(ctx context.Context, device *
 		return errors.New("device agent stopped")
 	}
 
-	if err := agent.clusterDataProxy.Update(ctx, "devices/"+agent.deviceID, device); err != nil {
+	if err := agent.dbProxy.Set(ctx, agent.deviceID, device); err != nil {
 		return status.Errorf(codes.Internal, "failed-update-device:%s: %s", agent.deviceID, err)
 	}
 	logger.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})

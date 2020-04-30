@@ -42,7 +42,8 @@ type LogicalManager struct {
 	logicalDeviceAgents            sync.Map
 	deviceMgr                      *Manager
 	kafkaICProxy                   kafka.InterContainerProxy
-	clusterDataProxy               *model.Proxy
+	dbProxy                        *model.Path
+	ldProxy                        *model.Proxy
 	defaultTimeout                 time.Duration
 	logicalDevicesLoadingLock      sync.RWMutex
 	logicalDeviceLoadingInProgress map[string][]chan int
@@ -98,7 +99,7 @@ func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Em
 	logger.Debug("ListAllLogicalDevices")
 
 	var logicalDevices []*voltha.LogicalDevice
-	if err := ldMgr.clusterDataProxy.List(ctx, "logical_devices", &logicalDevices); err != nil {
+	if err := ldMgr.ldProxy.List(ctx, &logicalDevices); err != nil {
 		logger.Errorw("failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
 		return nil, err
 	}
@@ -125,7 +126,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 
 	logger.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
-	agent := newLogicalDeviceAgent(id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
+	agent := newLogicalAgent(id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbProxy, ldMgr.ldProxy, ldMgr.defaultTimeout)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 
 	// Update the root device with the logical device Id reference
@@ -135,7 +136,8 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 	}
 
 	go func() {
-		//agent := newLogicalDeviceAgent(id, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
+		//TODO: either wait for the agent to be started before returning, or
+		//      implement locks in the agent to ensure request are not processed before start() is complete
 		err := agent.start(context.Background(), false)
 		if err != nil {
 			logger.Errorw("unable-to-create-the-logical-device", log.Fields{"error": err})
@@ -173,7 +175,7 @@ func (ldMgr *LogicalManager) stopManagingLogicalDeviceWithDeviceID(ctx context.C
 //getLogicalDeviceFromModel retrieves the logical device data from the model.
 func (ldMgr *LogicalManager) getLogicalDeviceFromModel(ctx context.Context, lDeviceID string) (*voltha.LogicalDevice, error) {
 	logicalDevice := &voltha.LogicalDevice{}
-	if have, err := ldMgr.clusterDataProxy.Get(ctx, "logical_devices/"+lDeviceID, logicalDevice); err != nil {
+	if have, err := ldMgr.ldProxy.Get(ctx, lDeviceID, logicalDevice); err != nil {
 		logger.Errorw("failed-to-get-logical-devices-from-cluster-proxy", log.Fields{"error": err})
 		return nil, err
 	} else if !have {
@@ -196,7 +198,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 			ldMgr.logicalDevicesLoadingLock.Unlock()
 			if _, err := ldMgr.getLogicalDeviceFromModel(ctx, lDeviceID); err == nil {
 				logger.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceID})
-				agent := newLogicalDeviceAgent(lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.clusterDataProxy, ldMgr.defaultTimeout)
+				agent := newLogicalAgent(lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbProxy, ldMgr.ldProxy, ldMgr.defaultTimeout)
 				if err := agent.start(ctx, true); err != nil {
 					return err
 				}
