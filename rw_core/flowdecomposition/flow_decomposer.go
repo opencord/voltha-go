@@ -19,6 +19,7 @@ package flowdecomposition
 import (
 	"context"
 	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-go/rw_core/route"
@@ -94,10 +95,10 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 						uint32(ofp.OfpPortNo_OFPP_CONTROLLER))
 				}
 				// Update flow Id as a change in the instruction field will result in a new flow ID
-				var err error
-				if f.Id, err = fu.HashFlowStats(f); err != nil {
-					return nil, err
-				}
+				//var err error
+				//if f.Id, err = fu.HashFlowStats(f); err != nil {
+				//return nil, err
+				//}
 				newDeviceRules.AddFlow(deviceID, (proto.Clone(f)).(*ofp.OfpFlowStats))
 			}
 		}
