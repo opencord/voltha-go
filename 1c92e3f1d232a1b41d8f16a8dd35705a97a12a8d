@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c7eada7_68625f2d",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-30T14:11:42Z",
+      "side": 1,
+      "message": "This was required in cases where the routes were not fully populated by the time a flow is received for that port.   I am experimenting with on demand route creation.   Not sure if we will get much benefit if the PON system is being discovered at that time.",
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
