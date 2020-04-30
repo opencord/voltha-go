@@ -989,7 +989,8 @@ func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, nu
 	}
 	// Wait for logical device to have the flows (or none
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
-		return lds != nil && len(lds.Items) == 1 && len(lds.Items[0].Flows.Items) == expectedNumFlows
+		flows, _ := nbi.ListLogicalDeviceFlows(getContext(), &voltha.ID{Id: lds.Items[0].Id})
+		return lds != nil && len(lds.Items) == 1 && len(flows.Items) == expectedNumFlows
 	}
 	// No timeout implies a success
 	err := waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
