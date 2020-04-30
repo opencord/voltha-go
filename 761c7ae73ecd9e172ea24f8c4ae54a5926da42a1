@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cc07183c_f1610590",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-30T17:39:44Z",
+      "side": 1,
+      "message": "This is a \"var\" definition.",
+      "parentUuid": "69594ec4_0f8d8a1d",
+      "range": {
+        "startLine": 611,
+        "startChar": 1,
+        "endLine": 611,
+        "endChar": 46
+      },
+      "revId": "761c7ae73ecd9e172ea24f8c4ae54a5926da42a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e29c114_2a6df784",
         "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2020-04-30T17:31:20Z",
       "side": 1,
       "message": "and what?",
+      "range": {
+        "startLine": 1089,
+        "startChar": 45,
+        "endLine": 1089,
+        "endChar": 48
+      },
+      "revId": "761c7ae73ecd9e172ea24f8c4ae54a5926da42a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c84fe27a_c11e3ba8",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-04-30T17:39:44Z",
+      "side": 1,
+      "message": "And nothing I guess :) Will update",
+      "parentUuid": "9e29c114_2a6df784",
       "range": {
         "startLine": 1089,
         "startChar": 45,
