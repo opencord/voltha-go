@@ -17,18 +17,19 @@ package device
 
 import (
 	"context"
-	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-go/rw_core/core/adapter"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"math/rand"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
+	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/config"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
-	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
 	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
@@ -566,9 +567,13 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
-
 	// wait for go routines to be done
 	localWG.Wait()
+	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
+
+	meterChunk, ok := ldAgent.meters[meterMod.MeterId]
+	assert.Equal(t, ok, true)
+	assert.True(t, proto.Equal(meterEntry, meterChunk.meter))
 
 	expectedChange := proto.Clone(originalLogicalDevice).(*voltha.LogicalDevice)
 	expectedChange.Ports[0].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
@@ -577,8 +582,6 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	expectedChange.Ports[1].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
 	expectedChange.Ports[2].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 	expectedChange.Ports[2].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
-	expectedChange.Meters = &voltha.Meters{Items: nil}
-	expectedChange.Meters.Items = append(expectedChange.Meters.Items, fu.MeterEntryFromMeterMod(meterMod))
 	updatedLogicalDevice, _ := ldAgent.GetLogicalDevice(context.Background())
 	assert.NotNil(t, updatedLogicalDevice)
 	assert.True(t, proto.Equal(expectedChange, updatedLogicalDevice))
