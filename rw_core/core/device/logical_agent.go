@@ -57,6 +57,32 @@ type LogicalAgent struct {
 	requestQueue       *coreutils.RequestQueue
 	startOnce          sync.Once
 	stopOnce           sync.Once
+
+	meterIDToMeterMap     sync.Map     // meter_id to MeterChunk
+	meterLock             sync.RWMutex // only used for adding a new entry to meterIDToMeterMap
+	logicalPortToFlowsMap sync.Map     // logical_port to Flows
+	flowsLock             sync.RWMutex // only used for adding a new entry to logicalPortToFlowsMap
+	groupIDToGroupMap     sync.Map     // group_id to Group map
+	groupLock             sync.RWMutex // only used for adding a new entry to groupIDToGroupMap
+
+}
+
+//MeterChunk keeps a meterEntry and its lock
+type MeterChunk struct {
+	meter *ofp.OfpMeterEntry
+	lock  sync.RWMutex
+}
+
+//FlowsChunk keeps a list of flow and the lock for this list
+type FlowsChunk struct {
+	flows *ofp.Flows
+	lock  sync.RWMutex
+}
+
+//GroupChunk keeps a groupEntry and its lock
+type GroupChunk struct {
+	group *ofp.OfpGroupEntry
+	lock  sync.RWMutex
 }
 
 func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
@@ -72,6 +98,12 @@ func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *Lo
 	agent.logicalPortsNo = make(map[uint32]bool)
 	agent.defaultTimeout = timeout
 	agent.requestQueue = coreutils.NewRequestQueue()
+	agent.meterIDToMeterMap = sync.Map{}
+	agent.meterLock = sync.RWMutex{}
+	agent.logicalPortToFlowsMap = sync.Map{}
+	agent.flowsLock = sync.RWMutex{}
+	agent.groupIDToGroupMap = sync.Map{}
+	agent.groupLock = sync.RWMutex{}
 	return &agent
 }
 
@@ -151,6 +183,10 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 
 		// Setup the local list of logical ports
 		agent.addLogicalPortsToMap(ld.Ports)
+		// load the flows, meters and groups from KV to cache
+		agent.loadFlowsFromModel(ctx)
+		agent.loadMetersFromModel(ctx)
+		agent.loadGroupsFromModel(ctx)
 	}
 
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
@@ -205,43 +241,50 @@ func (agent *LogicalAgent) GetLogicalDevice(ctx context.Context) (*voltha.Logica
 // ListLogicalDeviceFlows returns logical device flows
 func (agent *LogicalAgent) ListLogicalDeviceFlows(ctx context.Context) (*ofp.Flows, error) {
 	logger.Debug("ListLogicalDeviceFlows")
-
-	logicalDevice, err := agent.GetLogicalDevice(ctx)
-	if err != nil {
-		return nil, err
+	var flowStats []*ofp.OfpFlowStats
+	agent.logicalPortToFlowsMap.Range(func(key interface{}, value interface{}) bool {
+		flows := value.(*FlowsChunk).flows
+		for _, flow := range flows.Items {
+			flowStats = append(flowStats, (proto.Clone(flow)).(*ofp.OfpFlowStats))
+		}
+		return true
+	})
+	allFlows := ofp.Flows{
+		Items: flowStats,
 	}
-	if logicalDevice.Flows == nil {
-		return &ofp.Flows{}, nil
-	}
-	return (proto.Clone(logicalDevice.Flows)).(*ofp.Flows), nil
+	return &allFlows, nil
 }
 
 // ListLogicalDeviceMeters returns logical device meters
 func (agent *LogicalAgent) ListLogicalDeviceMeters(ctx context.Context) (*ofp.Meters, error) {
 	logger.Debug("ListLogicalDeviceMeters")
 
-	logicalDevice, err := agent.GetLogicalDevice(ctx)
-	if err != nil {
-		return nil, err
+	var meterEntries []*ofp.OfpMeterEntry
+	agent.meterIDToMeterMap.Range(func(key interface{}, value interface{}) bool {
+		meter := value.(*MeterChunk).meter
+		meterEntries = append(meterEntries, (proto.Clone(meter)).(*ofp.OfpMeterEntry))
+		return true
+	})
+	meters := ofp.Meters{
+		Items: meterEntries,
 	}
-	if logicalDevice.Meters == nil {
-		return &ofp.Meters{}, nil
-	}
-	return (proto.Clone(logicalDevice.Meters)).(*ofp.Meters), nil
+	return &meters, nil
 }
 
 // ListLogicalDeviceFlowGroups returns logical device flow groups
 func (agent *LogicalAgent) ListLogicalDeviceFlowGroups(ctx context.Context) (*ofp.FlowGroups, error) {
 	logger.Debug("ListLogicalDeviceFlowGroups")
 
-	logicalDevice, err := agent.GetLogicalDevice(ctx)
-	if err != nil {
-		return nil, err
+	var groupEntries []*ofp.OfpGroupEntry
+	agent.groupIDToGroupMap.Range(func(key interface{}, value interface{}) bool {
+		group := value.(*GroupChunk).group
+		groupEntries = append(groupEntries, (proto.Clone(group)).(*ofp.OfpGroupEntry))
+		return true
+	})
+	groups := ofp.FlowGroups{
+		Items: groupEntries,
 	}
-	if logicalDevice.FlowGroups == nil {
-		return &ofp.FlowGroups{}, nil
-	}
-	return (proto.Clone(logicalDevice.FlowGroups)).(*ofp.FlowGroups), nil
+	return &groups, nil
 }
 
 // ListLogicalDevicePorts returns logical device ports
@@ -260,44 +303,59 @@ func (agent *LogicalAgent) ListLogicalDevicePorts(ctx context.Context) (*voltha.
 }
 
 //updateLogicalDeviceFlowsWithoutLock updates the logical device with the latest flows in the model.
-func (agent *LogicalAgent) updateLogicalDeviceFlowsWithoutLock(ctx context.Context, flows *ofp.Flows) error {
-	ld := agent.getLogicalDeviceWithoutLock()
+func (agent *LogicalAgent) updateLogicalDeviceFlowsWithoutLock(ctx context.Context, flows *ofp.Flows, portNo uint32) error {
 
-	logger.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
-	ld.Flows = flows
-
-	if err := agent.updateLogicalDeviceWithoutLock(ctx, ld); err != nil {
-		logger.Errorw("error-updating-logical-device-with-flows", log.Fields{"error": err})
-		return err
+	path := fmt.Sprintf("logical_flows/%s/%d", agent.logicalDeviceID, portNo)
+	if err := agent.clusterDataProxy.Update(ctx, path, flows); err != nil {
+		return status.Errorf(codes.Internal, "failed-update-flows:%s:%s %s", agent.logicalDeviceID, portNo, err)
 	}
 	return nil
 }
 
 //updateLogicalDeviceMetersWithoutLock updates the logical device with the meters info
-func (agent *LogicalAgent) updateLogicalDeviceMetersWithoutLock(ctx context.Context, meters *ofp.Meters) error {
-	ld := agent.getLogicalDeviceWithoutLock()
+func (agent *LogicalAgent) updateLogicalDeviceMetersWithoutLock(ctx context.Context, meter *ofp.OfpMeterEntry, meterID uint32) error {
 
-	logger.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
-	ld.Meters = meters
-
-	if err := agent.updateLogicalDeviceWithoutLock(ctx, ld); err != nil {
+	path := fmt.Sprintf("meters/%s/%d", agent.logicalDeviceID, meterID)
+	if err := agent.clusterDataProxy.Update(ctx, path, meter); err != nil {
 		logger.Errorw("error-updating-logical-device-with-meters", log.Fields{"error": err})
 		return err
 	}
 	return nil
 }
 
+//deleteLogicalDeviceMeterWithoutLock deletes he meter from cache and DB
+func (agent *LogicalAgent) deleteLogicalDeviceMeterWithoutLock(ctx context.Context, meterID uint32) error {
+	path := fmt.Sprintf("meters/%s/%d", agent.logicalDeviceID, meterID)
+	if err := agent.clusterDataProxy.Remove(ctx, path); err != nil {
+		return errors.New("couldnt-deleted-meter-from-model")
+	}
+	//remove from the store
+	agent.meterLock.Lock()
+	agent.meterIDToMeterMap.Delete(meterID)
+	agent.meterLock.Unlock()
+	return nil
+}
+
 //updateLogicalDeviceFlowGroupsWithoutLock updates the logical device with the flow groups
-func (agent *LogicalAgent) updateLogicalDeviceFlowGroupsWithoutLock(ctx context.Context, flowGroups *ofp.FlowGroups) error {
-	ld := agent.getLogicalDeviceWithoutLock()
-
-	logger.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
-	ld.FlowGroups = flowGroups
-
-	if err := agent.updateLogicalDeviceWithoutLock(ctx, ld); err != nil {
-		logger.Errorw("error-updating-logical-device-with-flowgroups", log.Fields{"error": err})
+func (agent *LogicalAgent) updateLogicalDeviceFlowGroupsWithoutLock(ctx context.Context, groupEntry *ofp.OfpGroupEntry) error {
+	path := fmt.Sprintf("groups/%s/%d", agent.logicalDeviceID, groupEntry.Desc.GroupId)
+	if err := agent.clusterDataProxy.Update(ctx, path, groupEntry); err != nil {
+		logger.Errorw("error-updating-logical-device-with-group", log.Fields{"error": err})
 		return err
 	}
+	return nil
+}
+
+//removeLogicalDeviceFlowGroupsWithoutLock removes the flow groups in cache and DB
+func (agent *LogicalAgent) removeLogicalDeviceFlowGroupsWithoutLock(ctx context.Context, groupID uint32) error {
+	path := fmt.Sprintf("groups/%s/%d", agent.logicalDeviceID, groupID)
+	if err := agent.clusterDataProxy.Remove(ctx, path); err != nil {
+		return errors.New("couldnt-deleted-group-from-model")
+	}
+	//remove from the cache
+	agent.groupLock.Lock()
+	agent.groupIDToGroupMap.Delete(groupID)
+	agent.groupLock.Unlock()
 	return nil
 }
 
@@ -385,6 +443,8 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 				logger.Errorw("error-adding-UNI-port", log.Fields{"error": err})
 			}
 			agent.addLogicalPortToMap(port.PortNo, true)
+			//add port to logicalPortToFlowsMap
+			agent.addFlowsToModelIfNotExist(ctx, port.PortNo)
 		}
 	}
 	return err
@@ -463,6 +523,8 @@ func (agent *LogicalAgent) setupUNILogicalPorts(ctx context.Context, childDevice
 			}
 			if added {
 				agent.addLogicalPortToMap(port.PortNo, false)
+				//add port to logicalPortToFlowsMap
+				agent.addFlowsToModelIfNotExist(ctx, port.PortNo)
 			}
 		}
 	}
@@ -584,9 +646,10 @@ func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.OfpFlo
 	if flow == nil {
 		return nil
 	}
-	if err := agent.generateDeviceRoutesIfNeeded(ctx); err != nil {
+	//TODO: Think of that. Why do we need this here? This takes to much processing time.
+	/*if err := agent.generateDeviceRoutesIfNeeded(ctx); err != nil {
 		return err
-	}
+	}*/
 	switch flow.GetCommand() {
 	case ofp.OfpFlowModCommand_OFPFC_ADD:
 		return agent.flowAdd(ctx, flow)
@@ -649,34 +712,36 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 	if meterMod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
-	logger.Debug("Acquired logical device lock")
-	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	var meters []*ofp.OfpMeterEntry
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
-	}
-	logger.Debugw("Available meters", log.Fields{"meters": meters})
-
-	for _, meter := range meters {
-		if meterMod.MeterId == meter.Config.MeterId {
-			logger.Infow("Meter-already-exists", log.Fields{"meter": *meterMod})
-			return nil
-		}
-	}
+	_, ok := agent.meterIDToMeterMap.Load(meterMod.MeterId)
 
 	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
-	meters = append(meters, meterEntry)
-	//Update model
-	if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, &ofp.Meters{Items: meters}); err != nil {
-		logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+	agent.meterLock.Lock()
+	defer agent.meterLock.Unlock()
+
+	//concurrency control - one or more consecutive threads might fall into this case.
+	//Just one thread is allowed to create the meter.
+	_, ok = agent.meterIDToMeterMap.Load(meterMod.MeterId)
+	//check if the meters already exists or not
+	if ok {
+		logger.Infow("Meter-already-exists", log.Fields{"meter": *meterMod})
+		return nil
+	}
+
+	mChunk := MeterChunk{
+		meter: meterEntry,
+		lock:  sync.RWMutex{},
+	}
+	meterID := fmt.Sprintf("%d", meterMod.MeterId)
+	if err := agent.clusterDataProxy.AddWithID(ctx, "meters/"+agent.logicalDeviceID, meterID, meterEntry); err != nil {
+		logger.Errorw("failed-adding-meter", log.Fields{"deviceID": agent.logicalDeviceID, "meterID": meterID, "err": err})
 		return err
 	}
-	logger.Debugw("Meter-added-successfully", log.Fields{"Added-meter": meterEntry, "updated-meters": lDevice.Meters})
+
+	//Added to KV store. Now add to map
+	agent.meterIDToMeterMap.Store(meterMod.MeterId, &mChunk)
+
+	logger.Debugw("Meter-added-successfully", log.Fields{"Added-meter": meterEntry})
 	return nil
 }
 
@@ -685,56 +750,21 @@ func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMet
 	if meterMod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
 
-	lDevice := agent.getLogicalDeviceWithoutLock()
-
-	var meters []*ofp.OfpMeterEntry
-	var flows []*ofp.OfpFlowStats
-	updatedFlows := make([]*ofp.OfpFlowStats, 0)
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
-	}
-
-	changedMeter := false
-	changedFow := false
-	logger.Debugw("Available meters", log.Fields{"meters": meters})
-	for index, meter := range meters {
-		if meterMod.MeterId == meter.Config.MeterId {
-			flows = lDevice.Flows.Items
-			changedFow, updatedFlows = agent.getUpdatedFlowsAfterDeletebyMeterID(flows, meterMod.MeterId)
-			meters = append(meters[:index], meters[index+1:]...)
-			logger.Debugw("Meter has been deleted", log.Fields{"meter": meter, "index": index})
-			changedMeter = true
-			break
-		}
-	}
-	if changedMeter {
-		//Update model
-		metersToUpdate := &ofp.Meters{}
-		if lDevice.Meters != nil {
-			metersToUpdate = &ofp.Meters{Items: meters}
-		}
-		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
-			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+	logger.Debugw("Available meters", log.Fields{"meters": agent.meterIDToMeterMap})
+	meterChunk, ok := agent.meterIDToMeterMap.Load(meterMod.MeterId)
+	if ok {
+		meterChunk.(*MeterChunk).lock.Lock()
+		defer meterChunk.(*MeterChunk).lock.Unlock()
+		//remove from the store and cache
+		if err := agent.deleteLogicalDeviceMeterWithoutLock(ctx, meterMod.MeterId); err != nil {
 			return err
 		}
-		logger.Debug("Meter-deleted-from-DB-successfully", log.Fields{"updatedMeters": metersToUpdate, "no-of-meter": len(metersToUpdate.Items)})
-
+		agent.deleteFlowsOfMeter(ctx, meterMod.MeterId)
+		logger.Debugw("meterDelete success", log.Fields{"meterID": meterMod.MeterId})
+	} else {
+		logger.Warnw("meter not found", log.Fields{"meterID": meterMod.MeterId})
 	}
-	if changedFow {
-		//Update model
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: updatedFlows}); err != nil {
-			logger.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-			return err
-		}
-		logger.Debug("Flows-associated-with-meter-deleted-from-DB-successfully",
-			log.Fields{"updated-no-of-flows": len(updatedFlows), "meter": meterMod.MeterId})
-	}
-	logger.Debugw("meterDelete success", log.Fields{"meterID": meterMod.MeterId})
 	return nil
 }
 
@@ -743,97 +773,151 @@ func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMet
 	if meterMod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
+	newMeter := fu.MeterEntryFromMeterMod(meterMod)
+	return agent.meterModifyInModel(ctx, newMeter)
+}
 
-	lDevice := agent.getLogicalDeviceWithoutLock()
+func (agent *LogicalAgent) meterModifyInModel(ctx context.Context, newMeter *ofp.OfpMeterEntry) error {
+	meterChunk, ok := agent.meterIDToMeterMap.Load(newMeter.Config.MeterId)
+	if ok {
+		meterChunk.(*MeterChunk).lock.Lock()
+		defer meterChunk.(*MeterChunk).lock.Unlock()
+		oldMeter := meterChunk.(*MeterChunk).meter
+		newMeter.Stats.FlowCount = oldMeter.Stats.FlowCount
+		meterChunk.(*MeterChunk).meter = newMeter
 
-	var meters []*ofp.OfpMeterEntry
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
-	}
-	changedMeter := false
-	for index, meter := range meters {
-		if meterMod.MeterId == meter.Config.MeterId {
-			newmeterEntry := fu.MeterEntryFromMeterMod(meterMod)
-			newmeterEntry.Stats.FlowCount = meter.Stats.FlowCount
-			meters[index] = newmeterEntry
-			changedMeter = true
-			logger.Debugw("Found meter, replaced with new meter", log.Fields{"old meter": meter, "new meter": newmeterEntry})
-			break
-		}
-	}
-	if changedMeter {
-		//Update model
-		metersToUpdate := &ofp.Meters{}
-		if lDevice.Meters != nil {
-			metersToUpdate = &ofp.Meters{Items: meters}
-		}
-		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
-			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, newMeter, newMeter.Config.MeterId); err != nil {
+			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "meterID": newMeter.Config.MeterId})
 			return err
 		}
-		logger.Debugw("meter-updated-in-DB-successfully", log.Fields{"updated_meters": meters})
+		//put into the cache
+		//Already done by updating the pointer. No need to do the below line
+		//agent.meterIDToMeterMap.Store(newMeter.Config.MeterId, meterChunk)
+		logger.Debugw("replaced-with-new-meter", log.Fields{"oldMeter": oldMeter, "newMeter": newMeter, "availableMeters": agent.meterIDToMeterMap})
 		return nil
 	}
-
-	logger.Errorw("Meter not found ", log.Fields{"meter": meterMod})
-	return fmt.Errorf("no-logical-device-present:%d", meterMod.MeterId)
-
+	logger.Errorw("Meter not found ", log.Fields{"meter": newMeter})
+	return fmt.Errorf("no-logical-device-present:%d", newMeter.Config.MeterId)
 }
 
-func (agent *LogicalAgent) getUpdatedFlowsAfterDeletebyMeterID(flows []*ofp.OfpFlowStats, meterID uint32) (bool, []*ofp.OfpFlowStats) {
+func (agent *LogicalAgent) deleteFlowsOfMeter(ctx context.Context, meterID uint32) {
 	logger.Infow("Delete flows matching meter", log.Fields{"meter": meterID})
-	changed := false
-	//updatedFlows := make([]*ofp.OfpFlowStats, 0)
-	for index := len(flows) - 1; index >= 0; index-- {
-		if mID := fu.GetMeterIdFromFlow(flows[index]); mID != 0 && mID == meterID {
-			logger.Debugw("Flow to be deleted", log.Fields{"flow": flows[index], "index": index})
-			flows = append(flows[:index], flows[index+1:]...)
-			changed = true
+	agent.logicalPortToFlowsMap.Range(func(key interface{}, value interface{}) bool {
+		value.(*FlowsChunk).lock.Lock()
+		defer value.(*FlowsChunk).lock.Unlock()
+		flows := value.(*FlowsChunk).flows
+		updatedFlows := make([]*ofp.OfpFlowStats, 0)
+		changed := false
+		for _, flow := range flows.Items {
+			if mID := fu.GetMeterIdFromFlow(flow); mID != 0 && mID == meterID {
+				logger.Debugw("Flow to be deleted", log.Fields{"flow": flow})
+				changed = true
+			} else {
+				updatedFlows = append(updatedFlows, flow)
+			}
 		}
-	}
-	return changed, flows
+		if changed == true {
+			//update cache and db.
+			value.(*FlowsChunk).flows = &ofp.Flows{Items: updatedFlows}
+			agent.updateLogicalDeviceFlowsWithoutLock(ctx, value.(*FlowsChunk).flows, key.(uint32))
+		}
+		return true
+	})
+
 }
 
-func (agent *LogicalAgent) updateFlowCountOfMeterStats(modCommand *ofp.OfpFlowMod, meters []*ofp.OfpMeterEntry, flow *ofp.OfpFlowStats, revertUpdate bool) bool {
+func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modCommand *ofp.OfpFlowMod, flow *ofp.OfpFlowStats, revertUpdate bool) bool {
 
 	flowCommand := modCommand.GetCommand()
 	meterID := fu.GetMeterIdFromFlow(flow)
 	logger.Debugw("Meter-id-in-flow-mod", log.Fields{"meterId": meterID})
 	if meterID == 0 {
-		logger.Debugw("No meter present in the flow", log.Fields{"flow": *flow})
+		logger.Debugw("No-meter-present-in-the-flow", log.Fields{"flow": *flow})
+		return true
+	}
+
+	if flowCommand != ofp.OfpFlowModCommand_OFPFC_ADD && flowCommand != ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
+		return true
+	}
+	val, ok := agent.meterIDToMeterMap.Load(meterID)
+	if !ok {
+		logger.Debugw("Meter-is-not-present-in-logical-device", log.Fields{"meterID": meterID})
+		return true
+	}
+	meterChunk := val.(*MeterChunk)
+
+	//acquire the meter lock
+	logger.Debugf("meter-lock id:%d", meterID)
+	meterChunk.lock.Lock()
+	defer meterChunk.lock.Unlock()
+	// check if it still exists
+	_, ok = agent.meterIDToMeterMap.Load(meterID)
+	if !ok {
+		logger.Debugw("Meter-is-not-present-in-logical-device-any-more;-cannot-modify", log.Fields{"meterID": meterID})
+		return true
+	}
+
+	if flowCommand == ofp.OfpFlowModCommand_OFPFC_ADD {
+		if revertUpdate {
+			meterChunk.meter.Stats.FlowCount--
+		} else {
+			meterChunk.meter.Stats.FlowCount++
+		}
+	} else if flowCommand == ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
+		if revertUpdate {
+			meterChunk.meter.Stats.FlowCount++
+		} else {
+			meterChunk.meter.Stats.FlowCount--
+		}
+	}
+
+	//	Update model
+	if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, meterChunk.meter, meterID); err != nil {
+		logger.Debugw("unable-to-update-meter-in-db", log.Fields{"logicalDevice": agent.logicalDeviceID, "meterID": meterID})
 		return false
 	}
-	if meters == nil {
-		logger.Debug("No meters present in logical device")
-		return false
+
+	logger.Debugw("updated-meter-flow-stats", log.Fields{"meterId": meterID})
+	return true
+}
+
+func (agent *LogicalAgent) getPortClassifier(flow *ofp.OfpFlowStats) uint32 {
+	inPortNo := fu.GetInPort(flow)
+	//no in-port, return nni port
+	if inPortNo == 0 {
+		logger.Info("no-in-port-criterion-found.-Finding-and-returning-the-first-NNI-port-number")
+		nniPort, err := agent.getFirstNNIPort()
+		if err != nil {
+			logger.Warnw("no-nni-port", log.Fields{"error": err})
+			return 0
+		}
+		return nniPort
 	}
-	changedMeter := false
-	for _, meter := range meters {
-		if meterID == meter.Config.MeterId { // Found meter in Logicaldevice
-			if flowCommand == ofp.OfpFlowModCommand_OFPFC_ADD {
-				if revertUpdate {
-					meter.Stats.FlowCount--
-				} else {
-					meter.Stats.FlowCount++
-				}
-				changedMeter = true
-			} else if flowCommand == ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
-				if revertUpdate {
-					meter.Stats.FlowCount++
-				} else {
-					meter.Stats.FlowCount--
-				}
-				changedMeter = true
-			}
-			logger.Debugw("Found meter, updated meter flow stats", log.Fields{" meterId": meterID})
+
+	outPortNo := fu.GetOutPort(flow)
+	//controller bound flow- flow add request
+	if outPortNo != 0 && (outPortNo&0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER) {
+		return inPortNo
+	}
+	//check direction
+	nniPorts := agent.GetNNIPorts()
+	isDownstream := false
+	for _, nniPort := range nniPorts {
+		if inPortNo == nniPort {
+			isDownstream = true
 			break
 		}
 	}
-	return changedMeter
+	if !isDownstream {
+		return inPortNo
+	}
+	//flow is in downstream direction, so get out_port
+	outPortNo = fu.GetMetaData(flow)
+	if outPortNo == 0 {
+		outPortNo = fu.GetOutPort(flow)
+	}
+	logger.Infof("out port from match meta: %d", outPortNo)
+	return outPortNo
 }
 
 //flowAdd adds a flow to the flow table of that logical device
@@ -842,29 +926,62 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 	if mod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+	flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+	if err != nil {
+		logger.Errorw("flowAdd failed", log.Fields{"flowMod": mod, "err": err})
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
-
-	lDevice := agent.getLogicalDeviceWithoutLock()
-
-	var flows []*ofp.OfpFlowStats
-	var meters []*ofp.OfpMeterEntry
-	var flowToReplace *ofp.OfpFlowStats
-	var flow *ofp.OfpFlowStats
-	var err error
-
-	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
-		flows = lDevice.Flows.Items
+	var updated bool
+	var changed bool
+	if changed, updated, err = agent.decomposeAndAdd(ctx, flow, mod); err != nil {
+		logger.Errorw("flowAddorUpdate failed", log.Fields{"flowMod": mod, "err": err})
+		return err
 	}
-
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
+	if changed && !updated {
+		if dbupdated := agent.updateFlowCountOfMeterStats(ctx, mod, flow, false); !dbupdated {
+			return errors.New("flow-couldnt-updated-in-model")
+		}
 	}
-	updatedFlows := make([]*ofp.OfpFlowStats, 0)
+	return nil
+
+}
+
+func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlowStats, mod *ofp.OfpFlowMod) (bool, bool, error) {
 	changed := false
 	updated := false
+	var flowToReplace *ofp.OfpFlowStats
+	//get in port criterion
+	portClassifier := agent.getPortClassifier(flow)
+
+	if portClassifier == 0 {
+		logger.Errorw("no port classifier found in the flow. Ignoring the flow-add request", log.Fields{"flowMod": mod})
+		return changed, updated, errors.New("no-flow-classifier")
+	}
+
+	//if port not found in the map, create a new entry, otherwise get the existing one.
+	var flowsChunk *FlowsChunk
+	val, ok := agent.logicalPortToFlowsMap.Load(portClassifier) //not found
+	if !ok {
+		//if port not found in the map, create an entry in the map
+		//This lookup is to retrieve lock only.
+		flowsChunk = agent.addFlowsToModelIfNotExist(ctx, portClassifier)
+	} else {
+		flowsChunk = val.(*FlowsChunk)
+	}
+
+	flowsChunk.lock.Lock()
+	defer flowsChunk.lock.Unlock()
+
+	//check the existence of the flow after the lock
+	val, ok = agent.logicalPortToFlowsMap.Load(portClassifier) //not found
+	if !ok {
+		//it might have been deleted by another thread before acquiring the lock
+		return changed, updated, errors.New("another-flow-delete-request-has-been-received-for-the-flow")
+	}
+	flowsChunk.flows = val.(*FlowsChunk).flows //consider the most up-to-date flows object
+	flows := flowsChunk.flows.Items
+
+	updatedFlows := make([]*ofp.OfpFlowStats, 0)
 	checkOverlap := (mod.Flags & uint32(ofp.OfpFlowModFlags_OFPFF_CHECK_OVERLAP)) != 0
 	if checkOverlap {
 		if overlapped := fu.FindOverlappingFlows(flows, mod); len(overlapped) != 0 {
@@ -872,19 +989,11 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 			logger.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		} else {
 			//	Add flow
-			flow, err = fu.FlowStatsEntryFromFlowModMessage(mod)
-			if err != nil {
-				return err
-			}
 			flows = append(flows, flow)
 			updatedFlows = append(updatedFlows, flow)
 			changed = true
 		}
 	} else {
-		flow, err = fu.FlowStatsEntryFromFlowModMessage(mod)
-		if err != nil {
-			return err
-		}
 		idx := fu.FindFlows(flows, flow)
 		if idx >= 0 {
 			flowToReplace = flows[idx]
@@ -905,44 +1014,26 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 		}
 	}
 	logger.Debugw("flowAdd-changed", log.Fields{"changed": changed})
-
 	if changed {
 		var flowMetadata voltha.FlowMetadata
-		if err := agent.GetMeterConfig(updatedFlows, meters, &flowMetadata); err != nil { // This should never happen,meters should be installed before flow arrives
+		lMeters, err := agent.ListLogicalDeviceMeters(ctx)
+		if err = agent.GetMeterConfig(updatedFlows, lMeters.Items, &flowMetadata); err != nil { // This should never happen,meters should be installed before flow arrives
 			logger.Error("Meter-referred-in-flows-not-present")
-			return err
+			return changed, updated, err
 		}
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: updatedFlows}, *lDevice.FlowGroups)
+		flowGroups, _ := agent.ListLogicalDeviceFlowGroups(ctx)
+		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: updatedFlows}, *flowGroups)
 		if err != nil {
-			return err
+			return changed, updated, err
 		}
+
 		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
-
 		//	Update model
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}); err != nil {
-			logger.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-			return err
+		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}, portClassifier); err != nil {
+			return changed, updated, err
 		}
-
-		if !updated {
-			changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, flow, false)
-			metersToUpdate := &ofp.Meters{}
-			if lDevice.Meters != nil {
-				metersToUpdate = &ofp.Meters{Items: meters}
-			}
-			if changedMeterStats {
-				//Update model
-				if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
-					logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
-					return err
-				}
-				logger.Debugw("meter-stats-updated-in-DB-successfully", log.Fields{"updated_meters": meters})
-
-			}
-		}
-		// Send the flows to the devices
+		flowsChunk.flows.Items = flows
 		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &flowMetadata)
-
 		// Create the go routines to wait
 		go func() {
 			// Wait for completion
@@ -955,22 +1046,42 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 			}
 		}()
 	}
-	return nil
+	return changed, updated, nil
 }
 
 // revertAddedFlows reverts flows after the flowAdd request has failed.  All flows corresponding to that flowAdd request
 // will be reverted, both from the logical devices and the devices.
 func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlowMod, addedFlow *ofp.OfpFlowStats, replacedFlow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules, metadata *voltha.FlowMetadata) error {
 	logger.Debugw("revertFlowAdd", log.Fields{"added-flow": addedFlow, "replaced-flow": replacedFlow, "device-rules": deviceRules, "metadata": metadata})
-	if err := agent.requestQueue.WaitForGreenLight(context.Background()); err != nil {
-		return err
+	//get in port criterion
+	inPort := agent.getPortClassifier(addedFlow)
+	if inPort == 0 {
+		logger.Debugw("no-port-classifier-found", log.Fields{"flowMod": mod})
+		return errors.New("no-port-classifier-found")
 	}
-	defer agent.requestQueue.RequestComplete()
 
-	lDevice := agent.getLogicalDeviceWithoutLock()
+	val, ok := agent.logicalPortToFlowsMap.Load(inPort) //not found
+	if !ok {
+		logger.Debugw("Skipping-flow-delete-strict-request. No-flows-for-port", log.Fields{"flowMod": mod, "port": inPort})
+		return nil
+	}
+	flowsChunk := val.(*FlowsChunk)
+
+	//acquire the flow lock per port
+	flowsChunk.lock.Lock()
+	defer flowsChunk.lock.Unlock()
+
+	//check the flows after the lock
+	val, ok = agent.logicalPortToFlowsMap.Load(inPort)
+	if !ok {
+		//it might have been deleted by another thread before acquiring the lock
+		logger.Debugw("Skipping-flow-delete-strict-request.Flow-has-already-been-deleted", log.Fields{"flowMod": mod})
+		return nil
+	}
+	flowsChunk.flows = val.(*FlowsChunk).flows //consider the most up-to-date flows object
 
 	// Revert flows
-	clonedFlows := cloneFlows(lDevice.Flows.Items)
+	clonedFlows := cloneFlows(flowsChunk.flows.Items)
 	idx := fu.FindFlows(clonedFlows, addedFlow)
 	if idx < 0 {
 		// Not found - do nothing
@@ -982,17 +1093,16 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	} else {
 		clonedFlows = deleteFlowWithoutPreservingOrder(clonedFlows, idx)
 	}
-	lDevice.Flows = &ofp.Flows{Items: clonedFlows}
+	flowsChunk.flows = &ofp.Flows{Items: clonedFlows}
 
 	// Revert meters
-	meters := cloneMeters(lDevice.Meters.Items)
-	changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, addedFlow, true)
-	if changedMeterStats {
-		lDevice.Meters = &ofp.Meters{Items: meters}
+	if changedMeterStats := agent.updateFlowCountOfMeterStats(ctx, mod, addedFlow, true); !changedMeterStats {
+		return errors.New("Unable-to-revert-meterstats")
 	}
 
 	// Update the model
-	if err := agent.updateLogicalDeviceWithoutLock(ctx, lDevice); err != nil {
+	//TODO: Don't leave empty keys. Chek the length of flows.Items and remove insteaed of update, if it is 0.
+	if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, flowsChunk.flows, inPort); err != nil {
 		logger.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 		return err
 	}
@@ -1046,96 +1156,88 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 	if mod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+	var meters []*ofp.OfpMeterEntry
+	var flowGroups []*ofp.OfpGroupEntry
+	if ofpMeters, err := agent.ListLogicalDeviceMeters(ctx); err != nil {
+		meters = ofpMeters.Items
+	}
+
+	if groups, err := agent.ListLogicalDeviceFlowGroups(ctx); err != nil {
+		flowGroups = groups.Items
+	}
+
+	fs, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+	if err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
 
-	lDevice := agent.getLogicalDeviceWithoutLock()
-
-	var meters []*ofp.OfpMeterEntry
-	var flows []*ofp.OfpFlowStats
-	var flowGroups []*ofp.OfpGroupEntry
-
-	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
-		flows = lDevice.Flows.Items
-	}
-
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
-	}
-
-	if lDevice.FlowGroups != nil && lDevice.FlowGroups.Items != nil {
-		flowGroups = lDevice.FlowGroups.Items
-	}
-
-	//build a list of what to keep vs what to delete
-	toKeep := make([]*ofp.OfpFlowStats, 0)
-	toDelete := make([]*ofp.OfpFlowStats, 0)
-	for _, f := range flows {
-		// Check whether the flow and the flowmod matches
-		fs, err := fu.FlowStatsEntryFromFlowModMessage(mod)
-		if err != nil {
-			return err
-		}
-		if fu.FlowMatch(f, fs) {
-			toDelete = append(toDelete, f)
-			continue
-		}
-		// Check wild card match
-		if !fu.FlowMatchesMod(f, mod) {
-			toKeep = append(toKeep, f)
-		} else {
-			toDelete = append(toDelete, f)
-		}
-	}
-
-	logger.Debugw("flowDelete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "toKeep": len(toKeep), "toDelete": toDelete})
-
-	//Update flows
-	if len(toDelete) > 0 {
-		var flowMetadata voltha.FlowMetadata
-		if err := agent.GetMeterConfig(toDelete, meters, &flowMetadata); err != nil { // This should never happen
-			logger.Error("Meter-referred-in-flows-not-present")
-			return errors.New("Meter-referred-in-flows-not-present")
-		}
-
-		var respChnls []coreutils.Response
-		var partialRoute bool
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: toDelete}, ofp.FlowGroups{Items: flowGroups})
-		if err != nil {
-			// A no route error means no route exists between the ports specified in the flow. This can happen when the
-			// child device is deleted and a request to delete flows from the parent device is received
-			if !errors.Is(err, route.ErrNoRoute) {
-				logger.Errorw("unexpected-error-received", log.Fields{"flows-to-delete": toDelete, "error": err})
-				return err
+	agent.logicalPortToFlowsMap.Range(func(key interface{}, value interface{}) bool {
+		value.(*FlowsChunk).lock.Lock()
+		defer value.(*FlowsChunk).lock.Unlock()
+		//build a list of what to keep vs what to delete
+		flows := value.(*FlowsChunk).flows
+		toKeep := make([]*ofp.OfpFlowStats, 0)
+		toDelete := make([]*ofp.OfpFlowStats, 0)
+		for _, f := range flows.Items {
+			if fu.FlowMatch(f, fs) {
+				toDelete = append(toDelete, f)
+				continue
 			}
-			partialRoute = true
-		}
-
-		// Update the dB
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: toKeep}); err != nil {
-			logger.Errorw("cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-			return err
-		}
-
-		// Update the devices
-		if partialRoute {
-			respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: toDelete}, &flowMetadata)
-		} else {
-			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
-		}
-
-		// Wait for the responses
-		go func() {
-			// Wait for completion
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-				logger.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
-				// TODO: Revert the flow deletion
+			// Check wild card match
+			if !fu.FlowMatchesMod(f, mod) {
+				toKeep = append(toKeep, f)
+			} else {
+				toDelete = append(toDelete, f)
 			}
-		}()
-	}
+		}
+		//Update flows
+		if len(toDelete) > 0 {
+			logger.Debugw("flowDelete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "toKeep": len(toKeep), "toDelete": len(toDelete)})
+			var flowMetadata voltha.FlowMetadata
+			if err := agent.GetMeterConfig(toDelete, meters, &flowMetadata); err != nil { // This should never happen
+				logger.Error("Meter-referred-in-flows-not-present")
+				return false
+			}
+			var respChnls []coreutils.Response
+			var partialRoute bool
+			var deviceRules *fu.DeviceRules
+			deviceRules, err = agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: toDelete}, ofp.FlowGroups{Items: flowGroups})
+			if err != nil {
+				// A no route error means no route exists between the ports specified in the flow. This can happen when the
+				// child device is deleted and a request to delete flows from the parent device is received
+				if !errors.Is(err, route.ErrNoRoute) {
+					logger.Errorw("unexpected-error-received", log.Fields{"flows-to-delete": toDelete, "error": err})
+					return false
+				}
+				partialRoute = true
+			}
+			//update cache.
+			value.(*FlowsChunk).flows = &ofp.Flows{Items: toKeep}
 
+			// Update the dB
+			//TODO: Don't leave empty keys. Chek the length of flows.Items and remove insteaed of update, if it is 0.
+			if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: toKeep}, key.(uint32)); err != nil {
+				logger.Errorw("cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+			}
+
+			// Update the devices
+			if partialRoute {
+				respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: toDelete}, &flowMetadata)
+			} else {
+				respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
+			}
+
+			// Wait for the responses
+			go func() {
+				// Wait for completion
+				if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+					logger.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+					// TODO: Revert the flow deletion
+				}
+			}()
+		}
+		return true
+	})
 	//TODO: send announcement on delete
 	return nil
 }
@@ -1250,54 +1352,64 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 	if mod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
 
-	lDevice := agent.getLogicalDeviceWithoutLock()
-
-	var meters []*ofp.OfpMeterEntry
-	var flows []*ofp.OfpFlowStats
-	var flowGroups []*ofp.OfpGroupEntry
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
-	}
-	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
-		flows = lDevice.Flows.Items
-	}
-	if lDevice.FlowGroups != nil && lDevice.FlowGroups.Items != nil {
-		flowGroups = lDevice.FlowGroups.Items
-	}
-
-	changedFlow := false
-	changedMeter := false
 	flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
 	if err != nil {
 		return err
 	}
+	//get in port criterion
+	inPort := agent.getPortClassifier(flow)
+	if inPort == 0 {
+		logger.Debugw("no-port-classifier-found", log.Fields{"flowMod": mod})
+		return errors.New("no-port-classifier-found")
+	}
+
+	val, ok := agent.logicalPortToFlowsMap.Load(inPort) //not found
+	if !ok {
+		logger.Debugw("Skipping-flow-delete-strict-request. No-flows-for-port", log.Fields{"flowMod": mod, "port": inPort})
+		return nil
+	}
+	flowsChunk := val.(*FlowsChunk)
+
+	//acquire the flow lock per port
+	flowsChunk.lock.Lock()
+	defer flowsChunk.lock.Unlock()
+
+	//check the flows after the lock
+	val, ok = agent.logicalPortToFlowsMap.Load(inPort)
+	if !ok {
+		//it might have been deleted by another thread before acquiring the lock
+		logger.Debugw("Skipping-flow-delete-strict-request.Flow-has-already-been-deleted", log.Fields{"flowMod": mod})
+		return nil
+	}
+	flowsChunk.flows = val.(*FlowsChunk).flows //consider the most up-to-date flows object
+
+	var meters []*ofp.OfpMeterEntry
+	var flows []*ofp.OfpFlowStats
+	var flowGroups []*ofp.OfpGroupEntry
+	flows = flowsChunk.flows.Items
+	if ofMeters, er := agent.ListLogicalDeviceMeters(ctx); er == nil {
+		meters = ofMeters.Items
+	}
+	if ofGroups, er := agent.ListLogicalDeviceFlowGroups(ctx); er == nil {
+		flowGroups = ofGroups.Items
+	}
+
+	changedFlow := false
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	idx := fu.FindFlows(flows, flow)
 	if idx >= 0 {
-		changedMeter = agent.updateFlowCountOfMeterStats(mod, meters, flows[idx], false)
+		if changedMeter := agent.updateFlowCountOfMeterStats(ctx, mod, flows[idx], false); !changedMeter {
+			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+			return fmt.Errorf("Cannot delete flow - %s. Meter update failed", flow)
+		}
 		flowsToDelete = append(flowsToDelete, flows[idx])
 		flows = append(flows[:idx], flows[idx+1:]...)
 		changedFlow = true
 	} else {
 		return fmt.Errorf("Cannot delete flow - %s", flow)
 	}
-	if changedMeter {
-		//Update model
-		metersToUpdate := &ofp.Meters{}
-		if lDevice.Meters != nil {
-			metersToUpdate = &ofp.Meters{Items: meters}
-		}
-		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
-			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-			return err
-		}
 
-	}
 	if changedFlow {
 		var flowMetadata voltha.FlowMetadata
 		if err := agent.GetMeterConfig(flowsToDelete, meters, &flowMetadata); err != nil {
@@ -1318,11 +1430,13 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 		}
 
 		// Update the dB
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}); err != nil {
+		//TODO: Don't leave empty keys. Chek the length of flows.Items and remove insteaed of update, if it is 0.
+		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}, inPort); err != nil {
 			logger.Errorw("cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
-
+		// Update the cache
+		flowsChunk.flows.Items = flows
 		// Update the devices
 		if partialRoute {
 			respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: flowsToDelete}, &flowMetadata)
@@ -1356,43 +1470,51 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 	if groupMod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+	agent.groupLock.Lock()
+	_, ok := agent.groupIDToGroupMap.Load(groupMod.GroupId)
+	if ok {
+		logger.Debugf("group %d already exists", groupMod.GroupId)
+		agent.groupLock.Unlock()
+		return fmt.Errorf("Group %d already exists", groupMod.GroupId)
+	}
+
+	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
+	groupChunk := GroupChunk{
+		group: groupEntry,
+		lock:  sync.RWMutex{},
+	}
+	//add to map
+	agent.groupIDToGroupMap.Store(groupMod.GroupId, &groupChunk)
+	groupChunk.lock.Lock()
+	defer groupChunk.lock.Unlock()
+	agent.groupLock.Unlock()
+
+	deviceRules := fu.NewDeviceRules()
+	deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
+	fg := fu.NewFlowsAndGroups()
+	fg.AddGroup(fu.GroupEntryFromGroupMod(groupMod))
+	deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
+
+	logger.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String()})
+
+	//add to the kv store
+	path := fmt.Sprintf("groups/%s", agent.logicalDeviceID)
+	groupID := fmt.Sprintf("%d", groupMod.GroupId)
+	if err := agent.clusterDataProxy.AddWithID(ctx, path, groupID, groupEntry); err != nil {
+		logger.Errorw("failed-adding-group", log.Fields{"deviceID": agent.logicalDeviceID, "groupID": groupID, "err": err})
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	// Update the devices
+	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &voltha.FlowMetadata{})
 
-	lDevice := agent.getLogicalDeviceWithoutLock()
-
-	groups := lDevice.FlowGroups.Items
-	if fu.FindGroup(groups, groupMod.GroupId) == -1 {
-		groups = append(groups, fu.GroupEntryFromGroupMod(groupMod))
-
-		deviceRules := fu.NewDeviceRules()
-		deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
-		fg := fu.NewFlowsAndGroups()
-		fg.AddGroup(fu.GroupEntryFromGroupMod(groupMod))
-		deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
-
-		logger.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String()})
-
-		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, &ofp.FlowGroups{Items: groups}); err != nil {
-			logger.Errorw("cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-			return err
+	// Wait for completion
+	go func() {
+		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+			logger.Warnw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+			//TODO: Revert flow changes
 		}
-
-		// Update the devices
-		respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &voltha.FlowMetadata{})
-
-		// Wait for completion
-		go func() {
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-				logger.Warnw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
-				//TODO: Revert flow changes
-			}
-		}()
-		return nil
-	}
-	return fmt.Errorf("Groups %d already present", groupMod.GroupId)
+	}()
+	return nil
 }
 
 func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGroupMod) error {
@@ -1400,50 +1522,66 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	if groupMod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
-
-	lDevice := agent.getLogicalDeviceWithoutLock()
-	groups := lDevice.FlowGroups.Items
-	flows := lDevice.Flows.Items
+	effectedFlows := make([]*ofp.OfpFlowStats, 0)
+	effectedGroups := make([]*ofp.OfpGroupEntry, 0)
 	var groupsChanged bool
-	flowsChanged := false
 	groupID := groupMod.GroupId
+	var err error
 	if groupID == uint32(ofp.OfpGroup_OFPG_ALL) {
-		//TODO we must delete all flows that point to this group and
-		//signal controller as requested by flow's flag
-		groups = []*ofp.OfpGroupEntry{}
-		groupsChanged = true
-	} else {
-		idx := fu.FindGroup(groups, groupID)
-		if idx == -1 {
-			return nil // Valid case
+		agent.groupIDToGroupMap.Range(func(key interface{}, value interface{}) bool {
+			var groupChunk *GroupChunk
+			groupChunk = value.(*GroupChunk)
+			groupChunk.lock.Lock()
+			defer groupChunk.lock.Unlock()
+			//Remove from KV and cache
+			if err := agent.removeLogicalDeviceFlowGroupsWithoutLock(ctx, key.(uint32)); err != nil {
+				logger.Errorw("cannot-remove--group", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "groupID": key.(uint32)})
+				return false
+			}
+
+			var flows []*ofp.OfpFlowStats
+			if flows, err = agent.deleteFlowsOfGroup(ctx, key.(uint32)); err != nil {
+				logger.Errorw("cannot-update-flow-for-group-delete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "groupID": key.(uint32)})
+				return false
+			}
+			effectedFlows = append(effectedFlows, flows...)
+			effectedGroups = append(effectedGroups, groupChunk.group)
+			return true
+		})
+		if err == nil {
+			groupsChanged = true
 		}
-		flowsChanged, flows = fu.FlowsDeleteByGroupId(flows, groupID)
-		groups = append(groups[:idx], groups[idx+1:]...)
-		groupsChanged = true
+	} else {
+		groupChunk, ok := agent.groupIDToGroupMap.Load(groupID)
+		if ok {
+			groupChunk.(*GroupChunk).lock.Lock()
+			defer groupChunk.(*GroupChunk).lock.Unlock()
+			//remove from KV and cache
+			if err := agent.removeLogicalDeviceFlowGroupsWithoutLock(ctx, groupID); err != nil {
+				return err
+			}
+
+			var flows []*ofp.OfpFlowStats
+			if flows, err = agent.deleteFlowsOfGroup(ctx, groupID); err != nil {
+				logger.Errorw("cannot-update-flow-for-group-delete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "groupID": groupID})
+				return err
+			}
+			effectedFlows = append(effectedFlows, flows...)
+			effectedGroups = append(effectedGroups, groupChunk.(*GroupChunk).group)
+			groupsChanged = true
+		} else {
+			logger.Warnw("group-not-found", log.Fields{"groupID": groupID})
+		}
+
 	}
-	if flowsChanged || groupsChanged {
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: flows}, ofp.FlowGroups{Items: groups})
+
+	if err != nil || groupsChanged {
+		var deviceRules *fu.DeviceRules
+		deviceRules, err = agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: effectedFlows}, ofp.FlowGroups{Items: effectedGroups})
 		if err != nil {
 			return err
 		}
 		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
-
-		if groupsChanged {
-			if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, &ofp.FlowGroups{Items: groups}); err != nil {
-				logger.Errorw("cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-				return err
-			}
-		}
-		if flowsChanged {
-			if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}); err != nil {
-				logger.Errorw("cannot-update-flow", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-				return err
-			}
-		}
 
 		// Update the devices
 		respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, nil)
@@ -1459,27 +1597,48 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	return nil
 }
 
+func (agent *LogicalAgent) deleteFlowsOfGroup(ctx context.Context, groupID uint32) ([]*ofp.OfpFlowStats, error) {
+	logger.Infow("Delete-flows-matching-group", log.Fields{"groupID": groupID})
+	updatedFlows := make([]*ofp.OfpFlowStats, 0)
+	var err error
+	agent.logicalPortToFlowsMap.Range(func(key interface{}, value interface{}) bool {
+		value.(*FlowsChunk).lock.Lock()
+		flows := value.(*FlowsChunk).flows.Items
+		updatedFlowsofPort := make([]*ofp.OfpFlowStats, 0)
+		flowsChanged := false
+		flowsChanged, updatedFlowsofPort = fu.FlowsDeleteByGroupId(flows, groupID)
+
+		if flowsChanged == true {
+			//update cache and db.
+			value.(*FlowsChunk).flows = &ofp.Flows{Items: updatedFlowsofPort}
+			if err = agent.updateLogicalDeviceFlowsWithoutLock(ctx, value.(*FlowsChunk).flows, key.(uint32)); err != nil {
+				return false
+			}
+			updatedFlows = append(updatedFlows, updatedFlowsofPort...)
+		}
+		value.(*FlowsChunk).lock.Unlock()
+		return true
+	})
+	return updatedFlows, err
+
+}
+
 func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGroupMod) error {
 	logger.Debug("groupModify")
 	if groupMod == nil {
 		return nil
 	}
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
 
-	lDevice := agent.getLogicalDeviceWithoutLock()
-	groups := lDevice.FlowGroups.Items
 	var groupsChanged bool
 	groupID := groupMod.GroupId
-	idx := fu.FindGroup(groups, groupID)
-	if idx == -1 {
+	groupChunk, ok := agent.groupIDToGroupMap.Load(groupID)
+	if !ok {
 		return fmt.Errorf("group-absent:%d", groupID)
 	}
+	groupChunk.(*GroupChunk).lock.Lock()
+	defer groupChunk.(*GroupChunk).lock.Unlock()
 	//replace existing group entry with new group definition
 	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
-	groups[idx] = groupEntry
 	groupsChanged = true
 	if groupsChanged {
 		deviceRules := fu.NewDeviceRules()
@@ -1489,11 +1648,13 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 		deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
 
 		logger.Debugw("rules", log.Fields{"rules for group-modify": deviceRules.String()})
-
-		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, &ofp.FlowGroups{Items: groups}); err != nil {
+		//update KV
+		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, groupEntry); err != nil {
 			logger.Errorw("Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
+		//Update cache
+		groupChunk.(*GroupChunk).group = groupEntry
 
 		// Update the devices
 		respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, &voltha.FlowMetadata{})
@@ -1540,7 +1701,9 @@ func (agent *LogicalAgent) deleteLogicalPort(ctx context.Context, lPort *voltha.
 
 		// Remove the logical port from cache
 		agent.deleteLogicalPortsFromMap([]uint32{lPort.DevicePortNo})
-
+		if err := agent.deleteFlowsFromModel(ctx, []uint32{lPort.DevicePortNo}); err != nil {
+			return err
+		}
 		// Reset the logical device routes
 		go func() {
 			if err := agent.buildRoutes(context.Background()); err != nil {
@@ -1576,6 +1739,9 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 	}
 	// Remove the port from the cached logical ports set
 	agent.deleteLogicalPortsFromMap(lPortsNoToDelete)
+	if err := agent.deleteFlowsFromModel(ctx, lPortsNoToDelete); err != nil {
+		return err
+	}
 
 	// Reset the logical device routes
 	go func() {
@@ -2017,6 +2183,121 @@ func (agent *LogicalAgent) addLogicalPortsToMap(lps []*voltha.LogicalPort) {
 			agent.logicalPortsNo[lp.DevicePortNo] = lp.RootPort
 		}
 	}
+}
+
+func (agent *LogicalAgent) loadFlowsFromModel(ctx context.Context) {
+	agent.flowsLock.Lock()
+	defer agent.flowsLock.Unlock()
+
+	var flowsList []*ofp.Flows
+	if err := agent.clusterDataProxy.List(ctx, "logical_flows/"+agent.logicalDeviceID, &flowsList); err != nil {
+		logger.Errorw("Failed-to-list-logicalflows-from-cluster-data-proxy", log.Fields{"error": err})
+		return
+	}
+	for _, flows := range flowsList {
+		if flows.Items != nil && flows.Items[0] != nil {
+			//We can retrieve classifier port number from the first flow
+			portNo := agent.getPortClassifier(flows.Items[0])
+			if portNo != 0 {
+				flowsChunk := FlowsChunk{
+					flows: flows,
+					lock:  sync.RWMutex{},
+				}
+				agent.logicalPortToFlowsMap.Store(portNo, &flowsChunk)
+			}
+		}
+	}
+}
+
+func (agent *LogicalAgent) loadMetersFromModel(ctx context.Context) {
+	agent.meterLock.Lock()
+	defer agent.meterLock.Unlock()
+
+	var meters []*ofp.OfpMeterEntry
+	if err := agent.clusterDataProxy.List(ctx, "meters/"+agent.logicalDeviceID, &meters); err != nil {
+		logger.Errorw("Failed-to-list-meters-from-proxy", log.Fields{"error": err})
+		return
+	}
+	for _, meter := range meters {
+		if meter.Config != nil {
+			meterChunk := MeterChunk{
+				meter: meter,
+				lock:  sync.RWMutex{},
+			}
+			agent.meterIDToMeterMap.Store(meter.Config.MeterId, &meterChunk)
+		}
+	}
+}
+
+func (agent *LogicalAgent) loadGroupsFromModel(ctx context.Context) {
+	agent.groupLock.Lock()
+	defer agent.groupLock.Unlock()
+
+	var groups []*ofp.OfpGroupEntry
+	if err := agent.clusterDataProxy.List(ctx, "groups/"+agent.logicalDeviceID, &groups); err != nil {
+		logger.Errorw("Failed-to-list-groups-from-proxy", log.Fields{"error": err})
+		return
+	}
+	groupCount := 0
+	for _, group := range groups {
+		if group.Desc != nil {
+			groupChunk := GroupChunk{
+				group: group,
+				lock:  sync.RWMutex{},
+			}
+			agent.groupIDToGroupMap.Store(group.Desc.GroupId, &groupChunk)
+			groupCount++
+		}
+	}
+	logger.Infof("%d groups loaded into the cache from the kv store. LogicalDeviceID:%s", groupCount, agent.logicalDeviceID)
+}
+
+func (agent *LogicalAgent) addFlowsToModelIfNotExist(ctx context.Context, portNo uint32) *FlowsChunk {
+	//acquire the map lock
+	agent.flowsLock.Lock()
+	defer agent.flowsLock.Unlock()
+	val, ok := agent.logicalPortToFlowsMap.Load(portNo)
+	if ok {
+		//logger.Debug("port already added to logicalPortToFlowsMap. Not adding again.", log.Fields{"port": portNo})
+		return val.(*FlowsChunk)
+	}
+
+	flowsChunk := FlowsChunk{
+		flows: &ofp.Flows{},
+		lock:  sync.RWMutex{},
+	}
+	//Add Flow to model.
+	portID := fmt.Sprintf("%d", portNo)
+	if err := agent.clusterDataProxy.AddWithID(ctx, "logical_flows/"+agent.logicalDeviceID, portID, flowsChunk.flows); err != nil {
+		logger.Errorw("failed-adding-flow", log.Fields{"deviceID": agent.logicalDeviceID, "port": portID, "err": err})
+		return nil
+	}
+
+	agent.logicalPortToFlowsMap.Store(portNo, &flowsChunk)
+	logger.Debug("port-is-added-to-logicalPortToFlowsMap-successfully", log.Fields{"port": portID})
+	return &flowsChunk
+}
+
+func (agent *LogicalAgent) deleteFlowsFromModel(ctx context.Context, portNos []uint32) error {
+	for _, pNo := range portNos {
+		flowsChunk, ok := agent.logicalPortToFlowsMap.Load(pNo)
+		if !ok {
+			logger.Infow("port-already-been-deleted-from-logicalPortToFlowsMap", log.Fields{"port": pNo})
+			continue
+		}
+		flowsChunk.(*FlowsChunk).lock.Lock()
+		defer flowsChunk.(*FlowsChunk).lock.Unlock()
+
+		path := fmt.Sprintf("logical_flows/%s/%d", agent.logicalDeviceID, pNo)
+		if err := agent.clusterDataProxy.Remove(ctx, path); err != nil {
+			return err
+		}
+		agent.flowsLock.Lock()
+		agent.logicalPortToFlowsMap.Delete(pNo)
+		agent.flowsLock.Unlock()
+		logger.Infow("port-is-deleted-from-the-logicalPortToFlowsMap", log.Fields{"port": pNo})
+	}
+	return nil
 }
 
 func (agent *LogicalAgent) isNNIPort(portNo uint32) bool {
