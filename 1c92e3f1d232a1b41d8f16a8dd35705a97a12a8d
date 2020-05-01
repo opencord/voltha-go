@@ -165,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "e87e7bb0_e61b4241",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-01T03:52:05Z",
+      "side": 1,
+      "message": "In fact we still have them, but not a single one for whole logical device. We have lock per uni_port now.",
+      "parentUuid": "5ce7bb46_2896e262",
+      "range": {
+        "startLine": 306,
+        "startChar": 51,
+        "endLine": 306,
+        "endChar": 62
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee744c80_d6f39ed2",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 2
@@ -199,6 +223,24 @@
       "writtenOn": "2020-04-30T14:11:42Z",
       "side": 1,
       "message": "This was required in cases where the routes were not fully populated by the time a flow is received for that port.   I am experimenting with on demand route creation.   Not sure if we will get much benefit if the PON system is being discovered at that time.",
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "347866ae_6e86d2fa",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-01T03:52:05Z",
+      "side": 1,
+      "message": "because of the lock in this function all flow updates are locked on the same lock. So we need to find another solution to the case you wrote above.",
+      "parentUuid": "4c7eada7_68625f2d",
       "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
