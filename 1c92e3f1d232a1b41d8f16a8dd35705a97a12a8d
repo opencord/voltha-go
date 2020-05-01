@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "dfa25220_29b3359f",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-01T22:19:14Z",
+      "side": 1,
+      "message": "I recognized that I have a lot of changes to do for that. Can you please indicate the reason you advice this change?",
+      "parentUuid": "39b43466_7476b6d4",
+      "range": {
+        "startLine": 61,
+        "startChar": 23,
+        "endLine": 65,
+        "endChar": 31
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85d8c291_e932ae10",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 2
