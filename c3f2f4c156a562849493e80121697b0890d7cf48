@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14205dde_5342ad82",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-01T13:41:13Z",
+      "side": 1,
+      "message": "Is the proxy now use anywhere other than to create sub-proxies?",
+      "revId": "c3f2f4c156a562849493e80121697b0890d7cf48",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
