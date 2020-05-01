@@ -16,6 +16,24 @@
       "revId": "c3f2f4c156a562849493e80121697b0890d7cf48",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20ca4172_f0d78f16",
+        "filename": "db/model/proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-01T15:44:23Z",
+      "side": 1,
+      "message": "The top-level proxy is not currently.\n\nI\u0027m not 100% satisfied with this solution for the hierarchy.\n\nPrimarily trying to avoid copying the last path segment everywhere.",
+      "parentUuid": "14205dde_5342ad82",
+      "revId": "c3f2f4c156a562849493e80121697b0890d7cf48",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
