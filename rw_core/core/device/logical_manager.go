@@ -440,23 +440,6 @@ func (ldMgr *LogicalManager) deleteAllLogicalPorts(ctx context.Context, device *
 	return nil
 }
 
-func (ldMgr *LogicalManager) deleteAllUNILogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
-	logger.Debugw("delete-all-uni-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})
-
-	var ldID *string
-	var err error
-	//Get the logical device Id for this device
-	if ldID, err = ldMgr.getLogicalDeviceID(ctx, parentDevice); err != nil {
-		return err
-	}
-	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
-		if err := agent.deleteAllUNILogicalPorts(ctx, parentDevice); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (ldMgr *LogicalManager) updatePortState(ctx context.Context, deviceID string, portNo uint32, state voltha.OperStatus_Types) error {
 	logger.Debugw("updatePortState", log.Fields{"deviceId": deviceID, "state": state, "portNo": portNo})
 

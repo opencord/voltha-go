@@ -187,8 +187,8 @@ func TestValidTransitions(t *testing.T) {
 	handlers = transitionMap.GetTransitionHandler(device, previousState)
 	assert.Equal(t, 4, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalPorts).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllDeviceFlows).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
 
 	previousState = getDeviceState(voltha.AdminState_ENABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
@@ -202,8 +202,8 @@ func TestValidTransitions(t *testing.T) {
 	handlers = transitionMap.GetTransitionHandler(device, previousState)
 	assert.Equal(t, 4, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalPorts).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllDeviceFlows).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
 
 	previousState = getDeviceState(voltha.AdminState_DISABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
@@ -233,10 +233,8 @@ func TestValidTransitions(t *testing.T) {
 			getDevice(false, voltha.AdminState_DELETED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_FAILED),
 		},
 		expectedParentHandlers: []TransitionHandler{
-			tdm.DisableAllChildDevices,
-			tdm.DeleteAllUNILogicalPorts,
-			tdm.DeleteAllChildDevices,
 			tdm.DeleteAllLogicalPorts,
+			tdm.DeleteAllChildDevices,
 			tdm.DeleteLogicalDevice,
 			tdm.RunPostDeviceDelete,
 		},
@@ -253,7 +251,7 @@ func TestValidTransitions(t *testing.T) {
 			device.Root = true
 			t.Run(testName, func(t *testing.T) {
 				handlers = transitionMap.GetTransitionHandler(device, previousState)
-				assert.Equal(t, 6, len(handlers))
+				assert.Equal(t, 4, len(handlers))
 				for idx, expHandler := range deleteDeviceTest.expectedParentHandlers {
 					assert.True(t, reflect.ValueOf(expHandler).Pointer() == reflect.ValueOf(handlers[idx]).Pointer())
 				}
