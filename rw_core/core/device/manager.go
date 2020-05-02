@@ -1288,16 +1288,6 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	return nil
 }
 
-//DeleteAllUNILogicalPorts is invoked as a callback when the parent device is deleted
-func (dMgr *Manager) DeleteAllUNILogicalPorts(ctx context.Context, curr *voltha.Device) error {
-	logger.Debugw("delete-all-uni-logical-ports", log.Fields{"parent-device-id": curr.Id})
-	if err := dMgr.logicalDeviceMgr.deleteAllUNILogicalPorts(ctx, curr); err != nil {
-		// Just log the error and let the remaining pipeline proceed - ports may already have been deleted
-		logger.Warnw("delete-all-uni-logical-ports-failed", log.Fields{"parent-device-id": curr.Id, "error": err})
-	}
-	return nil
-}
-
 //DeleteAllLogicalPorts is invoked as a callback when the parent device's connection status moves to UNREACHABLE
 func (dMgr *Manager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
 	logger.Debugw("delete-all-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})

@@ -486,34 +486,6 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 	return nil
 }
 
-// deleteAllUNILogicalPorts deletes all UNI logical ports associated with this parent device
-func (agent *LogicalAgent) deleteAllUNILogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
-	logger.Debugw("delete-all-uni-logical-ports", log.Fields{"logical-device-id": agent.logicalDeviceID})
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
-	// Get the latest logical device info
-	ld := agent.getLogicalDeviceWithoutLock()
-
-	updateLogicalPorts := []*voltha.LogicalPort{}
-	for _, lport := range ld.Ports {
-		// Save NNI ports only
-		if agent.isNNIPort(lport.DevicePortNo) {
-			updateLogicalPorts = append(updateLogicalPorts, lport)
-		}
-	}
-	if len(updateLogicalPorts) < len(ld.Ports) {
-		// Updating the logical device will trigger the port change events to be populated to the controller
-		if err := agent.updateLogicalDevicePortsWithoutLock(ctx, ld, updateLogicalPorts); err != nil {
-			return err
-		}
-	} else {
-		logger.Debugw("no-change-required", log.Fields{"logical-device-id": agent.logicalDeviceID})
-	}
-	return nil
-}
-
 func clonePorts(ports []*voltha.LogicalPort) []*voltha.LogicalPort {
 	return proto.Clone(&voltha.LogicalPorts{Items: ports}).(*voltha.LogicalPorts).Items
 }
