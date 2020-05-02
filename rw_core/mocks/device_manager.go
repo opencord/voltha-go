@@ -73,11 +73,6 @@ func (dm *DeviceManager) DeleteAllChildDevices(ctx context.Context, cDevice *vol
 	return nil
 }
 
-// DeleteAllUNILogicalPorts -
-func (dm *DeviceManager) DeleteAllUNILogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
-	return nil
-}
-
 // DeleteAllLogicalPorts -
 func (dm *DeviceManager) DeleteAllLogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
 	return nil
