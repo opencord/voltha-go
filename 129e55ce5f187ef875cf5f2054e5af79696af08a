@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fa6545a_eb128ee9",
+        "filename": "rw_core/core/device/state_transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T14:51:05Z",
+      "side": 1,
+      "message": "This transitions order is different from the one below when the OLT goes to disconnected state.   Should these two transitions be the same?",
+      "revId": "129e55ce5f187ef875cf5f2054e5af79696af08a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
