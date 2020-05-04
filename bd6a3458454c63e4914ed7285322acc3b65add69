@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f19167bc_83a26539",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "I think we can leave it to the northbound user. i.e the user makes the requests separately and gets the success response from  meter add, then adds the flow.",
+      "parentUuid": "58ba373f_2eb85c42",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf72200b_06468fbc",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2020-05-04T15:50:50Z",
       "side": 1,
       "message": "Why not use updateLogicalDeviceMetersInStore()",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "343a0c11_24519c11",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "I tried to follow the previous practices. AddWithId was the function used in first additions to KV instead of Update functions. I can change it.",
+      "parentUuid": "cf72200b_06468fbc",
       "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "510b7cbe_9e8683d8",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7b4cfaf_2910f8af",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc976954_2c6351b7",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 12
@@ -64,6 +118,24 @@
       "writtenOn": "2020-05-04T15:50:50Z",
       "side": 1,
       "message": "Lock?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9441b65e_39e41c5b",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc976954_2c6351b7",
       "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "ae4b8f13_4bb766c9",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "This is a important part of feature which we have to talk on. For flowAdd; in Upstream direction, we expect the uni_port to be in in_port and for Downstream we expect it to be in out_port which is an action field. If I don\u0027t know it wrong, it is the case also in \"goto\" flows. Problem is in flowDelete. In flowDelete we have the uni_port again in in_port for upstream flows, but for downstream flows we don\u0027t have action fields, so don\u0027t have the out_port. That is why we decided to add the uni_port to metadata for flowDeletes, from the controller apps.\nI\u0027m not sure if we have tunnel_id populated with uni_id here. If we do, then we can use it instead of metadata, but in my tests I couldn\u0027t see the tunnel_id in logs.",
+      "parentUuid": "85e2d705_43dede27",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22d66c83_57c4ac7e",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 12
@@ -98,6 +188,24 @@
       "writtenOn": "2020-05-04T15:50:50Z",
       "side": 1,
       "message": "Is metadata always an out port?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e59fc9d_3363479e",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "refer to comment above.",
+      "parentUuid": "22d66c83_57c4ac7e",
       "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "78ffcb03_4c44804e",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 2153,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "Actually no flow without port classifier should be exist in the store. We add the flows to store with their port classifier as a key. So I\u0027m not sure if an action has to be taken here.",
+      "parentUuid": "761f7d71_19efcd41",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9faddef3_79f986eb",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 12
@@ -132,6 +258,24 @@
       "writtenOn": "2020-05-04T15:50:50Z",
       "side": 1,
       "message": "This is always adding an empty set of flows associated with a given port.  Either change the name or pass in the flow chunks.",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "052f3562_441bea9c",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 2204,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-04T20:16:22Z",
+      "side": 1,
+      "message": "Yes. we immediately add the flowsChunk to model, so concurrent flows that is added to the same port can allocate or wait the same lock in the model.",
+      "parentUuid": "9faddef3_79f986eb",
       "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
