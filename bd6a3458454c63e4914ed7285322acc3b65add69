@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58ba373f_2eb85c42",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "Addressing each element (e.g. flows, meters, groups, ports, ..) of a logical device allows these transactions to proceed concurrently.  This is good.   However, we may end up with requests being processed out of order.  For instance, a flow add requires a meter to be present sometimes.   If we have a meter add followed by a flow add but the flow add gets processed first then that flow request will fail.    Is there more granular request ordering needed?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf72200b_06468fbc",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "Why not use updateLogicalDeviceMetersInStore()",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7b4cfaf_2910f8af",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "Lock required?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc976954_2c6351b7",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "Lock?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85e2d705_43dede27",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "Is this method use to associate flows to ports in a deterministic way?   I.e. a flow that has both an in and out port will be associated with one of them.  Yes?  How does it handle \"goto table-id\" flows?   Could we get in a situation where one set is associated to a port while the \"goto\" associated with another set?   Would it be an issue if that\u0027s the case?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22d66c83_57c4ac7e",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "Is metadata always an out port?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "761f7d71_19efcd41",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 2153,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "What happens to flows that return a 0 for port classification?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9faddef3_79f986eb",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 2204,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-04T15:50:50Z",
+      "side": 1,
+      "message": "This is always adding an empty set of flows associated with a given port.  Either change the name or pass in the flow chunks.",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
