@@ -110,7 +110,9 @@ endif
 
 docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
-
+ifdef BUILD_PROFILED
+	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile
+endif
 docker-kind-load:
 	@if [ "`kind get clusters | grep voltha-$(TYPE)`" = '' ]; then echo "no voltha-$(TYPE) cluster found" && exit 1; fi
 	kind load docker-image ${RWCORE_IMAGENAME}:${DOCKER_TAG} --name=voltha-$(TYPE) --nodes $(shell kubectl get nodes --template='{{range .items}}{{.metadata.name}},{{end}}' | rev | cut -c 2- | rev)
