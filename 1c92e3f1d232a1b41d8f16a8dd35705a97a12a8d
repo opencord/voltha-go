@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "c78aec92_35d99a5c",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-05T17:53:52Z",
+      "side": 1,
+      "message": "It\u0027s better to use the built-in map type, since it properly uses the type system.  It\u0027s also easier to reason about locks without having to consider sync.Map.  Lastly, it\u0027s easier to understand the load/store/range operations.",
+      "parentUuid": "b1fe1689_c1feafa1",
+      "range": {
+        "startLine": 61,
+        "startChar": 23,
+        "endLine": 65,
+        "endChar": 31
+      },
+      "revId": "1c92e3f1d232a1b41d8f16a8dd35705a97a12a8d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85d8c291_e932ae10",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 2
