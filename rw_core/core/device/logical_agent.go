@@ -451,21 +451,24 @@ func (agent *LogicalAgent) updatePortsState(ctx context.Context, device *voltha.
 
 // setupUNILogicalPorts creates a UNI port on the logical device that represents a child UNI interface
 func (agent *LogicalAgent) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device) error {
-	logger.Infow("setupUNILogicalPort", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+	logger.Infow("setupUNILogicalPort", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "childDeviceId": childDevice.Id})
 	// Build the logical device based on information retrieved from the device adapter
 	var err error
-	var added bool
+	uniPorts := make([]*voltha.Port, 0)
 	//Get UNI port number
 	for _, port := range childDevice.Ports {
 		if port.Type == voltha.Port_ETHERNET_UNI {
-			if added, err = agent.addUNILogicalPort(ctx, childDevice, port); err != nil {
-				logger.Errorw("error-adding-UNI-port", log.Fields{"error": err})
-			}
-			if added {
-				agent.addLogicalPortToMap(port.PortNo, false)
-			}
+			uniPorts = append(uniPorts, port)
+			agent.addLogicalPortToMap(port.PortNo, false)
+			logger.Debugw("Added-UNI-Port", log.Fields{"PortNo": port.PortNo, "childDeviceId": childDevice.Id})
 		}
 	}
+	if len(uniPorts) > 0 {
+		if _, err = agent.addUNILogicalPortsOfAChild(ctx, childDevice, uniPorts); err != nil {
+			logger.Errorw("error-adding-UNI-ports", log.Fields{"error": err})
+		}
+	}
+	logger.Debugw("UNI-Ports-added", log.Fields{"childDeviceId": childDevice.Id, "count": len(uniPorts)})
 	return err
 }
 
@@ -1967,6 +1970,61 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 			logger.Warn("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
+
+	return true, nil
+}
+
+//addUNILogicalPortsOfAChild adds all UNI ports of a child at once to the locical device.
+func (agent *LogicalAgent) addUNILogicalPortsOfAChild(ctx context.Context, childDevice *voltha.Device, ports []*voltha.Port) (bool, error) {
+	logger.Debugw("addUNILogicalPortsOfAChild", log.Fields{"ports": ports})
+	if childDevice.AdminState != voltha.AdminState_ENABLED || childDevice.OperStatus != voltha.OperStatus_ACTIVE {
+		logger.Infow("device-not-ready", log.Fields{"deviceId": childDevice.Id, "admin": childDevice.AdminState, "oper": childDevice.OperStatus})
+		return false, nil
+	}
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return false, err
+	}
+	defer agent.requestQueue.RequestComplete()
+
+	// Get stored logical device
+	ldevice := agent.getLogicalDeviceWithoutLock()
+	clonedPorts := clonePorts(ldevice.Ports)
+	if clonedPorts == nil {
+		clonedPorts = make([]*voltha.LogicalPort, 0)
+	}
+	for _, port := range ports {
+		if agent.portExist(childDevice, port) {
+			logger.Warnw("port-already-exist", log.Fields{"port": port})
+			continue
+		}
+		var portCap *ic.PortCapability
+		var err error
+		// First get the port capability
+		if portCap, err = agent.deviceMgr.getPortCapability(ctx, childDevice.Id, port.PortNo); err != nil {
+			logger.Errorw("error-retrieving-port-capabilities", log.Fields{"error": err})
+			continue
+		}
+
+		logger.Debugw("adding-uni", log.Fields{"deviceId": childDevice.Id})
+		portCap.Port.RootPort = false
+		portCap.Port.Id = port.Label
+		portCap.Port.OfpPort.PortNo = port.PortNo
+		portCap.Port.DeviceId = childDevice.Id
+		portCap.Port.DevicePortNo = port.PortNo
+
+		clonedPorts = append(clonedPorts, portCap.Port)
+		// Update the device graph with this new logical port
+		clonedLP := (proto.Clone(portCap.Port)).(*voltha.LogicalPort)
+
+		go func() {
+			if err := agent.updateRoutes(context.Background(), clonedLP); err != nil {
+				logger.Warn("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+			}
+		}()
+	}
+	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, ldevice, clonedPorts); err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
