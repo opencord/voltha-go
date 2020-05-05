@@ -984,11 +984,13 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	}
 	lDevice.Flows = &ofp.Flows{Items: clonedFlows}
 
-	// Revert meters
-	meters := cloneMeters(lDevice.Meters.Items)
-	changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, addedFlow, true)
-	if changedMeterStats {
-		lDevice.Meters = &ofp.Meters{Items: meters}
+	// Revert meters, if necessary
+	if lDevice.Meters != nil && len(lDevice.Meters.Items) > 0 {
+		meters := cloneMeters(lDevice.Meters.Items)
+		changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, addedFlow, true)
+		if changedMeterStats {
+			lDevice.Meters = &ofp.Meters{Items: meters}
+		}
 	}
 
 	// Update the model
