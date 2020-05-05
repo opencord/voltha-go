@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ea48c29d_02e66424",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-05T17:53:52Z",
+      "side": 1,
+      "message": "Will this case still work if the key does not exist?",
+      "revId": "bd6a3458454c63e4914ed7285322acc3b65add69",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58ba373f_2eb85c42",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 12
