@@ -276,6 +276,30 @@
     },
     {
       "key": {
+        "uuid": "77c571e6_2b9b6e11",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T19:30:53Z",
+      "side": 1,
+      "message": "Can move the one from above here, it\u0027s not used anywhere else.",
+      "parentUuid": "f03aaea8_5a099904",
+      "range": {
+        "startLine": 719,
+        "startChar": 43,
+        "endLine": 719,
+        "endChar": 52
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf2464fc_c8b95324",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -687,6 +711,30 @@
       "side": 1,
       "message": "Kept till end, to avoid possible concurrent map modification.",
       "parentUuid": "c063e0c7_408e5bed",
+      "range": {
+        "startLine": 2126,
+        "startChar": 1,
+        "endLine": 2127,
+        "endChar": 31
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbad068f_6723bebf",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2127,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T19:30:53Z",
+      "side": 1,
+      "message": "Locking until the end is good, but should the lock be held immediately, or can it wait until after the kv access is complete?\n\nCurrently, other unrelated requests will have to wait for the KV access to complete, rather than running in parallel.",
+      "parentUuid": "2ec33457_312886bd",
       "range": {
         "startLine": 2126,
         "startChar": 1,
