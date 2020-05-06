@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30047991_cdc7508a",
+        "filename": "rw_core/core/device/state_transitions.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-06T14:01:53Z",
+      "side": 1,
+      "message": "Do we need DisableAllChildDevices?   It\u0027s a nit comment, but since this is a cleanup Jira then would be nice to make it consistent.",
+      "revId": "de9481f626c7228b0353647ffa5af754b3a171cb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
