@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33cf053a_dd693944",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "Probably an unnecessary comment.\n\nOnly really need comments where the code does something confusing, and requires extra explanation.",
+      "range": {
+        "startLine": 61,
+        "startChar": 37,
+        "endLine": 61,
+        "endChar": 59
+      },
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61c448cc_0474e2c3",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "Comment out of sync w/ code.  Consider something that doesn\u0027t make reference to var names, like: \"only used for adding entries\", or omitting altogether.",
+      "range": {
+        "startLine": 62,
+        "startChar": 73,
+        "endLine": 62,
+        "endChar": 90
+      },
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bf6c211_356dfb82",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "Should use strconv.Itoa() instead of printf in this situation.",
+      "range": {
+        "startLine": 707,
+        "startChar": 16,
+        "endLine": 707,
+        "endChar": 23
+      },
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c2fd85f_2e56d347",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "Consider map[uint64]struct{} for list of flow IDs.",
+      "range": {
+        "startLine": 774,
+        "startChar": 1,
+        "endLine": 774,
+        "endChar": 14
+      },
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93e15115_64af3a12",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "Probably better to just use Lock for the whole thing.\n\nRUnlock followed by Lock could allow another waiting thread to run, which might make unexpected changes.",
+      "range": {
+        "startLine": 781,
+        "startChar": 1,
+        "endLine": 782,
+        "endChar": 22
+      },
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c58f6d6_2488a5bb",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 787,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "deleteLogicalDeviceFlowInStore()?",
+      "range": {
+        "startLine": 787,
+        "startChar": 18,
+        "endLine": 787,
+        "endChar": 48
+      },
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5c53217_886a2ba9",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "no longer \"per port\"",
+      "range": {
+        "startLine": 967,
+        "startChar": 25,
+        "endLine": 967,
+        "endChar": 33
+      },
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fcb8b0a_d9720a90",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-06T20:55:01Z",
+      "side": 1,
+      "message": "remove commented code?",
+      "revId": "1e2d5b851d1963347da0140c8c133c6421bfd757",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
