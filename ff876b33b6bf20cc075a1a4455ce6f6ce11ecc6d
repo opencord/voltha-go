@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3476f7c_47076cbe",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T20:24:47Z",
+      "side": 1,
+      "message": "@Khen I thought that we don\u0027t need this anymore, because we don\u0027t use instruction field in flow_id generation any more. Could you please confirm.",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 7
+      },
+      "revId": "ff876b33b6bf20cc075a1a4455ce6f6ce11ecc6d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
