@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e3c78883_39d34254",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Yes, the final code will be .",
+      "parentUuid": "08ca2531_a6c34cf0",
+      "range": {
+        "startLine": 63,
+        "startChar": 1,
+        "endLine": 63,
+        "endChar": 22
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f93a0e6f_38138e9a",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -53,6 +77,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "This lock appears to be used to synchronize access to the KV, not the local struct.  Is this the case?  Consider naming it `dbLock`, or similar.",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 5
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3680dd33_0ff55d34",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "not only sync access to db but sync the flow related some other works.",
+      "parentUuid": "1abe1ed7_c74fc4ed",
       "range": {
         "startLine": 73,
         "startChar": 1,
@@ -134,6 +182,30 @@
     },
     {
       "key": {
+        "uuid": "fd284256_8f0ff8e8",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "there will be flows in kv for logical devices and devices. In order to keep them stored separately, I used logical_flows.",
+      "parentUuid": "80519d28_472e167c",
+      "range": {
+        "startLine": 296,
+        "startChar": 22,
+        "endLine": 296,
+        "endChar": 35
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b227e44f_d784ac47",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -180,6 +252,30 @@
     },
     {
       "key": {
+        "uuid": "f03aaea8_5a099904",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Already created one above, why don\u0027t use its address here and create new one? Do I think Java/C oriented?",
+      "parentUuid": "7bb18ff0_6409f817",
+      "range": {
+        "startLine": 719,
+        "startChar": 43,
+        "endLine": 719,
+        "endChar": 52
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf2464fc_c8b95324",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -191,6 +287,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "This is the only usage of meterModifyInModel()\n\nDoesn\u0027t need to be two separate functions; should be inlined?",
+      "range": {
+        "startLine": 757,
+        "startChar": 14,
+        "endLine": 760,
+        "endChar": 45
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cacac8fd_62197fce",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf2464fc_c8b95324",
       "range": {
         "startLine": 757,
         "startChar": 14,
@@ -226,6 +346,30 @@
     },
     {
       "key": {
+        "uuid": "f117a738_c5bf3961",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "6869e6e6_d202b218",
+      "range": {
+        "startLine": 785,
+        "startChar": 2,
+        "endLine": 785,
+        "endChar": 27
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4f98891_c94b03dc",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -237,6 +381,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "Missing a `agent.flowsLock.RUnlock()`",
+      "range": {
+        "startLine": 1149,
+        "startChar": 4,
+        "endLine": 1149,
+        "endChar": 14
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b85f661_421db95f",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Changed in new implementation",
+      "parentUuid": "a4f98891_c94b03dc",
       "range": {
         "startLine": 1149,
         "startChar": 4,
@@ -272,6 +440,30 @@
     },
     {
       "key": {
+        "uuid": "cfca01ed_787aa1ba",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1461,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "101b650e_c44d36d3",
+      "range": {
+        "startLine": 1461,
+        "startChar": 1,
+        "endLine": 1461,
+        "endChar": 14
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b509f2f_2474683e",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -283,6 +475,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "Shouldn\u0027t use defer in loops.",
+      "range": {
+        "startLine": 1470,
+        "startChar": 3,
+        "endLine": 1470,
+        "endChar": 33
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e4dc6e2_c8b96d5b",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1470,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6b509f2f_2474683e",
       "range": {
         "startLine": 1470,
         "startChar": 3,
@@ -318,6 +534,30 @@
     },
     {
       "key": {
+        "uuid": "c4b9fc8d_b015f93f",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1551,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6e0aa7b_1f199991",
+      "range": {
+        "startLine": 1551,
+        "startChar": 10,
+        "endLine": 1551,
+        "endChar": 11
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fe97ff6_3476294d",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -329,6 +569,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "always nil here, just return nil",
+      "range": {
+        "startLine": 1559,
+        "startChar": 22,
+        "endLine": 1559,
+        "endChar": 25
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17528b0a_35aaf104",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 1559,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5fe97ff6_3476294d",
       "range": {
         "startLine": 1559,
         "startChar": 22,
@@ -364,6 +628,30 @@
     },
     {
       "key": {
+        "uuid": "ab42d9dc_f664c5ab",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2125,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "90f337cf_d954fa74",
+      "range": {
+        "startLine": 2125,
+        "startChar": 36,
+        "endLine": 2125,
+        "endChar": 45
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c063e0c7_408e5bed",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -375,6 +663,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "Can lock after db read instead?",
+      "range": {
+        "startLine": 2126,
+        "startChar": 1,
+        "endLine": 2127,
+        "endChar": 31
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ec33457_312886bd",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2127,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Kept till end, to avoid possible concurrent map modification.",
+      "parentUuid": "c063e0c7_408e5bed",
       "range": {
         "startLine": 2126,
         "startChar": 1,
@@ -410,6 +722,30 @@
     },
     {
       "key": {
+        "uuid": "89fe46f2_6040a74f",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2148,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e94d2906_a097b174",
+      "range": {
+        "startLine": 2148,
+        "startChar": 27,
+        "endLine": 2148,
+        "endChar": 46
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4e5fd66_224548d7",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -421,6 +757,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "Can lock after db read instead?",
+      "range": {
+        "startLine": 2149,
+        "startChar": 1,
+        "endLine": 2150,
+        "endChar": 31
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7936adc_8394ee8f",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2150,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Same as above",
+      "parentUuid": "e4e5fd66_224548d7",
       "range": {
         "startLine": 2149,
         "startChar": 1,
@@ -456,6 +816,30 @@
     },
     {
       "key": {
+        "uuid": "f24b92a9_2cc575dd",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2167,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "202b139d_4d72553a",
+      "range": {
+        "startLine": 2167,
+        "startChar": 27,
+        "endLine": 2167,
+        "endChar": 46
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b57213e0_c6d55cf2",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -479,6 +863,30 @@
     },
     {
       "key": {
+        "uuid": "51793409_6337f781",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2169,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Same as above",
+      "parentUuid": "b57213e0_c6d55cf2",
+      "range": {
+        "startLine": 2168,
+        "startChar": 1,
+        "endLine": 2169,
+        "endChar": 31
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "595dceb6_fcacb332",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 14
@@ -490,6 +898,30 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "Just \u0026ofp.Flows{} ?",
+      "range": {
+        "startLine": 2204,
+        "startChar": 97,
+        "endLine": 2204,
+        "endChar": 113
+      },
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17f7ae5b_f577eecd",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2204,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "595dceb6_fcacb332",
       "range": {
         "startLine": 2204,
         "startChar": 97,
@@ -559,6 +991,24 @@
       "writtenOn": "2020-05-05T17:53:52Z",
       "side": 1,
       "message": "Is is worth having these getter functions?  Possibly more readable to do these things inline?",
+      "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72dc2765_418a2b05",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 14
+      },
+      "lineNbr": 2268,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-06T18:34:58Z",
+      "side": 1,
+      "message": "In order not to forget locking. Otherwise not worth, sure.",
+      "parentUuid": "6641c29c_fc17a5fb",
       "revId": "c2e8710a3e06bd422adfc96740c4d60e3af9931a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
