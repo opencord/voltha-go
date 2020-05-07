@@ -39,6 +39,7 @@ const (
 const (
 	DefaultKafkaHost                = "127.0.0.1"
 	DefaultKafkaPort                = 9092
+	DefaultKafkaAddress             = DefaultKafkaHost + ":" + string(DefaultKafkaPort)
 	DefaultGroupName                = "voltha"
 	DefaultSleepOnError             = 1
 	DefaultProducerFlushFrequency   = 10
