@@ -17,7 +17,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -62,7 +61,6 @@ type ReadyProbe interface {
 type GrpcServer struct {
 	gs       *grpc.Server
 	address  string
-	port     int
 	secure   bool
 	services []func(*grpc.Server)
 	probe    ReadyProbe // optional
@@ -75,14 +73,12 @@ Instantiate a GRPC server data structure
 */
 func NewGrpcServer(
 	address string,
-	port int,
 	certs *GrpcSecurity,
 	secure bool,
 	probe ReadyProbe,
 ) *GrpcServer {
 	server := &GrpcServer{
 		address:      address,
-		port:         port,
 		secure:       secure,
 		GrpcSecurity: certs,
 		probe:        probe,
@@ -95,9 +91,7 @@ Start prepares the GRPC server and starts servicing requests
 */
 func (s *GrpcServer) Start(ctx context.Context) {
 
-	host := fmt.Sprintf("%s:%d", s.address, s.port)
-
-	lis, err := net.Listen("tcp", host)
+	lis, err := net.Listen("tcp", s.address)
 	if err != nil {
 		logger.Fatalf("failed to listen: %v", err)
 	}
