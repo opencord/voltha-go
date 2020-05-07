@@ -79,8 +79,7 @@ type InterContainerProxy interface {
 
 // interContainerProxy represents the messaging proxy
 type interContainerProxy struct {
-	kafkaHost                      string
-	kafkaPort                      int
+	kafkaAddress                   string
 	defaultTopic                   *Topic
 	defaultRequestHandlerInterface interface{}
 	deviceDiscoveryTopic           *Topic
@@ -107,15 +106,9 @@ type interContainerProxy struct {
 
 type InterContainerProxyOption func(*interContainerProxy)
 
-func InterContainerHost(host string) InterContainerProxyOption {
+func InterContainerAddress(address string) InterContainerProxyOption {
 	return func(args *interContainerProxy) {
-		args.kafkaHost = host
-	}
-}
-
-func InterContainerPort(port int) InterContainerProxyOption {
-	return func(args *interContainerProxy) {
-		args.kafkaPort = port
+		args.kafkaAddress = address
 	}
 }
 
@@ -145,9 +138,8 @@ func MsgClient(client Client) InterContainerProxyOption {
 
 func newInterContainerProxy(opts ...InterContainerProxyOption) *interContainerProxy {
 	proxy := &interContainerProxy{
-		kafkaHost: DefaultKafkaHost,
-		kafkaPort: DefaultKafkaPort,
-		doneCh:    make(chan struct{}),
+		kafkaAddress: DefaultKafkaAddress,
+		doneCh:       make(chan struct{}),
 	}
 
 	for _, option := range opts {

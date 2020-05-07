@@ -18,6 +18,7 @@ package device
 import (
 	"context"
 	"math/rand"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -456,26 +457,23 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
 	cfg.DefaultRequestTimeout = lda.defaultTimeout
-	cfg.KVStorePort = lda.kvClientPort
+	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(lda.kvClientPort)
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
 		logger.Fatal("Cannot get a freeport for grpc")
 	}
-	cfg.GrpcPort = grpcPort
-	cfg.GrpcHost = "127.0.0.1"
+	cfg.GrpcAddress = "127.0.0.1" + ":" + strconv.Itoa(grpcPort)
 	client := tst.SetupKVClient(cfg, lda.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
-		Host:                    cfg.KVStoreHost,
-		Port:                    cfg.KVStorePort,
+		Address:                 cfg.KVStoreAddress,
 		Timeout:                 cfg.KVStoreTimeout,
 		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
 		PathPrefix:              cfg.KVStoreDataPrefix}
 	lda.kmp = kafka.NewInterContainerProxy(
-		kafka.InterContainerHost(cfg.KafkaAdapterHost),
-		kafka.InterContainerPort(cfg.KafkaAdapterPort),
+		kafka.InterContainerAddress(cfg.KafkaAdapterAddress),
 		kafka.MsgClient(lda.kClient),
 		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
 		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
