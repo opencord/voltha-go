@@ -112,26 +112,23 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CorePairTopic = "rw_core"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
-	cfg.KVStorePort = dat.kvClientPort
+	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(dat.kvClientPort)
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
 		logger.Fatal("Cannot get a freeport for grpc")
 	}
-	cfg.GrpcPort = grpcPort
-	cfg.GrpcHost = "127.0.0.1"
+	cfg.GrpcAddress = "127.0.0.1" + ":" + strconv.Itoa(grpcPort)
 	client := setupKVClient(cfg, dat.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
-		Host:                    cfg.KVStoreHost,
-		Port:                    cfg.KVStorePort,
+		Address:                 cfg.KVStoreAddress,
 		Timeout:                 cfg.KVStoreTimeout,
 		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
 		PathPrefix:              cfg.KVStoreDataPrefix}
 	dat.kmp = kafka.NewInterContainerProxy(
-		kafka.InterContainerHost(cfg.KafkaAdapterHost),
-		kafka.InterContainerPort(cfg.KafkaAdapterPort),
+		kafka.InterContainerAddress(cfg.KafkaAdapterAddress),
 		kafka.MsgClient(dat.kClient),
 		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
 		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
@@ -183,8 +180,7 @@ func stopEmbeddedEtcdServer(server *mock_etcd.EtcdServer) {
 }
 
 func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
-	addr := cf.KVStoreHost + ":" + strconv.Itoa(cf.KVStorePort)
-	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout, log.FatalLevel)
+	client, err := kvstore.NewEtcdClient(cf.KVStoreAddress, cf.KVStoreTimeout, log.FatalLevel)
 	if err != nil {
 		panic("no kv client")
 	}
