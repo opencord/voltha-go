@@ -29,15 +29,14 @@ import (
 )
 
 // startKafkInterContainerProxy is responsible for starting the Kafka Interadapter Proxy
-func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client, host string, port int, coreTopic, affinityRouterTopic string, connectionRetryInterval time.Duration) (kafka.InterContainerProxy, error) {
-	logger.Infow("initialize-kafka-manager", log.Fields{"host": host, "port": port, "topic": coreTopic})
+func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client, address string, coreTopic, affinityRouterTopic string, connectionRetryInterval time.Duration) (kafka.InterContainerProxy, error) {
+	logger.Infow("initialize-kafka-manager", log.Fields{"address": address, "topic": coreTopic})
 
 	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPreparing)
 
 	// create the kafka RPC proxy
 	kmp := kafka.NewInterContainerProxy(
-		kafka.InterContainerHost(host),
-		kafka.InterContainerPort(port),
+		kafka.InterContainerAddress(address),
 		kafka.MsgClient(kafkaClient),
 		kafka.DefaultTopic(&kafka.Topic{Name: coreTopic}),
 		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: affinityRouterTopic}))
@@ -45,8 +44,8 @@ func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client,
 	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPrepared)
 
 	// wait for connectivity
-	logger.Infow("starting-kafka-manager", log.Fields{"host": host,
-		"port": port, "topic": coreTopic})
+	logger.Infow("starting-kafka-manager", log.Fields{"address": address,
+		"topic": coreTopic})
 
 	for {
 		// If we haven't started yet, then try to start
