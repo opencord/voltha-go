@@ -18,17 +18,19 @@ package config
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"strings"
-	"time"
 )
 
 const (
-	defaultkvStoreConfigPath = "config"
-	kvStoreDataPathPrefix    = "service/voltha"
-	kvStorePathSeparator     = "/"
+	defaultkvStoreConfigPath     = "config"
+	defaultkvStoreDataPathPrefix = "service/voltha"
+	kvStorePathSeparator         = "/"
 )
 
 // ConfigType represents the type for which config is created inside the kvstore
@@ -68,8 +70,9 @@ type ConfigChangeEvent struct {
 // ConfigManager is a wrapper over Backend to maintain Configuration of voltha components
 // in kvstore based persistent storage
 type ConfigManager struct {
-	Backend             *db.Backend
-	KvStoreConfigPrefix string
+	Backend               *db.Backend
+	KVStoreConfigPrefix   string
+	KVStoreDataPathPrefix string
 }
 
 // ComponentConfig represents a category of configuration for a specific VOLTHA component type
@@ -93,24 +96,31 @@ type ComponentConfig struct {
 	kvStoreEventChan chan *kvstore.Event
 }
 
-func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreHost string, kvStorePort int, kvStoreTimeout time.Duration) *ConfigManager {
-
+func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreAddress string, kvStoreTimeout time.Duration) *ConfigManager {
+	var kvStorePrefix string
+	if prefix, present := os.LookupEnv("KV_STORE_DATAPATH_PREFIX"); present {
+		kvStorePrefix = prefix
+		logger.Infow("KV_STORE_DATAPATH_PREFIX env variable is set, ", log.Fields{"kvStoreDataPathPrefix": kvStorePrefix})
+	} else {
+		kvStorePrefix = defaultkvStoreDataPathPrefix
+		logger.Infow("KV_STORE_DATAPATH_PREFIX env variable is not set, using default", log.Fields{"kvStoreDataPathPrefix": defaultkvStoreDataPathPrefix})
+	}
 	return &ConfigManager{
-		KvStoreConfigPrefix: defaultkvStoreConfigPath,
+		KVStoreConfigPrefix:   defaultkvStoreConfigPath,
+		KVStoreDataPathPrefix: kvStorePrefix,
 		Backend: &db.Backend{
 			Client:     kvClient,
 			StoreType:  kvStoreType,
-			Host:       kvStoreHost,
-			Port:       kvStorePort,
+			Address:    kvStoreAddress,
 			Timeout:    kvStoreTimeout,
-			PathPrefix: kvStoreDataPathPrefix,
+			PathPrefix: kvStorePrefix,
 		},
 	}
 }
 
 // RetrieveComponentList list the component Names for which loglevel is stored in kvstore
 func (c *ConfigManager) RetrieveComponentList(ctx context.Context, configType ConfigType) ([]string, error) {
-	data, err := c.Backend.List(ctx, c.KvStoreConfigPrefix)
+	data, err := c.Backend.List(ctx, c.KVStoreConfigPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +130,7 @@ func (c *ConfigManager) RetrieveComponentList(ctx context.Context, configType Co
 	// For Example, recieved key would be <Backend Prefix Path>/<Config Prefix>/<Component Name>/<Config Type>/default and value \"DEBUG\"
 	// Then in default will be stored as PackageName,componentName as <Component Name> and DEBUG will be stored as value in List struct
 	ccPathPrefix := kvStorePathSeparator + configType.String() + kvStorePathSeparator
-	pathPrefix := kvStoreDataPathPrefix + kvStorePathSeparator + c.KvStoreConfigPrefix + kvStorePathSeparator
+	pathPrefix := c.KVStoreDataPathPrefix + kvStorePathSeparator + c.KVStoreConfigPrefix + kvStorePathSeparator
 	var list []string
 	keys := make(map[string]interface{})
 	for attr := range data {
@@ -153,7 +163,7 @@ func (cm *ConfigManager) InitComponentConfig(componentLabel string, configType C
 func (c *ComponentConfig) makeConfigPath() string {
 
 	cType := c.configType.String()
-	return c.cManager.KvStoreConfigPrefix + kvStorePathSeparator +
+	return c.cManager.KVStoreConfigPrefix + kvStorePathSeparator +
 		c.componentLabel + kvStorePathSeparator + cType
 }
 
