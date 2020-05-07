@@ -18,7 +18,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -98,8 +97,7 @@ func stopEmbeddedEtcdServer(server *mock_etcd.EtcdServer) {
 }
 
 func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
-	addr := cf.KVStoreHost + ":" + strconv.Itoa(cf.KVStorePort)
-	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout, log.FatalLevel)
+	client, err := kvstore.NewEtcdClient(cf.KVStoreAddress, cf.KVStoreTimeout, log.FatalLevel)
 	if err != nil {
 		panic("no kv client")
 	}
