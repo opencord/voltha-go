@@ -96,7 +96,7 @@ type ComponentConfig struct {
 	kvStoreEventChan chan *kvstore.Event
 }
 
-func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreHost string, kvStorePort int, kvStoreTimeout time.Duration) *ConfigManager {
+func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreAddress string, kvStoreTimeout time.Duration) *ConfigManager {
 	var kvStorePrefix string
 	if prefix, present := os.LookupEnv("KV_STORE_DATAPATH_PREFIX"); present {
 		kvStorePrefix = prefix
@@ -111,8 +111,7 @@ func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreHost string, 
 		Backend: &db.Backend{
 			Client:     kvClient,
 			StoreType:  kvStoreType,
-			Host:       kvStoreHost,
-			Port:       kvStorePort,
+			Address:    kvStoreAddress,
 			Timeout:    kvStoreTimeout,
 			PathPrefix: kvStorePrefix,
 		},

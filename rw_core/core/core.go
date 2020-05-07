@@ -18,7 +18,6 @@ package core
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/opencord/voltha-go/db/model"
@@ -73,14 +72,14 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// setup kv client
 	logger.Debugw("create-kv-client", log.Fields{"kvstore": cf.KVStoreType})
-	kvClient, err := newKVClient(cf.KVStoreType, cf.KVStoreHost+":"+strconv.Itoa(cf.KVStorePort), cf.KVStoreTimeout)
+	kvClient, err := newKVClient(cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	defer stopKVClient(context.Background(), kvClient)
 
 	// sync logging config with kv store
-	cm := conf.NewConfigManager(kvClient, cf.KVStoreType, cf.KVStoreHost, cf.KVStorePort, cf.KVStoreTimeout)
+	cm := conf.NewConfigManager(kvClient, cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
 	go conf.StartLogLevelConfigProcessing(cm, ctx)
 
 	backend := cm.Backend
@@ -94,8 +93,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// create kafka client
 	kafkaClient := kafka.NewSaramaClient(
-		kafka.Host(cf.KafkaAdapterHost),
-		kafka.Port(cf.KafkaAdapterPort),
+		kafka.Address(cf.KafkaAdapterAddress),
 		kafka.ConsumerType(kafka.GroupCustomer),
 		kafka.ProducerReturnOnErrors(true),
 		kafka.ProducerReturnOnSuccess(true),
@@ -119,7 +117,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// connect to kafka, then wait until reachable and publisher/consumer created
 	// core.kmp must be created before deviceMgr and adapterMgr
-	kmp, err := startKafkInterContainerProxy(ctx, kafkaClient, cf.KafkaAdapterHost, cf.KafkaAdapterPort, cf.CoreTopic, cf.AffinityRouterTopic, cf.ConnectionRetryInterval)
+	kmp, err := startKafkInterContainerProxy(ctx, kafkaClient, cf.KafkaAdapterAddress, cf.CoreTopic, cf.AffinityRouterTopic, cf.ConnectionRetryInterval)
 	if err != nil {
 		logger.Warn("Failed to setup kafka connection")
 		return
@@ -135,7 +133,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	registerAdapterRequestHandlers(kmp, deviceMgr, adapterMgr, cf.CoreTopic)
 
 	// start gRPC handler
-	grpcServer := grpcserver.NewGrpcServer(cf.GrpcHost, cf.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
+	grpcServer := grpcserver.NewGrpcServer(cf.GrpcAddress, nil, false, probe.GetProbeFromContext(ctx))
 	go startGRPCService(ctx, grpcServer, api.NewNBIHandler(deviceMgr, logicalDeviceMgr, adapterMgr))
 	defer grpcServer.Stop()
 

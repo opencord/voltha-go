@@ -26,16 +26,12 @@ import (
 const (
 	ConsulStoreName                  = "consul"
 	EtcdStoreName                    = "etcd"
-	defaultGrpcPort                  = 50057
-	defaultGrpcHost                  = ""
-	defaultKafkaAdapterHost          = "127.0.0.1"
-	defaultKafkaAdapterPort          = 9092
-	defaultKafkaClusterHost          = "127.0.0.1"
-	defaultKafkaClusterPort          = 9094
+	defaultGrpcAddress               = ":50057"
+	defaultKafkaAdapterAddress       = "127.0.0.1:9092"
+	defaultKafkaClusterAddress       = "127.0.0.1:9094"
 	defaultKVStoreType               = EtcdStoreName
 	defaultKVStoreTimeout            = 5 * time.Second
-	defaultKVStoreHost               = "127.0.0.1"
-	defaultKVStorePort               = 2379 // Consul = 8500; Etcd = 2379
+	defaultKVStoreAddress            = "127.0.0.1:2379" // Consul = 8500; Etcd = 2379
 	defaultKVTxnKeyDelTime           = 60
 	defaultLogLevel                  = "WARN"
 	defaultBanner                    = false
@@ -55,24 +51,19 @@ const (
 	defaultConnectionRetryInterval   = 2 * time.Second
 	defaultLiveProbeInterval         = 60 * time.Second
 	defaultNotLiveProbeInterval      = 5 * time.Second // Probe more frequently when not alive
-	defaultProbeHost                 = ""
-	defaultProbePort                 = 8080
+	defaultProbeAddress              = ":8080"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
 type RWCoreFlags struct {
 	// Command line parameters
 	RWCoreEndpoint            string
-	GrpcHost                  string
-	GrpcPort                  int
-	KafkaAdapterHost          string
-	KafkaAdapterPort          int
-	KafkaClusterHost          string
-	KafkaClusterPort          int
+	GrpcAddress               string
+	KafkaAdapterAddress       string
+	KafkaClusterAddress       string
 	KVStoreType               string
 	KVStoreTimeout            time.Duration
-	KVStoreHost               string
-	KVStorePort               int
+	KVStoreAddress            string
 	KVTxnKeyDelTime           int
 	CoreTopic                 string
 	LogLevel                  string
@@ -91,24 +82,19 @@ type RWCoreFlags struct {
 	ConnectionRetryInterval   time.Duration
 	LiveProbeInterval         time.Duration
 	NotLiveProbeInterval      time.Duration
-	ProbeHost                 string
-	ProbePort                 int
+	ProbeAddress              string
 }
 
 // NewRWCoreFlags returns a new RWCore config
 func NewRWCoreFlags() *RWCoreFlags {
 	var rwCoreFlag = RWCoreFlags{ // Default values
 		RWCoreEndpoint:            defaultRWCoreEndpoint,
-		GrpcHost:                  defaultGrpcHost,
-		GrpcPort:                  defaultGrpcPort,
-		KafkaAdapterHost:          defaultKafkaAdapterHost,
-		KafkaAdapterPort:          defaultKafkaAdapterPort,
-		KafkaClusterHost:          defaultKafkaClusterHost,
-		KafkaClusterPort:          defaultKafkaClusterPort,
+		GrpcAddress:               defaultGrpcAddress,
+		KafkaAdapterAddress:       defaultKafkaAdapterAddress,
+		KafkaClusterAddress:       defaultKafkaClusterAddress,
 		KVStoreType:               defaultKVStoreType,
 		KVStoreTimeout:            defaultKVStoreTimeout,
-		KVStoreHost:               defaultKVStoreHost,
-		KVStorePort:               defaultKVStorePort,
+		KVStoreAddress:            defaultKVStoreAddress,
 		KVTxnKeyDelTime:           defaultKVTxnKeyDelTime,
 		CoreTopic:                 defaultCoreTopic,
 		LogLevel:                  defaultLogLevel,
@@ -127,8 +113,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		ConnectionRetryInterval:   defaultConnectionRetryInterval,
 		LiveProbeInterval:         defaultLiveProbeInterval,
 		NotLiveProbeInterval:      defaultNotLiveProbeInterval,
-		ProbeHost:                 defaultProbeHost,
-		ProbePort:                 defaultProbePort,
+		ProbeAddress:              defaultProbeAddress,
 	}
 	return &rwCoreFlag
 }
@@ -139,23 +124,14 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	help := fmt.Sprintf("RW core endpoint address")
 	flag.StringVar(&(cf.RWCoreEndpoint), "vcore-endpoint", defaultRWCoreEndpoint, help)
 
-	help = fmt.Sprintf("GRPC server - host")
-	flag.StringVar(&(cf.GrpcHost), "grpc_host", defaultGrpcHost, help)
+	help = fmt.Sprintf("GRPC server - address")
+	flag.StringVar(&(cf.GrpcAddress), "grpc_address", defaultGrpcAddress, help)
 
-	help = fmt.Sprintf("GRPC server - port")
-	flag.IntVar(&(cf.GrpcPort), "grpc_port", defaultGrpcPort, help)
+	help = fmt.Sprintf("Kafka - Adapter messaging address")
+	flag.StringVar(&(cf.KafkaAdapterAddress), "kafka_adapter_address", defaultKafkaAdapterAddress, help)
 
-	help = fmt.Sprintf("Kafka - Adapter messaging host")
-	flag.StringVar(&(cf.KafkaAdapterHost), "kafka_adapter_host", defaultKafkaAdapterHost, help)
-
-	help = fmt.Sprintf("Kafka - Adapter messaging port")
-	flag.IntVar(&(cf.KafkaAdapterPort), "kafka_adapter_port", defaultKafkaAdapterPort, help)
-
-	help = fmt.Sprintf("Kafka - Cluster messaging host")
-	flag.StringVar(&(cf.KafkaClusterHost), "kafka_cluster_host", defaultKafkaClusterHost, help)
-
-	help = fmt.Sprintf("Kafka - Cluster messaging port")
-	flag.IntVar(&(cf.KafkaClusterPort), "kafka_cluster_port", defaultKafkaClusterPort, help)
+	help = fmt.Sprintf("Kafka - Cluster messaging address")
+	flag.StringVar(&(cf.KafkaClusterAddress), "kafka_cluster_address", defaultKafkaClusterAddress, help)
 
 	help = fmt.Sprintf("RW Core topic")
 	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", defaultCoreTopic, help)
@@ -172,11 +148,8 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	help = fmt.Sprintf("The default timeout when making a kv store request")
 	flag.DurationVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", defaultKVStoreTimeout, help)
 
-	help = fmt.Sprintf("KV store host")
-	flag.StringVar(&(cf.KVStoreHost), "kv_store_host", defaultKVStoreHost, help)
-
-	help = fmt.Sprintf("KV store port")
-	flag.IntVar(&(cf.KVStorePort), "kv_store_port", defaultKVStorePort, help)
+	help = fmt.Sprintf("KV store address")
+	flag.StringVar(&(cf.KVStoreAddress), "kv_store_address", defaultKVStoreAddress, help)
 
 	help = fmt.Sprintf("The time to wait before deleting a completed transaction key")
 	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", defaultKVTxnKeyDelTime, help)
@@ -214,11 +187,8 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	help = fmt.Sprintf("The number of seconds between liveness probes while in a not live state")
 	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", defaultNotLiveProbeInterval, help)
 
-	help = fmt.Sprintf("The host on which to listen to answer liveness and readiness probe queries over HTTP.")
-	flag.StringVar(&(cf.ProbeHost), "probe_host", defaultProbeHost, help)
-
-	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
-	flag.IntVar(&(cf.ProbePort), "probe_port", defaultProbePort, help)
+	help = fmt.Sprintf("The address on which to listen to answer liveness and readiness probe queries over HTTP.")
+	flag.StringVar(&(cf.ProbeAddress), "probe_address", defaultProbeAddress, help)
 
 	flag.Parse()
 }
