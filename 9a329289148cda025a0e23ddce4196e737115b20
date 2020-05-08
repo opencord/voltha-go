@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6706753_79013566",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 2003,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-08T14:12:49Z",
+      "side": 1,
+      "message": "This can be a slow operation under load.  During that time no request can be processed on the logical device.\n\nCan the port be created and added to the logical device with basic portCap fields (with port down status) before sending the request to the adapter?   This way the lock can be released after the ports are added.   \n\nA better approach would be to change the portcreate API between the core/adapter such that the port capability is included in that message.  This way we are guaranteed every time we have a logical port on a logical device we have all the basic data.  The added benefit is that we will have one less \"locked\" round-trip between the Core and adapter.",
+      "revId": "9a329289148cda025a0e23ddce4196e737115b20",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
