@@ -16,6 +16,24 @@
       "revId": "9a329289148cda025a0e23ddce4196e737115b20",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b7b3281_bb624c56",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 2003,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-09T20:23:25Z",
+      "side": 1,
+      "message": "Totally agree. I wasn\u0027t happy when I was putting this message into the lock block.  Changing portCreate can be a good way of doing that. I suggest to merge this patch and open another task to study this problem.",
+      "parentUuid": "e6706753_79013566",
+      "revId": "9a329289148cda025a0e23ddce4196e737115b20",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
