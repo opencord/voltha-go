@@ -34,6 +34,24 @@
       "revId": "9a329289148cda025a0e23ddce4196e737115b20",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e69ba15a_6c9803b0",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 2003,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T14:39:49Z",
+      "side": 1,
+      "message": "If we merge this patch then we will have a different performance issue.  For now, maybe it would be better to create a partial logical port port  before making the request to the adapter.",
+      "parentUuid": "3b7b3281_bb624c56",
+      "revId": "9a329289148cda025a0e23ddce4196e737115b20",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
