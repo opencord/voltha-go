@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "2181104b_8e87c5db",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T15:28:35Z",
+      "side": 1,
+      "message": "flowChunk.lock.Lock()\nand\ndefer flowChunk.lock.Unlock()\nInstead?\n(Perhaps within this lock?)\n\nThis currently holds the lock for all flows while modifying this specific flow, thus will serialize all flow writes.\n\nAlso: Since the flows map itself is not modified here, can use RLock() instead of Lock() for agent.flowLock\n\nAm I misunderstanding something here?\n\nAlso applies to \n`update/deleteLogicalDeviceFlow/Meter/FlowGroup ()`",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36337409_48d9cffc",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
@@ -13,6 +30,29 @@
       "writtenOn": "2020-05-11T15:24:23Z",
       "side": 1,
       "message": "Should this be after the \"Remove\" from KV in case the KV removal fails?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71ba6ed3_4ce40a80",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T15:28:35Z",
+      "side": 1,
+      "message": "with this order, it\u0027s possible to remove from local memory but then error and leave an entry in the db.\n\nShould delete from local memory only after committing to db?",
+      "range": {
+        "startLine": 311,
+        "startChar": 1,
+        "endLine": 314,
+        "endChar": 2
+      },
       "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -115,6 +155,98 @@
       "writtenOn": "2020-05-11T15:24:23Z",
       "side": 1,
       "message": "Should this be Lock() instead of RLock()?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44c2a5a0_793acc72",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T15:28:35Z",
+      "side": 1,
+      "message": "Since the flows map may be modified, use Lock() not RLock()",
+      "range": {
+        "startLine": 891,
+        "startChar": 16,
+        "endLine": 891,
+        "endChar": 21
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "003220d9_8ed0afbc",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T15:28:35Z",
+      "side": 1,
+      "message": "Function just to set bounds for defer?\n\nProbably cleaner to just use multiple unlocks.",
+      "range": {
+        "startLine": 1085,
+        "startChar": 2,
+        "endLine": 1096,
+        "endChar": 3
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4a37d96_4bb146f7",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T15:28:35Z",
+      "side": 1,
+      "message": "Chunk lock is held already, can release this before writing to DB?",
+      "range": {
+        "startLine": 1361,
+        "startChar": 1,
+        "endLine": 1361,
+        "endChar": 25
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "777978b1_6dca2d1d",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T15:28:35Z",
+      "side": 1,
+      "message": "Function just to set bounds for defer?\n\nProbably cleaner to just use multiple unlocks.",
+      "range": {
+        "startLine": 1394,
+        "startChar": 2,
+        "endLine": 1394,
+        "endChar": 24
+      },
       "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
