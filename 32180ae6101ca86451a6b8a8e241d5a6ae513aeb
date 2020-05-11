@@ -452,6 +452,30 @@
     },
     {
       "key": {
+        "uuid": "1c5a0240_5e25ef77",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T22:37:16Z",
+      "side": 1,
+      "message": "Yes I\u0027m trying to make it more clear. As I wrote above, I think this is more clear than putting Unlocks to everywhere.\nI prefer to move it to a helper function. I hope nobody will comment that this new function is only used once, so no need to make it a separate function then :).",
+      "parentUuid": "b19238ce_2866b14d",
+      "range": {
+        "startLine": 1085,
+        "startChar": 2,
+        "endLine": 1096,
+        "endChar": 3
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4a37d96_4bb146f7",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
