@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "03f62b6f_69537360",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "You may be right for the update functions. We are updating the entry in the map but not deleting or adding enrties. I\u0027m not sure if we need to syncronize this update. For kv update, you are right, it is not needed. The Chunk locks are already acquired before calling this methods. So I can move the lock to surround the map update only. For remove functions; not for KV update, but because of deletion in map, I think we should keep the map lock, but it may be better again to move the lock to cover delete(agent.flows) only.",
+      "parentUuid": "2181104b_8e87c5db",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36337409_48d9cffc",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
@@ -53,6 +71,24 @@
       "writtenOn": "2020-05-11T15:24:23Z",
       "side": 1,
       "message": "Should this be after the \"Remove\" from KV in case the KV removal fails?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4358f525_cbf07f06",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "Sure.",
+      "parentUuid": "36337409_48d9cffc",
       "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -82,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "33f59ebc_fda6ea89",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "Sure.",
+      "parentUuid": "71ba6ed3_4ce40a80",
+      "range": {
+        "startLine": 311,
+        "startChar": 1,
+        "endLine": 314,
+        "endChar": 2
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "499abb5f_2ca49a3e",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
@@ -93,6 +153,24 @@
       "writtenOn": "2020-05-11T15:24:23Z",
       "side": 1,
       "message": "Based on my latest test, this can be safely removed.",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dbd41b9_666b3b23",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "will remove",
+      "parentUuid": "499abb5f_2ca49a3e",
       "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -116,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "61a0301e_62f69394",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "will do.",
+      "parentUuid": "e3c39cb9_6043fe69",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a12cf801_e26b82b4",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
@@ -127,6 +223,24 @@
       "writtenOn": "2020-05-11T15:24:23Z",
       "side": 1,
       "message": "Should this be right after \"meterChunk, ok :\u003d agent.meters[meterMod.MeterId]\" and remove the one below as well in the \"else\" part?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff4bc353_db86f5ec",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "My approach was to release the map lock, after allocating the current meter\u0027s(or flow\u0027s, group\u0027s) lock. So that no any other thread will do changes about this flow inbetween the unlock and lock.",
+      "parentUuid": "a12cf801_e26b82b4",
       "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -150,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "3f903fff_622cb959",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "refer to previous comment. I\u0027m not insistent on that. Idea was to prevent any new add/deletes(write attempts) about this meter to modify the data between unlock/lock.",
+      "parentUuid": "227d5609_3d9e304e",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18fe6e66_ceaed918",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
@@ -161,6 +293,24 @@
       "writtenOn": "2020-05-11T15:24:23Z",
       "side": 1,
       "message": "Since here we have to go over the entire set of flows to determine which one has that meterID, would it make sense store the meterID along with the flow within the flowchunk?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1902ec7_53858b7a",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "Im may be, but then we need to manage the flows map during meter modifications(e.g delete meter). On the other hand, it is expected to be a very rare operation to remove a meter. I\u0027m OK for both solutions. The same thing is also valid for groups.",
+      "parentUuid": "18fe6e66_ceaed918",
       "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -207,6 +357,30 @@
     },
     {
       "key": {
+        "uuid": "4e81e24a_eae2a7c5",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "definitely",
+      "parentUuid": "44c2a5a0_793acc72",
+      "range": {
+        "startLine": 891,
+        "startChar": 16,
+        "endLine": 891,
+        "endChar": 21
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "003220d9_8ed0afbc",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
@@ -218,6 +392,30 @@
       "writtenOn": "2020-05-11T15:28:35Z",
       "side": 1,
       "message": "Function just to set bounds for defer?\n\nProbably cleaner to just use multiple unlocks.",
+      "range": {
+        "startLine": 1085,
+        "startChar": 2,
+        "endLine": 1096,
+        "endChar": 3
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6db41fd8_b860c9be",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "Yes, I did it for defer. It seemed me more dirty to use a lot of Unlocks around, and also more vulnerable for future edits.",
+      "parentUuid": "003220d9_8ed0afbc",
       "range": {
         "startLine": 1085,
         "startChar": 2,
@@ -253,6 +451,30 @@
     },
     {
       "key": {
+        "uuid": "b084d1de_c8fdf0aa",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "will do.",
+      "parentUuid": "f4a37d96_4bb146f7",
+      "range": {
+        "startLine": 1361,
+        "startChar": 1,
+        "endLine": 1361,
+        "endChar": 25
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "777978b1_6dca2d1d",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
@@ -264,6 +486,30 @@
       "writtenOn": "2020-05-11T15:28:35Z",
       "side": 1,
       "message": "Function just to set bounds for defer?\n\nProbably cleaner to just use multiple unlocks.",
+      "range": {
+        "startLine": 1394,
+        "startChar": 2,
+        "endLine": 1394,
+        "endChar": 24
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afc003a9_6a5f8bf7",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-11T17:51:13Z",
+      "side": 1,
+      "message": "see comment above for previous one.",
+      "parentUuid": "777978b1_6dca2d1d",
       "range": {
         "startLine": 1394,
         "startChar": 2,
