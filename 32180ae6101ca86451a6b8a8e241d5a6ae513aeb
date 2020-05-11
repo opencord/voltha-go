@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "ac2472ea_fe30e974",
+        "filename": "VERSION",
+        "patchSetId": 21
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T15:46:12Z",
+      "side": 1,
+      "message": "Should use just -dev, not -dev0\n\nAlso should be 2.4.2-dev (the version targeted, not the version developed from)",
+      "range": {
+        "startLine": 1,
+        "startChar": 6,
+        "endLine": 1,
+        "endChar": 10
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2181104b_8e87c5db",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
