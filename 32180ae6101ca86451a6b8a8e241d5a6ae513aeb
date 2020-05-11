@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36337409_48d9cffc",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "Should this be after the \"Remove\" from KV in case the KV removal fails?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "499abb5f_2ca49a3e",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "Based on my latest test, this can be safely removed.",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3c39cb9_6043fe69",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "This can be removed as well.",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a12cf801_e26b82b4",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "Should this be right after \"meterChunk, ok :\u003d agent.meters[meterMod.MeterId]\" and remove the one below as well in the \"else\" part?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "227d5609_3d9e304e",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "Since this is a Read lock, multiple calls will be able to to read at the same time.   Should this be right after \"meterChunk, ok :\u003d agent.meters[newMeter.Config.MeterId]\"",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18fe6e66_ceaed918",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "Since here we have to go over the entire set of flows to determine which one has that meterID, would it make sense store the meterID along with the flow within the flowchunk?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dfc5ee0_4a741991",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "Should this be Lock() instead of RLock()?",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8be73f61_cb07c56d",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-11T15:24:23Z",
+      "side": 1,
+      "message": "Commented code can be removed.",
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
