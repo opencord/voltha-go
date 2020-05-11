@@ -428,6 +428,30 @@
     },
     {
       "key": {
+        "uuid": "b19238ce_2866b14d",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 21
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-11T19:53:33Z",
+      "side": 1,
+      "message": "I\u0027d argue that this breaks \"clear is better than clever\".\nhttps://go-proverbs.github.io/\n\nAlternatively: Could move this out to be a proper named helper function (just below this one)?",
+      "parentUuid": "6db41fd8_b860c9be",
+      "range": {
+        "startLine": 1085,
+        "startChar": 2,
+        "endLine": 1096,
+        "endChar": 3
+      },
+      "revId": "32180ae6101ca86451a6b8a8e241d5a6ae513aeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4a37d96_4bb146f7",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 21
