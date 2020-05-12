@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39c8d1ea_994198f9",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-12T20:40:03Z",
+      "side": 1,
+      "message": "Add new chunk to map \u0026 acquire chunk lock, then release map lock, then add to kv store.  \n\nAny other order is unsafe.\n\nSee other comment for details.",
+      "range": {
+        "startLine": 664,
+        "startChar": 1,
+        "endLine": 664,
+        "endChar": 41
+      },
+      "revId": "d6d60f8d62827e504dddc780e6b7d6eae40af10c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1695103b_4be02bc1",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-12T20:40:03Z",
+      "side": 1,
+      "message": "See other comment: Must acquire chunk lock before releasing map lock in new chunk case.\n\n(Must not do this in existing chunk case.)",
+      "range": {
+        "startLine": 829,
+        "startChar": 2,
+        "endLine": 829,
+        "endChar": 34
+      },
+      "revId": "d6d60f8d62827e504dddc780e6b7d6eae40af10c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64a25a1f_61920bb5",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-12T20:40:03Z",
+      "side": 1,
+      "message": "Since at this point the group does not yet exist in the kv, it is unsafe to add to the map before locking the chunk, since another thread could acquire the lock first, and get no result from kv.\n\nSince in this case the chunk was just created, it is safe to acquire the chunk lock before the map lock.\n\nIn this one case (when adding a newly created chunk to a map), should acquire the chunk lock before releasing the map lock.",
+      "range": {
+        "startLine": 1282,
+        "startChar": 1,
+        "endLine": 1283,
+        "endChar": 31
+      },
+      "revId": "d6d60f8d62827e504dddc780e6b7d6eae40af10c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
