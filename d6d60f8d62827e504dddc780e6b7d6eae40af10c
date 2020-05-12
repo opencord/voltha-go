@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8b5f43f2_b7afb8ef",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-12T22:21:29Z",
+      "side": 1,
+      "message": "In your previous comments you objected to the order of acquiring chunk lock, then releasing map lock. So I changed the lock allocations in this patchset in various places. Here,  in order to add kv first and then add to map, I had to change between the locks too much, so found it more useful to keep the map lock till the end of the add process, which I think make it safe enough. I\u0027ll change it as you said here with adding deletion from map in case of error in KV. Does this work?\nAnd about the \"acquiring chunk lock, then releasing map lock\", do you still think we shouldn\u0027t do it in add/delete/modify meter/flow/group methods?",
+      "parentUuid": "39c8d1ea_994198f9",
+      "range": {
+        "startLine": 664,
+        "startChar": 1,
+        "endLine": 664,
+        "endChar": 41
+      },
+      "revId": "d6d60f8d62827e504dddc780e6b7d6eae40af10c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1695103b_4be02bc1",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 24
@@ -36,6 +60,30 @@
       "writtenOn": "2020-05-12T20:40:03Z",
       "side": 1,
       "message": "See other comment: Must acquire chunk lock before releasing map lock in new chunk case.\n\n(Must not do this in existing chunk case.)",
+      "range": {
+        "startLine": 829,
+        "startChar": 2,
+        "endLine": 829,
+        "endChar": 34
+      },
+      "revId": "d6d60f8d62827e504dddc780e6b7d6eae40af10c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ce72aa7_e6c4d216",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-12T22:21:29Z",
+      "side": 1,
+      "message": "See comment above.",
+      "parentUuid": "1695103b_4be02bc1",
       "range": {
         "startLine": 829,
         "startChar": 2,
