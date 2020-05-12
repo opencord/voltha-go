@@ -39,6 +39,24 @@
       "revId": "0f0d87727364afbca972d7bcc847d56781230b0c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aeb0f303_eaf78b41",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-12T16:23:03Z",
+      "side": 1,
+      "message": "If we know there are potential issues with locking then I would suggest to have them fix before merging.   Especially, since this is one part of the flow changes (the other one being in the device agents).",
+      "parentUuid": "5c36515b_68b58cdc",
+      "revId": "0f0d87727364afbca972d7bcc847d56781230b0c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
