@@ -57,6 +57,24 @@
       "revId": "0f0d87727364afbca972d7bcc847d56781230b0c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25259fe7_568a4fe8",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-12T20:18:49Z",
+      "side": 1,
+      "message": "Seems you both think same on this locking mechanism. Khen you also commented the same before. So I\u0027ll change it to unlock agent.flowLock before locking chunk.Lock.",
+      "parentUuid": "aeb0f303_eaf78b41",
+      "revId": "0f0d87727364afbca972d7bcc847d56781230b0c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
