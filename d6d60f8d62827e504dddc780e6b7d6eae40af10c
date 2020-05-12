@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "b5fedbb4_b5b4f6d4",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-12T23:02:25Z",
+      "side": 1,
+      "message": "The requirements are different in different places depending on what should be allowed to run in parallel (for speed), and what must guarantee serialized access (for correctness).\n\nI\u0027m pretty confident that with the these final mutex changes, we\u0027ll have a trustworthy implementation.\n\nIf we acquire the chunk lock before releasing map lock in other (already existing chunk) cases, then deadlocks can occur.  Only with new chunks is it safe to lock in this order.  \n(Since no other thread can possibly own the chunk lock.)",
+      "parentUuid": "8b5f43f2_b7afb8ef",
+      "range": {
+        "startLine": 664,
+        "startChar": 1,
+        "endLine": 664,
+        "endChar": 41
+      },
+      "revId": "d6d60f8d62827e504dddc780e6b7d6eae40af10c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1695103b_4be02bc1",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 24
