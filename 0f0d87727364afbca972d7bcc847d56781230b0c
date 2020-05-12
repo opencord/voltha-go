@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f1687da_e4acce68",
+        "filename": "VERSION",
+        "patchSetId": 23
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-12T15:58:04Z",
+      "side": 1,
+      "message": "Should be 2.4.2-dev, not 2.4.1-dev  (i.e. - we are working towards 2.4.2)",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 9
+      },
+      "revId": "0f0d87727364afbca972d7bcc847d56781230b0c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c36515b_68b58cdc",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-12T15:58:04Z",
+      "side": 1,
+      "message": "There are many places that use locks like\n\nagent.flowLock.Lock()\nflowChunk.lock.Lock()\nagent.flowLock.Unlock()\n...\n\n(i.e. - agent.flowLock held while flowChunk.lock is acquired)\n\nIf flowChunk.lock.Lock() is held when this function is called (as it should be), then the opposite occurs here.\n\n(i.e. - flowChunk.lock held while agent.flowLock is acquired)\n\nThis can deadlock.\n\nEither the flowChunk.lock should be released here before the agent.flowLock is acquired, _or_ agent.flowLock should be released in all cases before flowChunk.lock is acquired.\n\nI\u0027m tempted to say \"merge it\", and address this issue in parallel with other work.",
+      "revId": "0f0d87727364afbca972d7bcc847d56781230b0c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
