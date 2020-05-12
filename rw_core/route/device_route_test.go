@@ -19,15 +19,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -80,7 +81,7 @@ func (ldM *logicalDeviceManager) start(getDevice GetDeviceFunc, buildRoutes bool
 			DevicePortNo: portReg.port.PortNo,
 			RootPort:     portReg.rootPort,
 		}
-		ldM.logicalDevice.Ports = append(ldM.logicalDevice.Ports, lp)
+		ldM.logicalDevice.Ports[lp.Id] = lp
 		if buildRoutes {
 			err := ldM.deviceRoutes.AddPort(context.Background(), lp, ldM.logicalDevice.Ports)
 			if err != nil && !strings.Contains(err.Error(), "code = FailedPrecondition") {
@@ -112,18 +113,18 @@ func newOltManager(oltDeviceID string, ldMgr *logicalDeviceManager, numNNIPort i
 }
 
 func (oltM *oltManager) start() {
-	oltM.olt.Ports = make([]*voltha.Port, 0)
+	oltM.olt.Ports = make(map[uint32]*voltha.Port, oltM.numNNIPort+oltM.numPonPortOnOlt)
 	// Setup the OLT nni ports and trigger the nni ports creation
 	for nniPort := 1; nniPort < oltM.numNNIPort+1; nniPort++ {
 		p := &voltha.Port{Label: fmt.Sprintf("nni-%d", nniPort), PortNo: uint32(nniPort), DeviceId: oltM.olt.Id, Type: voltha.Port_ETHERNET_NNI}
-		oltM.olt.Ports = append(oltM.olt.Ports, p)
+		oltM.olt.Ports[p.PortNo] = p
 		oltM.logicalDeviceMgr.ldChnl <- portRegistration{port: p, rootPort: true}
 	}
 
 	// Create OLT pon ports
 	for ponPort := oltM.numNNIPort + 1; ponPort < oltM.numPonPortOnOlt+oltM.numNNIPort+1; ponPort++ {
-		p := voltha.Port{PortNo: uint32(ponPort), DeviceId: oltM.olt.Id, Type: voltha.Port_PON_OLT}
-		oltM.olt.Ports = append(oltM.olt.Ports, &p)
+		p := &voltha.Port{PortNo: uint32(ponPort), DeviceId: oltM.olt.Id, Type: voltha.Port_PON_OLT}
+		oltM.olt.Ports[p.PortNo] = p
 	}
 
 	// Wait for onu registration
@@ -188,11 +189,11 @@ func (onuM *onuManager) start(startingOltPeerPortNo int, numPonPortOnOlt int) {
 				ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
 				peerPort := voltha.Port_PeerPort{DeviceId: onuM.oltMgr.olt.Id, PortNo: uint32(oltPonNum)}
 				ponPort.Peers = append(ponPort.Peers, &peerPort)
-				onu.Ports = make([]*voltha.Port, 0)
-				onu.Ports = append(onu.Ports, ponPort)
+				onu.Ports = make(map[uint32]*voltha.Port, 0)
+				onu.Ports[ponPort.PortNo] = ponPort
 				for j := onuM.startingUniPortNo; j < onuM.numUnisPerOnu+onuM.startingUniPortNo; j++ {
 					uniPort := &voltha.Port{Label: fmt.Sprintf("%s:uni-%d", onu.Id, j), PortNo: uint32(j), DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
-					onu.Ports = append(onu.Ports, uniPort)
+					onu.Ports[uniPort.PortNo] = uniPort
 				}
 				onuM.deviceLock.Lock()
 				onuM.onus = append(onuM.onus, onu)
@@ -249,7 +250,7 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
 
 	// Create all the devices and logical device before computing the routes in one go
-	ld := &voltha.LogicalDevice{Id: logicalDeviceID}
+	ld := &voltha.LogicalDevice{Id: logicalDeviceID, Ports: map[string]*voltha.LogicalPort{}}
 	ldMgrChnl := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
 	ldMgr := newLogicalDeviceManager(ld, ldMgrChnl, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)
@@ -296,7 +297,7 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 
 	start := time.Now()
 	// Create all the devices and logical device before computing the routes in one go
-	ld := &voltha.LogicalDevice{Id: logicalDeviceID}
+	ld := &voltha.LogicalDevice{Id: logicalDeviceID, Ports: map[string]*voltha.LogicalPort{}}
 	ldMgrChnl := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
 	ldMgr := newLogicalDeviceManager(ld, ldMgrChnl, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)
@@ -340,7 +341,7 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
 
 	// Create all the devices and logical device before computing the routes in one go
-	ld1 := &voltha.LogicalDevice{Id: logicalDeviceID}
+	ld1 := &voltha.LogicalDevice{Id: logicalDeviceID, Ports: map[string]*voltha.LogicalPort{}}
 	ldMgrChnl1 := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
 	ldMgr1 := newLogicalDeviceManager(ld1, ldMgrChnl1, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl1 := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)
@@ -364,7 +365,7 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 
 	done = make(chan struct{})
 	// Create all the devices and logical device before computing the routes in one go
-	ld2 := &voltha.LogicalDevice{Id: logicalDeviceID}
+	ld2 := &voltha.LogicalDevice{Id: logicalDeviceID, Ports: map[string]*voltha.LogicalPort{}}
 	ldMgrChnl2 := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
 	ldMgr2 := newLogicalDeviceManager(ld2, ldMgrChnl2, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl2 := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)

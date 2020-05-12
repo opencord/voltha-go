@@ -73,7 +73,7 @@ func (rhp *AdapterRequestHandlerProxy) Register(args []*ic.Argument) (*voltha.Co
 	}
 	logger.Debugw("Register", log.Fields{"adapter": *adapter, "device-types": deviceTypes, "transaction-id": transactionID.Val})
 
-	return rhp.adapterMgr.RegisterAdapter(adapter, deviceTypes)
+	return rhp.adapterMgr.RegisterAdapter(adapter, deviceTypes.Items)
 }
 
 // GetDevice returns device info

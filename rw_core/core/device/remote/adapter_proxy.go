@@ -314,11 +314,11 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(ctx context.Context, device *volt
 	logger.Debugw("UpdateFlowsIncremental",
 		log.Fields{
 			"device-id":             device.Id,
-			"flow-to-add-count":     len(flowChanges.ToAdd.Items),
-			"flow-to-delete-count":  len(flowChanges.ToRemove.Items),
-			"group-to-add-count":    len(groupChanges.ToAdd.Items),
-			"group-to-delete-count": len(groupChanges.ToRemove.Items),
-			"group-to-update-count": len(groupChanges.ToUpdate.Items),
+			"flow-to-add-count":     len(flowChanges.ToAdd),
+			"flow-to-delete-count":  len(flowChanges.ToRemove),
+			"group-to-add-count":    len(groupChanges.ToAdd),
+			"group-to-delete-count": len(groupChanges.ToRemove),
+			"group-to-update-count": len(groupChanges.ToUpdate),
 		})
 	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
 	if err != nil {

@@ -19,6 +19,11 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
@@ -27,10 +32,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"strings"
-	"sync"
-	"testing"
 )
 
 var (
@@ -43,10 +44,10 @@ var (
 	TestProxyLogicalDeviceID       string
 	TestProxyTargetDeviceID        string
 	TestProxyTargetLogicalDeviceID string
-	TestProxyLogicalPorts          []*voltha.LogicalPort
-	TestProxyPorts                 []*voltha.Port
+	TestProxyLogicalPorts          map[string]*voltha.LogicalPort
+	TestProxyPorts                 map[uint32]*voltha.Port
 	TestProxyStats                 *openflow_13.OfpFlowStats
-	TestProxyFlows                 *openflow_13.Flows
+	TestProxyFlows                 map[uint64]*openflow_13.OfpFlowStats
 	TestProxyDevice                *voltha.Device
 	TestProxyLogicalDevice         *voltha.LogicalDevice
 	TestProxyAdapter               *voltha.Adapter
@@ -70,16 +71,16 @@ func init() {
 	TestProxyRootDevice = NewProxy(mockBackend, "/")
 	TestProxyRootAdapter = NewProxy(mockBackend, "/")
 
-	TestProxyLogicalPorts = []*voltha.LogicalPort{
-		{
+	TestProxyLogicalPorts = map[string]*voltha.LogicalPort{
+		"123": {
 			Id:           "123",
 			DeviceId:     "logicalport-0-device-id",
 			DevicePortNo: 123,
 			RootPort:     false,
 		},
 	}
-	TestProxyPorts = []*voltha.Port{
-		{
+	TestProxyPorts = map[uint32]*voltha.Port{
+		123: {
 			PortNo:     123,
 			Label:      "test-port-0",
 			Type:       voltha.Port_PON_OLT,
@@ -93,9 +94,7 @@ func init() {
 	TestProxyStats = &openflow_13.OfpFlowStats{
 		Id: 1111,
 	}
-	TestProxyFlows = &openflow_13.Flows{
-		Items: []*openflow_13.OfpFlowStats{TestProxyStats},
-	}
+	TestProxyFlows = map[uint64]*openflow_13.OfpFlowStats{TestProxyStats.Id: TestProxyStats}
 	TestProxyDevice = &voltha.Device{
 		Id:         TestProxyDeviceID,
 		Type:       "simulated_olt",

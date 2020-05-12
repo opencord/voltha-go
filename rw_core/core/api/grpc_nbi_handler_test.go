@@ -161,9 +161,8 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 		TotalReplicas:  1,
 		Endpoint:       nb.oltAdapterName,
 	}
-	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
-	deviceTypes := &voltha.DeviceTypes{Items: types}
-	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
+	types := map[string]*voltha.DeviceType{nb.oltAdapterName: {Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
+	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, types); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
@@ -185,9 +184,8 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 		TotalReplicas:  1,
 		Endpoint:       nb.onuAdapterName,
 	}
-	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
-	deviceTypes = &voltha.DeviceTypes{Items: types}
-	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
+	types = map[string]*voltha.DeviceType{nb.onuAdapterName: {Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
+	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, types); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
@@ -212,35 +210,36 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 	assert.NotNil(t, logicalDevices)
 	assert.Equal(t, 1, len(logicalDevices.Items))
 
-	ld := logicalDevices.Items[0]
-	assert.NotEqual(t, "", ld.Id)
-	assert.NotEqual(t, uint64(0), ld.DatapathId)
-	assert.Equal(t, "olt_adapter_mock", ld.Desc.HwDesc)
-	assert.Equal(t, "olt_adapter_mock", ld.Desc.SwDesc)
-	assert.NotEqual(t, "", ld.RootDeviceId)
-	assert.NotEqual(t, "", ld.Desc.SerialNum)
-	assert.Equal(t, uint32(256), ld.SwitchFeatures.NBuffers)
-	assert.Equal(t, uint32(2), ld.SwitchFeatures.NTables)
-	assert.Equal(t, uint32(15), ld.SwitchFeatures.Capabilities)
-	assert.Equal(t, 1+nb.numONUPerOLT, len(ld.Ports))
-	assert.Equal(t, oltDevice.ParentId, ld.Id)
-	//Expected port no
-	expectedPortNo := make(map[uint32]bool)
-	expectedPortNo[uint32(2)] = false
-	for i := 0; i < nb.numONUPerOLT; i++ {
-		expectedPortNo[uint32(i+100)] = false
-	}
-	for _, p := range ld.Ports {
-		assert.Equal(t, p.OfpPort.PortNo, p.DevicePortNo)
-		assert.Equal(t, uint32(4), p.OfpPort.State)
-		expectedPortNo[p.OfpPort.PortNo] = true
-		if strings.HasPrefix(p.Id, "nni") {
-			assert.Equal(t, true, p.RootPort)
-			//assert.Equal(t, uint32(2), p.OfpPort.PortNo)
-			assert.Equal(t, p.Id, fmt.Sprintf("nni-%d", p.DevicePortNo))
-		} else {
-			assert.Equal(t, p.Id, fmt.Sprintf("uni-%d", p.DevicePortNo))
-			assert.Equal(t, false, p.RootPort)
+	for _, ld := range logicalDevices.Items {
+		assert.NotEqual(t, "", ld.Id)
+		assert.NotEqual(t, uint64(0), ld.DatapathId)
+		assert.Equal(t, "olt_adapter_mock", ld.Desc.HwDesc)
+		assert.Equal(t, "olt_adapter_mock", ld.Desc.SwDesc)
+		assert.NotEqual(t, "", ld.RootDeviceId)
+		assert.NotEqual(t, "", ld.Desc.SerialNum)
+		assert.Equal(t, uint32(256), ld.SwitchFeatures.NBuffers)
+		assert.Equal(t, uint32(2), ld.SwitchFeatures.NTables)
+		assert.Equal(t, uint32(15), ld.SwitchFeatures.Capabilities)
+		assert.Equal(t, 1+nb.numONUPerOLT, len(ld.Ports))
+		assert.Equal(t, oltDevice.ParentId, ld.Id)
+		//Expected port no
+		expectedPortNo := make(map[uint32]bool)
+		expectedPortNo[uint32(2)] = false
+		for i := 0; i < nb.numONUPerOLT; i++ {
+			expectedPortNo[uint32(i+100)] = false
+		}
+		for _, p := range ld.Ports {
+			assert.Equal(t, p.OfpPort.PortNo, p.DevicePortNo)
+			assert.Equal(t, uint32(4), p.OfpPort.State)
+			expectedPortNo[p.OfpPort.PortNo] = true
+			if strings.HasPrefix(p.Id, "nni") {
+				assert.Equal(t, true, p.RootPort)
+				//assert.Equal(t, uint32(2), p.OfpPort.PortNo)
+				assert.Equal(t, p.Id, fmt.Sprintf("nni-%d", p.DevicePortNo))
+			} else {
+				assert.Equal(t, p.Id, fmt.Sprintf("uni-%d", p.DevicePortNo))
+				assert.Equal(t, false, p.RootPort)
+			}
 		}
 	}
 }
@@ -399,7 +398,9 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 	assert.NotNil(t, devices)
 	assert.Equal(t, 1, len(devices.Items))
-	assert.Equal(t, oltDevice.String(), devices.Items[0].String())
+	for _, item := range devices.Items {
+		assert.Equal(t, oltDevice.String(), item.String())
+	}
 
 	//Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
@@ -449,7 +450,9 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *NBIHandler) {
 	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(devices.Items))
-	assert.Equal(t, oltDevice.Id, devices.Items[0].Id)
+	for deviceId := range devices.Items {
+		assert.Equal(t, oltDevice.Id, deviceId)
+	}
 
 	// Enable the oltDevice
 	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
@@ -927,7 +930,9 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *NBIHandler) {
 	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(devices.Items))
-	assert.Equal(t, oltDevice.Id, devices.Items[0].Id)
+	for deviceId := range devices.Items {
+		assert.Equal(t, oltDevice.Id, deviceId)
+	}
 
 	// Enable the oltDevice
 	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
@@ -951,13 +956,13 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 	assert.Greater(t, len(onuDevices.Items), 0)
 
-	onuDevice := onuDevices.Items[0]
-
-	// Omci test action should succeed
-	request = &voltha.OmciTestRequest{Id: onuDevice.Id, Uuid: "456"}
-	resp, err := nbi.StartOmciTestAction(getContext(), request)
-	assert.Nil(t, err)
-	assert.Equal(t, resp.Result, voltha.TestResponse_SUCCESS)
+	for _, onuDevice := range onuDevices.Items {
+		// Omci test action should succeed
+		request = &voltha.OmciTestRequest{Id: onuDevice.Id, Uuid: "456"}
+		resp, err := nbi.StartOmciTestAction(getContext(), request)
+		assert.Nil(t, err)
+		assert.Equal(t, resp.Result, voltha.TestResponse_SUCCESS)
+	}
 
 	//Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
@@ -989,7 +994,14 @@ func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, nu
 	}
 	// Wait for logical device to have the flows (or none
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
-		return lds != nil && len(lds.Items) == 1 && len(lds.Items[0].Flows.Items) == expectedNumFlows
+		if lds != nil && len(lds.Items) == 1 {
+			for _, item := range lds.Items {
+				if len(item.Flows) == expectedNumFlows {
+					return true
+				}
+			}
+		}
+		return false
 	}
 	// No timeout implies a success
 	err := waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
@@ -1100,15 +1112,17 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 			return false
 		}
 		// Ensure there are both NNI ports and at least one UNI port on the logical device
-		ld := lds.Items[0]
-		nniPort := false
-		uniPort := false
-		for _, p := range ld.Ports {
-			nniPort = nniPort || p.RootPort == true
-			uniPort = uniPort || p.RootPort == false
-			if nniPort && uniPort {
-				return true
+		for _, ld := range lds.Items {
+			nniPort := false
+			uniPort := false
+			for _, p := range ld.Ports {
+				nniPort = nniPort || p.RootPort == true
+				uniPort = uniPort || p.RootPort == false
+				if nniPort && uniPort {
+					return true
+				}
 			}
+			return false
 		}
 		return false
 	}
@@ -1120,77 +1134,79 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	assert.NotNil(t, logicalDevices)
 	assert.Equal(t, 1, len(logicalDevices.Items))
 
-	logicalDevice := logicalDevices.Items[0]
-	meterID := rand.Uint32()
+	for _, logicalDevice := range logicalDevices.Items {
+		meterID := rand.Uint32()
 
-	// Add a meter to the logical device
-	meterMod := &ofp.OfpMeterMod{
-		Command: ofp.OfpMeterModCommand_OFPMC_ADD,
-		Flags:   rand.Uint32(),
-		MeterId: meterID,
-		Bands: []*ofp.OfpMeterBandHeader{
-			{Type: ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER,
-				Rate:      rand.Uint32(),
-				BurstSize: rand.Uint32(),
-				Data:      nil,
+		// Add a meter to the logical device
+		meterMod := &ofp.OfpMeterMod{
+			Command: ofp.OfpMeterModCommand_OFPMC_ADD,
+			Flags:   rand.Uint32(),
+			MeterId: meterID,
+			Bands: []*ofp.OfpMeterBandHeader{
+				{Type: ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER,
+					Rate:      rand.Uint32(),
+					BurstSize: rand.Uint32(),
+					Data:      nil,
+				},
 			},
-		},
-	}
-	_, err = nbi.UpdateLogicalDeviceMeterTable(getContext(), &ofp.MeterModUpdate{Id: logicalDevice.Id, MeterMod: meterMod})
-	assert.Nil(t, err)
+		}
+		_, err = nbi.UpdateLogicalDeviceMeterTable(getContext(), &ofp.MeterModUpdate{Id: logicalDevice.Id, MeterMod: meterMod})
+		assert.Nil(t, err)
 
-	// Send initial set of Trap flows
-	startingVlan := 4091
-	nb.sendTrapFlows(t, nbi, logicalDevice, uint64(meterID), startingVlan)
+		// Send initial set of Trap flows
+		startingVlan := 4091
+		nb.sendTrapFlows(t, nbi, logicalDevice, uint64(meterID), startingVlan)
 
-	// Listen for port events
-	start := time.Now()
-	processedNniLogicalPorts := 0
-	processedUniLogicalPorts := 0
+		// Listen for port events
+		start := time.Now()
+		processedNniLogicalPorts := 0
+		processedUniLogicalPorts := 0
 
-	for event := range nbi.GetChangeEventsQueueForTest() {
-		startingVlan++
-		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
-			ps := portStatus.PortStatus
-			if ps.Reason == ofp.OfpPortReason_OFPPR_ADD {
-				if ps.Desc.PortNo >= uint32(nb.startingUNIPortNo) {
-					processedUniLogicalPorts++
-					nb.sendEAPFlows(t, nbi, logicalDevice.Id, ps.Desc, startingVlan, uint64(meterID))
-				} else {
-					processedNniLogicalPorts++
+		for event := range nbi.GetChangeEventsQueueForTest() {
+			startingVlan++
+			if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
+				ps := portStatus.PortStatus
+				if ps.Reason == ofp.OfpPortReason_OFPPR_ADD {
+					if ps.Desc.PortNo >= uint32(nb.startingUNIPortNo) {
+						processedUniLogicalPorts++
+						nb.sendEAPFlows(t, nbi, logicalDevice.Id, ps.Desc, startingVlan, uint64(meterID))
+					} else {
+						processedNniLogicalPorts++
+					}
 				}
+			}
+
+			if processedNniLogicalPorts >= numNNIPorts && processedUniLogicalPorts >= numUNIPorts {
+				fmt.Println("Total time to send all flows:", time.Since(start))
+				break
 			}
 		}
 
-		if processedNniLogicalPorts >= numNNIPorts && processedUniLogicalPorts >= numUNIPorts {
-			fmt.Println("Total time to send all flows:", time.Since(start))
-			break
+		//Verify the flow count on the logical device
+		nb.verifyLogicalDeviceFlowCount(t, nbi, numNNIPorts, numUNIPorts, flowAddFail)
+
+		// Wait until all flows have been sent to the OLT adapters (or all failed)
+		expectedFlowCount := (numNNIPorts * 3) + numNNIPorts*numUNIPorts
+		if flowAddFail {
+			expectedFlowCount = 0
 		}
-	}
-	//Verify the flow count on the logical device
-	nb.verifyLogicalDeviceFlowCount(t, nbi, numNNIPorts, numUNIPorts, flowAddFail)
+		var oltVFunc isConditionSatisfied = func() bool {
+			return nb.oltAdapter.GetFlowCount() >= expectedFlowCount
+		}
+		err = waitUntilCondition(nb.maxTimeout, nbi, oltVFunc)
+		assert.Nil(t, err)
 
-	// Wait until all flows have been sent to the OLT adapters (or all failed)
-	expectedFlowCount := (numNNIPorts * 3) + numNNIPorts*numUNIPorts
-	if flowAddFail {
-		expectedFlowCount = 0
+		// Wait until all flows have been sent to the ONU adapters (or all failed)
+		expectedFlowCount = numUNIPorts
+		if flowAddFail {
+			expectedFlowCount = 0
+		}
+		var onuVFunc isConditionSatisfied = func() bool {
+			return nb.onuAdapter.GetFlowCount() == expectedFlowCount
+		}
+		err = waitUntilCondition(nb.maxTimeout, nbi, onuVFunc)
+		assert.Nil(t, err)
 	}
-	var oltVFunc isConditionSatisfied = func() bool {
-		return nb.oltAdapter.GetFlowCount() >= expectedFlowCount
-	}
-	err = waitUntilCondition(nb.maxTimeout, nbi, oltVFunc)
-	assert.Nil(t, err)
-
-	// Wait until all flows have been sent to the ONU adapters (or all failed)
-	expectedFlowCount = numUNIPorts
-	if flowAddFail {
-		expectedFlowCount = 0
-	}
-	var onuVFunc isConditionSatisfied = func() bool {
-		return nb.onuAdapter.GetFlowCount() == expectedFlowCount
-	}
-	err = waitUntilCondition(nb.maxTimeout, nbi, onuVFunc)
-	assert.Nil(t, err)
 }
 
 func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
@@ -1209,7 +1225,9 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
 	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(devices.Items))
-	assert.Equal(t, oltDevice.Id, devices.Items[0].Id)
+	for deviceId := range devices.Items {
+		assert.Equal(t, oltDevice.Id, deviceId)
+	}
 
 	// Enable the oltDevice
 	_, err = nbi.EnableDevice(getContext(), &voltha.ID{Id: oltDevice.Id})

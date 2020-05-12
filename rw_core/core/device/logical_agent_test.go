@@ -17,13 +17,14 @@ package device
 
 import (
 	"context"
-	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-go/rw_core/core/adapter"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"math/rand"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/config"
@@ -39,8 +40,8 @@ import (
 )
 
 func TestLogicalDeviceAgent_diff_nochange_1(t *testing.T) {
-	currentLogicalPorts := []*voltha.LogicalPort{}
-	updatedLogicalPorts := []*voltha.LogicalPort{}
+	currentLogicalPorts := map[string]*voltha.LogicalPort{}
+	updatedLogicalPorts := map[string]*voltha.LogicalPort{}
 	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
@@ -48,8 +49,8 @@ func TestLogicalDeviceAgent_diff_nochange_1(t *testing.T) {
 }
 
 func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
-	currentLogicalPorts := []*voltha.LogicalPort{
-		{
+	currentLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -61,7 +62,7 @@ func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1232": {
 			Id:           "1232",
 			DeviceId:     "d1234",
 			DevicePortNo: 2,
@@ -73,7 +74,7 @@ func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1233": {
 			Id:           "1233",
 			DeviceId:     "d1234",
 			DevicePortNo: 3,
@@ -86,8 +87,8 @@ func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
 			},
 		},
 	}
-	updatedLogicalPorts := []*voltha.LogicalPort{
-		{
+	updatedLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -99,7 +100,7 @@ func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1232": {
 			Id:           "1232",
 			DeviceId:     "d1234",
 			DevicePortNo: 2,
@@ -111,7 +112,7 @@ func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1233": {
 			Id:           "1233",
 			DeviceId:     "d1234",
 			DevicePortNo: 3,
@@ -131,9 +132,9 @@ func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
 }
 
 func TestLogicalDeviceAgent_diff_add(t *testing.T) {
-	currentLogicalPorts := []*voltha.LogicalPort{}
-	updatedLogicalPorts := []*voltha.LogicalPort{
-		{
+	currentLogicalPorts := map[string]*voltha.LogicalPort{}
+	updatedLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -145,7 +146,7 @@ func TestLogicalDeviceAgent_diff_add(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1232": {
 			Id:           "1232",
 			DeviceId:     "d1234",
 			DevicePortNo: 2,
@@ -162,13 +163,13 @@ func TestLogicalDeviceAgent_diff_add(t *testing.T) {
 	assert.Equal(t, 2, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
-	assert.Equal(t, updatedLogicalPorts[0], newPorts[updatedLogicalPorts[0].Id])
-	assert.Equal(t, updatedLogicalPorts[1], newPorts[updatedLogicalPorts[1].Id])
+	assert.Equal(t, updatedLogicalPorts["1231"], newPorts["1231"])
+	assert.Equal(t, updatedLogicalPorts["1232"], newPorts["1232"])
 }
 
 func TestLogicalDeviceAgent_diff_delete(t *testing.T) {
-	currentLogicalPorts := []*voltha.LogicalPort{
-		{
+	currentLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -181,17 +182,17 @@ func TestLogicalDeviceAgent_diff_delete(t *testing.T) {
 			},
 		},
 	}
-	updatedLogicalPorts := []*voltha.LogicalPort{}
+	updatedLogicalPorts := map[string]*voltha.LogicalPort{}
 	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 1, len(deletedPorts))
-	assert.Equal(t, currentLogicalPorts[0], deletedPorts[currentLogicalPorts[0].Id])
+	assert.Equal(t, currentLogicalPorts["1231"], deletedPorts["1231"])
 }
 
 func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
-	currentLogicalPorts := []*voltha.LogicalPort{
-		{
+	currentLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -203,7 +204,7 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1232": {
 			Id:           "1232",
 			DeviceId:     "d1234",
 			DevicePortNo: 2,
@@ -215,7 +216,7 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1233": {
 			Id:           "1233",
 			DeviceId:     "d1234",
 			DevicePortNo: 3,
@@ -228,8 +229,8 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 			},
 		},
 	}
-	updatedLogicalPorts := []*voltha.LogicalPort{
-		{
+	updatedLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -241,7 +242,7 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 				State:  4,
 			},
 		},
-		{
+		"1232": {
 			Id:           "1232",
 			DeviceId:     "d1234",
 			DevicePortNo: 2,
@@ -253,7 +254,7 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 				State:  4,
 			},
 		},
-		{
+		"1233": {
 			Id:           "1233",
 			DeviceId:     "d1234",
 			DevicePortNo: 3,
@@ -270,13 +271,13 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 2, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
-	assert.Equal(t, updatedLogicalPorts[0], changedPorts[updatedLogicalPorts[0].Id])
-	assert.Equal(t, updatedLogicalPorts[1], changedPorts[updatedLogicalPorts[1].Id])
+	assert.Equal(t, updatedLogicalPorts["1231"], changedPorts["1231"])
+	assert.Equal(t, updatedLogicalPorts["1232"], changedPorts["1232"])
 }
 
 func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
-	currentLogicalPorts := []*voltha.LogicalPort{
-		{
+	currentLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -288,7 +289,7 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1232": {
 			Id:           "1232",
 			DeviceId:     "d1234",
 			DevicePortNo: 2,
@@ -300,7 +301,7 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 				State:  1,
 			},
 		},
-		{
+		"1233": {
 			Id:           "1233",
 			DeviceId:     "d1234",
 			DevicePortNo: 3,
@@ -313,8 +314,8 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 			},
 		},
 	}
-	updatedLogicalPorts := []*voltha.LogicalPort{
-		{
+	updatedLogicalPorts := map[string]*voltha.LogicalPort{
+		"1231": {
 			Id:           "1231",
 			DeviceId:     "d1234",
 			DevicePortNo: 1,
@@ -326,7 +327,7 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 				State:  4,
 			},
 		},
-		{
+		"1232": {
 			Id:           "1232",
 			DeviceId:     "d1234",
 			DevicePortNo: 2,
@@ -338,7 +339,7 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 				State:  4,
 			},
 		},
-		{
+		"1234": {
 			Id:           "1234",
 			DeviceId:     "d1234",
 			DevicePortNo: 4,
@@ -355,9 +356,9 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 	assert.Equal(t, 1, len(newPorts))
 	assert.Equal(t, 2, len(changedPorts))
 	assert.Equal(t, 1, len(deletedPorts))
-	assert.Equal(t, updatedLogicalPorts[0], changedPorts[updatedLogicalPorts[0].Id])
-	assert.Equal(t, updatedLogicalPorts[1], changedPorts[updatedLogicalPorts[1].Id])
-	assert.Equal(t, currentLogicalPorts[2], deletedPorts[currentLogicalPorts[2].Id])
+	assert.Equal(t, updatedLogicalPorts["1231"], changedPorts["1231"])
+	assert.Equal(t, updatedLogicalPorts["1232"], changedPorts["1232"])
+	assert.Equal(t, currentLogicalPorts["1233"], deletedPorts["1233"])
 }
 
 type LDATest struct {
@@ -409,8 +410,8 @@ func newLDATest() *LDATest {
 				ofp.OfpCapabilities_OFPC_GROUP_STATS),
 		},
 		RootDeviceId: test.deviceIds[0],
-		Ports: []*voltha.LogicalPort{
-			{
+		Ports: map[string]*voltha.LogicalPort{
+			"1001": {
 				Id:           "1001",
 				DeviceId:     test.deviceIds[0],
 				DevicePortNo: 1,
@@ -422,7 +423,7 @@ func newLDATest() *LDATest {
 					State:  4,
 				},
 			},
-			{
+			"1002": {
 				Id:           "1002",
 				DeviceId:     test.deviceIds[1],
 				DevicePortNo: 2,
@@ -434,7 +435,7 @@ func newLDATest() *LDATest {
 					State:  4,
 				},
 			},
-			{
+			"1003": {
 				Id:           "1003",
 				DeviceId:     test.deviceIds[2],
 				DevicePortNo: 3,
@@ -524,7 +525,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the first port to FAILED
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[0].DeviceId, lda.logicalDevice.Ports[0].DevicePortNo, voltha.OperStatus_FAILED)
+		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports["1001"].DeviceId, lda.logicalDevice.Ports["1001"].DevicePortNo, voltha.OperStatus_FAILED)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -532,7 +533,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the second port to TESTING
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[1].DeviceId, lda.logicalDevice.Ports[1].DevicePortNo, voltha.OperStatus_TESTING)
+		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports["1002"].DeviceId, lda.logicalDevice.Ports["1002"].DevicePortNo, voltha.OperStatus_TESTING)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -540,9 +541,9 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the third port to UNKNOWN and then back to ACTIVE
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[2].DeviceId, lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_UNKNOWN)
+		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports["1003"].DeviceId, lda.logicalDevice.Ports["1003"].DevicePortNo, voltha.OperStatus_UNKNOWN)
 		assert.Nil(t, err)
-		err = ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[2].DeviceId, lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_ACTIVE)
+		err = ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports["1003"].DeviceId, lda.logicalDevice.Ports["1003"].DevicePortNo, voltha.OperStatus_ACTIVE)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -571,14 +572,14 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	localWG.Wait()
 
 	expectedChange := proto.Clone(originalLogicalDevice).(*voltha.LogicalDevice)
-	expectedChange.Ports[0].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	expectedChange.Ports[0].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
-	expectedChange.Ports[1].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	expectedChange.Ports[1].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
-	expectedChange.Ports[2].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	expectedChange.Ports[2].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
-	expectedChange.Meters = &voltha.Meters{Items: nil}
-	expectedChange.Meters.Items = append(expectedChange.Meters.Items, fu.MeterEntryFromMeterMod(meterMod))
+	expectedChange.Ports["1001"].OfpPort.Config = originalLogicalDevice.Ports["1001"].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+	expectedChange.Ports["1001"].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+	expectedChange.Ports["1002"].OfpPort.Config = originalLogicalDevice.Ports["1001"].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+	expectedChange.Ports["1002"].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+	expectedChange.Ports["1003"].OfpPort.Config = originalLogicalDevice.Ports["1001"].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+	expectedChange.Ports["1003"].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
+	expectedChange.Meters = make(map[uint32]*ofp.OfpMeterEntry)
+	expectedChange.Meters[meterMod.MeterId] = fu.MeterEntryFromMeterMod(meterMod)
 	updatedLogicalDevice, _ := ldAgent.GetLogicalDevice(context.Background())
 	assert.NotNil(t, updatedLogicalDevice)
 	assert.True(t, proto.Equal(expectedChange, updatedLogicalDevice))

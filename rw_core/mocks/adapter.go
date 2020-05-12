@@ -154,7 +154,7 @@ func (ta *Adapter) Update_flows_incrementally(device *voltha.Device, flows *of.F
 		if ta.failFlowAdd {
 			return fmt.Errorf("flow-add-error")
 		}
-		for _, f := range flows.ToAdd.Items {
+		for _, f := range flows.ToAdd {
 			ta.flows[f.Id] = f
 		}
 	}
@@ -162,7 +162,7 @@ func (ta *Adapter) Update_flows_incrementally(device *voltha.Device, flows *of.F
 		if ta.failFlowDelete {
 			return fmt.Errorf("flow-delete-error")
 		}
-		for _, f := range flows.ToRemove.Items {
+		for _, f := range flows.ToRemove {
 			delete(ta.flows, f.Id)
 		}
 	}

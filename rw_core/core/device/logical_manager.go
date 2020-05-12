@@ -19,13 +19,14 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/opencord/voltha-go/rw_core/core/device/event"
-	"github.com/opencord/voltha-go/rw_core/utils"
 	"io"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opencord/voltha-go/rw_core/core/device/event"
+	"github.com/opencord/voltha-go/rw_core/utils"
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
@@ -102,7 +103,12 @@ func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Em
 		logger.Errorw("failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
 		return nil, err
 	}
-	return &voltha.LogicalDevices{Items: logicalDevices}, nil
+
+	ret := make(map[string]*voltha.LogicalDevice, len(logicalDevices))
+	for _, ld := range logicalDevices {
+		ret[ld.Id] = ld
+	}
+	return &voltha.LogicalDevices{Items: ret}, nil
 }
 
 func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *voltha.Device) (*string, error) {

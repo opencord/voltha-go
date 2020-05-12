@@ -112,9 +112,9 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
 		logger.Debugw("Switch-capability", log.Fields{"Desc": ld.Desc, "fromAd": switchCap.Desc})
 		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
-		ld.Flows = &ofp.Flows{Items: nil}
-		ld.FlowGroups = &ofp.FlowGroups{Items: nil}
-		ld.Ports = []*voltha.LogicalPort{}
+		ld.Flows = make(map[uint64]*ofp.OfpFlowStats)
+		ld.FlowGroups = make(map[uint32]*ofp.OfpGroupEntry)
+		ld.Ports = make(map[string]*voltha.LogicalPort)
 
 		// Save the logical device
 		if err := agent.clusterDataProxy.AddWithID(ctx, "logical_devices", ld.Id, ld); err != nil {
@@ -213,7 +213,7 @@ func (agent *LogicalAgent) ListLogicalDeviceFlows(ctx context.Context) (*ofp.Flo
 	if logicalDevice.Flows == nil {
 		return &ofp.Flows{}, nil
 	}
-	return (proto.Clone(logicalDevice.Flows)).(*ofp.Flows), nil
+	return proto.Clone(&ofp.Flows{Items: logicalDevice.Flows}).(*ofp.Flows), nil
 }
 
 // ListLogicalDeviceMeters returns logical device meters
@@ -227,7 +227,7 @@ func (agent *LogicalAgent) ListLogicalDeviceMeters(ctx context.Context) (*ofp.Me
 	if logicalDevice.Meters == nil {
 		return &ofp.Meters{}, nil
 	}
-	return (proto.Clone(logicalDevice.Meters)).(*ofp.Meters), nil
+	return proto.Clone(&ofp.Meters{Items: logicalDevice.Meters}).(*ofp.Meters), nil
 }
 
 // ListLogicalDeviceFlowGroups returns logical device flow groups
@@ -241,7 +241,7 @@ func (agent *LogicalAgent) ListLogicalDeviceFlowGroups(ctx context.Context) (*of
 	if logicalDevice.FlowGroups == nil {
 		return &ofp.FlowGroups{}, nil
 	}
-	return (proto.Clone(logicalDevice.FlowGroups)).(*ofp.FlowGroups), nil
+	return proto.Clone(&ofp.FlowGroups{Items: logicalDevice.FlowGroups}).(*ofp.FlowGroups), nil
 }
 
 // ListLogicalDevicePorts returns logical device ports
@@ -254,13 +254,11 @@ func (agent *LogicalAgent) ListLogicalDevicePorts(ctx context.Context) (*voltha.
 	if logicalDevice == nil {
 		return &voltha.LogicalPorts{}, nil
 	}
-	lPorts := make([]*voltha.LogicalPort, 0)
-	lPorts = append(lPorts, logicalDevice.Ports...)
-	return &voltha.LogicalPorts{Items: lPorts}, nil
+	return proto.Clone(&voltha.LogicalPorts{Items: logicalDevice.Ports}).(*voltha.LogicalPorts), nil
 }
 
 //updateLogicalDeviceFlowsWithoutLock updates the logical device with the latest flows in the model.
-func (agent *LogicalAgent) updateLogicalDeviceFlowsWithoutLock(ctx context.Context, flows *ofp.Flows) error {
+func (agent *LogicalAgent) updateLogicalDeviceFlowsWithoutLock(ctx context.Context, flows map[uint64]*ofp.OfpFlowStats) error {
 	ld := agent.getLogicalDeviceWithoutLock()
 
 	logger.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
@@ -274,7 +272,7 @@ func (agent *LogicalAgent) updateLogicalDeviceFlowsWithoutLock(ctx context.Conte
 }
 
 //updateLogicalDeviceMetersWithoutLock updates the logical device with the meters info
-func (agent *LogicalAgent) updateLogicalDeviceMetersWithoutLock(ctx context.Context, meters *ofp.Meters) error {
+func (agent *LogicalAgent) updateLogicalDeviceMetersWithoutLock(ctx context.Context, meters map[uint32]*ofp.OfpMeterEntry) error {
 	ld := agent.getLogicalDeviceWithoutLock()
 
 	logger.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
@@ -288,7 +286,7 @@ func (agent *LogicalAgent) updateLogicalDeviceMetersWithoutLock(ctx context.Cont
 }
 
 //updateLogicalDeviceFlowGroupsWithoutLock updates the logical device with the flow groups
-func (agent *LogicalAgent) updateLogicalDeviceFlowGroupsWithoutLock(ctx context.Context, flowGroups *ofp.FlowGroups) error {
+func (agent *LogicalAgent) updateLogicalDeviceFlowGroupsWithoutLock(ctx context.Context, flowGroups map[uint32]*ofp.OfpGroupEntry) error {
 	ld := agent.getLogicalDeviceWithoutLock()
 
 	logger.Debugw("logical-device-before", log.Fields{"lports": len(ld.Ports)})
@@ -479,7 +477,7 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 	// Get the latest logical device info
 	cloned := agent.getLogicalDeviceWithoutLock()
 
-	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, cloned, []*voltha.LogicalPort{}); err != nil {
+	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, cloned, make(map[string]*voltha.LogicalPort)); err != nil {
 		logger.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
 		return err
 	}
@@ -496,11 +494,11 @@ func (agent *LogicalAgent) deleteAllUNILogicalPorts(ctx context.Context, parentD
 	// Get the latest logical device info
 	ld := agent.getLogicalDeviceWithoutLock()
 
-	updateLogicalPorts := []*voltha.LogicalPort{}
-	for _, lport := range ld.Ports {
+	updateLogicalPorts := make(map[string]*voltha.LogicalPort)
+	for id, port := range ld.Ports {
 		// Save NNI ports only
-		if agent.isNNIPort(lport.DevicePortNo) {
-			updateLogicalPorts = append(updateLogicalPorts, lport)
+		if agent.isNNIPort(port.DevicePortNo) {
+			updateLogicalPorts[id] = port
 		}
 	}
 	if len(updateLogicalPorts) < len(ld.Ports) {
@@ -514,20 +512,20 @@ func (agent *LogicalAgent) deleteAllUNILogicalPorts(ctx context.Context, parentD
 	return nil
 }
 
-func clonePorts(ports []*voltha.LogicalPort) []*voltha.LogicalPort {
+func clonePorts(ports map[string]*voltha.LogicalPort) map[string]*voltha.LogicalPort {
 	return proto.Clone(&voltha.LogicalPorts{Items: ports}).(*voltha.LogicalPorts).Items
 }
 
-func cloneFlows(flows []*ofp.OfpFlowStats) []*ofp.OfpFlowStats {
+func cloneFlows(flows map[uint64]*ofp.OfpFlowStats) map[uint64]*ofp.OfpFlowStats {
 	return proto.Clone(&ofp.Flows{Items: flows}).(*ofp.Flows).Items
 }
 
-func cloneMeters(meters []*ofp.OfpMeterEntry) []*ofp.OfpMeterEntry {
+func cloneMeters(meters map[uint32]*ofp.OfpMeterEntry) map[uint32]*ofp.OfpMeterEntry {
 	return proto.Clone(&ofp.Meters{Items: meters}).(*ofp.Meters).Items
 }
 
 //updateLogicalDevicePortsWithoutLock updates the
-func (agent *LogicalAgent) updateLogicalDevicePortsWithoutLock(ctx context.Context, device *voltha.LogicalDevice, newPorts []*voltha.LogicalPort) error {
+func (agent *LogicalAgent) updateLogicalDevicePortsWithoutLock(ctx context.Context, device *voltha.LogicalDevice, newPorts map[string]*voltha.LogicalPort) error {
 	oldPorts := device.Ports
 	device.Ports = newPorts
 	if err := agent.updateLogicalDeviceWithoutLock(ctx, device); err != nil {
@@ -656,9 +654,9 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 	logger.Debug("Acquired logical device lock")
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	var meters []*ofp.OfpMeterEntry
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
+	meters := lDevice.Meters
+	if meters == nil {
+		meters = make(map[uint32]*ofp.OfpMeterEntry)
 	}
 	logger.Debugw("Available meters", log.Fields{"meters": meters})
 
@@ -670,9 +668,9 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 	}
 
 	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
-	meters = append(meters, meterEntry)
+	meters[meterEntry.Config.MeterId] = meterEntry
 	//Update model
-	if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, &ofp.Meters{Items: meters}); err != nil {
+	if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, meters); err != nil {
 		logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		return err
 	}
@@ -692,42 +690,30 @@ func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMet
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	var meters []*ofp.OfpMeterEntry
-	var flows []*ofp.OfpFlowStats
-	updatedFlows := make([]*ofp.OfpFlowStats, 0)
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
+	updatedFlows := make(map[uint64]*ofp.OfpFlowStats, 0)
+
+	meters := lDevice.Meters
+	if meters == nil {
+		meters = make(map[uint32]*ofp.OfpMeterEntry)
 	}
 
-	changedMeter := false
 	changedFow := false
 	logger.Debugw("Available meters", log.Fields{"meters": meters})
-	for index, meter := range meters {
-		if meterMod.MeterId == meter.Config.MeterId {
-			flows = lDevice.Flows.Items
-			changedFow, updatedFlows = agent.getUpdatedFlowsAfterDeletebyMeterID(flows, meterMod.MeterId)
-			meters = append(meters[:index], meters[index+1:]...)
-			logger.Debugw("Meter has been deleted", log.Fields{"meter": meter, "index": index})
-			changedMeter = true
-			break
-		}
-	}
-	if changedMeter {
-		//Update model
-		metersToUpdate := &ofp.Meters{}
-		if lDevice.Meters != nil {
-			metersToUpdate = &ofp.Meters{Items: meters}
-		}
-		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
+	if meter, have := meters[meterMod.MeterId]; have {
+		changedFow, updatedFlows = agent.getUpdatedFlowsAfterDeletebyMeterID(lDevice.Flows, meterMod.MeterId)
+		delete(meters, meterMod.MeterId)
+		logger.Debugw("Meter has been deleted", log.Fields{"meter": meter})
+
+		//changed meter; update model
+		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, meters); err != nil {
 			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
-		logger.Debug("Meter-deleted-from-DB-successfully", log.Fields{"updatedMeters": metersToUpdate, "no-of-meter": len(metersToUpdate.Items)})
-
+		logger.Debug("Meter-deleted-from-DB-successfully", log.Fields{"updatedMeters": meters, "no-of-meter": len(meters)})
 	}
 	if changedFow {
 		//Update model
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: updatedFlows}); err != nil {
+		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, updatedFlows); err != nil {
 			logger.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
@@ -750,28 +736,19 @@ func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMet
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	var meters []*ofp.OfpMeterEntry
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
+	meters := lDevice.Meters
+	if meters == nil {
+		meters = make(map[uint32]*ofp.OfpMeterEntry)
 	}
-	changedMeter := false
-	for index, meter := range meters {
-		if meterMod.MeterId == meter.Config.MeterId {
-			newmeterEntry := fu.MeterEntryFromMeterMod(meterMod)
-			newmeterEntry.Stats.FlowCount = meter.Stats.FlowCount
-			meters[index] = newmeterEntry
-			changedMeter = true
-			logger.Debugw("Found meter, replaced with new meter", log.Fields{"old meter": meter, "new meter": newmeterEntry})
-			break
-		}
-	}
-	if changedMeter {
+
+	if meter, have := meters[meterMod.MeterId]; have {
+		newMeterEntry := fu.MeterEntryFromMeterMod(meterMod)
+		newMeterEntry.Stats.FlowCount = meter.Stats.FlowCount
+		meters[newMeterEntry.Config.MeterId] = newMeterEntry
+		logger.Debugw("Found meter, replaced with new meter", log.Fields{"old meter": meter, "new meter": newMeterEntry})
+
 		//Update model
-		metersToUpdate := &ofp.Meters{}
-		if lDevice.Meters != nil {
-			metersToUpdate = &ofp.Meters{Items: meters}
-		}
-		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
+		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, meters); err != nil {
 			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
@@ -784,21 +761,21 @@ func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMet
 
 }
 
-func (agent *LogicalAgent) getUpdatedFlowsAfterDeletebyMeterID(flows []*ofp.OfpFlowStats, meterID uint32) (bool, []*ofp.OfpFlowStats) {
+func (agent *LogicalAgent) getUpdatedFlowsAfterDeletebyMeterID(flows map[uint64]*ofp.OfpFlowStats, meterID uint32) (bool, map[uint64]*ofp.OfpFlowStats) {
 	logger.Infow("Delete flows matching meter", log.Fields{"meter": meterID})
 	changed := false
 	//updatedFlows := make([]*ofp.OfpFlowStats, 0)
-	for index := len(flows) - 1; index >= 0; index-- {
-		if mID := fu.GetMeterIdFromFlow(flows[index]); mID != 0 && mID == meterID {
-			logger.Debugw("Flow to be deleted", log.Fields{"flow": flows[index], "index": index})
-			flows = append(flows[:index], flows[index+1:]...)
+	for _, flow := range flows {
+		if mID := fu.GetMeterIdFromFlow(flow); mID != 0 && mID == meterID {
+			logger.Debugw("Flow to be deleted", log.Fields{"flow": flow})
+			delete(flows, flow.Id)
 			changed = true
 		}
 	}
 	return changed, flows
 }
 
-func (agent *LogicalAgent) updateFlowCountOfMeterStats(modCommand *ofp.OfpFlowMod, meters []*ofp.OfpMeterEntry, flow *ofp.OfpFlowStats, revertUpdate bool) bool {
+func (agent *LogicalAgent) updateFlowCountOfMeterStats(modCommand *ofp.OfpFlowMod, meters map[uint32]*ofp.OfpMeterEntry, flow *ofp.OfpFlowStats, revertUpdate bool) bool {
 
 	flowCommand := modCommand.GetCommand()
 	meterID := fu.GetMeterIdFromFlow(flow)
@@ -812,26 +789,23 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(modCommand *ofp.OfpFlowMo
 		return false
 	}
 	changedMeter := false
-	for _, meter := range meters {
-		if meterID == meter.Config.MeterId { // Found meter in Logicaldevice
-			if flowCommand == ofp.OfpFlowModCommand_OFPFC_ADD {
-				if revertUpdate {
-					meter.Stats.FlowCount--
-				} else {
-					meter.Stats.FlowCount++
-				}
-				changedMeter = true
-			} else if flowCommand == ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
-				if revertUpdate {
-					meter.Stats.FlowCount++
-				} else {
-					meter.Stats.FlowCount--
-				}
-				changedMeter = true
+	if meter, have := meters[meterID]; have { // Found meter in Logicaldevice
+		if flowCommand == ofp.OfpFlowModCommand_OFPFC_ADD {
+			if revertUpdate {
+				meter.Stats.FlowCount--
+			} else {
+				meter.Stats.FlowCount++
 			}
-			logger.Debugw("Found meter, updated meter flow stats", log.Fields{" meterId": meterID})
-			break
+			changedMeter = true
+		} else if flowCommand == ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
+			if revertUpdate {
+				meter.Stats.FlowCount++
+			} else {
+				meter.Stats.FlowCount--
+			}
+			changedMeter = true
 		}
+		logger.Debugw("Found meter, updated meter flow stats", log.Fields{" meterId": meterID})
 	}
 	return changedMeter
 }
@@ -849,20 +823,20 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	var flows []*ofp.OfpFlowStats
-	var meters []*ofp.OfpMeterEntry
 	var flowToReplace *ofp.OfpFlowStats
 	var flow *ofp.OfpFlowStats
 	var err error
 
-	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
-		flows = lDevice.Flows.Items
+	flows := lDevice.Flows
+	if flows == nil {
+		flows = make(map[uint64]*ofp.OfpFlowStats)
+	}
+	meters := lDevice.Meters
+	if meters == nil {
+		meters = make(map[uint32]*ofp.OfpMeterEntry)
 	}
 
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
-	}
-	updatedFlows := make([]*ofp.OfpFlowStats, 0)
+	updatedFlows := make(map[uint64]*ofp.OfpFlowStats, 0)
 	changed := false
 	updated := false
 	checkOverlap := (mod.Flags & uint32(ofp.OfpFlowModFlags_OFPFF_CHECK_OVERLAP)) != 0
@@ -876,8 +850,8 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 			if err != nil {
 				return err
 			}
-			flows = append(flows, flow)
-			updatedFlows = append(updatedFlows, flow)
+			flows[flow.Id] = flow
+			updatedFlows[flow.Id] = flow
 			changed = true
 		}
 	} else {
@@ -885,22 +859,20 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 		if err != nil {
 			return err
 		}
-		idx := fu.FindFlows(flows, flow)
-		if idx >= 0 {
-			flowToReplace = flows[idx]
+		if flowToReplace, have := flows[flow.Id]; have {
 			if (mod.Flags & uint32(ofp.OfpFlowModFlags_OFPFF_RESET_COUNTS)) != 0 {
 				flow.ByteCount = flowToReplace.ByteCount
 				flow.PacketCount = flowToReplace.PacketCount
 			}
 			if !proto.Equal(flowToReplace, flow) {
-				flows[idx] = flow
-				updatedFlows = append(updatedFlows, flow)
+				flows[flow.Id] = flow
+				updatedFlows[flow.Id] = flow
 				changed = true
 				updated = true
 			}
 		} else {
-			flows = append(flows, flow)
-			updatedFlows = append(updatedFlows, flow)
+			flows[flow.Id] = flow
+			updatedFlows[flow.Id] = flow
 			changed = true
 		}
 	}
@@ -912,27 +884,23 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 			logger.Error("Meter-referred-in-flows-not-present")
 			return err
 		}
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: updatedFlows}, *lDevice.FlowGroups)
+		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, updatedFlows, lDevice.FlowGroups)
 		if err != nil {
 			return err
 		}
 		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		//	Update model
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}); err != nil {
+		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, flows); err != nil {
 			logger.Errorw("db-flow-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 
 		if !updated {
 			changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, flow, false)
-			metersToUpdate := &ofp.Meters{}
-			if lDevice.Meters != nil {
-				metersToUpdate = &ofp.Meters{Items: meters}
-			}
 			if changedMeterStats {
 				//Update model
-				if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
+				if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, meters); err != nil {
 					logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 					return err
 				}
@@ -970,26 +938,25 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
 	// Revert flows
-	clonedFlows := cloneFlows(lDevice.Flows.Items)
-	idx := fu.FindFlows(clonedFlows, addedFlow)
-	if idx < 0 {
+	clonedFlows := cloneFlows(lDevice.Flows)
+	if _, have := clonedFlows[addedFlow.Id]; !have {
 		// Not found - do nothing
 		log.Debugw("flow-not-found", log.Fields{"added-flow": addedFlow})
 		return nil
 	}
 	if replacedFlow != nil {
-		clonedFlows[idx] = replacedFlow
+		clonedFlows[replacedFlow.Id] = replacedFlow
 	} else {
-		clonedFlows = deleteFlowWithoutPreservingOrder(clonedFlows, idx)
+		delete(clonedFlows, addedFlow.Id)
 	}
-	lDevice.Flows = &ofp.Flows{Items: clonedFlows}
+	lDevice.Flows = clonedFlows
 
 	// Revert meters, if necessary
-	if lDevice.Meters != nil && len(lDevice.Meters.Items) > 0 {
-		meters := cloneMeters(lDevice.Meters.Items)
+	if len(lDevice.Meters) > 0 {
+		meters := cloneMeters(lDevice.Meters)
 		changedMeterStats := agent.updateFlowCountOfMeterStats(mod, meters, addedFlow, true)
 		if changedMeterStats {
-			lDevice.Meters = &ofp.Meters{Items: meters}
+			lDevice.Meters = meters
 		}
 	}
 
@@ -1014,23 +981,17 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 }
 
 // GetMeterConfig returns meter config
-func (agent *LogicalAgent) GetMeterConfig(flows []*ofp.OfpFlowStats, meters []*ofp.OfpMeterEntry, metadata *voltha.FlowMetadata) error {
+func (agent *LogicalAgent) GetMeterConfig(flows map[uint64]*ofp.OfpFlowStats, meters map[uint32]*ofp.OfpMeterEntry, metadata *voltha.FlowMetadata) error {
 	m := make(map[uint32]bool)
 	for _, flow := range flows {
 		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 && !m[flowMeterID] {
-			foundMeter := false
 			// Meter is present in the flow , Get from logical device
-			for _, meter := range meters {
-				if flowMeterID == meter.Config.MeterId {
-					metadata.Meters = append(metadata.Meters, meter.Config)
-					logger.Debugw("Found meter in logical device",
-						log.Fields{"meterID": flowMeterID, "meter-band": meter.Config})
-					m[flowMeterID] = true
-					foundMeter = true
-					break
-				}
-			}
-			if !foundMeter {
+			if meter, have := meters[flowMeterID]; have {
+				metadata.Meters = append(metadata.Meters, meter.Config)
+				logger.Debugw("Found meter in logical device",
+					log.Fields{"meterID": flowMeterID, "meter-band": meter.Config})
+				m[flowMeterID] = true
+			} else {
 				logger.Errorw("Meter-referred-by-flow-is-not-found-in-logicaldevice",
 					log.Fields{"meterID": flowMeterID, "Available-meters": meters, "flow": *flow})
 				return errors.New("Meter-referred-by-flow-is-not-found-in-logicaldevice")
@@ -1055,40 +1016,32 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	var meters []*ofp.OfpMeterEntry
-	var flows []*ofp.OfpFlowStats
-	var flowGroups []*ofp.OfpGroupEntry
-
-	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
-		flows = lDevice.Flows.Items
+	flows := lDevice.Flows
+	if flows == nil {
+		flows = make(map[uint64]*ofp.OfpFlowStats)
 	}
-
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
+	meters := lDevice.Meters
+	if meters == nil {
+		meters = make(map[uint32]*ofp.OfpMeterEntry)
 	}
-
-	if lDevice.FlowGroups != nil && lDevice.FlowGroups.Items != nil {
-		flowGroups = lDevice.FlowGroups.Items
+	flowGroups := lDevice.FlowGroups
+	if flowGroups == nil {
+		flowGroups = make(map[uint32]*ofp.OfpGroupEntry)
 	}
 
 	//build a list of what to keep vs what to delete
-	toKeep := make([]*ofp.OfpFlowStats, 0)
-	toDelete := make([]*ofp.OfpFlowStats, 0)
+	toKeep := make(map[uint64]*ofp.OfpFlowStats)
+	toDelete := make(map[uint64]*ofp.OfpFlowStats)
 	for _, f := range flows {
 		// Check whether the flow and the flowmod matches
 		fs, err := fu.FlowStatsEntryFromFlowModMessage(mod)
 		if err != nil {
 			return err
 		}
-		if fu.FlowMatch(f, fs) {
-			toDelete = append(toDelete, f)
-			continue
-		}
-		// Check wild card match
-		if !fu.FlowMatchesMod(f, mod) {
-			toKeep = append(toKeep, f)
+		if f.Id == fs.Id || fu.FlowMatchesMod(f, mod) {
+			toDelete[f.Id] = f
 		} else {
-			toDelete = append(toDelete, f)
+			toKeep[f.Id] = f
 		}
 	}
 
@@ -1104,7 +1057,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 
 		var respChnls []coreutils.Response
 		var partialRoute bool
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: toDelete}, ofp.FlowGroups{Items: flowGroups})
+		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, toDelete, flowGroups)
 		if err != nil {
 			// A no route error means no route exists between the ports specified in the flow. This can happen when the
 			// child device is deleted and a request to delete flows from the parent device is received
@@ -1116,14 +1069,14 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 		}
 
 		// Update the dB
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: toKeep}); err != nil {
+		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, toKeep); err != nil {
 			logger.Errorw("cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 
 		// Update the devices
 		if partialRoute {
-			respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: toDelete}, &flowMetadata)
+			respChnls = agent.deleteFlowsFromParentDevice(ctx, toDelete, &flowMetadata)
 		} else {
 			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
 		}
@@ -1219,10 +1172,10 @@ func (agent *LogicalAgent) getUNILogicalPortNo(flow *ofp.OfpFlowStats) (uint32, 
 	return 0, status.Errorf(codes.NotFound, "no-uni-port: %v", flow)
 }
 
-func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flows ofp.Flows, metadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flows map[uint64]*ofp.OfpFlowStats, metadata *voltha.FlowMetadata) []coreutils.Response {
 	logger.Debugw("deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "flows": flows})
 	responses := make([]coreutils.Response, 0)
-	for _, flow := range flows.Items {
+	for _, flow := range flows {
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
 		uniPort, err := agent.getUNILogicalPortNo(flow)
@@ -1259,17 +1212,17 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	var meters []*ofp.OfpMeterEntry
-	var flows []*ofp.OfpFlowStats
-	var flowGroups []*ofp.OfpGroupEntry
-	if lDevice.Meters != nil && lDevice.Meters.Items != nil {
-		meters = lDevice.Meters.Items
+	meters := lDevice.Meters
+	if meters == nil {
+		meters = make(map[uint32]*ofp.OfpMeterEntry)
 	}
-	if lDevice.Flows != nil && lDevice.Flows.Items != nil {
-		flows = lDevice.Flows.Items
+	flows := lDevice.Flows
+	if flows == nil {
+		flows = make(map[uint64]*ofp.OfpFlowStats)
 	}
-	if lDevice.FlowGroups != nil && lDevice.FlowGroups.Items != nil {
-		flowGroups = lDevice.FlowGroups.Items
+	flowGroups := lDevice.FlowGroups
+	if flowGroups == nil {
+		flowGroups = make(map[uint32]*ofp.OfpGroupEntry)
 	}
 
 	changedFlow := false
@@ -1278,23 +1231,18 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 	if err != nil {
 		return err
 	}
-	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
-	idx := fu.FindFlows(flows, flow)
-	if idx >= 0 {
-		changedMeter = agent.updateFlowCountOfMeterStats(mod, meters, flows[idx], false)
-		flowsToDelete = append(flowsToDelete, flows[idx])
-		flows = append(flows[:idx], flows[idx+1:]...)
+	flowsToDelete := make(map[uint64]*ofp.OfpFlowStats)
+	if existingFlow, have := flows[flow.Id]; have {
+		changedMeter = agent.updateFlowCountOfMeterStats(mod, meters, existingFlow, false)
+		flowsToDelete[existingFlow.Id] = existingFlow
+		delete(flows, existingFlow.Id)
 		changedFlow = true
 	} else {
 		return fmt.Errorf("Cannot delete flow - %s", flow)
 	}
 	if changedMeter {
 		//Update model
-		metersToUpdate := &ofp.Meters{}
-		if lDevice.Meters != nil {
-			metersToUpdate = &ofp.Meters{Items: meters}
-		}
-		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, metersToUpdate); err != nil {
+		if err := agent.updateLogicalDeviceMetersWithoutLock(ctx, meters); err != nil {
 			logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
@@ -1308,7 +1256,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 		}
 		var respChnls []coreutils.Response
 		var partialRoute bool
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: flowsToDelete}, ofp.FlowGroups{Items: flowGroups})
+		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, flowsToDelete, flowGroups)
 		if err != nil {
 			// A no route error means no route exists between the ports specified in the flow. This can happen when the
 			// child device is deleted and a request to delete flows from the parent device is received
@@ -1320,14 +1268,14 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 		}
 
 		// Update the dB
-		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}); err != nil {
+		if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, flows); err != nil {
 			logger.Errorw("cannot-update-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 
 		// Update the devices
 		if partialRoute {
-			respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: flowsToDelete}, &flowMetadata)
+			respChnls = agent.deleteFlowsFromParentDevice(ctx, flowsToDelete, &flowMetadata)
 		} else {
 			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
 		}
@@ -1365,9 +1313,10 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
 
-	groups := lDevice.FlowGroups.Items
-	if fu.FindGroup(groups, groupMod.GroupId) == -1 {
-		groups = append(groups, fu.GroupEntryFromGroupMod(groupMod))
+	groups := lDevice.FlowGroups
+	if _, have := groups[groupMod.GroupId]; !have {
+		group := fu.GroupEntryFromGroupMod(groupMod)
+		groups[group.Desc.GroupId] = group
 
 		deviceRules := fu.NewDeviceRules()
 		deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
@@ -1377,7 +1326,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 
 		logger.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String()})
 
-		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, &ofp.FlowGroups{Items: groups}); err != nil {
+		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, groups); err != nil {
 			logger.Errorw("cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
@@ -1408,40 +1357,39 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	defer agent.requestQueue.RequestComplete()
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
-	groups := lDevice.FlowGroups.Items
-	flows := lDevice.Flows.Items
+	groups := lDevice.FlowGroups
+	flows := lDevice.Flows
 	var groupsChanged bool
 	flowsChanged := false
 	groupID := groupMod.GroupId
 	if groupID == uint32(ofp.OfpGroup_OFPG_ALL) {
 		//TODO we must delete all flows that point to this group and
 		//signal controller as requested by flow's flag
-		groups = []*ofp.OfpGroupEntry{}
+		groups = make(map[uint32]*ofp.OfpGroupEntry)
 		groupsChanged = true
 	} else {
-		idx := fu.FindGroup(groups, groupID)
-		if idx == -1 {
+		if _, have := groups[groupID]; !have {
 			return nil // Valid case
 		}
-		flowsChanged, flows = fu.FlowsDeleteByGroupId(flows, groupID)
-		groups = append(groups[:idx], groups[idx+1:]...)
+		flowsChanged = fu.FlowsDeleteByGroupId(flows, groupID)
+		delete(groups, groupID)
 		groupsChanged = true
 	}
 	if flowsChanged || groupsChanged {
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: flows}, ofp.FlowGroups{Items: groups})
+		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, flows, groups)
 		if err != nil {
 			return err
 		}
 		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		if groupsChanged {
-			if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, &ofp.FlowGroups{Items: groups}); err != nil {
+			if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, groups); err != nil {
 				logger.Errorw("cannot-update-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 				return err
 			}
 		}
 		if flowsChanged {
-			if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, &ofp.Flows{Items: flows}); err != nil {
+			if err := agent.updateLogicalDeviceFlowsWithoutLock(ctx, flows); err != nil {
 				logger.Errorw("cannot-update-flow", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 				return err
 			}
@@ -1472,16 +1420,15 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	defer agent.requestQueue.RequestComplete()
 
 	lDevice := agent.getLogicalDeviceWithoutLock()
-	groups := lDevice.FlowGroups.Items
+	groups := lDevice.FlowGroups
 	var groupsChanged bool
 	groupID := groupMod.GroupId
-	idx := fu.FindGroup(groups, groupID)
-	if idx == -1 {
+	if _, have := groups[groupID]; !have {
 		return fmt.Errorf("group-absent:%d", groupID)
 	}
 	//replace existing group entry with new group definition
 	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
-	groups[idx] = groupEntry
+	groups[groupID] = groupEntry
 	groupsChanged = true
 	if groupsChanged {
 		deviceRules := fu.NewDeviceRules()
@@ -1492,7 +1439,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 
 		logger.Debugw("rules", log.Fields{"rules for group-modify": deviceRules.String()})
 
-		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, &ofp.FlowGroups{Items: groups}); err != nil {
+		if err := agent.updateLogicalDeviceFlowGroupsWithoutLock(ctx, groups); err != nil {
 			logger.Errorw("Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
@@ -1520,28 +1467,17 @@ func (agent *LogicalAgent) deleteLogicalPort(ctx context.Context, lPort *voltha.
 
 	logicalDevice := agent.getLogicalDeviceWithoutLock()
 
-	index := -1
-	for i, logicalPort := range logicalDevice.Ports {
-		if logicalPort.Id == lPort.Id {
-			index = i
-			break
-		}
-	}
-	if index >= 0 {
-		clonedPorts := clonePorts(logicalDevice.Ports)
-		if index < len(clonedPorts)-1 {
-			copy(clonedPorts[index:], clonedPorts[index+1:])
-		}
-		clonedPorts[len(clonedPorts)-1] = nil
-		clonedPorts = clonedPorts[:len(clonedPorts)-1]
+	updatedPorts := clonePorts(logicalDevice.Ports)
+	if _, have := updatedPorts[lPort.Id]; have {
+		delete(updatedPorts, lPort.Id)
 		logger.Debugw("logical-port-deleted", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-		if err := agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, clonedPorts); err != nil {
+		if err := agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, updatedPorts); err != nil {
 			logger.Errorw("logical-device-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 			return err
 		}
 
 		// Remove the logical port from cache
-		agent.deleteLogicalPortsFromMap([]uint32{lPort.DevicePortNo})
+		agent.deleteLogicalPortsFromMap(map[uint32]struct{}{lPort.DevicePortNo: {}})
 
 		// Reset the logical device routes
 		go func() {
@@ -1562,17 +1498,17 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 	defer agent.requestQueue.RequestComplete()
 
 	logicalDevice := agent.getLogicalDeviceWithoutLock()
-	lPortstoKeep := []*voltha.LogicalPort{}
-	lPortsNoToDelete := []uint32{}
-	for _, logicalPort := range logicalDevice.Ports {
-		if logicalPort.DeviceId != deviceID {
-			lPortstoKeep = append(lPortstoKeep, logicalPort)
-		} else {
-			lPortsNoToDelete = append(lPortsNoToDelete, logicalPort.DevicePortNo)
+	lPortsNoToDelete := make(map[uint32]struct{})
+
+	portsToKeep := clonePorts(logicalDevice.Ports)
+	for _, logicalPort := range portsToKeep {
+		if logicalPort.DeviceId == deviceID {
+			delete(portsToKeep, logicalPort.Id)
+			lPortsNoToDelete[logicalPort.DevicePortNo] = struct{}{}
 		}
 	}
-	logger.Debugw("deleted-logical-ports", log.Fields{"ports": lPortstoKeep})
-	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, lPortstoKeep); err != nil {
+	logger.Debugw("deleted-logical-ports", log.Fields{"ports": portsToKeep})
+	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, portsToKeep); err != nil {
 		logger.Errorw("logical-device-update-failed", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		return err
 	}
@@ -1598,17 +1534,10 @@ func (agent *LogicalAgent) enableLogicalPort(ctx context.Context, lPortID string
 
 	logicalDevice := agent.getLogicalDeviceWithoutLock()
 
-	index := -1
-	for i, logicalPort := range logicalDevice.Ports {
-		if logicalPort.Id == lPortID {
-			index = i
-			break
-		}
-	}
-	if index >= 0 {
-		clonedPorts := clonePorts(logicalDevice.Ports)
-		clonedPorts[index].OfpPort.Config = clonedPorts[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-		return agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, clonedPorts)
+	updatedPorts := clonePorts(logicalDevice.Ports)
+	if port, have := updatedPorts[lPortID]; have {
+		port.OfpPort.Config = port.OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+		return agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, updatedPorts)
 	}
 	return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortID, agent.logicalDeviceID)
 }
@@ -1622,17 +1551,10 @@ func (agent *LogicalAgent) disableLogicalPort(ctx context.Context, lPortID strin
 
 	// Get the most up to date logical device
 	logicalDevice := agent.getLogicalDeviceWithoutLock()
-	index := -1
-	for i, logicalPort := range logicalDevice.Ports {
-		if logicalPort.Id == lPortID {
-			index = i
-			break
-		}
-	}
-	if index >= 0 {
-		clonedPorts := clonePorts(logicalDevice.Ports)
-		clonedPorts[index].OfpPort.Config = (clonedPorts[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)) | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-		return agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, clonedPorts)
+	updatedPorts := clonePorts(logicalDevice.Ports)
+	if port, have := updatedPorts[lPortID]; have {
+		port.OfpPort.Config = (port.OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)) | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+		return agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, updatedPorts)
 	}
 	return status.Errorf(codes.NotFound, "Port %s on Logical Device %s", lPortID, agent.logicalDeviceID)
 }
@@ -1783,23 +1705,23 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, lp *voltha.LogicalP
 }
 
 // diff go over two lists of logical ports and return what's new, what's changed and what's removed.
-func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, deletedPorts map[string]*voltha.LogicalPort) {
+func diff(oldList, newList map[string]*voltha.LogicalPort) (newPorts, changedPorts, deletedPorts map[string]*voltha.LogicalPort) {
 	newPorts = make(map[string]*voltha.LogicalPort, len(newList))
 	changedPorts = make(map[string]*voltha.LogicalPort, len(oldList))
 	deletedPorts = make(map[string]*voltha.LogicalPort, len(oldList))
 
-	for _, n := range newList {
-		newPorts[n.Id] = n
+	for id, n := range newList {
+		newPorts[id] = n
 	}
 
-	for _, o := range oldList {
-		if n, have := newPorts[o.Id]; have {
-			delete(newPorts, o.Id) // not new
+	for id, o := range oldList {
+		if n, have := newPorts[id]; have {
+			delete(newPorts, id) // not new
 			if !proto.Equal(n, o) {
-				changedPorts[n.Id] = n // changed
+				changedPorts[id] = n // changed
 			}
 		} else {
-			deletedPorts[o.Id] = o // deleted
+			deletedPorts[id] = o // deleted
 		}
 	}
 
@@ -1807,7 +1729,7 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 }
 
 // portUpdated is invoked when a port is updated on the logical device
-func (agent *LogicalAgent) portUpdated(prevPorts, currPorts []*voltha.LogicalPort) interface{} {
+func (agent *LogicalAgent) portUpdated(prevPorts, currPorts map[string]*voltha.LogicalPort) interface{} {
 	// Get the difference between the two list
 	newPorts, changedPorts, deletedPorts := diff(prevPorts, currPorts)
 
@@ -1874,13 +1796,13 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha
 
 	ld := agent.getLogicalDeviceWithoutLock()
 
-	clonedPorts := clonePorts(ld.Ports)
-	if clonedPorts == nil {
-		clonedPorts = make([]*voltha.LogicalPort, 0)
+	updatedPorts := clonePorts(ld.Ports)
+	if updatedPorts == nil {
+		updatedPorts = make(map[string]*voltha.LogicalPort)
 	}
-	clonedPorts = append(clonedPorts, lp)
+	updatedPorts[lp.Id] = lp
 
-	if err = agent.updateLogicalDevicePortsWithoutLock(ctx, ld, clonedPorts); err != nil {
+	if err = agent.updateLogicalDevicePortsWithoutLock(ctx, ld, updatedPorts); err != nil {
 		logger.Errorw("error-updating-logical-device", log.Fields{"error": err})
 		return false, err
 	}
@@ -1951,12 +1873,13 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 	portCap.Port.OfpPort.PortNo = port.PortNo
 	portCap.Port.DeviceId = childDevice.Id
 	portCap.Port.DevicePortNo = port.PortNo
-	clonedPorts := clonePorts(ldevice.Ports)
-	if clonedPorts == nil {
-		clonedPorts = make([]*voltha.LogicalPort, 0)
+
+	updatedPorts := clonePorts(ldevice.Ports)
+	if updatedPorts == nil {
+		updatedPorts = make(map[string]*voltha.LogicalPort)
 	}
-	clonedPorts = append(clonedPorts, portCap.Port)
-	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, ldevice, clonedPorts); err != nil {
+	updatedPorts[portCap.Port.Id] = portCap.Port
+	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, ldevice, updatedPorts); err != nil {
 		return false, err
 	}
 	// Update the device graph with this new logical port
@@ -2003,15 +1926,15 @@ func (agent *LogicalAgent) addLogicalPortToMap(portNo uint32, nniPort bool) {
 	}
 }
 
-func (agent *LogicalAgent) deleteLogicalPortsFromMap(portsNo []uint32) {
+func (agent *LogicalAgent) deleteLogicalPortsFromMap(portsNo map[uint32]struct{}) {
 	agent.lockLogicalPortsNo.Lock()
 	defer agent.lockLogicalPortsNo.Unlock()
-	for _, pNo := range portsNo {
+	for pNo := range portsNo {
 		delete(agent.logicalPortsNo, pNo)
 	}
 }
 
-func (agent *LogicalAgent) addLogicalPortsToMap(lps []*voltha.LogicalPort) {
+func (agent *LogicalAgent) addLogicalPortsToMap(lps map[string]*voltha.LogicalPort) {
 	agent.lockLogicalPortsNo.Lock()
 	defer agent.lockLogicalPortsNo.Unlock()
 	for _, lp := range lps {

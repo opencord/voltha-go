@@ -103,10 +103,10 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
 		return err
 	}
 	if len(deviceTypes) != 0 {
-		dTypes := &voltha.DeviceTypes{Items: []*voltha.DeviceType{}}
+		dTypes := make(map[string]*voltha.DeviceType)
 		for _, dType := range deviceTypes {
 			logger.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
-			dTypes.Items = append(dTypes.Items, dType)
+			dTypes[dType.Id] = dType
 		}
 		return aMgr.addDeviceTypes(dTypes, false)
 	}
@@ -158,7 +158,7 @@ func (aMgr *Manager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
 	return nil
 }
 
-func (aMgr *Manager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bool) error {
+func (aMgr *Manager) addDeviceTypes(deviceTypes map[string]*voltha.DeviceType, saveToDb bool) error {
 	if deviceTypes == nil {
 		return fmt.Errorf("no-device-type")
 	}
@@ -169,13 +169,13 @@ func (aMgr *Manager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bo
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
 	// create an in memory map to fetch the entire voltha.DeviceType from a device.Type string
-	for _, deviceType := range deviceTypes.Items {
+	for _, deviceType := range deviceTypes {
 		aMgr.deviceTypes[deviceType.Id] = deviceType
 	}
 
 	if saveToDb {
 		// Save the device types to the KV store
-		for _, deviceType := range deviceTypes.Items {
+		for _, deviceType := range deviceTypes {
 			if have, err := aMgr.clusterDataProxy.Get(context.Background(), "device_types/"+deviceType.Id, &voltha.DeviceType{}); err != nil {
 				logger.Errorw("Failed-to--device-types-from-cluster-data-proxy", log.Fields{"error": err})
 				return err
@@ -196,15 +196,15 @@ func (aMgr *Manager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bo
 
 // ListAdapters returns the contents of all adapters known to the system
 func (aMgr *Manager) ListAdapters(_ context.Context, _ *empty.Empty) (*voltha.Adapters, error) {
-	result := &voltha.Adapters{Items: []*voltha.Adapter{}}
 	aMgr.lockAdaptersMap.RLock()
 	defer aMgr.lockAdaptersMap.RUnlock()
+	result := make(map[string]*voltha.Adapter)
 	for _, adapterAgent := range aMgr.adapterAgents {
 		if a := adapterAgent.getAdapter(); a != nil {
-			result.Items = append(result.Items, (proto.Clone(a)).(*voltha.Adapter))
+			result[a.Id] = proto.Clone(a).(*voltha.Adapter)
 		}
 	}
-	return result, nil
+	return &voltha.Adapters{Items: result}, nil
 }
 
 func (aMgr *Manager) getAdapter(adapterID string) *voltha.Adapter {
@@ -216,9 +216,9 @@ func (aMgr *Manager) getAdapter(adapterID string) *voltha.Adapter {
 	return nil
 }
 
-func (aMgr *Manager) RegisterAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) (*voltha.CoreInstance, error) {
+func (aMgr *Manager) RegisterAdapter(adapter *voltha.Adapter, deviceTypes map[string]*voltha.DeviceType) (*voltha.CoreInstance, error) {
 	logger.Debugw("RegisterAdapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
-		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "deviceTypes": deviceTypes.Items})
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "deviceTypes": deviceTypes})
 
 	if adapter.Type == "" {
 		log.Errorw("adapter-not-specifying-type", log.Fields{
@@ -273,9 +273,9 @@ func (aMgr *Manager) ListDeviceTypes(_ context.Context, _ *empty.Empty) (*voltha
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 
-	deviceTypes := make([]*voltha.DeviceType, 0, len(aMgr.deviceTypes))
-	for _, deviceType := range aMgr.deviceTypes {
-		deviceTypes = append(deviceTypes, deviceType)
+	deviceTypes := make(map[string]*voltha.DeviceType, len(aMgr.deviceTypes))
+	for id, deviceType := range aMgr.deviceTypes {
+		deviceTypes[id] = deviceType
 	}
 	return &voltha.DeviceTypes{Items: deviceTypes}, nil
 }

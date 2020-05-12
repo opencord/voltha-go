@@ -43,16 +43,16 @@ func NewFlowDecomposer(deviceMgr coreif.DeviceManager) *FlowDecomposer {
 }
 
 //DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
-func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent coreif.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) (*fu.DeviceRules, error) {
+func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent coreif.LogicalDeviceAgent, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry) (*fu.DeviceRules, error) {
 	deviceRules := *fu.NewDeviceRules()
 	devicesToUpdate := make(map[string]string)
 
 	groupMap := make(map[uint32]*ofp.OfpGroupEntry)
-	for _, groupEntry := range groups.Items {
+	for _, groupEntry := range groups {
 		groupMap[groupEntry.Desc.GroupId] = groupEntry
 	}
 
-	for _, flow := range flows.Items {
+	for _, flow := range flows {
 		decomposedRules, err := fd.decomposeFlow(ctx, agent, flow, groupMap)
 		if err != nil {
 			return nil, err
@@ -92,11 +92,6 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 				if UpdateOutPortNo {
 					f = fu.UpdateOutputPortByActionType(f, uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS),
 						uint32(ofp.OfpPortNo_OFPP_CONTROLLER))
-				}
-				// Update flow Id as a change in the instruction field will result in a new flow ID
-				var err error
-				if f.Id, err = fu.HashFlowStats(f); err != nil {
-					return nil, err
 				}
 				newDeviceRules.AddFlow(deviceID, (proto.Clone(f)).(*ofp.OfpFlowStats))
 			}

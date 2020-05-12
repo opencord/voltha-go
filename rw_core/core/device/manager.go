@@ -19,11 +19,12 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"reflect"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-go/rw_core/core/device/event"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
@@ -223,7 +224,7 @@ func (dMgr *Manager) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*ofp.F
 	if err != nil {
 		return &ofp.Flows{}, err
 	}
-	return device.Flows, nil
+	return &voltha.Flows{Items: device.Flows}, nil
 }
 
 // ListDeviceFlowGroups returns the flow group details for a specific device entry
@@ -234,7 +235,7 @@ func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "device-%s", id.Id)
 	}
-	return device.GetFlowGroups(), nil
+	return &voltha.FlowGroups{Items: device.GetFlowGroups()}, nil
 }
 
 // stopManagingDevice stops the management of the device as well as any of its reference device and logical device.
@@ -395,7 +396,6 @@ func (dMgr *Manager) IsRootDevice(id string) (bool, error) {
 // ListDevices retrieves the latest devices from the data model
 func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.Devices, error) {
 	logger.Debug("ListDevices")
-	result := &voltha.Devices{}
 
 	var devices []*voltha.Device
 	if err := dMgr.clusterDataProxy.List(ctx, "devices", &devices); err != nil {
@@ -403,6 +403,7 @@ func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.D
 		return nil, err
 	}
 
+	ret := make(map[string]*voltha.Device)
 	for _, device := range devices {
 		// If device is not in memory then set it up
 		if !dMgr.IsDeviceInCache(device.Id) {
@@ -414,10 +415,10 @@ func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.D
 				dMgr.addDeviceAgentToMap(agent)
 			}
 		}
-		result.Items = append(result.Items, device)
+		ret[device.Id] = device
 	}
-	logger.Debugw("ListDevices-end", log.Fields{"len": len(result.Items)})
-	return result, nil
+	logger.Debugw("ListDevices-end", log.Fields{"len": len(ret)})
+	return &voltha.Devices{Items: ret}, nil
 }
 
 //isParentDeviceExist checks whether device is already preprovisioned.
@@ -760,7 +761,7 @@ func (dMgr *Manager) AddPort(ctx context.Context, deviceID string, port *voltha.
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	logger.Debugw("addFlowsAndGroups", log.Fields{"deviceid": deviceID, "groups:": groups, "flowMetadata": flowMetadata})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.addFlowsAndGroups(ctx, flows, groups, flowMetadata)
@@ -780,7 +781,7 @@ func (dMgr *Manager) deleteParentFlows(ctx context.Context, deviceID string, uni
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	logger.Debugw("deleteFlowsAndGroups", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.deleteFlowsAndGroups(ctx, flows, groups, flowMetadata)
@@ -788,7 +789,7 @@ func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, 
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) updateFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *Manager) updateFlowsAndGroups(ctx context.Context, deviceID string, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
 	logger.Debugw("updateFlowsAndGroups", log.Fields{"deviceid": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateFlowsAndGroups(ctx, flows, groups, flowMetadata)
@@ -840,7 +841,7 @@ func (dMgr *Manager) getSwitchCapability(ctx context.Context, deviceID string) (
 func (dMgr *Manager) GetPorts(ctx context.Context, deviceID string, portType voltha.Port_PortType) (*voltha.Ports, error) {
 	logger.Debugw("GetPorts", log.Fields{"deviceid": deviceID, "portType": portType})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
-		return agent.getPorts(ctx, portType), nil
+		return &voltha.Ports{Items: agent.getPorts(ctx, portType)}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
 }
@@ -1340,11 +1341,11 @@ func (dMgr *Manager) getAllChildDeviceIds(parentDevice *voltha.Device) ([]string
 func (dMgr *Manager) GetAllChildDevices(ctx context.Context, parentDeviceID string) (*voltha.Devices, error) {
 	logger.Debugw("GetAllChildDevices", log.Fields{"parentDeviceId": parentDeviceID})
 	if parentDevice, err := dMgr.getDevice(ctx, parentDeviceID); err == nil {
-		childDevices := make([]*voltha.Device, 0)
+		childDevices := make(map[string]*voltha.Device, 0)
 		if childDeviceIds, er := dMgr.getAllChildDeviceIds(parentDevice); er == nil {
 			for _, deviceID := range childDeviceIds {
 				if d, e := dMgr.getDevice(ctx, deviceID); e == nil && d != nil {
-					childDevices = append(childDevices, d)
+					childDevices[d.Id] = d
 				}
 			}
 		}
