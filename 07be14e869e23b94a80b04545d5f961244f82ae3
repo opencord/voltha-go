@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e576bd9c_1b87ee20",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-13T18:36:16Z",
+      "side": 1,
+      "message": "I\u0027m in favor to add some extra comment",
+      "parentUuid": "093aa73c_9832e5ba",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a83a7556_c6dde270",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 26
@@ -48,6 +66,24 @@
       "writtenOn": "2020-05-13T14:55:13Z",
       "side": 1,
       "message": "Adding details of which flow cannot be deleted would be useful.  Also, should we stop on the first error or attempt to delete as much as possible and return the error after.",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07e1b5bf_1b01eeef",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-13T18:36:16Z",
+      "side": 1,
+      "message": "Added detail to some other errors also. I\u0027m not sure about the second part of your comment. If we succeeded to delete the meter and failed to delete some related flows, is that an error or warning? How important is that and how will we repair the failed parts? I have no favor on any choice. If you are clear on that, I can make changes accordingly.",
+      "parentUuid": "a83a7556_c6dde270",
       "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -89,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "0cefbf7f_2b546ec9",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-13T18:36:16Z",
+      "side": 1,
+      "message": "Agree with Kent.",
+      "parentUuid": "48e78248_97e3f0d7",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "359a4d84_315e1773",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 26
@@ -100,6 +154,24 @@
       "writtenOn": "2020-05-13T14:55:13Z",
       "side": 1,
       "message": "Don\u0027t need groupCount as can use len(agent.groups) in logging below.",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4199897e_9a835a67",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 2044,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-13T18:36:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "359a4d84_315e1773",
       "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
