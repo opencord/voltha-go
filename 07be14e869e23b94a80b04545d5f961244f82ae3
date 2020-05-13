@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "4fd6d85e_6d2b8fbe",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-13T18:56:19Z",
+      "side": 1,
+      "message": "If we delete the meter but can\u0027t delete some related flows then the KV store will be left with inconsistent data.  Looking at the flow sequence, this failure will return an error to ONOS, hence, I believe another attempt will be made to delete the meter and associated flows. Therefore, while the KV will have inconsistent data, it may be a temporal state.\n\nMy original comment was, instead of getting out of the for-loop on error, why not keep deleting as much as we can and report any error after the loop.   It can be done in a different patch as there are other places where this inconsistency may arise.",
+      "parentUuid": "07e1b5bf_1b01eeef",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4981d27f_ee1b5aa1",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 26
@@ -137,6 +155,24 @@
       "side": 1,
       "message": "Agree with Kent.",
       "parentUuid": "48e78248_97e3f0d7",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff5739c5_f1ccc91c",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-13T18:56:19Z",
+      "side": 1,
+      "message": "Maybe then just add a TODO comment on how to handle deleted flows during concurrent requests on the same flow.  It can be dealt with some other times.",
+      "parentUuid": "0cefbf7f_2b546ec9",
       "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
