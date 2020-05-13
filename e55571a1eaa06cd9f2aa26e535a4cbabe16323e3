@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4133f44_af0e9238",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-13T02:11:43Z",
+      "side": 1,
+      "message": "In !ok case: should acquire chunk lock before releasing map lock\n\nIn ok case: should release map lock before acquiring chunk lock",
+      "range": {
+        "startLine": 832,
+        "startChar": 1,
+        "endLine": 832,
+        "endChar": 9
+      },
+      "revId": "e55571a1eaa06cd9f2aa26e535a4cbabe16323e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd27655b_9cf124d5",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-13T02:11:43Z",
+      "side": 1,
+      "message": "So this `if` block should end with:\n\n  flowChunk.lock.Lock() // acquire chunk lock before releasing map lock\n  defer flowChunk.lock.Unlock()\n  agent.flowLock.Unlock()\n} else {\n  agent.flowLock.Unlock() // release map lock before acquiring chunk lock\n  flowChunk.lock.Lock()\n  defer flowChunk.lock.Unlock()\n}",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 2
+      },
+      "revId": "e55571a1eaa06cd9f2aa26e535a4cbabe16323e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbc572f1_c973a7d4",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 843,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-13T02:11:43Z",
+      "side": 1,
+      "message": "And just remove these lines from here.",
+      "range": {
+        "startLine": 841,
+        "startChar": 1,
+        "endLine": 843,
+        "endChar": 24
+      },
+      "revId": "e55571a1eaa06cd9f2aa26e535a4cbabe16323e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
