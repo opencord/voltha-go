@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb451ce1_b131e117",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-13T14:55:13Z",
+      "side": 1,
+      "message": "Should there be a lock for that specific flow chunk here to prevent changes on that flow during this deletion process?   I saw similar behaviour a few places below.",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a83a7556_c6dde270",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-13T14:55:13Z",
+      "side": 1,
+      "message": "Adding details of which flow cannot be deleted would be useful.  Also, should we stop on the first error or attempt to delete as much as possible and return the error after.",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4981d27f_ee1b5aa1",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-13T14:55:13Z",
+      "side": 1,
+      "message": "If we have two flow Adds of the same flow (at least same priority and match) in quick succession then if the first one fail while the second one was waiting on the flowchunk.Lock the flowchunk variable could become nil.   However, chances of this scenario happening is low.",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "359a4d84_315e1773",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 2044,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-13T14:55:13Z",
+      "side": 1,
+      "message": "Don\u0027t need groupCount as can use len(agent.groups) in logging below.",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
