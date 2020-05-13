@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "093aa73c_9832e5ba",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-13T15:15:05Z",
+      "side": 1,
+      "message": "From previous discussion, I believe the caller is expected to hold the chunk lock.  \n(Perhaps document this in the function comment, or refactor the usage semantics?)",
+      "parentUuid": "fb451ce1_b131e117",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a83a7556_c6dde270",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 26
@@ -47,6 +65,24 @@
       "writtenOn": "2020-05-13T14:55:13Z",
       "side": 1,
       "message": "If we have two flow Adds of the same flow (at least same priority and match) in quick succession then if the first one fail while the second one was waiting on the flowchunk.Lock the flowchunk variable could become nil.   However, chances of this scenario happening is low.",
+      "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48e78248_97e3f0d7",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-13T15:15:05Z",
+      "side": 1,
+      "message": "The flowChunk variable won\u0027t become nil, but the second caller could end up with an instance of flowChunk that is no longer in the map.\n\nI was thinking this could be solved by having a \"deleted\" boolean in each chunk, to be checked (and possibly trigger a map lookup retry) after acquiring the lock.\n\nDoes seem like a very rare case, not sure it needs to be in this patch.",
+      "parentUuid": "4981d27f_ee1b5aa1",
       "revId": "07be14e869e23b94a80b04545d5f961244f82ae3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
