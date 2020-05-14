@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "fa900dd4_ca403d66",
+        "filename": "rw_core/core/device/logical_agent_flow_loader.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-14T18:49:36Z",
+      "side": 1,
+      "message": "Agreed, but the tight coupling of device \u0026 logical_device doesn\u0027t allow this.\n\nInstead, I would like to try to modify the functionality in each of the logical_agent_xxx files to be self-contained, and then move each out into separate packages.  Feasibility still tbd.\n\nThis is similar to what I did when pulling other components out of the core package: determine where it makes sense to divide things, and pull each functionality out into its own package.",
+      "parentUuid": "1829909b_8670803c",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ce9fd5b_3cdcf128",
         "filename": "rw_core/core/device/logical_agent_logical_port.go",
         "patchSetId": 2
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "However, they refer to that same logical port concept.   I would combine them and then later remove one of the structure if the other one can be used instead.",
       "parentUuid": "36978c0b_b39622b5",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e58ae979_2f537947",
+        "filename": "rw_core/core/device/logical_agent_logical_port.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-14T18:49:36Z",
+      "side": 1,
+      "message": "Alright, I\u0027ll combine them for now.",
+      "parentUuid": "2ddbe940_38673a69",
       "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
