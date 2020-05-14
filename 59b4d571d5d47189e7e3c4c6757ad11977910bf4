@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f15db34a_7c3ae90e",
+        "filename": "rw_core/core/device/logical_agent_flow_loader.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-14T17:46:39Z",
+      "side": 1,
+      "message": "I was trying to imply that this file is responsible for storing/loading flows from the kv, \u0026 caching in the chunk map. (this interaction contains, or should contain, all the complex mutex locking)\n\n\"_loader\" to me implies that it handles lower-level interaction \u0026 ultimately talks to the kv.\n\nI\u0027m open to naming suggestions.  \n\nWas considering \"_manager\", but thought it applied more to high-level flow management.\n\nThe logical separation isn\u0027t perfect, since no functions have been changed.",
+      "parentUuid": "3cd76f3e_3c15e0fe",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ce9fd5b_3cdcf128",
         "filename": "rw_core/core/device/logical_agent_logical_port.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2020-05-14T17:28:44Z",
       "side": 1,
       "message": "You don\u0027t need both logical_agent_port.go and logical_agent_logical_port.go.   Logical device handles logical ports.  So there should only be one logical_agent.port.go.",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36978c0b_b39622b5",
+        "filename": "rw_core/core/device/logical_agent_logical_port.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-14T17:46:39Z",
+      "side": 1,
+      "message": "There are two separate lists of ports that are maintained, agent.logicalDevice.ports, and agent.logicalPortsNo.\n\nThis ^ is the rule that separates the functions in these files.\n\nNot sure if it will stay this way, but there are currently two independent structures with separate logic.",
+      "parentUuid": "3ce9fd5b_3cdcf128",
       "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
