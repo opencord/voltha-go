@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "1829909b_8670803c",
+        "filename": "rw_core/core/device/logical_agent_flow_loader.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-14T17:58:57Z",
+      "side": 1,
+      "message": "Feels like logical device should be in its own package.   The repeating name of \"logical_device...\" is not clean.",
+      "parentUuid": "f15db34a_7c3ae90e",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ce9fd5b_3cdcf128",
         "filename": "rw_core/core/device/logical_agent_logical_port.go",
         "patchSetId": 2
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "There are two separate lists of ports that are maintained, agent.logicalDevice.ports, and agent.logicalPortsNo.\n\nThis ^ is the rule that separates the functions in these files.\n\nNot sure if it will stay this way, but there are currently two independent structures with separate logic.",
       "parentUuid": "3ce9fd5b_3cdcf128",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ddbe940_38673a69",
+        "filename": "rw_core/core/device/logical_agent_logical_port.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-14T17:58:57Z",
+      "side": 1,
+      "message": "However, they refer to that same logical port concept.   I would combine them and then later remove one of the structure if the other one can be used instead.",
+      "parentUuid": "36978c0b_b39622b5",
       "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
