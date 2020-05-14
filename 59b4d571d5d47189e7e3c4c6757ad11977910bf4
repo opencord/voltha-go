@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cd76f3e_3c15e0fe",
+        "filename": "rw_core/core/device/logical_agent_flow_loader.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-14T17:28:44Z",
+      "side": 1,
+      "message": "Flow loader implies loading flows from somewhere.   However, this file has functionalities other than loading.  Similar comments in other files",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ce9fd5b_3cdcf128",
+        "filename": "rw_core/core/device/logical_agent_logical_port.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-14T17:28:44Z",
+      "side": 1,
+      "message": "You don\u0027t need both logical_agent_port.go and logical_agent_logical_port.go.   Logical device handles logical ports.  So there should only be one logical_agent.port.go.",
+      "revId": "59b4d571d5d47189e7e3c4c6757ad11977910bf4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
