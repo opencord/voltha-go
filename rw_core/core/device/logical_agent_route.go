@@ -34,6 +34,9 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 	logger.Debugw("getting-route", log.Fields{"ingress-port": ingressPortNo, "egress-port": egressPortNo})
 	routes := make([]route.Hop, 0)
 
+	agent.lockDeviceRoutes.Lock()
+	defer agent.lockDeviceRoutes.Unlock()
+
 	// Note: A port value of 0 is equivalent to a nil port
 
 	//	Consider different possibilities
@@ -98,6 +101,8 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 
 func (agent *LogicalAgent) getPreCalculatedRoute(ingress, egress uint32) ([]route.Hop, error) {
 	logger.Debugw("ROUTE", log.Fields{"len": len(agent.deviceRoutes.Routes)})
+	agent.lockDeviceRoutes.Lock()
+	defer agent.lockDeviceRoutes.Unlock()
 	for routeLink, route := range agent.deviceRoutes.Routes {
 		logger.Debugw("ROUTELINKS", log.Fields{"ingress": ingress, "egress": egress, "routelink": routeLink})
 		if ingress == routeLink.Ingress && egress == routeLink.Egress {
