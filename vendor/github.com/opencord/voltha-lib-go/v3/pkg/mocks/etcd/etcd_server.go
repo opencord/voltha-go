@@ -16,6 +16,7 @@
 package etcd
 
 import (
+	"context"
 	"fmt"
 	"go.etcd.io/etcd/embed"
 	"net/url"
@@ -52,24 +53,25 @@ func islogLevelValid(logLevel string) bool {
 * :param logLevel: One of debug, info, warn, error, panic, or fatal. Default 'info'.
  */
 func MKConfig(configName string, clientPort, peerPort int, localPersistentStorageDir string, logLevel string) *embed.Config {
+	ctx := context.Background()
 	cfg := embed.NewConfig()
 	cfg.Name = configName
 	cfg.Dir = localPersistentStorageDir
 	cfg.Logger = "zap"
 	if !islogLevelValid(logLevel) {
-		logger.Fatalf("Invalid log level -%s", logLevel)
+		logger.Fatalf(ctx, "Invalid log level -%s", logLevel)
 	}
 	cfg.LogLevel = logLevel
 	acurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", clientPort))
 	if err != nil {
-		logger.Fatalf("Invalid client port -%d", clientPort)
+		logger.Fatalf(ctx, "Invalid client port -%d", clientPort)
 	}
 	cfg.ACUrls = []url.URL{*acurl}
 	cfg.LCUrls = []url.URL{*acurl}
 
 	apurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", peerPort))
 	if err != nil {
-		logger.Fatalf("Invalid peer port -%d", peerPort)
+		logger.Fatalf(ctx, "Invalid peer port -%d", peerPort)
 	}
 	cfg.LPUrls = []url.URL{*apurl}
 	cfg.APUrls = []url.URL{*apurl}
@@ -92,6 +94,7 @@ func getDefaultCfg() *embed.Config {
 //StartEtcdServer creates and starts an embedded Etcd server.  A local directory to store data is created for the
 //embedded server lifetime (for the duration of a unit test.  The server runs at localhost:2379.
 func StartEtcdServer(cfg *embed.Config) *EtcdServer {
+	ctx := context.Background()
 	// If the server is already running, just return
 	if cfg == nil {
 		cfg = getDefaultCfg()
@@ -99,35 +102,36 @@ func StartEtcdServer(cfg *embed.Config) *EtcdServer {
 	// Remove the local directory as
 	// a safeguard for the case where a prior test failed
 	if err := os.RemoveAll(cfg.Dir); err != nil {
-		logger.Fatalf("Failure removing local directory %s", cfg.Dir)
+		logger.Fatalf(ctx, "Failure removing local directory %s", cfg.Dir)
 	}
 	e, err := embed.StartEtcd(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(ctx, err)
 	}
 	select {
 	case <-e.Server.ReadyNotify():
-		logger.Debug("Embedded Etcd server is ready!")
+		logger.Debug(ctx, "Embedded Etcd server is ready!")
 	case <-time.After(serverStartUpTimeout):
 		e.Server.HardStop() // trigger a shutdown
 		e.Close()
-		logger.Fatal("Embedded Etcd server took too long to start!")
+		logger.Fatal(ctx, "Embedded Etcd server took too long to start!")
 	case err := <-e.Err():
 		e.Server.HardStop() // trigger a shutdown
 		e.Close()
-		logger.Fatalf("Embedded Etcd server errored out - %s", err)
+		logger.Fatalf(ctx, "Embedded Etcd server errored out - %s", err)
 	}
 	return &EtcdServer{server: e}
 }
 
 //Stop closes the embedded Etcd server and removes the local data directory as well
 func (es *EtcdServer) Stop() {
+	ctx := context.Background()
 	if es != nil {
 		storage := es.server.Config().Dir
 		es.server.Server.HardStop()
 		es.server.Close()
 		if err := os.RemoveAll(storage); err != nil {
-			logger.Fatalf("Failure removing local directory %s", es.server.Config().Dir)
+			logger.Fatalf(ctx, "Failure removing local directory %s", es.server.Config().Dir)
 		}
 	}
 }

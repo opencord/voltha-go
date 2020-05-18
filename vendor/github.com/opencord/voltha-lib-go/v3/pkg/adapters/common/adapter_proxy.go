@@ -36,13 +36,14 @@ type AdapterProxy struct {
 }
 
 func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, adapterTopic string, coreTopic string, backend *db.Backend) *AdapterProxy {
+	ctx := context.Background()
 	proxy := AdapterProxy{
 		kafkaICProxy: kafkaProxy,
 		adapterTopic: adapterTopic,
 		coreTopic:    coreTopic,
 		endpointMgr:  kafka.NewEndpointManager(backend),
 	}
-	logger.Debugw("topics", log.Fields{"core": proxy.coreTopic, "adapter": proxy.adapterTopic})
+	logger.Debugw(ctx, "topics", log.Fields{"core": proxy.coreTopic, "adapter": proxy.adapterTopic})
 	return &proxy
 }
 
@@ -54,14 +55,14 @@ func (ap *AdapterProxy) SendInterAdapterMessage(ctx context.Context,
 	toDeviceId string,
 	proxyDeviceId string,
 	messageId string) error {
-	logger.Debugw("sending-inter-adapter-message", log.Fields{"type": msgType, "from": fromAdapter,
+	logger.Debugw(ctx, "sending-inter-adapter-message", log.Fields{"type": msgType, "from": fromAdapter,
 		"to": toAdapter, "toDevice": toDeviceId, "proxyDevice": proxyDeviceId})
 
 	//Marshal the message
 	var marshalledMsg *any.Any
 	var err error
 	if marshalledMsg, err = ptypes.MarshalAny(msg); err != nil {
-		logger.Warnw("cannot-marshal-msg", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-marshal-msg", log.Fields{"error": err})
 		return err
 	}
 
@@ -99,6 +100,6 @@ func (ap *AdapterProxy) SendInterAdapterMessage(ctx context.Context,
 	rpc := "process_inter_adapter_message"
 
 	success, result := ap.kafkaICProxy.InvokeRPC(ctx, rpc, &topic, &replyToTopic, true, proxyDeviceId, args...)
-	logger.Debugw("inter-adapter-msg-response", log.Fields{"replyTopic": replyToTopic, "success": success})
+	logger.Debugw(ctx, "inter-adapter-msg-response", log.Fields{"replyTopic": replyToTopic, "success": success})
 	return unPackResponse(rpc, "", success, result)
 }

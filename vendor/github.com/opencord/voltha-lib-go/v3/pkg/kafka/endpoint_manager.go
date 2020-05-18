@@ -120,7 +120,8 @@ func NewEndpointManager(backend *db.Backend, opts ...EndpointManagerOption) Endp
 }
 
 func (ep *endpointManager) GetEndpoint(deviceID string, serviceType string) (Endpoint, error) {
-	logger.Debugw("getting-endpoint", log.Fields{"device-id": deviceID, "service": serviceType})
+	ctx := context.Background()
+	logger.Debugw(ctx, "getting-endpoint", log.Fields{"device-id": deviceID, "service": serviceType})
 	owner, err := ep.getOwner(deviceID, serviceType)
 	if err != nil {
 		return "", err
@@ -133,12 +134,13 @@ func (ep *endpointManager) GetEndpoint(deviceID string, serviceType string) (End
 	if endpoint == "" {
 		return "", status.Errorf(codes.Unavailable, "endpoint-not-set-%s", serviceType)
 	}
-	logger.Debugw("returning-endpoint", log.Fields{"device-id": deviceID, "service": serviceType, "endpoint": endpoint})
+	logger.Debugw(ctx, "returning-endpoint", log.Fields{"device-id": deviceID, "service": serviceType, "endpoint": endpoint})
 	return endpoint, nil
 }
 
 func (ep *endpointManager) IsDeviceOwnedByService(deviceID string, serviceType string, replicaNumber int32) (bool, error) {
-	logger.Debugw("device-ownership", log.Fields{"device-id": deviceID, "service": serviceType, "replica-number": replicaNumber})
+	ctx := context.Background()
+	logger.Debugw(ctx, "device-ownership", log.Fields{"device-id": deviceID, "service": serviceType, "replica-number": replicaNumber})
 	owner, err := ep.getOwner(deviceID, serviceType)
 	if err != nil {
 		return false, nil
@@ -215,6 +217,7 @@ func (ep *endpointManager) getConsistentConfig() consistent.Config {
 // the data format in the dB being binary protobuf then it is better to load all the data if inconsistency is detected,
 // instead of watching for updates in the dB and acting on it.
 func (ep *endpointManager) loadServices() error {
+	ctx := context.Background()
 	ep.servicesLock.Lock()
 	defer ep.servicesLock.Unlock()
 	ep.deviceTypeServiceMapLock.Lock()
@@ -276,13 +279,13 @@ func (ep *endpointManager) loadServices() error {
 	if logger.V(log.DebugLevel) {
 		for key, val := range ep.services {
 			members := val.consistentRing.GetMembers()
-			logger.Debugw("service", log.Fields{"service": key, "expected-replica": val.totalReplicas, "replicas": len(val.consistentRing.GetMembers())})
+			logger.Debugw(ctx, "service", log.Fields{"service": key, "expected-replica": val.totalReplicas, "replicas": len(val.consistentRing.GetMembers())})
 			for _, m := range members {
 				n := m.(Member)
-				logger.Debugw("service-loaded", log.Fields{"serviceId": n.getID(), "serviceType": n.getServiceType(), "replica": n.getReplica(), "endpoint": n.getEndPoint()})
+				logger.Debugw(ctx, "service-loaded", log.Fields{"serviceId": n.getID(), "serviceType": n.getServiceType(), "replica": n.getReplica(), "endpoint": n.getEndPoint()})
 			}
 		}
-		logger.Debugw("device-types-loaded", log.Fields{"device-types": ep.deviceTypeServiceMap})
+		logger.Debugw(ctx, "device-types-loaded", log.Fields{"device-types": ep.deviceTypeServiceMap})
 	}
 	return nil
 }

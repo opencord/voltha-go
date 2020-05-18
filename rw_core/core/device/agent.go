@@ -38,6 +38,7 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -100,6 +101,11 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 			}
 		}
 	}()
+
+	span := opentracing.SpanFromContext(ctx)
+	if span != nil {
+		span.SetTag("device-id", agent.deviceID)
+	}
 
 	var device *voltha.Device
 	if deviceToCreate == nil {

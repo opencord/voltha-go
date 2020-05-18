@@ -17,6 +17,7 @@ package flows
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"encoding/binary"
 	"fmt"
@@ -504,6 +505,7 @@ func GetTunnelId(flow *ofp.OfpFlowStats) uint64 {
 
 //GetMetaData - legacy get method (only want lower 32 bits)
 func GetMetaData(flow *ofp.OfpFlowStats) uint32 {
+	ctx := context.Background()
 	if flow == nil {
 		return 0
 	}
@@ -512,11 +514,12 @@ func GetMetaData(flow *ofp.OfpFlowStats) uint32 {
 			return uint32(field.GetTableMetadata() & 0xFFFFFFFF)
 		}
 	}
-	logger.Debug("No-metadata-present")
+	logger.Debug(ctx, "No-metadata-present")
 	return 0
 }
 
 func GetMetaData64Bit(flow *ofp.OfpFlowStats) uint64 {
+	ctx := context.Background()
 	if flow == nil {
 		return 0
 	}
@@ -525,12 +528,13 @@ func GetMetaData64Bit(flow *ofp.OfpFlowStats) uint64 {
 			return field.GetTableMetadata()
 		}
 	}
-	logger.Debug("No-metadata-present")
+	logger.Debug(ctx, "No-metadata-present")
 	return 0
 }
 
 // function returns write metadata value from write_metadata action field
 func GetMetadataFromWriteMetadataAction(flow *ofp.OfpFlowStats) uint64 {
+	ctx := context.Background()
 	if flow != nil {
 		for _, instruction := range flow.Instructions {
 			if instruction.Type == uint32(WRITE_METADATA) {
@@ -540,11 +544,12 @@ func GetMetadataFromWriteMetadataAction(flow *ofp.OfpFlowStats) uint64 {
 			}
 		}
 	}
-	logger.Debugw("No-write-metadata-present", log.Fields{"flow": flow})
+	logger.Debugw(ctx, "No-write-metadata-present", log.Fields{"flow": flow})
 	return 0
 }
 
 func GetTechProfileIDFromWriteMetaData(metadata uint64) uint16 {
+	ctx := context.Background()
 	/*
 	   Write metadata instruction value (metadata) is 8 bytes:
 	   MS 2 bytes: C Tag
@@ -554,15 +559,16 @@ func GetTechProfileIDFromWriteMetaData(metadata uint64) uint16 {
 	   This is set in the ONOS OltPipeline as a write metadata instruction
 	*/
 	var tpId uint16 = 0
-	logger.Debugw("Write metadata value for Techprofile ID", log.Fields{"metadata": metadata})
+	logger.Debugw(ctx, "Write metadata value for Techprofile ID", log.Fields{"metadata": metadata})
 	if metadata != 0 {
 		tpId = uint16((metadata >> 32) & 0xFFFF)
-		logger.Debugw("Found techprofile ID from write metadata action", log.Fields{"tpid": tpId})
+		logger.Debugw(ctx, "Found techprofile ID from write metadata action", log.Fields{"tpid": tpId})
 	}
 	return tpId
 }
 
 func GetEgressPortNumberFromWriteMetadata(flow *ofp.OfpFlowStats) uint32 {
+	ctx := context.Background()
 	/*
 			  Write metadata instruction value (metadata) is 8 bytes:
 		    	MS 2 bytes: C Tag
@@ -572,16 +578,17 @@ func GetEgressPortNumberFromWriteMetadata(flow *ofp.OfpFlowStats) uint32 {
 	*/
 	var uniPort uint32 = 0
 	md := GetMetadataFromWriteMetadataAction(flow)
-	logger.Debugw("Metadata found for egress/uni port ", log.Fields{"metadata": md})
+	logger.Debugw(ctx, "Metadata found for egress/uni port ", log.Fields{"metadata": md})
 	if md != 0 {
 		uniPort = uint32(md & 0xFFFFFFFF)
-		logger.Debugw("Found EgressPort from write metadata action", log.Fields{"egress_port": uniPort})
+		logger.Debugw(ctx, "Found EgressPort from write metadata action", log.Fields{"egress_port": uniPort})
 	}
 	return uniPort
 
 }
 
 func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint16 {
+	ctx := context.Background()
 	/*
 			  Write metadata instruction value (metadata) is 8 bytes:
 		    	MS 2 bytes: C Tag
@@ -593,7 +600,7 @@ func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint16 {
 	md := GetMetadataFromWriteMetadataAction(flow)
 	if md != 0 {
 		innerTag = uint16((md >> 48) & 0xFFFF)
-		logger.Debugw("Found  CVLAN from write metadate action", log.Fields{"c_vlan": innerTag})
+		logger.Debugw(ctx, "Found  CVLAN from write metadate action", log.Fields{"c_vlan": innerTag})
 	}
 	return innerTag
 }
@@ -607,7 +614,7 @@ func GetInnerTagFromMetaData(flow *ofp.OfpFlowStats) uint16 {
 		return 0
 	}
 	if md <= 0xffffffff {
-		logger.Debugw("onos-upgrade-suggested", logger.Fields{"Metadata_ofp": md, "message": "Legacy MetaData detected form OltPipeline"})
+		logger.Debugw(ctx, "onos-upgrade-suggested", logger.Fields{"Metadata_ofp": md, "message": "Legacy MetaData detected form OltPipeline"})
 		return md
 	}
 	return (md >> 32) & 0xffffffff
@@ -938,11 +945,12 @@ func GroupEntryFromGroupMod(mod *ofp.OfpGroupMod) *ofp.OfpGroupEntry {
 
 // flowStatsEntryFromFlowModMessage maps an ofp_flow_mod message to an ofp_flow_stats message
 func MeterEntryFromMeterMod(meterMod *ofp.OfpMeterMod) *ofp.OfpMeterEntry {
+	ctx := context.Background()
 	bandStats := make([]*ofp.OfpMeterBandStats, 0)
 	meter := &ofp.OfpMeterEntry{Config: &ofp.OfpMeterConfig{},
 		Stats: &ofp.OfpMeterStats{BandStats: bandStats}}
 	if meterMod == nil {
-		logger.Error("Invalid meter mod command")
+		logger.Error(ctx, "Invalid meter mod command")
 		return meter
 	}
 	// config init
@@ -964,7 +972,7 @@ func MeterEntryFromMeterMod(meterMod *ofp.OfpMeterMod) *ofp.OfpMeterEntry {
 		bandStats = append(bandStats, band)
 	}
 	meter.Stats.BandStats = bandStats
-	logger.Debugw("Allocated meter entry", log.Fields{"meter": *meter})
+	logger.Debugw(ctx, "Allocated meter entry", log.Fields{"meter": *meter})
 	return meter
 
 }

@@ -50,6 +50,7 @@ type Backend struct {
 
 // NewBackend creates a new instance of a Backend structure
 func NewBackend(storeType string, host string, port int, timeout time.Duration, pathPrefix string) *Backend {
+	ctx := context.Background()
 	var err error
 
 	b := &Backend{
@@ -63,8 +64,8 @@ func NewBackend(storeType string, host string, port int, timeout time.Duration, 
 	}
 
 	address := host + ":" + strconv.Itoa(port)
-	if b.Client, err = b.newClient(address, timeout); err != nil {
-		logger.Errorw("failed-to-create-kv-client",
+	if b.Client, err = b.newClient(ctx, address, timeout); err != nil {
+		logger.Errorw(ctx, "failed-to-create-kv-client",
 			log.Fields{
 				"type": storeType, "host": host, "port": port,
 				"timeout": timeout, "prefix": pathPrefix,
@@ -75,7 +76,7 @@ func NewBackend(storeType string, host string, port int, timeout time.Duration, 
 	return b
 }
 
-func (b *Backend) newClient(address string, timeout time.Duration) (kvstore.Client, error) {
+func (b *Backend) newClient(ctx context.Context, address string, timeout time.Duration) (kvstore.Client, error) {
 	switch b.StoreType {
 	case "consul":
 		return kvstore.NewConsulClient(address, timeout)
@@ -85,12 +86,12 @@ func (b *Backend) newClient(address string, timeout time.Duration) (kvstore.Clie
 	return nil, errors.New("unsupported-kv-store")
 }
 
-func (b *Backend) makePath(key string) string {
+func (b *Backend) makePath(ctx context.Context, key string) string {
 	path := fmt.Sprintf("%s/%s", b.PathPrefix, key)
 	return path
 }
 
-func (b *Backend) updateLiveness(alive bool) {
+func (b *Backend) updateLiveness(ctx context.Context, alive bool) {
 	// Periodically push stream of liveness data to the channel,
 	// so that in a live state, the core does not timeout and
 	// send a forced liveness message. Push alive state if the
@@ -98,11 +99,11 @@ func (b *Backend) updateLiveness(alive bool) {
 	if b.liveness != nil {
 
 		if b.alive != alive {
-			logger.Debug("update-liveness-channel-reason-change")
+			logger.Debug(ctx, "update-liveness-channel-reason-change")
 			b.liveness <- alive
 			b.lastLivenessTime = time.Now()
 		} else if time.Since(b.lastLivenessTime) > b.LivenessChannelInterval {
-			logger.Debug("update-liveness-channel-reason-interval")
+			logger.Debug(ctx, "update-liveness-channel-reason-interval")
 			b.liveness <- alive
 			b.lastLivenessTime = time.Now()
 		}
@@ -110,7 +111,7 @@ func (b *Backend) updateLiveness(alive bool) {
 
 	// Emit log message only for alive state change
 	if b.alive != alive {
-		logger.Debugw("change-kvstore-alive-status", log.Fields{"alive": alive})
+		logger.Debugw(ctx, "change-kvstore-alive-status", log.Fields{"alive": alive})
 		b.alive = alive
 	}
 }
@@ -119,9 +120,9 @@ func (b *Backend) updateLiveness(alive bool) {
 // post on Liveness channel
 func (b *Backend) PerformLivenessCheck(ctx context.Context) bool {
 	alive := b.Client.IsConnectionUp(ctx)
-	logger.Debugw("kvstore-liveness-check-result", log.Fields{"alive": alive})
+	logger.Debugw(ctx, "kvstore-liveness-check-result", log.Fields{"alive": alive})
 
-	b.updateLiveness(alive)
+	b.updateLiveness(ctx, alive)
 	return alive
 }
 
@@ -131,10 +132,11 @@ func (b *Backend) PerformLivenessCheck(ctx context.Context) bool {
 // by the service (i.e. rw_core / ro_core) to update readiness status
 // and/or take other actions.
 func (b *Backend) EnableLivenessChannel() chan bool {
-	logger.Debug("enable-kvstore-liveness-channel")
+	ctx := context.Background()
+	logger.Debug(ctx, "enable-kvstore-liveness-channel")
 
 	if b.liveness == nil {
-		logger.Debug("create-kvstore-liveness-channel")
+		logger.Debug(ctx, "create-kvstore-liveness-channel")
 
 		// Channel size of 10 to avoid any possibility of blocking in Load conditions
 		b.liveness = make(chan bool, 10)
@@ -148,7 +150,7 @@ func (b *Backend) EnableLivenessChannel() chan bool {
 }
 
 // Extract Alive status of Kvstore based on type of error
-func (b *Backend) isErrorIndicatingAliveKvstore(err error) bool {
+func (b *Backend) isErrorIndicatingAliveKvstore(ctx context.Context, err error) bool {
 	// Alive unless observed an error indicating so
 	alive := true
 
@@ -186,64 +188,65 @@ func (b *Backend) isErrorIndicatingAliveKvstore(err error) bool {
 
 // List retrieves one or more items that match the specified key
 func (b *Backend) List(ctx context.Context, key string) (map[string]*kvstore.KVPair, error) {
-	formattedPath := b.makePath(key)
-	logger.Debugw("listing-key", log.Fields{"key": key, "path": formattedPath})
+	formattedPath := b.makePath(ctx, key)
+	logger.Debugw(ctx, "listing-key", log.Fields{"key": key, "path": formattedPath})
 
 	pair, err := b.Client.List(ctx, formattedPath)
 
-	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
 
 	return pair, err
 }
 
 // Get retrieves an item that matches the specified key
 func (b *Backend) Get(ctx context.Context, key string) (*kvstore.KVPair, error) {
-	formattedPath := b.makePath(key)
-	logger.Debugw("getting-key", log.Fields{"key": key, "path": formattedPath})
+	formattedPath := b.makePath(ctx, key)
+	logger.Debugw(ctx, "getting-key", log.Fields{"key": key, "path": formattedPath})
 
 	pair, err := b.Client.Get(ctx, formattedPath)
 
-	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
 
 	return pair, err
 }
 
 // Put stores an item value under the specifed key
 func (b *Backend) Put(ctx context.Context, key string, value interface{}) error {
-	formattedPath := b.makePath(key)
-	logger.Debugw("putting-key", log.Fields{"key": key, "path": formattedPath})
+	formattedPath := b.makePath(ctx, key)
+	logger.Debugw(ctx, "putting-key", log.Fields{"key": key, "path": formattedPath})
 
 	err := b.Client.Put(ctx, formattedPath, value)
 
-	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
 
 	return err
 }
 
 // Delete removes an item under the specified key
 func (b *Backend) Delete(ctx context.Context, key string) error {
-	formattedPath := b.makePath(key)
-	logger.Debugw("deleting-key", log.Fields{"key": key, "path": formattedPath})
+	formattedPath := b.makePath(ctx, key)
+	logger.Debugw(ctx, "deleting-key", log.Fields{"key": key, "path": formattedPath})
 
 	err := b.Client.Delete(ctx, formattedPath)
 
-	b.updateLiveness(b.isErrorIndicatingAliveKvstore(err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
 
 	return err
 }
 
 // CreateWatch starts watching events for the specified key
 func (b *Backend) CreateWatch(ctx context.Context, key string, withPrefix bool) chan *kvstore.Event {
-	formattedPath := b.makePath(key)
-	logger.Debugw("creating-key-watch", log.Fields{"key": key, "path": formattedPath})
+	formattedPath := b.makePath(ctx, key)
+	logger.Debugw(ctx, "creating-key-watch", log.Fields{"key": key, "path": formattedPath})
 
 	return b.Client.Watch(ctx, formattedPath, withPrefix)
 }
 
 // DeleteWatch stops watching events for the specified key
 func (b *Backend) DeleteWatch(key string, ch chan *kvstore.Event) {
-	formattedPath := b.makePath(key)
-	logger.Debugw("deleting-key-watch", log.Fields{"key": key, "path": formattedPath})
+	ctx := context.Background()
+	formattedPath := b.makePath(ctx, key)
+	logger.Debugw(ctx, "deleting-key-watch", log.Fields{"key": key, "path": formattedPath})
 
 	b.Client.CloseWatch(formattedPath, ch)
 }

@@ -36,6 +36,7 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -136,6 +137,9 @@ func (dMgr *Manager) listDeviceIdsFromMap() *voltha.IDs {
 
 // CreateDevice creates a new parent device in the data model
 func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "create-device")
+	defer span.Finish()
+
 	if device.MacAddress == "" && device.GetHostAndPort() == "" {
 		logger.Errorf("No Device Info Present")
 		return &voltha.Device{}, errors.New("no-device-info-present; MAC or HOSTIP&PORT")
@@ -394,6 +398,9 @@ func (dMgr *Manager) IsRootDevice(id string) (bool, error) {
 
 // ListDevices retrieves the latest devices from the data model
 func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.Devices, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "list-devices")
+	defer span.Finish()
+
 	logger.Debug("ListDevices")
 	result := &voltha.Devices{}
 
