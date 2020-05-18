@@ -99,19 +99,19 @@ func (s *GrpcServer) Start(ctx context.Context) {
 
 	lis, err := net.Listen("tcp", host)
 	if err != nil {
-		logger.Fatalf("failed to listen: %v", err)
+		logger.Fatalf(ctx, "failed to listen: %v", err)
 	}
 
 	if s.secure && s.GrpcSecurity != nil {
 		creds, err := credentials.NewServerTLSFromFile(s.CertFile, s.KeyFile)
 		if err != nil {
-			logger.Fatalf("could not load TLS keys: %s", err)
+			logger.Fatalf(ctx, "could not load TLS keys: %s", err)
 		}
 		s.gs = grpc.NewServer(grpc.Creds(creds),
 			withServerUnaryInterceptor(s))
 
 	} else {
-		logger.Info("starting-insecure-grpc-server")
+		logger.Info(ctx, "starting-insecure-grpc-server")
 		s.gs = grpc.NewServer(withServerUnaryInterceptor(s))
 	}
 
@@ -121,7 +121,7 @@ func (s *GrpcServer) Start(ctx context.Context) {
 	}
 
 	if err := s.gs.Serve(lis); err != nil {
-		logger.Fatalf("failed to serve: %v\n", err)
+		logger.Fatalf(ctx, "failed to serve: %v\n", err)
 	}
 }
 
@@ -144,7 +144,7 @@ func mkServerInterceptor(s *GrpcServer) func(ctx context.Context,
 		handler grpc.UnaryHandler) (interface{}, error) {
 
 		if (s.probe != nil) && (!s.probe.IsReady()) {
-			logger.Warnf("Grpc request received while not ready %v", req)
+			logger.Warnf(ctx, "Grpc request received while not ready %v", req)
 			return nil, status.Error(codes.Unavailable, "system is not ready")
 		}
 

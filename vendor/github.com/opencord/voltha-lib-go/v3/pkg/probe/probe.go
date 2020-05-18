@@ -110,6 +110,7 @@ func (p *Probe) WithHealthFunc(healthFunc func(map[string]ServiceStatus) bool) *
 
 // RegisterService register one or more service names with the probe, status will be track against service name
 func (p *Probe) RegisterService(names ...string) {
+	ctx := context.Background()
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if p.status == nil {
@@ -118,7 +119,7 @@ func (p *Probe) RegisterService(names ...string) {
 	for _, name := range names {
 		if _, ok := p.status[name]; !ok {
 			p.status[name] = ServiceStatusUnknown
-			logger.Debugw("probe-service-registered", log.Fields{"service-name": name})
+			logger.Debugw(ctx, "probe-service-registered", log.Fields{"service-name": name})
 		}
 	}
 
@@ -137,6 +138,7 @@ func (p *Probe) RegisterService(names ...string) {
 
 // UpdateStatus utility function to send a service update to the probe
 func (p *Probe) UpdateStatus(name string, status ServiceStatus) {
+	ctx := context.Background()
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if p.status == nil {
@@ -161,7 +163,7 @@ func (p *Probe) UpdateStatus(name string, status ServiceStatus) {
 	} else {
 		p.isHealthy = defaultHealthFunc(p.status)
 	}
-	logger.Debugw("probe-service-status-updated",
+	logger.Debugw(ctx, "probe-service-status-updated",
 		log.Fields{
 			"service-name": name,
 			"status":       status.String(),
@@ -228,25 +230,26 @@ func (p *Probe) healthzFunc(w http.ResponseWriter, req *http.Request) {
 	}
 }
 func (p *Probe) detailzFunc(w http.ResponseWriter, req *http.Request) {
+	ctx := context.Background()
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write([]byte("{")); err != nil {
-		logger.Errorw("write-response", log.Fields{"error": err})
+		logger.Errorw(ctx, "write-response", log.Fields{"error": err})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	comma := ""
 	for c, s := range p.status {
 		if _, err := w.Write([]byte(fmt.Sprintf("%s\"%s\": \"%s\"", comma, c, s.String()))); err != nil {
-			logger.Errorw("write-response", log.Fields{"error": err})
+			logger.Errorw(ctx, "write-response", log.Fields{"error": err})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		comma = ", "
 	}
 	if _, err := w.Write([]byte("}")); err != nil {
-		logger.Errorw("write-response", log.Fields{"error": err})
+		logger.Errorw(ctx, "write-response", log.Fields{"error": err})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -255,6 +258,7 @@ func (p *Probe) detailzFunc(w http.ResponseWriter, req *http.Request) {
 
 // ListenAndServe implements 3 HTTP endpoints on the given port for healthz, readz, and detailz. Returns only on error
 func (p *Probe) ListenAndServe(address string) {
+	ctx := context.Background()
 	mux := http.NewServeMux()
 
 	// Returns the result of the readyFunc calculation
@@ -269,7 +273,7 @@ func (p *Probe) ListenAndServe(address string) {
 		Addr:    address,
 		Handler: mux,
 	}
-	logger.Fatal(s.ListenAndServe())
+	logger.Fatal(ctx, s.ListenAndServe())
 }
 
 func (p *Probe) IsReady() bool {

@@ -162,16 +162,17 @@ func NewInterContainerProxy(opts ...InterContainerProxyOption) InterContainerPro
 }
 
 func (kp *interContainerProxy) Start() error {
-	logger.Info("Starting-Proxy")
+	ctx := context.Background()
+	logger.Info(ctx, "Starting-Proxy")
 
 	// Kafka MsgClient should already have been created.  If not, output fatal error
 	if kp.kafkaClient == nil {
-		logger.Fatal("kafka-client-not-set")
+		logger.Fatal(ctx, "kafka-client-not-set")
 	}
 
 	// Start the kafka client
 	if err := kp.kafkaClient.Start(); err != nil {
-		logger.Errorw("Cannot-create-kafka-proxy", log.Fields{"error": err})
+		logger.Errorw(ctx, "Cannot-create-kafka-proxy", log.Fields{"error": err})
 		return err
 	}
 
@@ -188,17 +189,18 @@ func (kp *interContainerProxy) Start() error {
 }
 
 func (kp *interContainerProxy) Stop() {
-	logger.Info("stopping-intercontainer-proxy")
+	ctx := context.Background()
+	logger.Info(ctx, "stopping-intercontainer-proxy")
 	kp.doneOnce.Do(func() { close(kp.doneCh) })
 	// TODO : Perform cleanup
 	kp.kafkaClient.Stop()
 	err := kp.deleteAllTopicRequestHandlerChannelMap()
 	if err != nil {
-		logger.Errorw("failed-delete-all-topic-request-handler-channel-map", log.Fields{"error": err})
+		logger.Errorw(ctx, "failed-delete-all-topic-request-handler-channel-map", log.Fields{"error": err})
 	}
 	err = kp.deleteAllTopicResponseChannelMap()
 	if err != nil {
-		logger.Errorw("failed-delete-all-topic-response-channel-map", log.Fields{"error": err})
+		logger.Errorw(ctx, "failed-delete-all-topic-response-channel-map", log.Fields{"error": err})
 	}
 	kp.deleteAllTransactionIdToChannelMap()
 }
@@ -209,10 +211,11 @@ func (kp *interContainerProxy) GetDefaultTopic() *Topic {
 
 // DeviceDiscovered publish the discovered device onto the kafka messaging bus
 func (kp *interContainerProxy) DeviceDiscovered(deviceId string, deviceType string, parentId string, publisher string) error {
-	logger.Debugw("sending-device-discovery-msg", log.Fields{"deviceId": deviceId})
+	ctx := context.Background()
+	logger.Debugw(ctx, "sending-device-discovery-msg", log.Fields{"deviceId": deviceId})
 	//	Simple validation
 	if deviceId == "" || deviceType == "" {
-		logger.Errorw("invalid-parameters", log.Fields{"id": deviceId, "type": deviceType})
+		logger.Errorw(ctx, "invalid-parameters", log.Fields{"id": deviceId, "type": deviceType})
 		return errors.New("invalid-parameters")
 	}
 	//	Create the device discovery message
@@ -233,7 +236,7 @@ func (kp *interContainerProxy) DeviceDiscovered(deviceId string, deviceType stri
 	var marshalledData *any.Any
 	var err error
 	if marshalledData, err = ptypes.MarshalAny(body); err != nil {
-		logger.Errorw("cannot-marshal-request", log.Fields{"error": err})
+		logger.Errorw(ctx, "cannot-marshal-request", log.Fields{"error": err})
 		return err
 	}
 	msg := &ic.InterContainerMessage{
@@ -243,7 +246,7 @@ func (kp *interContainerProxy) DeviceDiscovered(deviceId string, deviceType stri
 
 	// Send the message
 	if err := kp.kafkaClient.Send(msg, kp.deviceDiscoveryTopic); err != nil {
-		logger.Errorw("cannot-send-device-discovery-message", log.Fields{"error": err})
+		logger.Errorw(ctx, "cannot-send-device-discovery-message", log.Fields{"error": err})
 		return err
 	}
 	return nil
@@ -253,7 +256,7 @@ func (kp *interContainerProxy) DeviceDiscovered(deviceId string, deviceType stri
 func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic,
 	waitForResponse bool, key string, kvArgs ...*KVArg) chan *RpcResponse {
 
-	logger.Debugw("InvokeAsyncRPC", log.Fields{"rpc": rpc, "key": key})
+	logger.Debugw(ctx, "InvokeAsyncRPC", log.Fields{"rpc": rpc, "key": key})
 	//	If a replyToTopic is provided then we use it, otherwise just use the  default toTopic.  The replyToTopic is
 	// typically the device ID.
 	responseTopic := replyToTopic
@@ -275,7 +278,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		// Encode the request
 		protoRequest, err = encodeRequest(rpc, toTopic, responseTopic, key, kvArgs...)
 		if err != nil {
-			logger.Warnw("cannot-format-request", log.Fields{"rpc": rpc, "error": err})
+			logger.Warnw(ctx, "cannot-format-request", log.Fields{"rpc": rpc, "error": err})
 			chnl <- NewResponse(RpcFormattingError, err, nil)
 			return
 		}
@@ -283,7 +286,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		// Subscribe for response, if needed, before sending request
 		var ch <-chan *ic.InterContainerMessage
 		if ch, err = kp.subscribeForResponse(*responseTopic, protoRequest.Header.Id); err != nil {
-			logger.Errorw("failed-to-subscribe-for-response", log.Fields{"error": err, "toTopic": toTopic.Name})
+			logger.Errorw(ctx, "failed-to-subscribe-for-response", log.Fields{"error": err, "toTopic": toTopic.Name})
 			chnl <- NewResponse(RpcTransportError, err, nil)
 			return
 		}
@@ -291,7 +294,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		// Send request - if the topic is formatted with a device Id then we will send the request using a
 		// specific key, hence ensuring a single partition is used to publish the request.  This ensures that the
 		// subscriber on that topic will receive the request in the order it was sent.  The key used is the deviceId.
-		logger.Debugw("sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
+		logger.Debugw(ctx, "sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
 
 		// if the message is not sent on kafka publish an event an close the channel
 		if err = kp.kafkaClient.Send(protoRequest, toTopic, key); err != nil {
@@ -308,7 +311,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		defer func() {
 			// Remove the subscription for a response on return
 			if err := kp.unSubscribeForResponse(protoRequest.Header.Id); err != nil {
-				logger.Warnw("invoke-async-rpc-unsubscriber-for-response-failed", log.Fields{"err": err})
+				logger.Warnw(ctx, "invoke-async-rpc-unsubscriber-for-response-failed", log.Fields{"err": err})
 			}
 		}()
 
@@ -316,10 +319,10 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		select {
 		case msg, ok := <-ch:
 			if !ok {
-				logger.Warnw("channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
+				logger.Warnw(ctx, "channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
 				chnl <- NewResponse(RpcTransportError, status.Error(codes.Aborted, "channel closed"), nil)
 			}
-			logger.Debugw("received-response", log.Fields{"rpc": rpc, "msgHeader": msg.Header})
+			logger.Debugw(ctx, "received-response", log.Fields{"rpc": rpc, "msgHeader": msg.Header})
 			if responseBody, err := decodeResponse(msg); err != nil {
 				chnl <- NewResponse(RpcReply, err, nil)
 			} else {
@@ -336,12 +339,12 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 				}
 			}
 		case <-ctx.Done():
-			logger.Errorw("context-cancelled", log.Fields{"rpc": rpc, "ctx": ctx.Err()})
+			logger.Errorw(ctx, "context-cancelled", log.Fields{"rpc": rpc, "ctx": ctx.Err()})
 			err := status.Error(codes.DeadlineExceeded, ctx.Err().Error())
 			chnl <- NewResponse(RpcTimeout, err, nil)
 		case <-kp.doneCh:
 			chnl <- NewResponse(RpcSystemClosing, nil, nil)
-			logger.Warnw("received-exit-signal", log.Fields{"toTopic": toTopic.Name, "rpc": rpc})
+			logger.Warnw(ctx, "received-exit-signal", log.Fields{"toTopic": toTopic.Name, "rpc": rpc})
 		}
 	}()
 	return chnl
@@ -361,7 +364,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	// Encode the request
 	protoRequest, err := encodeRequest(rpc, toTopic, responseTopic, key, kvArgs...)
 	if err != nil {
-		logger.Warnw("cannot-format-request", log.Fields{"rpc": rpc, "error": err})
+		logger.Warnw(ctx, "cannot-format-request", log.Fields{"rpc": rpc, "error": err})
 		return false, nil
 	}
 
@@ -370,7 +373,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	if waitForResponse {
 		var err error
 		if ch, err = kp.subscribeForResponse(*responseTopic, protoRequest.Header.Id); err != nil {
-			logger.Errorw("failed-to-subscribe-for-response", log.Fields{"error": err, "toTopic": toTopic.Name})
+			logger.Errorw(ctx, "failed-to-subscribe-for-response", log.Fields{"error": err, "toTopic": toTopic.Name})
 		}
 	}
 
@@ -378,10 +381,10 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	// specific key, hence ensuring a single partition is used to publish the request.  This ensures that the
 	// subscriber on that topic will receive the request in the order it was sent.  The key used is the deviceId.
 	//key := GetDeviceIdFromTopic(*toTopic)
-	logger.Debugw("sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
+	logger.Debugw(ctx, "sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
 	go func() {
 		if err := kp.kafkaClient.Send(protoRequest, toTopic, key); err != nil {
-			logger.Errorw("send-failed", log.Fields{
+			logger.Errorw(ctx, "send-failed", log.Fields{
 				"topic": toTopic,
 				"key":   key,
 				"error": err})
@@ -403,7 +406,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 		// Remove the subscription for a response on return
 		defer func() {
 			if err := kp.unSubscribeForResponse(protoRequest.Header.Id); err != nil {
-				logger.Errorw("response-unsubscribe-failed", log.Fields{
+				logger.Errorw(ctx, "response-unsubscribe-failed", log.Fields{
 					"id":    protoRequest.Header.Id,
 					"error": err})
 			}
@@ -411,7 +414,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 		select {
 		case msg, ok := <-ch:
 			if !ok {
-				logger.Warnw("channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
+				logger.Warnw(ctx, "channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
 				protoError := &ic.Error{Reason: "channel-closed"}
 				var marshalledArg *any.Any
 				if marshalledArg, err = ptypes.MarshalAny(protoError); err != nil {
@@ -419,16 +422,16 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 				}
 				return false, marshalledArg
 			}
-			logger.Debugw("received-response", log.Fields{"rpc": rpc, "msgHeader": msg.Header})
+			logger.Debugw(ctx, "received-response", log.Fields{"rpc": rpc, "msgHeader": msg.Header})
 			var responseBody *ic.InterContainerResponseBody
 			var err error
 			if responseBody, err = decodeResponse(msg); err != nil {
-				logger.Errorw("decode-response-error", log.Fields{"error": err})
+				logger.Errorw(ctx, "decode-response-error", log.Fields{"error": err})
 				// FIXME we should return something
 			}
 			return responseBody.Success, responseBody.Result
 		case <-ctx.Done():
-			logger.Debugw("context-cancelled", log.Fields{"rpc": rpc, "ctx": ctx.Err()})
+			logger.Debugw(ctx, "context-cancelled", log.Fields{"rpc": rpc, "ctx": ctx.Err()})
 			//	 pack the error as proto any type
 			protoError := &ic.Error{Reason: ctx.Err().Error(), Code: ic.ErrorCode_DEADLINE_EXCEEDED}
 
@@ -438,7 +441,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 			}
 			return false, marshalledArg
 		case <-childCtx.Done():
-			logger.Debugw("context-cancelled", log.Fields{"rpc": rpc, "ctx": childCtx.Err()})
+			logger.Debugw(ctx, "context-cancelled", log.Fields{"rpc": rpc, "ctx": childCtx.Err()})
 			//	 pack the error as proto any type
 			protoError := &ic.Error{Reason: childCtx.Err().Error(), Code: ic.ErrorCode_DEADLINE_EXCEEDED}
 
@@ -448,7 +451,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 			}
 			return false, marshalledArg
 		case <-kp.doneCh:
-			logger.Infow("received-exit-signal", log.Fields{"toTopic": toTopic.Name, "rpc": rpc})
+			logger.Infow(ctx, "received-exit-signal", log.Fields{"toTopic": toTopic.Name, "rpc": rpc})
 			return true, nil
 		}
 	}
@@ -458,13 +461,14 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 // SubscribeWithRequestHandlerInterface allows a caller to assign a target object to be invoked automatically
 // when a message is received on a given topic
 func (kp *interContainerProxy) SubscribeWithRequestHandlerInterface(topic Topic, handler interface{}) error {
+	ctx := context.Background()
 
 	// Subscribe to receive messages for that topic
 	var ch <-chan *ic.InterContainerMessage
 	var err error
 	if ch, err = kp.kafkaClient.Subscribe(&topic); err != nil {
 		//if ch, err = kp.Subscribe(topic); err != nil {
-		logger.Errorw("failed-to-subscribe", log.Fields{"error": err, "topic": topic.Name})
+		logger.Errorw(ctx, "failed-to-subscribe", log.Fields{"error": err, "topic": topic.Name})
 		return err
 	}
 
@@ -479,11 +483,12 @@ func (kp *interContainerProxy) SubscribeWithRequestHandlerInterface(topic Topic,
 // SubscribeWithDefaultRequestHandler allows a caller to add a topic to an existing target object to be invoked automatically
 // when a message is received on a given topic.  So far there is only 1 target registered per microservice
 func (kp *interContainerProxy) SubscribeWithDefaultRequestHandler(topic Topic, initialOffset int64) error {
+	ctx := context.Background()
 	// Subscribe to receive messages for that topic
 	var ch <-chan *ic.InterContainerMessage
 	var err error
 	if ch, err = kp.kafkaClient.Subscribe(&topic, &KVArg{Key: Offset, Value: initialOffset}); err != nil {
-		logger.Errorw("failed-to-subscribe", log.Fields{"error": err, "topic": topic.Name})
+		logger.Errorw(ctx, "failed-to-subscribe", log.Fields{"error": err, "topic": topic.Name})
 		return err
 	}
 	kp.addToTopicRequestHandlerChannelMap(topic.Name, &requestHandlerChannel{requesthandlerInterface: kp.defaultRequestHandlerInterface, ch: ch})
@@ -499,13 +504,14 @@ func (kp *interContainerProxy) UnSubscribeFromRequestHandler(topic Topic) error 
 }
 
 func (kp *interContainerProxy) deleteFromTopicResponseChannelMap(topic string) error {
+	ctx := context.Background()
 	kp.lockTopicResponseChannelMap.Lock()
 	defer kp.lockTopicResponseChannelMap.Unlock()
 	if _, exist := kp.topicToResponseChannelMap[topic]; exist {
 		// Unsubscribe to this topic first - this will close the subscribed channel
 		var err error
 		if err = kp.kafkaClient.UnSubscribe(&Topic{Name: topic}, kp.topicToResponseChannelMap[topic]); err != nil {
-			logger.Errorw("unsubscribing-error", log.Fields{"topic": topic})
+			logger.Errorw(ctx, "unsubscribing-error", log.Fields{"topic": topic})
 		}
 		delete(kp.topicToResponseChannelMap, topic)
 		return err
@@ -516,7 +522,8 @@ func (kp *interContainerProxy) deleteFromTopicResponseChannelMap(topic string) e
 
 // nolint: unused
 func (kp *interContainerProxy) deleteAllTopicResponseChannelMap() error {
-	logger.Debug("delete-all-topic-response-channel")
+	ctx := context.Background()
+	logger.Debug(ctx, "delete-all-topic-response-channel")
 	kp.lockTopicResponseChannelMap.Lock()
 	defer kp.lockTopicResponseChannelMap.Unlock()
 	var unsubscribeFailTopics []string
@@ -524,7 +531,7 @@ func (kp *interContainerProxy) deleteAllTopicResponseChannelMap() error {
 		// Unsubscribe to this topic first - this will close the subscribed channel
 		if err := kp.kafkaClient.UnSubscribe(&Topic{Name: topic}, kp.topicToResponseChannelMap[topic]); err != nil {
 			unsubscribeFailTopics = append(unsubscribeFailTopics, topic)
-			logger.Errorw("unsubscribing-error", log.Fields{"topic": topic, "error": err})
+			logger.Errorw(ctx, "unsubscribing-error", log.Fields{"topic": topic, "error": err})
 			// Do not return. Continue to try to unsubscribe to other topics.
 		} else {
 			// Only delete from channel map if successfully unsubscribed.
@@ -562,7 +569,8 @@ func (kp *interContainerProxy) deleteFromTopicRequestHandlerChannelMap(topic str
 
 // nolint: unused
 func (kp *interContainerProxy) deleteAllTopicRequestHandlerChannelMap() error {
-	logger.Debug("delete-all-topic-request-channel")
+	ctx := context.Background()
+	logger.Debug(ctx, "delete-all-topic-request-channel")
 	kp.lockTopicRequestHandlerChannelMap.Lock()
 	defer kp.lockTopicRequestHandlerChannelMap.Unlock()
 	var unsubscribeFailTopics []string
@@ -570,7 +578,7 @@ func (kp *interContainerProxy) deleteAllTopicRequestHandlerChannelMap() error {
 		// Close the kafka client client first by unsubscribing to this topic
 		if err := kp.kafkaClient.UnSubscribe(&Topic{Name: topic}, kp.topicToRequestHandlerChannelMap[topic].ch); err != nil {
 			unsubscribeFailTopics = append(unsubscribeFailTopics, topic)
-			logger.Errorw("unsubscribing-error", log.Fields{"topic": topic, "error": err})
+			logger.Errorw(ctx, "unsubscribing-error", log.Fields{"topic": topic, "error": err})
 			// Do not return. Continue to try to unsubscribe to other topics.
 		} else {
 			// Only delete from channel map if successfully unsubscribed.
@@ -614,7 +622,8 @@ func (kp *interContainerProxy) deleteTopicTransactionIdToChannelMap(id string) {
 
 // nolint: unused
 func (kp *interContainerProxy) deleteAllTransactionIdToChannelMap() {
-	logger.Debug("delete-all-transaction-id-channel-map")
+	ctx := context.Background()
+	logger.Debug(ctx, "delete-all-transaction-id-channel-map")
 	kp.lockTransactionIdToChannelMap.Lock()
 	defer kp.lockTransactionIdToChannelMap.Unlock()
 	for key, value := range kp.transactionIdToChannelMap {
@@ -624,12 +633,13 @@ func (kp *interContainerProxy) deleteAllTransactionIdToChannelMap() {
 }
 
 func (kp *interContainerProxy) DeleteTopic(topic Topic) error {
+	ctx := context.Background()
 	// If we have any consumers on that topic we need to close them
 	if err := kp.deleteFromTopicResponseChannelMap(topic.Name); err != nil {
-		logger.Errorw("delete-from-topic-responsechannelmap-failed", log.Fields{"error": err})
+		logger.Errorw(ctx, "delete-from-topic-responsechannelmap-failed", log.Fields{"error": err})
 	}
 	if err := kp.deleteFromTopicRequestHandlerChannelMap(topic.Name); err != nil {
-		logger.Errorw("delete-from-topic-requesthandlerchannelmap-failed", log.Fields{"error": err})
+		logger.Errorw(ctx, "delete-from-topic-requesthandlerchannelmap-failed", log.Fields{"error": err})
 	}
 	kp.deleteTopicTransactionIdToChannelMap(topic.Name)
 
@@ -637,13 +647,14 @@ func (kp *interContainerProxy) DeleteTopic(topic Topic) error {
 }
 
 func encodeReturnedValue(returnedVal interface{}) (*any.Any, error) {
+	ctx := context.Background()
 	// Encode the response argument - needs to be a proto message
 	if returnedVal == nil {
 		return nil, nil
 	}
 	protoValue, ok := returnedVal.(proto.Message)
 	if !ok {
-		logger.Warnw("response-value-not-proto-message", log.Fields{"error": ok, "returnVal": returnedVal})
+		logger.Warnw(ctx, "response-value-not-proto-message", log.Fields{"error": ok, "returnVal": returnedVal})
 		err := errors.New("response-value-not-proto-message")
 		return nil, err
 	}
@@ -652,13 +663,14 @@ func encodeReturnedValue(returnedVal interface{}) (*any.Any, error) {
 	var marshalledReturnedVal *any.Any
 	var err error
 	if marshalledReturnedVal, err = ptypes.MarshalAny(protoValue); err != nil {
-		logger.Warnw("cannot-marshal-returned-val", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-marshal-returned-val", log.Fields{"error": err})
 		return nil, err
 	}
 	return marshalledReturnedVal, nil
 }
 
 func encodeDefaultFailedResponse(request *ic.InterContainerMessage) *ic.InterContainerMessage {
+	ctx := context.Background()
 	responseHeader := &ic.Header{
 		Id:        request.Header.Id,
 		Type:      ic.MessageType_RESPONSE,
@@ -674,7 +686,7 @@ func encodeDefaultFailedResponse(request *ic.InterContainerMessage) *ic.InterCon
 	var err error
 	// Error should never happen here
 	if marshalledResponseBody, err = ptypes.MarshalAny(responseBody); err != nil {
-		logger.Warnw("cannot-marshal-failed-response-body", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-marshal-failed-response-body", log.Fields{"error": err})
 	}
 
 	return &ic.InterContainerMessage{
@@ -687,7 +699,8 @@ func encodeDefaultFailedResponse(request *ic.InterContainerMessage) *ic.InterCon
 //formatRequest formats a request to send over kafka and returns an InterContainerMessage message on success
 //or an error on failure
 func encodeResponse(request *ic.InterContainerMessage, success bool, returnedValues ...interface{}) (*ic.InterContainerMessage, error) {
-	//logger.Debugw("encodeResponse", log.Fields{"success": success, "returnedValues": returnedValues})
+	ctx := context.Background()
+	//logger.Debugw(ctx, "encodeResponse", log.Fields{"success": success, "returnedValues": returnedValues})
 	responseHeader := &ic.Header{
 		Id:        request.Header.Id,
 		Type:      ic.MessageType_RESPONSE,
@@ -704,7 +717,7 @@ func encodeResponse(request *ic.InterContainerMessage, success bool, returnedVal
 	// for now we support only 1 returned value - (excluding the error)
 	if len(returnedValues) > 0 {
 		if marshalledReturnedVal, err = encodeReturnedValue(returnedValues[0]); err != nil {
-			logger.Warnw("cannot-marshal-response-body", log.Fields{"error": err})
+			logger.Warnw(ctx, "cannot-marshal-response-body", log.Fields{"error": err})
 		}
 	}
 
@@ -716,7 +729,7 @@ func encodeResponse(request *ic.InterContainerMessage, success bool, returnedVal
 	// Marshal the response body
 	var marshalledResponseBody *any.Any
 	if marshalledResponseBody, err = ptypes.MarshalAny(responseBody); err != nil {
-		logger.Warnw("cannot-marshal-response-body", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-marshal-response-body", log.Fields{"error": err})
 		return nil, err
 	}
 
@@ -744,6 +757,7 @@ func CallFuncByName(myClass interface{}, funcName string, params ...interface{})
 }
 
 func (kp *interContainerProxy) addTransactionId(transactionId string, currentArgs []*ic.Argument) []*ic.Argument {
+	ctx := context.Background()
 	arg := &KVArg{
 		Key:   TransactionKey,
 		Value: &ic.StrType{Val: transactionId},
@@ -752,7 +766,7 @@ func (kp *interContainerProxy) addTransactionId(transactionId string, currentArg
 	var marshalledArg *any.Any
 	var err error
 	if marshalledArg, err = ptypes.MarshalAny(&ic.StrType{Val: transactionId}); err != nil {
-		logger.Warnw("cannot-add-transactionId", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-add-transactionId", log.Fields{"error": err})
 		return currentArgs
 	}
 	protoArg := &ic.Argument{
@@ -763,10 +777,11 @@ func (kp *interContainerProxy) addTransactionId(transactionId string, currentArg
 }
 
 func (kp *interContainerProxy) addFromTopic(fromTopic string, currentArgs []*ic.Argument) []*ic.Argument {
+	ctx := context.Background()
 	var marshalledArg *any.Any
 	var err error
 	if marshalledArg, err = ptypes.MarshalAny(&ic.StrType{Val: fromTopic}); err != nil {
-		logger.Warnw("cannot-add-transactionId", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-add-transactionId", log.Fields{"error": err})
 		return currentArgs
 	}
 	protoArg := &ic.Argument{
@@ -777,6 +792,7 @@ func (kp *interContainerProxy) addFromTopic(fromTopic string, currentArgs []*ic.
 }
 
 func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targetInterface interface{}) {
+	ctx := context.Background()
 
 	// First extract the header to know whether this is a request - responses are handled by a different handler
 	if msg.Header.Type == ic.MessageType_REQUEST {
@@ -786,9 +802,9 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 		// Get the request body
 		requestBody := &ic.InterContainerRequestBody{}
 		if err = ptypes.UnmarshalAny(msg.Body, requestBody); err != nil {
-			logger.Warnw("cannot-unmarshal-request", log.Fields{"error": err})
+			logger.Warnw(ctx, "cannot-unmarshal-request", log.Fields{"error": err})
 		} else {
-			logger.Debugw("received-request", log.Fields{"rpc": requestBody.Rpc, "header": msg.Header})
+			logger.Debugw(ctx, "received-request", log.Fields{"rpc": requestBody.Rpc, "header": msg.Header})
 			// let the callee unpack the arguments as its the only one that knows the real proto type
 			// Augment the requestBody with the message Id as it will be used in scenarios where cores
 			// are set in pairs and competing
@@ -800,7 +816,7 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 
 			out, err = CallFuncByName(targetInterface, requestBody.Rpc, requestBody.Args)
 			if err != nil {
-				logger.Warn(err)
+				logger.Warn(ctx, err)
 			}
 		}
 		// Response required?
@@ -820,7 +836,7 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 				if out[lastIndex].Interface() != nil { // Error
 					if retError, ok := out[lastIndex].Interface().(error); ok {
 						if retError.Error() == ErrorTransactionNotAcquired.Error() {
-							logger.Debugw("Ignoring request", log.Fields{"error": retError, "txId": msg.Header.Id})
+							logger.Debugw(ctx, "Ignoring request", log.Fields{"error": retError, "txId": msg.Header.Id})
 							return // Ignore - process is in competing mode and ignored transaction
 						}
 						returnError = &ic.Error{Reason: retError.Error()}
@@ -830,12 +846,12 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 						returnedValues = append(returnedValues, returnError)
 					}
 				} else if len(out) == 2 && reflect.ValueOf(out[0].Interface()).IsValid() && reflect.ValueOf(out[0].Interface()).IsNil() {
-					logger.Warnw("Unexpected response of (nil,nil)", log.Fields{"txId": msg.Header.Id})
+					logger.Warnw(ctx, "Unexpected response of (nil,nil)", log.Fields{"txId": msg.Header.Id})
 					return // Ignore - should not happen
 				} else { // Non-error case
 					success = true
 					for idx, val := range out {
-						//logger.Debugw("returned-api-response-loop", log.Fields{"idx": idx, "val": val.Interface()})
+						//logger.Debugw(ctx, "returned-api-response-loop", log.Fields{"idx": idx, "val": val.Interface()})
 						if idx != lastIndex {
 							returnedValues = append(returnedValues, val.Interface())
 						}
@@ -845,7 +861,7 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 
 			var icm *ic.InterContainerMessage
 			if icm, err = encodeResponse(msg, success, returnedValues...); err != nil {
-				logger.Warnw("error-encoding-response-returning-failure-result", log.Fields{"error": err})
+				logger.Warnw(ctx, "error-encoding-response-returning-failure-result", log.Fields{"error": err})
 				icm = encodeDefaultFailedResponse(msg)
 			}
 			// To preserve ordering of messages, all messages to a given topic are sent to the same partition
@@ -854,11 +870,11 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 			// partitions.
 			replyTopic := &Topic{Name: msg.Header.FromTopic}
 			key := msg.Header.KeyTopic
-			logger.Debugw("sending-response-to-kafka", log.Fields{"rpc": requestBody.Rpc, "header": icm.Header, "key": key})
+			logger.Debugw(ctx, "sending-response-to-kafka", log.Fields{"rpc": requestBody.Rpc, "header": icm.Header, "key": key})
 			// TODO: handle error response.
 			go func() {
 				if err := kp.kafkaClient.Send(icm, replyTopic, key); err != nil {
-					logger.Errorw("send-reply-failed", log.Fields{
+					logger.Errorw(ctx, "send-reply-failed", log.Fields{
 						"topic": replyTopic,
 						"key":   key,
 						"error": err})
@@ -866,26 +882,27 @@ func (kp *interContainerProxy) handleMessage(msg *ic.InterContainerMessage, targ
 			}()
 		}
 	} else if msg.Header.Type == ic.MessageType_RESPONSE {
-		logger.Debugw("response-received", log.Fields{"msg-header": msg.Header})
+		logger.Debugw(ctx, "response-received", log.Fields{"msg-header": msg.Header})
 		go kp.dispatchResponse(msg)
 	} else {
-		logger.Warnw("unsupported-message-received", log.Fields{"msg-header": msg.Header})
+		logger.Warnw(ctx, "unsupported-message-received", log.Fields{"msg-header": msg.Header})
 	}
 }
 
 func (kp *interContainerProxy) waitForMessages(ch <-chan *ic.InterContainerMessage, topic Topic, targetInterface interface{}) {
 	//	Wait for messages
 	for msg := range ch {
-		//logger.Debugw("request-received", log.Fields{"msg": msg, "topic": topic.Name, "target": targetInterface})
+		//logger.Debugw(ctx, "request-received", log.Fields{"msg": msg, "topic": topic.Name, "target": targetInterface})
 		go kp.handleMessage(msg, targetInterface)
 	}
 }
 
 func (kp *interContainerProxy) dispatchResponse(msg *ic.InterContainerMessage) {
+	ctx := context.Background()
 	kp.lockTransactionIdToChannelMap.RLock()
 	defer kp.lockTransactionIdToChannelMap.RUnlock()
 	if _, exist := kp.transactionIdToChannelMap[msg.Header.Id]; !exist {
-		logger.Debugw("no-waiting-channel", log.Fields{"transaction": msg.Header.Id})
+		logger.Debugw(ctx, "no-waiting-channel", log.Fields{"transaction": msg.Header.Id})
 		return
 	}
 	kp.transactionIdToChannelMap[msg.Header.Id].ch <- msg
@@ -896,7 +913,8 @@ func (kp *interContainerProxy) dispatchResponse(msg *ic.InterContainerMessage) {
 // API. There is one response channel waiting for kafka messages before dispatching the message to the
 // corresponding waiting channel
 func (kp *interContainerProxy) subscribeForResponse(topic Topic, trnsId string) (chan *ic.InterContainerMessage, error) {
-	logger.Debugw("subscribeForResponse", log.Fields{"topic": topic.Name, "trnsid": trnsId})
+	ctx := context.Background()
+	logger.Debugw(ctx, "subscribeForResponse", log.Fields{"topic": topic.Name, "trnsid": trnsId})
 
 	// Create a specific channel for this consumers.  We cannot use the channel from the kafkaclient as it will
 	// broadcast any message for this topic to all channels waiting on it.
@@ -908,7 +926,8 @@ func (kp *interContainerProxy) subscribeForResponse(topic Topic, trnsId string) 
 }
 
 func (kp *interContainerProxy) unSubscribeForResponse(trnsId string) error {
-	logger.Debugw("unsubscribe-for-response", log.Fields{"trnsId": trnsId})
+	ctx := context.Background()
+	logger.Debugw(ctx, "unsubscribe-for-response", log.Fields{"trnsId": trnsId})
 	kp.deleteFromTransactionIdToChannelMap(trnsId)
 	return nil
 }
@@ -928,6 +947,7 @@ func (kp *interContainerProxy) SendLiveness() error {
 //formatRequest formats a request to send over kafka and returns an InterContainerMessage message on success
 //or an error on failure
 func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kvArgs ...*KVArg) (*ic.InterContainerMessage, error) {
+	ctx := context.Background()
 	requestHeader := &ic.Header{
 		Id:        uuid.New().String(),
 		Type:      ic.MessageType_REQUEST,
@@ -952,12 +972,12 @@ func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kv
 		// ascertain the value interface type is a proto.Message
 		protoValue, ok := arg.Value.(proto.Message)
 		if !ok {
-			logger.Warnw("argument-value-not-proto-message", log.Fields{"error": ok, "Value": arg.Value})
+			logger.Warnw(ctx, "argument-value-not-proto-message", log.Fields{"error": ok, "Value": arg.Value})
 			err := errors.New("argument-value-not-proto-message")
 			return nil, err
 		}
 		if marshalledArg, err = ptypes.MarshalAny(protoValue); err != nil {
-			logger.Warnw("cannot-marshal-request", log.Fields{"error": err})
+			logger.Warnw(ctx, "cannot-marshal-request", log.Fields{"error": err})
 			return nil, err
 		}
 		protoArg := &ic.Argument{
@@ -970,7 +990,7 @@ func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kv
 	var marshalledData *any.Any
 	var err error
 	if marshalledData, err = ptypes.MarshalAny(requestBody); err != nil {
-		logger.Warnw("cannot-marshal-request", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-marshal-request", log.Fields{"error": err})
 		return nil, err
 	}
 	request := &ic.InterContainerMessage{
@@ -981,13 +1001,14 @@ func encodeRequest(rpc string, toTopic *Topic, replyTopic *Topic, key string, kv
 }
 
 func decodeResponse(response *ic.InterContainerMessage) (*ic.InterContainerResponseBody, error) {
+	ctx := context.Background()
 	//	Extract the message body
 	responseBody := ic.InterContainerResponseBody{}
 	if err := ptypes.UnmarshalAny(response.Body, &responseBody); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 		return nil, err
 	}
-	//logger.Debugw("response-decoded-successfully", log.Fields{"response-status": &responseBody.Success})
+	//logger.Debugw(ctx, "response-decoded-successfully", log.Fields{"response-status": &responseBody.Success})
 
 	return &responseBody, nil
 

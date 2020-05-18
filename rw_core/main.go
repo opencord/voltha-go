@@ -104,14 +104,18 @@ func main() {
 	// Update all loggers to log level specified as input parameter
 	log.SetAllLogLevel(logLevel)
 
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-
 	defer func() {
 		err := log.CleanUp()
 		if err != nil {
 			logger.Errorw("unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
 		}
 	}()
+
+	closer, err := log.StartTracing()
+	if err != nil {
+		logger.Errorw("unable-to-initialize-jaeger-tracing", log.Fields{"error": err})
+	}
+	defer closer.Close()
 
 	// Print version / build information and exit
 	if cf.DisplayVersionOnly {
