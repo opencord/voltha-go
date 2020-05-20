@@ -44,17 +44,12 @@ func NewFlowDecomposer(deviceMgr coreif.DeviceManager) *FlowDecomposer {
 }
 
 //DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
-func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent coreif.LogicalDeviceAgent, flows ofp.Flows, groups ofp.FlowGroups) (*fu.DeviceRules, error) {
+func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent coreif.LogicalDeviceAgent, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry) (*fu.DeviceRules, error) {
 	deviceRules := *fu.NewDeviceRules()
 	devicesToUpdate := make(map[string]string)
 
-	groupMap := make(map[uint32]*ofp.OfpGroupEntry)
-	for _, groupEntry := range groups.Items {
-		groupMap[groupEntry.Desc.GroupId] = groupEntry
-	}
-
-	for _, flow := range flows.Items {
-		decomposedRules, err := fd.decomposeFlow(ctx, agent, flow, groupMap)
+	for _, flow := range flows {
+		decomposedRules, err := fd.decomposeFlow(ctx, agent, flow, groups)
 		if err != nil {
 			return nil, err
 		}
