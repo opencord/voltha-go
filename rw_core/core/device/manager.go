@@ -57,11 +57,11 @@ type Manager struct {
 	deviceLoadingInProgress map[string][]chan int
 }
 
-func NewManagers(dbProxy *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, corePairTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
+func NewManagers(dbProxy *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
-		adapterProxy:            remote.NewAdapterProxy(kmp, corePairTopic, endpointMgr),
+		adapterProxy:            remote.NewAdapterProxy(kmp, coreTopic, endpointMgr),
 		coreInstanceID:          coreInstanceID,
 		dProxy:                  dbProxy.Proxy("devices"),
 		adapterMgr:              adapterMgr,

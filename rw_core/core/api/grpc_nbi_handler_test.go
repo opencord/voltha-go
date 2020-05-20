@@ -95,7 +95,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	cfg := config.NewRWCoreFlags()
-	cfg.CorePairTopic = "rw_core"
+	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = nb.defaultTimeout
 	cfg.DefaultCoreTimeout = nb.defaultTimeout
 	cfg.KVStorePort = nb.kvClientPort
@@ -114,8 +114,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 		Host:                    cfg.KVStoreHost,
 		Port:                    cfg.KVStorePort,
 		Timeout:                 cfg.KVStoreTimeout,
-		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
-		PathPrefix:              cfg.KVStoreDataPrefix}
+		LivenessChannelInterval: cfg.LiveProbeInterval / 2}
 	nb.kmp = kafka.NewInterContainerProxy(
 		kafka.InterContainerHost(cfg.KafkaAdapterHost),
 		kafka.InterContainerPort(cfg.KafkaAdapterPort),
@@ -126,7 +125,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
 	nb.adapterMgr = adapter.NewAdapterManager(proxy, nb.coreInstanceID, nb.kClient)
-	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
+	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CoreTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
 	nb.adapterMgr.Start(ctx)
 
 	if err := nb.kmp.Start(); err != nil {
@@ -136,7 +135,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	if err := nb.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
 		logger.Fatalf("Cannot add request handler: %s", err)
 	}
-	if err := nb.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: cfg.CorePairTopic}, kafka.OffsetNewest); err != nil {
+	if err := nb.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: cfg.CoreTopic}, kafka.OffsetNewest); err != nil {
 		logger.Fatalf("Cannot add default request handler: %s", err)
 	}
 }
