@@ -19,11 +19,12 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"reflect"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-go/rw_core/core/device/event"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
@@ -57,11 +58,11 @@ type Manager struct {
 	deviceLoadingInProgress map[string][]chan int
 }
 
-func NewManagers(proxy *model.Proxy, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, corePairTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
+func NewManagers(proxy *model.Proxy, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
-		adapterProxy:            remote.NewAdapterProxy(kmp, corePairTopic, endpointMgr),
+		adapterProxy:            remote.NewAdapterProxy(kmp, coreTopic, endpointMgr),
 		coreInstanceID:          coreInstanceID,
 		clusterDataProxy:        proxy,
 		adapterMgr:              adapterMgr,
