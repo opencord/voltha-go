@@ -112,7 +112,7 @@ func newDATest() *DATest {
 
 func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
-	cfg.CorePairTopic = "rw_core"
+	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
 	cfg.KVStorePort = dat.kvClientPort
 	cfg.InCompetingMode = inCompeteMode
@@ -129,8 +129,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 		Host:                    cfg.KVStoreHost,
 		Port:                    cfg.KVStorePort,
 		Timeout:                 cfg.KVStoreTimeout,
-		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
-		PathPrefix:              cfg.KVStoreDataPrefix}
+		LivenessChannelInterval: cfg.LiveProbeInterval / 2}
 	dat.kmp = kafka.NewInterContainerProxy(
 		kafka.InterContainerHost(cfg.KafkaAdapterHost),
 		kafka.InterContainerPort(cfg.KafkaAdapterPort),
@@ -142,7 +141,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	proxy := model.NewDBPath(backend)
 	dat.adapterMgr = adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
 
-	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
 	dat.adapterMgr.Start(context.Background())
 	if err = dat.kmp.Start(); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
