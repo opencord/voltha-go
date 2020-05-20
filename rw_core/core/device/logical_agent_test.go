@@ -571,9 +571,12 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	localWG.Wait()
 	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
 
-	meterChunk, ok := ldAgent.meters[meterMod.MeterId]
-	assert.Equal(t, ok, true)
-	assert.True(t, proto.Equal(meterEntry, meterChunk.meter))
+	meterHandle, have := ldAgent.meterLoader.Lock(meterMod.MeterId)
+	assert.Equal(t, have, true)
+	if have {
+		assert.True(t, proto.Equal(meterEntry, meterHandle.GetReadOnly()))
+		meterHandle.Unlock()
+	}
 
 	expectedChange := proto.Clone(originalLogicalDevice).(*voltha.LogicalDevice)
 	expectedChange.Ports[0].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
