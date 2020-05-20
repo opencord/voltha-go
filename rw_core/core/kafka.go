@@ -147,18 +147,12 @@ func monitorKafkaLiveness(ctx context.Context, kmp kafka.InterContainerProxy, li
 	}
 }
 
-func registerAdapterRequestHandlers(kmp kafka.InterContainerProxy, dMgr *device.Manager, aMgr *adapter.Manager, coreTopic, corePairTopic string) {
+func registerAdapterRequestHandlers(kmp kafka.InterContainerProxy, dMgr *device.Manager, aMgr *adapter.Manager, coreTopic string) {
 	requestProxy := api.NewAdapterRequestHandlerProxy(dMgr, aMgr)
 
 	// Register the broadcast topic to handle any core-bound broadcast requests
 	if err := kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: coreTopic}, requestProxy); err != nil {
 		logger.Fatalw("Failed-registering-broadcast-handler", log.Fields{"topic": coreTopic})
 	}
-
-	// Register the core-pair topic to handle core-bound requests destined to the core pair
-	if err := kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: corePairTopic}, kafka.OffsetNewest); err != nil {
-		logger.Fatalw("Failed-registering-pair-handler", log.Fields{"topic": corePairTopic})
-	}
-
 	logger.Info("request-handler-registered")
 }

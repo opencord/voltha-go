@@ -27,7 +27,6 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/api"
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	conf "github.com/opencord/voltha-lib-go/v3/pkg/config"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	grpcserver "github.com/opencord/voltha-lib-go/v3/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -84,17 +83,8 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	cm := conf.NewConfigManager(kvClient, cf.KVStoreType, cf.KVStoreHost, cf.KVStorePort, cf.KVStoreTimeout)
 	go conf.StartLogLevelConfigProcessing(cm, ctx)
 
-	backend := &db.Backend{
-		Client:    kvClient,
-		StoreType: cf.KVStoreType,
-		Host:      cf.KVStoreHost,
-		Port:      cf.KVStorePort,
-		Timeout:   cf.KVStoreTimeout,
-		// Configure backend to push Liveness Status at least every (cf.LiveProbeInterval / 2) seconds
-		// so as to avoid trigger of Liveness check (due to Liveness timeout) when backend is alive
-		LivenessChannelInterval: cf.LiveProbeInterval / 2,
-		PathPrefix:              cf.KVStoreDataPrefix,
-	}
+	backend := cm.Backend
+	backend.LivenessChannelInterval = cf.LiveProbeInterval / 2
 
 	// wait until connection to KV Store is up
 	if err := waitUntilKVStoreReachableOrMaxTries(ctx, kvClient, cf.MaxConnectionRetries, cf.ConnectionRetryInterval); err != nil {
@@ -139,10 +129,10 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CorePairTopic, id, cf.DefaultCoreTimeout)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout)
 
 	// register kafka RPC handler
-	registerAdapterRequestHandlers(kmp, deviceMgr, adapterMgr, cf.CoreTopic, cf.CorePairTopic)
+	registerAdapterRequestHandlers(kmp, deviceMgr, adapterMgr, cf.CoreTopic)
 
 	// start gRPC handler
 	grpcServer := grpcserver.NewGrpcServer(cf.GrpcHost, cf.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
