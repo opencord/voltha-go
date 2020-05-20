@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b70c5703_54ebd6d5",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-20T20:43:09Z",
+      "side": 0,
+      "message": "If this function is removed, does it make cleanup possible in voltha-lib-go?  Perhaps make a note of this somewhere.",
+      "revId": "3136fbd8a35e4909563e484e9b95852bf1d53b75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
