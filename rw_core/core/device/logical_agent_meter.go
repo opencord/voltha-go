@@ -19,7 +19,6 @@ package device
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -53,34 +52,18 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 	}
 
 	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
-	agent.meterLock.Lock()
-	//check if the meter already exists or not
-	_, ok := agent.meters[meterMod.MeterId]
-	if ok {
-		logger.Infow("Meter-already-exists", log.Fields{"meter": *meterMod})
-		agent.meterLock.Unlock()
-		return nil
-	}
 
-	mChunk := MeterChunk{
-		meter: meterEntry,
-	}
-	//Add to map and acquire the per meter lock
-	agent.meters[meterMod.MeterId] = &mChunk
-	mChunk.lock.Lock()
-	defer mChunk.lock.Unlock()
-	agent.meterLock.Unlock()
-	meterID := strconv.Itoa(int(meterMod.MeterId))
-	if err := agent.clusterDataProxy.AddWithID(ctx, "meters/"+agent.logicalDeviceID, meterID, meterEntry); err != nil {
-		logger.Errorw("failed-adding-meter", log.Fields{"deviceID": agent.logicalDeviceID, "meterID": meterID, "err": err})
-		//Revert the map
-		agent.meterLock.Lock()
-		delete(agent.meters, meterMod.MeterId)
-		agent.meterLock.Unlock()
+	meterHandle, created, err := agent.meterLoader.LockOrCreateMeter(ctx, meterEntry)
+	if err != nil {
 		return err
 	}
+	defer meterHandle.Unlock()
 
-	logger.Debugw("Meter-added-successfully", log.Fields{"Added-meter": meterEntry})
+	if created {
+		logger.Debugw("Meter-added-successfully", log.Fields{"Added-meter": meterEntry})
+	} else {
+		logger.Infow("Meter-already-exists", log.Fields{"meter": *meterMod})
+	}
 	return nil
 }
 
@@ -89,25 +72,25 @@ func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMet
 	if meterMod == nil {
 		return nil
 	}
-	agent.meterLock.RLock()
-	meterChunk, ok := agent.meters[meterMod.MeterId]
-	agent.meterLock.RUnlock()
-	if ok {
-		//Dont let anyone to do any changes to this meter until this is done.
-		//And wait if someone else is already making modifications. Do this with per meter lock.
-		meterChunk.lock.Lock()
-		defer meterChunk.lock.Unlock()
-		if err := agent.deleteFlowsOfMeter(ctx, meterMod.MeterId); err != nil {
-			return err
-		}
-		//remove from the store and cache
-		if err := agent.removeLogicalDeviceMeter(ctx, meterMod.MeterId); err != nil {
-			return err
-		}
-		logger.Debugw("meterDelete-success", log.Fields{"meterID": meterMod.MeterId})
-	} else {
+
+	meterHandle, have := agent.meterLoader.LockMeter(meterMod.MeterId)
+	if !have {
 		logger.Warnw("meter-not-found", log.Fields{"meterID": meterMod.MeterId})
+		return nil
 	}
+	defer meterHandle.Unlock()
+
+	//TODO: A meter lock is held here while flow lock(s) are acquired, if this is done in opposite order anywhere
+	//      there's potential for deadlock.
+	if err := agent.deleteFlowsHavingMeter(ctx, meterMod.MeterId); err != nil {
+		return err
+	}
+
+	if err := meterHandle.Delete(ctx); err != nil {
+		return err
+	}
+
+	logger.Debugw("meterDelete-success", log.Fields{"meterID": meterMod.MeterId})
 	return nil
 }
 
@@ -116,21 +99,18 @@ func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMet
 	if meterMod == nil {
 		return nil
 	}
-	newMeter := fu.MeterEntryFromMeterMod(meterMod)
-	agent.meterLock.RLock()
-	meterChunk, ok := agent.meters[newMeter.Config.MeterId]
-	agent.meterLock.RUnlock()
-	if !ok {
-		return fmt.Errorf("no-meter-to-modify:%d", newMeter.Config.MeterId)
+
+	meterHandle, have := agent.meterLoader.LockMeter(meterMod.MeterId)
+	if !have {
+		return fmt.Errorf("no-meter-to-modify: %d", meterMod.MeterId)
 	}
-	//Release the map lock and syncronize per meter
-	meterChunk.lock.Lock()
-	defer meterChunk.lock.Unlock()
-	oldMeter := meterChunk.meter
+	defer meterHandle.Unlock()
+
+	oldMeter := meterHandle.GetReadOnly()
+	newMeter := fu.MeterEntryFromMeterMod(meterMod)
 	newMeter.Stats.FlowCount = oldMeter.Stats.FlowCount
 
-	if err := agent.updateLogicalDeviceMeter(ctx, newMeter, meterChunk); err != nil {
-		logger.Errorw("db-meter-update-failed", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "meterID": newMeter.Config.MeterId})
+	if err := meterHandle.Update(ctx, newMeter); err != nil {
 		return err
 	}
 	logger.Debugw("replaced-with-new-meter", log.Fields{"oldMeter": oldMeter, "newMeter": newMeter})

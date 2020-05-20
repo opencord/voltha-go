@@ -1,0 +1,192 @@
+/*
+ * Copyright 2018-present Open Networking Foundation
+
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ * http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package group
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"sync"
+
+	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+// Loader hides all low-level locking & synchronization related to group state updates
+type Loader struct {
+	// this lock protects the groups map, it does not protect individual groups
+	lock   sync.RWMutex
+	groups map[uint32]*chunk
+
+	dbProxy         *model.Proxy
+	logicalDeviceID string // TODO: dbProxy should already have the logicalDeviceID component of the path internally
+}
+
+// chunk keeps a group and the lock for this group
+type chunk struct {
+	// this lock is used to synchronize all access to the group, and also to the "deleted" variable
+	lock    sync.Mutex
+	deleted bool
+
+	group *ofp.OfpGroupEntry
+}
+
+func NewLoader(dataProxy *model.Proxy, logicalDeviceID string) *Loader {
+	return &Loader{
+		groups:          make(map[uint32]*chunk),
+		dbProxy:         dataProxy,
+		logicalDeviceID: logicalDeviceID,
+	}
+}
+
+// LoadGroups queries existing groups from the kv,
+// and should only be called once when first created.
+func (loader *Loader) LoadGroups(ctx context.Context) {
+	loader.lock.Lock()
+	defer loader.lock.Unlock()
+
+	var groups []*ofp.OfpGroupEntry
+	if err := loader.dbProxy.List(ctx, "logical_groups/"+loader.logicalDeviceID, &groups); err != nil {
+		logger.Errorw("failed-to-list-groups-from-cluster-data-proxy", log.Fields{"error": err})
+		return
+	}
+	for _, group := range groups {
+		loader.groups[group.Desc.GroupId] = &chunk{group: group}
+	}
+}
+
+// LockOrCreateGroup locks this group if it exists, or creates a new group if it does not.
+// In the case of group creation, the provided "group" must not be modified afterwards.
+func (loader *Loader) LockOrCreateGroup(ctx context.Context, group *ofp.OfpGroupEntry) (*Handle, bool, error) {
+	// try to use read lock instead of full lock if possible
+	if handle, have := loader.LockGroup(group.Desc.GroupId); have {
+		return handle, false, nil
+	}
+
+	loader.lock.Lock()
+	entry, have := loader.groups[group.Desc.GroupId]
+	if !have {
+		entry := &chunk{group: group}
+		loader.groups[group.Desc.GroupId] = entry
+		entry.lock.Lock()
+		loader.lock.Unlock()
+
+		groupID := strconv.FormatUint(uint64(group.Desc.GroupId), 10)
+		if err := loader.dbProxy.AddWithID(ctx, "logical_groups/"+loader.logicalDeviceID, groupID, group); err != nil {
+			logger.Errorw("failed-adding-group-to-db", log.Fields{"deviceID": loader.logicalDeviceID, "groupID": groupID, "err": err})
+
+			// revert the map
+			loader.lock.Lock()
+			delete(loader.groups, group.Desc.GroupId)
+			loader.lock.Unlock()
+
+			entry.deleted = true
+			entry.lock.Unlock()
+			return nil, false, err
+		}
+		return &Handle{loader: loader, chunk: entry}, true, nil
+	}
+	loader.lock.Unlock()
+
+	entry.lock.Lock()
+	if entry.deleted {
+		entry.lock.Unlock()
+		return loader.LockOrCreateGroup(ctx, group)
+	}
+	return &Handle{loader: loader, chunk: entry}, false, nil
+}
+
+// LockGroup acquires a lock on the group, and returns a handle in order to safely modify the group.
+// If not found, false is returned instead.
+// TODO: consider accepting a ctx and aborting the lock attempt on cancellation
+func (loader *Loader) LockGroup(id uint32) (*Handle, bool) {
+	loader.lock.RLock()
+	entry, have := loader.groups[id]
+	loader.lock.RUnlock()
+
+	if !have {
+		return nil, false
+	}
+
+	entry.lock.Lock()
+	if entry.deleted {
+		entry.lock.Unlock()
+		return loader.LockGroup(id)
+	}
+	return &Handle{loader: loader, chunk: entry}, true
+}
+
+type Handle struct {
+	loader *Loader
+	chunk  *chunk
+}
+
+// GetReadOnly returns an *ofp.OfpGroupEntry which MUST NOT be modified externally, but is safe to keep indefinitely
+func (h *Handle) GetReadOnly() *ofp.OfpGroupEntry {
+	return h.chunk.group
+}
+
+// Update updates an existing group in the kv.
+// The provided "group" must not be modified afterwards.
+func (h *Handle) Update(ctx context.Context, group *ofp.OfpGroupEntry) error {
+	path := fmt.Sprintf("logical_groups/%s/%d", h.loader.logicalDeviceID, group.Desc.GroupId)
+	if err := h.loader.dbProxy.Update(ctx, path, group); err != nil {
+		return status.Errorf(codes.Internal, "failed-update-group:%s:%d %s", h.loader.logicalDeviceID, group.Desc.GroupId, err)
+	}
+	h.chunk.group = group
+	return nil
+}
+
+// Delete removes the device from the kv
+func (h *Handle) Delete(ctx context.Context) error {
+	path := fmt.Sprintf("logical_groups/%s/%d", h.loader.logicalDeviceID, h.chunk.group.Desc.GroupId)
+	if err := h.loader.dbProxy.Remove(ctx, path); err != nil {
+		return fmt.Errorf("couldnt-delete-group-from-store-%s", path)
+	}
+	h.chunk.deleted = true
+
+	h.loader.lock.Lock()
+	delete(h.loader.groups, h.chunk.group.Desc.GroupId)
+	h.loader.lock.Unlock()
+
+	h.Unlock()
+	return nil
+}
+
+// Unlock releases the lock on the group
+func (h *Handle) Unlock() {
+	if h.chunk != nil {
+		h.chunk.lock.Unlock()
+		h.chunk = nil // attempting to access the group through this handle in future will panic
+	}
+}
+
+// ListGroups returns a snapshot of all the managed group IDs
+// TODO: iterating through groups safely is expensive now, since all groups are stored & locked separately
+func (loader *Loader) ListGroups() map[uint32]struct{} {
+	loader.lock.RLock()
+	defer loader.lock.RUnlock()
+	// copy the IDs so caller can safely iterate
+	ret := make(map[uint32]struct{}, len(loader.groups))
+	for id := range loader.groups {
+		ret[id] = struct{}{}
+	}
+	return ret
+}

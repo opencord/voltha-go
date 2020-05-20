@@ -18,6 +18,8 @@ package flowdecomposition
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/opencord/voltha-go/rw_core/mocks"
 	"github.com/opencord/voltha-go/rw_core/route"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
@@ -26,8 +28,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"testing"
 )
 
 type testDeviceManager struct {
@@ -476,11 +476,10 @@ func TestEapolReRouteRuleVlanDecomposition(t *testing.T) {
 
 	fs, err := fu.MkFlowStat(fa)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
-	groups := ofp.FlowGroups{}
+	flows := map[uint64]*ofp.OfpFlowStats{fs.Id: fs}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
-	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -541,11 +540,10 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 
 	fs, err := fu.MkFlowStat(fa)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
-	groups := ofp.FlowGroups{}
+	flows := map[uint64]*ofp.OfpFlowStats{fs.Id: fs}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
-	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -605,11 +603,10 @@ func TestEapolReRouteRuleNoVlanDecomposition(t *testing.T) {
 
 	fs, err := fu.MkFlowStat(fa)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
-	groups := ofp.FlowGroups{}
+	flows := map[uint64]*ofp.OfpFlowStats{fs.Id: fs}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
-	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -669,11 +666,10 @@ func TestDhcpReRouteRuleDecomposition(t *testing.T) {
 
 	fs, err := fu.MkFlowStat(fa)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
-	groups := ofp.FlowGroups{}
+	flows := map[uint64]*ofp.OfpFlowStats{fs.Id: fs}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
-	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -737,10 +733,9 @@ func TestLldpReRouteRuleDecomposition(t *testing.T) {
 
 	fs, err := fu.MkFlowStat(fa)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
-	groups := ofp.FlowGroups{}
+	flows := map[uint64]*ofp.OfpFlowStats{fs.Id: fs}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
-	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -796,19 +791,19 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 	assert.Nil(t, err)
 	fs2, err := fu.MkFlowStat(fa2)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs, fs2}}
-	flows.Items[0].Instructions = []*ofp.OfpInstruction{{
+
+	fs.Instructions = []*ofp.OfpInstruction{{
 		Type: uint32(ofp.OfpInstructionType_OFPIT_GOTO_TABLE),
 		Data: &ofp.OfpInstruction_GotoTable{
 			GotoTable: &ofp.OfpInstructionGotoTable{
 				TableId: 1,
 			},
 		}}}
+	flows := map[uint64]*ofp.OfpFlowStats{fs.Id: fs, fs2.Id: fs2}
 
-	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
-	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -905,19 +900,18 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 	assert.Nil(t, err)
 	fs2, err := fu.MkFlowStat(fa2)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs1, fs2}}
-	flows.Items[0].Instructions = []*ofp.OfpInstruction{{
+	fs1.Instructions = []*ofp.OfpInstruction{{
 		Type: uint32(ofp.OfpInstructionType_OFPIT_GOTO_TABLE),
 		Data: &ofp.OfpInstruction_GotoTable{
 			GotoTable: &ofp.OfpInstructionGotoTable{
 				TableId: 1,
 			},
 		}}}
+	flows := map[uint64]*ofp.OfpFlowStats{fs1.Id: fs1, fs2.Id: fs2}
 
-	groups := ofp.FlowGroups{}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
-	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
 	assert.Nil(t, err)
 	onu1FlowAndGroup := deviceRules.Rules["onu1"]
 	oltFlowAndGroup := deviceRules.Rules["olt"]
@@ -1004,8 +998,8 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 
 	fs, err := fu.MkFlowStat(fa)
 	assert.Nil(t, err)
-	flows := ofp.Flows{Items: []*ofp.OfpFlowStats{fs}}
-	groups := ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{fu.MkGroupStat(ga)}}
+	flows := map[uint64]*ofp.OfpFlowStats{fs.Id: fs}
+	groups := map[uint32]*ofp.OfpGroupEntry{ga.GroupId: fu.MkGroupStat(ga)}
 	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
 
 	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, groups)

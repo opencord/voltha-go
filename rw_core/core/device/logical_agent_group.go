@@ -19,7 +19,6 @@ package device
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
@@ -57,36 +56,22 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 		return nil
 	}
 	logger.Debugw("groupAdd", log.Fields{"GroupId": groupMod.GroupId})
-	agent.groupLock.Lock()
-	_, ok := agent.groups[groupMod.GroupId]
-	if ok {
-		agent.groupLock.Unlock()
-		return fmt.Errorf("Group %d already exists", groupMod.GroupId)
-	}
 
 	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
-	groupChunk := GroupChunk{
-		group: groupEntry,
-	}
-	//add to map
-	agent.groups[groupMod.GroupId] = &groupChunk
-	groupChunk.lock.Lock()
-	defer groupChunk.lock.Unlock()
-	agent.groupLock.Unlock()
-	//add to the kv store
-	path := fmt.Sprintf("groups/%s", agent.logicalDeviceID)
-	groupID := strconv.Itoa(int(groupMod.GroupId))
-	if err := agent.clusterDataProxy.AddWithID(ctx, path, groupID, groupEntry); err != nil {
-		logger.Errorw("failed-adding-group", log.Fields{"deviceID": agent.logicalDeviceID, "groupID": groupID, "err": err})
-		agent.groupLock.Lock()
-		delete(agent.groups, groupMod.GroupId)
-		agent.groupLock.Unlock()
+
+	groupHandle, created, err := agent.groupLoader.LockOrCreateGroup(ctx, groupEntry)
+	if err != nil {
 		return err
 	}
-	deviceRules := fu.NewDeviceRules()
-	deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
+	groupHandle.Unlock()
+
+	if !created {
+		return fmt.Errorf("group %d already exists", groupMod.GroupId)
+	}
+
 	fg := fu.NewFlowsAndGroups()
-	fg.AddGroup(fu.GroupEntryFromGroupMod(groupMod))
+	fg.AddGroup(groupEntry)
+	deviceRules := fu.NewDeviceRules()
 	deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
 
 	logger.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String()})
@@ -109,63 +94,63 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	if groupMod == nil {
 		return nil
 	}
-	affectedFlows := make([]*ofp.OfpFlowStats, 0)
-	affectedGroups := make([]*ofp.OfpGroupEntry, 0)
+
+	affectedFlows := make(map[uint64]*ofp.OfpFlowStats)
+	affectedGroups := make(map[uint32]*ofp.OfpGroupEntry)
 	var groupsChanged bool
-	groupID := groupMod.GroupId
-	var err error
-	if groupID == uint32(ofp.OfpGroup_OFPG_ALL) {
-		if err := func() error {
-			agent.groupLock.Lock()
-			defer agent.groupLock.Unlock()
-			for key, groupChunk := range agent.groups {
-				//Remove from store and cache. Do this in a one time lock allocation.
-				path := fmt.Sprintf("groups/%s/%d", agent.logicalDeviceID, key)
-				if err := agent.clusterDataProxy.Remove(ctx, path); err != nil {
-					return fmt.Errorf("couldnt-deleted-group-from-store-%s", path)
-				}
-				delete(agent.groups, groupID)
-				var flows []*ofp.OfpFlowStats
-				if flows, err = agent.deleteFlowsOfGroup(ctx, key); err != nil {
-					logger.Errorw("cannot-update-flow-for-group-delete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "groupID": key})
+
+	if groupMod.GroupId == uint32(ofp.OfpGroup_OFPG_ALL) {
+		for groupID := range agent.groupLoader.ListGroups() {
+			if groupHandle, have := agent.groupLoader.LockGroup(groupID); have {
+				if err := groupHandle.Delete(ctx); err != nil {
 					return err
 				}
-				affectedFlows = append(affectedFlows, flows...)
-				affectedGroups = append(affectedGroups, groupChunk.group)
+				affectedGroups[groupID] = groupHandle.GetReadOnly()
+				groupHandle.Unlock()
+
+				//TODO: this is another case where ordering guarantees are not being made,
+				//      group deletion does not guarantee deletion of corresponding flows.
+				//      an error while deleting flows can cause inconsistent state.
+				flows, err := agent.deleteFlowsHavingGroup(ctx, groupID)
+				if err != nil {
+					logger.Errorw("cannot-update-flow-for-group-delete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "groupID": groupID})
+					return err
+				}
+				for flowID, flow := range flows {
+					affectedFlows[flowID] = flow
+				}
 			}
-			return nil
-		}(); err != nil {
-			return err
 		}
 		groupsChanged = true
 	} else {
-		agent.groupLock.RLock()
-		groupChunk, ok := agent.groups[groupID]
-		agent.groupLock.RUnlock()
-		if !ok {
+		groupID := groupMod.GroupId
+		groupHandle, have := agent.groupLoader.LockGroup(groupID)
+		if !have {
 			logger.Warnw("group-not-found", log.Fields{"groupID": groupID})
-			return nil
+			return nil // valid case
 		}
-		groupChunk.lock.Lock()
-		defer groupChunk.lock.Unlock()
-		var flows []*ofp.OfpFlowStats
-		if flows, err = agent.deleteFlowsOfGroup(ctx, groupID); err != nil {
+		defer groupHandle.Unlock()
+
+		flows, err := agent.deleteFlowsHavingGroup(ctx, groupID)
+		if err != nil {
 			logger.Errorw("cannot-update-flow-for-group-delete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "groupID": groupID})
 			return err
 		}
 		//remove from store
-		if err := agent.removeLogicalDeviceFlowGroup(ctx, groupID); err != nil {
+		for flowID, flow := range flows {
+			affectedFlows[flowID] = flow
+		}
+		affectedGroups[groupID] = groupHandle.GetReadOnly()
+
+		if err := groupHandle.Delete(ctx); err != nil {
 			return err
 		}
-		affectedFlows = append(affectedFlows, flows...)
-		affectedGroups = append(affectedGroups, groupChunk.group)
 		groupsChanged = true
-
 	}
 
-	if err != nil || groupsChanged {
-		var deviceRules *fu.DeviceRules
-		deviceRules, err = agent.flowDecomposer.DecomposeRules(ctx, agent, ofp.Flows{Items: affectedFlows}, ofp.FlowGroups{Items: affectedGroups})
+	//TODO: groupsChanged is always true here?  use `len(affectedFlows)!=0` or `len(affectedGroups)!=0` instead?
+	if groupsChanged {
+		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, affectedFlows, affectedGroups)
 		if err != nil {
 			return err
 		}
@@ -192,15 +177,13 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	}
 
 	groupID := groupMod.GroupId
-	agent.groupLock.RLock()
-	groupChunk, ok := agent.groups[groupID]
-	agent.groupLock.RUnlock()
-	if !ok {
+
+	groupHandle, have := agent.groupLoader.LockGroup(groupID)
+	if !have {
 		return fmt.Errorf("group-absent:%d", groupID)
 	}
-	//Don't let any other thread to make modifications to this group till all done here.
-	groupChunk.lock.Lock()
-	defer groupChunk.lock.Unlock()
+	defer groupHandle.Unlock()
+
 	//replace existing group entry with new group definition
 	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
 	deviceRules := fu.NewDeviceRules()
@@ -210,8 +193,9 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
 
 	logger.Debugw("rules", log.Fields{"rules-for-group-modify": deviceRules.String()})
+
 	//update KV
-	if err := agent.updateLogicalDeviceFlowGroup(ctx, groupEntry, groupChunk); err != nil {
+	if err := groupHandle.Update(ctx, groupEntry); err != nil {
 		logger.Errorw("Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
 		return err
 	}
