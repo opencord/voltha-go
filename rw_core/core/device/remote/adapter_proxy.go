@@ -18,6 +18,7 @@ package remote
 
 import (
 	"context"
+
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
@@ -29,22 +30,22 @@ import (
 type AdapterProxy struct {
 	kafka.EndpointManager
 	deviceTopicRegistered bool
-	corePairTopic         string
+	coreTopic             string
 	kafkaICProxy          kafka.InterContainerProxy
 }
 
 // NewAdapterProxy will return adapter proxy instance
-func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, corePairTopic string, endpointManager kafka.EndpointManager) *AdapterProxy {
+func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, coreTopic string, endpointManager kafka.EndpointManager) *AdapterProxy {
 	return &AdapterProxy{
 		EndpointManager:       endpointManager,
 		kafkaICProxy:          kafkaProxy,
-		corePairTopic:         corePairTopic,
+		coreTopic:             coreTopic,
 		deviceTopicRegistered: false,
 	}
 }
 
 func (ap *AdapterProxy) getCoreTopic() kafka.Topic {
-	return kafka.Topic{Name: ap.corePairTopic}
+	return kafka.Topic{Name: ap.coreTopic}
 }
 
 func (ap *AdapterProxy) getAdapterTopic(deviceID string, adapterType string) (*kafka.Topic, error) {
