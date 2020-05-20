@@ -19,15 +19,15 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/opencord/voltha-go/rw_core/core/device/event"
-	"github.com/opencord/voltha-go/rw_core/utils"
 	"io"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/core/device/event"
+	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -297,19 +297,35 @@ func (ldMgr *LogicalManager) getLogicalPortID(ctx context.Context, device *volth
 // ListLogicalDeviceFlows returns the flows of logical device
 func (ldMgr *LogicalManager) ListLogicalDeviceFlows(ctx context.Context, id *voltha.ID) (*openflow_13.Flows, error) {
 	logger.Debugw("ListLogicalDeviceFlows", log.Fields{"logicaldeviceid": id.Id})
-	if agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id); agent != nil {
-		return agent.ListLogicalDeviceFlows(ctx)
+	agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+
+	flows := agent.listLogicalDeviceFlows()
+	ctr, ret := 0, make([]*openflow_13.OfpFlowStats, len(flows))
+	for _, flow := range flows {
+		ret[ctr] = flow
+		ctr++
+	}
+	return &openflow_13.Flows{Items: ret}, nil
 }
 
 // ListLogicalDeviceFlowGroups returns logical device flow groups
 func (ldMgr *LogicalManager) ListLogicalDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*openflow_13.FlowGroups, error) {
 	logger.Debugw("ListLogicalDeviceFlowGroups", log.Fields{"logicaldeviceid": id.Id})
-	if agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id); agent != nil {
-		return agent.ListLogicalDeviceFlowGroups(ctx)
+	agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+
+	groups := agent.listLogicalDeviceGroups()
+	ctr, ret := 0, make([]*openflow_13.OfpGroupEntry, len(groups))
+	for _, group := range groups {
+		ret[ctr] = group
+		ctr++
+	}
+	return &openflow_13.FlowGroups{Items: ret}, nil
 }
 
 // ListLogicalDevicePorts returns logical device ports
@@ -503,7 +519,13 @@ func (ldMgr *LogicalManager) ListLogicalDeviceMeters(ctx context.Context, id *vo
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return agent.ListLogicalDeviceMeters(ctx)
+	meters := agent.listLogicalDeviceMeters()
+	ctr, ret := 0, make([]*openflow_13.OfpMeterEntry, len(meters))
+	for _, meter := range meters {
+		ret[ctr] = meter
+		ctr++
+	}
+	return &openflow_13.Meters{Items: ret}, nil
 }
 
 // UpdateLogicalDeviceFlowGroupTable updates logical device flow group table

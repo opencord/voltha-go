@@ -646,5 +646,5 @@ func (agent *LogicalAgent) getUNILogicalPortNo(flow *ofp.OfpFlowStats) (uint32, 
 	if uniPort != 0 {
 		return uniPort, nil
 	}
-	return 0, status.Errorf(codes.NotFound, "no-uni-port: %v", flow)
+	return 0, status.Errorf(codes.NotFound, "no-uni-port: %v inPort: %d, outPort: %d logicalPortsNo: %v", flow, inPortNo, outPortNo, agent.logicalPortsNo)
 }
