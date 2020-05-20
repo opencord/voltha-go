@@ -18,6 +18,14 @@ package device
 
 import (
 	"context"
+	"math/rand"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
@@ -35,13 +43,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math/rand"
-	"sort"
-	"strconv"
-	"strings"
-	"sync"
-	"testing"
-	"time"
 )
 
 type DATest struct {
@@ -110,7 +111,7 @@ func newDATest() *DATest {
 
 func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
-	cfg.CorePairTopic = "rw_core"
+	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
 	cfg.KVStorePort = dat.kvClientPort
 	cfg.InCompetingMode = inCompeteMode
@@ -127,8 +128,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 		Host:                    cfg.KVStoreHost,
 		Port:                    cfg.KVStorePort,
 		Timeout:                 cfg.KVStoreTimeout,
-		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
-		PathPrefix:              cfg.KVStoreDataPrefix}
+		LivenessChannelInterval: cfg.LiveProbeInterval / 2}
 	dat.kmp = kafka.NewInterContainerProxy(
 		kafka.InterContainerHost(cfg.KafkaAdapterHost),
 		kafka.InterContainerPort(cfg.KafkaAdapterPort),
@@ -140,7 +140,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	proxy := model.NewProxy(backend, "/")
 	adapterMgr := adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
 
-	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, adapterMgr, dat.kmp, endpointMgr, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
 	if err = dat.kmp.Start(); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}

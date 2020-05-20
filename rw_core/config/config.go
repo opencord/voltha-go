@@ -37,7 +37,6 @@ const (
 	defaultKVStoreHost               = "127.0.0.1"
 	defaultKVStorePort               = 2379 // Consul = 8500; Etcd = 2379
 	defaultKVTxnKeyDelTime           = 60
-	defaultKVStoreDataPrefix         = "service/voltha"
 	defaultLogLevel                  = "WARN"
 	defaultBanner                    = false
 	defaultDisplayVersionOnly        = false
@@ -52,7 +51,6 @@ const (
 	defaultDefaultRequestTimeout     = 1000 * time.Millisecond
 	defaultCoreTimeout               = 1000 * time.Millisecond
 	defaultCoreBindingKey            = "voltha_backend_name"
-	defaultCorePairTopic             = "rwcore_1"
 	defaultMaxConnectionRetries      = -1 // retries forever
 	defaultConnectionRetryInterval   = 2 * time.Second
 	defaultLiveProbeInterval         = 60 * time.Second
@@ -76,7 +74,6 @@ type RWCoreFlags struct {
 	KVStoreHost               string
 	KVStorePort               int
 	KVTxnKeyDelTime           int
-	KVStoreDataPrefix         string
 	CoreTopic                 string
 	LogLevel                  string
 	Banner                    bool
@@ -90,7 +87,6 @@ type RWCoreFlags struct {
 	DefaultRequestTimeout     time.Duration
 	DefaultCoreTimeout        time.Duration
 	CoreBindingKey            string
-	CorePairTopic             string
 	MaxConnectionRetries      int
 	ConnectionRetryInterval   time.Duration
 	LiveProbeInterval         time.Duration
@@ -113,7 +109,6 @@ func NewRWCoreFlags() *RWCoreFlags {
 		KVStoreTimeout:            defaultKVStoreTimeout,
 		KVStoreHost:               defaultKVStoreHost,
 		KVStorePort:               defaultKVStorePort,
-		KVStoreDataPrefix:         defaultKVStoreDataPrefix,
 		KVTxnKeyDelTime:           defaultKVTxnKeyDelTime,
 		CoreTopic:                 defaultCoreTopic,
 		LogLevel:                  defaultLogLevel,
@@ -128,7 +123,6 @@ func NewRWCoreFlags() *RWCoreFlags {
 		LongRunningRequestTimeout: defaultLongRunningRequestTimeout,
 		DefaultCoreTimeout:        defaultCoreTimeout,
 		CoreBindingKey:            defaultCoreBindingKey,
-		CorePairTopic:             defaultCorePairTopic,
 		MaxConnectionRetries:      defaultMaxConnectionRetries,
 		ConnectionRetryInterval:   defaultConnectionRetryInterval,
 		LiveProbeInterval:         defaultLiveProbeInterval,
@@ -187,9 +181,6 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	help = fmt.Sprintf("The time to wait before deleting a completed transaction key")
 	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", defaultKVTxnKeyDelTime, help)
 
-	help = fmt.Sprintf("KV store data prefix")
-	flag.StringVar(&(cf.KVStoreDataPrefix), "kv_store_data_prefix", defaultKVStoreDataPrefix, help)
-
 	help = fmt.Sprintf("Log level")
 	flag.StringVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
 
@@ -210,9 +201,6 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
 	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", defaultCoreBindingKey, help)
-
-	help = fmt.Sprintf("Core pairing group topic")
-	flag.StringVar(&cf.CorePairTopic, "core_pair_topic", defaultCorePairTopic, help)
 
 	help = fmt.Sprintf("The number of retries to connect to a dependent component")
 	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", defaultMaxConnectionRetries, help)
