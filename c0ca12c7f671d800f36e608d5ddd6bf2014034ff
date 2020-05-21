@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c435e9f_cfa1a8e7",
+        "filename": "rw_core/core/device/flow/loader.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-21T22:21:50Z",
+      "side": 1,
+      "message": "Is there one instance of each Loader type per logical device?",
+      "revId": "c0ca12c7f671d800f36e608d5ddd6bf2014034ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6ff94b6_449c101a",
+        "filename": "rw_core/core/device/flow/loader.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-21T22:21:50Z",
+      "side": 1,
+      "message": "Why not \"sync.Mutex\" instead of \"lock ....\".?",
+      "revId": "c0ca12c7f671d800f36e608d5ddd6bf2014034ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ad75e25_983137f7",
+        "filename": "rw_core/core/device/flow/loader.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-21T22:21:50Z",
+      "side": 1,
+      "message": "Some more description about the Handle would be useful.   Is it something that gets created only for one-time use?",
+      "revId": "c0ca12c7f671d800f36e608d5ddd6bf2014034ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1edaccd3_63f58ad8",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-21T22:21:50Z",
+      "side": 1,
+      "message": "Nothing prevents the caller of listLogicaldeviceFlows() to change the value of the flow, right?",
+      "revId": "c0ca12c7f671d800f36e608d5ddd6bf2014034ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
