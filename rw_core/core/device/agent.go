@@ -1422,6 +1422,7 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 		cp := proto.Clone(port).(*voltha.Port)
 		// Set the admin state of the port to ENABLE
 		cp.AdminState = voltha.AdminState_ENABLED
+		cp.Id = coreutils.CreateDevicePortID()
 		cloned.Ports = append(cloned.Ports, cp)
 	}
 	// Store the device

@@ -35,6 +35,11 @@ func CreateLogicalDeviceID() string {
 	return uuid.New().String()
 }
 
+// CreateDevicePortID produces a device port ID. The device port ID is a UUID
+func CreateDevicePortID() string {
+	return uuid.New().String()
+}
+
 // CreateLogicalPortID produces a random port ID for a logical device.
 func CreateLogicalPortID() uint32 {
 	//	A logical port is a uint32
