@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c10fbd9_6fd3462a",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1977,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-21T21:41:08Z",
+      "side": 1,
+      "message": "This addresses one  scenario when the logical device is setup.   There are other scenarios when a single logical port is added.",
+      "revId": "de0a665f472cc3984825081623d3c9c7cc4f729e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
