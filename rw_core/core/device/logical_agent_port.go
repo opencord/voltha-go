@@ -421,7 +421,7 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha
 func (agent *LogicalAgent) portExist(device *voltha.Device, port *voltha.Port) bool {
 	ldevice := agent.getLogicalDeviceWithoutLock()
 	for _, lPort := range ldevice.Ports {
-		if lPort.DeviceId == device.Id && lPort.DevicePortNo == port.PortNo && lPort.Id == port.Label {
+		if lPort.DeviceId == device.Id && lPort.DevicePortNo == port.PortNo {
 			return true
 		}
 	}
