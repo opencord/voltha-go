@@ -22,14 +22,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	tst "github.com/opencord/voltha-go/rw_core/test"
+	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
-
-	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-go/rw_core/config"
-	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
 	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
@@ -382,7 +382,7 @@ func newLDATest() *LDATest {
 	test := &LDATest{}
 	// Start the embedded etcd server
 	var err error
-	test.etcdServer, test.kvClientPort, err = startEmbeddedEtcdServer("voltha.rwcore.lda.test", "voltha.rwcore.lda.etcd", "error")
+	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer("voltha.rwcore.lda.test", "voltha.rwcore.lda.etcd", "error")
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -464,7 +464,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	}
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
-	client := setupKVClient(cfg, lda.coreInstanceID)
+	client := tst.SetupKVClient(cfg, lda.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
@@ -499,7 +499,7 @@ func (lda *LDATest) stopAll() {
 		lda.kmp.Stop()
 	}
 	if lda.etcdServer != nil {
-		stopEmbeddedEtcdServer(lda.etcdServer)
+		tst.StopEmbeddedEtcdServer(lda.etcdServer)
 	}
 }
 
