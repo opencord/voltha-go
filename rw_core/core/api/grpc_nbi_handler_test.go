@@ -35,23 +35,18 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
+	tst "github.com/opencord/voltha-go/rw_core/test"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
 	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/version"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-)
-
-const (
-	coreName = "rw_core"
 )
 
 type NBTest struct {
@@ -77,7 +72,7 @@ func newNBTest() *NBTest {
 	test := &NBTest{}
 	// Start the embedded etcd server
 	var err error
-	test.etcdServer, test.kvClientPort, err = startEmbeddedEtcdServer("voltha.rwcore.nb.test", "voltha.rwcore.nb.etcd", "error")
+	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer("voltha.rwcore.nb.test", "voltha.rwcore.nb.etcd", "error")
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -107,7 +102,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
 	setCoreCompeteMode(inCompeteMode)
-	client := setupKVClient(cfg, nb.coreInstanceID)
+	client := tst.SetupKVClient(cfg, nb.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
@@ -141,58 +136,6 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	}
 }
 
-func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
-	// Setup the mock OLT adapter
-	oltAdapter, err := createMockAdapter(OltAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.oltAdapterName)
-	if err != nil {
-		logger.Fatalw("setting-mock-olt-adapter-failed", log.Fields{"error": err})
-	}
-	nb.oltAdapter = (oltAdapter).(*cm.OLTAdapter)
-	nb.numONUPerOLT = nb.oltAdapter.GetNumONUPerOLT()
-	nb.startingUNIPortNo = nb.oltAdapter.GetStartingUNIPortNo()
-
-	//	Register the adapter
-	registrationData := &voltha.Adapter{
-		Id:             nb.oltAdapterName,
-		Vendor:         "Voltha-olt",
-		Version:        version.VersionInfo.Version,
-		Type:           nb.oltAdapterName,
-		CurrentReplica: 1,
-		TotalReplicas:  1,
-		Endpoint:       nb.oltAdapterName,
-	}
-	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
-	deviceTypes := &voltha.DeviceTypes{Items: types}
-	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
-		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
-		assert.NotNil(t, err)
-	}
-
-	// Setup the mock ONU adapter
-	onuAdapter, err := createMockAdapter(OnuAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.onuAdapterName)
-	if err != nil {
-		logger.Fatalw("setting-mock-onu-adapter-failed", log.Fields{"error": err})
-	}
-	nb.onuAdapter = (onuAdapter).(*cm.ONUAdapter)
-
-	//	Register the adapter
-	registrationData = &voltha.Adapter{
-		Id:             nb.onuAdapterName,
-		Vendor:         "Voltha-onu",
-		Version:        version.VersionInfo.Version,
-		Type:           nb.onuAdapterName,
-		CurrentReplica: 1,
-		TotalReplicas:  1,
-		Endpoint:       nb.onuAdapterName,
-	}
-	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
-	deviceTypes = &voltha.DeviceTypes{Items: types}
-	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
-		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
-		assert.NotNil(t, err)
-	}
-}
-
 func (nb *NBTest) stopAll() {
 	if nb.kClient != nil {
 		nb.kClient.Stop()
@@ -201,7 +144,7 @@ func (nb *NBTest) stopAll() {
 		nb.kmp.Stop()
 	}
 	if nb.etcdServer != nil {
-		stopEmbeddedEtcdServer(nb.etcdServer)
+		tst.StopEmbeddedEtcdServer(nb.etcdServer)
 	}
 }
 
@@ -1267,7 +1210,9 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 	nb.testCoreWithoutData(t, nbi)
 
 	// Create/register the adapters
-	nb.createAndregisterAdapters(t)
+	nb.oltAdapter, nb.onuAdapter = tst.CreateAndregisterAdapters(t, nb.kClient, nb.coreInstanceID, nb.oltAdapterName, nb.onuAdapterName, nb.adapterMgr)
+	nb.numONUPerOLT = nb.oltAdapter.GetNumONUPerOLT()
+	nb.startingUNIPortNo = nb.oltAdapter.GetStartingUNIPortNo()
 
 	// 2. Test adapter registration
 	nb.testAdapterRegistration(t, nbi)
