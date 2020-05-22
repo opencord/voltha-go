@@ -18,23 +18,6 @@ package device
 
 import (
 	"context"
-	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-go/rw_core/config"
-	"github.com/opencord/voltha-go/rw_core/core/adapter"
-	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
-	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
-	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"github.com/phayes/freeport"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -42,17 +25,46 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
+	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	cm "github.com/opencord/voltha-go/rw_core/mocks"
+	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
+	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
+	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/version"
+	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/phayes/freeport"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+const (
+	OltAdapter = iota
+	OnuAdapter
 )
 
 type DATest struct {
 	etcdServer       *mock_etcd.EtcdServer
 	deviceMgr        *Manager
 	logicalDeviceMgr *LogicalManager
+	adapterMgr       *adapter.Manager
 	kmp              kafka.InterContainerProxy
 	kClient          kafka.Client
 	kvClientPort     int
 	oltAdapterName   string
 	onuAdapterName   string
+	oltAdapter       *cm.OLTAdapter
+	onuAdapter       *cm.ONUAdapter
 	coreInstanceID   string
 	defaultTimeout   time.Duration
 	maxTimeout       time.Duration
@@ -138,13 +150,18 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewProxy(backend, "/")
-	adapterMgr := adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
+	dat.adapterMgr = adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
 
-	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, adapterMgr, dat.kmp, endpointMgr, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	dat.adapterMgr.Start(context.Background())
 	if err = dat.kmp.Start(); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}
-	adapterMgr.Start(context.Background())
+
+	if err := dat.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: cfg.CorePairTopic}, kafka.OffsetNewest); err != nil {
+		logger.Fatalf("Cannot add default request handler: %s", err)
+	}
+
 }
 
 func (dat *DATest) stopAll() {
@@ -278,7 +295,7 @@ func TestConcurrentDevices(t *testing.T) {
 		da := newDATest()
 		assert.NotNil(t, da)
 		defer da.stopAll()
-
+		log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 		// Start the Core
 		da.startCore(false)
 
@@ -292,6 +309,36 @@ func TestConcurrentDevices(t *testing.T) {
 
 		wg.Wait()
 	}
+}
+func TestFlowUpdates(t *testing.T) {
+	da := newDATest()
+	assert.NotNil(t, da)
+	defer da.stopAll()
+
+	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
+	// Start the Core
+	da.startCore(false)
+	da.createAndregisterAdapters(t)
+	a := da.createDeviceAgent(t)
+	cloned := a.getDeviceWithoutLock()
+	err := a.updateDeviceStateInStoreWithoutLock(context.Background(), cloned, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
+	assert.Nil(t, err)
+	da.testFlowAddDeletes(t, a)
+}
+
+func TestGroupUpdates(t *testing.T) {
+	da := newDATest()
+	assert.NotNil(t, da)
+	defer da.stopAll()
+
+	// Start the Core
+	da.startCore(false)
+	da.createAndregisterAdapters(t)
+	a := da.createDeviceAgent(t)
+	cloned := a.getDeviceWithoutLock()
+	err := a.updateDeviceStateInStoreWithoutLock(context.Background(), cloned, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
+	assert.Nil(t, err)
+	da.testGroupAddDeletes(t, a)
 }
 
 func isFlowSliceEqual(a, b []*ofp.OfpFlowStats) bool {
@@ -330,195 +377,247 @@ func isGroupSliceEqual(a, b []*ofp.OfpGroupEntry) bool {
 	return true
 }
 
-func TestFlowsToUpdateToDelete_EmptySlices(t *testing.T) {
-	newFlows := []*ofp.OfpFlowStats{}
-	existingFlows := []*ofp.OfpFlowStats{}
-	expectedNewFlows := []*ofp.OfpFlowStats{}
-	expectedFlowsToDelete := []*ofp.OfpFlowStats{}
-	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
-	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
-	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
-	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
-}
-
-func TestFlowsToUpdateToDelete_NoExistingFlows(t *testing.T) {
+func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
+	//Add new Flows on empty list
 	newFlows := []*ofp.OfpFlowStats{
 		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
 		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
 		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
 	}
-	existingFlows := []*ofp.OfpFlowStats{}
-	expectedNewFlows := []*ofp.OfpFlowStats{
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
-		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
-	}
-	expectedFlowsToDelete := []*ofp.OfpFlowStats{}
-	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
-		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
-	}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
-	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
-	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
-	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
-}
+	err := da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daFlows, _ := da.ListDeviceFlows(context.Background())
+	assert.True(t, isFlowSliceEqual(newFlows, daFlows.Items))
 
-func TestFlowsToUpdateToDelete_UpdateNoDelete(t *testing.T) {
-	newFlows := []*ofp.OfpFlowStats{
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
-		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
-	}
-	existingFlows := []*ofp.OfpFlowStats{
-		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
-		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
-		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
-	}
-	expectedNewFlows := []*ofp.OfpFlowStats{
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
-	}
-	expectedFlowsToDelete := []*ofp.OfpFlowStats{}
-	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
-		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
-		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
-		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
-	}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
-	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
-	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
-	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
-}
-
-func TestFlowsToUpdateToDelete_UpdateAndDelete(t *testing.T) {
-	newFlows := []*ofp.OfpFlowStats{
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 20},
-		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 10, Flags: 0, Cookie: 1250000, PacketCount: 0},
-		{Id: 126, TableId: 1260, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+	//Add new Flows on existing ones
+	newFlows = []*ofp.OfpFlowStats{
+		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
 	}
-	existingFlows := []*ofp.OfpFlowStats{
-		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
-		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
+
+	expectedFlows := []*ofp.OfpFlowStats{
 		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
 		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
 		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
-	}
-	expectedNewFlows := []*ofp.OfpFlowStats{
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 20},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 10, Flags: 0, Cookie: 1250000, PacketCount: 0},
-		{Id: 126, TableId: 1260, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
 	}
-	expectedFlowsToDelete := []*ofp.OfpFlowStats{
+
+	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daFlows, _ = da.ListDeviceFlows(context.Background())
+	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows.Items))
+
+	//Add new Flows on existing ones
+	newFlows = []*ofp.OfpFlowStats{
+		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270001, PacketCount: 0},
+		{Id: 128, TableId: 1280, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1280000, PacketCount: 0},
+	}
+
+	expectedFlows = []*ofp.OfpFlowStats{
 		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
-	}
-	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{
-		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
-		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
-		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 20},
 		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
-		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 10, Flags: 0, Cookie: 1250000, PacketCount: 0},
-		{Id: 126, TableId: 1260, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
-		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270001, PacketCount: 0},
+		{Id: 128, TableId: 1280, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1280000, PacketCount: 0},
 	}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
-	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
-	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
-	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
+
+	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daFlows, _ = da.ListDeviceFlows(context.Background())
+	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows.Items))
+
+	//Delete Flows
+	newFlows = []*ofp.OfpFlowStats{
+		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270001, PacketCount: 0},
+		{Id: 128, TableId: 1280, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1280000, PacketCount: 0},
+	}
+
+	expectedFlows = []*ofp.OfpFlowStats{
+		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
+		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
+		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
+		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
+		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270001, PacketCount: 0},
+		{Id: 128, TableId: 1280, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1280000, PacketCount: 0},
+	}
+
+	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daFlows, _ = da.ListDeviceFlows(context.Background())
+	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows.Items))
+
 }
 
-func TestGroupsToUpdateToDelete_EmptySlices(t *testing.T) {
-	newGroups := []*ofp.OfpGroupEntry{}
-	existingGroups := []*ofp.OfpGroupEntry{}
-	expectedNewGroups := []*ofp.OfpGroupEntry{}
-	expectedGroupsToDelete := []*ofp.OfpGroupEntry{}
-	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
-	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
-	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
-	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
-}
-
-func TestGroupsToUpdateToDelete_NoExistingGroups(t *testing.T) {
+func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
+	//Add new Groups on empty list
 	newGroups := []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
 	}
-	existingGroups := []*ofp.OfpGroupEntry{}
-	expectedNewGroups := []*ofp.OfpGroupEntry{
+	err := da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daGroups, _ := da.ListDeviceFlowGroups(context.Background())
+	assert.True(t, isGroupSliceEqual(newGroups, daGroups.Items))
+
+	//Add new Groups on existing ones
+	newGroups = []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	}
+	expectedGroups := []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
 	}
-	expectedGroupsToDelete := []*ofp.OfpGroupEntry{}
-	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{
+	err = da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daGroups, _ = da.ListDeviceFlowGroups(context.Background())
+	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups.Items))
+
+	//Add new Groups on existing ones
+	newGroups = []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
+	}
+	expectedGroups = []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
 	}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
-	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
-	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
-	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
+	err = da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daGroups, _ = da.ListDeviceFlowGroups(context.Background())
+	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups.Items))
+
+	//Modify Group
+	updtGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 33, GroupId: 30, Buckets: nil}},
+	}
+	expectedGroups = []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 33, GroupId: 30, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
+	}
+	err = da.updateFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, updtGroups, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daGroups, _ = da.ListDeviceFlowGroups(context.Background())
+	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups.Items))
+
+	//Delete Group
+	delGroups := []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 33, GroupId: 30, Buckets: nil}},
+	}
+	expectedGroups = []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
+	}
+	err = da.deleteFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, delGroups, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daGroups, _ = da.ListDeviceFlowGroups(context.Background())
+	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups.Items))
+
+	//Delete Group
+	delGroups = []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	}
+	expectedGroups = []*ofp.OfpGroupEntry{
+		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
+	}
+	err = da.deleteFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, delGroups, &voltha.FlowMetadata{})
+	assert.Nil(t, err)
+	daGroups, _ = da.ListDeviceFlowGroups(context.Background())
+	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups.Items))
 }
 
-func TestGroupsToUpdateToDelete_UpdateNoDelete(t *testing.T) {
-	newGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
+func (dat *DATest) createAndregisterAdapters(t *testing.T) {
+	// Setup the mock OLT adapter
+	oltAdapter, err := createMockAdapter(OltAdapter, dat.kClient, dat.coreInstanceID, "rw_core", dat.oltAdapterName)
+	if err != nil {
+		logger.Fatalw("setting-mock-olt-adapter-failed", log.Fields{"error": err})
 	}
-	existingGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	dat.oltAdapter = (oltAdapter).(*cm.OLTAdapter)
+
+	//	Register the adapter
+	registrationData := &voltha.Adapter{
+		Id:             dat.oltAdapterName,
+		Vendor:         "Voltha-olt",
+		Version:        version.VersionInfo.Version,
+		Type:           dat.oltAdapterName,
+		CurrentReplica: 1,
+		TotalReplicas:  1,
+		Endpoint:       dat.oltAdapterName,
 	}
-	expectedNewGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
+	types := []*voltha.DeviceType{{Id: dat.oltAdapterName, Adapter: dat.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
+	deviceTypes := &voltha.DeviceTypes{Items: types}
+	if _, err := dat.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
+		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		assert.NotNil(t, err)
 	}
-	expectedGroupsToDelete := []*ofp.OfpGroupEntry{}
-	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+
+	// Setup the mock ONU adapter
+	onuAdapter, err := createMockAdapter(OnuAdapter, dat.kClient, dat.coreInstanceID, "rw_core", dat.onuAdapterName)
+	if err != nil {
+		logger.Fatalw("setting-mock-onu-adapter-failed", log.Fields{"error": err})
 	}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
-	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
-	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
-	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
+	dat.onuAdapter = (onuAdapter).(*cm.ONUAdapter)
+
+	//	Register the adapter
+	registrationData = &voltha.Adapter{
+		Id:             dat.onuAdapterName,
+		Vendor:         "Voltha-onu",
+		Version:        version.VersionInfo.Version,
+		Type:           dat.onuAdapterName,
+		CurrentReplica: 1,
+		TotalReplicas:  1,
+		Endpoint:       dat.onuAdapterName,
+	}
+	types = []*voltha.DeviceType{{Id: dat.onuAdapterName, Adapter: dat.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
+	deviceTypes = &voltha.DeviceTypes{Items: types}
+	if _, err := dat.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
+		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
 }
 
-func TestGroupsToUpdateToDelete_UpdateWithDelete(t *testing.T) {
-	newGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: []*ofp.OfpBucket{{WatchPort: 10}}}},
+func createMockAdapter(adapterType int, kafkaClient kafka.Client, coreInstanceID string, coreName string, adapterName string) (adapters.IAdapter, error) {
+	var err error
+	var adapter adapters.IAdapter
+	adapterKafkaICProxy := kafka.NewInterContainerProxy(
+		kafka.MsgClient(kafkaClient),
+		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}))
+	adapterCoreProxy := com.NewCoreProxy(adapterKafkaICProxy, adapterName, coreName)
+	var adapterReqHandler *com.RequestHandlerProxy
+	switch adapterType {
+	case OltAdapter:
+		adapter = cm.NewOLTAdapter(adapterCoreProxy)
+	case OnuAdapter:
+		adapter = cm.NewONUAdapter(adapterCoreProxy)
+	default:
+		logger.Fatalf("invalid-adapter-type-%d", adapterType)
 	}
-	existingGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
+	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
+
+	if err = adapterKafkaICProxy.Start(); err != nil {
+		logger.Errorw("Failure-starting-adapter-intercontainerProxy", log.Fields{"error": err})
+		return nil, err
 	}
-	expectedNewGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: []*ofp.OfpBucket{{WatchPort: 10}}}},
+	if err = adapterKafkaICProxy.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: adapterName}, adapterReqHandler); err != nil {
+		logger.Errorw("Failure-to-subscribe-onu-request-handler", log.Fields{"error": err})
+		return nil, err
 	}
-	expectedGroupsToDelete := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
-	}
-	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{
-		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: []*ofp.OfpBucket{{WatchPort: 10}}}},
-		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
-		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
-	}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
-	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
-	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
-	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
+	return adapter, nil
 }
