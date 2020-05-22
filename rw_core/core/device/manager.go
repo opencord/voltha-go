@@ -19,11 +19,12 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"reflect"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-go/rw_core/core/device/event"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
@@ -219,22 +220,22 @@ func (dMgr *Manager) ListDevicePorts(ctx context.Context, id *voltha.ID) (*volth
 // ListDeviceFlows returns the flow details for a specific device entry
 func (dMgr *Manager) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*ofp.Flows, error) {
 	logger.Debugw("ListDeviceFlows", log.Fields{"device-id": id.Id})
-	device, err := dMgr.getDevice(ctx, id.Id)
-	if err != nil {
-		return &ofp.Flows{}, err
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return &ofp.Flows{}, status.Errorf(codes.NotFound, "device-%s", id.Id)
 	}
-	return device.Flows, nil
+
+	return agent.ListDeviceFlows(ctx)
 }
 
 // ListDeviceFlowGroups returns the flow group details for a specific device entry
 func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
 	logger.Debugw("ListDeviceFlowGroups", log.Fields{"device-id": id.Id})
-
-	device, err := dMgr.getDevice(ctx, id.Id)
-	if err != nil {
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "device-%s", id.Id)
 	}
-	return device.GetFlowGroups(), nil
+	return agent.ListDeviceFlowGroups(ctx)
 }
 
 // stopManagingDevice stops the management of the device as well as any of its reference device and logical device.

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 
@@ -59,6 +60,11 @@ type Agent struct {
 	startOnce        sync.Once
 	stopOnce         sync.Once
 	stopped          bool
+
+	flows     map[uint64]*FlowChunk
+	flowLock  sync.RWMutex
+	groups    map[uint32]*GroupChunk
+	groupLock sync.RWMutex
 }
 
 //newAgent creates a new device agent. The device will be initialized when start() is called.
@@ -81,6 +87,9 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 	agent.defaultTimeout = timeout
 	agent.device = proto.Clone(device).(*voltha.Device)
 	agent.requestQueue = coreutils.NewRequestQueue()
+	agent.flows = make(map[uint64]*FlowChunk)
+	agent.groups = make(map[uint32]*GroupChunk)
+
 	return &agent
 }
 
@@ -138,7 +147,9 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 		}
 		agent.device = device
 	}
-
+	// load the flows and groups from KV to cache
+	agent.loadFlows(ctx)
+	agent.loadGroups(ctx)
 	startSucceeded = true
 	logger.Debugw("device-agent-started", log.Fields{"device-id": agent.deviceID})
 
@@ -191,6 +202,8 @@ func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 
 	agent.deviceType = device.Adapter
 	agent.device = device
+	agent.loadFlows(ctx)
+	agent.loadGroups(ctx)
 	logger.Debugw("reconciled-device-agent-devicetype", log.Fields{"device-id": agent.deviceID, "type": agent.deviceType})
 }
 
@@ -333,100 +346,99 @@ func deleteGroupWithoutPreservingOrder(groups []*ofp.OfpGroupEntry, index int) [
 	return groups[:len(groups)-1]
 }
 
-func flowsToUpdateToDelete(newFlows, existingFlows []*ofp.OfpFlowStats) (updatedNewFlows, flowsToDelete, updatedAllFlows []*ofp.OfpFlowStats) {
-	// Process flows
-	for _, flow := range existingFlows {
-		if idx := fu.FindFlows(newFlows, flow); idx == -1 {
-			updatedAllFlows = append(updatedAllFlows, flow)
-		} else {
-			// We have a matching flow (i.e. the following field matches: "TableId", "Priority", "Flags", "Cookie",
-			// "Match".  If this is an exact match (i.e. all other fields matches as well) then this flow will be
-			// ignored.  Otherwise, the previous flow will be deleted and the new one added
-			if proto.Equal(newFlows[idx], flow) {
-				// Flow already exist, remove it from the new flows but keep it in the updated flows slice
-				newFlows = deleteFlowWithoutPreservingOrder(newFlows, idx)
-				updatedAllFlows = append(updatedAllFlows, flow)
-			} else {
-				// Minor change to flow, delete old and add new one
-				flowsToDelete = append(flowsToDelete, flow)
-			}
-		}
+//replaceFlowInList removes the old flow from list and adds the new one.
+func replaceFlowInList(flowList []*ofp.OfpFlowStats, oldFlow *ofp.OfpFlowStats, newFlow *ofp.OfpFlowStats) []*ofp.OfpFlowStats {
+	if idx := fu.FindFlows(flowList, oldFlow); idx != -1 {
+		flowList = deleteFlowWithoutPreservingOrder(flowList, idx)
 	}
-	updatedAllFlows = append(updatedAllFlows, newFlows...)
-	return newFlows, flowsToDelete, updatedAllFlows
+	flowList = append(flowList, newFlow)
+	return flowList
 }
 
-func groupsToUpdateToDelete(newGroups, existingGroups []*ofp.OfpGroupEntry) (updatedNewGroups, groupsToDelete, updatedAllGroups []*ofp.OfpGroupEntry) {
-	for _, group := range existingGroups {
-		if idx := fu.FindGroup(newGroups, group.Desc.GroupId); idx == -1 { // does not exist now
-			updatedAllGroups = append(updatedAllGroups, group)
-		} else {
-			// Follow same logic as flows
-			if proto.Equal(newGroups[idx], group) {
-				// Group already exist, remove it from the new groups
-				newGroups = deleteGroupWithoutPreservingOrder(newGroups, idx)
-				updatedAllGroups = append(updatedAllGroups, group)
-			} else {
-				// Minor change to group, delete old and add new one
-				groupsToDelete = append(groupsToDelete, group)
-			}
-		}
+//replaceGroupInList removes the old group from list and adds the new one.
+func replaceGroupInList(groupList []*ofp.OfpGroupEntry, oldGroup *ofp.OfpGroupEntry, newGroup *ofp.OfpGroupEntry) []*ofp.OfpGroupEntry {
+	if idx := fu.FindGroup(groupList, oldGroup.Desc.GroupId); idx != -1 {
+		groupList = deleteGroupWithoutPreservingOrder(groupList, idx)
 	}
-	updatedAllGroups = append(updatedAllGroups, newGroups...)
-	return newGroups, groupsToDelete, updatedAllGroups
+	groupList = append(groupList, newGroup)
+	return groupList
 }
 
-func (agent *Agent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	logger.Debugw("add-flows-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups, "flow-metadata": flowMetadata})
+func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+	logger.Debugw("add-flows-to-adapters", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
 
-	if (len(newFlows) | len(newGroups)) == 0 {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
+	if (len(newFlows)) == 0 {
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows})
 		return coreutils.DoneResponse(), nil
 	}
-
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return coreutils.DoneResponse(), err
-	}
-	defer agent.requestQueue.RequestComplete()
-
 	device := agent.getDeviceWithoutLock()
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+	updatedAllFlows := &ofp.Flows{Items: []*ofp.OfpFlowStats{}}
+	if !dType.AcceptsAddRemoveFlowUpdates {
+		updatedAllFlows, _ = agent.ListDeviceFlows(ctx)
+	}
+	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
+	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
+	for _, flow := range newFlows {
 
-	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
-	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
+		agent.flowLock.Lock()
+		flowChunk, ok := agent.flows[flow.Id]
+		if !ok {
+			flowChunk = &FlowChunk{
+				flow: flow,
+			}
+			agent.flows[flow.Id] = flowChunk
+			flowChunk.lock.Lock() //acquire chunk lock before releasing map lock
+			agent.flowLock.Unlock()
+			flowID := strconv.FormatUint(flow.Id, 10)
+			if err := agent.clusterDataProxy.AddWithID(ctx, flowRootPath+agent.deviceID, flowID, flow); err != nil {
+				logger.Errorw("failed-adding-flow-to-db", log.Fields{"deviceID": agent.deviceID, "flowID": flowID, "err": err})
+				//Revert the map
+				//TODO: Solve the condition:If we have two flow Adds of the same flow (at least same priority and match) in quick succession
+				//then if the first one fails while the second one was waiting on the flowchunk, we will end up with an instance of flowChunk that is no longer in the map.
+				agent.flowLock.Lock()
+				delete(agent.flows, flow.Id)
+				agent.flowLock.Unlock()
+				flowChunk.lock.Unlock()
+				return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-adding-flow-%s-to-device-%s", flowID, agent.deviceID)
+			}
+			flowsToAdd = append(flowsToAdd, flow)
+			updatedAllFlows.Items = append(updatedAllFlows.Items, flow)
+		} else {
+			agent.flowLock.Unlock() //release map lock before acquiring chunk lock
+			flowChunk.lock.Lock()
+			if !proto.Equal(flowChunk.flow, flow) {
+				//Flow needs to be updated.
+				if err := agent.updateDeviceFlow(ctx, flow, flowChunk); err != nil {
+					flowChunk.lock.Unlock()
+					return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-flow-%s-to-device-%s", strconv.FormatUint(flow.Id, 10), agent.deviceID)
+				}
+				flowsToDelete = append(flowsToDelete, flowChunk.flow)
+				flowsToAdd = append(flowsToAdd, flow)
+				updatedAllFlows.Items = replaceFlowInList(updatedAllFlows.Items, flowChunk.flow, flow)
+			} else {
+				//No need to change the flow. It is already exist.
+				logger.Debugw("No-need-to-change-already-existing-flow", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
+			}
+		}
 
-	// Process flows
-	newFlows, flowsToDelete, updatedAllFlows := flowsToUpdateToDelete(newFlows, existingFlows.Items)
-
-	// Process groups
-	newGroups, groupsToDelete, updatedAllGroups := groupsToUpdateToDelete(newGroups, existingGroups.Items)
-
-	// Sanity check
-	if (len(updatedAllFlows) | len(flowsToDelete) | len(updatedAllGroups) | len(groupsToDelete)) == 0 {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
-		return coreutils.DoneResponse(), nil
+		flowChunk.lock.Unlock()
 	}
 
-	// store the changed data
-	device.Flows = &voltha.Flows{Items: updatedAllFlows}
-	device.FlowGroups = &voltha.FlowGroups{Items: updatedAllGroups}
-	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-device-%s", agent.deviceID)
+	// Sanity check
+	if (len(flowsToAdd)) == 0 {
+		logger.Debugw("no-flows-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows})
+		return coreutils.DoneResponse(), nil
 	}
 
 	// Send update to adapters
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		if len(updatedAllGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedAllGroups) && len(updatedAllFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedAllFlows) {
-			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
-			cancel()
-			return coreutils.DoneResponse(), nil
-		}
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedAllFlows}, &voltha.FlowGroups{Items: updatedAllGroups}, flowMetadata)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, updatedAllFlows, &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}}, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -434,11 +446,110 @@ func (agent *Agent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: newFlows},
+			ToAdd:    &voltha.Flows{Items: flowsToAdd},
 			ToRemove: &voltha.Flows{Items: flowsToDelete},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: newGroups},
+			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+		}
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
+		if err != nil {
+			cancel()
+			return coreutils.DoneResponse(), err
+		}
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+	}
+	return response, nil
+}
+
+func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+	logger.Debugw("add-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "groups": newGroups, "flow-metadata": flowMetadata})
+
+	if (len(newGroups)) == 0 {
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
+		return coreutils.DoneResponse(), nil
+	}
+
+	device := agent.getDeviceWithoutLock()
+	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
+	if err != nil {
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+	}
+	updatedAllGroups := &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}}
+	if !dType.AcceptsAddRemoveFlowUpdates {
+		updatedAllGroups, _ = agent.ListDeviceFlowGroups(ctx)
+	}
+	groupsToAdd := make([]*ofp.OfpGroupEntry, 0)
+	groupsToDelete := make([]*ofp.OfpGroupEntry, 0)
+	for _, group := range newGroups {
+		agent.groupLock.Lock()
+		groupChunk, ok := agent.groups[group.Desc.GroupId]
+		if !ok {
+			groupChunk = &GroupChunk{
+				group: group,
+			}
+			agent.groups[group.Desc.GroupId] = groupChunk
+			groupChunk.lock.Lock() //acquire chunk lock before releasing map lock
+			agent.groupLock.Unlock()
+			groupID := strconv.Itoa(int(group.Desc.GroupId))
+			if err := agent.clusterDataProxy.AddWithID(ctx, groupRootPath+agent.deviceID, groupID, group); err != nil {
+				logger.Errorw("failed-adding-group-to-db", log.Fields{"deviceID": agent.deviceID, "groupID": groupID, "err": err})
+				//Revert the map
+				//TODO: Solve the condition:If we have two group Adds of the same group (at least same priority and match) in quick succession
+				//then if the first one fails while the second one was waiting on the groupchunk, we will end up with an instance of grouoChunk that is no longer in the map.
+				agent.groupLock.Lock()
+				delete(agent.groups, group.Desc.GroupId)
+				agent.groupLock.Unlock()
+				groupChunk.lock.Unlock()
+				return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-adding-group-%s-to-device-%s", groupID, agent.deviceID)
+			}
+			groupsToAdd = append(groupsToAdd, group)
+			updatedAllGroups.Items = append(updatedAllGroups.Items, group)
+		} else {
+			agent.groupLock.Unlock() //release map lock before acquiring chunk lock
+			groupChunk.lock.Lock()
+			if !proto.Equal(groupChunk.group, group) {
+				//Group needs to be updated.
+				if err := agent.updateDeviceFlowGroup(ctx, group, groupChunk); err != nil {
+					groupChunk.lock.Unlock()
+					return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-group-%s-to-device-%s", strconv.Itoa(int(group.Desc.GroupId)), agent.deviceID)
+				}
+				groupsToDelete = append(groupsToDelete, group)
+				groupsToAdd = append(groupsToAdd, group)
+				updatedAllGroups.Items = replaceGroupInList(updatedAllGroups.Items, groupChunk.group, group)
+			} else {
+				//No need to change the group. It is already exist.
+				logger.Debugw("No-need-to-change-already-existing-group", log.Fields{"device-id": agent.deviceID, "group": newGroups, "flow-metadata": flowMetadata})
+			}
+		}
+
+		groupChunk.lock.Unlock()
+	}
+	// Sanity check
+	if (len(groupsToAdd)) == 0 {
+		logger.Debugw("no-groups-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
+		return coreutils.DoneResponse(), nil
+	}
+
+	// Send update to adapters
+	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	response := coreutils.NewResponse()
+	if !dType.AcceptsAddRemoveFlowUpdates {
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: []*ofp.OfpFlowStats{}}, updatedAllGroups, flowMetadata)
+		if err != nil {
+			cancel()
+			return coreutils.DoneResponse(), err
+		}
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+	} else {
+		flowChanges := &ofp.FlowChanges{
+			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToRemove: &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+		}
+		groupChanges := &ofp.FlowGroupChanges{
+			ToAdd:    &voltha.FlowGroups{Items: groupsToAdd},
 			ToRemove: &voltha.FlowGroups{Items: groupsToDelete},
 			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
@@ -455,7 +566,17 @@ func (agent *Agent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*
 //addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
 //adapters
 func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
-	response, err := agent.addFlowsAndGroupsToAdapter(ctx, newFlows, newGroups, flowMetadata)
+	var response coreutils.Response
+	var err error
+	if len(newFlows) > 0 {
+		response, err = agent.addFlowsToAdapter(ctx, newFlows, flowMetadata)
+	} else if len(newGroups) > 0 {
+		response, err = agent.addGroupsToAdapter(ctx, newGroups, flowMetadata)
+	} else {
+		logger.Debugw("no-flows-or-groups-added", log.Fields{"device-id": agent.deviceID})
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
@@ -466,18 +587,30 @@ func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFl
 	return nil
 }
 
-func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	logger.Debugw("delete-flows-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
+func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+	logger.Debugw("delete-flows-from-adapter", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel})
 
-	if (len(flowsToDel) | len(groupsToDel)) == 0 {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
+	if (len(flowsToDel)) == 0 {
+		logger.Debugw("nothing-to-delete", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel})
 		return coreutils.DoneResponse(), nil
 	}
-
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return coreutils.DoneResponse(), err
+	for _, flow := range flowsToDel {
+		agent.flowLock.RLock()
+		flowChunk, ok := agent.flows[flow.Id]
+		//Release the map lock and syncronize per flow
+		agent.flowLock.RUnlock()
+		if !ok {
+			logger.Debugw("Skipping-flow-delete-request. No-flow-found", log.Fields{"flowID": flow.Id})
+			continue
+		}
+		flowChunk.lock.Lock()
+		// Update the store and cache
+		if err := agent.removeDeviceFlow(ctx, flow.Id); err != nil {
+			flowChunk.lock.Unlock()
+			return coreutils.DoneResponse(), err
+		}
+		flowChunk.lock.Unlock()
 	}
-	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceWithoutLock()
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
@@ -485,58 +618,12 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
-	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
-	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
-
-	var flowsToKeep []*ofp.OfpFlowStats
-	var groupsToKeep []*ofp.OfpGroupEntry
-
-	// Process flows
-	for _, flow := range existingFlows.Items {
-		if idx := fu.FindFlows(flowsToDel, flow); idx == -1 {
-			flowsToKeep = append(flowsToKeep, flow)
-		}
-	}
-
-	// Process groups
-	for _, group := range existingGroups.Items {
-		if fu.FindGroup(groupsToDel, group.Desc.GroupId) == -1 { // does not exist now
-			groupsToKeep = append(groupsToKeep, group)
-		}
-	}
-
-	logger.Debugw("deleteFlowsAndGroups",
-		log.Fields{
-			"device-id":      agent.deviceID,
-			"flows-to-del":   len(flowsToDel),
-			"flows-to-keep":  len(flowsToKeep),
-			"groups-to-del":  len(groupsToDel),
-			"groups-to-keep": len(groupsToKeep),
-		})
-
-	// Sanity check
-	if (len(flowsToKeep) | len(flowsToDel) | len(groupsToKeep) | len(groupsToDel)) == 0 {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows-to-del": flowsToDel, "groups-to-del": groupsToDel})
-		return coreutils.DoneResponse(), nil
-	}
-
-	// store the changed data
-	device.Flows = &voltha.Flows{Items: flowsToKeep}
-	device.FlowGroups = &voltha.FlowGroups{Items: groupsToKeep}
-	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
-	}
-
 	// Send update to adapters
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		if len(groupsToKeep) != 0 && reflect.DeepEqual(existingGroups.Items, groupsToKeep) && len(flowsToKeep) != 0 && reflect.DeepEqual(existingFlows.Items, flowsToKeep) {
-			logger.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flowsToDel": flowsToDel, "groupsToDel": groupsToDel})
-			cancel()
-			return coreutils.DoneResponse(), nil
-		}
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: flowsToKeep}, &voltha.FlowGroups{Items: groupsToKeep}, flowMetadata)
+		flowsToKeep, _ := agent.ListDeviceFlows(ctx)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: flowsToKeep.Items}, &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}}, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -546,6 +633,68 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
 			ToRemove: &voltha.Flows{Items: flowsToDel},
+		}
+		groupChanges := &ofp.FlowGroupChanges{
+			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+		}
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
+		if err != nil {
+			cancel()
+			return coreutils.DoneResponse(), err
+		}
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+	}
+	return response, nil
+}
+
+func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+	logger.Debugw("delete-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "groups": groupsToDel})
+
+	if (len(groupsToDel)) == 0 {
+		logger.Debugw("nothing-to-delete", log.Fields{"device-id": agent.deviceID})
+		return coreutils.DoneResponse(), nil
+	}
+	for _, group := range groupsToDel {
+		agent.groupLock.RLock()
+		groupChunk, ok := agent.groups[group.Desc.GroupId]
+		//Release the map lock and syncronize per group
+		agent.groupLock.RUnlock()
+		if !ok {
+			logger.Debugw("Skipping-group-delete-request. No-group-found", log.Fields{"groupID": group.Desc.GroupId})
+			continue
+		}
+		groupChunk.lock.Lock()
+		// Update the store and cache
+		if err := agent.removeDeviceFlowGroup(ctx, group.Desc.GroupId); err != nil {
+			groupChunk.lock.Unlock()
+			return coreutils.DoneResponse(), err
+		}
+		groupChunk.lock.Unlock()
+	}
+
+	device := agent.getDeviceWithoutLock()
+	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
+	if err != nil {
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+	}
+
+	// Send update to adapters
+	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	response := coreutils.NewResponse()
+	if !dType.AcceptsAddRemoveFlowUpdates {
+		groupsToKeep, _ := agent.ListDeviceFlowGroups(ctx)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: []*ofp.OfpFlowStats{}}, &voltha.FlowGroups{Items: groupsToKeep.Items}, flowMetadata)
+		if err != nil {
+			cancel()
+			return coreutils.DoneResponse(), err
+		}
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+	} else {
+		flowChanges := &ofp.FlowChanges{
+			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToRemove: &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
 			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
@@ -565,7 +714,17 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 //deleteFlowsAndGroups removes the "flowsToDel" and "groupsToDel" from the existing flows/groups and sends the update to the
 //adapters
 func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
-	response, err := agent.deleteFlowsAndGroupsFromAdapter(ctx, flowsToDel, groupsToDel, flowMetadata)
+	var response coreutils.Response
+	var err error
+	if len(flowsToDel) > 0 {
+		response, err = agent.deleteFlowsFromAdapter(ctx, flowsToDel, flowMetadata)
+	} else if len(groupsToDel) > 0 {
+		response, err = agent.deleteGroupsFromAdapter(ctx, groupsToDel, flowMetadata)
+	} else {
+		logger.Debugw("no-flows-or-groups-deleted", log.Fields{"device-id": agent.deviceID})
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
@@ -577,11 +736,7 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 
 //filterOutFlows removes flows from a device using the uni-port as filter
 func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMetadata *voltha.FlowMetadata) error {
-	device, err := agent.getDevice(ctx)
-	if err != nil {
-		return err
-	}
-	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
+	existingFlows, _ := agent.ListDeviceFlows(ctx)
 	var flowsToDelete []*ofp.OfpFlowStats
 
 	// If an existing flow has the uniPort as an InPort or OutPort or as a Tunnel ID then it needs to be removed
@@ -595,7 +750,7 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 		return nil
 	}
 
-	response, err := agent.deleteFlowsAndGroupsFromAdapter(ctx, flowsToDelete, []*ofp.OfpGroupEntry{}, flowMetadata)
+	response, err := agent.deleteFlowsFromAdapter(ctx, flowsToDelete, flowMetadata)
 	if err != nil {
 		return err
 	}
@@ -605,18 +760,13 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 	return nil
 }
 
-func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	logger.Debugw("updateFlowsAndGroups", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
+func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+	logger.Debugw("updateFlowsToAdapter", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
 
-	if (len(updatedFlows) | len(updatedGroups)) == 0 {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
+	if (len(updatedFlows)) == 0 {
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
 		return coreutils.DoneResponse(), nil
 	}
-
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return coreutils.DoneResponse(), err
-	}
-	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceWithoutLock()
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
@@ -626,81 +776,51 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
+	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 
-	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
-	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
-
-	if len(updatedGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedGroups) && len(updatedFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedFlows) {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
-		return coreutils.DoneResponse(), nil
-	}
-
-	logger.Debugw("updating-flows-and-groups",
-		log.Fields{
-			"device-id":      agent.deviceID,
-			"updated-flows":  updatedFlows,
-			"updated-groups": updatedGroups,
-		})
-
-	// store the updated data
-	device.Flows = &voltha.Flows{Items: updatedFlows}
-	device.FlowGroups = &voltha.FlowGroups{Items: updatedGroups}
-	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
+	for _, flow := range updatedFlows {
+		agent.flowLock.RLock()
+		flowChunk, ok := agent.flows[flow.Id]
+		agent.flowLock.RUnlock()
+		if !ok {
+			logger.Debugw("Skipping-flow-update-request. No-flow-found", log.Fields{"flowID": flow.Id})
+			//TODO: Should we add it?
+			continue
+		}
+		//Release the map lock and syncronize per flow
+		flowChunk.lock.Lock()
+		// Update the store and cache
+		if err := agent.updateDeviceFlow(ctx, flow, flowChunk); err != nil {
+			flowChunk.lock.Unlock()
+			return coreutils.DoneResponse(), err
+		}
+		flowsToDelete = append(flowsToDelete, flow)
+		flowsToAdd = append(flowsToAdd, flow)
+		flowChunk.lock.Unlock()
 	}
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedFlows}, &voltha.FlowGroups{Items: updatedGroups}, nil)
+		updatedFlows, _ := agent.ListDeviceFlows(ctx)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedFlows.Items}, &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}}, nil)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	} else {
-		var flowsToAdd []*ofp.OfpFlowStats
-		var flowsToDelete []*ofp.OfpFlowStats
-		var groupsToAdd []*ofp.OfpGroupEntry
-		var groupsToDelete []*ofp.OfpGroupEntry
-
-		// Process flows
-		for _, flow := range updatedFlows {
-			if idx := fu.FindFlows(existingFlows.Items, flow); idx == -1 {
-				flowsToAdd = append(flowsToAdd, flow)
-			}
-		}
-		for _, flow := range existingFlows.Items {
-			if idx := fu.FindFlows(updatedFlows, flow); idx != -1 {
-				flowsToDelete = append(flowsToDelete, flow)
-			}
-		}
-
-		// Process groups
-		for _, g := range updatedGroups {
-			if fu.FindGroup(existingGroups.Items, g.Desc.GroupId) == -1 { // does not exist now
-				groupsToAdd = append(groupsToAdd, g)
-			}
-		}
-		for _, group := range existingGroups.Items {
-			if fu.FindGroup(updatedGroups, group.Desc.GroupId) != -1 { // does not exist now
-				groupsToDelete = append(groupsToDelete, group)
-			}
-		}
-
 		logger.Debugw("updating-flows-and-groups",
 			log.Fields{
-				"device-id":        agent.deviceID,
-				"flows-to-add":     flowsToAdd,
-				"flows-to-delete":  flowsToDelete,
-				"groups-to-add":    groupsToAdd,
-				"groups-to-delete": groupsToDelete,
+				"device-id":       agent.deviceID,
+				"flows-to-add":    flowsToAdd,
+				"flows-to-delete": flowsToDelete,
 			})
-
 		// Sanity check
-		if (len(flowsToAdd) | len(flowsToDelete) | len(groupsToAdd) | len(groupsToDelete) | len(updatedGroups)) == 0 {
-			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
+		if (len(flowsToAdd) | len(flowsToDelete)) == 0 {
+			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
 			cancel()
 			return coreutils.DoneResponse(), nil
 		}
@@ -710,9 +830,92 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 			ToRemove: &voltha.Flows{Items: flowsToDelete},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: groupsToAdd},
-			ToRemove: &voltha.FlowGroups{Items: groupsToDelete},
-			ToUpdate: &voltha.FlowGroups{Items: updatedGroups},
+			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+		}
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
+		if err != nil {
+			cancel()
+			return coreutils.DoneResponse(), err
+		}
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+	}
+
+	return response, nil
+}
+
+func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+	logger.Debugw("updateGroupsToAdapter", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
+
+	if (len(updatedGroups)) == 0 {
+		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
+		return coreutils.DoneResponse(), nil
+	}
+
+	device := agent.getDeviceWithoutLock()
+	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states-oper-%s-connect-%s-admin-%s", device.OperStatus, device.ConnectStatus, device.AdminState)
+	}
+	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
+	if err != nil {
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+	}
+	groupsToUpdate := make([]*ofp.OfpGroupEntry, 0)
+
+	for _, group := range updatedGroups {
+		agent.groupLock.RLock()
+		groupChunk, ok := agent.groups[group.Desc.GroupId]
+		agent.groupLock.RUnlock()
+		if !ok {
+			logger.Debugw("Skipping-group-update-request. No-group-found", log.Fields{"groupID": group.Desc.GroupId})
+			//TODO: Should we add it?
+			continue
+		}
+		//Release the map lock and syncronize per group
+		groupChunk.lock.Lock()
+		// Update the store and cache
+		if err := agent.updateDeviceFlowGroup(ctx, group, groupChunk); err != nil {
+			groupChunk.lock.Unlock()
+			return coreutils.DoneResponse(), err
+		}
+		groupsToUpdate = append(groupsToUpdate, group)
+		groupChunk.lock.Unlock()
+	}
+
+	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	response := coreutils.NewResponse()
+	// Process bulk flow update differently than incremental update
+	if !dType.AcceptsAddRemoveFlowUpdates {
+		groupsToKeep, _ := agent.ListDeviceFlowGroups(ctx)
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: []*ofp.OfpFlowStats{}}, &voltha.FlowGroups{Items: groupsToKeep.Items}, nil)
+		if err != nil {
+			cancel()
+			return coreutils.DoneResponse(), err
+		}
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+	} else {
+		logger.Debugw("updating-groups",
+			log.Fields{
+				"device-id":        agent.deviceID,
+				"groups-to-update": groupsToUpdate,
+			})
+
+		// Sanity check
+		if (len(groupsToUpdate)) == 0 {
+			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": groupsToUpdate})
+			cancel()
+			return coreutils.DoneResponse(), nil
+		}
+
+		flowChanges := &ofp.FlowChanges{
+			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToRemove: &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+		}
+		groupChanges := &ofp.FlowGroupChanges{
+			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &voltha.FlowGroups{Items: groupsToUpdate},
 		}
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
@@ -728,7 +931,16 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 //updateFlowsAndGroups replaces the existing flows and groups with "updatedFlows" and "updatedGroups" respectively. It
 //also sends the updates to the adapters
 func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
-	response, err := agent.updateFlowsAndGroupsToAdapter(ctx, updatedFlows, updatedGroups, flowMetadata)
+	var response coreutils.Response
+	var err error
+	if len(updatedFlows) > 0 {
+		response, err = agent.updateFlowsToAdapter(ctx, updatedFlows, flowMetadata)
+	} else if len(updatedGroups) > 0 {
+		response, err = agent.updateGroupsToAdapter(ctx, updatedGroups, flowMetadata)
+	} else {
+		logger.Debugw("no-flows-or-groups-deleted", log.Fields{"device-id": agent.deviceID})
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -741,17 +953,25 @@ func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*of
 //deleteAllFlows deletes all flows in the device table
 func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 	logger.Debugw("deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
+	agent.flowLock.Lock()
+	existingFlowIds := make(map[uint64]struct{}, len(agent.flows))
+	for id := range agent.flows {
+		existingFlowIds[id] = struct{}{}
 	}
-	defer agent.requestQueue.RequestComplete()
+	agent.flowLock.Unlock()
 
-	device := agent.getDeviceWithoutLock()
-	// purge all flows on the device by setting it to nil
-	device.Flows = &ofp.Flows{Items: nil}
-	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
-		// The caller logs the error
-		return err
+	for flowID := range existingFlowIds {
+		flowChunk, ok := agent.flows[flowID]
+		if ok {
+			//Release the map lock and syncronize per flow
+			flowChunk.lock.Lock()
+			// Update the store and cache
+			if err := agent.removeDeviceFlow(ctx, flowChunk.flow.Id); err != nil {
+				flowChunk.lock.Unlock()
+				continue
+			}
+			flowChunk.lock.Unlock()
+		}
 	}
 	return nil
 }
@@ -1293,13 +1513,6 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 		return status.Errorf(codes.Internal, "%s", err.Error())
 	}
 	cloned := proto.Clone(updatedDevice).(*voltha.Device)
-	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
-}
-
-func (agent *Agent) updateDeviceWithoutLock(ctx context.Context, device *voltha.Device) error {
-	logger.Debugw("updateDevice", log.Fields{"deviceId": device.Id})
-	//cloned := proto.Clone(device).(*voltha.Device)
-	cloned := device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
