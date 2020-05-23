@@ -16,6 +16,24 @@
       "revId": "3136fbd8a35e4909563e484e9b95852bf1d53b75",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "537689eb_e4c95053",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-05-23T02:01:44Z",
+      "side": 0,
+      "message": "Which function you\u0027re referring? The SubscribeWithDefaultRequestHandler? It\u0027s still in use in some other places.",
+      "parentUuid": "b70c5703_54ebd6d5",
+      "revId": "3136fbd8a35e4909563e484e9b95852bf1d53b75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
