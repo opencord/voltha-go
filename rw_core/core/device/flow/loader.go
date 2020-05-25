@@ -86,8 +86,6 @@ func (loader *Loader) LockOrCreate(ctx context.Context, flow *ofp.OfpFlowStats) 
 		loader.lock.Unlock()
 
 		if err := loader.dbProxy.Set(ctx, fmt.Sprint(flow.Id), flow); err != nil {
-			logger.Errorw("failed-adding-flow-to-db", log.Fields{"flowID": flow.Id, "err": err})
-
 			// revert the map
 			loader.lock.Lock()
 			delete(loader.flows, flow.Id)
@@ -109,7 +107,7 @@ func (loader *Loader) LockOrCreate(ctx context.Context, flow *ofp.OfpFlowStats) 
 	return &Handle{loader: loader, chunk: entry}, false, nil
 }
 
-// Lock acquires the lock for this flow, and returns a handle which can be used to access the meter until it's unlocked.
+// Lock acquires the lock for this flow, and returns a handle which can be used to access the flow until it's unlocked.
 // This handle ensures that the flow cannot be accessed if the lock is not held.
 // Returns false if the flow is not present.
 // TODO: consider accepting a ctx and aborting the lock attempt on cancellation
@@ -130,6 +128,8 @@ func (loader *Loader) Lock(id uint64) (*Handle, bool) {
 	return &Handle{loader: loader, chunk: entry}, true
 }
 
+// Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
+// This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
 	loader *Loader
 	chunk  *chunk
@@ -152,13 +152,14 @@ func (h *Handle) Update(ctx context.Context, flow *ofp.OfpFlowStats) error {
 
 // Delete removes the device from the kv
 func (h *Handle) Delete(ctx context.Context) error {
-	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.flow.Id)); err != nil {
-		return fmt.Errorf("couldnt-delete-flow-from-store-%v", h.chunk.flow.Id)
+	flow := h.chunk.flow
+	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(flow.Id)); err != nil {
+		return fmt.Errorf("couldnt-delete-flow-from-store-%v", flow.Id)
 	}
 	h.chunk.deleted = true
 
 	h.loader.lock.Lock()
-	delete(h.loader.flows, h.chunk.flow.Id)
+	delete(h.loader.flows, flow.Id)
 	h.loader.lock.Unlock()
 
 	h.Unlock()
@@ -173,7 +174,7 @@ func (h *Handle) Unlock() {
 	}
 }
 
-// List returns a snapshot of all the managed flow IDs
+// List returns a snapshot of all the managed flow identifiers
 // TODO: iterating through flows safely is expensive now, since all flows are stored & locked separately
 //       should avoid this where possible
 func (loader *Loader) List() map[uint64]struct{} {

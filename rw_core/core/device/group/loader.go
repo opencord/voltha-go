@@ -86,8 +86,6 @@ func (loader *Loader) LockOrCreate(ctx context.Context, group *ofp.OfpGroupEntry
 		loader.lock.Unlock()
 
 		if err := loader.dbProxy.Set(ctx, fmt.Sprint(group.Desc.GroupId), group); err != nil {
-			logger.Errorw("failed-adding-group-to-db", log.Fields{"groupID": group.Desc.GroupId, "err": err})
-
 			// revert the map
 			loader.lock.Lock()
 			delete(loader.groups, group.Desc.GroupId)
@@ -130,6 +128,8 @@ func (loader *Loader) Lock(id uint32) (*Handle, bool) {
 	return &Handle{loader: loader, chunk: entry}, true
 }
 
+// Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
+// This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
 	loader *Loader
 	chunk  *chunk
@@ -152,13 +152,14 @@ func (h *Handle) Update(ctx context.Context, group *ofp.OfpGroupEntry) error {
 
 // Delete removes the device from the kv
 func (h *Handle) Delete(ctx context.Context) error {
-	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.group.Desc.GroupId)); err != nil {
-		return fmt.Errorf("couldnt-delete-group-from-store-%v", h.chunk.group.Desc.GroupId)
+	group := h.chunk.group
+	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(group.Desc.GroupId)); err != nil {
+		return fmt.Errorf("couldnt-delete-group-from-store-%v", group.Desc.GroupId)
 	}
 	h.chunk.deleted = true
 
 	h.loader.lock.Lock()
-	delete(h.loader.groups, h.chunk.group.Desc.GroupId)
+	delete(h.loader.groups, group.Desc.GroupId)
 	h.loader.lock.Unlock()
 
 	h.Unlock()
@@ -173,7 +174,7 @@ func (h *Handle) Unlock() {
 	}
 }
 
-// List returns a snapshot of all the managed group IDs
+// List returns a snapshot of all the managed group identifiers
 // TODO: iterating through groups safely is expensive now, since all groups are stored & locked separately
 //       should avoid this where possible
 func (loader *Loader) List() map[uint32]struct{} {

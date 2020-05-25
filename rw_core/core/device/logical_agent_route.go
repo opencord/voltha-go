@@ -118,12 +118,7 @@ func (agent *LogicalAgent) generateDeviceRoutesIfNeeded(ctx context.Context) err
 	agent.lockDeviceRoutes.Lock()
 	defer agent.lockDeviceRoutes.Unlock()
 
-	ld, err := agent.GetLogicalDevice(ctx)
-	if err != nil {
-		return err
-	}
-
-	if agent.deviceRoutes != nil && agent.deviceRoutes.IsUpToDate(ld) {
+	if agent.deviceRoutes != nil && agent.deviceRoutes.IsUpToDate(agent.listLogicalDevicePorts()) {
 		return nil
 	}
 	logger.Debug("Generation of device route required")
@@ -148,9 +143,9 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	// Get all the logical ports on that logical device
-	lDevice := agent.getLogicalDeviceWithoutLock()
+	ports := agent.listLogicalDevicePorts()
 
-	if err := agent.deviceRoutes.ComputeRoutes(ctx, lDevice.Ports); err != nil {
+	if err := agent.deviceRoutes.ComputeRoutes(ctx, ports); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {
@@ -170,7 +165,7 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, lp *voltha.LogicalP
 	if agent.deviceRoutes == nil {
 		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
-	if err := agent.deviceRoutes.AddPort(ctx, lp, agent.logicalDevice.Ports); err != nil {
+	if err := agent.deviceRoutes.AddPort(ctx, lp, agent.listLogicalDevicePorts()); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {
