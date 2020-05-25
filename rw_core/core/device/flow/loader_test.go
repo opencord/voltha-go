@@ -22,34 +22,43 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"testing"
 )
 
 // TestLoadersIdentical ensures that the group, flow, and meter loaders always have an identical implementation.
 func TestLoadersIdentical(t *testing.T) {
+	types := []string{"flow", "group", "meter", "logical_port"}
+
 	identical := [][]string{
-		{"ofp\\.OfpFlowStats", "ofp\\.OfpGroupEntry", "ofp\\.OfpMeterEntry"},
-		{"\\.Id", "\\.Desc\\.GroupId", "\\.Config.MeterId"},
-		{"uint64", "uint32", "uint32"},
-		{"Flow", "Group", "Meter"},
-		{"flow", "group", "meter"},
+		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`, `voltha\.LogicalPort`},
+		{`\.Id`, `\.Desc\.GroupId`, `\.Config\.MeterId`, `\.OfpPort\.PortNo`},
+		{`uint64`, `uint32`, `uint32`, `uint32`},
+		{`Flow`, `Group`, `Meter`, `Port`},
+		{`flow`, `group`, `meter`, `port|logical_port`},
 	}
 
-	regexes := make([]*regexp.Regexp, len(identical))
+	regexes := make([][]*regexp.Regexp, len(identical[0]))
+	for i := range regexes {
+		regexes[i] = make([]*regexp.Regexp, len(identical))
+	}
 	for i, group := range identical {
-		regexes[i] = regexp.MustCompile(strings.Join(group, "|"))
+		for j, regexStr := range group {
+			// convert from column-wise to row-wise for convenience
+			regexes[j][i] = regexp.MustCompile(regexStr)
+		}
 	}
 
-	for i := 1; i < len(identical[0]); i++ {
-		if err := compare(regexes, "../"+identical[4][0]+"/loader.go", "../"+identical[4][i]+"/loader.go"); err != nil {
+	for i := 1; i < len(types); i++ {
+		if err := compare(regexes[0], regexes[i],
+			"../"+types[0]+"/loader.go",
+			"../"+types[i]+"/loader.go"); err != nil {
 			t.Error(err)
 			return
 		}
 	}
 }
 
-func compare(regexes []*regexp.Regexp, fileNameA, fileNameB string) error {
+func compare(regexesA, regexesB []*regexp.Regexp, fileNameA, fileNameB string) error {
 	fileA, err := os.Open(fileNameA)
 	if err != nil {
 		return err
@@ -64,43 +73,63 @@ func compare(regexes []*regexp.Regexp, fileNameA, fileNameB string) error {
 
 	scannerA, scannerB := bufio.NewScanner(fileA), bufio.NewScanner(fileB)
 
-	spaceRegex := regexp.MustCompile(" +")
+	// treat any number of spaces as a single space
+	spaceRegex := regexp.MustCompile(` +`)
+	// extra lines are permitted before a "blank" line, or before a lock/unlock
+	spacerRegex := regexp.MustCompile(`^(?:[^a-z]*|.*Lock\(\)|.*Unlock\(\))$`)
+	// ignore import type differences
+	libGoImportRegex := regexp.MustCompile(`^.*github\.com/opencord/voltha-protos/.*$`)
 
-	line := 1
+	lineA, lineB := 1, 1
+linesLoop:
 	for {
-		if continueA, continueB := scannerA.Scan(), scannerB.Scan(); continueA != continueB {
-			if !continueA && continueB {
-				if err := scannerA.Err(); err != nil {
-					return err
+		if continueA, continueB := scannerA.Scan(), scannerB.Scan(); !continueA || !continueB {
+			// EOF
+			break linesLoop
+		}
+		textA, textB := scannerA.Text(), scannerB.Text()
+
+		// allow any number of "extra" lines just before a spacer line
+		for {
+			isSpacerA, isSpacerB := spacerRegex.MatchString(textA), spacerRegex.MatchString(textB)
+			if isSpacerA && !isSpacerB {
+				if !scannerB.Scan() {
+					// EOF
+					break linesLoop
 				}
-			}
-			if continueA && !continueB {
-				if err := scannerB.Err(); err != nil {
-					return err
+				lineB++
+				textB = scannerB.Text()
+				continue
+			} else if isSpacerB && !isSpacerA {
+				if !scannerA.Scan() {
+					// EOF
+					break linesLoop
 				}
+				lineA++
+				textA = scannerA.Text()
+				continue
 			}
-			return fmt.Errorf("line %d: files are not the same length", line)
-		} else if !continueA {
-			// EOF from both files
 			break
 		}
 
-		textA, textB := scannerA.Text(), scannerB.Text()
-
 		replacedA, replacedB := textA, textB
-		for i, regex := range regexes {
+		for i := range regexesA {
 			replacement := "{{type" + strconv.Itoa(i) + "}}"
-			replacedA, replacedB = regex.ReplaceAllString(replacedA, replacement), regex.ReplaceAllString(replacedB, replacement)
+			replacedA, replacedB = regexesA[i].ReplaceAllString(replacedA, replacement), regexesB[i].ReplaceAllString(replacedB, replacement)
 		}
 
 		// replace multiple spaces with single space
 		replacedA, replacedB = spaceRegex.ReplaceAllString(replacedA, " "), spaceRegex.ReplaceAllString(replacedB, " ")
 
-		if replacedA != replacedB {
-			return fmt.Errorf("line %d: files %s and %s do not match: \n\t%s\n\t%s\n\n\t%s\n\t%s", line, fileNameA, fileNameB, textA, textB, replacedA, replacedB)
+		// ignore voltha-protos import of ofp vs voltha
+		replacedA, replacedB = libGoImportRegex.ReplaceAllString(replacedA, "{{lib-go-import}}"), libGoImportRegex.ReplaceAllString(replacedB, "{{lib-go-import}}")
+
+		if replacedA != replacedB && textA != textB {
+			return fmt.Errorf("files which must be identical do not match: \n  %s:%d\n    %s\n  %s:%d\n    %s\n\n\t%s\n\t%s", fileNameA, lineA, textA, fileNameB, lineB, textB, replacedA, replacedB)
 		}
 
-		line++
+		lineA++
+		lineB++
 	}
 
 	if err := scannerA.Err(); err != nil {

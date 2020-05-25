@@ -19,7 +19,6 @@ package device
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"sync"
 	"time"
 
@@ -27,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/device/flow"
 	"github.com/opencord/voltha-go/rw_core/core/device/group"
+	"github.com/opencord/voltha-go/rw_core/core/device/logical_port"
 	"github.com/opencord/voltha-go/rw_core/core/device/meter"
 	fd "github.com/opencord/voltha-go/rw_core/flowdecomposition"
 	"github.com/opencord/voltha-go/rw_core/route"
@@ -62,6 +62,7 @@ type LogicalAgent struct {
 	flowLoader  *flow.Loader
 	meterLoader *meter.Loader
 	groupLoader *group.Loader
+	portLoader  *port.Loader
 }
 
 func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
@@ -81,6 +82,7 @@ func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalM
 		flowLoader:  flow.NewLoader(dbProxy.SubPath("logical_flows").Proxy(id)),
 		groupLoader: group.NewLoader(dbProxy.SubPath("logical_groups").Proxy(id)),
 		meterLoader: meter.NewLoader(dbProxy.SubPath("logical_meters").Proxy(id)),
+		portLoader:  port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
 	}
 	agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	return agent
@@ -134,7 +136,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		}
 		logger.Debugw("logicaldevice-created", log.Fields{"logical-device-id": agent.logicalDeviceID, "root-id": ld.RootDeviceId})
 
-		agent.logicalDevice = proto.Clone(ld).(*voltha.LogicalDevice)
+		agent.logicalDevice = ld
 
 		// Setup the logicalports - internal processing, no need to propagate the client context
 		go func() {
@@ -158,14 +160,16 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		agent.rootDeviceID = ld.RootDeviceId
 
 		// Update the last data
-		agent.logicalDevice = proto.Clone(ld).(*voltha.LogicalDevice)
+		agent.logicalDevice = ld
 
-		// Setup the local list of logical ports
-		agent.addLogicalPortsToMap(ld.Ports)
 		// load the flows, meters and groups from KV to cache
 		agent.flowLoader.Load(ctx)
 		agent.meterLoader.Load(ctx)
 		agent.groupLoader.Load(ctx)
+		agent.portLoader.Load(ctx)
+
+		// Setup the local list of logical ports
+		agent.addLogicalPortsToMap(agent.listLogicalDevicePorts())
 	}
 
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
@@ -200,6 +204,8 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 		} else {
 			logger.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		}
+		// TODO: remove all entries from all loaders
+		// TODO: don't allow any more modifications to flows/groups/meters/ports or to any logical device field
 
 		agent.stopped = true
 
@@ -215,28 +221,6 @@ func (agent *LogicalAgent) GetLogicalDevice(ctx context.Context) (*voltha.Logica
 	}
 	defer agent.requestQueue.RequestComplete()
 	return proto.Clone(agent.logicalDevice).(*voltha.LogicalDevice), nil
-}
-
-// getLogicalDeviceWithoutLock returns a cloned logical device to a function that already holds the agent lock.
-func (agent *LogicalAgent) getLogicalDeviceWithoutLock() *voltha.LogicalDevice {
-	logger.Debug("getLogicalDeviceWithoutLock")
-	return proto.Clone(agent.logicalDevice).(*voltha.LogicalDevice)
-}
-
-//updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it
-func (agent *LogicalAgent) updateLogicalDeviceWithoutLock(ctx context.Context, logicalDevice *voltha.LogicalDevice) error {
-	if agent.stopped {
-		return fmt.Errorf("logical device agent stopped-%s", logicalDevice.Id)
-	}
-
-	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-	if err := agent.ldProxy.Set(updateCtx, agent.logicalDeviceID, logicalDevice); err != nil {
-		logger.Errorw("failed-to-update-logical-devices-to-cluster-proxy", log.Fields{"error": err})
-		return err
-	}
-
-	agent.logicalDevice = logicalDevice
-	return nil
 }
 
 func (agent *LogicalAgent) addFlowsAndGroupsToDevices(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -260,6 +261,8 @@ func (ldMgr *LogicalManager) getLogicalDeviceID(ctx context.Context, device *vol
 	}
 	// Device is child device
 	//	retrieve parent device using child device ID
+	// TODO: return (string, have) instead of *string
+	//       also: If not root device, just return device.parentID instead of loading the parent device.
 	if parentDevice := ldMgr.deviceMgr.getParentDevice(ctx, device); parentDevice != nil {
 		return &parentDevice.ParentId, nil
 	}
@@ -283,12 +286,13 @@ func (ldMgr *LogicalManager) getLogicalPortID(ctx context.Context, device *volth
 	if lDeviceID, err = ldMgr.getLogicalDeviceID(ctx, device); err != nil {
 		return nil, err
 	}
-	var lDevice *voltha.LogicalDevice
-	if lDevice, err = ldMgr.GetLogicalDevice(ctx, &voltha.ID{Id: *lDeviceID}); err != nil {
-		return nil, err
+	// Get the logical device where this port is attached
+	agent := ldMgr.getLogicalDeviceAgent(ctx, *lDeviceID)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", *lDeviceID)
 	}
-	// Go over list of ports
-	for _, port := range lDevice.Ports {
+
+	for _, port := range agent.listLogicalDevicePorts() {
 		if port.DeviceId == device.Id {
 			return &voltha.LogicalPortId{Id: *lDeviceID, PortId: port.Id}, nil
 		}
@@ -333,22 +337,29 @@ func (ldMgr *LogicalManager) ListLogicalDeviceFlowGroups(ctx context.Context, id
 // ListLogicalDevicePorts returns logical device ports
 func (ldMgr *LogicalManager) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
 	logger.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id.Id})
-	if agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id); agent != nil {
-		return agent.ListLogicalDevicePorts(ctx)
+	agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+
+	ports := agent.listLogicalDevicePorts()
+	ctr, ret := 0, make([]*voltha.LogicalPort, len(ports))
+	for _, port := range ports {
+		ret[ctr] = port
+		ctr++
+	}
+	return &voltha.LogicalPorts{Items: ret}, nil
 }
 
 // GetLogicalDevicePort returns logical device port details
 func (ldMgr *LogicalManager) GetLogicalDevicePort(ctx context.Context, lPortID *voltha.LogicalPortId) (*voltha.LogicalPort, error) {
-	// Get the logical device where this device is attached
-	var err error
-	var lDevice *voltha.LogicalDevice
-	if lDevice, err = ldMgr.GetLogicalDevice(ctx, &voltha.ID{Id: lPortID.Id}); err != nil {
-		return nil, err
+	// Get the logical device where this port is attached
+	agent := ldMgr.getLogicalDeviceAgent(ctx, lPortID.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", lPortID.Id)
 	}
-	// Go over list of ports
-	for _, port := range lDevice.Ports {
+
+	for _, port := range agent.listLogicalDevicePorts() {
 		if port.Id == lPortID.PortId {
 			return port, nil
 		}
@@ -469,7 +480,7 @@ func (ldMgr *LogicalManager) updatePortState(ctx context.Context, deviceID strin
 		return err
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
-		if err := agent.updatePortState(ctx, deviceID, portNo, state); err != nil {
+		if err := agent.updatePortState(ctx, portNo, state); err != nil {
 			return err
 		}
 	}
@@ -487,7 +498,7 @@ func (ldMgr *LogicalManager) updatePortsState(ctx context.Context, device *volth
 		return err
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
-		if err := agent.updatePortsState(ctx, device, state); err != nil {
+		if err := agent.updatePortsState(ctx, device.Id, state); err != nil {
 			return err
 		}
 	}
@@ -547,7 +558,11 @@ func (ldMgr *LogicalManager) EnableLogicalDevicePort(ctx context.Context, id *vo
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return &empty.Empty{}, agent.enableLogicalPort(ctx, id.PortId)
+	portNo, err := strconv.ParseUint(id.PortId, 10, 32)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse %s as a number", id.PortId)
+	}
+	return &empty.Empty{}, agent.enableLogicalPort(ctx, uint32(portNo))
 }
 
 // DisableLogicalDevicePort disables logical device port
@@ -557,7 +572,11 @@ func (ldMgr *LogicalManager) DisableLogicalDevicePort(ctx context.Context, id *v
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return &empty.Empty{}, agent.disableLogicalPort(ctx, id.PortId)
+	portNo, err := strconv.ParseUint(id.PortId, 10, 32)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse %s as a number", id.PortId)
+	}
+	return &empty.Empty{}, agent.disableLogicalPort(ctx, uint32(portNo))
 }
 
 func (ldMgr *LogicalManager) packetIn(ctx context.Context, logicalDeviceID string, port uint32, transactionID string, packet []byte) error {
