@@ -28,6 +28,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/flow"
 	"github.com/opencord/voltha-go/rw_core/core/device/group"
 	"github.com/opencord/voltha-go/rw_core/core/device/meter"
+	"github.com/opencord/voltha-go/rw_core/core/device/port"
 	fd "github.com/opencord/voltha-go/rw_core/flowdecomposition"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -63,6 +64,7 @@ type LogicalAgent struct {
 	flowLoader  *flow.Loader
 	meterLoader *meter.Loader
 	groupLoader *group.Loader
+	portLoader  *port.Loader
 }
 
 func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
@@ -82,6 +84,7 @@ func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalM
 		flowLoader:  flow.NewLoader(dbProxy.SubPath("logical_flows").Proxy(id)),
 		groupLoader: group.NewLoader(dbProxy.SubPath("logical_groups").Proxy(id)),
 		meterLoader: meter.NewLoader(dbProxy.SubPath("logical_meters").Proxy(id)),
+		portLoader:  port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
 	}
 }
 
@@ -159,12 +162,14 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		// Update the last data
 		agent.logicalDevice = proto.Clone(ld).(*voltha.LogicalDevice)
 
-		// Setup the local list of logical ports
-		agent.addLogicalPortsToMap(ld.Ports)
 		// load the flows, meters and groups from KV to cache
 		agent.flowLoader.Load(ctx)
 		agent.meterLoader.Load(ctx)
 		agent.groupLoader.Load(ctx)
+		agent.portLoader.Load(ctx)
+
+		// Setup the local list of logical ports
+		agent.addLogicalPortsToMap(agent.listLogicalDevicePorts())
 	}
 
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
@@ -199,6 +204,8 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 		} else {
 			logger.Debugw("logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		}
+		// TODO: remove all entries from all loaders
+		// TODO: don't allow any more modifications to flows/groups/meters/ports or to any logical device field
 
 		agent.stopped = true
 
@@ -214,12 +221,6 @@ func (agent *LogicalAgent) GetLogicalDevice(ctx context.Context) (*voltha.Logica
 	}
 	defer agent.requestQueue.RequestComplete()
 	return proto.Clone(agent.logicalDevice).(*voltha.LogicalDevice), nil
-}
-
-// getLogicalDeviceWithoutLock returns a cloned logical device to a function that already holds the agent lock.
-func (agent *LogicalAgent) getLogicalDeviceWithoutLock() *voltha.LogicalDevice {
-	logger.Debug("getLogicalDeviceWithoutLock")
-	return proto.Clone(agent.logicalDevice).(*voltha.LogicalDevice)
 }
 
 //updateLogicalDeviceWithoutLock updates the model with the logical device.  It clones the logicaldevice before saving it

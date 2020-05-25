@@ -20,11 +20,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+
+	"github.com/opencord/voltha-go/rw_core/core/device/port"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 )
 
 var ErrNoRoute = errors.New("no route")
@@ -84,7 +86,7 @@ func (dr *DeviceRoutes) IsRootPort(port uint32) bool {
 }
 
 //ComputeRoutes calculates all the routes between the logical ports.  This will clear up any existing route
-func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.LogicalPort) error {
+func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps map[port.ID]*voltha.LogicalPort) error {
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
 
@@ -102,7 +104,9 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 	}
 
 	dr.reset()
-	dr.logicalPorts = append(dr.logicalPorts, lps...)
+	for _, lp := range lps {
+		dr.logicalPorts = append(dr.logicalPorts, lp)
+	}
 
 	// Setup the physical ports to logical ports map, the nni ports as well as the root ports map
 	physPortToLogicalPortMap := make(map[string]uint32)
@@ -200,7 +204,7 @@ func (dr *DeviceRoutes) addPortAndVerifyPrecondition(lp *voltha.LogicalPort) err
 
 // AddPort augments the current set of routes with new routes corresponding to the logical port "lp".  If the routes have
 // not been built yet then use logical port "lps" to compute all current routes (lps includes lp)
-func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, lps []*voltha.LogicalPort) error {
+func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, lps map[port.ID]*voltha.LogicalPort) error {
 	logger.Debugw("add-port-to-routes", log.Fields{"port": lp, "len-logical-ports": len(lps)})
 
 	dr.routeBuildLock.Lock()
@@ -299,16 +303,16 @@ func (dr *DeviceRoutes) Print() error {
 }
 
 // IsUpToDate returns true if device is up to date
-func (dr *DeviceRoutes) IsUpToDate(ld *voltha.LogicalDevice) bool {
+func (dr *DeviceRoutes) IsUpToDate(ldPorts map[port.ID]*voltha.LogicalPort) bool {
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
 	numNNI, numUNI := 0, 0
-	if ld != nil {
-		if len(dr.logicalPorts) != len(ld.Ports) {
+	if ldPorts != nil {
+		if len(dr.logicalPorts) != len(ldPorts) {
 			return false
 		}
 		numNNI = len(dr.RootPorts)
-		numUNI = len(ld.Ports) - numNNI
+		numUNI = len(ldPorts) - numNNI
 	}
 	return len(dr.Routes) == numNNI*numUNI*2
 }
