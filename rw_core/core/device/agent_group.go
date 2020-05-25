@@ -22,7 +22,7 @@ import (
 
 // listDeviceGroups returns logical device flow groups
 func (agent *Agent) listDeviceGroups() map[uint32]*ofp.OfpGroupEntry {
-	groupIDs := agent.groupLoader.List()
+	groupIDs := agent.groupLoader.ListIDs()
 	groups := make(map[uint32]*ofp.OfpGroupEntry, len(groupIDs))
 	for groupID := range groupIDs {
 		if groupHandle, have := agent.groupLoader.Lock(groupID); have {

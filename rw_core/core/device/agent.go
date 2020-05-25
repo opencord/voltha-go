@@ -378,7 +378,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 	}
 	updatedAllFlows := make([]*ofp.OfpFlowStats, 0)
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		flowIDs := agent.flowLoader.List()
+		flowIDs := agent.flowLoader.ListIDs()
 		for flowID := range flowIDs {
 			if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 				updatedAllFlows = append(updatedAllFlows, flowHandle.GetReadOnly())
@@ -468,7 +468,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	}
 	updatedAllGroups := make([]*ofp.OfpGroupEntry, 0)
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		groupIDs := agent.groupLoader.List()
+		groupIDs := agent.groupLoader.ListIDs()
 		for groupID := range groupIDs {
 			if grpHandle, have := agent.groupLoader.Lock(groupID); have {
 				updatedAllGroups = append(updatedAllGroups, grpHandle.GetReadOnly())
@@ -579,7 +579,7 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 	}
 	updatedAllFlows := make([]*ofp.OfpFlowStats, 0)
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		flowIDs := agent.flowLoader.List()
+		flowIDs := agent.flowLoader.ListIDs()
 		for flowID := range flowIDs {
 			if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 				updatedAllFlows = append(updatedAllFlows, flowHandle.GetReadOnly())
@@ -646,7 +646,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 	}
 	updatedAllGroups := make([]*ofp.OfpGroupEntry, 0)
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		groupIDs := agent.groupLoader.List()
+		groupIDs := agent.groupLoader.ListIDs()
 		for groupID := range groupIDs {
 			if grpHandle, have := agent.groupLoader.Lock(groupID); have {
 				updatedAllGroups = append(updatedAllGroups, grpHandle.GetReadOnly())
@@ -721,7 +721,7 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMetadata *voltha.FlowMetadata) error {
 	var flowsToDelete []*ofp.OfpFlowStats
 	// If an existing flow has the uniPort as an InPort or OutPort or as a Tunnel ID then it needs to be removed
-	for flowID := range agent.flowLoader.List() {
+	for flowID := range agent.flowLoader.ListIDs() {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 			flow := flowHandle.GetReadOnly()
 			if flow != nil && (fu.GetInPort(flow) == uniPort || fu.GetOutPort(flow) == uniPort || fu.GetTunnelId(flow) == uint64(uniPort)) {
@@ -764,7 +764,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	}
 	updatedAllFlows := make([]*ofp.OfpFlowStats, 0)
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		flowIDs := agent.flowLoader.List()
+		flowIDs := agent.flowLoader.ListIDs()
 		for flowID := range flowIDs {
 			if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 				updatedAllFlows = append(updatedAllFlows, flowHandle.GetReadOnly())
@@ -853,7 +853,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 	}
 	updatedAllGroups := make([]*ofp.OfpGroupEntry, 0)
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		groupIDs := agent.groupLoader.List()
+		groupIDs := agent.groupLoader.ListIDs()
 		for groupID := range groupIDs {
 			if grpHandle, have := agent.groupLoader.Lock(groupID); have {
 				updatedAllGroups = append(updatedAllGroups, grpHandle.GetReadOnly())
@@ -942,7 +942,7 @@ func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*of
 func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 	logger.Debugw("deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
 
-	for flowID := range agent.flowLoader.List() {
+	for flowID := range agent.flowLoader.ListIDs() {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 			// Update the store and cache
 			if err := flowHandle.Delete(ctx); err != nil {
