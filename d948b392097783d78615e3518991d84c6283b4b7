@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "2ce5deca_59c0776d",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-25T22:19:01Z",
+      "side": 1,
+      "message": "Is that portNo?",
+      "range": {
+        "startLine": 134,
+        "startChar": 43,
+        "endLine": 134,
+        "endChar": 46
+      },
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bcb617c_0f9fa5f9",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-25T22:19:01Z",
+      "side": 1,
+      "message": "Why just don\u0027t update oldPort.Config and State? Do we really need this new variables and assignments?",
+      "range": {
+        "startLine": 171,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 30
+      },
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33e33ebf_50124745",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-25T22:19:01Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 296,
+        "startChar": 0,
+        "endLine": 298,
+        "endChar": 30
+      },
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9afcf5df_d88f6f00",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -31,6 +100,24 @@
       "side": 1,
       "message": "Sure, I\u0027ll keep this in mind when I come back to this.\n\nActually meant to uploaded this change as a draft, it\u0027s still very much WIP.",
       "parentUuid": "9afcf5df_d88f6f00",
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e750199d_e96c2308",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-25T22:19:01Z",
+      "side": 1,
+      "message": "If Kent revisits and changes here, then no need to have my change anymore.",
+      "parentUuid": "7fa12539_cf1f5f78",
       "revId": "d948b392097783d78615e3518991d84c6283b4b7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
