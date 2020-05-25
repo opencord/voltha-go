@@ -34,7 +34,7 @@ import (
 
 // listLogicalDeviceFlows returns logical device flows
 func (agent *LogicalAgent) listLogicalDeviceFlows() map[uint64]*ofp.OfpFlowStats {
-	flowIDs := agent.flowLoader.List()
+	flowIDs := agent.flowLoader.ListIDs()
 	flows := make(map[uint64]*ofp.OfpFlowStats, len(flowIDs))
 	for flowID := range flowIDs {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
@@ -142,7 +142,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			return changed, updated, err
 		}
 
-		groupIDs := agent.groupLoader.List()
+		groupIDs := agent.groupLoader.ListIDs()
 		groups := make(map[uint32]*ofp.OfpGroupEntry, len(groupIDs))
 		for groupID := range groupIDs {
 			if groupHandle, have := agent.groupLoader.Lock(groupID); have {
@@ -242,7 +242,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 	}
 
 	// search through all the flows
-	for flowID := range agent.flowLoader.List() {
+	for flowID := range agent.flowLoader.ListIDs() {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 			if flow := flowHandle.GetReadOnly(); fu.FlowMatchesMod(flow, mod) {
 				toDelete[flow.Id] = flow
@@ -283,7 +283,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 		}
 
 		groups := make(map[uint32]*ofp.OfpGroupEntry)
-		for groupID := range agent.groupLoader.List() {
+		for groupID := range agent.groupLoader.ListIDs() {
 			if groupHandle, have := agent.groupLoader.Lock(groupID); have {
 				groups[groupID] = groupHandle.GetReadOnly()
 				groupHandle.Unlock()
@@ -344,7 +344,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 	defer flowHandle.Unlock()
 
 	groups := make(map[uint32]*ofp.OfpGroupEntry)
-	for groupID := range agent.groupLoader.List() {
+	for groupID := range agent.groupLoader.ListIDs() {
 		if groupHandle, have := agent.groupLoader.Lock(groupID); have {
 			groups[groupID] = groupHandle.GetReadOnly()
 			groupHandle.Unlock()
@@ -419,7 +419,7 @@ func toMetadata(meters map[uint32]*ofp.OfpMeterConfig) *voltha.FlowMetadata {
 
 func (agent *LogicalAgent) deleteFlowsHavingMeter(ctx context.Context, meterID uint32) error {
 	logger.Infow("Delete-flows-matching-meter", log.Fields{"meter": meterID})
-	for flowID := range agent.flowLoader.List() {
+	for flowID := range agent.flowLoader.ListIDs() {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 			if flowMeterID := fu.GetMeterIdFromFlow(flowHandle.GetReadOnly()); flowMeterID != 0 && flowMeterID == meterID {
 				if err := flowHandle.Delete(ctx); err != nil {
@@ -438,7 +438,7 @@ func (agent *LogicalAgent) deleteFlowsHavingMeter(ctx context.Context, meterID u
 func (agent *LogicalAgent) deleteFlowsHavingGroup(ctx context.Context, groupID uint32) (map[uint64]*ofp.OfpFlowStats, error) {
 	logger.Infow("Delete-flows-matching-group", log.Fields{"groupID": groupID})
 	flowsRemoved := make(map[uint64]*ofp.OfpFlowStats)
-	for flowID := range agent.flowLoader.List() {
+	for flowID := range agent.flowLoader.ListIDs() {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 			if flow := flowHandle.GetReadOnly(); fu.FlowHasOutGroup(flow, groupID) {
 				if err := flowHandle.Delete(ctx); err != nil {
