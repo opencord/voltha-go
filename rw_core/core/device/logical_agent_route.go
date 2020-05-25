@@ -19,6 +19,7 @@ package device
 import (
 	"context"
 	"fmt"
+
 	"github.com/opencord/voltha-go/rw_core/route"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -97,13 +98,7 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
-	}
-	// Get all the logical ports on that logical device
-	lDevice := agent.getLogicalDeviceWithoutLock()
-
-	if err := agent.deviceRoutes.ComputeRoutes(ctx, lDevice.Ports); err != nil {
+	if err := agent.deviceRoutes.ComputeRoutes(ctx, agent.listLogicalDevicePorts()); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {
@@ -113,7 +108,7 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 }
 
 //updateRoutes updates the device routes
-func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Device, lp *voltha.LogicalPort, lps []*voltha.LogicalPort) error {
+func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Device, lp *voltha.LogicalPort, lps map[uint32]*voltha.LogicalPort) error {
 	logger.Debugw("updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "port:": lp})
 
 	if err := agent.deviceRoutes.AddPort(ctx, lp, device, lps); err != nil {
@@ -129,12 +124,7 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Devi
 func (agent *LogicalAgent) updateAllRoutes(ctx context.Context, device *voltha.Device) error {
 	logger.Debugw("updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "ports-count": len(device.Ports)})
 
-	ld, err := agent.GetLogicalDevice(ctx)
-	if err != nil {
-		return err
-	}
-
-	if err := agent.deviceRoutes.AddAllPorts(ctx, device, ld.Ports); err != nil {
+	if err := agent.deviceRoutes.AddAllPorts(ctx, device, agent.listLogicalDevicePorts()); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {
