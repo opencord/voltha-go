@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "99c0f78c_6196dece",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-25T22:42:46Z",
+      "side": 1,
+      "message": "Still WIP.  Need to determine what the unique identifier is for ports.",
+      "parentUuid": "2ce5deca_59c0776d",
+      "range": {
+        "startLine": 134,
+        "startChar": 43,
+        "endLine": 134,
+        "endChar": 46
+      },
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bcb617c_0f9fa5f9",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2020-05-25T22:19:01Z",
       "side": 1,
       "message": "Why just don\u0027t update oldPort.Config and State? Do we really need this new variables and assignments?",
+      "range": {
+        "startLine": 171,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 30
+      },
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77b6ed5d_9aa5a402",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-25T22:42:46Z",
+      "side": 1,
+      "message": "Structures returned by GetReadOnly() should never be modified, so must avoid all changes to the original.\n\n(Am trying to decide on, \u0026 eventually formalize, the guarantees made wrt cloning, in order to avoid cloning as much as possible, while still being multithread-safe.)",
+      "parentUuid": "9bcb617c_0f9fa5f9",
       "range": {
         "startLine": 171,
         "startChar": 0,
@@ -118,6 +166,24 @@
       "side": 1,
       "message": "If Kent revisits and changes here, then no need to have my change anymore.",
       "parentUuid": "7fa12539_cf1f5f78",
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "333db287_c892591f",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-25T22:42:46Z",
+      "side": 1,
+      "message": "Will keep in mind.",
+      "parentUuid": "e750199d_e96c2308",
       "revId": "d948b392097783d78615e3518991d84c6283b4b7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
