@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7fa12539_cf1f5f78",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-25T17:28:39Z",
+      "side": 1,
+      "message": "Sure, I\u0027ll keep this in mind when I come back to this.\n\nActually meant to uploaded this change as a draft, it\u0027s still very much WIP.",
+      "parentUuid": "9afcf5df_d88f6f00",
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d799c1a3_36e796d1",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2020-05-25T17:19:10Z",
       "side": 1,
       "message": "Missing code?",
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "744bf605_be1428ce",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-25T17:28:39Z",
+      "side": 1,
+      "message": "This change is still very much WIP, and does not compile currently.  \n\nI thought uploading as draft would hide the patch, but apparently not.",
+      "parentUuid": "d799c1a3_36e796d1",
       "revId": "d948b392097783d78615e3518991d84c6283b4b7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
