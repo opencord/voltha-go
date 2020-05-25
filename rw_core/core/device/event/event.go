@@ -18,11 +18,12 @@ package event
 
 import (
 	"encoding/hex"
+	"sync"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"sync"
 )
 
 type Manager struct {
@@ -123,13 +124,17 @@ loop:
 	return nil
 }
 
-func (q *Manager) SendChangeEvent(deviceID string, portStatus *openflow_13.OfpPortStatus) {
-	// TODO: validate the type of portStatus parameter
-	//if _, ok := portStatus.(*openflow_13.OfpPortStatus); ok {
-	//}
-	event := openflow_13.ChangeEvent{Id: deviceID, Event: &openflow_13.ChangeEvent_PortStatus{PortStatus: portStatus}}
-	logger.Debugw("SendChangeEvent", log.Fields{"event": event})
-	q.changeEventQueue <- event
+func (q *Manager) SendChangeEvent(deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
+	logger.Debugw("SendChangeEvent", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
+	q.changeEventQueue <- openflow_13.ChangeEvent{
+		Id: deviceID,
+		Event: &openflow_13.ChangeEvent_PortStatus{
+			PortStatus: &openflow_13.OfpPortStatus{
+				Reason: reason,
+				Desc:   desc,
+			},
+		},
+	}
 }
 
 // ReceiveChangeEvents receives change in events
