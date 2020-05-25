@@ -34,6 +34,24 @@
       "revId": "3136fbd8a35e4909563e484e9b95852bf1d53b75",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4044d8b7_94e3d5dc",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-25T14:15:25Z",
+      "side": 0,
+      "message": "Though it\u0027s not longer used in core, except in tests.  Something to keep in mind if it is eventually removed from other voltha components.\n\nShould this call be removed from the tests as well?  I believe the usage in tests just replicates this startup process.",
+      "parentUuid": "537689eb_e4c95053",
+      "revId": "3136fbd8a35e4909563e484e9b95852bf1d53b75",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
