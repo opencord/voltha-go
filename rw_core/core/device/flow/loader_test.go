@@ -22,34 +22,45 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"testing"
 )
 
 // TestLoadersIdentical ensures that the group, flow, and meter loaders always have an identical implementation.
 func TestLoadersIdentical(t *testing.T) {
 	identical := [][]string{
-		{"ofp\\.OfpFlowStats", "ofp\\.OfpGroupEntry", "ofp\\.OfpMeterEntry"},
-		{"\\.Id", "\\.Desc\\.GroupId", "\\.Config.MeterId"},
-		{"uint64", "uint32", "uint32"},
-		{"Flow", "Group", "Meter"},
-		{"flow", "group", "meter"},
+		{`\.flows\[flow\.Id] = .*$`, `\.groups\[group\.Desc\.GroupId] = .*$`, `\.meters\[meter\.Config\.MeterId] = .*$`, `\.addUnsafe\(port\.DeviceId, port\.DevicePortNo, .*$`},
+		{`delete\(.*loader\.flows, `, `delete\(.*loader\.groups, `, `delete\(.*loader\.meters, `, `(?:[a-z].*)?loader\.deletedUnsafe\(`},
+		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`, `voltha\.LogicalPort`},
+		{`flow\.Id`, `group\.Desc\.GroupId`, `meter\.Config\.MeterId`, `port\.DeviceId, port\.DevicePortNo|port\.DeviceId]\[port\.DevicePortNo|port\.DeviceId, "/", port\.DevicePortNo`},
+		{`%v`, `%v`, `%v`, `%s-%d`},
+		{`id uint64`, `id uint32`, `id uint32`, `deviceID string, portNo uint32`},
+		{`\[id]`, `\[id]`, `\[id]`, `\[deviceID]\[portNo]`},
+		{`\(id\)`, `\(id\)`, `\(id\)`, `\(deviceID, portNo\)`},
+		{`uint64`, `uint32`, `uint32`, `string]map\[uint32|ID`},
+		{`Flow`, `Group`, `Meter`, `Port`},
+		{`flow`, `group`, `meter`, `port`},
 	}
 
-	regexes := make([]*regexp.Regexp, len(identical))
+	regexes := make([][]*regexp.Regexp, len(identical[0]))
+	for i := range regexes {
+		regexes[i] = make([]*regexp.Regexp, len(identical))
+	}
 	for i, group := range identical {
-		regexes[i] = regexp.MustCompile(strings.Join(group, "|"))
+		for j, regexStr := range group {
+			// convert from column-wise to row-wise for convenience
+			regexes[j][i] = regexp.MustCompile(regexStr)
+		}
 	}
 
-	for i := 1; i < len(identical[0]); i++ {
-		if err := compare(regexes, "../"+identical[4][0]+"/loader.go", "../"+identical[4][i]+"/loader.go"); err != nil {
+	for i := 1; i < len(identical); i++ {
+		if err := compare(regexes[0], regexes[i], "../"+identical[9][0]+"/loader.go", "../"+identical[9][i]+"/loader.go"); err != nil {
 			t.Error(err)
 			return
 		}
 	}
 }
 
-func compare(regexes []*regexp.Regexp, fileNameA, fileNameB string) error {
+func compare(regexesA, regexesB []*regexp.Regexp, fileNameA, fileNameB string) error {
 	fileA, err := os.Open(fileNameA)
 	if err != nil {
 		return err
@@ -65,6 +76,7 @@ func compare(regexes []*regexp.Regexp, fileNameA, fileNameB string) error {
 	scannerA, scannerB := bufio.NewScanner(fileA), bufio.NewScanner(fileB)
 
 	spaceRegex := regexp.MustCompile(" +")
+	libGoImportRegex := regexp.MustCompile(`^.*github\.com/opencord/voltha-protos/.*$`)
 
 	line := 1
 	for {
@@ -88,16 +100,19 @@ func compare(regexes []*regexp.Regexp, fileNameA, fileNameB string) error {
 		textA, textB := scannerA.Text(), scannerB.Text()
 
 		replacedA, replacedB := textA, textB
-		for i, regex := range regexes {
+		for i := range regexesA {
 			replacement := "{{type" + strconv.Itoa(i) + "}}"
-			replacedA, replacedB = regex.ReplaceAllString(replacedA, replacement), regex.ReplaceAllString(replacedB, replacement)
+			replacedA, replacedB = regexesA[i].ReplaceAllString(replacedA, replacement), regexesB[i].ReplaceAllString(replacedB, replacement)
 		}
 
 		// replace multiple spaces with single space
 		replacedA, replacedB = spaceRegex.ReplaceAllString(replacedA, " "), spaceRegex.ReplaceAllString(replacedB, " ")
 
-		if replacedA != replacedB {
-			return fmt.Errorf("line %d: files %s and %s do not match: \n\t%s\n\t%s\n\n\t%s\n\t%s", line, fileNameA, fileNameB, textA, textB, replacedA, replacedB)
+		// ignore difference: voltha-protos import of ofp vs voltha
+		replacedA, replacedB = libGoImportRegex.ReplaceAllString(replacedA, "{{lib-go-import}}"), libGoImportRegex.ReplaceAllString(replacedB, "{{lib-go-import}}")
+
+		if replacedA != replacedB && textA != textB {
+			return fmt.Errorf("files do not match: \n  %s:%d\n    %s\n  %s:%d\n    %s\n\n\t%s\n\t%s", fileNameA, line, textA, fileNameB, line, textB, replacedA, replacedB)
 		}
 
 		line++

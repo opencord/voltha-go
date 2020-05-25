@@ -53,6 +53,7 @@ var (
 )
 
 type isLogicalDeviceConditionSatisfied func(ld *voltha.LogicalDevice) bool
+type isLogicalDevicePortsConditionSatisfied func(ports []*voltha.LogicalPort) bool
 type isDeviceConditionSatisfied func(ld *voltha.Device) bool
 type isDevicesConditionSatisfied func(ds *voltha.Devices) bool
 type isLogicalDevicesConditionSatisfied func(lds *voltha.LogicalDevices) bool
@@ -187,6 +188,41 @@ func waitUntilLogicalDeviceReadiness(oltDeviceID string,
 				}
 			} else if d != nil && d.ParentId == "" { // case where logical device deleted
 				if verificationFunction(nil) {
+					ch <- 1
+					break
+				}
+				if done {
+					break
+				}
+			}
+			time.Sleep(retryInterval)
+		}
+	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-ch:
+		return nil
+	case <-timer.C:
+		done = true
+		return fmt.Errorf("timeout-waiting-for-logical-device-readiness%s", oltDeviceID)
+	}
+}
+
+func waitUntilLogicalDevicePortsReadiness(oltDeviceID string,
+	timeout time.Duration,
+	nbi *NBIHandler,
+	verificationFunction isLogicalDevicePortsConditionSatisfied,
+) error {
+	ch := make(chan int, 1)
+	done := false
+	go func() {
+		for {
+			// Get the logical device from the olt device
+			d, _ := nbi.GetDevice(getContext(), &voltha.ID{Id: oltDeviceID})
+			if d != nil && d.ParentId != "" {
+				ports, err := nbi.ListLogicalDevicePorts(getContext(), &voltha.ID{Id: d.ParentId})
+				if err == nil && verificationFunction(ports.Items) {
 					ch <- 1
 					break
 				}

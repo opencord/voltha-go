@@ -413,15 +413,11 @@ func (tfd *testFlowDecomposer) GetAllDefaultRules() *fu.DeviceRules {
 	return tfd.defaultRules
 }
 
-func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort ...uint32) []uint32 {
-	lPorts := make([]uint32, 0)
-	var exclPort uint32
-	if len(excludePort) == 1 {
-		exclPort = excludePort[0]
-	}
-	for portno := range tfd.logicalPorts {
-		if portno != exclPort {
-			lPorts = append(lPorts, portno)
+func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort uint32) map[uint32]struct{} {
+	lPorts := make(map[uint32]struct{})
+	for portNo := range tfd.logicalPorts {
+		if portNo != excludePort {
+			lPorts[portNo] = struct{}{}
 		}
 	}
 	return lPorts

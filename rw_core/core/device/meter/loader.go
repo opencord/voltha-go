@@ -86,8 +86,6 @@ func (loader *Loader) LockOrCreate(ctx context.Context, meter *ofp.OfpMeterEntry
 		loader.lock.Unlock()
 
 		if err := loader.dbProxy.Set(ctx, fmt.Sprint(meter.Config.MeterId), meter); err != nil {
-			logger.Errorw("failed-adding-meter-to-db", log.Fields{"meterID": meter.Config.MeterId, "err": err})
-
 			// revert the map
 			loader.lock.Lock()
 			delete(loader.meters, meter.Config.MeterId)
@@ -130,6 +128,8 @@ func (loader *Loader) Lock(id uint32) (*Handle, bool) {
 	return &Handle{loader: loader, chunk: entry}, true
 }
 
+// Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
+// This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
 	loader *Loader
 	chunk  *chunk
@@ -152,13 +152,14 @@ func (h *Handle) Update(ctx context.Context, meter *ofp.OfpMeterEntry) error {
 
 // Delete removes the device from the kv
 func (h *Handle) Delete(ctx context.Context) error {
-	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.meter.Config.MeterId)); err != nil {
-		return fmt.Errorf("couldnt-delete-meter-from-store-%v", h.chunk.meter.Config.MeterId)
+	meter := h.chunk.meter
+	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(meter.Config.MeterId)); err != nil {
+		return fmt.Errorf("couldnt-delete-meter-from-store-%v", meter.Config.MeterId)
 	}
 	h.chunk.deleted = true
 
 	h.loader.lock.Lock()
-	delete(h.loader.meters, h.chunk.meter.Config.MeterId)
+	delete(h.loader.meters, meter.Config.MeterId)
 	h.loader.lock.Unlock()
 
 	h.Unlock()
@@ -173,7 +174,7 @@ func (h *Handle) Unlock() {
 	}
 }
 
-// List returns a snapshot of all the managed meter IDs
+// List returns a snapshot of all the managed meter identifiers
 // TODO: iterating through meters safely is expensive now, since all meters are stored & locked separately
 //       should avoid this where possible
 func (loader *Loader) List() map[uint32]struct{} {
