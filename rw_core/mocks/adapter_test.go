@@ -17,12 +17,13 @@
 package mocks
 
 import (
+	"context"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
 	"testing"
 )
 
 func TestAdapterImplementsIAdapter(t *testing.T) {
-	adapter := NewAdapter(nil)
+	adapter := NewAdapter(context.Background(), nil)
 
 	if _, ok := interface{}(adapter).(adapters.IAdapter); !ok {
 		t.Error("adapter does not implement voltha-lib-go/v2/pkg/adapters/IAdapter interface")

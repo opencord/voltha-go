@@ -47,6 +47,7 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
 	// If the context has a probe then fetch it and register our services
 	if p := probe.GetProbeFromContext(ctx); p != nil {
 		p.RegisterService(
+			ctx,
 			"message-bus",
 			"kv-store",
 			"adapter-manager",
@@ -74,15 +75,15 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// setup kv client
 	logger.Debugw("create-kv-client", log.Fields{"kvstore": cf.KVStoreType})
-	kvClient, err := newKVClient(cf.KVStoreType, cf.KVStoreHost+":"+strconv.Itoa(cf.KVStorePort), cf.KVStoreTimeout)
+	kvClient, err := newKVClient(ctx, cf.KVStoreType, cf.KVStoreHost+":"+strconv.Itoa(cf.KVStorePort), cf.KVStoreTimeout)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	defer stopKVClient(context.Background(), kvClient)
 
 	// sync logging config with kv store
-	cm := conf.NewConfigManager(kvClient, cf.KVStoreType, cf.KVStoreHost, cf.KVStorePort, cf.KVStoreTimeout)
-	go conf.StartLogLevelConfigProcessing(cm, ctx)
+	cm := conf.NewConfigManager(ctx, kvClient, cf.KVStoreType, cf.KVStoreHost, cf.KVStorePort, cf.KVStoreTimeout)
+	go conf.StartLogLevelConfigProcessing(ctx, cm)
 
 	backend := &db.Backend{
 		Client:    kvClient,
@@ -104,27 +105,28 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// create kafka client
 	kafkaClient := kafka.NewSaramaClient(
-		kafka.Host(cf.KafkaAdapterHost),
-		kafka.Port(cf.KafkaAdapterPort),
-		kafka.ConsumerType(kafka.GroupCustomer),
-		kafka.ProducerReturnOnErrors(true),
-		kafka.ProducerReturnOnSuccess(true),
-		kafka.ProducerMaxRetries(6),
-		kafka.NumPartitions(3),
-		kafka.ConsumerGroupName(id),
-		kafka.ConsumerGroupPrefix(id),
-		kafka.AutoCreateTopic(true),
-		kafka.ProducerFlushFrequency(5),
-		kafka.ProducerRetryBackoff(time.Millisecond*30),
-		kafka.LivenessChannelInterval(cf.LiveProbeInterval/2),
+		ctx,
+		kafka.Host(ctx, cf.KafkaAdapterHost),
+		kafka.Port(ctx, cf.KafkaAdapterPort),
+		kafka.ConsumerType(ctx, kafka.GroupCustomer),
+		kafka.ProducerReturnOnErrors(ctx, true),
+		kafka.ProducerReturnOnSuccess(ctx, true),
+		kafka.ProducerMaxRetries(ctx, 6),
+		kafka.NumPartitions(ctx, 3),
+		kafka.ConsumerGroupName(ctx, id),
+		kafka.ConsumerGroupPrefix(ctx, id),
+		kafka.AutoCreateTopic(ctx, true),
+		kafka.ProducerFlushFrequency(ctx, 5),
+		kafka.ProducerRetryBackoff(ctx, time.Millisecond*30),
+		kafka.LivenessChannelInterval(ctx, cf.LiveProbeInterval/2),
 	)
 	// defer kafkaClient.Stop()
 
 	// create kv proxy
-	proxy := model.NewProxy(backend, "/")
+	proxy := model.NewProxy(ctx, backend, "/")
 
 	// load adapters & device types while other things are starting
-	adapterMgr := adapter.NewAdapterManager(proxy, id, kafkaClient)
+	adapterMgr := adapter.NewAdapterManager(ctx, proxy, id, kafkaClient)
 	go adapterMgr.Start(ctx)
 
 	// connect to kafka, then wait until reachable and publisher/consumer created
@@ -134,27 +136,27 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 		logger.Warn("Failed to setup kafka connection")
 		return
 	}
-	defer kmp.Stop()
+	defer kmp.Stop(ctx)
 	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
 
 	// create the core of the system, the device managers
-	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(proxy, adapterMgr, kmp, endpointMgr, cf.CorePairTopic, id, cf.DefaultCoreTimeout)
+	endpointMgr := kafka.NewEndpointManager(ctx, backend)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(ctx, proxy, adapterMgr, kmp, endpointMgr, cf.CorePairTopic, id, cf.DefaultCoreTimeout)
 
 	// register kafka RPC handler
-	registerAdapterRequestHandlers(kmp, deviceMgr, adapterMgr, cf.CoreTopic, cf.CorePairTopic)
+	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf.CoreTopic, cf.CorePairTopic)
 
 	// start gRPC handler
-	grpcServer := grpcserver.NewGrpcServer(cf.GrpcHost, cf.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
-	go startGRPCService(ctx, grpcServer, api.NewNBIHandler(deviceMgr, logicalDeviceMgr, adapterMgr))
-	defer grpcServer.Stop()
+	grpcServer := grpcserver.NewGrpcServer(ctx, cf.GrpcHost, cf.GrpcPort, nil, false, probe.GetProbeFromContext(ctx))
+	go startGRPCService(ctx, grpcServer, api.NewNBIHandler(ctx, deviceMgr, logicalDeviceMgr, adapterMgr))
+	defer grpcServer.Stop(ctx)
 
 	// wait for core to be stopped, via Stop() or context cancellation, before running deferred functions
 	<-ctx.Done()
 }
 
 // Stop brings down core services
-func (core *Core) Stop() {
+func (core *Core) Stop(ctx context.Context) {
 	core.shutdown()
 	<-core.stopped
 }

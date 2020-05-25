@@ -44,14 +44,14 @@ type Manager struct {
 	lockdDeviceTypeToAdapterMap sync.RWMutex
 }
 
-func NewAdapterManager(cdProxy *model.Proxy, coreInstanceID string, kafkaClient kafka.Client) *Manager {
+func NewAdapterManager(ctx context.Context, cdProxy *model.Proxy, coreInstanceID string, kafkaClient kafka.Client) *Manager {
 	aMgr := &Manager{
 		coreInstanceID:   coreInstanceID,
 		clusterDataProxy: cdProxy,
 		deviceTypes:      make(map[string]*voltha.DeviceType),
 		adapterAgents:    make(map[string]*agent),
 	}
-	kafkaClient.SubscribeForMetadata(aMgr.updateLastAdapterCommunication)
+	kafkaClient.SubscribeForMetadata(ctx, aMgr.updateLastAdapterCommunication)
 	return aMgr
 }
 
@@ -59,7 +59,7 @@ func NewAdapterManager(cdProxy *model.Proxy, coreInstanceID string, kafkaClient 
 // if more than one callback is required, this should be converted to a proper interface
 type adapterRestartedHandler func(ctx context.Context, adapter *voltha.Adapter) error
 
-func (aMgr *Manager) SetAdapterRestartedCallback(onAdapterRestart adapterRestartedHandler) {
+func (aMgr *Manager) SetAdapterRestartedCallback(ctx context.Context, onAdapterRestart adapterRestartedHandler) {
 	aMgr.onAdapterRestart = onAdapterRestart
 }
 
@@ -69,7 +69,7 @@ func (aMgr *Manager) Start(ctx context.Context) {
 
 	// Load the existing adapterAgents and device types - this will also ensure the correct paths have been
 	// created if there are no data in the dB to start
-	err := aMgr.loadAdaptersAndDevicetypesInMemory()
+	err := aMgr.loadAdaptersAndDevicetypesInMemory(ctx)
 	if err != nil {
 		logger.Fatalf("failed-to-load-adapters-and-device-types-in-memory: %s", err)
 	}
@@ -79,7 +79,7 @@ func (aMgr *Manager) Start(ctx context.Context) {
 }
 
 //loadAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
-func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
+func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory(ctx context.Context) error {
 	// Load the adapters
 	var adapters []*voltha.Adapter
 	if err := aMgr.clusterDataProxy.List(context.Background(), "adapters", &adapters); err != nil {
@@ -88,7 +88,7 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
 	}
 	if len(adapters) != 0 {
 		for _, adapter := range adapters {
-			if err := aMgr.addAdapter(adapter, false); err != nil {
+			if err := aMgr.addAdapter(ctx, adapter, false); err != nil {
 				logger.Errorw("failed to add adapter", log.Fields{"adapterId": adapter.Id})
 			} else {
 				logger.Debugw("adapter added successfully", log.Fields{"adapterId": adapter.Id})
@@ -108,7 +108,7 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
 			logger.Debugw("found-existing-device-types", log.Fields{"deviceTypes": dTypes})
 			dTypes.Items = append(dTypes.Items, dType)
 		}
-		return aMgr.addDeviceTypes(dTypes, false)
+		return aMgr.addDeviceTypes(ctx, dTypes, false)
 	}
 
 	logger.Debug("no-existing-device-type-found")
@@ -116,17 +116,17 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory() error {
 	return nil
 }
 
-func (aMgr *Manager) updateLastAdapterCommunication(adapterID string, timestamp time.Time) {
+func (aMgr *Manager) updateLastAdapterCommunication(ctx context.Context, adapterID string, timestamp time.Time) {
 	aMgr.lockAdaptersMap.RLock()
 	adapterAgent, have := aMgr.adapterAgents[adapterID]
 	aMgr.lockAdaptersMap.RUnlock()
 
 	if have {
-		adapterAgent.updateCommunicationTime(timestamp)
+		adapterAgent.updateCommunicationTime(ctx, timestamp)
 	}
 }
 
-func (aMgr *Manager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
+func (aMgr *Manager) addAdapter(ctx context.Context, adapter *voltha.Adapter, saveToDb bool) error {
 	aMgr.lockAdaptersMap.Lock()
 	defer aMgr.lockAdaptersMap.Unlock()
 	logger.Debugw("adding-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
@@ -153,12 +153,12 @@ func (aMgr *Manager) addAdapter(adapter *voltha.Adapter, saveToDb bool) error {
 			}
 		}
 		clonedAdapter := (proto.Clone(adapter)).(*voltha.Adapter)
-		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(clonedAdapter)
+		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(ctx, clonedAdapter)
 	}
 	return nil
 }
 
-func (aMgr *Manager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bool) error {
+func (aMgr *Manager) addDeviceTypes(ctx context.Context, deviceTypes *voltha.DeviceTypes, saveToDb bool) error {
 	if deviceTypes == nil {
 		return fmt.Errorf("no-device-type")
 	}
@@ -195,28 +195,28 @@ func (aMgr *Manager) addDeviceTypes(deviceTypes *voltha.DeviceTypes, saveToDb bo
 }
 
 // ListAdapters returns the contents of all adapters known to the system
-func (aMgr *Manager) ListAdapters(_ context.Context, _ *empty.Empty) (*voltha.Adapters, error) {
+func (aMgr *Manager) ListAdapters(ctx context.Context, _ *empty.Empty) (*voltha.Adapters, error) {
 	result := &voltha.Adapters{Items: []*voltha.Adapter{}}
 	aMgr.lockAdaptersMap.RLock()
 	defer aMgr.lockAdaptersMap.RUnlock()
 	for _, adapterAgent := range aMgr.adapterAgents {
-		if a := adapterAgent.getAdapter(); a != nil {
+		if a := adapterAgent.getAdapter(ctx); a != nil {
 			result.Items = append(result.Items, (proto.Clone(a)).(*voltha.Adapter))
 		}
 	}
 	return result, nil
 }
 
-func (aMgr *Manager) getAdapter(adapterID string) *voltha.Adapter {
+func (aMgr *Manager) getAdapter(ctx context.Context, adapterID string) *voltha.Adapter {
 	aMgr.lockAdaptersMap.RLock()
 	defer aMgr.lockAdaptersMap.RUnlock()
 	if adapterAgent, ok := aMgr.adapterAgents[adapterID]; ok {
-		return adapterAgent.getAdapter()
+		return adapterAgent.getAdapter(ctx)
 	}
 	return nil
 }
 
-func (aMgr *Manager) RegisterAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) (*voltha.CoreInstance, error) {
+func (aMgr *Manager) RegisterAdapter(ctx context.Context, adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) (*voltha.CoreInstance, error) {
 	logger.Debugw("RegisterAdapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
 		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "deviceTypes": deviceTypes.Items})
 
@@ -229,7 +229,7 @@ func (aMgr *Manager) RegisterAdapter(adapter *voltha.Adapter, deviceTypes *volth
 		return nil, status.Error(codes.InvalidArgument, "adapter-not-specifying-type")
 	}
 
-	if aMgr.getAdapter(adapter.Id) != nil {
+	if aMgr.getAdapter(ctx, adapter.Id) != nil {
 		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
 		go func() {
 			err := aMgr.onAdapterRestart(context.Background(), adapter)
@@ -240,11 +240,11 @@ func (aMgr *Manager) RegisterAdapter(adapter *voltha.Adapter, deviceTypes *volth
 		return &voltha.CoreInstance{InstanceId: aMgr.coreInstanceID}, nil
 	}
 	// Save the adapter and the device types
-	if err := aMgr.addAdapter(adapter, true); err != nil {
+	if err := aMgr.addAdapter(ctx, adapter, true); err != nil {
 		logger.Errorw("failed-to-add-adapter", log.Fields{"error": err})
 		return nil, err
 	}
-	if err := aMgr.addDeviceTypes(deviceTypes, true); err != nil {
+	if err := aMgr.addDeviceTypes(ctx, deviceTypes, true); err != nil {
 		logger.Errorw("failed-to-add-device-types", log.Fields{"error": err})
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func (aMgr *Manager) RegisterAdapter(adapter *voltha.Adapter, deviceTypes *volth
 }
 
 // GetAdapterType returns the name of the device adapter that service this device type
-func (aMgr *Manager) GetAdapterType(deviceType string) (string, error) {
+func (aMgr *Manager) GetAdapterType(ctx context.Context, deviceType string) (string, error) {
 	aMgr.lockdDeviceTypeToAdapterMap.Lock()
 	defer aMgr.lockdDeviceTypeToAdapterMap.Unlock()
 	for _, adapterAgent := range aMgr.adapterAgents {

@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -26,23 +27,23 @@ import (
 )
 
 // CreateDeviceID produces a device ID. The device ID is a UUID
-func CreateDeviceID() string {
+func CreateDeviceID(ctx context.Context) string {
 	return uuid.New().String()
 }
 
 // CreateLogicalDeviceID produces a logical device ID. The logical device ID is a UUID
-func CreateLogicalDeviceID() string {
+func CreateLogicalDeviceID(ctx context.Context) string {
 	return uuid.New().String()
 }
 
 // CreateLogicalPortID produces a random port ID for a logical device.
-func CreateLogicalPortID() uint32 {
+func CreateLogicalPortID(ctx context.Context) uint32 {
 	//	A logical port is a uint32
 	return rand.Uint32()
 }
 
 // CreateDataPathID creates uint64 pathid from string pathid
-func CreateDataPathID(idInHexString string) (uint64, error) {
+func CreateDataPathID(ctx context.Context, idInHexString string) (uint64, error) {
 	if idInHexString == "" {
 		return 0, errors.New("id-empty")
 	}

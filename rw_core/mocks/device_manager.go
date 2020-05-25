@@ -34,7 +34,7 @@ func (dm *DeviceManager) GetDevice(ctx context.Context, deviceID *voltha.ID) (*v
 }
 
 // IsRootDevice -
-func (dm *DeviceManager) IsRootDevice(deviceID string) (bool, error) {
+func (dm *DeviceManager) IsRootDevice(ctx context.Context, deviceID string) (bool, error) {
 	return false, nil
 }
 

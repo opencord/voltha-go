@@ -84,7 +84,7 @@ func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*mock_etc
 	if err != nil {
 		return nil, 0, err
 	}
-	etcdServer := mock_etcd.StartEtcdServer(mock_etcd.MKConfig(configName, kvClientPort, peerPort, storageDir, logLevel))
+	etcdServer := mock_etcd.StartEtcdServer(context.Background(), mock_etcd.MKConfig(context.Background(), configName, kvClientPort, peerPort, storageDir, logLevel))
 	if etcdServer == nil {
 		return nil, 0, status.Error(codes.Internal, "Embedded server failed to start")
 	}
@@ -93,42 +93,43 @@ func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*mock_etc
 
 func stopEmbeddedEtcdServer(server *mock_etcd.EtcdServer) {
 	if server != nil {
-		server.Stop()
+		server.Stop(context.Background())
 	}
 }
 
 func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
 	addr := cf.KVStoreHost + ":" + strconv.Itoa(cf.KVStorePort)
-	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout, log.FatalLevel)
+	client, err := kvstore.NewEtcdClient(context.Background(), addr, cf.KVStoreTimeout, log.FatalLevel)
 	if err != nil {
 		panic("no kv client")
 	}
 	return client
 }
 
-func createMockAdapter(adapterType int, kafkaClient kafka.Client, coreInstanceID string, coreName string, adapterName string) (adapters.IAdapter, error) {
+func createMockAdapter(ctx context.Context, adapterType int, kafkaClient kafka.Client, coreInstanceID string, coreName string, adapterName string) (adapters.IAdapter, error) {
 	var err error
 	var adapter adapters.IAdapter
 	adapterKafkaICProxy := kafka.NewInterContainerProxy(
-		kafka.MsgClient(kafkaClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}))
-	adapterCoreProxy := com.NewCoreProxy(adapterKafkaICProxy, adapterName, coreName)
+		ctx,
+		kafka.MsgClient(ctx, kafkaClient),
+		kafka.DefaultTopic(ctx, &kafka.Topic{Name: adapterName}))
+	adapterCoreProxy := com.NewCoreProxy(ctx, adapterKafkaICProxy, adapterName, coreName)
 	var adapterReqHandler *com.RequestHandlerProxy
 	switch adapterType {
 	case OltAdapter:
-		adapter = cm.NewOLTAdapter(adapterCoreProxy)
+		adapter = cm.NewOLTAdapter(ctx, adapterCoreProxy)
 	case OnuAdapter:
-		adapter = cm.NewONUAdapter(adapterCoreProxy)
+		adapter = cm.NewONUAdapter(ctx, adapterCoreProxy)
 	default:
 		logger.Fatalf("invalid-adapter-type-%d", adapterType)
 	}
-	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
+	adapterReqHandler = com.NewRequestHandlerProxy(ctx, coreInstanceID, adapter, adapterCoreProxy)
 
-	if err = adapterKafkaICProxy.Start(); err != nil {
+	if err = adapterKafkaICProxy.Start(ctx); err != nil {
 		logger.Errorw("Failure-starting-adapter-intercontainerProxy", log.Fields{"error": err})
 		return nil, err
 	}
-	if err = adapterKafkaICProxy.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: adapterName}, adapterReqHandler); err != nil {
+	if err = adapterKafkaICProxy.SubscribeWithRequestHandlerInterface(ctx, kafka.Topic{Name: adapterName}, adapterReqHandler); err != nil {
 		logger.Errorw("Failure-to-subscribe-onu-request-handler", log.Fields{"error": err})
 		return nil, err
 	}

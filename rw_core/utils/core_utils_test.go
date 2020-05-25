@@ -16,13 +16,13 @@
 package utils
 
 import (
-	"math/rand"
-	"testing"
-	"time"
-
+	"context"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"math/rand"
+	"testing"
+	"time"
 )
 
 var (
@@ -37,12 +37,12 @@ func init() {
 
 func runSuccessfulTask(response Response, durationRange int) {
 	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond)
-	response.Done()
+	response.Done(context.Background())
 }
 
 func runFailureTask(response Response, durationRange int) {
 	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond)
-	response.Error(taskFailureError)
+	response.Error(context.Background(), taskFailureError)
 }
 
 func runMultipleTasks(timeout time.Duration, numTasks, taskDurationRange, numSuccessfulTask, numFailuretask int) []error {
@@ -52,7 +52,7 @@ func runMultipleTasks(timeout time.Duration, numTasks, taskDurationRange, numSuc
 	numSuccessfulTaskCreated := 0
 	responses := make([]Response, numTasks)
 	for i := 0; i < numTasks; i++ {
-		responses[i] = NewResponse()
+		responses[i] = NewResponse(context.Background())
 		if numSuccessfulTaskCreated < numSuccessfulTask {
 			go runSuccessfulTask(responses[i], taskDurationRange)
 			numSuccessfulTaskCreated++
@@ -60,7 +60,7 @@ func runMultipleTasks(timeout time.Duration, numTasks, taskDurationRange, numSuc
 		}
 		go runFailureTask(responses[i], taskDurationRange)
 	}
-	return WaitForNilOrErrorResponses(timeout, responses...)
+	return WaitForNilOrErrorResponses(context.Background(), timeout, responses...)
 }
 
 func getNumSuccessFailure(inputs []error) (numSuccess, numFailure, numTimeout int) {

@@ -93,10 +93,10 @@ func (agent *LogicalAgent) ListLogicalDeviceMeters(ctx context.Context) (*ofp.Me
 }
 
 // GetMeterConfig returns meter config
-func (agent *LogicalAgent) GetMeterConfig(flows []*ofp.OfpFlowStats, meters []*ofp.OfpMeterEntry, metadata *voltha.FlowMetadata) error {
+func (agent *LogicalAgent) GetMeterConfig(ctx context.Context, flows []*ofp.OfpFlowStats, meters []*ofp.OfpMeterEntry, metadata *voltha.FlowMetadata) error {
 	m := make(map[uint32]bool)
 	for _, flow := range flows {
-		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 && !m[flowMeterID] {
+		if flowMeterID := fu.GetMeterIdFromFlow(ctx, flow); flowMeterID != 0 && !m[flowMeterID] {
 			foundMeter := false
 			// Meter is present in the flow , Get from logical device
 			for _, meter := range meters {
@@ -122,7 +122,7 @@ func (agent *LogicalAgent) GetMeterConfig(flows []*ofp.OfpFlowStats, meters []*o
 
 func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modCommand *ofp.OfpFlowMod, flow *ofp.OfpFlowStats, revertUpdate bool) bool {
 	flowCommand := modCommand.GetCommand()
-	meterID := fu.GetMeterIdFromFlow(flow)
+	meterID := fu.GetMeterIdFromFlow(ctx, flow)
 	logger.Debugw("Meter-id-in-flow-mod", log.Fields{"meterId": meterID})
 	if meterID == 0 {
 		logger.Debugw("No-meter-present-in-the-flow", log.Fields{"flow": *flow})

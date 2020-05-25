@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -25,7 +26,7 @@ import (
 )
 
 // ResponseCallback is the function signature for callbacks to execute after a response is received.
-type ResponseCallback func(rpc string, response interface{}, reqArgs ...interface{})
+type ResponseCallback func(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{})
 
 // DeviceID represent device id attribute
 type DeviceID struct {
@@ -38,7 +39,7 @@ type LogicalDeviceID struct {
 }
 
 // GetHostName returns host name
-func GetHostName() string {
+func GetHostName(ctx context.Context) string {
 	return os.Getenv("HOSTNAME")
 }
 
@@ -53,7 +54,7 @@ type response struct {
 }
 
 // NewResponse -
-func NewResponse() Response {
+func NewResponse(ctx context.Context) Response {
 	return Response{
 		&response{
 			ch: make(chan struct{}),
@@ -62,7 +63,7 @@ func NewResponse() Response {
 }
 
 // Fake a completed response.
-func DoneResponse() Response {
+func DoneResponse(ctx context.Context) Response {
 	r := Response{
 		&response{
 			err:  nil,
@@ -75,7 +76,7 @@ func DoneResponse() Response {
 }
 
 // Error sends a response with the given error.  It may only be called once.
-func (r Response) Error(err error) {
+func (r Response) Error(ctx context.Context, err error) {
 	// if this is called twice, it will panic; this is intentional
 	r.err = err
 	r.done = true
@@ -83,7 +84,7 @@ func (r Response) Error(err error) {
 }
 
 // Done sends a non-error response unless Error has already been called, in which case this is a no-op.
-func (r Response) Done() {
+func (r Response) Done(ctx context.Context) {
 	if !r.done {
 		close(r.ch)
 	}
@@ -94,7 +95,7 @@ func (r Response) Done() {
 //The error will be at the index corresponding to the order in which the channel appear in the parameter list.
 //If no errors is found then nil is returned.  This method also takes in a timeout in milliseconds. If a
 //timeout is obtained then this function will stop waiting for the remaining responses and abort.
-func WaitForNilOrErrorResponses(timeout time.Duration, responses ...Response) []error {
+func WaitForNilOrErrorResponses(ctx context.Context, timeout time.Duration, responses ...Response) []error {
 	timedOut := make(chan struct{})
 	timer := time.AfterFunc(timeout, func() { close(timedOut) })
 	defer timer.Stop()

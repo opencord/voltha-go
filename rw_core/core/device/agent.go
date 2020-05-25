@@ -62,11 +62,11 @@ type Agent struct {
 }
 
 //newAgent creates a new device agent. The device will be initialized when start() is called.
-func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager, cdProxy *model.Proxy, timeout time.Duration) *Agent {
+func newAgent(ctx context.Context, ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager, cdProxy *model.Proxy, timeout time.Duration) *Agent {
 	var agent Agent
 	agent.adapterProxy = ap
 	if device.Id == "" {
-		agent.deviceID = coreutils.CreateDeviceID()
+		agent.deviceID = coreutils.CreateDeviceID(ctx)
 	} else {
 		agent.deviceID = device.Id
 	}
@@ -80,7 +80,7 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 	agent.clusterDataProxy = cdProxy
 	agent.defaultTimeout = timeout
 	agent.device = proto.Clone(device).(*voltha.Device)
-	agent.requestQueue = coreutils.NewRequestQueue()
+	agent.requestQueue = coreutils.NewRequestQueue(ctx)
 	return &agent
 }
 
@@ -154,7 +154,7 @@ func (agent *Agent) stop(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	logger.Infow("stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
 
@@ -178,7 +178,7 @@ func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 		logger.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "error": err})
 		return
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debug("reconciling-device-agent-devicetype")
 	// TODO: context timeout
 	device := &voltha.Device{}
@@ -196,14 +196,14 @@ func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 
 // onSuccess is a common callback for scenarios where we receive a nil response following a request to an adapter
 // and the only action required is to publish a successful result on kafka
-func (agent *Agent) onSuccess(rpc string, response interface{}, reqArgs ...interface{}) {
+func (agent *Agent) onSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
 	logger.Debugw("response successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
 	// TODO: Post success message onto kafka
 }
 
 // onFailure is a common callback for scenarios where we receive an error response following a request to an adapter
 // and the only action required is to publish the failed result on kafka
-func (agent *Agent) onFailure(rpc string, response interface{}, reqArgs ...interface{}) {
+func (agent *Agent) onFailure(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
 	if res, ok := response.(error); ok {
 		logger.Errorw("rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
 	} else {
@@ -218,14 +218,14 @@ func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.C
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
-			onFailure(rpc, status.Errorf(codes.Aborted, "channel-closed"), reqArgs)
+			onFailure(ctx, rpc, status.Errorf(codes.Aborted, "channel-closed"), reqArgs)
 		} else if rpcResponse.Err != nil {
-			onFailure(rpc, rpcResponse.Err, reqArgs)
+			onFailure(ctx, rpc, rpcResponse.Err, reqArgs)
 		} else {
-			onSuccess(rpc, rpcResponse.Reply, reqArgs)
+			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
 		}
 	case <-ctx.Done():
-		onFailure(rpc, ctx.Err(), reqArgs)
+		onFailure(ctx, rpc, ctx.Err(), reqArgs)
 	}
 }
 
@@ -234,12 +234,12 @@ func (agent *Agent) getDevice(ctx context.Context) (*voltha.Device, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	return proto.Clone(agent.device).(*voltha.Device), nil
 }
 
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
-func (agent *Agent) getDeviceWithoutLock() *voltha.Device {
+func (agent *Agent) getDeviceWithoutLock(ctx context.Context) *voltha.Device {
 	return proto.Clone(agent.device).(*voltha.Device)
 }
 
@@ -248,16 +248,16 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	logger.Debugw("enableDevice", log.Fields{"device-id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
 	// with the adapter then we need to know the adapter that will handle this request
-	adapterName, err := agent.adapterMgr.GetAdapterType(cloned.Type)
+	adapterName, err := agent.adapterMgr.GetAdapterType(ctx, cloned.Type)
 	if err != nil {
 		return err
 	}
@@ -306,20 +306,20 @@ func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel conte
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
-			response.Error(status.Errorf(codes.Aborted, "channel-closed"))
+			response.Error(ctx, status.Errorf(codes.Aborted, "channel-closed"))
 		} else if rpcResponse.Err != nil {
-			response.Error(rpcResponse.Err)
+			response.Error(ctx, rpcResponse.Err)
 		} else {
-			response.Done()
+			response.Done(ctx)
 		}
 	case <-ctx.Done():
-		response.Error(ctx.Err())
+		response.Error(ctx, ctx.Err())
 	}
 }
 
 //deleteFlowWithoutPreservingOrder removes a flow specified by index from the flows slice.  This function will
 //panic if the index is out of range.
-func deleteFlowWithoutPreservingOrder(flows []*ofp.OfpFlowStats, index int) []*ofp.OfpFlowStats {
+func deleteFlowWithoutPreservingOrder(ctx context.Context, flows []*ofp.OfpFlowStats, index int) []*ofp.OfpFlowStats {
 	flows[index] = flows[len(flows)-1]
 	flows[len(flows)-1] = nil
 	return flows[:len(flows)-1]
@@ -327,16 +327,16 @@ func deleteFlowWithoutPreservingOrder(flows []*ofp.OfpFlowStats, index int) []*o
 
 //deleteGroupWithoutPreservingOrder removes a group specified by index from the groups slice.  This function will
 //panic if the index is out of range.
-func deleteGroupWithoutPreservingOrder(groups []*ofp.OfpGroupEntry, index int) []*ofp.OfpGroupEntry {
+func deleteGroupWithoutPreservingOrder(ctx context.Context, groups []*ofp.OfpGroupEntry, index int) []*ofp.OfpGroupEntry {
 	groups[index] = groups[len(groups)-1]
 	groups[len(groups)-1] = nil
 	return groups[:len(groups)-1]
 }
 
-func flowsToUpdateToDelete(newFlows, existingFlows []*ofp.OfpFlowStats) (updatedNewFlows, flowsToDelete, updatedAllFlows []*ofp.OfpFlowStats) {
+func flowsToUpdateToDelete(ctx context.Context, newFlows, existingFlows []*ofp.OfpFlowStats) (updatedNewFlows, flowsToDelete, updatedAllFlows []*ofp.OfpFlowStats) {
 	// Process flows
 	for _, flow := range existingFlows {
-		if idx := fu.FindFlows(newFlows, flow); idx == -1 {
+		if idx := fu.FindFlows(ctx, newFlows, flow); idx == -1 {
 			updatedAllFlows = append(updatedAllFlows, flow)
 		} else {
 			// We have a matching flow (i.e. the following field matches: "TableId", "Priority", "Flags", "Cookie",
@@ -344,7 +344,7 @@ func flowsToUpdateToDelete(newFlows, existingFlows []*ofp.OfpFlowStats) (updated
 			// ignored.  Otherwise, the previous flow will be deleted and the new one added
 			if proto.Equal(newFlows[idx], flow) {
 				// Flow already exist, remove it from the new flows but keep it in the updated flows slice
-				newFlows = deleteFlowWithoutPreservingOrder(newFlows, idx)
+				newFlows = deleteFlowWithoutPreservingOrder(ctx, newFlows, idx)
 				updatedAllFlows = append(updatedAllFlows, flow)
 			} else {
 				// Minor change to flow, delete old and add new one
@@ -356,15 +356,15 @@ func flowsToUpdateToDelete(newFlows, existingFlows []*ofp.OfpFlowStats) (updated
 	return newFlows, flowsToDelete, updatedAllFlows
 }
 
-func groupsToUpdateToDelete(newGroups, existingGroups []*ofp.OfpGroupEntry) (updatedNewGroups, groupsToDelete, updatedAllGroups []*ofp.OfpGroupEntry) {
+func groupsToUpdateToDelete(ctx context.Context, newGroups, existingGroups []*ofp.OfpGroupEntry) (updatedNewGroups, groupsToDelete, updatedAllGroups []*ofp.OfpGroupEntry) {
 	for _, group := range existingGroups {
-		if idx := fu.FindGroup(newGroups, group.Desc.GroupId); idx == -1 { // does not exist now
+		if idx := fu.FindGroup(ctx, newGroups, group.Desc.GroupId); idx == -1 { // does not exist now
 			updatedAllGroups = append(updatedAllGroups, group)
 		} else {
 			// Follow same logic as flows
 			if proto.Equal(newGroups[idx], group) {
 				// Group already exist, remove it from the new groups
-				newGroups = deleteGroupWithoutPreservingOrder(newGroups, idx)
+				newGroups = deleteGroupWithoutPreservingOrder(ctx, newGroups, idx)
 				updatedAllGroups = append(updatedAllGroups, group)
 			} else {
 				// Minor change to group, delete old and add new one
@@ -381,55 +381,55 @@ func (agent *Agent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*
 
 	if (len(newFlows) | len(newGroups)) == 0 {
 		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
-		return coreutils.DoneResponse(), nil
+		return coreutils.DoneResponse(ctx), nil
 	}
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return coreutils.DoneResponse(), err
+		return coreutils.DoneResponse(ctx), err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+		return coreutils.DoneResponse(ctx), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
 	existingGroups := proto.Clone(device.FlowGroups).(*ofp.FlowGroups)
 
 	// Process flows
-	newFlows, flowsToDelete, updatedAllFlows := flowsToUpdateToDelete(newFlows, existingFlows.Items)
+	newFlows, flowsToDelete, updatedAllFlows := flowsToUpdateToDelete(ctx, newFlows, existingFlows.Items)
 
 	// Process groups
-	newGroups, groupsToDelete, updatedAllGroups := groupsToUpdateToDelete(newGroups, existingGroups.Items)
+	newGroups, groupsToDelete, updatedAllGroups := groupsToUpdateToDelete(ctx, newGroups, existingGroups.Items)
 
 	// Sanity check
 	if (len(updatedAllFlows) | len(flowsToDelete) | len(updatedAllGroups) | len(groupsToDelete)) == 0 {
 		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
-		return coreutils.DoneResponse(), nil
+		return coreutils.DoneResponse(ctx), nil
 	}
 
 	// store the changed data
 	device.Flows = &voltha.Flows{Items: updatedAllFlows}
 	device.FlowGroups = &voltha.FlowGroups{Items: updatedAllGroups}
 	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-device-%s", agent.deviceID)
+		return coreutils.DoneResponse(ctx), status.Errorf(codes.Internal, "failure-updating-device-%s", agent.deviceID)
 	}
 
 	// Send update to adapters
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	response := coreutils.NewResponse()
+	response := coreutils.NewResponse(ctx)
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		if len(updatedAllGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedAllGroups) && len(updatedAllFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedAllFlows) {
 			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "groups": newGroups})
 			cancel()
-			return coreutils.DoneResponse(), nil
+			return coreutils.DoneResponse(ctx), nil
 		}
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedAllFlows}, &voltha.FlowGroups{Items: updatedAllGroups}, flowMetadata)
 		if err != nil {
 			cancel()
-			return coreutils.DoneResponse(), err
+			return coreutils.DoneResponse(ctx), err
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	} else {
@@ -445,7 +445,7 @@ func (agent *Agent) addFlowsAndGroupsToAdapter(ctx context.Context, newFlows []*
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
-			return coreutils.DoneResponse(), err
+			return coreutils.DoneResponse(ctx), err
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	}
@@ -459,7 +459,7 @@ func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFl
 	if err != nil {
 		return err
 	}
-	if errs := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); errs != nil {
+	if errs := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, response); errs != nil {
 		logger.Warnw("no-adapter-response", log.Fields{"device-id": agent.deviceID, "result": errs})
 		return status.Errorf(codes.Aborted, "flow-failure-device-%s", agent.deviceID)
 	}
@@ -471,18 +471,18 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 
 	if (len(flowsToDel) | len(groupsToDel)) == 0 {
 		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel, "groups": groupsToDel})
-		return coreutils.DoneResponse(), nil
+		return coreutils.DoneResponse(ctx), nil
 	}
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return coreutils.DoneResponse(), err
+		return coreutils.DoneResponse(ctx), err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+		return coreutils.DoneResponse(ctx), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
@@ -493,14 +493,14 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 
 	// Process flows
 	for _, flow := range existingFlows.Items {
-		if idx := fu.FindFlows(flowsToDel, flow); idx == -1 {
+		if idx := fu.FindFlows(ctx, flowsToDel, flow); idx == -1 {
 			flowsToKeep = append(flowsToKeep, flow)
 		}
 	}
 
 	// Process groups
 	for _, group := range existingGroups.Items {
-		if fu.FindGroup(groupsToDel, group.Desc.GroupId) == -1 { // does not exist now
+		if fu.FindGroup(ctx, groupsToDel, group.Desc.GroupId) == -1 { // does not exist now
 			groupsToKeep = append(groupsToKeep, group)
 		}
 	}
@@ -517,29 +517,29 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 	// Sanity check
 	if (len(flowsToKeep) | len(flowsToDel) | len(groupsToKeep) | len(groupsToDel)) == 0 {
 		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows-to-del": flowsToDel, "groups-to-del": groupsToDel})
-		return coreutils.DoneResponse(), nil
+		return coreutils.DoneResponse(ctx), nil
 	}
 
 	// store the changed data
 	device.Flows = &voltha.Flows{Items: flowsToKeep}
 	device.FlowGroups = &voltha.FlowGroups{Items: groupsToKeep}
 	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
+		return coreutils.DoneResponse(ctx), status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
 	}
 
 	// Send update to adapters
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	response := coreutils.NewResponse()
+	response := coreutils.NewResponse(ctx)
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		if len(groupsToKeep) != 0 && reflect.DeepEqual(existingGroups.Items, groupsToKeep) && len(flowsToKeep) != 0 && reflect.DeepEqual(existingFlows.Items, flowsToKeep) {
 			logger.Debugw("nothing-to-update", log.Fields{"deviceId": agent.deviceID, "flowsToDel": flowsToDel, "groupsToDel": groupsToDel})
 			cancel()
-			return coreutils.DoneResponse(), nil
+			return coreutils.DoneResponse(ctx), nil
 		}
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: flowsToKeep}, &voltha.FlowGroups{Items: groupsToKeep}, flowMetadata)
 		if err != nil {
 			cancel()
-			return coreutils.DoneResponse(), err
+			return coreutils.DoneResponse(ctx), err
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	} else {
@@ -555,7 +555,7 @@ func (agent *Agent) deleteFlowsAndGroupsFromAdapter(ctx context.Context, flowsTo
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
-			return coreutils.DoneResponse(), err
+			return coreutils.DoneResponse(ctx), err
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	}
@@ -569,7 +569,7 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 	if err != nil {
 		return err
 	}
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, response); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -586,7 +586,7 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 
 	// If an existing flow has the uniPort as an InPort or OutPort or as a Tunnel ID then it needs to be removed
 	for _, flow := range existingFlows.Items {
-		if fu.GetInPort(flow) == uniPort || fu.GetOutPort(flow) == uniPort || fu.GetTunnelId(flow) == uint64(uniPort) {
+		if fu.GetInPort(ctx, flow) == uniPort || fu.GetOutPort(ctx, flow) == uniPort || fu.GetTunnelId(ctx, flow) == uint64(uniPort) {
 			flowsToDelete = append(flowsToDelete, flow)
 		}
 	}
@@ -599,7 +599,7 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 	if err != nil {
 		return err
 	}
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, response); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -610,21 +610,21 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 
 	if (len(updatedFlows) | len(updatedGroups)) == 0 {
 		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
-		return coreutils.DoneResponse(), nil
+		return coreutils.DoneResponse(ctx), nil
 	}
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return coreutils.DoneResponse(), err
+		return coreutils.DoneResponse(ctx), err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
-		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states")
+		return coreutils.DoneResponse(ctx), status.Errorf(codes.FailedPrecondition, "invalid device states")
 	}
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+		return coreutils.DoneResponse(ctx), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
 	existingFlows := proto.Clone(device.Flows).(*voltha.Flows)
@@ -632,7 +632,7 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 
 	if len(updatedGroups) != 0 && reflect.DeepEqual(existingGroups.Items, updatedGroups) && len(updatedFlows) != 0 && reflect.DeepEqual(existingFlows.Items, updatedFlows) {
 		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
-		return coreutils.DoneResponse(), nil
+		return coreutils.DoneResponse(ctx), nil
 	}
 
 	logger.Debugw("updating-flows-and-groups",
@@ -646,17 +646,17 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 	device.Flows = &voltha.Flows{Items: updatedFlows}
 	device.FlowGroups = &voltha.FlowGroups{Items: updatedGroups}
 	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
-		return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
+		return coreutils.DoneResponse(ctx), status.Errorf(codes.Internal, "failure-updating-%s", agent.deviceID)
 	}
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	response := coreutils.NewResponse()
+	response := coreutils.NewResponse(ctx)
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedFlows}, &voltha.FlowGroups{Items: updatedGroups}, nil)
 		if err != nil {
 			cancel()
-			return coreutils.DoneResponse(), err
+			return coreutils.DoneResponse(ctx), err
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	} else {
@@ -667,24 +667,24 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 
 		// Process flows
 		for _, flow := range updatedFlows {
-			if idx := fu.FindFlows(existingFlows.Items, flow); idx == -1 {
+			if idx := fu.FindFlows(ctx, existingFlows.Items, flow); idx == -1 {
 				flowsToAdd = append(flowsToAdd, flow)
 			}
 		}
 		for _, flow := range existingFlows.Items {
-			if idx := fu.FindFlows(updatedFlows, flow); idx != -1 {
+			if idx := fu.FindFlows(ctx, updatedFlows, flow); idx != -1 {
 				flowsToDelete = append(flowsToDelete, flow)
 			}
 		}
 
 		// Process groups
 		for _, g := range updatedGroups {
-			if fu.FindGroup(existingGroups.Items, g.Desc.GroupId) == -1 { // does not exist now
+			if fu.FindGroup(ctx, existingGroups.Items, g.Desc.GroupId) == -1 { // does not exist now
 				groupsToAdd = append(groupsToAdd, g)
 			}
 		}
 		for _, group := range existingGroups.Items {
-			if fu.FindGroup(updatedGroups, group.Desc.GroupId) != -1 { // does not exist now
+			if fu.FindGroup(ctx, updatedGroups, group.Desc.GroupId) != -1 { // does not exist now
 				groupsToDelete = append(groupsToDelete, group)
 			}
 		}
@@ -702,7 +702,7 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 		if (len(flowsToAdd) | len(flowsToDelete) | len(groupsToAdd) | len(groupsToDelete) | len(updatedGroups)) == 0 {
 			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows, "groups": updatedGroups})
 			cancel()
-			return coreutils.DoneResponse(), nil
+			return coreutils.DoneResponse(ctx), nil
 		}
 
 		flowChanges := &ofp.FlowChanges{
@@ -717,7 +717,7 @@ func (agent *Agent) updateFlowsAndGroupsToAdapter(ctx context.Context, updatedFl
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
-			return coreutils.DoneResponse(), err
+			return coreutils.DoneResponse(ctx), err
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	}
@@ -732,7 +732,7 @@ func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*of
 	if err != nil {
 		return err
 	}
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, response); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, response); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -744,9 +744,9 @@ func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	// purge all flows on the device by setting it to nil
 	device.Flows = &ofp.Flows{Items: nil}
 	if err := agent.updateDeviceWithoutLock(ctx, device); err != nil {
@@ -761,10 +761,10 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("disableDevice", log.Fields{"device-id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	if cloned.AdminState == voltha.AdminState_DISABLED {
 		logger.Debugw("device-already-disabled", log.Fields{"id": agent.deviceID})
@@ -795,10 +795,10 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("rebootDevice", log.Fields{"device-id": agent.deviceID})
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.RebootDevice(subCtx, device)
 	if err != nil {
@@ -814,9 +814,9 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	previousState := cloned.AdminState
 
@@ -844,11 +844,11 @@ func (agent *Agent) setParentID(ctx context.Context, device *voltha.Device, pare
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	logger.Debugw("setParentId", log.Fields{"device-id": device.Id, "parent-id": parentID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 	cloned.ParentId = parentID
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, ""); err != nil {
@@ -862,10 +862,10 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("updatePmConfigs", log.Fields{"device-id": pmConfigs.Id})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, ""); err != nil {
@@ -886,10 +886,10 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("initPmConfigs", log.Fields{"device-id": pmConfigs.Id})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
 	return agent.updateDeviceInStoreWithoutLock(updateCtx, cloned, false, "")
@@ -899,21 +899,21 @@ func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("listPmConfigs", log.Fields{"device-id": agent.deviceID})
 
-	return agent.getDeviceWithoutLock().PmConfigs, nil
+	return agent.getDeviceWithoutLock(ctx).PmConfigs, nil
 }
 
 func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	logger.Debugw("downloadImage", log.Fields{"device-id": agent.deviceID})
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 
 	if device.AdminState != voltha.AdminState_ENABLED {
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, expected-admin-state:%s", agent.deviceID, voltha.AdminState_ENABLED)
@@ -954,7 +954,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 }
 
 // isImageRegistered is a helper method to figure out if an image is already registered
-func isImageRegistered(img *voltha.ImageDownload, device *voltha.Device) bool {
+func isImageRegistered(ctx context.Context, img *voltha.ImageDownload, device *voltha.Device) bool {
 	for _, image := range device.ImageDownloads {
 		if image.Id == img.Id && image.Name == img.Name {
 			return true
@@ -967,14 +967,14 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	logger.Debugw("cancelImageDownload", log.Fields{"device-id": agent.deviceID})
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 
 	// Verify whether the Image is in the list of image being downloaded
-	if !isImageRegistered(img, device) {
+	if !isImageRegistered(ctx, img, device) {
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, image-not-registered:%s", agent.deviceID, img.Name)
 	}
 
@@ -1005,12 +1005,12 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("activateImage", log.Fields{"device-id": agent.deviceID})
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	// Verify whether the Image is in the list of image being downloaded
-	if !isImageRegistered(img, cloned) {
+	if !isImageRegistered(ctx, img, cloned) {
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, image-not-registered:%s", agent.deviceID, img.Name)
 	}
 
@@ -1045,13 +1045,13 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("revertImage", log.Fields{"device-id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	// Verify whether the Image is in the list of image being downloaded
-	if !isImageRegistered(img, cloned) {
+	if !isImageRegistered(ctx, img, cloned) {
 		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, image-not-registered:%s", agent.deviceID, img.Name)
 	}
 
@@ -1086,9 +1086,9 @@ func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.Imag
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	ch, err := agent.adapterProxy.GetImageDownloadStatus(ctx, device, img)
-	agent.requestQueue.RequestComplete()
+	agent.requestQueue.RequestComplete(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1112,10 +1112,10 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	// Update the image as well as remove it if the download was cancelled
 	clonedImages := make([]*voltha.ImageDownload, len(cloned.ImageDownloads))
@@ -1140,10 +1140,10 @@ func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownl
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("getImageDownload", log.Fields{"device-id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 	for _, image := range cloned.ImageDownloads {
 		if image.Id == img.Id && image.Name == img.Name {
 			return image, nil
@@ -1156,10 +1156,10 @@ func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*v
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("listImageDownloads", log.Fields{"device-id": agent.deviceID})
 
-	return &voltha.ImageDownloads{Items: agent.getDeviceWithoutLock().ImageDownloads}, nil
+	return &voltha.ImageDownloads{Items: agent.getDeviceWithoutLock(ctx).ImageDownloads}, nil
 }
 
 // getPorts retrieves the ports information of the device based on the port type.
@@ -1232,7 +1232,7 @@ func (agent *Agent) getPortCapability(ctx context.Context, portNo uint32) (*ic.P
 	return portCap, nil
 }
 
-func (agent *Agent) onPacketFailure(rpc string, response interface{}, args ...interface{}) {
+func (agent *Agent) onPacketFailure(ctx context.Context, rpc string, response interface{}, args ...interface{}) {
 	// packet data is encoded in the args param as the first parameter
 	var packet []byte
 	if len(args) >= 1 {
@@ -1270,8 +1270,8 @@ func (agent *Agent) packetOut(ctx context.Context, outPort uint32, packet *ofp.O
 
 // updatePartialDeviceData updates a subset of a device that an Adapter can update.
 // TODO:  May need a specific proto to handle only a subset of a device that can be changed by an adapter
-func (agent *Agent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.Device, error) {
-	cloned := agent.getDeviceWithoutLock()
+func (agent *Agent) mergeDeviceInfoFromAdapter(ctx context.Context, device *voltha.Device) (*voltha.Device, error) {
+	cloned := agent.getDeviceWithoutLock(ctx)
 	cloned.Root = device.Root
 	cloned.Vendor = device.Vendor
 	cloned.Model = device.Model
@@ -1286,10 +1286,10 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("updateDeviceUsingAdapterData", log.Fields{"device-id": device.Id})
 
-	updatedDevice, err := agent.mergeDeviceInfoFromAdapter(device)
+	updatedDevice, err := agent.mergeDeviceInfoFromAdapter(ctx, device)
 	if err != nil {
 		return status.Errorf(codes.Internal, "%s", err.Error())
 	}
@@ -1308,9 +1308,9 @@ func (agent *Agent) updateDeviceStatus(ctx context.Context, operStatus voltha.Op
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	newConnStatus, newOperStatus := cloned.ConnectStatus, cloned.OperStatus
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
@@ -1332,8 +1332,8 @@ func (agent *Agent) updatePortsOperState(ctx context.Context, operStatus voltha.
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
-	cloned := agent.getDeviceWithoutLock()
+	defer agent.requestQueue.RequestComplete(ctx)
+	cloned := agent.getDeviceWithoutLock(ctx)
 	for _, port := range cloned.Ports {
 		port.OperStatus = operStatus
 	}
@@ -1345,10 +1345,10 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	// Work only on latest data
 	// TODO: Get list of ports from device directly instead of the entire device
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
 	if _, ok := voltha.Port_PortType_value[portType.String()]; !ok {
@@ -1369,9 +1369,9 @@ func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	if cloned.AdminState != voltha.AdminState_DISABLED && cloned.AdminState != voltha.AdminState_DELETED {
 		err := status.Error(codes.FailedPrecondition, fmt.Sprintf("invalid-state-%v", cloned.AdminState))
@@ -1393,10 +1393,10 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("addPort", log.Fields{"deviceId": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 	updatePort := false
 	if cloned.Ports == nil {
 		//	First port
@@ -1432,10 +1432,10 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("adding-peer-peerPort", log.Fields{"device-id": agent.deviceID, "peer-peerPort": peerPort})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	// Get the peer port on the device based on the peerPort no
 	found := false
@@ -1471,12 +1471,12 @@ func (agent *Agent) updateDeviceAttribute(ctx context.Context, name string, valu
 		logger.Warnw("request-aborted", log.Fields{"device-id": agent.deviceID, "name": name, "error": err})
 		return
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	if value == nil {
 		return
 	}
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 	updated := false
 	s := reflect.ValueOf(cloned).Elem()
 	if s.Kind() == reflect.Struct {
@@ -1508,10 +1508,10 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("simulateAlarm", log.Fields{"id": agent.deviceID})
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.SimulateAlarm(subCtx, cloned, simulateReq)
@@ -1530,7 +1530,7 @@ func (agent *Agent) updateDeviceStateInStoreWithoutLock(
 	connectStatus voltha.ConnectStatus_Types,
 	operStatus voltha.OperStatus_Types,
 ) error {
-	previousState := getDeviceStates(device)
+	previousState := getDeviceStates(ctx, device)
 	device.AdminState, device.ConnectStatus, device.OperStatus = adminState, connectStatus, operStatus
 
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
@@ -1567,9 +1567,9 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	cloned := agent.getDeviceWithoutLock()
+	cloned := agent.getDeviceWithoutLock(ctx)
 	cloned.Reason = reason
 	logger.Debugw("updateDeviceReason", log.Fields{"deviceId": cloned.Id, "reason": cloned.Reason})
 	// Store the device
@@ -1580,11 +1580,11 @@ func (agent *Agent) disablePort(ctx context.Context, Port *voltha.Port) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("disablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
 	var cp *voltha.Port
 	// Get the most up to date the device info
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	for _, port := range device.Ports {
 		if port.PortNo == Port.PortNo {
 			port.AdminState = voltha.AdminState_DISABLED
@@ -1621,12 +1621,12 @@ func (agent *Agent) enablePort(ctx context.Context, Port *voltha.Port) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	logger.Debugw("enablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
 
 	var cp *voltha.Port
 	// Get the most up to date the device info
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 	for _, port := range device.Ports {
 		if port.PortNo == Port.PortNo {
 			port.AdminState = voltha.AdminState_ENABLED
@@ -1662,12 +1662,12 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	logger.Debugw("childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-ud": agent.deviceID})
 
 	//Remove the associated peer ports on the parent device
-	parentDevice := agent.getDeviceWithoutLock()
+	parentDevice := agent.getDeviceWithoutLock(ctx)
 	var updatedPeers []*voltha.Port_PeerPort
 	for _, port := range parentDevice.Ports {
 		updatedPeers = make([]*voltha.Port_PeerPort, 0)
@@ -1698,12 +1698,12 @@ func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *voltha.O
 		return nil, err
 	}
 
-	device := agent.getDeviceWithoutLock()
+	device := agent.getDeviceWithoutLock(ctx)
 
 	if device.Adapter == "" {
-		adapterName, err := agent.adapterMgr.GetAdapterType(device.Type)
+		adapterName, err := agent.adapterMgr.GetAdapterType(ctx, device.Type)
 		if err != nil {
-			agent.requestQueue.RequestComplete()
+			agent.requestQueue.RequestComplete(ctx)
 			return nil, err
 		}
 		device.Adapter = adapterName
@@ -1711,7 +1711,7 @@ func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *voltha.O
 
 	// Send request to the adapter
 	ch, err := agent.adapterProxy.StartOmciTest(ctx, device, omcitestrequest)
-	agent.requestQueue.RequestComplete()
+	agent.requestQueue.RequestComplete(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1742,7 +1742,7 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 
 	//send request to adapter
 	ch, err := agent.adapterProxy.GetExtValue(ctx, pdevice, cdevice, valueparam.Id, valueparam.Value)
-	agent.requestQueue.RequestComplete()
+	agent.requestQueue.RequestComplete(ctx)
 	if err != nil {
 		return nil, err
 	}

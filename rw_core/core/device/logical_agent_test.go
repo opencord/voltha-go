@@ -42,7 +42,7 @@ import (
 func TestLogicalDeviceAgent_diff_nochange_1(t *testing.T) {
 	currentLogicalPorts := []*voltha.LogicalPort{}
 	updatedLogicalPorts := []*voltha.LogicalPort{}
-	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
+	newPorts, changedPorts, deletedPorts := diff(context.Background(), currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
@@ -125,7 +125,7 @@ func TestLogicalDeviceAgent_diff_nochange_2(t *testing.T) {
 			},
 		},
 	}
-	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
+	newPorts, changedPorts, deletedPorts := diff(context.Background(), currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
@@ -159,7 +159,7 @@ func TestLogicalDeviceAgent_diff_add(t *testing.T) {
 			},
 		},
 	}
-	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
+	newPorts, changedPorts, deletedPorts := diff(context.Background(), currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 2, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
@@ -183,7 +183,7 @@ func TestLogicalDeviceAgent_diff_delete(t *testing.T) {
 		},
 	}
 	updatedLogicalPorts := []*voltha.LogicalPort{}
-	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
+	newPorts, changedPorts, deletedPorts := diff(context.Background(), currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 0, len(changedPorts))
 	assert.Equal(t, 1, len(deletedPorts))
@@ -267,7 +267,7 @@ func TestLogicalDeviceAgent_diff_changed(t *testing.T) {
 			},
 		},
 	}
-	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
+	newPorts, changedPorts, deletedPorts := diff(context.Background(), currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 0, len(newPorts))
 	assert.Equal(t, 2, len(changedPorts))
 	assert.Equal(t, 0, len(deletedPorts))
@@ -352,7 +352,7 @@ func TestLogicalDeviceAgent_diff_mix(t *testing.T) {
 			},
 		},
 	}
-	newPorts, changedPorts, deletedPorts := diff(currentLogicalPorts, updatedLogicalPorts)
+	newPorts, changedPorts, deletedPorts := diff(context.Background(), currentLogicalPorts, updatedLogicalPorts)
 	assert.Equal(t, 1, len(newPorts))
 	assert.Equal(t, 2, len(changedPorts))
 	assert.Equal(t, 1, len(deletedPorts))
@@ -387,7 +387,7 @@ func newLDATest() *LDATest {
 		logger.Fatal(err)
 	}
 	// Create the kafka client
-	test.kClient = mock_kafka.NewKafkaClient()
+	test.kClient = mock_kafka.NewKafkaClient(context.Background())
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-da-test"
@@ -458,6 +458,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	cfg.DefaultRequestTimeout = lda.defaultTimeout
 	cfg.KVStorePort = lda.kvClientPort
 	cfg.InCompetingMode = inCompeteMode
+	ctx := context.Background()
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
 		logger.Fatal("Cannot get a freeport for grpc")
@@ -474,29 +475,30 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
 		PathPrefix:              cfg.KVStoreDataPrefix}
 	lda.kmp = kafka.NewInterContainerProxy(
-		kafka.InterContainerHost(cfg.KafkaAdapterHost),
-		kafka.InterContainerPort(cfg.KafkaAdapterPort),
-		kafka.MsgClient(lda.kClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
-		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+		ctx,
+		kafka.InterContainerHost(ctx, cfg.KafkaAdapterHost),
+		kafka.InterContainerPort(ctx, cfg.KafkaAdapterPort),
+		kafka.MsgClient(ctx, lda.kClient),
+		kafka.DefaultTopic(ctx, &kafka.Topic{Name: cfg.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(ctx, &kafka.Topic{Name: cfg.AffinityRouterTopic}))
 
-	endpointMgr := kafka.NewEndpointManager(backend)
-	proxy := model.NewProxy(backend, "/")
-	adapterMgr := adapter.NewAdapterManager(proxy, lda.coreInstanceID, lda.kClient)
+	endpointMgr := kafka.NewEndpointManager(ctx, backend)
+	proxy := model.NewProxy(ctx, backend, "/")
+	adapterMgr := adapter.NewAdapterManager(ctx, proxy, lda.coreInstanceID, lda.kClient)
 
-	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
-	if err = lda.kmp.Start(); err != nil {
+	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(ctx, proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CorePairTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
+	if err = lda.kmp.Start(ctx); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}
-	adapterMgr.Start(context.Background())
+	adapterMgr.Start(ctx)
 }
 
 func (lda *LDATest) stopAll() {
 	if lda.kClient != nil {
-		lda.kClient.Stop()
+		lda.kClient.Stop(context.Background())
 	}
 	if lda.kmp != nil {
-		lda.kmp.Stop()
+		lda.kmp.Stop(context.Background())
 	}
 	if lda.etcdServer != nil {
 		stopEmbeddedEtcdServer(lda.etcdServer)
@@ -509,11 +511,11 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 	clonedLD := proto.Clone(lda.logicalDevice).(*voltha.LogicalDevice)
 	clonedLD.Id = com.GetRandomString(10)
 	clonedLD.DatapathId = rand.Uint64()
-	lDeviceAgent := newLogicalDeviceAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.clusterDataProxy, lDeviceMgr.defaultTimeout)
+	lDeviceAgent := newLogicalDeviceAgent(context.Background(), clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.clusterDataProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
 	err := lDeviceAgent.clusterDataProxy.AddWithID(context.Background(), "logical_devices", clonedLD.Id, clonedLD)
 	assert.Nil(t, err)
-	lDeviceMgr.addLogicalDeviceAgentToMap(lDeviceAgent)
+	lDeviceMgr.addLogicalDeviceAgentToMap(context.Background(), lDeviceAgent)
 	return lDeviceAgent
 }
 
@@ -569,7 +571,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	}()
 	// wait for go routines to be done
 	localWG.Wait()
-	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
+	meterEntry := fu.MeterEntryFromMeterMod(context.Background(), meterMod)
 
 	meterChunk, ok := ldAgent.meters[meterMod.MeterId]
 	assert.Equal(t, ok, true)

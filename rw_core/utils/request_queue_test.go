@@ -24,7 +24,7 @@ import (
 )
 
 func TestRequestQueueOrdering(t *testing.T) {
-	rq := NewRequestQueue()
+	rq := NewRequestQueue(context.Background())
 	// acquire lock immediately, so our requests will queue up
 	if err := rq.WaitForGreenLight(context.Background()); err != nil {
 		t.Error(err)
@@ -43,7 +43,7 @@ func TestRequestQueueOrdering(t *testing.T) {
 				t.Error(err)
 			}
 			doneOrder = append(doneOrder, i)
-			rq.RequestComplete()
+			rq.RequestComplete(context.Background())
 
 			wg.Done()
 		}(i)
@@ -53,7 +53,7 @@ func TestRequestQueueOrdering(t *testing.T) {
 	}
 
 	// complete the first process
-	rq.RequestComplete()
+	rq.RequestComplete(context.Background())
 
 	wg.Wait()
 
@@ -66,7 +66,7 @@ func TestRequestQueueOrdering(t *testing.T) {
 }
 
 func TestRequestQueueCancellation(t *testing.T) {
-	rq := NewRequestQueue()
+	rq := NewRequestQueue(context.Background())
 	// acquire lock immediately, so our requests will queue up
 	if err := rq.WaitForGreenLight(context.Background()); err != nil {
 		t.Error(err)
@@ -97,7 +97,7 @@ func TestRequestQueueCancellation(t *testing.T) {
 				if willCancel {
 					t.Error("this should have been canceled")
 				} //else completed as expected
-				rq.RequestComplete()
+				rq.RequestComplete(context.Background())
 			}
 			wg.Done()
 		}(i)
@@ -110,7 +110,7 @@ func TestRequestQueueCancellation(t *testing.T) {
 	time.Sleep(time.Millisecond)
 
 	// release the lock, and allow the processes to complete
-	rq.RequestComplete()
+	rq.RequestComplete(context.Background())
 
 	// wait for all processes to complete
 	wg.Wait()

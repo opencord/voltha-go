@@ -65,7 +65,7 @@ type LogicalAgent struct {
 	groupLock sync.RWMutex
 }
 
-func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
+func newLogicalDeviceAgent(ctx context.Context, id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
 	deviceMgr *Manager, cdProxy *model.Proxy, timeout time.Duration) *LogicalAgent {
 	var agent LogicalAgent
 	agent.logicalDeviceID = id
@@ -74,10 +74,10 @@ func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *Lo
 	agent.deviceMgr = deviceMgr
 	agent.clusterDataProxy = cdProxy
 	agent.ldeviceMgr = ldeviceMgr
-	agent.flowDecomposer = fd.NewFlowDecomposer(agent.deviceMgr)
+	agent.flowDecomposer = fd.NewFlowDecomposer(ctx, agent.deviceMgr)
 	agent.logicalPortsNo = make(map[uint32]bool)
 	agent.defaultTimeout = timeout
-	agent.requestQueue = coreutils.NewRequestQueue()
+	agent.requestQueue = coreutils.NewRequestQueue(ctx)
 	agent.meters = make(map[uint32]*MeterChunk)
 	agent.flows = make(map[uint64]*FlowChunk)
 	agent.groups = make(map[uint32]*GroupChunk)
@@ -114,7 +114,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 
 		// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
 		var datapathID uint64
-		if datapathID, err = coreutils.CreateDataPathID(agent.serialNumber); err != nil {
+		if datapathID, err = coreutils.CreateDataPathID(ctx, agent.serialNumber); err != nil {
 			return err
 		}
 		ld.DatapathId = datapathID
@@ -159,7 +159,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		agent.logicalDevice = proto.Clone(ld).(*voltha.LogicalDevice)
 
 		// Setup the local list of logical ports
-		agent.addLogicalPortsToMap(ld.Ports)
+		agent.addLogicalPortsToMap(ctx, ld.Ports)
 		// load the flows, meters and groups from KV to cache
 		agent.loadFlows(ctx)
 		agent.loadMeters(ctx)
@@ -190,7 +190,7 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 			returnErr = err
 			return
 		}
-		defer agent.requestQueue.RequestComplete()
+		defer agent.requestQueue.RequestComplete(ctx)
 
 		//Remove the logical device from the model
 		if err := agent.clusterDataProxy.Remove(ctx, "logical_devices/"+agent.logicalDeviceID); err != nil {
@@ -211,12 +211,12 @@ func (agent *LogicalAgent) GetLogicalDevice(ctx context.Context) (*voltha.Logica
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	return proto.Clone(agent.logicalDevice).(*voltha.LogicalDevice), nil
 }
 
 // getLogicalDeviceWithoutLock returns a cloned logical device to a function that already holds the agent lock.
-func (agent *LogicalAgent) getLogicalDeviceWithoutLock() *voltha.LogicalDevice {
+func (agent *LogicalAgent) getLogicalDeviceWithoutLock(ctx context.Context) *voltha.LogicalDevice {
 	logger.Debug("getLogicalDeviceWithoutLock")
 	return proto.Clone(agent.logicalDevice).(*voltha.LogicalDevice)
 }
@@ -255,17 +255,17 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 	logger.Debugw("send-add-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID, "deviceRules": deviceRules, "flowMetadata": flowMetadata})
 
 	responses := make([]coreutils.Response, 0)
-	for deviceID, value := range deviceRules.GetRules() {
-		response := coreutils.NewResponse()
+	for deviceID, value := range deviceRules.GetRules(ctx) {
+		response := coreutils.NewResponse(ctx)
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
-			if err := agent.deviceMgr.addFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+			if err := agent.deviceMgr.addFlowsAndGroups(ctx, deviceId, value.ListFlows(ctx), value.ListGroups(ctx), flowMetadata); err != nil {
 				logger.Errorw("flow-add-failed", log.Fields{"deviceID": deviceId, "error": err})
-				response.Error(status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
+				response.Error(ctx, status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
 			}
-			response.Done()
+			response.Done(ctx)
 		}(deviceID, value)
 	}
 	// Return responses (an array of channels) for the caller to wait for a response from the far end.
@@ -276,17 +276,17 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 	logger.Debugw("send-delete-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
-	for deviceID, value := range deviceRules.GetRules() {
-		response := coreutils.NewResponse()
+	for deviceID, value := range deviceRules.GetRules(ctx) {
+		response := coreutils.NewResponse(ctx)
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
-			if err := agent.deviceMgr.deleteFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+			if err := agent.deviceMgr.deleteFlowsAndGroups(ctx, deviceId, value.ListFlows(ctx), value.ListGroups(ctx), flowMetadata); err != nil {
 				logger.Errorw("flow-delete-failed", log.Fields{"deviceID": deviceId, "error": err})
-				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s", deviceId))
+				response.Error(ctx, status.Errorf(codes.Internal, "flow-delete-failed: %s", deviceId))
 			}
-			response.Done()
+			response.Done(ctx)
 		}(deviceID, value)
 	}
 	return responses
@@ -296,17 +296,17 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 	logger.Debugw("send-update-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
-	for deviceID, value := range deviceRules.GetRules() {
-		response := coreutils.NewResponse()
+	for deviceID, value := range deviceRules.GetRules(ctx) {
+		response := coreutils.NewResponse(ctx)
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
-			if err := agent.deviceMgr.updateFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+			if err := agent.deviceMgr.updateFlowsAndGroups(ctx, deviceId, value.ListFlows(ctx), value.ListGroups(ctx), flowMetadata); err != nil {
 				logger.Errorw("flow-update-failed", log.Fields{"deviceID": deviceId, "error": err})
-				response.Error(status.Errorf(codes.Internal, "flow-update-failed: %s", deviceId))
+				response.Error(ctx, status.Errorf(codes.Internal, "flow-update-failed: %s", deviceId))
 			}
-			response.Done()
+			response.Done(ctx)
 		}(deviceID, value)
 	}
 	return responses
@@ -316,13 +316,13 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 	logger.Debugw("deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "flows": flows})
 	responses := make([]coreutils.Response, 0)
 	for _, flow := range flows.Items {
-		response := coreutils.NewResponse()
+		response := coreutils.NewResponse(ctx)
 		responses = append(responses, response)
-		uniPort, err := agent.getUNILogicalPortNo(flow)
+		uniPort, err := agent.getUNILogicalPortNo(ctx, flow)
 		if err != nil {
 			logger.Error("no-uni-port-in-flow", log.Fields{"deviceID": agent.rootDeviceID, "flow": flow, "error": err})
-			response.Error(err)
-			response.Done()
+			response.Error(ctx, err)
+			response.Done(ctx)
 			continue
 		}
 		logger.Debugw("uni-port", log.Fields{"flows": flows, "uni-port": uniPort})
@@ -331,9 +331,9 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 			defer cancel()
 			if err := agent.deviceMgr.deleteParentFlows(ctx, agent.rootDeviceID, uniPort, metadata); err != nil {
 				logger.Error("flow-delete-failed", log.Fields{"device-id": agent.rootDeviceID, "error": err})
-				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s %v", agent.rootDeviceID, err))
+				response.Error(ctx, status.Errorf(codes.Internal, "flow-delete-failed: %s %v", agent.rootDeviceID, err))
 			}
-			response.Done()
+			response.Done(ctx)
 		}(uniPort, metadata)
 	}
 	return responses
@@ -344,7 +344,7 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 		"packet": hex.EncodeToString(packet.Data),
 		"inPort": packet.GetInPort(),
 	})
-	outPort := fu.GetPacketOutPort(packet)
+	outPort := fu.GetPacketOutPort(ctx, packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
 	if err := agent.deviceMgr.packetOut(ctx, agent.rootDeviceID, outPort, packet); err != nil {
@@ -352,13 +352,13 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 	}
 }
 
-func (agent *LogicalAgent) packetIn(port uint32, transactionID string, packet []byte) {
+func (agent *LogicalAgent) packetIn(ctx context.Context, port uint32, transactionID string, packet []byte) {
 	logger.Debugw("packet-in", log.Fields{
 		"port":          port,
 		"packet":        hex.EncodeToString(packet),
 		"transactionId": transactionID,
 	})
-	packetIn := fu.MkPacketIn(port, packet)
-	agent.ldeviceMgr.SendPacketIn(agent.logicalDeviceID, transactionID, packetIn)
+	packetIn := fu.MkPacketIn(ctx, port, packet)
+	agent.ldeviceMgr.SendPacketIn(ctx, agent.logicalDeviceID, transactionID, packetIn)
 	logger.Debugw("sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
 }

@@ -32,12 +32,12 @@ import (
 type Core interface {
 	Start(ctx context.Context)
 	Stop(ctx context.Context)
-	GetKafkaInterContainerProxy() *kafka.InterContainerProxy
-	GetConfig() *config.RWCoreFlags
-	GetInstanceId() string
-	GetClusterDataProxy() *model.Proxy
-	GetAdapterManager() AdapterManager
+	GetKafkaInterContainerProxy(ctx context.Context) *kafka.InterContainerProxy
+	GetConfig(ctx context.Context) *config.RWCoreFlags
+	GetInstanceId(ctx context.Context) string
+	GetClusterDataProxy(ctx context.Context) *model.Proxy
+	GetAdapterManager(ctx context.Context) AdapterManager
 	StartGRPCService(ctx context.Context)
-	GetDeviceManager() DeviceManager
-	GetLogicalDeviceManager() LogicalDeviceManager
+	GetDeviceManager(ctx context.Context) DeviceManager
+	GetLogicalDeviceManager(ctx context.Context) LogicalDeviceManager
 }

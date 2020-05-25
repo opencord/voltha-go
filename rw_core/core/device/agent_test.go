@@ -69,7 +69,7 @@ func newDATest() *DATest {
 		logger.Fatal(err)
 	}
 	// Create the kafka client
-	test.kClient = mock_kafka.NewKafkaClient()
+	test.kClient = mock_kafka.NewKafkaClient(context.Background())
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-da-test"
@@ -114,6 +114,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
 	cfg.KVStorePort = dat.kvClientPort
 	cfg.InCompetingMode = inCompeteMode
+	ctx := context.Background()
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
 		logger.Fatal("Cannot get a freeport for grpc")
@@ -130,18 +131,19 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
 		PathPrefix:              cfg.KVStoreDataPrefix}
 	dat.kmp = kafka.NewInterContainerProxy(
-		kafka.InterContainerHost(cfg.KafkaAdapterHost),
-		kafka.InterContainerPort(cfg.KafkaAdapterPort),
-		kafka.MsgClient(dat.kClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
-		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+		ctx,
+		kafka.InterContainerHost(ctx, cfg.KafkaAdapterHost),
+		kafka.InterContainerPort(ctx, cfg.KafkaAdapterPort),
+		kafka.MsgClient(ctx, dat.kClient),
+		kafka.DefaultTopic(ctx, &kafka.Topic{Name: cfg.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(ctx, &kafka.Topic{Name: cfg.AffinityRouterTopic}))
 
-	endpointMgr := kafka.NewEndpointManager(backend)
-	proxy := model.NewProxy(backend, "/")
-	adapterMgr := adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
+	endpointMgr := kafka.NewEndpointManager(ctx, backend)
+	proxy := model.NewProxy(ctx, backend, "/")
+	adapterMgr := adapter.NewAdapterManager(ctx, proxy, dat.coreInstanceID, dat.kClient)
 
-	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, adapterMgr, dat.kmp, endpointMgr, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
-	if err = dat.kmp.Start(); err != nil {
+	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(ctx, proxy, adapterMgr, dat.kmp, endpointMgr, cfg.CorePairTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	if err = dat.kmp.Start(ctx); err != nil {
 		logger.Fatal("Cannot start InterContainerProxy")
 	}
 	adapterMgr.Start(context.Background())
@@ -149,10 +151,10 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 
 func (dat *DATest) stopAll() {
 	if dat.kClient != nil {
-		dat.kClient.Stop()
+		dat.kClient.Stop(context.Background())
 	}
 	if dat.kmp != nil {
-		dat.kmp.Stop()
+		dat.kmp.Stop(context.Background())
 	}
 	if dat.etcdServer != nil {
 		stopEmbeddedEtcdServer(dat.etcdServer)
@@ -169,7 +171,7 @@ func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*mock_etc
 	if err != nil {
 		return nil, 0, err
 	}
-	etcdServer := mock_etcd.StartEtcdServer(mock_etcd.MKConfig(configName, kvClientPort, peerPort, storageDir, logLevel))
+	etcdServer := mock_etcd.StartEtcdServer(context.Background(), mock_etcd.MKConfig(context.Background(), configName, kvClientPort, peerPort, storageDir, logLevel))
 	if etcdServer == nil {
 		return nil, 0, status.Error(codes.Internal, "Embedded server failed to start")
 	}
@@ -178,13 +180,13 @@ func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*mock_etc
 
 func stopEmbeddedEtcdServer(server *mock_etcd.EtcdServer) {
 	if server != nil {
-		server.Stop()
+		server.Stop(context.Background())
 	}
 }
 
 func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
 	addr := cf.KVStoreHost + ":" + strconv.Itoa(cf.KVStorePort)
-	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout, log.FatalLevel)
+	client, err := kvstore.NewEtcdClient(context.Background(), addr, cf.KVStoreTimeout, log.FatalLevel)
 	if err != nil {
 		panic("no kv client")
 	}
@@ -194,11 +196,11 @@ func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client
 func (dat *DATest) createDeviceAgent(t *testing.T) *Agent {
 	deviceMgr := dat.deviceMgr
 	clonedDevice := proto.Clone(dat.device).(*voltha.Device)
-	deviceAgent := newAgent(deviceMgr.adapterProxy, clonedDevice, deviceMgr, deviceMgr.clusterDataProxy, deviceMgr.defaultTimeout)
+	deviceAgent := newAgent(context.Background(), deviceMgr.adapterProxy, clonedDevice, deviceMgr, deviceMgr.clusterDataProxy, deviceMgr.defaultTimeout)
 	d, err := deviceAgent.start(context.TODO(), clonedDevice)
 	assert.Nil(t, err)
 	assert.NotNil(t, d)
-	deviceMgr.addDeviceAgentToMap(deviceAgent)
+	deviceMgr.addDeviceAgentToMap(context.Background(), deviceAgent)
 	return deviceAgent
 }
 
@@ -336,7 +338,7 @@ func TestFlowsToUpdateToDelete_EmptySlices(t *testing.T) {
 	expectedNewFlows := []*ofp.OfpFlowStats{}
 	expectedFlowsToDelete := []*ofp.OfpFlowStats{}
 	expectedUpdatedAllFlows := []*ofp.OfpFlowStats{}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	uNF, fD, uAF := flowsToUpdateToDelete(context.Background(), newFlows, existingFlows)
 	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
 	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
 	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
@@ -360,7 +362,7 @@ func TestFlowsToUpdateToDelete_NoExistingFlows(t *testing.T) {
 		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
 		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
 	}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	uNF, fD, uAF := flowsToUpdateToDelete(context.Background(), newFlows, existingFlows)
 	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
 	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
 	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
@@ -389,7 +391,7 @@ func TestFlowsToUpdateToDelete_UpdateNoDelete(t *testing.T) {
 		{Id: 121, TableId: 1210, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1210000, PacketCount: 0},
 		{Id: 122, TableId: 1220, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1220000, PacketCount: 0},
 	}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	uNF, fD, uAF := flowsToUpdateToDelete(context.Background(), newFlows, existingFlows)
 	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
 	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
 	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
@@ -429,7 +431,7 @@ func TestFlowsToUpdateToDelete_UpdateAndDelete(t *testing.T) {
 		{Id: 126, TableId: 1260, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
 	}
-	uNF, fD, uAF := flowsToUpdateToDelete(newFlows, existingFlows)
+	uNF, fD, uAF := flowsToUpdateToDelete(context.Background(), newFlows, existingFlows)
 	assert.True(t, isFlowSliceEqual(uNF, expectedNewFlows))
 	assert.True(t, isFlowSliceEqual(fD, expectedFlowsToDelete))
 	assert.True(t, isFlowSliceEqual(uAF, expectedUpdatedAllFlows))
@@ -441,7 +443,7 @@ func TestGroupsToUpdateToDelete_EmptySlices(t *testing.T) {
 	expectedNewGroups := []*ofp.OfpGroupEntry{}
 	expectedGroupsToDelete := []*ofp.OfpGroupEntry{}
 	expectedUpdatedAllGroups := []*ofp.OfpGroupEntry{}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	uNG, gD, uAG := groupsToUpdateToDelete(context.Background(), newGroups, existingGroups)
 	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
 	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
 	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
@@ -462,7 +464,7 @@ func TestGroupsToUpdateToDelete_NoExistingGroups(t *testing.T) {
 		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
 	}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	uNG, gD, uAG := groupsToUpdateToDelete(context.Background(), newGroups, existingGroups)
 	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
 	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
 	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
@@ -488,7 +490,7 @@ func TestGroupsToUpdateToDelete_UpdateNoDelete(t *testing.T) {
 		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
 	}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	uNG, gD, uAG := groupsToUpdateToDelete(context.Background(), newGroups, existingGroups)
 	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
 	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
 	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))
@@ -517,7 +519,7 @@ func TestGroupsToUpdateToDelete_UpdateWithDelete(t *testing.T) {
 		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
 	}
-	uNG, gD, uAG := groupsToUpdateToDelete(newGroups, existingGroups)
+	uNG, gD, uAG := groupsToUpdateToDelete(context.Background(), newGroups, existingGroups)
 	assert.True(t, isGroupSliceEqual(uNG, expectedNewGroups))
 	assert.True(t, isGroupSliceEqual(gD, expectedGroupsToDelete))
 	assert.True(t, isGroupSliceEqual(uAG, expectedUpdatedAllGroups))

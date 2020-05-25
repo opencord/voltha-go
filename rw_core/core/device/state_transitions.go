@@ -46,18 +46,18 @@ type match struct {
 }
 
 // toInt returns an integer representing the matching level of the match (the larger the number the better)
-func (m *match) toInt() int {
+func (m *match) toInt(ctx context.Context) int {
 	return int(m.admin<<4 | m.oper<<2 | m.conn)
 }
 
 // isExactMatch returns true if match is an exact match
-func (m *match) isExactMatch() bool {
+func (m *match) isExactMatch(ctx context.Context) bool {
 	return m.admin == currPrevStateMatch && m.oper == currPrevStateMatch && m.conn == currPrevStateMatch
 }
 
 // isBetterMatch returns true if newMatch is a worse match
-func (m *match) isBetterMatch(newMatch *match) bool {
-	return m.toInt() > newMatch.toInt()
+func (m *match) isBetterMatch(ctx context.Context, newMatch *match) bool {
+	return m.toInt(ctx) > newMatch.toInt(ctx)
 }
 
 // deviceState has admin, operational and connection status of device
@@ -85,7 +85,7 @@ type TransitionMap struct {
 }
 
 // NewTransitionMap creates transition map
-func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
+func NewTransitionMap(ctx context.Context, dMgr coreif.DeviceManager) *TransitionMap {
 	var transitionMap TransitionMap
 	transitionMap.dMgr = dMgr
 	transitionMap.transitions = make([]Transition, 0)
@@ -238,12 +238,12 @@ func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
 	return &transitionMap
 }
 
-func getDeviceStates(device *voltha.Device) *deviceState {
+func getDeviceStates(ctx context.Context, device *voltha.Device) *deviceState {
 	return &deviceState{Admin: device.AdminState, Connection: device.ConnectStatus, Operational: device.OperStatus}
 }
 
 // isMatched matches a state transition.  It returns whether there is a match and if there is whether it is an exact match
-func getHandler(previous *deviceState, current *deviceState, transition *Transition) ([]TransitionHandler, *match) {
+func getHandler(ctx context.Context, previous *deviceState, current *deviceState, transition *Transition) ([]TransitionHandler, *match) {
 	m := &match{}
 	// Do we have an exact match?
 	if *previous == transition.previousState && *current == transition.currentState {
@@ -297,9 +297,9 @@ func getHandler(previous *deviceState, current *deviceState, transition *Transit
 }
 
 // GetTransitionHandler returns transition handler & a flag that's set if the transition is invalid
-func (tMap *TransitionMap) GetTransitionHandler(device *voltha.Device, pState *deviceState) []TransitionHandler {
+func (tMap *TransitionMap) GetTransitionHandler(ctx context.Context, device *voltha.Device, pState *deviceState) []TransitionHandler {
 	//1. Get the previous and current set of states
-	cState := getDeviceStates(device)
+	cState := getDeviceStates(ctx, device)
 
 	// Do nothing is there are no states change
 	if *pState == *cState {
@@ -324,11 +324,11 @@ func (tMap *TransitionMap) GetTransitionHandler(device *voltha.Device, pState *d
 		if aTransition.deviceType != deviceType && aTransition.deviceType != any {
 			continue
 		}
-		tempHandler, m = getHandler(pState, cState, &aTransition)
+		tempHandler, m = getHandler(ctx, pState, cState, &aTransition)
 		if tempHandler != nil {
-			if m.isExactMatch() && aTransition.deviceType == deviceType {
+			if m.isExactMatch(ctx) && aTransition.deviceType == deviceType {
 				return tempHandler
-			} else if m.isExactMatch() || m.isBetterMatch(bestMatch) {
+			} else if m.isExactMatch(ctx) || m.isBetterMatch(ctx, bestMatch) {
 				currentMatch = tempHandler
 				bestMatch = m
 			}

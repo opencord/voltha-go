@@ -53,6 +53,7 @@ var (
 )
 
 func init() {
+	ctx := context.Background()
 	BenchmarkProxyLogger, _ = log.AddPackage(log.JSON, log.DebugLevel, log.Fields{"instanceId": "PLT"})
 	//log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
 	//Setup default logger - applies for packages that do not have specific logger set
@@ -66,9 +67,9 @@ func init() {
 	}
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/db/model", log.DebugLevel)
 
-	TestProxyRootLogicalDevice = NewProxy(mockBackend, "/")
-	TestProxyRootDevice = NewProxy(mockBackend, "/")
-	TestProxyRootAdapter = NewProxy(mockBackend, "/")
+	TestProxyRootLogicalDevice = NewProxy(ctx, mockBackend, "/")
+	TestProxyRootDevice = NewProxy(ctx, mockBackend, "/")
+	TestProxyRootAdapter = NewProxy(ctx, mockBackend, "/")
 
 	TestProxyLogicalPorts = []*voltha.LogicalPort{
 		{
@@ -314,8 +315,8 @@ func TestProxy_1_3_1_Update_Device(t *testing.T) {
 }
 
 func TestProxy_1_3_3_Update_Adapter(t *testing.T) {
-
-	adaptersProxy := NewProxy(mockBackend, "/adapters")
+	ctx := context.Background()
+	adaptersProxy := NewProxy(ctx, mockBackend, "/adapters")
 
 	retrieved := &voltha.Adapter{}
 	if have, err := TestProxyRootAdapter.Get(context.Background(), "adapters/"+TestProxyAdapterID, retrieved); err != nil {

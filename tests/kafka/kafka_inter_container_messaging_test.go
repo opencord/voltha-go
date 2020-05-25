@@ -83,7 +83,7 @@ func init() {
 func subscribeTarget(kmp *kk.InterContainerProxy) {
 	topic := kk.Topic{Name: "Core"}
 	requestProxy := &api.AdapterRequestHandlerProxy{TestMode: true}
-	kmp.SubscribeWithRequestHandlerInterface(topic, requestProxy)
+	kmp.SubscribeWithRequestHandlerInterface(context.Background(), topic, requestProxy)
 }
 
 func waitForRPCMessage(topic kk.Topic, ch <-chan *ic.InterContainerMessage, doneCh chan string) {

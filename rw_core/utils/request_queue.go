@@ -36,7 +36,7 @@ type RequestQueue struct {
 }
 
 // NewRequestQueue creates a new request queue
-func NewRequestQueue() *RequestQueue {
+func NewRequestQueue(ctx context.Context) *RequestQueue {
 	ch := make(chan struct{})
 	close(ch) // assume the "current" request is already complete
 	return &RequestQueue{lastCompleteCh: ch}
@@ -72,7 +72,7 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 			// chan has been closed, so the lock has been acquired
 			// context is canceled, so just release the lock immediately
 			rq.current = r
-			rq.releaseWithoutLock()
+			rq.releaseWithoutLock(ctx)
 		default:
 			// on abort, skip our position in the queue
 			r.prev.notifyOnComplete = r.notifyOnComplete
@@ -96,14 +96,14 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 
 // RequestComplete must be invoked by a process when it completes processing the request.  That process must have
 // invoked WaitForGreenLight() before.
-func (rq *RequestQueue) RequestComplete() {
+func (rq *RequestQueue) RequestComplete(ctx context.Context) {
 	rq.mutex.Lock()
 	defer rq.mutex.Unlock()
 
-	rq.releaseWithoutLock()
+	rq.releaseWithoutLock(ctx)
 }
 
-func (rq *RequestQueue) releaseWithoutLock() {
+func (rq *RequestQueue) releaseWithoutLock(ctx context.Context) {
 	// Notify the next waiting request.  This will panic if the lock is released more than once.
 	close(rq.current.notifyOnComplete)
 

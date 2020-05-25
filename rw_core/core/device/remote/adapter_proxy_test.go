@@ -58,35 +58,38 @@ func init() {
 	log.SetAllLogLevel(log.WarnLevel)
 
 	var err error
+	ctx := context.Background()
 
 	// Create the KV client
-	kc = mock_kafka.NewKafkaClient()
+	kc = mock_kafka.NewKafkaClient(ctx)
 
 	// Setup core inter-container proxy and core request handler
 	coreKafkaICProxy = kafka.NewInterContainerProxy(
-		kafka.MsgClient(kc),
-		kafka.DefaultTopic(&kafka.Topic{Name: coreName}))
+		ctx,
+		kafka.MsgClient(ctx, kc),
+		kafka.DefaultTopic(ctx, &kafka.Topic{Name: coreName}))
 
-	if err = coreKafkaICProxy.Start(); err != nil {
+	if err = coreKafkaICProxy.Start(ctx); err != nil {
 		logger.Fatalw("Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
-	if err = coreKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: coreName}, 0); err != nil {
+	if err = coreKafkaICProxy.SubscribeWithDefaultRequestHandler(ctx, kafka.Topic{Name: coreName}, 0); err != nil {
 		logger.Fatalw("Failure-subscribing-core-request-handler", log.Fields{"error": err})
 	}
 
 	// Setup adapter inter-container proxy and adapter request handler
-	adapterCoreProxy := com.NewCoreProxy(nil, adapterName, coreName)
-	adapter = cm.NewAdapter(adapterCoreProxy)
-	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
+	adapterCoreProxy := com.NewCoreProxy(ctx, nil, adapterName, coreName)
+	adapter = cm.NewAdapter(ctx, adapterCoreProxy)
+	adapterReqHandler = com.NewRequestHandlerProxy(ctx, coreInstanceID, adapter, adapterCoreProxy)
 	adapterKafkaICProxy = kafka.NewInterContainerProxy(
-		kafka.MsgClient(kc),
-		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}),
-		kafka.RequestHandlerInterface(adapterReqHandler))
+		ctx,
+		kafka.MsgClient(ctx, kc),
+		kafka.DefaultTopic(ctx, &kafka.Topic{Name: adapterName}),
+		kafka.RequestHandlerInterface(ctx, adapterReqHandler))
 
-	if err = adapterKafkaICProxy.Start(); err != nil {
+	if err = adapterKafkaICProxy.Start(ctx); err != nil {
 		logger.Fatalw("Failure-starting-adapter-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
-	if err = adapterKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: adapterName}, 0); err != nil {
+	if err = adapterKafkaICProxy.SubscribeWithDefaultRequestHandler(ctx, kafka.Topic{Name: adapterName}, 0); err != nil {
 		logger.Fatalw("Failure-subscribing-adapter-request-handler", log.Fields{"error": err})
 	}
 }
@@ -98,7 +101,7 @@ func getRandomBytes(size int) (bytes []byte, err error) {
 }
 
 func TestCreateAdapterProxy(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
+	ap := NewAdapterProxy(context.Background(), coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager(context.Background()))
 	assert.NotNil(t, ap)
 }
 
@@ -119,7 +122,7 @@ func waitForResponse(ctx context.Context, ch chan *kafka.RpcResponse) (*any2.Any
 
 func testSimpleRequests(t *testing.T) {
 	type simpleRequest func(context.Context, *voltha.Device) (chan *kafka.RpcResponse, error)
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
+	ap := NewAdapterProxy(context.Background(), coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager(context.Background()))
 	simpleRequests := []simpleRequest{
 		ap.AdoptDevice,
 		ap.DisableDevice,
@@ -162,7 +165,7 @@ func testSimpleRequests(t *testing.T) {
 }
 
 func testGetSwitchCapabilityFromAdapter(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
+	ap := NewAdapterProxy(context.Background(), coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager(context.Background()))
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -174,12 +177,12 @@ func testGetSwitchCapabilityFromAdapter(t *testing.T) {
 	err = ptypes.UnmarshalAny(response, switchCap)
 	assert.Nil(t, err)
 	assert.NotNil(t, switchCap)
-	expectedCap, _ := adapter.Get_ofp_device_info(d)
+	expectedCap, _ := adapter.Get_ofp_device_info(ctx, d)
 	assert.Equal(t, switchCap.String(), expectedCap.String())
 }
 
 func testGetPortInfoFromAdapter(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
+	ap := NewAdapterProxy(context.Background(), coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager(context.Background()))
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -192,12 +195,12 @@ func testGetPortInfoFromAdapter(t *testing.T) {
 	err = ptypes.UnmarshalAny(response, portCap)
 	assert.Nil(t, err)
 	assert.NotNil(t, portCap)
-	expectedPortInfo, _ := adapter.Get_ofp_port_info(d, int64(portNo))
+	expectedPortInfo, _ := adapter.Get_ofp_port_info(context.Background(), d, int64(portNo))
 	assert.Equal(t, portCap.String(), expectedPortInfo.String())
 }
 
 func testPacketOut(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
+	ap := NewAdapterProxy(context.Background(), coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager(context.Background()))
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	outPort := uint32(1)
 	packet, err := getRandomBytes(50)
@@ -211,7 +214,7 @@ func testPacketOut(t *testing.T) {
 }
 
 func testFlowUpdates(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
+	ap := NewAdapterProxy(context.Background(), coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager(context.Background()))
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	_, err := ap.UpdateFlowsBulk(context.Background(), d, &voltha.Flows{}, &voltha.FlowGroups{}, &voltha.FlowMetadata{})
 	assert.Nil(t, err)
@@ -226,7 +229,7 @@ func testFlowUpdates(t *testing.T) {
 }
 
 func testPmUpdates(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
+	ap := NewAdapterProxy(context.Background(), coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager(context.Background()))
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
