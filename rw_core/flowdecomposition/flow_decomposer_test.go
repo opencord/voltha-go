@@ -413,15 +413,11 @@ func (tfd *testFlowDecomposer) GetAllDefaultRules() *fu.DeviceRules {
 	return tfd.defaultRules
 }
 
-func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort ...uint32) []uint32 {
-	lPorts := make([]uint32, 0)
-	var exclPort uint32
-	if len(excludePort) == 1 {
-		exclPort = excludePort[0]
-	}
-	for portno := range tfd.logicalPorts {
-		if portno != exclPort {
-			lPorts = append(lPorts, portno)
+func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort uint32) map[uint32]struct{} {
+	lPorts := make(map[uint32]struct{})
+	for portNo := range tfd.logicalPorts {
+		if portNo != excludePort {
+			lPorts[portNo] = struct{}{}
 		}
 	}
 	return lPorts
@@ -449,11 +445,11 @@ func (tfd *testFlowDecomposer) GetRoute(ctx context.Context, ingressPortNo uint3
 	return nil, status.Errorf(codes.FailedPrecondition, "no route from:%d to:%d", ingressPortNo, egressPortNo)
 }
 
-func (tfd *testFlowDecomposer) GetNNIPorts() []uint32 {
-	nniPorts := make([]uint32, 0)
+func (tfd *testFlowDecomposer) GetNNIPorts() map[uint32]struct{} {
+	nniPorts := make(map[uint32]struct{}, 0)
 	for portNo, nni := range tfd.logicalPortsNo {
 		if nni {
-			nniPorts = append(nniPorts, portNo)
+			nniPorts[portNo] = struct{}{}
 		}
 	}
 	return nniPorts
