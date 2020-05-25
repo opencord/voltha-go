@@ -30,11 +30,10 @@ import (
 
 // Loader hides all low-level locking & synchronization related to meter state updates
 type Loader struct {
+	dbProxy *model.Proxy
 	// this lock protects the meters map, it does not protect individual meters
 	lock   sync.RWMutex
 	meters map[uint32]*chunk
-
-	dbProxy *model.Proxy
 }
 
 // chunk keeps a meter and the lock for this meter
@@ -48,8 +47,8 @@ type chunk struct {
 
 func NewLoader(dbProxy *model.Proxy) *Loader {
 	return &Loader{
-		meters:  make(map[uint32]*chunk),
 		dbProxy: dbProxy,
+		meters:  make(map[uint32]*chunk),
 	}
 }
 
@@ -86,8 +85,6 @@ func (loader *Loader) LockOrCreate(ctx context.Context, meter *ofp.OfpMeterEntry
 		loader.lock.Unlock()
 
 		if err := loader.dbProxy.Set(ctx, fmt.Sprint(meter.Config.MeterId), meter); err != nil {
-			logger.Errorw("failed-adding-meter-to-db", log.Fields{"meterID": meter.Config.MeterId, "err": err})
-
 			// revert the map
 			loader.lock.Lock()
 			delete(loader.meters, meter.Config.MeterId)
@@ -130,6 +127,8 @@ func (loader *Loader) Lock(id uint32) (*Handle, bool) {
 	return &Handle{loader: loader, chunk: entry}, true
 }
 
+// Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
+// This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
 	loader *Loader
 	chunk  *chunk
@@ -173,10 +172,10 @@ func (h *Handle) Unlock() {
 	}
 }
 
-// List returns a snapshot of all the managed meter IDs
+// ListIDs returns a snapshot of all the managed meter IDs
 // TODO: iterating through meters safely is expensive now, since all meters are stored & locked separately
 //       should avoid this where possible
-func (loader *Loader) List() map[uint32]struct{} {
+func (loader *Loader) ListIDs() map[uint32]struct{} {
 	loader.lock.RLock()
 	defer loader.lock.RUnlock()
 	// copy the IDs so caller can safely iterate

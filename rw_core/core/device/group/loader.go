@@ -30,11 +30,10 @@ import (
 
 // Loader hides all low-level locking & synchronization related to group state updates
 type Loader struct {
+	dbProxy *model.Proxy
 	// this lock protects the groups map, it does not protect individual groups
 	lock   sync.RWMutex
 	groups map[uint32]*chunk
-
-	dbProxy *model.Proxy
 }
 
 // chunk keeps a group and the lock for this group
@@ -48,8 +47,8 @@ type chunk struct {
 
 func NewLoader(dbProxy *model.Proxy) *Loader {
 	return &Loader{
-		groups:  make(map[uint32]*chunk),
 		dbProxy: dbProxy,
+		groups:  make(map[uint32]*chunk),
 	}
 }
 
@@ -86,8 +85,6 @@ func (loader *Loader) LockOrCreate(ctx context.Context, group *ofp.OfpGroupEntry
 		loader.lock.Unlock()
 
 		if err := loader.dbProxy.Set(ctx, fmt.Sprint(group.Desc.GroupId), group); err != nil {
-			logger.Errorw("failed-adding-group-to-db", log.Fields{"groupID": group.Desc.GroupId, "err": err})
-
 			// revert the map
 			loader.lock.Lock()
 			delete(loader.groups, group.Desc.GroupId)
@@ -130,6 +127,8 @@ func (loader *Loader) Lock(id uint32) (*Handle, bool) {
 	return &Handle{loader: loader, chunk: entry}, true
 }
 
+// Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
+// This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
 	loader *Loader
 	chunk  *chunk
@@ -173,10 +172,10 @@ func (h *Handle) Unlock() {
 	}
 }
 
-// List returns a snapshot of all the managed group IDs
+// ListIDs returns a snapshot of all the managed group IDs
 // TODO: iterating through groups safely is expensive now, since all groups are stored & locked separately
 //       should avoid this where possible
-func (loader *Loader) List() map[uint32]struct{} {
+func (loader *Loader) ListIDs() map[uint32]struct{} {
 	loader.lock.RLock()
 	defer loader.lock.RUnlock()
 	// copy the IDs so caller can safely iterate
