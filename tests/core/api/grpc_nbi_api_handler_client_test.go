@@ -361,7 +361,9 @@ func TestDeviceManagement(t *testing.T) {
 	for _, ld := range lresponse.Items {
 		logicalDevices[ld.Id] = ld
 		// Ensure each logical device have two ports
-		assert.Equal(t, 2, len(ld.Ports))
+		ports, err := stub.ListLogicalDevicePorts(ctx, &voltha.ID{Id: ld.Id})
+		assert.Nil(t, err)
+		assert.Equal(t, 2, len(ports.Items))
 	}
 
 	//7. Disable all ONUs & check status & check logical device
@@ -399,7 +401,9 @@ func TestDeviceManagement(t *testing.T) {
 	for _, ld := range lresponse.Items {
 		logicalDevices[ld.Id] = ld
 		// Ensure each logical device have one port - only olt port
-		assert.Equal(t, 1, len(ld.Ports))
+		ports, err := stub.ListLogicalDevicePorts(ctx, &common.ID{Id: ld.Id})
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(ports.Items))
 	}
 
 	//8. Enable all ONUs & check status & check logical device

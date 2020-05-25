@@ -30,11 +30,10 @@ import (
 
 // Loader hides all low-level locking & synchronization related to flow state updates
 type Loader struct {
+	dbProxy *model.Proxy
 	// this lock protects the flows map, it does not protect individual flows
 	lock  sync.RWMutex
 	flows map[uint64]*chunk
-
-	dbProxy *model.Proxy
 }
 
 // chunk keeps a flow and the lock for this flow
@@ -48,8 +47,8 @@ type chunk struct {
 
 func NewLoader(dbProxy *model.Proxy) *Loader {
 	return &Loader{
-		flows:   make(map[uint64]*chunk),
 		dbProxy: dbProxy,
+		flows:   make(map[uint64]*chunk),
 	}
 }
 
@@ -86,8 +85,6 @@ func (loader *Loader) LockOrCreate(ctx context.Context, flow *ofp.OfpFlowStats) 
 		loader.lock.Unlock()
 
 		if err := loader.dbProxy.Set(ctx, fmt.Sprint(flow.Id), flow); err != nil {
-			logger.Errorw("failed-adding-flow-to-db", log.Fields{"flowID": flow.Id, "err": err})
-
 			// revert the map
 			loader.lock.Lock()
 			delete(loader.flows, flow.Id)
@@ -109,7 +106,7 @@ func (loader *Loader) LockOrCreate(ctx context.Context, flow *ofp.OfpFlowStats) 
 	return &Handle{loader: loader, chunk: entry}, false, nil
 }
 
-// Lock acquires the lock for this flow, and returns a handle which can be used to access the meter until it's unlocked.
+// Lock acquires the lock for this flow, and returns a handle which can be used to access the flow until it's unlocked.
 // This handle ensures that the flow cannot be accessed if the lock is not held.
 // Returns false if the flow is not present.
 // TODO: consider accepting a ctx and aborting the lock attempt on cancellation
@@ -130,6 +127,8 @@ func (loader *Loader) Lock(id uint64) (*Handle, bool) {
 	return &Handle{loader: loader, chunk: entry}, true
 }
 
+// Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
+// This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
 	loader *Loader
 	chunk  *chunk
@@ -173,10 +172,10 @@ func (h *Handle) Unlock() {
 	}
 }
 
-// List returns a snapshot of all the managed flow IDs
+// ListIDs returns a snapshot of all the managed flow IDs
 // TODO: iterating through flows safely is expensive now, since all flows are stored & locked separately
 //       should avoid this where possible
-func (loader *Loader) List() map[uint64]struct{} {
+func (loader *Loader) ListIDs() map[uint64]struct{} {
 	loader.lock.RLock()
 	defer loader.lock.RUnlock()
 	// copy the IDs so caller can safely iterate

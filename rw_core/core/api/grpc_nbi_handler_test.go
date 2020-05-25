@@ -152,6 +152,9 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 	assert.Equal(t, 1, len(logicalDevices.Items))
 
 	ld := logicalDevices.Items[0]
+	ports, err := nbi.ListLogicalDevicePorts(getContext(), &voltha.ID{Id: ld.Id})
+	assert.Nil(t, err)
+
 	assert.NotEqual(t, "", ld.Id)
 	assert.NotEqual(t, uint64(0), ld.DatapathId)
 	assert.Equal(t, "olt_adapter_mock", ld.Desc.HwDesc)
@@ -161,7 +164,7 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 	assert.Equal(t, uint32(256), ld.SwitchFeatures.NBuffers)
 	assert.Equal(t, uint32(2), ld.SwitchFeatures.NTables)
 	assert.Equal(t, uint32(15), ld.SwitchFeatures.Capabilities)
-	assert.Equal(t, 1+nb.numONUPerOLT, len(ld.Ports))
+	assert.Equal(t, 1+nb.numONUPerOLT, len(ports.Items))
 	assert.Equal(t, oltDevice.ParentId, ld.Id)
 	//Expected port no
 	expectedPortNo := make(map[uint32]bool)
@@ -169,7 +172,7 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 	for i := 0; i < nb.numONUPerOLT; i++ {
 		expectedPortNo[uint32(i+100)] = false
 	}
-	for _, p := range ld.Ports {
+	for _, p := range ports.Items {
 		assert.Equal(t, p.OfpPort.PortNo, p.DevicePortNo)
 		assert.Equal(t, uint32(4), p.OfpPort.State)
 		expectedPortNo[p.OfpPort.PortNo] = true
@@ -395,10 +398,10 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 
 	// Wait for the logical device to be in the ready state
-	var vldFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
-		return ld != nil && len(ld.Ports) == nb.numONUPerOLT+1
+	var vldFunction = func(ports []*voltha.LogicalPort) bool {
+		return len(ports) == nb.numONUPerOLT+1
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
 	assert.Nil(t, err)
 
 	// Verify that the devices have been setup correctly
@@ -441,11 +444,8 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *NBIHandler
 	}
 
 	// Wait for the logical device to satisfy the expected condition
-	var vlFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
-		if ld == nil {
-			return false
-		}
-		for _, lp := range ld.Ports {
+	var vlFunction = func(ports []*voltha.LogicalPort) bool {
+		for _, lp := range ports {
 			if (lp.OfpPort.Config&uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN) != lp.OfpPort.Config) ||
 				lp.OfpPort.State != uint32(ofp.OfpPortState_OFPPS_LINK_DOWN) {
 				return false
@@ -453,7 +453,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *NBIHandler
 		}
 		return true
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 
 	// Reenable the oltDevice
@@ -476,11 +476,8 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *NBIHandler
 	}
 
 	// Wait for the logical device to satisfy the expected condition
-	vlFunction = func(ld *voltha.LogicalDevice) bool {
-		if ld == nil {
-			return false
-		}
-		for _, lp := range ld.Ports {
+	vlFunction = func(ports []*voltha.LogicalPort) bool {
+		for _, lp := range ports {
 			if (lp.OfpPort.Config&^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN) != lp.OfpPort.Config) ||
 				lp.OfpPort.State != uint32(ofp.OfpPortState_OFPPS_LIVE) {
 				return false
@@ -488,7 +485,7 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi *NBIHandler
 		}
 		return true
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 }
 
@@ -583,10 +580,10 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 
 	// Wait for the logical device to be in the ready state
-	var vldFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
-		return ld != nil && len(ld.Ports) == nb.numONUPerOLT+1
+	var vldFunction = func(ports []*voltha.LogicalPort) bool {
+		return len(ports) == nb.numONUPerOLT+1
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
 	assert.Nil(t, err)
 
 	//Get all child devices
@@ -666,11 +663,8 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
 	assert.Nil(t, err)
 	// Wait for the logical device to satisfy the expected condition
-	var vlFunction = func(ld *voltha.LogicalDevice) bool {
-		if ld == nil {
-			return false
-		}
-		for _, lp := range ld.Ports {
+	var vlFunction = func(ports []*voltha.LogicalPort) bool {
+		for _, lp := range ports {
 			if (lp.OfpPort.Config&^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN) != lp.OfpPort.Config) ||
 				lp.OfpPort.State != uint32(ofp.OfpPortState_OFPPS_LIVE) {
 				return false
@@ -678,7 +672,7 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 		}
 		return true
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 
 	// Enable the NW Port of oltDevice
@@ -697,11 +691,8 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
 	assert.Nil(t, err)
 	// Wait for the logical device to satisfy the expected condition
-	vlFunction = func(ld *voltha.LogicalDevice) bool {
-		if ld == nil {
-			return false
-		}
-		for _, lp := range ld.Ports {
+	vlFunction = func(ports []*voltha.LogicalPort) bool {
+		for _, lp := range ports {
 			if (lp.OfpPort.Config&^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN) != lp.OfpPort.Config) ||
 				lp.OfpPort.State != uint32(ofp.OfpPortState_OFPPS_LIVE) {
 				return false
@@ -709,7 +700,7 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 		}
 		return true
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 
 	// Disable a non-PON port
@@ -878,10 +869,10 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 
 	// Wait for the logical device to be in the ready state
-	var vldFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
-		return ld != nil && len(ld.Ports) == nb.numONUPerOLT+1
+	var vldFunction = func(ports []*voltha.LogicalPort) bool {
+		return len(ports) == nb.numONUPerOLT+1
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
 	assert.Nil(t, err)
 
 	// Wait for the olt device to be enabled
@@ -941,11 +932,11 @@ func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, nu
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *voltha.LogicalDevice, meterID uint64, startingVlan int) (numNNIPorts, numUNIPorts int) {
+func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDeviceID string, ports []*voltha.LogicalPort, meterID uint64, startingVlan int) (numNNIPorts, numUNIPorts int) {
 	// Send flows for the parent device
 	var nniPorts []*voltha.LogicalPort
 	var uniPorts []*voltha.LogicalPort
-	for _, p := range logicalDevice.Ports {
+	for _, p := range ports {
 		if p.RootPort {
 			nniPorts = append(nniPorts, p)
 		} else {
@@ -968,7 +959,7 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 			flows.Output(controllerPortMask),
 		},
 	}
-	flowLLDP := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDevice.Id}
+	flowLLDP := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDeviceID}
 	_, err := nbi.UpdateLogicalDeviceFlowTable(getContext(), &flowLLDP)
 	assert.Nil(t, err)
 
@@ -985,7 +976,7 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 			flows.Output(controllerPortMask),
 		},
 	}
-	flowIPV4 := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDevice.Id}
+	flowIPV4 := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDeviceID}
 	_, err = nbi.UpdateLogicalDeviceFlowTable(getContext(), &flowIPV4)
 	assert.Nil(t, err)
 
@@ -1002,7 +993,7 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 			flows.Output(controllerPortMask),
 		},
 	}
-	flowIPV6 := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDevice.Id}
+	flowIPV6 := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDeviceID}
 	_, err = nbi.UpdateLogicalDeviceFlowTable(getContext(), &flowIPV6)
 	assert.Nil(t, err)
 
@@ -1061,9 +1052,13 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 		}
 		// Ensure there are both NNI ports and at least one UNI port on the logical device
 		ld := lds.Items[0]
+		ports, err := nbi.ListLogicalDevicePorts(getContext(), &voltha.ID{Id: ld.Id})
+		if err != nil {
+			return false
+		}
 		nniPort := false
 		uniPort := false
-		for _, p := range ld.Ports {
+		for _, p := range ports.Items {
 			nniPort = nniPort || p.RootPort == true
 			uniPort = uniPort || p.RootPort == false
 			if nniPort && uniPort {
@@ -1080,7 +1075,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	assert.NotNil(t, logicalDevices)
 	assert.Equal(t, 1, len(logicalDevices.Items))
 
-	logicalDevice := logicalDevices.Items[0]
+	logicalDeviceID := logicalDevices.Items[0].Id
 	meterID := rand.Uint32()
 
 	// Add a meter to the logical device
@@ -1096,12 +1091,15 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 			},
 		},
 	}
-	_, err = nbi.UpdateLogicalDeviceMeterTable(getContext(), &ofp.MeterModUpdate{Id: logicalDevice.Id, MeterMod: meterMod})
+	_, err = nbi.UpdateLogicalDeviceMeterTable(getContext(), &ofp.MeterModUpdate{Id: logicalDeviceID, MeterMod: meterMod})
+	assert.Nil(t, err)
+
+	ports, err := nbi.ListLogicalDevicePorts(getContext(), &voltha.ID{Id: logicalDeviceID})
 	assert.Nil(t, err)
 
 	// Send initial set of Trap flows
 	startingVlan := 4091
-	nb.sendTrapFlows(t, nbi, logicalDevice, uint64(meterID), startingVlan)
+	nb.sendTrapFlows(t, nbi, logicalDeviceID, ports.Items, uint64(meterID), startingVlan)
 
 	// Listen for port events
 	start := time.Now()
@@ -1115,7 +1113,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 			if ps.Reason == ofp.OfpPortReason_OFPPR_ADD {
 				if ps.Desc.PortNo >= uint32(nb.startingUNIPortNo) {
 					processedUniLogicalPorts++
-					nb.sendEAPFlows(t, nbi, logicalDevice.Id, ps.Desc, startingVlan, uint64(meterID))
+					nb.sendEAPFlows(t, nbi, logicalDeviceID, ps.Desc, startingVlan, uint64(meterID))
 				} else {
 					processedNniLogicalPorts++
 				}
@@ -1176,10 +1174,10 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 
 	// Wait for the logical device to be in the ready state
-	var vldFunction isLogicalDeviceConditionSatisfied = func(ld *voltha.LogicalDevice) bool {
-		return ld != nil && len(ld.Ports) == nb.numONUPerOLT+1
+	var vldFunction = func(ports []*voltha.LogicalPort) bool {
+		return len(ports) == nb.numONUPerOLT+1
 	}
-	err = waitUntilLogicalDeviceReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
+	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
 	assert.Nil(t, err)
 
 	// Verify that the devices have been setup correctly

@@ -29,7 +29,7 @@ import (
 
 // listLogicalDeviceMeters returns logical device meters
 func (agent *LogicalAgent) listLogicalDeviceMeters() map[uint32]*ofp.OfpMeterEntry {
-	meterIDs := agent.meterLoader.List()
+	meterIDs := agent.meterLoader.ListIDs()
 	meters := make(map[uint32]*ofp.OfpMeterEntry, len(meterIDs))
 	for meterID := range meterIDs {
 		if meterHandle, have := agent.meterLoader.Lock(meterID); have {
