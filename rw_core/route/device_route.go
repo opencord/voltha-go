@@ -20,11 +20,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 )
 
 var ErrNoRoute = errors.New("no route")
@@ -119,7 +120,7 @@ func (dr *DeviceRoutes) GetRoute(ctx context.Context, ingress, egress uint32) ([
 }
 
 //ComputeRoutes calculates all the routes between the logical ports.  This will clear up any existing route
-func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.LogicalPort) error {
+func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps map[uint32]*voltha.LogicalPort) error {
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
 
@@ -208,7 +209,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 
 // AddPort augments the current set of routes with new routes corresponding to the logical port "lp".  If the routes have
 // not been built yet then use logical port "lps" to compute all current routes (lps includes lp)
-func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps []*voltha.LogicalPort) error {
+func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
 	logger.Debugw("add-port-to-routes", log.Fields{"port": lp, "count-logical-ports": len(lps)})
 
 	// Adding NNI port
@@ -221,7 +222,7 @@ func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, dev
 }
 
 // AddUNIPort setup routes between the logical UNI port lp and all registered NNI ports
-func (dr *DeviceRoutes) AddUNIPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps []*voltha.LogicalPort) error {
+func (dr *DeviceRoutes) AddUNIPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
 	logger.Debugw("add-uni-port-to-routes", log.Fields{"port": lp, "count-logical-ports": len(lps)})
 
 	dr.routeBuildLock.Lock()
@@ -258,7 +259,7 @@ func (dr *DeviceRoutes) AddUNIPort(ctx context.Context, lp *voltha.LogicalPort, 
 }
 
 // AddNNIPort setup routes between the logical NNI port lp and all registered UNI ports
-func (dr *DeviceRoutes) AddNNIPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps []*voltha.LogicalPort) error {
+func (dr *DeviceRoutes) AddNNIPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
 	logger.Debugw("add-port-to-routes", log.Fields{"port": lp, "logical-ports-count": len(lps), "device-id": device.Id})
 
 	dr.routeBuildLock.Lock()
@@ -316,7 +317,7 @@ func (dr *DeviceRoutes) AddNNIPort(ctx context.Context, lp *voltha.LogicalPort, 
 }
 
 // AddAllPorts setups up new routes using all ports on the device. lps includes the device's logical port
-func (dr *DeviceRoutes) AddAllPorts(ctx context.Context, device *voltha.Device, lps []*voltha.LogicalPort) error {
+func (dr *DeviceRoutes) AddAllPorts(ctx context.Context, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
 	logger.Debugw("add-all-port-to-routes", log.Fields{"logical-ports-count": len(lps), "device-id": device.Id})
 	for _, lp := range lps {
 		if lp.DeviceId == device.Id {
@@ -356,16 +357,16 @@ func (dr *DeviceRoutes) Print() error {
 }
 
 // isUpToDate returns true if device is up to date
-func (dr *DeviceRoutes) isUpToDate(ld *voltha.LogicalDevice) bool {
+func (dr *DeviceRoutes) isUpToDate(ldPorts map[uint32]*voltha.LogicalPort) bool {
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
 	numNNI, numUNI := 0, 0
-	if ld != nil {
-		if len(dr.logicalPorts) != len(ld.Ports) {
+	if ldPorts != nil {
+		if len(dr.logicalPorts) != len(ldPorts) {
 			return false
 		}
 		numNNI = len(dr.RootPorts)
-		numUNI = len(ld.Ports) - numNNI
+		numUNI = len(ldPorts) - numNNI
 	}
 	return len(dr.Routes) == numNNI*numUNI*2
 }

@@ -31,7 +31,7 @@ import (
 
 // listLogicalDeviceGroups returns logical device flow groups
 func (agent *LogicalAgent) listLogicalDeviceGroups() map[uint32]*ofp.OfpGroupEntry {
-	groupIDs := agent.groupLoader.List()
+	groupIDs := agent.groupLoader.ListIDs()
 	groups := make(map[uint32]*ofp.OfpGroupEntry, len(groupIDs))
 	for groupID := range groupIDs {
 		if groupHandle, have := agent.groupLoader.Lock(groupID); have {
@@ -110,7 +110,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 
 	toDelete := map[uint32]struct{}{groupMod.GroupId: {}}
 	if groupMod.GroupId == uint32(ofp.OfpGroup_OFPG_ALL) {
-		toDelete = agent.groupLoader.List()
+		toDelete = agent.groupLoader.ListIDs()
 	}
 
 	for groupID := range toDelete {

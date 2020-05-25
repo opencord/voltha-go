@@ -19,15 +19,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -53,7 +54,8 @@ type onuRegistration struct {
 }
 
 type logicalDeviceManager struct {
-	logicalDevice   *voltha.LogicalDevice
+	logicalDeviceID string
+	ports           map[uint32]*voltha.LogicalPort
 	deviceRoutes    *DeviceRoutes
 	ldChnl          chan portRegistration
 	numLogicalPorts int
@@ -61,8 +63,14 @@ type logicalDeviceManager struct {
 }
 
 func newLogicalDeviceManager(ld *voltha.LogicalDevice, ch chan portRegistration, totalLogicalPorts int, done chan struct{}) *logicalDeviceManager {
+	ports := make(map[uint32]*voltha.LogicalPort)
+	for _, p := range ld.Ports {
+		ports[p.DevicePortNo] = p
+	}
+
 	return &logicalDeviceManager{
-		logicalDevice:   ld,
+		logicalDeviceID: ld.Id,
+		ports:           ports,
 		ldChnl:          ch,
 		numLogicalPorts: totalLogicalPorts,
 		done:            done,
@@ -70,7 +78,7 @@ func newLogicalDeviceManager(ld *voltha.LogicalDevice, ch chan portRegistration,
 }
 
 func (ldM *logicalDeviceManager) start(getDevice GetDeviceFunc, buildRoutes bool) {
-	ldM.deviceRoutes = NewDeviceRoutes(ldM.logicalDevice.Id, getDevice)
+	ldM.deviceRoutes = NewDeviceRoutes(ldM.logicalDeviceID, getDevice)
 	ofpPortNo := uint32(1)
 	for portReg := range ldM.ldChnl {
 		if portReg.port == nil {
@@ -84,15 +92,14 @@ func (ldM *logicalDeviceManager) start(getDevice GetDeviceFunc, buildRoutes bool
 			DevicePortNo: portReg.port.PortNo,
 			RootPort:     portReg.rootPort,
 		}
-		ldM.logicalDevice.Ports = append(ldM.logicalDevice.Ports, lp)
+		ldM.ports[lp.DevicePortNo] = lp
 		if buildRoutes {
 			device, err := getDevice(context.WithValue(context.Background(), testSetupPhase, true), lp.DeviceId)
 			if err != nil {
 				fmt.Println("Error when getting device:", lp.DeviceId, err)
 			}
-			err = ldM.deviceRoutes.AddPort(context.Background(), lp, device, ldM.logicalDevice.Ports)
-			if err != nil && !strings.Contains(err.Error(), "code = FailedPrecondition") {
-				fmt.Println("(Error when adding port:", lp, len(ldM.logicalDevice.Ports), err)
+			if err := ldM.deviceRoutes.AddPort(context.Background(), lp, device, ldM.ports); err != nil && !strings.Contains(err.Error(), "code = FailedPrecondition") {
+				fmt.Println("(Error when adding port:", lp, len(ldM.ports), err)
 			}
 		}
 		ofpPortNo++
@@ -111,7 +118,7 @@ type oltManager struct {
 
 func newOltManager(oltDeviceID string, ldMgr *logicalDeviceManager, numNNIPort int, numPonPortOnOlt int, ch chan onuRegistration) *oltManager {
 	return &oltManager{
-		olt:              &voltha.Device{Id: oltDeviceID, ParentId: ldMgr.logicalDevice.Id, Root: true},
+		olt:              &voltha.Device{Id: oltDeviceID, ParentId: ldMgr.logicalDeviceID, Root: true},
 		logicalDeviceMgr: ldMgr,
 		numNNIPort:       numNNIPort,
 		numPonPortOnOlt:  numPonPortOnOlt,
@@ -185,21 +192,21 @@ func newOnuManager(oltMgr *oltManager, numOnus int, numUnisPerOnu int, startingU
 func (onuM *onuManager) start(startingOltPeerPortNo int, numPonPortOnOlt int) {
 	var wg sync.WaitGroup
 	for oltPonNo := startingOltPeerPortNo; oltPonNo < startingOltPeerPortNo+numPonPortOnOlt; oltPonNo++ {
-		for i := 0; i < onuM.numOnus; i++ {
+		for onuID := 0; onuID < onuM.numOnus; onuID++ {
 			wg.Add(1)
-			go func(idx int, oltPonNum int) {
+			go func(onuID int, oltPonNum int) {
 				var onu *voltha.Device
 				defer wg.Done()
-				id := fmt.Sprintf("%d-onu-%d", oltPonNum, idx)
+				id := fmt.Sprintf("%d-onu-%d", oltPonNum, onuID)
 				onu = &voltha.Device{Id: id, ParentId: onuM.oltMgr.olt.Id, ParentPortNo: uint32(oltPonNum)}
-				ponPort := &voltha.Port{Label: fmt.Sprintf("%s:pon-%d", onu.Id, idx), PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
+				ponPort := &voltha.Port{Label: fmt.Sprintf("%s:pon-%d", onu.Id, onuID), PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
 				ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
 				peerPort := voltha.Port_PeerPort{DeviceId: onuM.oltMgr.olt.Id, PortNo: uint32(oltPonNum)}
 				ponPort.Peers = append(ponPort.Peers, &peerPort)
 				onu.Ports = make([]*voltha.Port, 0)
 				onu.Ports = append(onu.Ports, ponPort)
 				for j := onuM.startingUniPortNo; j < onuM.numUnisPerOnu+onuM.startingUniPortNo; j++ {
-					uniPort := &voltha.Port{Label: fmt.Sprintf("%s:uni-%d", onu.Id, j), PortNo: uint32(j), DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
+					uniPort := &voltha.Port{Label: fmt.Sprintf("%s:uni-%d", onu.Id, j), PortNo: uint32(oltPonNum)<<12 + uint32(onuID+1)<<4 + uint32(j), DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
 					onu.Ports = append(onu.Ports, uniPort)
 				}
 				onuM.deviceLock.Lock()
@@ -210,7 +217,7 @@ func (onuM *onuManager) start(startingOltPeerPortNo int, numPonPortOnOlt int) {
 					oltPonNo: uint32(oltPonNum),
 					onuPonNo: 1,
 				}
-			}(i, oltPonNo)
+			}(onuID, oltPonNo)
 		}
 	}
 	wg.Wait()
@@ -278,17 +285,17 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 
 	// Computes the routes
 	start := time.Now()
-	err := ldMgr.deviceRoutes.ComputeRoutes(context.TODO(), ldMgr.logicalDevice.Ports)
+	err := ldMgr.deviceRoutes.ComputeRoutes(context.TODO(), ldMgr.ports)
 	assert.Nil(t, err)
 
 	// Validate the routes are up to date
-	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ld))
+	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ldMgr.ports))
 
 	// Validate the expected number of routes
 	assert.EqualValues(t, 2*numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, len(ldMgr.deviceRoutes.Routes))
 
 	// Validate the root ports
-	for _, port := range ldMgr.logicalDevice.Ports {
+	for _, port := range ldMgr.ports {
 		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(port.OfpPort.PortNo))
 	}
 	fmt.Println(fmt.Sprintf("Total Time:%dms, Total Routes:%d NumGetDeviceInvoked:%d", time.Since(start)/time.Millisecond, len(ldMgr.deviceRoutes.Routes), onuMgr.numGetDeviceInvoked))
@@ -326,13 +333,13 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	ldMgr.deviceRoutes.Print()
 
 	// Validate the routes are up to date
-	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ld))
+	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ldMgr.ports))
 
 	// Validate the expected number of routes
 	assert.EqualValues(t, 2*numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, len(ldMgr.deviceRoutes.Routes))
 
 	// Validate the root ports
-	for _, port := range ldMgr.logicalDevice.Ports {
+	for _, port := range ldMgr.ports {
 		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(port.OfpPort.PortNo))
 	}
 
@@ -367,7 +374,7 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 	close(oltMgrChnl1)
 	close(ldMgrChnl1)
 
-	err := ldMgr1.deviceRoutes.ComputeRoutes(context.TODO(), ldMgr1.logicalDevice.Ports)
+	err := ldMgr1.deviceRoutes.ComputeRoutes(context.TODO(), ldMgr1.ports)
 	assert.Nil(t, err)
 
 	routesGeneratedAllAtOnce := ldMgr1.deviceRoutes.Routes
