@@ -19,6 +19,7 @@ package device
 import (
 	"context"
 	"fmt"
+
 	"github.com/opencord/voltha-go/rw_core/route"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -34,7 +35,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 
 	// Controller-bound flow
 	if egressPortNo != 0 && ((egressPortNo & 0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER)) {
-		logger.Debugw("controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "logicalPortsNo": agent.logicalPortsNo})
+		logger.Debugw("controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo})
 		if agent.isNNIPort(ingressPortNo) {
 			//This is a trap on the NNI Port
 			if agent.deviceRoutes.IsRoutesEmpty() {
@@ -55,7 +56,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		}
 		// Treat it as if the output port is the first NNI of the OLT
 		var err error
-		if egressPortNo, err = agent.getFirstNNIPort(); err != nil {
+		if egressPortNo, err = agent.getAnyNNIPort(); err != nil {
 			logger.Warnw("no-nni-port", log.Fields{"error": err})
 			return nil, err
 		}
@@ -97,13 +98,7 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
-	}
-	// Get all the logical ports on that logical device
-	lDevice := agent.getLogicalDeviceWithoutLock()
-
-	if err := agent.deviceRoutes.ComputeRoutes(ctx, lDevice.Ports); err != nil {
+	if err := agent.deviceRoutes.ComputeRoutes(ctx, agent.listLogicalDevicePorts()); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {
@@ -113,7 +108,7 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 }
 
 //updateRoutes updates the device routes
-func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Device, lp *voltha.LogicalPort, lps []*voltha.LogicalPort) error {
+func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Device, lp *voltha.LogicalPort, lps map[uint32]*voltha.LogicalPort) error {
 	logger.Debugw("updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "port:": lp})
 
 	if err := agent.deviceRoutes.AddPort(ctx, lp, device, lps); err != nil {
@@ -129,12 +124,7 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Devi
 func (agent *LogicalAgent) updateAllRoutes(ctx context.Context, device *voltha.Device) error {
 	logger.Debugw("updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "ports-count": len(device.Ports)})
 
-	ld, err := agent.GetLogicalDevice(ctx)
-	if err != nil {
-		return err
-	}
-
-	if err := agent.deviceRoutes.AddAllPorts(ctx, device, ld.Ports); err != nil {
+	if err := agent.deviceRoutes.AddAllPorts(ctx, device, agent.listLogicalDevicePorts()); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {

@@ -140,13 +140,11 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 		logger.Debug("trap-uni")
 
 		//inPortNo is 0 for wildcard input case, do not include upstream port for controller bound flow in input
-		var inPorts []uint32
+		var inPorts = map[uint32]struct{}{inPortNo: {}}
 		if inPortNo == 0 {
 			inPorts = agent.GetWildcardInputPorts(egressHop.Egress) // exclude egress_hop.egress_port.port_no
-		} else {
-			inPorts = []uint32{inPortNo}
 		}
-		for _, inputPort := range inPorts {
+		for inputPort := range inPorts {
 			// Upstream flow on parent (olt) device
 			faParent := &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
@@ -457,8 +455,11 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.Logica
 		//so that a valid path can be found for the flow
 		nniPorts := agent.GetNNIPorts()
 		if len(nniPorts) > 0 {
-			inPortNo = nniPorts[0]
-			logger.Debugw("assigning-nni-port-as-in-port-for-multicast-flow", log.Fields{"nni": nniPorts[0], "flow:": flow})
+			for port := range nniPorts {
+				inPortNo = port
+				break
+			}
+			logger.Debugw("assigning-nni-port-as-in-port-for-multicast-flow", log.Fields{"nni": inPortNo, "flow:": flow})
 		}
 	}
 	outPortNo := fu.GetOutPort(flow)
