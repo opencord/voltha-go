@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9afcf5df_d88f6f00",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-25T17:19:10Z",
+      "side": 1,
+      "message": "An adapter sends a \"portCreated\" event followed by a \"portStateUpdate\".   Currently,  this is an issue where the \"portStateUpdate\" gets ignored if the \"getPortCapability()\" request does not complete before receiving the \"portStateUpdate\" as the port was not created at that time.   Mahir has a change pending where the logical agent will be locked until the \"getPortCapability()\" returns hence forcing the agent the update to happen after the create is completed.   That\u0027s an issue as the lock can be long.  This code will still have the original issue.\n\nSince you are using a lock per port then can the port handle be first created (without updating the dB), grab the lock, initiate the \"getPortCapability()\", then create the port in the dB?  This way, when a port state update is received it will be blocked on the port lock until it gets released.  This way the two operations will be processed.\n\nSame comment for NNI port below.",
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d799c1a3_36e796d1",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-25T17:19:10Z",
+      "side": 1,
+      "message": "Missing code?",
+      "revId": "d948b392097783d78615e3518991d84c6283b4b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
