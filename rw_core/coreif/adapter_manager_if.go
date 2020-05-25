@@ -25,7 +25,7 @@ import (
 // AdapterManager represent adapter manager related methods
 type AdapterManager interface {
 	ListAdapters(ctx context.Context) (*voltha.Adapters, error)
-	GetAdapterName(deviceType string) (string, error)
-	GetDeviceType(deviceType string) *voltha.DeviceType
-	RegisterAdapter(adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *voltha.CoreInstance
+	GetAdapterName(ctx context.Context, deviceType string) (string, error)
+	GetDeviceType(ctx context.Context, deviceType string) *voltha.DeviceType
+	RegisterAdapter(ctx context.Context, adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) *voltha.CoreInstance
 }

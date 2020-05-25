@@ -64,7 +64,7 @@ type DeviceRoutes struct {
 }
 
 // NewDeviceRoutes creates device graph instance
-func NewDeviceRoutes(logicalDeviceID string, getDevice GetDeviceFunc) *DeviceRoutes {
+func NewDeviceRoutes(ctx context.Context, logicalDeviceID string, getDevice GetDeviceFunc) *DeviceRoutes {
 	var dr DeviceRoutes
 	dr.logicalDeviceID = logicalDeviceID
 	dr.getDeviceFromModel = getDevice
@@ -76,7 +76,7 @@ func NewDeviceRoutes(logicalDeviceID string, getDevice GetDeviceFunc) *DeviceRou
 }
 
 //IsRootPort returns true if the port is a root port on a logical device
-func (dr *DeviceRoutes) IsRootPort(port uint32) bool {
+func (dr *DeviceRoutes) IsRootPort(ctx context.Context, port uint32) bool {
 	dr.rootPortsLock.RLock()
 	defer dr.rootPortsLock.RUnlock()
 	_, exist := dr.RootPorts[port]
@@ -93,7 +93,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 	defer func() {
 		// On error, clear the routes - any flow request or a port add/delete will trigger the rebuild
 		if err != nil {
-			dr.reset()
+			dr.reset(ctx)
 		}
 	}()
 
@@ -101,14 +101,14 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 		return fmt.Errorf("not enough logical port :%w", ErrNoRoute)
 	}
 
-	dr.reset()
+	dr.reset(ctx)
 	dr.logicalPorts = append(dr.logicalPorts, lps...)
 
 	// Setup the physical ports to logical ports map, the nni ports as well as the root ports map
 	physPortToLogicalPortMap := make(map[string]uint32)
 	nniPorts := make([]*voltha.LogicalPort, 0)
 	for _, lp := range lps {
-		physPortToLogicalPortMap[concatDeviceIDPortID(lp.DeviceId, lp.DevicePortNo)] = lp.OfpPort.PortNo
+		physPortToLogicalPortMap[concatDeviceIDPortID(ctx, lp.DeviceId, lp.DevicePortNo)] = lp.OfpPort.PortNo
 		if lp.RootPort {
 			nniPorts = append(nniPorts, lp)
 			dr.RootPorts[lp.OfpPort.PortNo] = lp.OfpPort.PortNo
@@ -124,7 +124,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 		if idx == 0 {
 			copyFromNNIPort = nniPort
 		} else if len(dr.Routes) > 0 {
-			dr.copyFromExistingNNIRoutes(nniPort, copyFromNNIPort)
+			dr.copyFromExistingNNIRoutes(ctx, nniPort, copyFromNNIPort)
 			return nil
 		}
 		// Get root device
@@ -144,7 +144,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 					if err != nil {
 						return err
 					}
-					childPonPorts := dr.getDevicePonPorts(childDevice.Id, nniPort.DeviceId)
+					childPonPorts := dr.getDevicePonPorts(ctx, childDevice.Id, nniPort.DeviceId)
 					if len(childPonPorts) < 1 {
 						err = status.Errorf(codes.Aborted, "no-child-pon-port-%s", childDevice.Id)
 						return err
@@ -153,7 +153,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 					childPonPort := childPonPorts[0].PortNo
 					for _, childDevicePort := range childDevice.Ports {
 						if childDevicePort.Type == voltha.Port_ETHERNET_UNI {
-							childLogicalPort, exist := physPortToLogicalPortMap[concatDeviceIDPortID(childDevice.Id, childDevicePort.PortNo)]
+							childLogicalPort, exist := physPortToLogicalPortMap[concatDeviceIDPortID(ctx, childDevice.Id, childDevicePort.PortNo)]
 							if !exist {
 								// This can happen if this logical port has not been created yet for that device
 								continue
@@ -162,7 +162,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 								{DeviceID: rootDevice.Id, Ingress: nniPort.DevicePortNo, Egress: rootDevicePort.PortNo},
 								{DeviceID: childDevice.Id, Ingress: childPonPort, Egress: childDevicePort.PortNo},
 							}
-							dr.Routes[PathID{Ingress: childLogicalPort, Egress: nniPort.OfpPort.PortNo}] = getReverseRoute(
+							dr.Routes[PathID{Ingress: childLogicalPort, Egress: nniPort.OfpPort.PortNo}] = getReverseRoute(ctx,
 								dr.Routes[PathID{Ingress: nniPort.OfpPort.PortNo, Egress: childLogicalPort}])
 						}
 					}
@@ -174,7 +174,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps []*voltha.Logical
 }
 
 // verifyPrecondition verify whether the preconditions are met to proceed with addition of the new logical port
-func (dr *DeviceRoutes) addPortAndVerifyPrecondition(lp *voltha.LogicalPort) error {
+func (dr *DeviceRoutes) addPortAndVerifyPrecondition(ctx context.Context, lp *voltha.LogicalPort) error {
 	var exist, nniLogicalPortExist, uniLogicalPortExist bool
 	for _, existingLogicalPort := range dr.logicalPorts {
 		nniLogicalPortExist = nniLogicalPortExist || existingLogicalPort.RootPort
@@ -210,8 +210,8 @@ func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, lps
 	}
 
 	// A set of routes exists
-	if err := dr.addPortAndVerifyPrecondition(lp); err != nil {
-		dr.reset()
+	if err := dr.addPortAndVerifyPrecondition(ctx, lp); err != nil {
+		dr.reset(ctx)
 		dr.routeBuildLock.Unlock()
 		return err
 	}
@@ -242,22 +242,22 @@ func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, lps
 	// Adding NNI Port?   If we are here we already have an NNI port with a set of routes.  Just copy the existing
 	// routes using an existing NNI port
 	if lp.RootPort {
-		dr.copyFromExistingNNIRoutes(lp, copyFromNNIPort)
+		dr.copyFromExistingNNIRoutes(ctx, lp, copyFromNNIPort)
 		return nil
 	}
 
 	// Adding a UNI port
 	for _, nniPort := range nniPorts {
-		childPonPorts := dr.getDevicePonPorts(lp.DeviceId, nniPort.DeviceId)
+		childPonPorts := dr.getDevicePonPorts(ctx, lp.DeviceId, nniPort.DeviceId)
 		if len(childPonPorts) == 0 || len(childPonPorts[0].Peers) == 0 {
 			// Ports may not have been cached yet - get the device info which sets the PON port cache
 			if _, err := dr.getDevice(ctx, lp.DeviceId); err != nil {
-				dr.reset()
+				dr.reset(ctx)
 				return err
 			}
-			childPonPorts = dr.getDevicePonPorts(lp.DeviceId, nniPort.DeviceId)
+			childPonPorts = dr.getDevicePonPorts(ctx, lp.DeviceId, nniPort.DeviceId)
 			if len(childPonPorts) == 0 || len(childPonPorts[0].Peers) == 0 {
-				dr.reset()
+				dr.reset(ctx)
 				return status.Errorf(codes.FailedPrecondition, "no-pon-ports-%s", lp.DeviceId)
 			}
 		}
@@ -267,14 +267,14 @@ func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, lps
 			{DeviceID: nniPort.DeviceId, Ingress: nniPort.DevicePortNo, Egress: childPonPort.Peers[0].PortNo},
 			{DeviceID: lp.DeviceId, Ingress: childPonPort.PortNo, Egress: lp.DevicePortNo},
 		}
-		dr.Routes[PathID{Ingress: lp.OfpPort.PortNo, Egress: nniPort.OfpPort.PortNo}] = getReverseRoute(
+		dr.Routes[PathID{Ingress: lp.OfpPort.PortNo, Egress: nniPort.OfpPort.PortNo}] = getReverseRoute(ctx,
 			dr.Routes[PathID{Ingress: nniPort.OfpPort.PortNo, Egress: lp.OfpPort.PortNo}])
 	}
 	return nil
 }
 
 // Print prints routes
-func (dr *DeviceRoutes) Print() error {
+func (dr *DeviceRoutes) Print(ctx context.Context) error {
 	logger.Debugw("Print", log.Fields{"logical-device-id": dr.logicalDeviceID, "logical-ports": dr.logicalPorts})
 	if logger.V(log.DebugLevel) {
 		output := ""
@@ -299,7 +299,7 @@ func (dr *DeviceRoutes) Print() error {
 }
 
 // IsUpToDate returns true if device is up to date
-func (dr *DeviceRoutes) IsUpToDate(ld *voltha.LogicalDevice) bool {
+func (dr *DeviceRoutes) IsUpToDate(ctx context.Context, ld *voltha.LogicalDevice) bool {
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
 	numNNI, numUNI := 0, 0
@@ -314,7 +314,7 @@ func (dr *DeviceRoutes) IsUpToDate(ld *voltha.LogicalDevice) bool {
 }
 
 // getDevicePonPorts returns all the PON ports of a device whose peer device ID is peerDeviceID
-func (dr *DeviceRoutes) getDevicePonPorts(deviceID string, peerDeviceID string) []*voltha.Port {
+func (dr *DeviceRoutes) getDevicePonPorts(ctx context.Context, deviceID string, peerDeviceID string) []*voltha.Port {
 	dr.devicesPonPortsLock.RLock()
 	defer dr.devicesPonPortsLock.RUnlock()
 	ponPorts := make([]*voltha.Port, 0)
@@ -351,7 +351,7 @@ func (dr *DeviceRoutes) getDevice(ctx context.Context, deviceID string) (*voltha
 }
 
 //copyFromExistingNNIRoutes copies routes from an existing set of NNI routes
-func (dr *DeviceRoutes) copyFromExistingNNIRoutes(newNNIPort *voltha.LogicalPort, copyFromNNIPort *voltha.LogicalPort) {
+func (dr *DeviceRoutes) copyFromExistingNNIRoutes(ctx context.Context, newNNIPort *voltha.LogicalPort, copyFromNNIPort *voltha.LogicalPort) {
 	updatedRoutes := make(map[PathID][]Hop)
 	for key, val := range dr.Routes {
 		if key.Ingress == copyFromNNIPort.OfpPort.PortNo {
@@ -372,7 +372,7 @@ func (dr *DeviceRoutes) copyFromExistingNNIRoutes(newNNIPort *voltha.LogicalPort
 }
 
 // reset cleans up the device graph
-func (dr *DeviceRoutes) reset() {
+func (dr *DeviceRoutes) reset(ctx context.Context) {
 	dr.rootPortsLock.Lock()
 	dr.RootPorts = make(map[uint32]uint32)
 	dr.rootPortsLock.Unlock()
@@ -385,12 +385,12 @@ func (dr *DeviceRoutes) reset() {
 }
 
 //concatDeviceIdPortId formats a portid using the device id and the port number
-func concatDeviceIDPortID(deviceID string, portNo uint32) string {
+func concatDeviceIDPortID(ctx context.Context, deviceID string, portNo uint32) string {
 	return fmt.Sprintf("%s:%d", deviceID, portNo)
 }
 
 //getReverseRoute returns the reverse of the route
-func getReverseRoute(route []Hop) []Hop {
+func getReverseRoute(ctx context.Context, route []Hop) []Hop {
 	reverse := make([]Hop, len(route))
 	for i, j := 0, len(route)-1; j >= 0; i, j = i+1, j-1 {
 		reverse[i].DeviceID, reverse[i].Ingress, reverse[i].Egress = route[j].DeviceID, route[j].Egress, route[j].Ingress

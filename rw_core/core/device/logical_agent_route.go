@@ -39,7 +39,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 	//	Consider different possibilities
 	if egressPortNo != 0 && ((egressPortNo & 0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER)) {
 		logger.Debugw("controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "logicalPortsNo": agent.logicalPortsNo})
-		if agent.isNNIPort(ingressPortNo) {
+		if agent.isNNIPort(ctx, ingressPortNo) {
 			//This is a trap on the NNI Port
 			if len(agent.deviceRoutes.Routes) == 0 {
 				// If there are no routes set (usually when the logical device has only NNI port(s), then just return an
@@ -51,7 +51,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 			}
 			//Return a 'half' route to make the flow decomposer logic happy
 			for routeLink, path := range agent.deviceRoutes.Routes {
-				if agent.isNNIPort(routeLink.Egress) {
+				if agent.isNNIPort(ctx, routeLink.Egress) {
 					routes = append(routes, route.Hop{}) // first hop is set to empty
 					routes = append(routes, path[1])
 					return routes, nil
@@ -61,7 +61,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		}
 		//treat it as if the output port is the first NNI of the OLT
 		var err error
-		if egressPortNo, err = agent.getFirstNNIPort(); err != nil {
+		if egressPortNo, err = agent.getFirstNNIPort(ctx); err != nil {
 			logger.Warnw("no-nni-port", log.Fields{"error": err})
 			return nil, err
 		}
@@ -70,10 +70,10 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 	//route if egress port is OFPP_CONTROLLER or a nni logical port,
 	//in which case we need to create a half-route where only the egress
 	//hop is filled, the first hop is nil
-	if ingressPortNo == 0 && agent.isNNIPort(egressPortNo) {
+	if ingressPortNo == 0 && agent.isNNIPort(ctx, egressPortNo) {
 		// We can use the 2nd hop of any upstream route, so just find the first upstream:
 		for routeLink, path := range agent.deviceRoutes.Routes {
-			if agent.isNNIPort(routeLink.Egress) {
+			if agent.isNNIPort(ctx, routeLink.Egress) {
 				routes = append(routes, route.Hop{}) // first hop is set to empty
 				routes = append(routes, path[1])
 				return routes, nil
@@ -93,10 +93,10 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		return nil, fmt.Errorf("no downstream route from:%d to:%d :%w", ingressPortNo, egressPortNo, route.ErrNoRoute)
 	}
 	//	Return the pre-calculated route
-	return agent.getPreCalculatedRoute(ingressPortNo, egressPortNo)
+	return agent.getPreCalculatedRoute(ctx, ingressPortNo, egressPortNo)
 }
 
-func (agent *LogicalAgent) getPreCalculatedRoute(ingress, egress uint32) ([]route.Hop, error) {
+func (agent *LogicalAgent) getPreCalculatedRoute(ctx context.Context, ingress, egress uint32) ([]route.Hop, error) {
 	logger.Debugw("ROUTE", log.Fields{"len": len(agent.deviceRoutes.Routes)})
 	for routeLink, route := range agent.deviceRoutes.Routes {
 		logger.Debugw("ROUTELINKS", log.Fields{"ingress": ingress, "egress": egress, "routelink": routeLink})
@@ -108,7 +108,7 @@ func (agent *LogicalAgent) getPreCalculatedRoute(ingress, egress uint32) ([]rout
 }
 
 // GetDeviceRoutes returns device graph
-func (agent *LogicalAgent) GetDeviceRoutes() *route.DeviceRoutes {
+func (agent *LogicalAgent) GetDeviceRoutes(ctx context.Context) *route.DeviceRoutes {
 	return agent.deviceRoutes
 }
 
@@ -123,7 +123,7 @@ func (agent *LogicalAgent) generateDeviceRoutesIfNeeded(ctx context.Context) err
 		return err
 	}
 
-	if agent.deviceRoutes != nil && agent.deviceRoutes.IsUpToDate(ld) {
+	if agent.deviceRoutes != nil && agent.deviceRoutes.IsUpToDate(ctx, ld) {
 		return nil
 	}
 	logger.Debug("Generation of device route required")
@@ -142,18 +142,18 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
+		agent.deviceRoutes = route.NewDeviceRoutes(ctx, agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	// Get all the logical ports on that logical device
-	lDevice := agent.getLogicalDeviceWithoutLock()
+	lDevice := agent.getLogicalDeviceWithoutLock(ctx)
 
 	if err := agent.deviceRoutes.ComputeRoutes(ctx, lDevice.Ports); err != nil {
 		return err
 	}
-	if err := agent.deviceRoutes.Print(); err != nil {
+	if err := agent.deviceRoutes.Print(ctx); err != nil {
 		return err
 	}
 	return nil
@@ -165,15 +165,15 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, lp *voltha.LogicalP
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	if agent.deviceRoutes == nil {
-		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
+		agent.deviceRoutes = route.NewDeviceRoutes(ctx, agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	if err := agent.deviceRoutes.AddPort(ctx, lp, agent.logicalDevice.Ports); err != nil {
 		return err
 	}
-	if err := agent.deviceRoutes.Print(); err != nil {
+	if err := agent.deviceRoutes.Print(ctx); err != nil {
 		return err
 	}
 	return nil

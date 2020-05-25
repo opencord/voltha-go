@@ -52,7 +52,7 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 		return nil
 	}
 
-	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
+	meterEntry := fu.MeterEntryFromMeterMod(ctx, meterMod)
 	agent.meterLock.Lock()
 	//check if the meter already exists or not
 	_, ok := agent.meters[meterMod.MeterId]
@@ -116,7 +116,7 @@ func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMet
 	if meterMod == nil {
 		return nil
 	}
-	newMeter := fu.MeterEntryFromMeterMod(meterMod)
+	newMeter := fu.MeterEntryFromMeterMod(ctx, meterMod)
 	agent.meterLock.RLock()
 	meterChunk, ok := agent.meters[newMeter.Config.MeterId]
 	agent.meterLock.RUnlock()

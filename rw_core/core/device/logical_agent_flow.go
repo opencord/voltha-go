@@ -51,9 +51,9 @@ func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.OfpFlo
 	case ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT:
 		return agent.flowDeleteStrict(ctx, flow)
 	case ofp.OfpFlowModCommand_OFPFC_MODIFY:
-		return agent.flowModify(flow)
+		return agent.flowModify(ctx, flow)
 	case ofp.OfpFlowModCommand_OFPFC_MODIFY_STRICT:
-		return agent.flowModifyStrict(flow)
+		return agent.flowModifyStrict(ctx, flow)
 	}
 	return status.Errorf(codes.Internal,
 		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, flow.GetCommand())
@@ -65,7 +65,7 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 	if mod == nil {
 		return nil
 	}
-	flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+	flow, err := fu.FlowStatsEntryFromFlowModMessage(ctx, mod)
 	if err != nil {
 		logger.Errorw("flowAdd-failed", log.Fields{"flowMod": mod, "err": err})
 		return err
@@ -126,7 +126,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 	updatedFlows := make([]*ofp.OfpFlowStats, 0)
 	checkOverlap := (mod.Flags & uint32(ofp.OfpFlowModFlags_OFPFF_CHECK_OVERLAP)) != 0
 	if checkOverlap {
-		if overlapped := fu.FindOverlappingFlows(flows, mod); len(overlapped) != 0 {
+		if overlapped := fu.FindOverlappingFlows(ctx, flows, mod); len(overlapped) != 0 {
 			//	TODO:  should this error be notified other than being logged?
 			logger.Warnw("overlapped-flows", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
 		} else {
@@ -153,7 +153,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		updatedFlows = append(updatedFlows, flow)
 		var flowMetadata voltha.FlowMetadata
 		lMeters, _ := agent.ListLogicalDeviceMeters(ctx)
-		if err := agent.GetMeterConfig(updatedFlows, lMeters.Items, &flowMetadata); err != nil {
+		if err := agent.GetMeterConfig(ctx, updatedFlows, lMeters.Items, &flowMetadata); err != nil {
 			logger.Error("Meter-referred-in-flow-not-present")
 			return changed, updated, err
 		}
@@ -163,7 +163,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			return changed, updated, err
 		}
 
-		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
+		logger.Debugw("rules", log.Fields{"rules": deviceRules.String(ctx)})
 		//	Update store and cache
 		if updated {
 			if err := agent.updateLogicalDeviceFlow(ctx, flow, flowChunk); err != nil {
@@ -174,7 +174,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		// Create the go routines to wait
 		go func() {
 			// Wait for completion
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChannels...); res != nil {
+			if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, respChannels...); res != nil {
 				logger.Infow("failed-to-add-flows-will-attempt-deletion", log.Fields{"errors": res, "logical-device-id": agent.logicalDeviceID})
 				// Revert added flows
 				if err := agent.revertAddedFlows(context.Background(), mod, flow, flowToReplace, deviceRules, &flowMetadata); err != nil {
@@ -223,7 +223,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	// Wait for the responses
 	go func() {
 		// Since this action is taken following an add failure, we may also receive a failure for the revert
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, respChnls...); res != nil {
 			logger.Warnw("failure-reverting-added-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
 		}
 	}()
@@ -238,7 +238,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 		return nil
 	}
 
-	fs, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+	fs, err := fu.FlowStatsEntryFromFlowModMessage(ctx, mod)
 	if err != nil {
 		return err
 	}
@@ -249,13 +249,13 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 	//Lock the map to search the matched flows
 	agent.flowLock.RLock()
 	for _, f := range agent.flows {
-		if fu.FlowMatch(f.flow, fs) {
+		if fu.FlowMatch(ctx, f.flow, fs) {
 			toDelete = append(toDelete, f.flow)
 			toDeleteChunks = append(toDeleteChunks, f)
 			continue
 		}
 		// Check wild card match
-		if fu.FlowMatchesMod(f.flow, mod) {
+		if fu.FlowMatchesMod(ctx, f.flow, mod) {
 			toDelete = append(toDelete, f.flow)
 			toDeleteChunks = append(toDeleteChunks, f)
 		}
@@ -280,7 +280,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 			}
 		}
 		var flowMetadata voltha.FlowMetadata
-		if err := agent.GetMeterConfig(toDelete, meters, &flowMetadata); err != nil { // This should never happen
+		if err := agent.GetMeterConfig(ctx, toDelete, meters, &flowMetadata); err != nil { // This should never happen
 			logger.Error("Meter-referred-in-flows-not-present")
 			return err
 		}
@@ -308,7 +308,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 		// Wait for the responses
 		go func() {
 			// Wait for completion
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+			if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, respChnls...); res != nil {
 				logger.Errorw("failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
 				// TODO: Revert the flow deletion
 			}
@@ -325,7 +325,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 		return nil
 	}
 
-	flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+	flow, err := fu.FlowStatsEntryFromFlowModMessage(ctx, mod)
 	if err != nil {
 		return err
 	}
@@ -355,7 +355,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 
 	var flowMetadata voltha.FlowMetadata
 	flowsToDelete := []*ofp.OfpFlowStats{flowChunk.flow}
-	if err := agent.GetMeterConfig(flowsToDelete, meters, &flowMetadata); err != nil {
+	if err := agent.GetMeterConfig(ctx, flowsToDelete, meters, &flowMetadata); err != nil {
 		logger.Error("meter-referred-in-flows-not-present")
 		return err
 	}
@@ -385,7 +385,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 
 	// Wait for completion
 	go func() {
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, respChnls...); res != nil {
 			logger.Warnw("failure-deleting-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
 			//TODO: Revert flow changes
 		}
@@ -395,11 +395,11 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 }
 
 //flowModify modifies a flow from the flow table of that logical device
-func (agent *LogicalAgent) flowModify(mod *ofp.OfpFlowMod) error {
+func (agent *LogicalAgent) flowModify(ctx context.Context, mod *ofp.OfpFlowMod) error {
 	return errors.New("flowModify not implemented")
 }
 
 //flowModifyStrict deletes a flow from the flow table of that logical device
-func (agent *LogicalAgent) flowModifyStrict(mod *ofp.OfpFlowMod) error {
+func (agent *LogicalAgent) flowModifyStrict(ctx context.Context, mod *ofp.OfpFlowMod) error {
 	return errors.New("flowModifyStrict not implemented")
 }

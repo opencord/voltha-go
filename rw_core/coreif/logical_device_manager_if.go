@@ -29,18 +29,18 @@ import (
 
 // LogicalDeviceManager represent logical device manager related methods
 type LogicalDeviceManager interface {
-	GetLogicalPort(lPortID *voltha.LogicalPortId) (*voltha.LogicalPort, error)
+	GetLogicalPort(ctx context.Context, lPortID *voltha.LogicalPortId) (*voltha.LogicalPort, error)
 	EnableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{})
 	DisableLogicalPort(ctx context.Context, id *voltha.LogicalPortId, ch chan interface{})
 	UpdateFlowTable(ctx context.Context, id string, flow *openflow_13.OfpFlowMod, ch chan interface{})
 	UpdateMeterTable(ctx context.Context, id string, meter *openflow_13.OfpMeterMod, ch chan interface{})
 	UpdateGroupTable(ctx context.Context, id string, groupMod *openflow_13.OfpGroupMod, ch chan interface{})
-	GetLogicalDevice(id string) (*voltha.LogicalDevice, error)
-	ListManagedLogicalDevices() (*voltha.LogicalDevices, error)
-	ListLogicalDevices() (*voltha.LogicalDevices, error)
+	GetLogicalDevice(ctx context.Context, id string) (*voltha.LogicalDevice, error)
+	ListManagedLogicalDevices(ctx context.Context) (*voltha.LogicalDevices, error)
+	ListLogicalDevices(ctx context.Context) (*voltha.LogicalDevices, error)
 	ListLogicalDeviceFlows(ctx context.Context, id string) (*openflow_13.Flows, error)
 	ListLogicalDeviceFlowGroups(ctx context.Context, id string) (*openflow_13.FlowGroups, error)
 	ListLogicalDevicePorts(ctx context.Context, id string) (*voltha.LogicalPorts, error)
 	ListLogicalDeviceMeters(ctx context.Context, id string) (*openflow_13.Meters, error)
-	PacketOut(packet *openflow_13.PacketOut) error
+	PacketOut(ctx context.Context, packet *openflow_13.PacketOut) error
 }

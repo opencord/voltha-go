@@ -32,7 +32,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/version"
 )
 
-func waitForExit() int {
+func waitForExit(ctx context.Context) int {
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel,
 		syscall.SIGHUP,
@@ -54,7 +54,7 @@ func waitForExit() int {
 	}
 }
 
-func printBanner() {
+func printBanner(ctx context.Context) {
 	fmt.Println(`                                    `)
 	fmt.Println(` ______        ______               `)
 	fmt.Println(`|  _ \ \      / / ___|___  _ __ ___ `)
@@ -64,7 +64,7 @@ func printBanner() {
 	fmt.Println(`                                    `)
 }
 
-func printVersion() {
+func printVersion(ctx context.Context) {
 	fmt.Println("VOLTHA Read-Write Core")
 	fmt.Println(version.VersionInfo.String("  "))
 }
@@ -72,12 +72,13 @@ func printVersion() {
 func main() {
 	start := time.Now()
 
+	ctx := context.Background()
 	cf := config.NewRWCoreFlags()
 	cf.ParseCommandArguments()
 
 	// Set the instance ID as the hostname
 	var instanceID string
-	hostName := utils.GetHostName()
+	hostName := utils.GetHostName(ctx)
 	if len(hostName) > 0 {
 		instanceID = hostName
 	} else {
@@ -115,13 +116,13 @@ func main() {
 
 	// Print version / build information and exit
 	if cf.DisplayVersionOnly {
-		printVersion()
+		printVersion(ctx)
 		return
 	}
 
 	// Print banner if specified
 	if cf.Banner {
-		printBanner()
+		printBanner(ctx)
 	}
 
 	logger.Infow("rw-core-config", log.Fields{"config": *cf})
@@ -136,7 +137,7 @@ func main() {
 	 * objects there can be a single probe end point for the process.
 	 */
 	p := &probe.Probe{}
-	go p.ListenAndServe(fmt.Sprintf("%s:%d", cf.ProbeHost, cf.ProbePort))
+	go p.ListenAndServe(ctx, fmt.Sprintf("%s:%d", cf.ProbeHost, cf.ProbePort))
 
 	// Add the probe to the context to pass to all the services started
 	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
@@ -144,11 +145,11 @@ func main() {
 	// create and start the core
 	core := c.NewCore(probeCtx, instanceID, cf)
 
-	code := waitForExit()
+	code := waitForExit(ctx)
 	logger.Infow("received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
-	core.Stop()
+	core.Stop(ctx)
 
 	elapsed := time.Since(start)
 	logger.Infow("rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})

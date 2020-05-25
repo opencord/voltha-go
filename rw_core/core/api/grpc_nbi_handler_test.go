@@ -73,7 +73,7 @@ type NBTest struct {
 	maxTimeout        time.Duration
 }
 
-func newNBTest() *NBTest {
+func newNBTest(ctx context.Context) *NBTest {
 	test := &NBTest{}
 	// Start the embedded etcd server
 	var err error
@@ -82,7 +82,7 @@ func newNBTest() *NBTest {
 		logger.Fatal(err)
 	}
 	// Create the kafka client
-	test.kClient = mock_kafka.NewKafkaClient()
+	test.kClient = mock_kafka.NewKafkaClient(ctx)
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-nbi-test"
@@ -117,39 +117,40 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 		LivenessChannelInterval: cfg.LiveProbeInterval / 2,
 		PathPrefix:              cfg.KVStoreDataPrefix}
 	nb.kmp = kafka.NewInterContainerProxy(
-		kafka.InterContainerHost(cfg.KafkaAdapterHost),
-		kafka.InterContainerPort(cfg.KafkaAdapterPort),
-		kafka.MsgClient(nb.kClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
-		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+		context.Background(),
+		kafka.InterContainerHost(context.Background(), cfg.KafkaAdapterHost),
+		kafka.InterContainerPort(context.Background(), cfg.KafkaAdapterPort),
+		kafka.MsgClient(context.Background(), nb.kClient),
+		kafka.DefaultTopic(context.Background(), &kafka.Topic{Name: cfg.CoreTopic}),
+		kafka.DeviceDiscoveryTopic(context.Background(), &kafka.Topic{Name: cfg.AffinityRouterTopic}))
 
-	endpointMgr := kafka.NewEndpointManager(backend)
-	proxy := model.NewProxy(backend, "/")
-	nb.adapterMgr = adapter.NewAdapterManager(proxy, nb.coreInstanceID, nb.kClient)
-	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
+	endpointMgr := kafka.NewEndpointManager(context.Background(), backend)
+	proxy := model.NewProxy(context.Background(), backend, "/")
+	nb.adapterMgr = adapter.NewAdapterManager(context.Background(), proxy, nb.coreInstanceID, nb.kClient)
+	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(context.Background(), proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CorePairTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
 	nb.adapterMgr.Start(ctx)
 
-	if err := nb.kmp.Start(); err != nil {
+	if err := nb.kmp.Start(context.Background()); err != nil {
 		logger.Fatalf("Cannot start InterContainerProxy: %s", err)
 	}
-	requestProxy := NewAdapterRequestHandlerProxy(nb.deviceMgr, nb.adapterMgr)
-	if err := nb.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
+	requestProxy := NewAdapterRequestHandlerProxy(context.Background(), nb.deviceMgr, nb.adapterMgr)
+	if err := nb.kmp.SubscribeWithRequestHandlerInterface(context.Background(), kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
 		logger.Fatalf("Cannot add request handler: %s", err)
 	}
-	if err := nb.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: cfg.CorePairTopic}, kafka.OffsetNewest); err != nil {
+	if err := nb.kmp.SubscribeWithDefaultRequestHandler(context.Background(), kafka.Topic{Name: cfg.CorePairTopic}, kafka.OffsetNewest); err != nil {
 		logger.Fatalf("Cannot add default request handler: %s", err)
 	}
 }
 
 func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	// Setup the mock OLT adapter
-	oltAdapter, err := createMockAdapter(OltAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.oltAdapterName)
+	oltAdapter, err := createMockAdapter(context.Background(), OltAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.oltAdapterName)
 	if err != nil {
 		logger.Fatalw("setting-mock-olt-adapter-failed", log.Fields{"error": err})
 	}
 	nb.oltAdapter = (oltAdapter).(*cm.OLTAdapter)
-	nb.numONUPerOLT = nb.oltAdapter.GetNumONUPerOLT()
-	nb.startingUNIPortNo = nb.oltAdapter.GetStartingUNIPortNo()
+	nb.numONUPerOLT = nb.oltAdapter.GetNumONUPerOLT(context.Background())
+	nb.startingUNIPortNo = nb.oltAdapter.GetStartingUNIPortNo(context.Background())
 
 	//	Register the adapter
 	registrationData := &voltha.Adapter{
@@ -163,13 +164,13 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	}
 	types := []*voltha.DeviceType{{Id: nb.oltAdapterName, Adapter: nb.oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
-	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
+	if _, err := nb.adapterMgr.RegisterAdapter(context.Background(), registrationData, deviceTypes); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
 
 	// Setup the mock ONU adapter
-	onuAdapter, err := createMockAdapter(OnuAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.onuAdapterName)
+	onuAdapter, err := createMockAdapter(context.Background(), OnuAdapter, nb.kClient, nb.coreInstanceID, coreName, nb.onuAdapterName)
 	if err != nil {
 		logger.Fatalw("setting-mock-onu-adapter-failed", log.Fields{"error": err})
 	}
@@ -187,7 +188,7 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 	}
 	types = []*voltha.DeviceType{{Id: nb.onuAdapterName, Adapter: nb.onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
 	deviceTypes = &voltha.DeviceTypes{Items: types}
-	if _, err := nb.adapterMgr.RegisterAdapter(registrationData, deviceTypes); err != nil {
+	if _, err := nb.adapterMgr.RegisterAdapter(context.Background(), registrationData, deviceTypes); err != nil {
 		logger.Errorw("failed-to-register-adapter", log.Fields{"error": err})
 		assert.NotNil(t, err)
 	}
@@ -195,10 +196,10 @@ func (nb *NBTest) createAndregisterAdapters(t *testing.T) {
 
 func (nb *NBTest) stopAll() {
 	if nb.kClient != nil {
-		nb.kClient.Stop()
+		nb.kClient.Stop(context.Background())
 	}
 	if nb.kmp != nil {
-		nb.kmp.Stop()
+		nb.kmp.Stop(context.Background())
 	}
 	if nb.etcdServer != nil {
 		stopEmbeddedEtcdServer(nb.etcdServer)
@@ -972,7 +973,7 @@ func makeSimpleFlowMod(fa *flows.FlowArgs) *ofp.OfpFlowMod {
 	for _, val := range fa.MatchFields {
 		matchFields = append(matchFields, &ofp.OfpOxmField{Field: &ofp.OfpOxmField_OfbField{OfbField: val}})
 	}
-	return flows.MkSimpleFlowMod(matchFields, fa.Actions, fa.Command, fa.KV)
+	return flows.MkSimpleFlowMod(context.Background(), matchFields, fa.Actions, fa.Command, fa.KV)
 }
 
 func createMetadata(cTag int, techProfile int, port int) uint64 {
@@ -1001,6 +1002,7 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 	// Send flows for the parent device
 	var nniPorts []*voltha.LogicalPort
 	var uniPorts []*voltha.LogicalPort
+	ctx := context.Background()
 	for _, p := range logicalDevice.Ports {
 		if p.RootPort {
 			nniPorts = append(nniPorts, p)
@@ -1017,11 +1019,11 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 	fa = &flows.FlowArgs{
 		KV: flows.OfpFlowModArgs{"priority": 10000, "buffer_id": maxInt32, "out_port": maxInt32, "out_group": maxInt32, "flags": 1},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			flows.InPort(nniPort),
-			flows.EthType(35020),
+			flows.InPort(ctx, nniPort),
+			flows.EthType(ctx, 35020),
 		},
 		Actions: []*ofp.OfpAction{
-			flows.Output(controllerPortMask),
+			flows.Output(ctx, controllerPortMask),
 		},
 	}
 	flowLLDP := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDevice.Id}
@@ -1031,14 +1033,14 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 	fa = &flows.FlowArgs{
 		KV: flows.OfpFlowModArgs{"priority": 10000, "buffer_id": maxInt32, "out_port": maxInt32, "out_group": maxInt32, "flags": 1},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			flows.InPort(nniPort),
-			flows.EthType(2048),
-			flows.IpProto(17),
-			flows.UdpSrc(67),
-			flows.UdpDst(68),
+			flows.InPort(ctx, nniPort),
+			flows.EthType(ctx, 2048),
+			flows.IpProto(ctx, 17),
+			flows.UdpSrc(ctx, 67),
+			flows.UdpDst(ctx, 68),
 		},
 		Actions: []*ofp.OfpAction{
-			flows.Output(controllerPortMask),
+			flows.Output(ctx, controllerPortMask),
 		},
 	}
 	flowIPV4 := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDevice.Id}
@@ -1048,14 +1050,14 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 	fa = &flows.FlowArgs{
 		KV: flows.OfpFlowModArgs{"priority": 10000, "buffer_id": maxInt32, "out_port": maxInt32, "out_group": maxInt32, "flags": 1},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			flows.InPort(nniPort),
-			flows.EthType(34525),
-			flows.IpProto(17),
-			flows.UdpSrc(546),
-			flows.UdpDst(547),
+			flows.InPort(ctx, nniPort),
+			flows.EthType(ctx, 34525),
+			flows.IpProto(ctx, 17),
+			flows.UdpSrc(ctx, 546),
+			flows.UdpDst(ctx, 547),
 		},
 		Actions: []*ofp.OfpAction{
-			flows.Output(controllerPortMask),
+			flows.Output(ctx, controllerPortMask),
 		},
 	}
 	flowIPV6 := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDevice.Id}
@@ -1066,17 +1068,18 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDevice *vo
 }
 
 func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *NBIHandler, logicalDeviceID string, port *ofp.OfpPort, vlan int, meterID uint64) {
+	ctx := context.Background()
 	maxInt32 := uint64(0xFFFFFFFF)
 	controllerPortMask := uint32(4294967293) // will result in 4294967293&0x7fffffff => 2147483645 which is the actual controller port
 	fa := &flows.FlowArgs{
 		KV: flows.OfpFlowModArgs{"priority": 10000, "buffer_id": maxInt32, "out_port": maxInt32, "out_group": maxInt32, "flags": 1, "write_metadata": createMetadata(vlan, 64, 0), "meter_id": meterID},
 		MatchFields: []*ofp.OfpOxmOfbField{
-			flows.InPort(port.PortNo),
-			flows.EthType(34958),
-			flows.VlanVid(8187),
+			flows.InPort(ctx, port.PortNo),
+			flows.EthType(ctx, 34958),
+			flows.VlanVid(ctx, 8187),
 		},
 		Actions: []*ofp.OfpAction{
-			flows.Output(controllerPortMask),
+			flows.Output(ctx, controllerPortMask),
 		},
 	}
 	flowEAP := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDeviceID}
@@ -1088,12 +1091,12 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	defer wg.Done()
 
 	// Clear any existing flows on the adapters
-	nb.oltAdapter.ClearFlows()
-	nb.onuAdapter.ClearFlows()
+	nb.oltAdapter.ClearFlows(context.Background())
+	nb.onuAdapter.ClearFlows(context.Background())
 
 	// Set the adapter actions on flow addition/deletion
-	nb.oltAdapter.SetFlowAction(flowAddFail, flowDelete)
-	nb.onuAdapter.SetFlowAction(flowAddFail, flowDelete)
+	nb.oltAdapter.SetFlowAction(context.Background(), flowAddFail, flowDelete)
+	nb.onuAdapter.SetFlowAction(context.Background(), flowAddFail, flowDelete)
 
 	// Wait until a logical device is ready
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
@@ -1149,7 +1152,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
-	for event := range nbi.GetChangeEventsQueueForTest() {
+	for event := range nbi.GetChangeEventsQueueForTest(context.Background()) {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
@@ -1177,7 +1180,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 		expectedFlowCount = 0
 	}
 	var oltVFunc isConditionSatisfied = func() bool {
-		return nb.oltAdapter.GetFlowCount() >= expectedFlowCount
+		return nb.oltAdapter.GetFlowCount(context.Background()) >= expectedFlowCount
 	}
 	err = waitUntilCondition(nb.maxTimeout, nbi, oltVFunc)
 	assert.Nil(t, err)
@@ -1188,7 +1191,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 		expectedFlowCount = 0
 	}
 	var onuVFunc isConditionSatisfied = func() bool {
-		return nb.onuAdapter.GetFlowCount() == expectedFlowCount
+		return nb.onuAdapter.GetFlowCount(context.Background()) == expectedFlowCount
 	}
 	err = waitUntilCondition(nb.maxTimeout, nbi, onuVFunc)
 	assert.Nil(t, err)
@@ -1252,7 +1255,7 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 
 	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 
-	nb := newNBTest()
+	nb := newNBTest(context.Background())
 	assert.NotNil(t, nb)
 
 	defer nb.stopAll()
@@ -1261,7 +1264,7 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 	nb.startCore(false)
 
 	// Set the grpc API interface - no grpc server is running in unit test
-	nbi := NewNBIHandler(nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr)
+	nbi := NewNBIHandler(context.Background(), nb.deviceMgr, nb.logicalDeviceMgr, nb.adapterMgr)
 
 	// 1. Basic test with no data in Core
 	nb.testCoreWithoutData(t, nbi)

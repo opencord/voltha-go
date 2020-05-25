@@ -17,6 +17,7 @@
 package event
 
 import (
+	"context"
 	"encoding/hex"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -32,7 +33,7 @@ type Manager struct {
 	changeEventQueueDone chan bool
 }
 
-func NewManager() *Manager {
+func NewManager(ctx context.Context) *Manager {
 	return &Manager{
 		packetInQueue:        make(chan openflow_13.PacketIn, 100),
 		packetInQueueDone:    make(chan bool, 1),
@@ -41,7 +42,7 @@ func NewManager() *Manager {
 	}
 }
 
-func (q *Manager) SendPacketIn(deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
+func (q *Manager) SendPacketIn(ctx context.Context, deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
 	// TODO: Augment the OF PacketIn to include the transactionId
 	packetIn := openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
 	logger.Debugw("SendPacketIn", log.Fields{"packetIn": packetIn})
@@ -58,7 +59,7 @@ type streamTracker struct {
 
 var streamingTracker = &streamTracker{calls: make(map[string]*callTracker)}
 
-func (q *Manager) getStreamingTracker(method string, done chan<- bool) *callTracker {
+func (q *Manager) getStreamingTracker(ctx context.Context, method string, done chan<- bool) *callTracker {
 	streamingTracker.Lock()
 	defer streamingTracker.Unlock()
 	if _, ok := streamingTracker.calls[method]; ok {
@@ -72,7 +73,7 @@ func (q *Manager) getStreamingTracker(method string, done chan<- bool) *callTrac
 	return streamingTracker.calls[method]
 }
 
-func (q *Manager) flushFailedPackets(tracker *callTracker) error {
+func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) error {
 	if tracker.failedPacket != nil {
 		switch tracker.failedPacket.(type) {
 		case openflow_13.PacketIn:
@@ -88,10 +89,11 @@ func (q *Manager) flushFailedPackets(tracker *callTracker) error {
 
 // ReceivePacketsIn receives packets from adapter
 func (q *Manager) ReceivePacketsIn(_ *empty.Empty, packetsIn voltha.VolthaService_ReceivePacketsInServer) error {
-	var streamingTracker = q.getStreamingTracker("ReceivePacketsIn", q.packetInQueueDone)
+	ctx := context.Background()
+	var streamingTracker = q.getStreamingTracker(ctx, "ReceivePacketsIn", q.packetInQueueDone)
 	logger.Debugw("ReceivePacketsIn-request", log.Fields{"packetsIn": packetsIn})
 
-	err := q.flushFailedPackets(streamingTracker)
+	err := q.flushFailedPackets(ctx, streamingTracker)
 	if err != nil {
 		logger.Errorw("unable-to-flush-failed-packets", log.Fields{"error": err})
 	}
@@ -123,7 +125,7 @@ loop:
 	return nil
 }
 
-func (q *Manager) SendChangeEvent(deviceID string, portStatus *openflow_13.OfpPortStatus) {
+func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, portStatus *openflow_13.OfpPortStatus) {
 	// TODO: validate the type of portStatus parameter
 	//if _, ok := portStatus.(*openflow_13.OfpPortStatus); ok {
 	//}
@@ -134,10 +136,11 @@ func (q *Manager) SendChangeEvent(deviceID string, portStatus *openflow_13.OfpPo
 
 // ReceiveChangeEvents receives change in events
 func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
-	var streamingTracker = q.getStreamingTracker("ReceiveChangeEvents", q.changeEventQueueDone)
+	ctx := context.Background()
+	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveChangeEvents", q.changeEventQueueDone)
 	logger.Debugw("ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
 
-	err := q.flushFailedPackets(streamingTracker)
+	err := q.flushFailedPackets(ctx, streamingTracker)
 	if err != nil {
 		logger.Errorw("unable-to-flush-failed-packets", log.Fields{"error": err})
 	}
@@ -167,6 +170,6 @@ loop:
 	return nil
 }
 
-func (q *Manager) GetChangeEventsQueueForTest() <-chan openflow_13.ChangeEvent {
+func (q *Manager) GetChangeEventsQueueForTest(ctx context.Context) <-chan openflow_13.ChangeEvent {
 	return q.changeEventQueue
 }

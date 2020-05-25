@@ -64,7 +64,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 		return fmt.Errorf("Group %d already exists", groupMod.GroupId)
 	}
 
-	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
+	groupEntry := fu.GroupEntryFromGroupMod(ctx, groupMod)
 	groupChunk := GroupChunk{
 		group: groupEntry,
 	}
@@ -83,20 +83,20 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 		agent.groupLock.Unlock()
 		return err
 	}
-	deviceRules := fu.NewDeviceRules()
-	deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
-	fg := fu.NewFlowsAndGroups()
-	fg.AddGroup(fu.GroupEntryFromGroupMod(groupMod))
-	deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
+	deviceRules := fu.NewDeviceRules(ctx)
+	deviceRules.CreateEntryIfNotExist(ctx, agent.rootDeviceID)
+	fg := fu.NewFlowsAndGroups(ctx)
+	fg.AddGroup(ctx, fu.GroupEntryFromGroupMod(ctx, groupMod))
+	deviceRules.AddFlowsAndGroup(ctx, agent.rootDeviceID, fg)
 
-	logger.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String()})
+	logger.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String(ctx)})
 
 	// Update the devices
 	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &voltha.FlowMetadata{})
 
 	// Wait for completion
 	go func() {
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, respChnls...); res != nil {
 			logger.Warnw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
 			//TODO: Revert flow changes
 		}
@@ -169,14 +169,14 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 		if err != nil {
 			return err
 		}
-		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
+		logger.Debugw("rules", log.Fields{"rules": deviceRules.String(ctx)})
 
 		// Update the devices
 		respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, nil)
 
 		// Wait for completion
 		go func() {
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+			if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, respChnls...); res != nil {
 				logger.Warnw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
 				//TODO: Revert flow changes
 			}
@@ -202,14 +202,14 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	groupChunk.lock.Lock()
 	defer groupChunk.lock.Unlock()
 	//replace existing group entry with new group definition
-	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
-	deviceRules := fu.NewDeviceRules()
-	deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
-	fg := fu.NewFlowsAndGroups()
-	fg.AddGroup(fu.GroupEntryFromGroupMod(groupMod))
-	deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
+	groupEntry := fu.GroupEntryFromGroupMod(ctx, groupMod)
+	deviceRules := fu.NewDeviceRules(ctx)
+	deviceRules.CreateEntryIfNotExist(ctx, agent.rootDeviceID)
+	fg := fu.NewFlowsAndGroups(ctx)
+	fg.AddGroup(ctx, fu.GroupEntryFromGroupMod(ctx, groupMod))
+	deviceRules.AddFlowsAndGroup(ctx, agent.rootDeviceID, fg)
 
-	logger.Debugw("rules", log.Fields{"rules-for-group-modify": deviceRules.String()})
+	logger.Debugw("rules", log.Fields{"rules-for-group-modify": deviceRules.String(ctx)})
 	//update KV
 	if err := agent.updateLogicalDeviceFlowGroup(ctx, groupEntry, groupChunk); err != nil {
 		logger.Errorw("Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
@@ -221,7 +221,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 
 	// Wait for completion
 	go func() {
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, respChnls...); res != nil {
 			logger.Warnw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
 			//TODO: Revert flow changes
 		}

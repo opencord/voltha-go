@@ -17,13 +17,13 @@
 package mocks
 
 import (
-	"testing"
-
+	"context"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
+	"testing"
 )
 
 func TestOLTAdapterImplementsIAdapter(t *testing.T) {
-	adapter := NewOLTAdapter(nil)
+	adapter := NewOLTAdapter(context.Background(), nil)
 
 	if _, ok := interface{}(adapter).(adapters.IAdapter); !ok {
 		t.Error("OLT adapter does not implement voltha-lib-go/v2/pkg/adapters/IAdapter interface")

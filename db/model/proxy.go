@@ -38,7 +38,7 @@ type Proxy struct {
 }
 
 // NewProxy instantiates a new proxy to a specific location
-func NewProxy(kvStore *db.Backend, path string) *Proxy {
+func NewProxy(ctx context.Context, kvStore *db.Backend, path string) *Proxy {
 	if path == "/" {
 		path = ""
 	}

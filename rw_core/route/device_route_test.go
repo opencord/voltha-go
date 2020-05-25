@@ -66,7 +66,7 @@ func newLogicalDeviceManager(ld *voltha.LogicalDevice, ch chan portRegistration,
 }
 
 func (ldM *logicalDeviceManager) start(getDevice GetDeviceFunc, buildRoutes bool) {
-	ldM.deviceRoutes = NewDeviceRoutes(ldM.logicalDevice.Id, getDevice)
+	ldM.deviceRoutes = NewDeviceRoutes(context.Background(), ldM.logicalDevice.Id, getDevice)
 	ofpPortNo := uint32(1)
 	for portReg := range ldM.ldChnl {
 		if portReg.port == nil {
@@ -268,18 +268,18 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 
 	// Computes the routes
 	start := time.Now()
-	err := ldMgr.deviceRoutes.ComputeRoutes(context.TODO(), ldMgr.logicalDevice.Ports)
+	err := ldMgr.deviceRoutes.ComputeRoutes(context.Background(), ldMgr.logicalDevice.Ports)
 	assert.Nil(t, err)
 
 	// Validate the routes are up to date
-	assert.True(t, ldMgr.deviceRoutes.IsUpToDate(ld))
+	assert.True(t, ldMgr.deviceRoutes.IsUpToDate(context.Background(), ld))
 
 	// Validate the expected number of routes
 	assert.EqualValues(t, 2*numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, len(ldMgr.deviceRoutes.Routes))
 
 	// Validate the root ports
 	for _, port := range ldMgr.logicalDevice.Ports {
-		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(port.OfpPort.PortNo))
+		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(context.Background(), port.OfpPort.PortNo))
 	}
 	fmt.Println(fmt.Sprintf("Total Time:%dms, Total Routes:%d NumGetDeviceInvoked:%d", time.Since(start)/time.Millisecond, len(ldMgr.deviceRoutes.Routes), onuMgr.numGetDeviceInvoked))
 }
@@ -313,17 +313,17 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	close(oltMgrChnl)
 	close(ldMgrChnl)
 
-	ldMgr.deviceRoutes.Print()
+	ldMgr.deviceRoutes.Print(context.Background())
 
 	// Validate the routes are up to date
-	assert.True(t, ldMgr.deviceRoutes.IsUpToDate(ld))
+	assert.True(t, ldMgr.deviceRoutes.IsUpToDate(context.Background(), ld))
 
 	// Validate the expected number of routes
 	assert.EqualValues(t, 2*numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, len(ldMgr.deviceRoutes.Routes))
 
 	// Validate the root ports
 	for _, port := range ldMgr.logicalDevice.Ports {
-		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(port.OfpPort.PortNo))
+		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(context.Background(), port.OfpPort.PortNo))
 	}
 
 	fmt.Println(fmt.Sprintf("Total Time:%dms, Total Routes:%d NumGetDeviceInvoked:%d", time.Since(start)/time.Millisecond, len(ldMgr.deviceRoutes.Routes), onuMgr.numGetDeviceInvoked))
@@ -394,7 +394,7 @@ func TestDeviceRoutes_reverseRoute(t *testing.T) {
 	route[1].Ingress = 10
 	route[1].Egress = 15
 
-	reverseRoute := getReverseRoute(route)
+	reverseRoute := getReverseRoute(context.Background(), route)
 	assert.Equal(t, 2, len(reverseRoute))
 	assert.Equal(t, "d2", reverseRoute[0].DeviceID)
 	assert.Equal(t, "d1", reverseRoute[1].DeviceID)
@@ -416,7 +416,7 @@ func TestDeviceRoutes_reverseRoute(t *testing.T) {
 	route[2].DeviceID = "d3"
 	route[2].Ingress = 20
 	route[2].Egress = 25
-	reverseRoute = getReverseRoute(route)
+	reverseRoute = getReverseRoute(context.Background(), route)
 	assert.Equal(t, 3, len(reverseRoute))
 	assert.Equal(t, "d3", reverseRoute[0].DeviceID)
 	assert.Equal(t, "d2", reverseRoute[1].DeviceID)
@@ -446,7 +446,7 @@ func TestDeviceRoutes_reverseRoute(t *testing.T) {
 		route[i].Ingress = ingressNos[i]
 		route[i].Egress = egressNos[i]
 	}
-	reverseRoute = getReverseRoute(route)
+	reverseRoute = getReverseRoute(context.Background(), route)
 	assert.Equal(t, numRoutes, len(reverseRoute))
 	for i, j := 0, numRoutes-1; j >= 0; i, j = i+1, j-1 {
 		assert.Equal(t, deviceIds[j], reverseRoute[i].DeviceID)
@@ -456,7 +456,7 @@ func TestDeviceRoutes_reverseRoute(t *testing.T) {
 
 	fmt.Println(fmt.Sprintf("Reverse of %d hops successful.", numRoutes))
 
-	reverseOfReverse := getReverseRoute(reverseRoute)
+	reverseOfReverse := getReverseRoute(context.Background(), reverseRoute)
 	assert.Equal(t, route, reverseOfReverse)
 	fmt.Println("Reverse of reverse successful.")
 }

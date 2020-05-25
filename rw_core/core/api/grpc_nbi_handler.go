@@ -40,7 +40,7 @@ type NBIHandler struct {
 type adapterManager struct{ *adapter.Manager }
 
 // NewNBIHandler creates API handler instance
-func NewNBIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalManager, adapterMgr *adapter.Manager) *NBIHandler {
+func NewNBIHandler(ctx context.Context, deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalManager, adapterMgr *adapter.Manager) *NBIHandler {
 	return &NBIHandler{
 		Manager:        deviceMgr,
 		LogicalManager: logicalDeviceMgr,

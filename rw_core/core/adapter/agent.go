@@ -17,6 +17,7 @@
 package adapter
 
 import (
+	"context"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -30,13 +31,13 @@ type agent struct {
 	lock    sync.RWMutex
 }
 
-func newAdapterAgent(adapter *voltha.Adapter) *agent {
+func newAdapterAgent(ctx context.Context, adapter *voltha.Adapter) *agent {
 	return &agent{
 		adapter: adapter,
 	}
 }
 
-func (aa *agent) getAdapter() *voltha.Adapter {
+func (aa *agent) getAdapter(ctx context.Context) *voltha.Adapter {
 	aa.lock.RLock()
 	defer aa.lock.RUnlock()
 	logger.Debugw("getAdapter", log.Fields{"adapter": aa.adapter})
@@ -45,7 +46,7 @@ func (aa *agent) getAdapter() *voltha.Adapter {
 
 // updateCommunicationTime updates the message to the specified time.
 // No attempt is made to save the time to the db, so only recent times are guaranteed to be accurate.
-func (aa *agent) updateCommunicationTime(new time.Time) {
+func (aa *agent) updateCommunicationTime(ctx context.Context, new time.Time) {
 	// only update if new time is not in the future, and either the old time is invalid or new time > old time
 	if last, err := ptypes.Timestamp(aa.adapter.LastCommunication); !new.After(time.Now()) && (err != nil || new.After(last)) {
 		timestamp, err := ptypes.TimestampProto(new)

@@ -28,7 +28,7 @@ import (
 // DeviceManager represents a generic device manager
 type DeviceManager interface {
 	GetDevice(context.Context, *voltha.ID) (*voltha.Device, error)
-	IsRootDevice(string) (bool, error)
+	IsRootDevice(context.Context, string) (bool, error)
 	NotifyInvalidTransition(ctx context.Context, curr *voltha.Device) error
 	CreateLogicalDevice(ctx context.Context, curr *voltha.Device) error
 	SetupUNILogicalPorts(ctx context.Context, curr *voltha.Device) error

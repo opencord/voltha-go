@@ -29,13 +29,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func newKVClient(storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
+func newKVClient(ctx context.Context, storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
 	logger.Infow("kv-store-type", log.Fields{"store": storeType})
 	switch storeType {
 	case "consul":
-		return kvstore.NewConsulClient(address, timeout)
+		return kvstore.NewConsulClient(ctx, address, timeout)
 	case "etcd":
-		return kvstore.NewEtcdClient(address, timeout, log.FatalLevel)
+		return kvstore.NewEtcdClient(ctx, address, timeout, log.FatalLevel)
 	}
 	return nil, errors.New("unsupported-kv-store")
 }
@@ -46,7 +46,7 @@ func stopKVClient(ctx context.Context, kvClient kvstore.Client) {
 		logger.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
 	}
 	// Close the DB connection
-	kvClient.Close()
+	kvClient.Close(ctx)
 }
 
 // waitUntilKVStoreReachableOrMaxTries will wait until it can connect to a KV store or until maxtries has been reached
@@ -98,7 +98,7 @@ func monitorKVStoreLiveness(ctx context.Context, backend *db.Backend, liveProbeI
 	logger.Info("start-monitoring-kvstore-liveness")
 
 	// Instruct backend to create Liveness channel for transporting state updates
-	livenessChannel := backend.EnableLivenessChannel()
+	livenessChannel := backend.EnableLivenessChannel(ctx)
 
 	logger.Debug("enabled-kvstore-liveness-channel")
 

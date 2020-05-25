@@ -96,7 +96,7 @@ func (agent *LogicalAgent) deleteFlowsOfMeter(ctx context.Context, meterID uint3
 	agent.flowLock.Lock()
 	defer agent.flowLock.Unlock()
 	for flowID, flowChunk := range agent.flows {
-		if mID := fu.GetMeterIdFromFlow(flowChunk.flow); mID != 0 && mID == meterID {
+		if mID := fu.GetMeterIdFromFlow(ctx, flowChunk.flow); mID != 0 && mID == meterID {
 			logger.Debugw("Flow-to-be- deleted", log.Fields{"flow": flowChunk.flow})
 			path := fmt.Sprintf("logical_flows/%s/%d", agent.logicalDeviceID, flowID)
 			if err := agent.clusterDataProxy.Remove(ctx, path); err != nil {
@@ -117,7 +117,7 @@ func (agent *LogicalAgent) deleteFlowsOfGroup(ctx context.Context, groupID uint3
 	agent.flowLock.Lock()
 	defer agent.flowLock.Unlock()
 	for flowID, flowChunk := range agent.flows {
-		if fu.FlowHasOutGroup(flowChunk.flow, groupID) {
+		if fu.FlowHasOutGroup(ctx, flowChunk.flow, groupID) {
 			path := fmt.Sprintf("logical_flows/%s/%d", agent.logicalDeviceID, flowID)
 			if err := agent.clusterDataProxy.Remove(ctx, path); err != nil {
 				return nil, fmt.Errorf("couldnt-delete-flow-from-store-%s", path)

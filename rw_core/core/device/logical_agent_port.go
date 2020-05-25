@@ -53,12 +53,12 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 		if _, err = agent.addNNILogicalPort(ctx, device, port); err != nil {
 			return err
 		}
-		agent.addLogicalPortToMap(port.PortNo, true)
+		agent.addLogicalPortToMap(ctx, port.PortNo, true)
 	} else if port.Type == voltha.Port_ETHERNET_UNI {
 		if _, err = agent.addUNILogicalPort(ctx, device, port); err != nil {
 			return err
 		}
-		agent.addLogicalPortToMap(port.PortNo, false)
+		agent.addLogicalPortToMap(ctx, port.PortNo, false)
 	} else {
 		// Update the device routes to ensure all routes on the logical device have been calculated
 		if err = agent.buildRoutes(ctx); err != nil {
@@ -88,18 +88,18 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 	}
 	responses := make([]coreutils.Response, 0)
 	for _, child := range children.Items {
-		response := coreutils.NewResponse()
+		response := coreutils.NewResponse(ctx)
 		responses = append(responses, response)
 		go func(child *voltha.Device) {
 			if err = agent.setupUNILogicalPorts(context.Background(), child); err != nil {
 				logger.Error("setting-up-UNI-ports-failed", log.Fields{"deviceID": child.Id})
-				response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
+				response.Error(ctx, status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
 			}
-			response.Done()
+			response.Done(ctx)
 		}(child)
 	}
 	// Wait for completion
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(ctx, agent.defaultTimeout, responses...); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -123,7 +123,7 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 			if _, err = agent.addNNILogicalPort(ctx, device, port); err != nil {
 				logger.Errorw("error-adding-UNI-port", log.Fields{"error": err})
 			}
-			agent.addLogicalPortToMap(port.PortNo, true)
+			agent.addLogicalPortToMap(ctx, port.PortNo, true)
 		}
 	}
 	return err
@@ -135,10 +135,10 @@ func (agent *LogicalAgent) updatePortState(ctx context.Context, deviceID string,
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	// Get the latest logical device info
-	original := agent.getLogicalDeviceWithoutLock()
-	updatedPorts := clonePorts(original.Ports)
+	original := agent.getLogicalDeviceWithoutLock(ctx)
+	updatedPorts := clonePorts(ctx, original.Ports)
 	for _, port := range updatedPorts {
 		if port.DeviceId == deviceID && port.DevicePortNo == portNo {
 			if operStatus == voltha.OperStatus_ACTIVE {
@@ -165,10 +165,10 @@ func (agent *LogicalAgent) updatePortsState(ctx context.Context, device *voltha.
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	// Get the latest logical device info
-	original := agent.getLogicalDeviceWithoutLock()
-	updatedPorts := clonePorts(original.Ports)
+	original := agent.getLogicalDeviceWithoutLock(ctx)
+	updatedPorts := clonePorts(ctx, original.Ports)
 	for _, port := range updatedPorts {
 		if port.DeviceId == device.Id {
 			if state == voltha.OperStatus_ACTIVE {
@@ -201,7 +201,7 @@ func (agent *LogicalAgent) setupUNILogicalPorts(ctx context.Context, childDevice
 				logger.Errorw("error-adding-UNI-port", log.Fields{"error": err})
 			}
 			if added {
-				agent.addLogicalPortToMap(port.PortNo, false)
+				agent.addLogicalPortToMap(ctx, port.PortNo, false)
 			}
 		}
 	}
@@ -214,9 +214,9 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	// Get the latest logical device info
-	cloned := agent.getLogicalDeviceWithoutLock()
+	cloned := agent.getLogicalDeviceWithoutLock(ctx)
 
 	if err := agent.updateLogicalDevicePortsWithoutLock(ctx, cloned, []*voltha.LogicalPort{}); err != nil {
 		logger.Warnw("logical-device-update-failed", log.Fields{"ldeviceId": agent.logicalDeviceID, "error": err})
@@ -230,9 +230,9 @@ func (agent *LogicalAgent) deleteLogicalPort(ctx context.Context, lPort *voltha.
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	logicalDevice := agent.getLogicalDeviceWithoutLock()
+	logicalDevice := agent.getLogicalDeviceWithoutLock(ctx)
 
 	index := -1
 	for i, logicalPort := range logicalDevice.Ports {
@@ -242,7 +242,7 @@ func (agent *LogicalAgent) deleteLogicalPort(ctx context.Context, lPort *voltha.
 		}
 	}
 	if index >= 0 {
-		clonedPorts := clonePorts(logicalDevice.Ports)
+		clonedPorts := clonePorts(ctx, logicalDevice.Ports)
 		if index < len(clonedPorts)-1 {
 			copy(clonedPorts[index:], clonedPorts[index+1:])
 		}
@@ -255,7 +255,7 @@ func (agent *LogicalAgent) deleteLogicalPort(ctx context.Context, lPort *voltha.
 		}
 
 		// Remove the logical port from cache
-		agent.deleteLogicalPortsFromMap([]uint32{lPort.DevicePortNo})
+		agent.deleteLogicalPortsFromMap(ctx, []uint32{lPort.DevicePortNo})
 		// Reset the logical device routes
 		go func() {
 			if err := agent.buildRoutes(context.Background()); err != nil {
@@ -272,9 +272,9 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	logicalDevice := agent.getLogicalDeviceWithoutLock()
+	logicalDevice := agent.getLogicalDeviceWithoutLock(ctx)
 	lPortstoKeep := []*voltha.LogicalPort{}
 	lPortsNoToDelete := []uint32{}
 	for _, logicalPort := range logicalDevice.Ports {
@@ -290,7 +290,7 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 		return err
 	}
 	// Remove the port from the cached logical ports set
-	agent.deleteLogicalPortsFromMap(lPortsNoToDelete)
+	agent.deleteLogicalPortsFromMap(ctx, lPortsNoToDelete)
 
 	// Reset the logical device routes
 	go func() {
@@ -307,9 +307,9 @@ func (agent *LogicalAgent) enableLogicalPort(ctx context.Context, lPortID string
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
-	logicalDevice := agent.getLogicalDeviceWithoutLock()
+	logicalDevice := agent.getLogicalDeviceWithoutLock(ctx)
 
 	index := -1
 	for i, logicalPort := range logicalDevice.Ports {
@@ -319,7 +319,7 @@ func (agent *LogicalAgent) enableLogicalPort(ctx context.Context, lPortID string
 		}
 	}
 	if index >= 0 {
-		clonedPorts := clonePorts(logicalDevice.Ports)
+		clonedPorts := clonePorts(ctx, logicalDevice.Ports)
 		clonedPorts[index].OfpPort.Config = clonedPorts[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		return agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, clonedPorts)
 	}
@@ -331,10 +331,10 @@ func (agent *LogicalAgent) disableLogicalPort(ctx context.Context, lPortID strin
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 
 	// Get the most up to date logical device
-	logicalDevice := agent.getLogicalDeviceWithoutLock()
+	logicalDevice := agent.getLogicalDeviceWithoutLock(ctx)
 	index := -1
 	for i, logicalPort := range logicalDevice.Ports {
 		if logicalPort.Id == lPortID {
@@ -343,7 +343,7 @@ func (agent *LogicalAgent) disableLogicalPort(ctx context.Context, lPortID strin
 		}
 	}
 	if index >= 0 {
-		clonedPorts := clonePorts(logicalDevice.Ports)
+		clonedPorts := clonePorts(ctx, logicalDevice.Ports)
 		clonedPorts[index].OfpPort.Config = (clonedPorts[index].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)) | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		return agent.updateLogicalDevicePortsWithoutLock(ctx, logicalDevice, clonedPorts)
 	}
@@ -360,12 +360,12 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return false, err
 	}
-	if agent.portExist(device, port) {
+	if agent.portExist(ctx, device, port) {
 		logger.Debugw("port-already-exist", log.Fields{"port": port})
-		agent.requestQueue.RequestComplete()
+		agent.requestQueue.RequestComplete(ctx)
 		return false, nil
 	}
-	agent.requestQueue.RequestComplete()
+	agent.requestQueue.RequestComplete(ctx)
 
 	var portCap *ic.PortCapability
 	var err error
@@ -379,9 +379,9 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha
 		return false, err
 	}
 
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	// Double check again if this port has been already added since the getPortCapability could have taken a long time
-	if agent.portExist(device, port) {
+	if agent.portExist(ctx, device, port) {
 		logger.Debugw("port-already-exist", log.Fields{"port": port})
 		return false, nil
 	}
@@ -394,9 +394,9 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha
 	lp.OfpPort.Name = lp.Id
 	lp.DevicePortNo = port.PortNo
 
-	ld := agent.getLogicalDeviceWithoutLock()
+	ld := agent.getLogicalDeviceWithoutLock(ctx)
 
-	clonedPorts := clonePorts(ld.Ports)
+	clonedPorts := clonePorts(ctx, ld.Ports)
 	if clonedPorts == nil {
 		clonedPorts = make([]*voltha.LogicalPort, 0)
 	}
@@ -418,8 +418,8 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha
 	return true, nil
 }
 
-func (agent *LogicalAgent) portExist(device *voltha.Device, port *voltha.Port) bool {
-	ldevice := agent.getLogicalDeviceWithoutLock()
+func (agent *LogicalAgent) portExist(ctx context.Context, device *voltha.Device, port *voltha.Port) bool {
+	ldevice := agent.getLogicalDeviceWithoutLock(ctx)
 	for _, lPort := range ldevice.Ports {
 		if lPort.DeviceId == device.Id && lPort.DevicePortNo == port.PortNo && lPort.Id == port.Label {
 			return true
@@ -442,12 +442,12 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 		return false, err
 	}
 
-	if agent.portExist(childDevice, port) {
+	if agent.portExist(ctx, childDevice, port) {
 		logger.Debugw("port-already-exist", log.Fields{"port": port})
-		agent.requestQueue.RequestComplete()
+		agent.requestQueue.RequestComplete(ctx)
 		return false, nil
 	}
-	agent.requestQueue.RequestComplete()
+	agent.requestQueue.RequestComplete(ctx)
 	var portCap *ic.PortCapability
 	var err error
 	// First get the port capability
@@ -458,14 +458,14 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return false, err
 	}
-	defer agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete(ctx)
 	// Double check again if this port has been already added since the getPortCapability could have taken a long time
-	if agent.portExist(childDevice, port) {
+	if agent.portExist(ctx, childDevice, port) {
 		logger.Debugw("port-already-exist", log.Fields{"port": port})
 		return false, nil
 	}
 	// Get stored logical device
-	ldevice := agent.getLogicalDeviceWithoutLock()
+	ldevice := agent.getLogicalDeviceWithoutLock(ctx)
 
 	logger.Debugw("adding-uni", log.Fields{"deviceId": childDevice.Id})
 	portCap.Port.RootPort = false
@@ -473,7 +473,7 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 	portCap.Port.OfpPort.PortNo = port.PortNo
 	portCap.Port.DeviceId = childDevice.Id
 	portCap.Port.DevicePortNo = port.PortNo
-	clonedPorts := clonePorts(ldevice.Ports)
+	clonedPorts := clonePorts(ctx, ldevice.Ports)
 	if clonedPorts == nil {
 		clonedPorts = make([]*voltha.LogicalPort, 0)
 	}
@@ -493,7 +493,7 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 	return true, nil
 }
 
-func clonePorts(ports []*voltha.LogicalPort) []*voltha.LogicalPort {
+func clonePorts(ctx context.Context, ports []*voltha.LogicalPort) []*voltha.LogicalPort {
 	return proto.Clone(&voltha.LogicalPorts{Items: ports}).(*voltha.LogicalPorts).Items
 }
 
@@ -504,12 +504,12 @@ func (agent *LogicalAgent) updateLogicalDevicePortsWithoutLock(ctx context.Conte
 	if err := agent.updateLogicalDeviceWithoutLock(ctx, device); err != nil {
 		return err
 	}
-	agent.portUpdated(oldPorts, newPorts)
+	agent.portUpdated(ctx, oldPorts, newPorts)
 	return nil
 }
 
 // diff go over two lists of logical ports and return what's new, what's changed and what's removed.
-func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, deletedPorts map[string]*voltha.LogicalPort) {
+func diff(ctx context.Context, oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, deletedPorts map[string]*voltha.LogicalPort) {
 	newPorts = make(map[string]*voltha.LogicalPort, len(newList))
 	changedPorts = make(map[string]*voltha.LogicalPort, len(oldList))
 	deletedPorts = make(map[string]*voltha.LogicalPort, len(oldList))
@@ -533,21 +533,21 @@ func diff(oldList, newList []*voltha.LogicalPort) (newPorts, changedPorts, delet
 }
 
 // portUpdated is invoked when a port is updated on the logical device
-func (agent *LogicalAgent) portUpdated(prevPorts, currPorts []*voltha.LogicalPort) interface{} {
+func (agent *LogicalAgent) portUpdated(ctx context.Context, prevPorts, currPorts []*voltha.LogicalPort) interface{} {
 	// Get the difference between the two list
-	newPorts, changedPorts, deletedPorts := diff(prevPorts, currPorts)
+	newPorts, changedPorts, deletedPorts := diff(ctx, prevPorts, currPorts)
 
 	// Send the port change events to the OF controller
 	for _, newP := range newPorts {
-		go agent.ldeviceMgr.SendChangeEvent(agent.logicalDeviceID,
+		go agent.ldeviceMgr.SendChangeEvent(ctx, agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_ADD, Desc: newP.OfpPort})
 	}
 	for _, change := range changedPorts {
-		go agent.ldeviceMgr.SendChangeEvent(agent.logicalDeviceID,
+		go agent.ldeviceMgr.SendChangeEvent(ctx, agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_MODIFY, Desc: change.OfpPort})
 	}
 	for _, del := range deletedPorts {
-		go agent.ldeviceMgr.SendChangeEvent(agent.logicalDeviceID,
+		go agent.ldeviceMgr.SendChangeEvent(ctx, agent.logicalDeviceID,
 			&ofp.OfpPortStatus{Reason: ofp.OfpPortReason_OFPPR_DELETE, Desc: del.OfpPort})
 	}
 
@@ -557,13 +557,13 @@ func (agent *LogicalAgent) portUpdated(prevPorts, currPorts []*voltha.LogicalPor
 //GetWildcardInputPorts filters out the logical port number from the set of logical ports on the device and
 //returns their port numbers.  This function is invoked only during flow decomposition where the lock on the logical
 //device is already held.  Therefore it is safe to retrieve the logical device without lock.
-func (agent *LogicalAgent) GetWildcardInputPorts(excludePort ...uint32) []uint32 {
+func (agent *LogicalAgent) GetWildcardInputPorts(ctx context.Context, excludePort ...uint32) []uint32 {
 	lPorts := make([]uint32, 0)
 	var exclPort uint32
 	if len(excludePort) == 1 {
 		exclPort = excludePort[0]
 	}
-	lDevice := agent.getLogicalDeviceWithoutLock()
+	lDevice := agent.getLogicalDeviceWithoutLock(ctx)
 	for _, port := range lDevice.Ports {
 		if port.OfpPort.PortNo != exclPort {
 			lPorts = append(lPorts, port.OfpPort.PortNo)
@@ -574,7 +574,7 @@ func (agent *LogicalAgent) GetWildcardInputPorts(excludePort ...uint32) []uint32
 
 // helpers for agent.logicalPortsNo
 
-func (agent *LogicalAgent) addLogicalPortToMap(portNo uint32, nniPort bool) {
+func (agent *LogicalAgent) addLogicalPortToMap(ctx context.Context, portNo uint32, nniPort bool) {
 	agent.lockLogicalPortsNo.Lock()
 	defer agent.lockLogicalPortsNo.Unlock()
 	if exist := agent.logicalPortsNo[portNo]; !exist {
@@ -582,7 +582,7 @@ func (agent *LogicalAgent) addLogicalPortToMap(portNo uint32, nniPort bool) {
 	}
 }
 
-func (agent *LogicalAgent) addLogicalPortsToMap(lps []*voltha.LogicalPort) {
+func (agent *LogicalAgent) addLogicalPortsToMap(ctx context.Context, lps []*voltha.LogicalPort) {
 	agent.lockLogicalPortsNo.Lock()
 	defer agent.lockLogicalPortsNo.Unlock()
 	for _, lp := range lps {
@@ -592,7 +592,7 @@ func (agent *LogicalAgent) addLogicalPortsToMap(lps []*voltha.LogicalPort) {
 	}
 }
 
-func (agent *LogicalAgent) deleteLogicalPortsFromMap(portsNo []uint32) {
+func (agent *LogicalAgent) deleteLogicalPortsFromMap(ctx context.Context, portsNo []uint32) {
 	agent.lockLogicalPortsNo.Lock()
 	defer agent.lockLogicalPortsNo.Unlock()
 	for _, pNo := range portsNo {
@@ -600,7 +600,7 @@ func (agent *LogicalAgent) deleteLogicalPortsFromMap(portsNo []uint32) {
 	}
 }
 
-func (agent *LogicalAgent) isNNIPort(portNo uint32) bool {
+func (agent *LogicalAgent) isNNIPort(ctx context.Context, portNo uint32) bool {
 	agent.lockLogicalPortsNo.RLock()
 	defer agent.lockLogicalPortsNo.RUnlock()
 	if exist := agent.logicalPortsNo[portNo]; exist {
@@ -609,7 +609,7 @@ func (agent *LogicalAgent) isNNIPort(portNo uint32) bool {
 	return false
 }
 
-func (agent *LogicalAgent) getFirstNNIPort() (uint32, error) {
+func (agent *LogicalAgent) getFirstNNIPort(ctx context.Context) (uint32, error) {
 	agent.lockLogicalPortsNo.RLock()
 	defer agent.lockLogicalPortsNo.RUnlock()
 	for portNo, nni := range agent.logicalPortsNo {
@@ -621,7 +621,7 @@ func (agent *LogicalAgent) getFirstNNIPort() (uint32, error) {
 }
 
 //GetNNIPorts returns NNI ports.
-func (agent *LogicalAgent) GetNNIPorts() []uint32 {
+func (agent *LogicalAgent) GetNNIPorts(ctx context.Context) []uint32 {
 	agent.lockLogicalPortsNo.RLock()
 	defer agent.lockLogicalPortsNo.RUnlock()
 	nniPorts := make([]uint32, 0)
@@ -634,13 +634,13 @@ func (agent *LogicalAgent) GetNNIPorts() []uint32 {
 }
 
 // getUNILogicalPortNo returns the UNI logical port number specified in the flow
-func (agent *LogicalAgent) getUNILogicalPortNo(flow *ofp.OfpFlowStats) (uint32, error) {
+func (agent *LogicalAgent) getUNILogicalPortNo(ctx context.Context, flow *ofp.OfpFlowStats) (uint32, error) {
 	var uniPort uint32
-	inPortNo := fu.GetInPort(flow)
-	outPortNo := fu.GetOutPort(flow)
-	if agent.isNNIPort(inPortNo) {
+	inPortNo := fu.GetInPort(ctx, flow)
+	outPortNo := fu.GetOutPort(ctx, flow)
+	if agent.isNNIPort(ctx, inPortNo) {
 		uniPort = outPortNo
-	} else if agent.isNNIPort(outPortNo) {
+	} else if agent.isNNIPort(ctx, outPortNo) {
 		uniPort = inPortNo
 	}
 	if uniPort != 0 {
