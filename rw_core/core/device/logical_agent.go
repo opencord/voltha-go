@@ -28,6 +28,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/flow"
 	"github.com/opencord/voltha-go/rw_core/core/device/group"
 	"github.com/opencord/voltha-go/rw_core/core/device/meter"
+	"github.com/opencord/voltha-go/rw_core/core/device/port"
 	fd "github.com/opencord/voltha-go/rw_core/flowdecomposition"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -63,6 +64,7 @@ type LogicalAgent struct {
 	flowLoader  *flow.Loader
 	meterLoader *meter.Loader
 	groupLoader *group.Loader
+	portLoader  *port.Loader
 }
 
 func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
@@ -82,6 +84,7 @@ func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalM
 		flowLoader:  flow.NewLoader(dbProxy.SubPath("logical_flows").Proxy(id)),
 		groupLoader: group.NewLoader(dbProxy.SubPath("logical_groups").Proxy(id)),
 		meterLoader: meter.NewLoader(dbProxy.SubPath("logical_meters").Proxy(id)),
+		portLoader:  port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
 	}
 }
 
@@ -165,6 +168,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		agent.flowLoader.Load(ctx)
 		agent.meterLoader.Load(ctx)
 		agent.groupLoader.Load(ctx)
+		agent.portLoader.Load(ctx)
 	}
 
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)

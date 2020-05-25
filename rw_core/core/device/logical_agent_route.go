@@ -148,9 +148,9 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
 	// Get all the logical ports on that logical device
-	lDevice := agent.getLogicalDeviceWithoutLock()
+	ports := agent.portLoader.List()
 
-	if err := agent.deviceRoutes.ComputeRoutes(ctx, lDevice.Ports); err != nil {
+	if err := agent.deviceRoutes.ComputeRoutes(ctx, ports); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {

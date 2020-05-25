@@ -29,11 +29,11 @@ import (
 // TestLoadersIdentical ensures that the group, flow, and meter loaders always have an identical implementation.
 func TestLoadersIdentical(t *testing.T) {
 	identical := [][]string{
-		{"ofp\\.OfpFlowStats", "ofp\\.OfpGroupEntry", "ofp\\.OfpMeterEntry"},
-		{"\\.Id", "\\.Desc\\.GroupId", "\\.Config.MeterId"},
-		{"uint64", "uint32", "uint32"},
-		{"Flow", "Group", "Meter"},
-		{"flow", "group", "meter"},
+		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`, `voltha\.LogicalPort`},
+		{`\.Id`, `\.Desc\.GroupId`, `\.Config\.MeterId`, `\.Id`},
+		{"uint64", "uint32", "uint32", "string"},
+		{"Flow", "Group", "Meter", "Port"},
+		{"flow", "group", "meter", "port"},
 	}
 
 	regexes := make([]*regexp.Regexp, len(identical))
@@ -65,6 +65,7 @@ func compare(regexes []*regexp.Regexp, fileNameA, fileNameB string) error {
 	scannerA, scannerB := bufio.NewScanner(fileA), bufio.NewScanner(fileB)
 
 	spaceRegex := regexp.MustCompile(" +")
+	libGoImportRegex := regexp.MustCompile(`^.*github\.com/opencord/voltha-protos/.*$`)
 
 	line := 1
 	for {
@@ -95,6 +96,9 @@ func compare(regexes []*regexp.Regexp, fileNameA, fileNameB string) error {
 
 		// replace multiple spaces with single space
 		replacedA, replacedB = spaceRegex.ReplaceAllString(replacedA, " "), spaceRegex.ReplaceAllString(replacedB, " ")
+
+		// ignore difference: voltha-protos import of ofp vs voltha
+		replacedA, replacedB = libGoImportRegex.ReplaceAllString(replacedA, "{{lib-go-import}}"), libGoImportRegex.ReplaceAllString(replacedB, "{{lib-go-import}}")
 
 		if replacedA != replacedB {
 			return fmt.Errorf("line %d: files %s and %s do not match: \n\t%s\n\t%s\n\n\t%s\n\t%s", line, fileNameA, fileNameB, textA, textB, replacedA, replacedB)

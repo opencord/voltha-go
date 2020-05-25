@@ -333,10 +333,18 @@ func (ldMgr *LogicalManager) ListLogicalDeviceFlowGroups(ctx context.Context, id
 // ListLogicalDevicePorts returns logical device ports
 func (ldMgr *LogicalManager) ListLogicalDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.LogicalPorts, error) {
 	logger.Debugw("ListLogicalDevicePorts", log.Fields{"logicaldeviceid": id.Id})
-	if agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id); agent != nil {
-		return agent.ListLogicalDevicePorts(ctx)
+	agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+
+	ports := agent.listLogicalDevicePorts()
+	ctr, ret := 0, make([]*voltha.LogicalPort, len(ports))
+	for _, port := range ports {
+		ret[ctr] = port
+		ctr++
+	}
+	return &voltha.LogicalPorts{Items: ret}, nil
 }
 
 // GetLogicalDevicePort returns logical device port details
@@ -487,7 +495,7 @@ func (ldMgr *LogicalManager) updatePortsState(ctx context.Context, device *volth
 		return err
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
-		if err := agent.updatePortsState(ctx, device, state); err != nil {
+		if err := agent.updatePortsState(ctx, device.Id, state); err != nil {
 			return err
 		}
 	}

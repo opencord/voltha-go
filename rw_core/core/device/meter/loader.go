@@ -130,6 +130,8 @@ func (loader *Loader) Lock(id uint32) (*Handle, bool) {
 	return &Handle{loader: loader, chunk: entry}, true
 }
 
+// Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
+// This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
 	loader *Loader
 	chunk  *chunk
