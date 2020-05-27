@@ -35,6 +35,10 @@ const (
 	oltDeviceID     = "olt"
 )
 
+const testSetupPhase contextKey = "testSetupPhase"
+
+type contextKey string
+
 //portRegistration is a message sent from an OLT device to a logical device to create a logical port
 type portRegistration struct {
 	port     *voltha.Port
@@ -82,7 +86,11 @@ func (ldM *logicalDeviceManager) start(getDevice GetDeviceFunc, buildRoutes bool
 		}
 		ldM.logicalDevice.Ports = append(ldM.logicalDevice.Ports, lp)
 		if buildRoutes {
-			err := ldM.deviceRoutes.AddPort(context.Background(), lp, ldM.logicalDevice.Ports)
+			device, err := getDevice(context.WithValue(context.Background(), testSetupPhase, true), lp.DeviceId)
+			if err != nil {
+				fmt.Println("Error when getting device:", lp.DeviceId, err)
+			}
+			err = ldM.deviceRoutes.AddPort(context.Background(), lp, device, ldM.logicalDevice.Ports)
 			if err != nil && !strings.Contains(err.Error(), "code = FailedPrecondition") {
 				fmt.Println("(Error when adding port:", lp, len(ldM.logicalDevice.Ports), err)
 			}
@@ -225,10 +233,12 @@ func (onuM *onuManager) getOnu(deviceID string) *voltha.Device {
 	return nil
 }
 
-func (onuM *onuManager) GetDeviceHelper(_ context.Context, id string) (*voltha.Device, error) {
-	onuM.numGetDeviceInvokedLock.Lock()
-	onuM.numGetDeviceInvoked++
-	onuM.numGetDeviceInvokedLock.Unlock()
+func (onuM *onuManager) GetDeviceHelper(ctx context.Context, id string) (*voltha.Device, error) {
+	if ctx.Value(testSetupPhase) != true {
+		onuM.numGetDeviceInvokedLock.Lock()
+		onuM.numGetDeviceInvoked++
+		onuM.numGetDeviceInvokedLock.Unlock()
+	}
 	if id == oltDeviceID {
 		return onuM.oltMgr.olt, nil
 	}
@@ -241,7 +251,7 @@ func (onuM *onuManager) GetDeviceHelper(_ context.Context, id string) (*voltha.D
 func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 	numNNIPort := 2
 	numPonPortOnOlt := 8
-	numOnuPerOltPonPort := 32
+	numOnuPerOltPonPort := 256
 	numUniPerOnu := 4
 	done := make(chan struct{})
 
@@ -272,7 +282,7 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Validate the routes are up to date
-	assert.True(t, ldMgr.deviceRoutes.IsUpToDate(ld))
+	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ld))
 
 	// Validate the expected number of routes
 	assert.EqualValues(t, 2*numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, len(ldMgr.deviceRoutes.Routes))
@@ -286,8 +296,8 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 
 func TestDeviceRoutes_AddPort(t *testing.T) {
 	numNNIPort := 2
-	numPonPortOnOlt := 8
-	numOnuPerOltPonPort := 32
+	numPonPortOnOlt := 16
+	numOnuPerOltPonPort := 256
 	numUniPerOnu := 4
 	done := make(chan struct{})
 
@@ -316,7 +326,7 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	ldMgr.deviceRoutes.Print()
 
 	// Validate the routes are up to date
-	assert.True(t, ldMgr.deviceRoutes.IsUpToDate(ld))
+	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ld))
 
 	// Validate the expected number of routes
 	assert.EqualValues(t, 2*numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, len(ldMgr.deviceRoutes.Routes))

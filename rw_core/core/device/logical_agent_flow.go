@@ -20,8 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -31,6 +29,7 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strconv"
 )
 
 //updateFlowTable updates the flow table of that logical device
@@ -40,9 +39,6 @@ func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.OfpFlo
 		return nil
 	}
 
-	if err := agent.generateDeviceRoutesIfNeeded(ctx); err != nil {
-		return err
-	}
 	switch flow.GetCommand() {
 	case ofp.OfpFlowModCommand_OFPFC_ADD:
 		return agent.flowAdd(ctx, flow)
@@ -170,7 +166,8 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				return changed, updated, err
 			}
 		}
-		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &flowMetadata)
+
+		respChannels := agent.addFlowsAndGroupsToDevices(deviceRules, &flowMetadata)
 		// Create the go routines to wait
 		go func() {
 			// Wait for completion
@@ -218,7 +215,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	}
 
 	// Update the devices
-	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, metadata)
+	respChnls := agent.deleteFlowsAndGroupsFromDevices(deviceRules, metadata)
 
 	// Wait for the responses
 	go func() {
@@ -300,9 +297,9 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 
 		// Update the devices
 		if partialRoute {
-			respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: toDelete}, &flowMetadata)
+			respChnls = agent.deleteFlowsFromParentDevice(ofp.Flows{Items: toDelete}, &flowMetadata)
 		} else {
-			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
+			respChnls = agent.deleteFlowsAndGroupsFromDevices(deviceRules, &flowMetadata)
 		}
 
 		// Wait for the responses
@@ -378,9 +375,9 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 	}
 	// Update the devices
 	if partialRoute {
-		respChnls = agent.deleteFlowsFromParentDevice(ctx, ofp.Flows{Items: flowsToDelete}, &flowMetadata)
+		respChnls = agent.deleteFlowsFromParentDevice(ofp.Flows{Items: flowsToDelete}, &flowMetadata)
 	} else {
-		respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &flowMetadata)
+		respChnls = agent.deleteFlowsAndGroupsFromDevices(deviceRules, &flowMetadata)
 	}
 
 	// Wait for completion

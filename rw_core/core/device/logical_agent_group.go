@@ -37,10 +37,6 @@ func (agent *LogicalAgent) updateGroupTable(ctx context.Context, groupMod *ofp.O
 		return nil
 	}
 
-	if err := agent.generateDeviceRoutesIfNeeded(ctx); err != nil {
-		return err
-	}
-
 	switch groupMod.GetCommand() {
 	case ofp.OfpGroupModCommand_OFPGC_ADD:
 		return agent.groupAdd(ctx, groupMod)
@@ -92,7 +88,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 	logger.Debugw("rules", log.Fields{"rules for group-add": deviceRules.String()})
 
 	// Update the devices
-	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &voltha.FlowMetadata{})
+	respChnls := agent.addFlowsAndGroupsToDevices(deviceRules, &voltha.FlowMetadata{})
 
 	// Wait for completion
 	go func() {
@@ -172,7 +168,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
 
 		// Update the devices
-		respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, nil)
+		respChnls := agent.updateFlowsAndGroupsOfDevice(deviceRules, nil)
 
 		// Wait for completion
 		go func() {
@@ -217,7 +213,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	}
 
 	// Update the devices
-	respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, &voltha.FlowMetadata{})
+	respChnls := agent.updateFlowsAndGroupsOfDevice(deviceRules, &voltha.FlowMetadata{})
 
 	// Wait for completion
 	go func() {

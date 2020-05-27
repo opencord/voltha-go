@@ -240,7 +240,7 @@ func (agent *Agent) getDevice(ctx context.Context) (*voltha.Device, error) {
 
 // getDeviceWithoutLock is a helper function to be used ONLY by any device agent function AFTER it has acquired the device lock.
 func (agent *Agent) getDeviceWithoutLock() *voltha.Device {
-	return proto.Clone(agent.device).(*voltha.Device)
+	return agent.device
 }
 
 // enableDevice activates a preprovisioned or a disable device
@@ -891,8 +891,7 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 
 	cloned := agent.getDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
-	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-	return agent.updateDeviceInStoreWithoutLock(updateCtx, cloned, false, "")
+	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
 func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error) {
@@ -1461,6 +1460,7 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 		cloned.Ports = append(cloned.Ports, ponPort)
 		logger.Infow("adding-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
 	}
+
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
@@ -1553,13 +1553,12 @@ func (agent *Agent) updateDeviceInStoreWithoutLock(ctx context.Context, device *
 		return errors.New("device agent stopped")
 	}
 
-	updateCtx := context.WithValue(ctx, model.RequestTimestamp, time.Now().UnixNano())
-	if err := agent.clusterDataProxy.Update(updateCtx, "devices/"+agent.deviceID, device); err != nil {
+	if err := agent.clusterDataProxy.Update(ctx, "devices/"+agent.deviceID, device); err != nil {
 		return status.Errorf(codes.Internal, "failed-update-device:%s: %s", agent.deviceID, err)
 	}
 	logger.Debugw("updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
 
-	agent.device = proto.Clone(device).(*voltha.Device)
+	agent.device = device
 	return nil
 }
 
