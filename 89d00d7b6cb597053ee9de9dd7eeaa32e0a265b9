@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3370207f_ab85cc65",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "getDeviceWithoutLock, implies only 1 caller that already holds the lock of the device can change it.   There is a separate getDevice() where clone is used.",
+      "parentUuid": "ad9d865a_68d67bed",
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b712ee35_ce1bb29e",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2020-05-27T20:48:31Z",
       "side": 1,
       "message": "Error is returned, and will likely be logged by the caller.  Is it necessary to log this at error level?",
+      "range": {
+        "startLine": 1557,
+        "startChar": 6,
+        "endLine": 1557,
+        "endChar": 12
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fed3fc0_6810c00e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1557,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "Will change to warn",
+      "parentUuid": "b712ee35_ce1bb29e",
       "range": {
         "startLine": 1557,
         "startChar": 6,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "f8870252_2c41e6a5",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "Sure, will update",
+      "parentUuid": "9c9f46dc_4fc67490",
+      "range": {
+        "startLine": 254,
+        "startChar": 54,
+        "endLine": 254,
+        "endChar": 71
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77d59a4b_24047c79",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -76,6 +142,30 @@
       "writtenOn": "2020-05-27T20:30:32Z",
       "side": 1,
       "message": "addLogicalDevicePortsWithoutLock",
+      "range": {
+        "startLine": 497,
+        "startChar": 2,
+        "endLine": 497,
+        "endChar": 37
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c85454f4_6322b964",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "Will update.",
+      "parentUuid": "77d59a4b_24047c79",
       "range": {
         "startLine": 497,
         "startChar": 2,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "37483ebf_7041ed84",
+        "filename": "rw_core/core/device/logical_agent_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "In the case where the entire set of routes is computed if there is a failure then the deviceRoutes is reset.   Subsequent calls to route creation, in this scenario, will generate some route.",
+      "parentUuid": "5fdf7e8c_bcf78c5a",
+      "range": {
+        "startLine": 155,
+        "startChar": 8,
+        "endLine": 155,
+        "endChar": 20
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f21420d2_25fda3af",
         "filename": "rw_core/route/device_route.go",
         "patchSetId": 1
@@ -122,6 +236,30 @@
       "writtenOn": "2020-05-27T20:48:31Z",
       "side": 1,
       "message": "Need a discussion on port identifiers.\n\nShould this be a `struct{DeviceID string; PortNo uint32}`?",
+      "range": {
+        "startLine": 57,
+        "startChar": 31,
+        "endLine": 57,
+        "endChar": 37
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17a885fe_d287860d",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "No.  A logical port no ought to be unique for a logical device.   The issue I mentioned on slack will have to be addressed in a separate Jira.",
+      "parentUuid": "f21420d2_25fda3af",
       "range": {
         "startLine": 57,
         "startChar": 31,
@@ -151,6 +289,24 @@
     },
     {
       "key": {
+        "uuid": "7240820a_969c541d",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "I doubt we will remove this caching.  Doing so will require a device/port lookup which invoke a lock.  Even if it\u0027s small with maps, when doing so while other operations are going on would make the latency even bigger.",
+      "parentUuid": "6422c30b_a17f6863",
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54901fdc_91f346f3",
         "filename": "rw_core/route/device_route.go",
         "patchSetId": 1
@@ -162,6 +318,30 @@
       "writtenOn": "2020-05-27T20:48:31Z",
       "side": 1,
       "message": "I cannot seem to figure out what this is mapping from/to.\n\nConsider using a more descriptive, less cryptic name.",
+      "range": {
+        "startLine": 63,
+        "startChar": 1,
+        "endLine": 63,
+        "endChar": 26
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1425da36_2f5533a4",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "This is the pon port number on the parent device that is associated with the child.   Help with a better name would be great.",
+      "parentUuid": "54901fdc_91f346f3",
       "range": {
         "startLine": 63,
         "startChar": 1,
@@ -191,6 +371,24 @@
     },
     {
       "key": {
+        "uuid": "fbd8d035_2161b0f5",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "1d201869_cf69eb89",
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63b1eab4_3a267fcc",
         "filename": "rw_core/route/device_route.go",
         "patchSetId": 1
@@ -214,6 +412,30 @@
     },
     {
       "key": {
+        "uuid": "9ac7a950_02406bd7",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "hopefully :) will fix",
+      "parentUuid": "63b1eab4_3a267fcc",
+      "range": {
+        "startLine": 427,
+        "startChar": 29,
+        "endLine": 427,
+        "endChar": 30
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b70ce70f_262c0c3f",
         "filename": "rw_core/route/device_route.go",
         "patchSetId": 1
@@ -225,6 +447,30 @@
       "writtenOn": "2020-05-27T20:48:31Z",
       "side": 1,
       "message": "This is a tiny function, would it be cleaner to read dr.childPonPortNoMapOnParent directly?",
+      "range": {
+        "startLine": 465,
+        "startChar": 0,
+        "endLine": 471,
+        "endChar": 1
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "051e4c1e_b86874c8",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-27T21:30:13Z",
+      "side": 1,
+      "message": "Was trying to avoid repeating the same code twice in the function above.",
+      "parentUuid": "b70ce70f_262c0c3f",
       "range": {
         "startLine": 465,
         "startChar": 0,
