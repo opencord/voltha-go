@@ -2,6 +2,69 @@
   "comments": [
     {
       "key": {
+        "uuid": "ad9d865a_68d67bed",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "Are we sure that no caller alters the returned device?  What are the guidelines that should be followed for safe access to this device struct?",
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b712ee35_ce1bb29e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1557,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "Error is returned, and will likely be logged by the caller.  Is it necessary to log this at error level?",
+      "range": {
+        "startLine": 1557,
+        "startChar": 6,
+        "endLine": 1557,
+        "endChar": 12
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c9f46dc_4fc67490",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "If context is no longer used, no need to pass it.\n(more like this)",
+      "range": {
+        "startLine": 254,
+        "startChar": 54,
+        "endLine": 254,
+        "endChar": 71
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77d59a4b_24047c79",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -18,6 +81,155 @@
         "startChar": 2,
         "endLine": 497,
         "endChar": 37
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fdf7e8c_bcf78c5a",
+        "filename": "rw_core/core/device/logical_agent_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "deviceRoutes seem to be set, but never changed, can we just set it once when the agent is created, and do away with this locking?",
+      "range": {
+        "startLine": 155,
+        "startChar": 8,
+        "endLine": 155,
+        "endChar": 20
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f21420d2_25fda3af",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "Need a discussion on port identifiers.\n\nShould this be a `struct{DeviceID string; PortNo uint32}`?",
+      "range": {
+        "startLine": 57,
+        "startChar": 31,
+        "endLine": 57,
+        "endChar": 37
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6422c30b_a17f6863",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "It seems that a number of values here are cached even though looking them up on-demand would be an in-memory operation.  \n\nAs the Device/LogicalDevice moves towards maps instead of lists, could this caching be removed?",
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54901fdc_91f346f3",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "I cannot seem to figure out what this is mapping from/to.\n\nConsider using a more descriptive, less cryptic name.",
+      "range": {
+        "startLine": 63,
+        "startChar": 1,
+        "endLine": 63,
+        "endChar": 26
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d201869_cf69eb89",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "Should add a comment to describe what this function does.",
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63b1eab4_3a267fcc",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "...returns the \u003csomething\u003e from the model...?",
+      "range": {
+        "startLine": 427,
+        "startChar": 29,
+        "endLine": 427,
+        "endChar": 30
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b70ce70f_262c0c3f",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-27T20:48:31Z",
+      "side": 1,
+      "message": "This is a tiny function, would it be cleaner to read dr.childPonPortNoMapOnParent directly?",
+      "range": {
+        "startLine": 465,
+        "startChar": 0,
+        "endLine": 471,
+        "endChar": 1
       },
       "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
