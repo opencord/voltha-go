@@ -66,7 +66,7 @@ type LogicalAgent struct {
 }
 
 func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
-	deviceMgr *Manager, cdProxy *model.Proxy, timeout time.Duration) *LogicalAgent {
+	deviceMgr *Manager, cdProxy *model.Proxy, defaultTimeout time.Duration) *LogicalAgent {
 	var agent LogicalAgent
 	agent.logicalDeviceID = id
 	agent.serialNumber = sn
@@ -76,7 +76,7 @@ func newLogicalDeviceAgent(id string, sn string, deviceID string, ldeviceMgr *Lo
 	agent.ldeviceMgr = ldeviceMgr
 	agent.flowDecomposer = fd.NewFlowDecomposer(agent.deviceMgr)
 	agent.logicalPortsNo = make(map[uint32]bool)
-	agent.defaultTimeout = timeout
+	agent.defaultTimeout = defaultTimeout
 	agent.requestQueue = coreutils.NewRequestQueue()
 	agent.meters = make(map[uint32]*MeterChunk)
 	agent.flows = make(map[uint64]*FlowChunk)
@@ -251,7 +251,7 @@ func (agent *LogicalAgent) deleteFlowAndUpdateMeterStats(ctx context.Context, mo
 	return nil
 }
 
-func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) addFlowsAndGroupsToDevices(_ context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
 	logger.Debugw("send-add-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID, "deviceRules": deviceRules, "flowMetadata": flowMetadata})
 
 	responses := make([]coreutils.Response, 0)
@@ -259,10 +259,11 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
-			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+			subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
-			if err := agent.deviceMgr.addFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Errorw("flow-add-failed", log.Fields{"deviceID": deviceId, "error": err})
+			start := time.Now()
+			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+				logger.Errorw("flow-add-failed", log.Fields{"deviceID": deviceId, "error": err, "wait-time": time.Since(start)})
 				response.Error(status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
 			}
 			response.Done()
@@ -272,7 +273,7 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 	return responses
 }
 
-func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(_ context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
 	logger.Debugw("send-delete-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
@@ -280,10 +281,11 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
-			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+			subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
-			if err := agent.deviceMgr.deleteFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Errorw("flow-delete-failed", log.Fields{"deviceID": deviceId, "error": err})
+			start := time.Now()
+			if err := agent.deviceMgr.deleteFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+				logger.Errorw("flow-delete-failed", log.Fields{"deviceID": deviceId, "error": err, "wait-time": time.Since(start)})
 				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s", deviceId))
 			}
 			response.Done()
@@ -292,7 +294,7 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 	return responses
 }
 
-func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(_ context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
 	logger.Debugw("send-update-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
@@ -300,9 +302,9 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
-			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+			subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
-			if err := agent.deviceMgr.updateFlowsAndGroups(ctx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+			if err := agent.deviceMgr.updateFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
 				logger.Errorw("flow-update-failed", log.Fields{"deviceID": deviceId, "error": err})
 				response.Error(status.Errorf(codes.Internal, "flow-update-failed: %s", deviceId))
 			}
@@ -312,7 +314,7 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 	return responses
 }
 
-func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flows ofp.Flows, metadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) deleteFlowsFromParentDevice(_ context.Context, flows ofp.Flows, metadata *voltha.FlowMetadata) []coreutils.Response {
 	logger.Debugw("deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "flows": flows})
 	responses := make([]coreutils.Response, 0)
 	for _, flow := range flows.Items {
@@ -327,9 +329,9 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 		}
 		logger.Debugw("uni-port", log.Fields{"flows": flows, "uni-port": uniPort})
 		go func(uniPort uint32, metadata *voltha.FlowMetadata) {
-			ctx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+			subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
-			if err := agent.deviceMgr.deleteParentFlows(ctx, agent.rootDeviceID, uniPort, metadata); err != nil {
+			if err := agent.deviceMgr.deleteParentFlows(subCtx, agent.rootDeviceID, uniPort, metadata); err != nil {
 				logger.Error("flow-delete-failed", log.Fields{"device-id": agent.rootDeviceID, "error": err})
 				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s %v", agent.rootDeviceID, err))
 			}

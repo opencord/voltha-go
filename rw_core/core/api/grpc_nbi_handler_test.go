@@ -598,6 +598,11 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi *NBIHandler) {
 }
 
 func (nb *NBTest) deleteAllDevices(t *testing.T, nbi *NBIHandler) {
+	devices, _ := nbi.ListDevices(getContext(), &empty.Empty{})
+	if len(devices.Items) == 0 {
+		// Nothing to do
+		return
+	}
 	//Get an OLT device
 	oltDevice, err := nb.getADevice(true, nbi)
 	assert.Nil(t, err)
@@ -1080,11 +1085,26 @@ func (nb *NBTest) sendEAPFlows(t *testing.T, nbi *NBIHandler, logicalDeviceID st
 		},
 	}
 	flowEAP := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDeviceID}
-	_, err := nbi.UpdateLogicalDeviceFlowTable(getContext(), &flowEAP)
+	maxTries := 3
+	var err error
+	for {
+		if _, err = nbi.UpdateLogicalDeviceFlowTable(getContext(), &flowEAP); err == nil {
+			if maxTries < 3 {
+				t.Log("Re-sending EAPOL flow succeeded for port:", port)
+			}
+			break
+		}
+		t.Log("Sending EAPOL flows fail:", err)
+		time.Sleep(50 * time.Millisecond)
+		maxTries--
+		if maxTries == 0 {
+			break
+		}
+	}
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup, flowAddFail bool, flowDelete bool) {
+func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, wg *sync.WaitGroup, flowAddFail bool, flowDeleteFail bool) {
 	defer wg.Done()
 
 	// Clear any existing flows on the adapters
@@ -1092,8 +1112,8 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	nb.onuAdapter.ClearFlows()
 
 	// Set the adapter actions on flow addition/deletion
-	nb.oltAdapter.SetFlowAction(flowAddFail, flowDelete)
-	nb.onuAdapter.SetFlowAction(flowAddFail, flowDelete)
+	nb.oltAdapter.SetFlowAction(flowAddFail, flowDeleteFail)
+	nb.onuAdapter.SetFlowAction(flowAddFail, flowDeleteFail)
 
 	// Wait until a logical device is ready
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
@@ -1199,7 +1219,7 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
 	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg, true, true)
+	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg, true, false)
 
 	//	Create the device with valid data
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
@@ -1280,7 +1300,7 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 		// 4. Test Enable a device
 		nb.testEnableDevice(t, nbi)
 
-		// 5. Test disable and ReEnable a root device
+		//// 5. Test disable and ReEnable a root device
 		nb.testDisableAndReEnableRootDevice(t, nbi)
 
 		// 6. Test disable and Enable pon port of OLT device
@@ -1297,6 +1317,9 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 
 		// 10. Test omci test
 		nb.testStartOmciTestAction(t, nbi)
+
+		// 11. Remove all devices from tests above
+		nb.deleteAllDevices(t, nbi)
 
 		// 11. Test flow add failure
 		nb.testFlowAddFailure(t, nbi)

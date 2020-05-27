@@ -25,8 +25,6 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // GetRoute returns route
@@ -93,31 +91,20 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		return nil, fmt.Errorf("no downstream route from:%d to:%d :%w", ingressPortNo, egressPortNo, route.ErrNoRoute)
 	}
 	//	Return the pre-calculated route
-	return agent.getPreCalculatedRoute(ingressPortNo, egressPortNo)
-}
-
-func (agent *LogicalAgent) getPreCalculatedRoute(ingress, egress uint32) ([]route.Hop, error) {
-	logger.Debugw("ROUTE", log.Fields{"len": len(agent.deviceRoutes.Routes)})
-	for routeLink, route := range agent.deviceRoutes.Routes {
-		logger.Debugw("ROUTELINKS", log.Fields{"ingress": ingress, "egress": egress, "routelink": routeLink})
-		if ingress == routeLink.Ingress && egress == routeLink.Egress {
-			return route, nil
-		}
-	}
-	return nil, status.Errorf(codes.FailedPrecondition, "no route from:%d to:%d", ingress, egress)
+	return agent.deviceRoutes.GetRoute(ctx, ingressPortNo, egressPortNo)
 }
 
 // GetDeviceRoutes returns device graph
 func (agent *LogicalAgent) GetDeviceRoutes() *route.DeviceRoutes {
+	agent.lockDeviceRoutes.Lock()
+	defer agent.lockDeviceRoutes.Unlock()
+
 	return agent.deviceRoutes
 }
 
 //generateDeviceRoutesIfNeeded generates the device routes if the logical device has been updated since the last time
 //that device graph was generated.
 func (agent *LogicalAgent) generateDeviceRoutesIfNeeded(ctx context.Context) error {
-	agent.lockDeviceRoutes.Lock()
-	defer agent.lockDeviceRoutes.Unlock()
-
 	ld, err := agent.GetLogicalDevice(ctx)
 	if err != nil {
 		return err
@@ -160,17 +147,40 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 }
 
 //updateRoutes updates the device routes
-func (agent *LogicalAgent) updateRoutes(ctx context.Context, lp *voltha.LogicalPort) error {
-	logger.Debugw("updateRoutes", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return err
-	}
-	defer agent.requestQueue.RequestComplete()
+func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Device, lp *voltha.LogicalPort, lps []*voltha.LogicalPort) error {
+	logger.Debugw("updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "port:": lp})
 
+	agent.lockDeviceRoutes.Lock()
 	if agent.deviceRoutes == nil {
 		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
 	}
-	if err := agent.deviceRoutes.AddPort(ctx, lp, agent.logicalDevice.Ports); err != nil {
+	agent.lockDeviceRoutes.Unlock()
+
+	if err := agent.deviceRoutes.AddPort(ctx, lp, device, lps); err != nil {
+		return err
+	}
+	if err := agent.deviceRoutes.Print(); err != nil {
+		return err
+	}
+	return nil
+}
+
+//updateAllRoutes updates the device routes using all the logical ports on that device
+func (agent *LogicalAgent) updateAllRoutes(ctx context.Context, device *voltha.Device) error {
+	logger.Debugw("updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "ports-count": len(device.Ports)})
+
+	ld, err := agent.GetLogicalDevice(ctx)
+	if err != nil {
+		return err
+	}
+
+	agent.lockDeviceRoutes.Lock()
+	if agent.deviceRoutes == nil {
+		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.deviceMgr.getDevice)
+	}
+	agent.lockDeviceRoutes.Unlock()
+
+	if err := agent.deviceRoutes.AddAllPorts(ctx, device, ld.Ports); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(); err != nil {
