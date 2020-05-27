@@ -150,7 +150,7 @@ func (ta *Adapter) Update_flows_incrementally(device *voltha.Device, flows *of.F
 	ta.flowLock.Lock()
 	defer ta.flowLock.Unlock()
 
-	if flows.ToAdd != nil {
+	if flows.ToAdd != nil && len(flows.ToAdd.Items) > 0 {
 		if ta.failFlowAdd {
 			return fmt.Errorf("flow-add-error")
 		}
@@ -158,7 +158,7 @@ func (ta *Adapter) Update_flows_incrementally(device *voltha.Device, flows *of.F
 			ta.flows[f.Id] = f
 		}
 	}
-	if flows.ToRemove != nil {
+	if flows.ToRemove != nil && len(flows.ToRemove.Items) > 0 {
 		if ta.failFlowDelete {
 			return fmt.Errorf("flow-delete-error")
 		}

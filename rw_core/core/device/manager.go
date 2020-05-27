@@ -725,36 +725,40 @@ func (dMgr *Manager) UpdateDeviceUsingAdapterData(ctx context.Context, device *v
 	return status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
+func (dMgr *Manager) addPeerPort(ctx context.Context, deviceID string, port *voltha.Port) error {
+	meAsPeer := &voltha.Port_PeerPort{DeviceId: deviceID, PortNo: port.PortNo}
+	for _, peerPort := range port.Peers {
+		if agent := dMgr.getDeviceAgent(ctx, peerPort.DeviceId); agent != nil {
+			if err := agent.addPeerPort(ctx, meAsPeer); err != nil {
+				return err
+			}
+		}
+	}
+	// Notify the logical device manager to setup a logical port, if needed.  If the added port is an NNI or UNI
+	// then a logical port will be added to the logical device and the device route generated.  If the port is a
+	// PON port then only the device graph will be generated.
+	device, err := dMgr.getDevice(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+	if err = dMgr.logicalDeviceMgr.updateLogicalPort(context.Background(), device, port); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (dMgr *Manager) AddPort(ctx context.Context, deviceID string, port *voltha.Port) error {
 	agent := dMgr.getDeviceAgent(ctx, deviceID)
 	if agent != nil {
 		if err := agent.addPort(ctx, port); err != nil {
 			return err
 		}
-		//	Setup peer ports
-		meAsPeer := &voltha.Port_PeerPort{DeviceId: deviceID, PortNo: port.PortNo}
-		for _, peerPort := range port.Peers {
-			if agent := dMgr.getDeviceAgent(ctx, peerPort.DeviceId); agent != nil {
-				if err := agent.addPeerPort(ctx, meAsPeer); err != nil {
-					logger.Errorw("failed-to-add-peer", log.Fields{"peer-device-id": peerPort.DeviceId})
-					return err
-				}
+		//	Setup peer ports in its own routine
+		go func() {
+			if err := dMgr.addPeerPort(ctx, deviceID, port); err != nil {
+				logger.Errorw("unable-to-add-peer-port", log.Fields{"error": err, "device-id": deviceID})
 			}
-		}
-		// Notify the logical device manager to setup a logical port, if needed.  If the added port is an NNI or UNI
-		// then a logical port will be added to the logical device and the device graph generated.  If the port is a
-		// PON port then only the device graph will be generated.
-		if device, err := dMgr.getDevice(ctx, deviceID); err == nil {
-			go func() {
-				err = dMgr.logicalDeviceMgr.updateLogicalPort(context.Background(), device, port)
-				if err != nil {
-					logger.Errorw("unable-to-update-logical-port", log.Fields{"error": err})
-				}
-			}()
-		} else {
-			logger.Errorw("failed-to-retrieve-device", log.Fields{"deviceId": deviceID})
-			return err
-		}
+		}()
 		return nil
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)

@@ -20,8 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -31,6 +29,7 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strconv"
 )
 
 //updateFlowTable updates the flow table of that logical device
@@ -40,9 +39,6 @@ func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.OfpFlo
 		return nil
 	}
 
-	if err := agent.generateDeviceRoutesIfNeeded(ctx); err != nil {
-		return err
-	}
 	switch flow.GetCommand() {
 	case ofp.OfpFlowModCommand_OFPFC_ADD:
 		return agent.flowAdd(ctx, flow)
@@ -170,6 +166,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				return changed, updated, err
 			}
 		}
+
 		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &flowMetadata)
 		// Create the go routines to wait
 		go func() {
