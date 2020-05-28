@@ -530,6 +530,30 @@
     },
     {
       "key": {
+        "uuid": "c106f829_b567f039",
+        "filename": "rw_core/core/device/logical_agent_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T19:30:29Z",
+      "side": 1,
+      "message": "Let me see if this is still needed.",
+      "parentUuid": "6442cabe_32daade4",
+      "range": {
+        "startLine": 155,
+        "startChar": 8,
+        "endLine": 155,
+        "endChar": 20
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "246a83d8_af742c54",
         "filename": "rw_core/mocks/adapter.go",
         "patchSetId": 1
@@ -870,6 +894,30 @@
       "writtenOn": "2020-05-28T17:06:56Z",
       "side": 1,
       "message": "Now that the use of \"childPonPortNoMapOnParent\" makes more sense to me:\n\nCan the \"from cache\" vs \"from model\" decision logic be handled by a single helper function?  Or if this is simply the \"one right way\" to look up this data, perhaps remove \"FromCache\" from the function name?\n\n(There\u0027s just a number of small functions here with somewhat confusing names/behaviour.  Doesn\u0027t need to change if you don\u0027t agree with my assessment. ;)",
+      "range": {
+        "startLine": 466,
+        "startChar": 24,
+        "endLine": 466,
+        "endChar": 49
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0935ecf_d77ff9ba",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T19:30:29Z",
+      "side": 1,
+      "message": "Let me see if it\u0027s clearer to inline the helper functions.",
+      "parentUuid": "2e5e1972_e5e88394",
       "range": {
         "startLine": 466,
         "startChar": 24,
