@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "3448145a_515360b0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "This is a dB write which is part of a complete request. Hence we need to use the context timeout.  The updateCtx is a left-over when we had two core pairs where we needed the update time stamp to differentiate between two simultaneous writes on the same object.",
+      "parentUuid": "e1a1f7ca_36a1fbfd",
+      "range": {
+        "startLine": 894,
+        "startChar": 45,
+        "endLine": 894,
+        "endChar": 48
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b712ee35_ce1bb29e",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 1
@@ -177,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "53c7b5c8_89439239",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "There are two parts for this request.  Part 1 processes the request from ONOS, update the dB and sends back a response (partial complete) such that we don\u0027t hold the client until the transaction is completed fully which can take time.    For that part ctx is used (used prior to this method).  Part 2 is when we send the request to the olt/onu device and adapters and wait for a response.   That transaction can take time, hence deserves its own context. On failure the flows are reverted back.   As we mentioned on slack we will eventually need to separate the core timeout (used here) and a timeout specific for communication with adapters.  That\u0027s another Jira.",
+      "parentUuid": "83dc821d_53dfb177",
+      "range": {
+        "startLine": 262,
+        "startChar": 3,
+        "endLine": 262,
+        "endChar": 84
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bf849df_17da8b71",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 1
@@ -188,6 +236,30 @@
       "writtenOn": "2020-05-28T07:40:21Z",
       "side": 1,
       "message": "I\u0027m not sure this import is needed",
+      "range": {
+        "startLine": 32,
+        "startChar": 1,
+        "endLine": 32,
+        "endChar": 10
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c64d41c5_c1ff4b75",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "It\u0027s just moved places with git fmt.",
+      "parentUuid": "9bf849df_17da8b71",
       "range": {
         "startLine": 32,
         "startChar": 1,
@@ -257,6 +329,30 @@
       "writtenOn": "2020-05-28T07:40:21Z",
       "side": 1,
       "message": "pass the device ID as argument before the err, that clarifies immediately what device we are talking about.",
+      "range": {
+        "startLine": 475,
+        "startChar": 2,
+        "endLine": 475,
+        "endChar": 74
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ad4fc85_b65b3dd7",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "Will update.",
+      "parentUuid": "737ed07a_2f9cdd41",
       "range": {
         "startLine": 475,
         "startChar": 2,
@@ -339,6 +435,30 @@
     },
     {
       "key": {
+        "uuid": "51163d2b_9ed75dce",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "I will see what I can do here.",
+      "parentUuid": "cbe84a03_6acc4fbe",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 511,
+        "endChar": 15
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fdf7e8c_bcf78c5a",
         "filename": "rw_core/core/device/logical_agent_route.go",
         "patchSetId": 1
@@ -397,6 +517,30 @@
       "writtenOn": "2020-05-28T07:40:21Z",
       "side": 1,
       "message": "I\u0027m wondering how do we get to this situation. Have you seen it in the logs/runs ?",
+      "range": {
+        "startLine": 153,
+        "startChar": 23,
+        "endLine": 153,
+        "endChar": 53
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23d9dc97_b2c73701",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "it\u0027s a mock used in the unit tests and I saw error messages in unit test that did not make sense and this was the issue.",
+      "parentUuid": "246a83d8_af742c54",
       "range": {
         "startLine": 153,
         "startChar": 23,
@@ -561,6 +705,30 @@
     },
     {
       "key": {
+        "uuid": "21c0eedd_4726b7e7",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "2b80859f_d003dfaa",
+      "range": {
+        "startLine": 98,
+        "startChar": 2,
+        "endLine": 98,
+        "endChar": 64
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d201869_cf69eb89",
         "filename": "rw_core/route/device_route.go",
         "patchSetId": 1
@@ -701,6 +869,30 @@
       "writtenOn": "2020-05-28T07:40:21Z",
       "side": 1,
       "message": "t.log ?",
+      "range": {
+        "startLine": 91,
+        "startChar": 4,
+        "endLine": 91,
+        "endChar": 16
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee8bbb05_acb582bc",
+        "filename": "rw_core/route/device_route_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T13:49:55Z",
+      "side": 1,
+      "message": "sure",
+      "parentUuid": "08498ca4_6717230c",
       "range": {
         "startLine": 91,
         "startChar": 4,
