@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2fa10a39_887ee3ac",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-28T23:25:03Z",
+      "side": 1,
+      "message": "Above we only iterate over the added flows which mostly is only one flow. We acquire the chunk lock which belongs to each single flow when we add the flow to db and cache. The only time that we acquired flowLock is the time we access the map to get the chunk and we release it between the flow iterations. So there isn\u0027t a full lock allocation over the whole flow list here from beginning of the function to the end. There is only per flow lock allocation. I think, for bulk insertion, after we added the related flows safely, there is no problem to send the final list of the flows to device, even if it contains other concurrent request\u0027s flows.\nOtherwise I need to lock the whole map until all kv and cache updates are done.",
+      "parentUuid": "60a6531e_2887a8c0",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3995a1f_0f8ce9b5",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "fb64f6d0_8fafc4a7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-28T23:25:03Z",
+      "side": 1,
+      "message": "Comment should be a few lines above. Will fix.",
+      "parentUuid": "be5d0df4_b61f568f",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13fb19ff_78a8a764",
         "filename": "rw_core/core/device/agent_test.go",
         "patchSetId": 5
@@ -64,6 +100,24 @@
       "writtenOn": "2020-05-28T21:30:07Z",
       "side": 1,
       "message": "This function exists in the api/common_test.go.  Is it possible to move it into a test utils where it can be shared across, unless there is package dependencies.",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82f05cc8_348616eb",
+        "filename": "rw_core/core/device/agent_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-28T23:25:03Z",
+      "side": 1,
+      "message": "I tried to do that but had some troubles with dependencies, so I chose the easy path and copied function to here :). Will try it again. Is there a commonly used packet structure for that? Where to put the new class?",
+      "parentUuid": "13fb19ff_78a8a764",
       "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
