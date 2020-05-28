@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60a6531e_2887a8c0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T21:30:07Z",
+      "side": 1,
+      "message": "Would it be more efficient to get the list of flows above when you had the flow lock and update that list together with flowsToAdd and flowsToDelete?  Also, if we have two concurrent request on the same device, is there a chance that this list may include the flows of the other concurrent request?",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3995a1f_0f8ce9b5",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T21:30:07Z",
+      "side": 1,
+      "message": "Similar comments as above.",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be5d0df4_b61f568f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T21:30:07Z",
+      "side": 1,
+      "message": "Release?",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13fb19ff_78a8a764",
+        "filename": "rw_core/core/device/agent_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-28T21:30:07Z",
+      "side": 1,
+      "message": "This function exists in the api/common_test.go.  Is it possible to move it into a test utils where it can be shared across, unless there is package dependencies.",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
