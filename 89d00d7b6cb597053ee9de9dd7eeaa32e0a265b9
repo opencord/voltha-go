@@ -37,6 +37,29 @@
     },
     {
       "key": {
+        "uuid": "e1a1f7ca_36a1fbfd",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "isn\u0027t the removal of the updatedCtx actually lowering the time allowed for this call?",
+      "range": {
+        "startLine": 894,
+        "startChar": 45,
+        "endLine": 894,
+        "endChar": 48
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b712ee35_ce1bb29e",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 1
@@ -131,6 +154,121 @@
     },
     {
       "key": {
+        "uuid": "83dc821d_53dfb177",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "instead of overriding the cox here, shouldn\u0027t be the call that passes down the right one ? same is valid for all other instances of this piece of code",
+      "range": {
+        "startLine": 262,
+        "startChar": 3,
+        "endLine": 262,
+        "endChar": 84
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bf849df_17da8b71",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "I\u0027m not sure this import is needed",
+      "range": {
+        "startLine": 32,
+        "startChar": 1,
+        "endLine": 32,
+        "endChar": 10
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92cbfd21_cc2915be",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "debug",
+      "range": {
+        "startLine": 68,
+        "startChar": 11,
+        "endLine": 68,
+        "endChar": 16
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59671527_18ff488f",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 77,
+        "startChar": 11,
+        "endLine": 77,
+        "endChar": 16
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "737ed07a_2f9cdd41",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "pass the device ID as argument before the err, that clarifies immediately what device we are talking about.",
+      "range": {
+        "startLine": 475,
+        "startChar": 2,
+        "endLine": 475,
+        "endChar": 74
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77d59a4b_24047c79",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -178,6 +316,29 @@
     },
     {
       "key": {
+        "uuid": "cbe84a03_6acc4fbe",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "can we distinguish the cases ? a Warn seems a pretty strong thing for a non error",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 511,
+        "endChar": 15
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fdf7e8c_bcf78c5a",
         "filename": "rw_core/core/device/logical_agent_route.go",
         "patchSetId": 1
@@ -218,6 +379,29 @@
         "startChar": 8,
         "endLine": 155,
         "endChar": 20
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "246a83d8_af742c54",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "I\u0027m wondering how do we get to this situation. Have you seen it in the logs/runs ?",
+      "range": {
+        "startLine": 153,
+        "startChar": 23,
+        "endLine": 153,
+        "endChar": 53
       },
       "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
@@ -354,6 +538,29 @@
     },
     {
       "key": {
+        "uuid": "2b80859f_d003dfaa",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 98,
+        "startChar": 2,
+        "endLine": 98,
+        "endChar": 64
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d201869_cf69eb89",
         "filename": "rw_core/route/device_route.go",
         "patchSetId": 1
@@ -476,6 +683,29 @@
         "startChar": 0,
         "endLine": 471,
         "endChar": 1
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08498ca4_6717230c",
+        "filename": "rw_core/route/device_route_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-05-28T07:40:21Z",
+      "side": 1,
+      "message": "t.log ?",
+      "range": {
+        "startLine": 91,
+        "startChar": 4,
+        "endLine": 91,
+        "endChar": 16
       },
       "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
