@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "c10352e5_d96b4b9b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-29T18:54:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "733b649f_970c48a8",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3995a1f_0f8ce9b5",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -66,6 +84,24 @@
       "writtenOn": "2020-05-28T21:30:07Z",
       "side": 1,
       "message": "Similar comments as above.",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f855a61_c291e41d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-29T18:54:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3995a1f_0f8ce9b5",
       "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "Comment should be a few lines above. Will fix.",
       "parentUuid": "be5d0df4_b61f568f",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57802d3b_7dd67bef",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-29T18:54:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb64f6d0_8fafc4a7",
       "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -154,6 +208,24 @@
       "side": 1,
       "message": "We could create a test package under core or just use the utils package.   This can be done in a separate jira ticket.",
       "parentUuid": "82f05cc8_348616eb",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0693d2d_8f9d7ea6",
+        "filename": "rw_core/core/device/agent_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-05-29T18:54:25Z",
+      "side": 1,
+      "message": "Done, but created test package under rw-core.",
+      "parentUuid": "7eb82c55_6d69c0d8",
       "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
