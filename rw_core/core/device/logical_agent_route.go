@@ -31,11 +31,14 @@ import (
 
 // GetRoute returns route
 func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, egressPortNo uint32) ([]route.Hop, error) {
+
+	agent.lockDeviceRoutes.Lock()
+	defer agent.lockDeviceRoutes.Unlock()
+
 	logger.Debugw("getting-route", log.Fields{"ingress-port": ingressPortNo, "egress-port": egressPortNo})
 	routes := make([]route.Hop, 0)
 
 	// Note: A port value of 0 is equivalent to a nil port
-
 	//	Consider different possibilities
 	if egressPortNo != 0 && ((egressPortNo & 0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER)) {
 		logger.Debugw("controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo, "logicalPortsNo": agent.logicalPortsNo})
