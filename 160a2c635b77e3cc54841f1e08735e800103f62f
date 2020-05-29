@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "733b649f_970c48a8",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-29T15:59:16Z",
+      "side": 1,
+      "message": "You don\u0027t need to lock the whole map until all kv and cache update is done.  Can you get a copy of the current list when you hold the agent.flowLock.lock and then update this local list with the new flow?   Chances of two concurrent flow add request happening is very high.  If we sent a bulk update with flows for other request and if for some reason the additional flow fails then we will be reverting the incorrect flow.",
+      "parentUuid": "2fa10a39_887ee3ac",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3995a1f_0f8ce9b5",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -118,6 +136,24 @@
       "side": 1,
       "message": "I tried to do that but had some troubles with dependencies, so I chose the easy path and copied function to here :). Will try it again. Is there a commonly used packet structure for that? Where to put the new class?",
       "parentUuid": "13fb19ff_78a8a764",
+      "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7eb82c55_6d69c0d8",
+        "filename": "rw_core/core/device/agent_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-05-29T15:59:16Z",
+      "side": 1,
+      "message": "We could create a test package under core or just use the utils package.   This can be done in a separate jira ticket.",
+      "parentUuid": "82f05cc8_348616eb",
       "revId": "160a2c635b77e3cc54841f1e08735e800103f62f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
