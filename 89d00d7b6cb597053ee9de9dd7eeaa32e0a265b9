@@ -601,6 +601,30 @@
     },
     {
       "key": {
+        "uuid": "b3cabe8d_f511b68b",
+        "filename": "rw_core/mocks/adapter.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-06-01T18:58:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23d9dc97_b2c73701",
+      "range": {
+        "startLine": 153,
+        "startChar": 23,
+        "endLine": 153,
+        "endChar": 53
+      },
+      "revId": "89d00d7b6cb597053ee9de9dd7eeaa32e0a265b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f21420d2_25fda3af",
         "filename": "rw_core/route/device_route.go",
         "patchSetId": 1
