@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66837109_e1fc48dd",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "Just use %d instead of %s, no need to strconv.FormatUint()",
+      "range": {
+        "startLine": 85,
+        "startChar": 109,
+        "endLine": 85,
+        "endChar": 127
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a7ae310_199d7b44",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "Rather than querying, updating, and then passing updatedAllFlows, consider modifying UpdateFlowsBulk to accept a `map[uint64]*ofp.OfpFlowStats` instead of `*ofp.Flows`, and simply calling listDeviceFlows()\n\n(It\u0027s more convenient \u0026 efficient to use maps instead of lists now that the internal data format uses maps.  Only need to convert to/from lists for APIs.  As such, I\u0027ve been taking the opportunity to also update many functions to use maps, whenever I\u0027ve encountered these cases in the LogicalAgent.)\n\nThis may be a separate patch...",
+      "range": {
+        "startLine": 109,
+        "startChar": 73,
+        "endLine": 109,
+        "endChar": 107
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15d7b506_857fd30d",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "If maps are used, this can be replaced with \n`flowList[newFlow.Id] \u003d newFlow`",
+      "range": {
+        "startLine": 136,
+        "startChar": 5,
+        "endLine": 136,
+        "endChar": 22
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ed11dd9_6aad2c28",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "If maps are used, this can be replaced with\n`delete(flows, flow.Id)`",
+      "range": {
+        "startLine": 146,
+        "startChar": 5,
+        "endLine": 146,
+        "endChar": 37
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efbbd3fc_c0b68f5a",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "Again, can just listDeviceFlows() here.",
+      "range": {
+        "startLine": 193,
+        "startChar": 94,
+        "endLine": 193,
+        "endChar": 109
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10d6dfe8_dd02120e",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "Rather than building existingFlows, then ranging to build flowsToDelete, then deleting, just build flowsToDelete within this range loop.",
+      "range": {
+        "startLine": 221,
+        "startChar": 1,
+        "endLine": 228,
+        "endChar": 2
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf1fb2c8_fa582e64",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "toDelete should use the version of the flow _before_ it is updated.\n\nCall GetReadOnly() before calling Update() to obtain this.",
+      "range": {
+        "startLine": 288,
+        "startChar": 41,
+        "endLine": 288,
+        "endChar": 45
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54e093e0_5a8074ff",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "listDeviceFlows()",
+      "range": {
+        "startLine": 299,
+        "startChar": 94,
+        "endLine": 299,
+        "endChar": 109
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53af5341_2ff634aa",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "Can range over agent.flowLoader.List() inline.\n\n(more like this)",
+      "range": {
+        "startLine": 344,
+        "startChar": 21,
+        "endLine": 344,
+        "endChar": 36
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27185ae7_387eb32f",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T16:31:42Z",
+      "side": 1,
+      "message": "Return?  Or at least log error?",
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
