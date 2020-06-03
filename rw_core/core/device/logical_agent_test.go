@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	tst "github.com/opencord/voltha-go/rw_core/test"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
@@ -381,7 +382,7 @@ func newLDATest() *LDATest {
 	test := &LDATest{}
 	// Start the embedded etcd server
 	var err error
-	test.etcdServer, test.kvClientPort, err = startEmbeddedEtcdServer("voltha.rwcore.lda.test", "voltha.rwcore.lda.etcd", "error")
+	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer("voltha.rwcore.lda.test", "voltha.rwcore.lda.etcd", "error")
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -463,7 +464,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	}
 	cfg.GrpcPort = grpcPort
 	cfg.GrpcHost = "127.0.0.1"
-	client := setupKVClient(cfg, lda.coreInstanceID)
+	client := tst.SetupKVClient(cfg, lda.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
@@ -498,7 +499,7 @@ func (lda *LDATest) stopAll() {
 		lda.kmp.Stop()
 	}
 	if lda.etcdServer != nil {
-		stopEmbeddedEtcdServer(lda.etcdServer)
+		tst.StopEmbeddedEtcdServer(lda.etcdServer)
 	}
 }
 
@@ -508,7 +509,7 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 	clonedLD := proto.Clone(lda.logicalDevice).(*voltha.LogicalDevice)
 	clonedLD.Id = com.GetRandomString(10)
 	clonedLD.DatapathId = rand.Uint64()
-	lDeviceAgent := newLogicalAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbProxy, lDeviceMgr.ldProxy, lDeviceMgr.defaultTimeout)
+	lDeviceAgent := newLogicalAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbPath, lDeviceMgr.ldProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
 	err := lDeviceAgent.ldProxy.Set(context.Background(), clonedLD.Id, clonedLD)
 	assert.Nil(t, err)

@@ -18,34 +18,17 @@ package api
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
-	"github.com/opencord/voltha-go/rw_core/config"
-	cm "github.com/opencord/voltha-go/rw_core/mocks"
-	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
-	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"github.com/phayes/freeport"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 const (
 	volthaSerialNumberKey = "voltha_serial_number"
 	retryInterval         = 50 * time.Millisecond
-)
-
-const (
-	OltAdapter = iota
-	OnuAdapter
 )
 
 var (
@@ -72,67 +55,6 @@ func getContext() context.Context {
 		return metadata.NewIncomingContext(context.Background(), metadata.Pairs(volthaSerialNumberKey, uuid.New().String()))
 	}
 	return context.Background()
-}
-
-//startEmbeddedEtcdServer creates and starts an Embedded etcd server locally.
-func startEmbeddedEtcdServer(configName, storageDir, logLevel string) (*mock_etcd.EtcdServer, int, error) {
-	kvClientPort, err := freeport.GetFreePort()
-	if err != nil {
-		return nil, 0, err
-	}
-	peerPort, err := freeport.GetFreePort()
-	if err != nil {
-		return nil, 0, err
-	}
-	etcdServer := mock_etcd.StartEtcdServer(mock_etcd.MKConfig(configName, kvClientPort, peerPort, storageDir, logLevel))
-	if etcdServer == nil {
-		return nil, 0, status.Error(codes.Internal, "Embedded server failed to start")
-	}
-	return etcdServer, kvClientPort, nil
-}
-
-func stopEmbeddedEtcdServer(server *mock_etcd.EtcdServer) {
-	if server != nil {
-		server.Stop()
-	}
-}
-
-func setupKVClient(cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
-	addr := cf.KVStoreHost + ":" + strconv.Itoa(cf.KVStorePort)
-	client, err := kvstore.NewEtcdClient(addr, cf.KVStoreTimeout, log.FatalLevel)
-	if err != nil {
-		panic("no kv client")
-	}
-	return client
-}
-
-func createMockAdapter(adapterType int, kafkaClient kafka.Client, coreInstanceID string, coreName string, adapterName string) (adapters.IAdapter, error) {
-	var err error
-	var adapter adapters.IAdapter
-	adapterKafkaICProxy := kafka.NewInterContainerProxy(
-		kafka.MsgClient(kafkaClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}))
-	adapterCoreProxy := com.NewCoreProxy(adapterKafkaICProxy, adapterName, coreName)
-	var adapterReqHandler *com.RequestHandlerProxy
-	switch adapterType {
-	case OltAdapter:
-		adapter = cm.NewOLTAdapter(adapterCoreProxy)
-	case OnuAdapter:
-		adapter = cm.NewONUAdapter(adapterCoreProxy)
-	default:
-		logger.Fatalf("invalid-adapter-type-%d", adapterType)
-	}
-	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
-
-	if err = adapterKafkaICProxy.Start(); err != nil {
-		logger.Errorw("Failure-starting-adapter-intercontainerProxy", log.Fields{"error": err})
-		return nil, err
-	}
-	if err = adapterKafkaICProxy.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: adapterName}, adapterReqHandler); err != nil {
-		logger.Errorw("Failure-to-subscribe-onu-request-handler", log.Fields{"error": err})
-		return nil, err
-	}
-	return adapter, nil
 }
 
 func waitUntilDeviceReadiness(deviceID string,
