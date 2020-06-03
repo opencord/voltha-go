@@ -363,6 +363,30 @@
       "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc969efb_4ed2abd8",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T21:17:35Z",
+      "side": 1,
+      "message": "If there\u0027s no such case, should these functions be separate / called directly?\n\n(future patch probably)",
+      "parentUuid": "95711909_aae6302c",
+      "range": {
+        "startLine": 937,
+        "startChar": 1,
+        "endLine": 939,
+        "endChar": 10
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
