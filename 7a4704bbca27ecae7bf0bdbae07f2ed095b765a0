@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e525f9b2_5a83629e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "Should not load in new device case (move to load existing device case).",
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d76a82fd_9945007b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "Optimization already done in called function, redundant here.",
+      "range": {
+        "startLine": 552,
+        "startChar": 1,
+        "endLine": 552,
+        "endChar": 23
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9588b164_56706024",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "...and here.",
+      "range": {
+        "startLine": 554,
+        "startChar": 11,
+        "endLine": 554,
+        "endChar": 29
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0223958b_1add4c0f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "Again, redundant optimization.",
+      "range": {
+        "startLine": 711,
+        "startChar": 4,
+        "endLine": 711,
+        "endChar": 23
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb86baff_77721885",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "Could put List() inline.",
+      "range": {
+        "startLine": 734,
+        "startChar": 21,
+        "endLine": 734,
+        "endChar": 28
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af05f1df_e37f5140",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "Must call this _before_ the Update() on line 791.",
+      "range": {
+        "startLine": 796,
+        "startChar": 41,
+        "endLine": 796,
+        "endChar": 65
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "388ead4e_b96f52fb",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "this one as well.",
+      "range": {
+        "startLine": 798,
+        "startChar": 56,
+        "endLine": 798,
+        "endChar": 80
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88add4c0_31c4475c",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-03T19:50:22Z",
+      "side": 1,
+      "message": "Just realized that these are \"if\" followed by \"else if\".\n\nThis will be incorrect if both flows and groups are updated, both need to be called.  (should just call both in any case.)",
+      "range": {
+        "startLine": 937,
+        "startChar": 1,
+        "endLine": 939,
+        "endChar": 10
+      },
+      "revId": "7a4704bbca27ecae7bf0bdbae07f2ed095b765a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
