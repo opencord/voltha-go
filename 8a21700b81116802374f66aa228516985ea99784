@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "05a8d453_5a9b2339",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-03T19:07:00Z",
+      "side": 1,
+      "message": "Khen says approach is good :)",
+      "parentUuid": "8b6c5c48_9984dc78",
+      "range": {
+        "startLine": 109,
+        "startChar": 73,
+        "endLine": 109,
+        "endChar": 107
+      },
+      "revId": "8a21700b81116802374f66aa228516985ea99784",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15d7b506_857fd30d",
         "filename": "rw_core/core/device/agent_flow.go",
         "patchSetId": 1
