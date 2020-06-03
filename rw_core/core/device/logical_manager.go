@@ -42,7 +42,7 @@ type LogicalManager struct {
 	logicalDeviceAgents            sync.Map
 	deviceMgr                      *Manager
 	kafkaICProxy                   kafka.InterContainerProxy
-	dbProxy                        *model.Path
+	dbPath                         *model.Path
 	ldProxy                        *model.Proxy
 	defaultTimeout                 time.Duration
 	logicalDevicesLoadingLock      sync.RWMutex
@@ -126,7 +126,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 
 	logger.Debugw("logical-device-id", log.Fields{"logicaldeviceId": id})
 
-	agent := newLogicalAgent(id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbProxy, ldMgr.ldProxy, ldMgr.defaultTimeout)
+	agent := newLogicalAgent(id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.defaultTimeout)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 
 	// Update the root device with the logical device Id reference
@@ -198,7 +198,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 			ldMgr.logicalDevicesLoadingLock.Unlock()
 			if _, err := ldMgr.getLogicalDeviceFromModel(ctx, lDeviceID); err == nil {
 				logger.Debugw("loading-logical-device", log.Fields{"lDeviceId": lDeviceID})
-				agent := newLogicalAgent(lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbProxy, ldMgr.ldProxy, ldMgr.defaultTimeout)
+				agent := newLogicalAgent(lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.defaultTimeout)
 				if err := agent.start(ctx, true); err != nil {
 					return err
 				}
