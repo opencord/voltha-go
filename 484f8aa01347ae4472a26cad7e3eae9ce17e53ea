@@ -159,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "fb28a316_b518e678",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:57:05Z",
+      "side": 1,
+      "message": "It is \"safe\" to call Unlock() multiple times (though the caller should not do so intentionally).\n\nThe purpose here is to invalidate the handle, so that any GetReadOnly() or Update() calls made after a Delete() will fail.\n\nOnce deleted, the port should no longer be accessible.",
+      "parentUuid": "f6a4cbfa_be87dcda",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b38ffc50_ab28c8c2",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
