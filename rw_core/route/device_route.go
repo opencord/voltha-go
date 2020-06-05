@@ -330,6 +330,8 @@ func (dr *DeviceRoutes) AddAllPorts(ctx context.Context, device *voltha.Device, 
 
 // Print prints routes
 func (dr *DeviceRoutes) Print() error {
+	dr.routeBuildLock.RLock()
+	defer dr.routeBuildLock.RUnlock()
 	logger.Debugw("Print", log.Fields{"logical-device-id": dr.logicalDeviceID, "logical-ports": dr.logicalPorts})
 	if logger.V(log.DebugLevel) {
 		output := ""
