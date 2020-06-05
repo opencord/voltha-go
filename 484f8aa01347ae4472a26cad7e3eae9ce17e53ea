@@ -37,6 +37,57 @@
     },
     {
       "key": {
+        "uuid": "e878cfee_4fb8469b",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "Will this include the OfpPortStats attribute?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "541e7aed_e27f6501",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "If a device is not in memory (e.g. on a restart) then there should be a mechanism to load that device opportunistically.",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06ddcdeb_32684c6d",
+        "filename": "rw_core/core/device/logical_port/common.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "Should the package name be logical-port instead?  Otherwise, the same name will likely be used for device ports.",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1ac1792_405ef338",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -72,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "76e367ba_c083fdb9",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "How about \"ports\" and \"portsLookup\"?",
+      "parentUuid": "b31be2bc_da7a67cf",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4d4cec5_ccc76a9f",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -101,6 +170,24 @@
       "side": 1,
       "message": "I uh... disagree?\n\n\"aChunk\" says nothing wrt the usage of the chunk.  It\u0027s similar to the `interface{}` problem, though I suppose it hints at the type.\n\n\"entry\" isn\u0027t much better, but implies that this is a map entry, which is more descriptive later when we aren\u0027t directly dealing with the map anymore.",
       "parentUuid": "c4d4cec5_ccc76a9f",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fea55c41_b970986b",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "It\u0027s not clear that the name \"entry\" expresses anything about its usage.\n\nI guess it\u0027s a matter of preference.",
+      "parentUuid": "a58caf5a_54427390",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -177,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "acb9bf1f_412bec4c",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "Another reason to have more description on the handler usage.",
+      "parentUuid": "fb28a316_b518e678",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b38ffc50_ab28c8c2",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -206,6 +311,24 @@
       "side": 1,
       "message": "Yes, we\u0027re returning the \"set\" of port IDs, so there\u0027s no value associated.\n\nmap[\u003ctype\u003e]struct{}\nis like\nmap[\u003ctype\u003e]bool\nbut slightly more memory efficient.",
       "parentUuid": "b38ffc50_ab28c8c2",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "669b589c_c652aa5b",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "Should that method then be renamed to ListIDs?",
+      "parentUuid": "1a218d8c_2249b08f",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -247,6 +370,24 @@
     },
     {
       "key": {
+        "uuid": "3d19f383_95fb66fc",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "Consider renaming the method to be more explicit, ListIdsForDevice",
+      "parentUuid": "955f2a32_ab579d83",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d9d131f_f95c692c",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -276,6 +417,24 @@
       "side": 1,
       "message": "Currently, this maintains a fast-lookup structure of the type\n\nmap[deviceID]map[portID]struct{}\n\nWhich is used to efficiently list all ports for a given device.\n\nAm hoping to add more structures like this for each lookup case, rather than iterating through the whole list each time.",
       "parentUuid": "7d9d131f_f95c692c",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17eaf144_7b7533e9",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T18:55:08Z",
+      "side": 1,
+      "message": "Having structures like that is useful.  The only downside is that it\u0027s one more thing to maintain across CRUD requests.",
+      "parentUuid": "359971fe_c4e8bd48",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
