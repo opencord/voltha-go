@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f2c1641_e5e87126",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "Since the requestQueue is static, we may get a request for logical device and try to run it before the logical device is fully started.   Should the start method grab the \"lock\" of the request queue during the start phase?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1ac1792_405ef338",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "The name \"ports\" and \"devicePorts\" can be confusing.  Either put additional comments or use names that clearly differentiate between them.",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4d4cec5_ccc76a9f",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "Since chunk is the data type, it is easier to read the code if \"aChunk\" is used instead of \"entry\".",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "337d3bd2_6398dac9",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "Is this meant to be a recursive call until the port is deleted in ports[]?  If that\u0027s the case and for whatever reason that port never gets deleted then this function will go in an infinite loop.  Is there a chance of that happening?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6a4cbfa_be87dcda",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "The general pattern is for a calling function to get a handler , do something with it and then release the lock.   Here calling \"Delete\" on the handler is releasing the lock as well.  Should keep following the same pattern.",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b38ffc50_ab28c8c2",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "Empty?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c62d3498_a7e50400",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "Empty?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d9d131f_f95c692c",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-05T16:04:57Z",
+      "side": 1,
+      "message": "Looks like still WIP.   What\u0027s the purpose of lookup?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
