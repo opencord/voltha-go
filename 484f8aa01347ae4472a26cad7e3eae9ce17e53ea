@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c39a98bd_d5544249",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:53:38Z",
+      "side": 1,
+      "message": "Maybe.  If this is the case, the lock should really be acquired in the newLogicalAgent() function, and released here.\n\n(i.e. - don\u0027t allow calls which could arrive before the start method.)\n\nProbably in a separate patch.",
+      "parentUuid": "9f2c1641_e5e87126",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1ac1792_405ef338",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2020-06-05T16:04:57Z",
       "side": 1,
       "message": "The name \"ports\" and \"devicePorts\" can be confusing.  Either put additional comments or use names that clearly differentiate between them.",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b31be2bc_da7a67cf",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:53:38Z",
+      "side": 1,
+      "message": "ports contains all ports.\n\ndevicePorts contains all the ports, sorted per-device, for fast lookup of all a device\u0027s ports.\n\nOpen to suggestions for names, but I personally find \"devicePorts\" fairly descriptive.  (perhaps \"devicesPorts\"?  Seems like there\u0027s multiple ways to read this though: devices vs device\u0027s vs devices\u0027.)",
+      "parentUuid": "a1ac1792_405ef338",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "a58caf5a_54427390",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:53:38Z",
+      "side": 1,
+      "message": "I uh... disagree?\n\n\"aChunk\" says nothing wrt the usage of the chunk.  It\u0027s similar to the `interface{}` problem, though I suppose it hints at the type.\n\n\"entry\" isn\u0027t much better, but implies that this is a map entry, which is more descriptive later when we aren\u0027t directly dealing with the map anymore.",
+      "parentUuid": "c4d4cec5_ccc76a9f",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "337d3bd2_6398dac9",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -64,6 +118,24 @@
       "writtenOn": "2020-06-05T16:04:57Z",
       "side": 1,
       "message": "Is this meant to be a recursive call until the port is deleted in ports[]?  If that\u0027s the case and for whatever reason that port never gets deleted then this function will go in an infinite loop.  Is there a chance of that happening?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e986214_d3270444",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:53:38Z",
+      "side": 1,
+      "message": "It\u0027s possible (though rare) for the port to be deleted between the loader.lock.Unlock() on line 121, and the entry.lock.Lock() on line 127.  \nIn such a case, the entry we have is no longer valid, so must either retry (as is done currently) or give up (which may also be valid, though I believe there was a reason that this wasn\u0027t valid...)",
+      "parentUuid": "337d3bd2_6398dac9",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "1a218d8c_2249b08f",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:53:38Z",
+      "side": 1,
+      "message": "Yes, we\u0027re returning the \"set\" of port IDs, so there\u0027s no value associated.\n\nmap[\u003ctype\u003e]struct{}\nis like\nmap[\u003ctype\u003e]bool\nbut slightly more memory efficient.",
+      "parentUuid": "b38ffc50_ab28c8c2",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c62d3498_a7e50400",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -121,6 +211,24 @@
     },
     {
       "key": {
+        "uuid": "955f2a32_ab579d83",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:53:38Z",
+      "side": 1,
+      "message": "Same as above.",
+      "parentUuid": "c62d3498_a7e50400",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d9d131f_f95c692c",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -132,6 +240,24 @@
       "writtenOn": "2020-06-05T16:04:57Z",
       "side": 1,
       "message": "Looks like still WIP.   What\u0027s the purpose of lookup?",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "359971fe_c4e8bd48",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-05T17:53:38Z",
+      "side": 1,
+      "message": "Currently, this maintains a fast-lookup structure of the type\n\nmap[deviceID]map[portID]struct{}\n\nWhich is used to efficiently list all ports for a given device.\n\nAm hoping to add more structures like this for each lookup case, rather than iterating through the whole list each time.",
+      "parentUuid": "7d9d131f_f95c692c",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
