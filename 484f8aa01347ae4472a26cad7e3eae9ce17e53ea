@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6dc7b8ae_20524138",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "Yes.  Using \nnewPort \u003d *oldPort\nwill clone the struct including all fields, but doesn\u0027t do a deep clone, so the existing pointer to OfpPortStats will remain as-is.",
+      "parentUuid": "e878cfee_4fb8469b",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "541e7aed_e27f6501",
         "filename": "rw_core/core/device/logical_manager.go",
         "patchSetId": 6
@@ -71,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d7440587_eeab6c30",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "Not entirely sure what you mean by this.\n\nI agree that things should be loaded as-needed, on-demand.\n\nThis particular change would just remove the need to access the parent device to complete this request.",
+      "parentUuid": "541e7aed_e27f6501",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06ddcdeb_32684c6d",
         "filename": "rw_core/core/device/logical_port/common.go",
         "patchSetId": 6
@@ -82,6 +118,24 @@
       "writtenOn": "2020-06-05T18:55:08Z",
       "side": 1,
       "message": "Should the package name be logical-port instead?  Otherwise, the same name will likely be used for device ports.",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59453206_2091c6ba",
+        "filename": "rw_core/core/device/logical_port/common.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "Originally used logical_port as the name, but the linter complained.\n\nI think this is fine, since the device loader \u0026 logical device loader will be used in separate places (Agent \u0026 LogicalAgent, respectively).",
+      "parentUuid": "06ddcdeb_32684c6d",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -141,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "4cb37a8c_b5efed85",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "\"ports\" is the name of the package already, so portsLookup is redundant here.  \n\nHow about \"deviceLookup\"?  (Though this is a map, so it\u0027s already implied that this is a lookup structure...)",
+      "parentUuid": "76e367ba_c083fdb9",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4d4cec5_ccc76a9f",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -188,6 +260,24 @@
       "side": 1,
       "message": "It\u0027s not clear that the name \"entry\" expresses anything about its usage.\n\nI guess it\u0027s a matter of preference.",
       "parentUuid": "a58caf5a_54427390",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b67975f7_12007c1f",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "I consider it like using `i` in a loop.\n\nFor small loops it\u0027s specific enough, and more detail is just extra words to read.\n\nThis is a fairly small function, so \"entry\" seems specific enough.",
+      "parentUuid": "fea55c41_b970986b",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -282,6 +372,24 @@
     },
     {
       "key": {
+        "uuid": "68af7e51_2feafe09",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "This is a special case that the caller shouldn\u0027t really need to worry about.  \n\nIt\u0027s really just an extra sanity check to ensure the port isn\u0027t updated or querried after a Delete().",
+      "parentUuid": "acb9bf1f_412bec4c",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b38ffc50_ab28c8c2",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -329,6 +437,24 @@
       "side": 1,
       "message": "Should that method then be renamed to ListIDs?",
       "parentUuid": "1a218d8c_2249b08f",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f13974c9_4d66f50b",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "Possibly.  There is no \"list structs\" call (and I don\u0027t think there really should be), so it\u0027s not strictly nescessary to specify.\n\nI think having List() return the ids rather than the type is pretty clear as-is, the caller will have to think about locking \u0026 such already, so this shouldn\u0027t add much cognitive load.",
+      "parentUuid": "669b589c_c652aa5b",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
@@ -388,6 +514,24 @@
     },
     {
       "key": {
+        "uuid": "f5a1f9ef_99cc4d9c",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "Same as above.",
+      "parentUuid": "3d19f383_95fb66fc",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d9d131f_f95c692c",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -435,6 +579,24 @@
       "side": 1,
       "message": "Having structures like that is useful.  The only downside is that it\u0027s one more thing to maintain across CRUD requests.",
       "parentUuid": "359971fe_c4e8bd48",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fb31fc3_24a69687",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T17:54:43Z",
+      "side": 1,
+      "message": "Map entries/lookups take at most O(log(n)) time, and having any given number of them means the overall call will run in O(log(n)) time as well.\n\nThis can be used to avoid the O(n) penalty for each place we currently iterate, so I believe it\u0027s worthwhile most of the time.",
+      "parentUuid": "17eaf144_7b7533e9",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
