@@ -115,10 +115,10 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 
 	for groupID := range toDelete {
 		if groupHandle, have := agent.groupLoader.Lock(groupID); have {
+			affectedGroups[groupID] = groupHandle.GetReadOnly()
 			if err := groupHandle.Delete(ctx); err != nil {
 				return err
 			}
-			affectedGroups[groupID] = groupHandle.GetReadOnly()
 			groupHandle.Unlock()
 
 			//TODO: this is another case where ordering guarantees are not being made,
