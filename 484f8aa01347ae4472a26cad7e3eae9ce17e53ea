@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "2688d970_fa62b518",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T20:56:07Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "3a0f9e79_28a3e5f6",
+      "range": {
+        "startLine": 230,
+        "startChar": 3,
+        "endLine": 230,
+        "endChar": 4
+      },
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecd0afab_13691017",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 6
@@ -106,6 +130,30 @@
       "writtenOn": "2020-06-08T19:28:06Z",
       "side": 1,
       "message": "Until this is done we may have a race between PortCapability response and the portStateUpdate from onu-adapter. To eliminate this, the portHandle lock might be hold before the getPortCapability call.",
+      "range": {
+        "startLine": 424,
+        "startChar": 0,
+        "endLine": 424,
+        "endChar": 113
+      },
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04322f67_0a686aa7",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T20:56:07Z",
+      "side": 1,
+      "message": "If this is being called, then the lock on the port was not able to be acquired on line 417, so the port does not exist.  (Only ports which exist can be locked.)  \n\nIf another request comes in (portStateUpdate in your example) that request will not find the port (will return \"port-%d-not-exist\") until after this getPortCapability returns \u0026 the port has been created.\n\nThus, this \"race condition\" will at worst trigger a retry, correctness is guaranteed.",
+      "parentUuid": "ecd0afab_13691017",
       "range": {
         "startLine": 424,
         "startChar": 0,
@@ -176,6 +224,30 @@
     },
     {
       "key": {
+        "uuid": "e02c4f2a_6f2b9657",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T20:56:07Z",
+      "side": 1,
+      "message": "I believe that this is only called on an OLT device, and that port.DeviceId refers to the ONU device that is connected to a given port on that OLT.",
+      "parentUuid": "ded467e3_26cfb0f4",
+      "range": {
+        "startLine": 295,
+        "startChar": 0,
+        "endLine": 295,
+        "endChar": 54
+      },
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26db9d25_6f37914b",
         "filename": "rw_core/core/device/logical_manager.go",
         "patchSetId": 6
@@ -187,6 +259,30 @@
       "writtenOn": "2020-06-08T19:28:06Z",
       "side": 1,
       "message": "If this is the portNo we are using as the key in map then we can just get the port in map with key and return it.",
+      "range": {
+        "startLine": 357,
+        "startChar": 43,
+        "endLine": 357,
+        "endChar": 53
+      },
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c162f97_5f3e1fcb",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T20:56:07Z",
+      "side": 1,
+      "message": "LogicalPorts are unique per-OLT, thus per-logicalAgent.  \n`.Id` here refers to the OLT that this port belongs to.",
+      "parentUuid": "26db9d25_6f37914b",
       "range": {
         "startLine": 357,
         "startChar": 43,
@@ -423,6 +519,24 @@
       "side": 1,
       "message": "I\u0027m also not comfortable with this recursive call. Better to assume that entry does not exist here? Or retry(recurse) for a while and then give up.",
       "parentUuid": "6e986214_d3270444",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1797dc0_f329268f",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-08T20:56:07Z",
+      "side": 1,
+      "message": "It\u0027s extremely unlikely that this will retry multiple times.\n\nThere would have to be very precise timing \u0026 another thread repeating port deletion-\u003ecreation-\u003edeletion-\u003e...",
+      "parentUuid": "703f622c_36108385",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
