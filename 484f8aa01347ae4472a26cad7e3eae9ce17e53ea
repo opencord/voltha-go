@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "1e594133_d9a5f4d0",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-09T14:32:10Z",
+      "side": 1,
+      "message": "The problem with adding then updating after portCapabilities returns, is that an error in the portCapabilities request can leave the port in an incomplete state, where it\u0027s been created but has incorrect capabilities.  (A core crash while portCapabilities is in progress will leave a logicalPort in etcd which is missing capability information.)\n\n(What changes are required to send the portCapabilities to this request?  Alternatively, could the updatePortState call be responsible for creating this LogicalPort instead?)\n\nAs a temporary solution, I could acquire \u0026 hold the lock until this completes.  (Though this will require slightly reworking the loader code once again.)\n\nThoughts?",
+      "parentUuid": "d58e63cf_2d78ec27",
+      "range": {
+        "startLine": 424,
+        "startChar": 0,
+        "endLine": 424,
+        "endChar": 113
+      },
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "541e7aed_e27f6501",
         "filename": "rw_core/core/device/logical_manager.go",
         "patchSetId": 6
@@ -296,6 +320,30 @@
     },
     {
       "key": {
+        "uuid": "4be5c5db_14352d32",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-09T14:32:10Z",
+      "side": 1,
+      "message": "You may have to ask Khen for specifics, this function works the same way it did before. (This patch does not modify the logic.)",
+      "parentUuid": "5bb33e77_becbb325",
+      "range": {
+        "startLine": 295,
+        "startChar": 0,
+        "endLine": 295,
+        "endChar": 54
+      },
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26db9d25_6f37914b",
         "filename": "rw_core/core/device/logical_manager.go",
         "patchSetId": 6
@@ -355,6 +403,30 @@
       "side": 1,
       "message": "Sorry commented on wrong place. I mean the id below `lPortID.PortId ` .",
       "parentUuid": "0c162f97_5f3e1fcb",
+      "range": {
+        "startLine": 357,
+        "startChar": 43,
+        "endLine": 357,
+        "endChar": 53
+      },
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c02cf890_a43e2380",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-09T14:32:10Z",
+      "side": 1,
+      "message": "Unfortunately, this is a different identifier, I believe it\u0027s a pretty-printed string, whereas the portID used elsewhere is a uint32.",
+      "parentUuid": "c27d1aa1_e1176794",
       "range": {
         "startLine": 357,
         "startChar": 43,
