@@ -545,6 +545,24 @@
     },
     {
       "key": {
+        "uuid": "4b79da04_f871b773",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-09T14:32:18Z",
+      "side": 1,
+      "message": "deviceLookup is ok.   The \"lookup\" is necessary here for differentiate between this variable and the ports one.",
+      "parentUuid": "4cb37a8c_b5efed85",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4d4cec5_ccc76a9f",
         "filename": "rw_core/core/device/logical_port/loader.go",
         "patchSetId": 6
@@ -823,6 +841,24 @@
       "side": 1,
       "message": "Possibly.  There is no \"list structs\" call (and I don\u0027t think there really should be), so it\u0027s not strictly nescessary to specify.\n\nI think having List() return the ids rather than the type is pretty clear as-is, the caller will have to think about locking \u0026 such already, so this shouldn\u0027t add much cognitive load.",
       "parentUuid": "669b589c_c652aa5b",
+      "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b77e5d17_e6537896",
+        "filename": "rw_core/core/device/logical_port/loader.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-09T14:32:18Z",
+      "side": 1,
+      "message": "A List() under port loader implies listing all the elements in that structure.  Here, only a specific element is being returned. Besides are we returning port numbers, device port numbers, ids?  They all have the same uint32 definition.   I would rename the method.",
+      "parentUuid": "f13974c9_4d66f50b",
       "revId": "484f8aa01347ae4472a26cad7e3eae9ce17e53ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
