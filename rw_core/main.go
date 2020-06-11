@@ -73,7 +73,6 @@ func main() {
 	start := time.Now()
 
 	cf := config.NewRWCoreFlags()
-	cf.ParseCommandArguments()
 
 	// Set the instance ID as the hostname
 	var instanceID string

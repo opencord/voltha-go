@@ -14,11 +14,11 @@ github.com/buraksezer/consistent
 github.com/cespare/xxhash
 # github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73
 github.com/cevaris/ordered_map
-# github.com/coreos/go-semver v0.2.0
+# github.com/coreos/go-semver v0.3.0
 github.com/coreos/go-semver/semver
 # github.com/coreos/go-systemd v0.0.0-20190620071333-e64a0ec8b42a
 github.com/coreos/go-systemd/journal
-# github.com/coreos/pkg v0.0.0-20180108230652-97fdf19511ea
+# github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
 github.com/coreos/pkg/capnslog
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
@@ -32,6 +32,8 @@ github.com/eapache/go-resiliency/breaker
 github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 github.com/eapache/queue
+# github.com/fsnotify/fsnotify v1.4.7
+github.com/fsnotify/fsnotify
 # github.com/gogo/protobuf v1.3.0
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
@@ -56,7 +58,7 @@ github.com/golang/snappy
 github.com/google/btree
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
-# github.com/gorilla/websocket v0.0.0-20170926233335-4201258b820c
+# github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
 # github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 github.com/grpc-ecosystem/go-grpc-middleware
@@ -78,6 +80,17 @@ github.com/hashicorp/go-rootcerts
 github.com/hashicorp/go-uuid
 # github.com/hashicorp/golang-lru v0.5.3
 github.com/hashicorp/golang-lru/simplelru
+# github.com/hashicorp/hcl v1.0.0
+github.com/hashicorp/hcl
+github.com/hashicorp/hcl/hcl/ast
+github.com/hashicorp/hcl/hcl/parser
+github.com/hashicorp/hcl/hcl/printer
+github.com/hashicorp/hcl/hcl/scanner
+github.com/hashicorp/hcl/hcl/strconv
+github.com/hashicorp/hcl/hcl/token
+github.com/hashicorp/hcl/json/parser
+github.com/hashicorp/hcl/json/scanner
+github.com/hashicorp/hcl/json/token
 # github.com/hashicorp/serf v0.8.4
 github.com/hashicorp/serf/coordinate
 # github.com/jcmturner/gofork v1.0.0
@@ -89,6 +102,8 @@ github.com/jonboulle/clockwork
 github.com/json-iterator/go
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/magiconair/properties v1.8.1
+github.com/magiconair/properties
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mitchellh/go-homedir v1.1.0
@@ -120,6 +135,8 @@ github.com/opencord/voltha-protos/v3/go/inter_container
 github.com/opencord/voltha-protos/v3/go/omci
 github.com/opencord/voltha-protos/v3/go/openflow_13
 github.com/opencord/voltha-protos/v3/go/voltha
+# github.com/pelletier/go-toml v1.2.0
+github.com/pelletier/go-toml
 # github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 github.com/phayes/freeport
 # github.com/pierrec/lz4 v2.3.0+incompatible
@@ -146,11 +163,22 @@ github.com/rcrowley/go-metrics
 github.com/sirupsen/logrus
 # github.com/soheilhy/cmux v0.1.4
 github.com/soheilhy/cmux
+# github.com/spf13/afero v1.1.2
+github.com/spf13/afero
+github.com/spf13/afero/mem
+# github.com/spf13/cast v1.3.0
+github.com/spf13/cast
+# github.com/spf13/jwalterweatherman v1.0.0
+github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
+# github.com/spf13/viper v1.7.0
+github.com/spf13/viper
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
-# github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8
+# github.com/subosito/gotenv v1.2.0
+github.com/subosito/gotenv
+# github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5
 github.com/tmc/grpc-websocket-proxy/wsproxy
 # github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2
 github.com/xiang90/probing
@@ -268,9 +296,9 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
+# golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 golang.org/x/time/rate
-# google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c
+# google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
@@ -311,6 +339,8 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
+# gopkg.in/ini.v1 v1.51.0
+gopkg.in/ini.v1
 # gopkg.in/jcmturner/aescts.v1 v1.0.1
 gopkg.in/jcmturner/aescts.v1
 # gopkg.in/jcmturner/dnsutils.v1 v1.0.1
@@ -349,7 +379,7 @@ gopkg.in/jcmturner/gokrb5.v7/types
 # gopkg.in/jcmturner/rpc.v1 v1.1.0
 gopkg.in/jcmturner/rpc.v1/mstypes
 gopkg.in/jcmturner/rpc.v1/ndr
-# gopkg.in/yaml.v2 v2.2.3
+# gopkg.in/yaml.v2 v2.2.4
 gopkg.in/yaml.v2
 # sigs.k8s.io/yaml v1.1.0
 sigs.k8s.io/yaml
