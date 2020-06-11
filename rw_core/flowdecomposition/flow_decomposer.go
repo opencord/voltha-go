@@ -147,19 +147,27 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 			inPorts = []uint32{inPortNo}
 		}
 		for _, inputPort := range inPorts {
+
+			setVid := fu.GetSetVlanVid(flow)
+			setPcp := fu.GetSetVlanPcp(flow)
+
 			// Upstream flow on parent (olt) device
 			faParent := &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					fu.InPort(egressHop.Ingress),
 					fu.TunnelId(uint64(inputPort)),
+					fu.VlanVid(*setVid),
+					fu.VlanPcp(*setPcp),
 				},
 				Actions: []*ofp.OfpAction{
 					fu.Output(egressHop.Egress),
 				},
 			}
+
 			// Augment the matchfields with the ofpfields from the flow
-			faParent.MatchFields = append(faParent.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
+			faParent.MatchFields = append(faParent.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.VLAN_VID, fu.VLAN_PCP)...)
+
 			fgParent := fu.NewFlowsAndGroups()
 			fs, err := fu.MkFlowStat(faParent)
 			if err != nil {
@@ -171,13 +179,15 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 
 			// Upstream flow on child (onu) device
 			var actions []*ofp.OfpAction
-			setvid := fu.GetVlanVid(flow)
-			if setvid != nil {
+			if setVid != nil {
 				// have this child push the vlan the parent is matching/trapping on above
 				actions = []*ofp.OfpAction{
 					fu.PushVlan(0x8100),
-					fu.SetField(fu.VlanVid(*setvid)),
+					fu.SetField(fu.VlanVid(*setVid)),
 					fu.Output(ingressHop.Egress),
+				}
+				if setPcp != nil {
+					actions = append(actions, fu.SetField(fu.VlanPcp(*setPcp)))
 				}
 			} else {
 				// otherwise just set the egress port
@@ -185,6 +195,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 					fu.Output(ingressHop.Egress),
 				}
 			}
+
 			faChild := &fu.FlowArgs{
 				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 				MatchFields: []*ofp.OfpOxmOfbField{
@@ -196,11 +207,8 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 			// Augment the matchfields with the ofpfields from the flow.
 			// If the parent has a match vid and the child is setting that match vid exclude the the match vlan
 			// for the child given it will be setting that vlan and the parent will be matching on it
-			if setvid != nil {
-				faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.VLAN_VID)...)
-			} else {
-				faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
-			}
+			faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
+
 			fgChild := fu.NewFlowsAndGroups()
 			fs, err = fu.MkFlowStat(faChild)
 			if err != nil {
