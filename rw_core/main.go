@@ -75,7 +75,6 @@ func main() {
 	ctx := context.Background()
 
 	cf := config.NewRWCoreFlags()
-	cf.ParseCommandArguments()
 
 	// Set the instance ID as the hostname
 	var instanceID string
