@@ -9,6 +9,8 @@ require (
 	github.com/opencord/voltha-lib-go/v3 v3.1.12
 	github.com/opencord/voltha-protos/v3 v3.3.3
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
+	github.com/spf13/pflag v1.0.3
+	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.4.0
 	google.golang.org/grpc v1.24.0
 )
