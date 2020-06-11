@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f61730a_60a85cb5",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-11T19:04:32Z",
+      "side": 1,
+      "message": "Sending a port add events before route calculated may end up with failure to add flows (no route).  There has been code changes in that area.  Suggest to run this patch in the scale test environment to prevent regressions.",
+      "revId": "d3949294120c7db2223f11c393441059bbbb540d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
