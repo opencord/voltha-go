@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
 	"github.com/opencord/voltha-lib-go/v3/pkg/version"
+	"github.com/spf13/viper"
 )
 
 func waitForExit() int {
@@ -72,8 +74,10 @@ func printVersion() {
 func main() {
 	start := time.Now()
 
-	cf := config.NewRWCoreFlags()
-	cf.ParseCommandArguments()
+	cf := &config.RWCoreFlags{}
+	fs := config.BuildFlagSet(path.Base(os.Args[0]), cf)
+	err := fs.Parse(os.Args[1:])
+	viper.Unmarshal(cf)
 
 	// Set the instance ID as the hostname
 	var instanceID string
