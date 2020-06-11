@@ -75,7 +75,6 @@ func main() {
 	ctx := context.Background()
 
 	cf := config.NewRWCoreFlags()
-	cf.ParseCommandArguments()
 
 	// Set the instance ID as the hostname
 	var instanceID string
@@ -141,7 +140,7 @@ func main() {
 	// Add the probe to the context to pass to all the services started
 	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
 
-	closer, err := log.InitTracingAndLogCorrelation(cf.TraceEnabled, cf.TraceAgentAddress, cf.LogCorrelationEnabled)
+	closer, err := log.InitTracingAndLogCorrelation(cf.TraceEnabled, cf.TraceAgentAddress, !cf.LogCorrelationDisabled)
 	if err != nil {
 		logger.Warnw(ctx, "unable-to-initialize-tracing-and-log-correlation-module", log.Fields{"error": err})
 	} else {
