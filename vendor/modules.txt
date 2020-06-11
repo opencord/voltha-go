@@ -14,11 +14,13 @@ github.com/buraksezer/consistent
 github.com/cespare/xxhash
 # github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73
 github.com/cevaris/ordered_map
-# github.com/coreos/go-semver v0.2.0
+# github.com/ciena/go-flags v1.4.1-0.20200612001858-c16908f3b3b1
+github.com/ciena/go-flags
+# github.com/coreos/go-semver v0.3.0
 github.com/coreos/go-semver/semver
 # github.com/coreos/go-systemd v0.0.0-20190620071333-e64a0ec8b42a
 github.com/coreos/go-systemd/journal
-# github.com/coreos/pkg v0.0.0-20180108230652-97fdf19511ea
+# github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
 github.com/coreos/pkg/capnslog
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
@@ -56,7 +58,7 @@ github.com/golang/snappy
 github.com/google/btree
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
-# github.com/gorilla/websocket v0.0.0-20170926233335-4201258b820c
+# github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
 # github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 github.com/grpc-ecosystem/go-grpc-middleware
@@ -150,7 +152,7 @@ github.com/soheilhy/cmux
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
-# github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8
+# github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5
 github.com/tmc/grpc-websocket-proxy/wsproxy
 # github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2
 github.com/xiang90/probing
@@ -268,9 +270,9 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
+# golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 golang.org/x/time/rate
-# google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c
+# google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
@@ -349,7 +351,7 @@ gopkg.in/jcmturner/gokrb5.v7/types
 # gopkg.in/jcmturner/rpc.v1 v1.1.0
 gopkg.in/jcmturner/rpc.v1/mstypes
 gopkg.in/jcmturner/rpc.v1/ndr
-# gopkg.in/yaml.v2 v2.2.3
+# gopkg.in/yaml.v2 v2.2.4
 gopkg.in/yaml.v2
 # sigs.k8s.io/yaml v1.1.0
 sigs.k8s.io/yaml

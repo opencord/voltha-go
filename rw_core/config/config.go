@@ -17,208 +17,57 @@
 package config
 
 import (
-	"flag"
-	"fmt"
+	"os"
 	"time"
+
+	flags "github.com/ciena/go-flags"
 )
 
 // RW Core service default constants
 const (
-	ConsulStoreName                  = "consul"
-	EtcdStoreName                    = "etcd"
-	defaultGrpcPort                  = 50057
-	defaultGrpcHost                  = ""
-	defaultKafkaAdapterHost          = "127.0.0.1"
-	defaultKafkaAdapterPort          = 9092
-	defaultKafkaClusterHost          = "127.0.0.1"
-	defaultKafkaClusterPort          = 9094
-	defaultKVStoreType               = EtcdStoreName
-	defaultKVStoreTimeout            = 5 * time.Second
-	defaultKVStoreHost               = "127.0.0.1"
-	defaultKVStorePort               = 2379 // Consul = 8500; Etcd = 2379
-	defaultKVTxnKeyDelTime           = 60
-	defaultLogLevel                  = "WARN"
-	defaultBanner                    = false
-	defaultDisplayVersionOnly        = false
-	defaultCoreTopic                 = "rwcore"
-	defaultRWCoreEndpoint            = "rwcore"
-	defaultRWCoreKey                 = "pki/voltha.key"
-	defaultRWCoreCert                = "pki/voltha.crt"
-	defaultRWCoreCA                  = "pki/voltha-CA.pem"
-	defaultAffinityRouterTopic       = "affinityRouter"
-	defaultInCompetingMode           = true
-	defaultLongRunningRequestTimeout = 2000 * time.Millisecond
-	defaultDefaultRequestTimeout     = 1000 * time.Millisecond
-	defaultCoreTimeout               = 1000 * time.Millisecond
-	defaultCoreBindingKey            = "voltha_backend_name"
-	defaultMaxConnectionRetries      = -1 // retries forever
-	defaultConnectionRetryInterval   = 2 * time.Second
-	defaultLiveProbeInterval         = 60 * time.Second
-	defaultNotLiveProbeInterval      = 5 * time.Second // Probe more frequently when not alive
-	defaultProbeHost                 = ""
-	defaultProbePort                 = 8080
+	ConsulStoreName = "consul"
+	EtcdStoreName   = "etcd"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
 type RWCoreFlags struct {
 	// Command line parameters
-	RWCoreEndpoint            string
-	GrpcHost                  string
-	GrpcPort                  int
-	KafkaAdapterHost          string
-	KafkaAdapterPort          int
-	KafkaClusterHost          string
-	KafkaClusterPort          int
-	KVStoreType               string
-	KVStoreTimeout            time.Duration
-	KVStoreHost               string
-	KVStorePort               int
-	KVTxnKeyDelTime           int
-	CoreTopic                 string
-	LogLevel                  string
-	Banner                    bool
-	DisplayVersionOnly        bool
-	RWCoreKey                 string
-	RWCoreCert                string
-	RWCoreCA                  string
-	AffinityRouterTopic       string
-	InCompetingMode           bool
-	LongRunningRequestTimeout time.Duration
-	DefaultRequestTimeout     time.Duration
-	DefaultCoreTimeout        time.Duration
-	CoreBindingKey            string
-	MaxConnectionRetries      int
-	ConnectionRetryInterval   time.Duration
-	LiveProbeInterval         time.Duration
-	NotLiveProbeInterval      time.Duration
-	ProbeHost                 string
-	ProbePort                 int
+	RWCoreEndpoint            string        `long:"vcore-endpoint" default:"rwcore" description:"RW core endpoint address"`
+	GrpcHost                  string        `default:"0.0.0.0" description:"GRPC server - host"`
+	GrpcPort                  int           `default:"50057" description:"GRPC server - port"`
+	KafkaAdapterHost          string        `default:"127.0.0.1" description:"Kafka - Adapter messaging host"`
+	KafkaAdapterPort          int           `default:"9092" description:"Kafka - Adapter messaging port"`
+	KafkaClusterHost          string        `default:"127.0.0.1" description:"Kafka - Cluster messaging host"`
+	KafkaClusterPort          int           `default:"9094" description:"Kafka - Cluster messaging port"`
+	KVStoreType               string        `default:"etcd" description:"KV store type"`
+	KVStoreTimeout            time.Duration `long:"kv_store_request_timeout" default:"5s" description:"The default timeout when making a KV store request"`
+	KVStoreHost               string        `default:"127.0.0.1" description:"KV store host"`
+	KVStorePort               int           `default:"2379" description:"KV store port"`
+	KVTxnKeyDelTime           int           `long:"kv_txn_delete_time" default:"60" description:"The time to wait before deleting a completed transaction key"`
+	CoreTopic                 string        `long:"rw_core_topic" default:"rwcore" description:"RW Core topic"`
+	LogLevel                  string        `default:"WARN" description:"Initial log level"`
+	Banner                    bool          `description:"Show startup banner"`
+	DisplayVersionOnly        bool          `long:"version" description:"Show version information and exit"`
+	RWCoreKey                 string        `no-flag:"true"`
+	RWCoreCert                string        `no-flag:"true"`
+	RWCoreCA                  string        `no-flag:"true"`
+	AffinityRouterTopic       string        `default:"affinityRouter" description:"Affinity Router topic"`
+	InCompetingMode           bool          `description:"In competing mode - two cores competing to handle a transaction"`
+	LongRunningRequestTimeout time.Duration `long:"timeout_long_request" default:"2s" description:"Timeout for long running request"`
+	DefaultRequestTimeout     time.Duration `long:"timeout_request" default:"1s" description:"Default timeout for regular request"`
+	DefaultCoreTimeout        time.Duration `long:"core_timeout" default:"1s" description:"Default Core timeout"`
+	CoreBindingKey            string        `default:"voltha_backend_name" description:"The name of the meta-key whose value is the rw-core group to which the ofagent is bound"`
+	MaxConnectionRetries      int           `default:"-1" description:"The number of retries to connect to a dependent component"`
+	ConnectionRetryInterval   time.Duration `default:"2s" description:"The number of seconds between each connection retry attempt"`
+	LiveProbeInterval         time.Duration `default:"60s" description:"The number of seconds between liveness probes while in a live state"`
+	NotLiveProbeInterval      time.Duration `default:"5s" description:"The number of seconds between liveness probes while in a not live state"`
+	ProbeHost                 string        `default:"0.0.0.0" description:"The host on which to listen to answer liveness and readiness probe queries over HTTP"`
+	ProbePort                 int           `default:"8080" description:"The port on which to listen to answer liveness and readiness probe queries over HTTP"`
 }
 
-// NewRWCoreFlags returns a new RWCore config
 func NewRWCoreFlags() *RWCoreFlags {
-	var rwCoreFlag = RWCoreFlags{ // Default values
-		RWCoreEndpoint:            defaultRWCoreEndpoint,
-		GrpcHost:                  defaultGrpcHost,
-		GrpcPort:                  defaultGrpcPort,
-		KafkaAdapterHost:          defaultKafkaAdapterHost,
-		KafkaAdapterPort:          defaultKafkaAdapterPort,
-		KafkaClusterHost:          defaultKafkaClusterHost,
-		KafkaClusterPort:          defaultKafkaClusterPort,
-		KVStoreType:               defaultKVStoreType,
-		KVStoreTimeout:            defaultKVStoreTimeout,
-		KVStoreHost:               defaultKVStoreHost,
-		KVStorePort:               defaultKVStorePort,
-		KVTxnKeyDelTime:           defaultKVTxnKeyDelTime,
-		CoreTopic:                 defaultCoreTopic,
-		LogLevel:                  defaultLogLevel,
-		Banner:                    defaultBanner,
-		DisplayVersionOnly:        defaultDisplayVersionOnly,
-		RWCoreKey:                 defaultRWCoreKey,
-		RWCoreCert:                defaultRWCoreCert,
-		RWCoreCA:                  defaultRWCoreCA,
-		AffinityRouterTopic:       defaultAffinityRouterTopic,
-		InCompetingMode:           defaultInCompetingMode,
-		DefaultRequestTimeout:     defaultDefaultRequestTimeout,
-		LongRunningRequestTimeout: defaultLongRunningRequestTimeout,
-		DefaultCoreTimeout:        defaultCoreTimeout,
-		CoreBindingKey:            defaultCoreBindingKey,
-		MaxConnectionRetries:      defaultMaxConnectionRetries,
-		ConnectionRetryInterval:   defaultConnectionRetryInterval,
-		LiveProbeInterval:         defaultLiveProbeInterval,
-		NotLiveProbeInterval:      defaultNotLiveProbeInterval,
-		ProbeHost:                 defaultProbeHost,
-		ProbePort:                 defaultProbePort,
-	}
-	return &rwCoreFlag
-}
-
-// ParseCommandArguments parses the arguments when running read-write core service
-func (cf *RWCoreFlags) ParseCommandArguments() {
-
-	help := fmt.Sprintf("RW core endpoint address")
-	flag.StringVar(&(cf.RWCoreEndpoint), "vcore-endpoint", defaultRWCoreEndpoint, help)
-
-	help = fmt.Sprintf("GRPC server - host")
-	flag.StringVar(&(cf.GrpcHost), "grpc_host", defaultGrpcHost, help)
-
-	help = fmt.Sprintf("GRPC server - port")
-	flag.IntVar(&(cf.GrpcPort), "grpc_port", defaultGrpcPort, help)
-
-	help = fmt.Sprintf("Kafka - Adapter messaging host")
-	flag.StringVar(&(cf.KafkaAdapterHost), "kafka_adapter_host", defaultKafkaAdapterHost, help)
-
-	help = fmt.Sprintf("Kafka - Adapter messaging port")
-	flag.IntVar(&(cf.KafkaAdapterPort), "kafka_adapter_port", defaultKafkaAdapterPort, help)
-
-	help = fmt.Sprintf("Kafka - Cluster messaging host")
-	flag.StringVar(&(cf.KafkaClusterHost), "kafka_cluster_host", defaultKafkaClusterHost, help)
-
-	help = fmt.Sprintf("Kafka - Cluster messaging port")
-	flag.IntVar(&(cf.KafkaClusterPort), "kafka_cluster_port", defaultKafkaClusterPort, help)
-
-	help = fmt.Sprintf("RW Core topic")
-	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", defaultCoreTopic, help)
-
-	help = fmt.Sprintf("Affinity Router topic")
-	flag.StringVar(&(cf.AffinityRouterTopic), "affinity_router_topic", defaultAffinityRouterTopic, help)
-
-	help = fmt.Sprintf("In competing Mode - two cores competing to handle a transaction ")
-	flag.BoolVar(&cf.InCompetingMode, "in_competing_mode", defaultInCompetingMode, help)
-
-	help = fmt.Sprintf("KV store type")
-	flag.StringVar(&(cf.KVStoreType), "kv_store_type", defaultKVStoreType, help)
-
-	help = fmt.Sprintf("The default timeout when making a kv store request")
-	flag.DurationVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", defaultKVStoreTimeout, help)
-
-	help = fmt.Sprintf("KV store host")
-	flag.StringVar(&(cf.KVStoreHost), "kv_store_host", defaultKVStoreHost, help)
-
-	help = fmt.Sprintf("KV store port")
-	flag.IntVar(&(cf.KVStorePort), "kv_store_port", defaultKVStorePort, help)
-
-	help = fmt.Sprintf("The time to wait before deleting a completed transaction key")
-	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", defaultKVTxnKeyDelTime, help)
-
-	help = fmt.Sprintf("Log level")
-	flag.StringVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
-
-	help = fmt.Sprintf("Timeout for long running request")
-	flag.DurationVar(&(cf.LongRunningRequestTimeout), "timeout_long_request", defaultLongRunningRequestTimeout, help)
-
-	help = fmt.Sprintf("Default timeout for regular request")
-	flag.DurationVar(&(cf.DefaultRequestTimeout), "timeout_request", defaultDefaultRequestTimeout, help)
-
-	help = fmt.Sprintf("Default Core timeout")
-	flag.DurationVar(&(cf.DefaultCoreTimeout), "core_timeout", defaultCoreTimeout, help)
-
-	help = fmt.Sprintf("Show startup banner log lines")
-	flag.BoolVar(&cf.Banner, "banner", defaultBanner, help)
-
-	help = fmt.Sprintf("Show version information and exit")
-	flag.BoolVar(&cf.DisplayVersionOnly, "version", defaultDisplayVersionOnly, help)
-
-	help = fmt.Sprintf("The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
-	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", defaultCoreBindingKey, help)
-
-	help = fmt.Sprintf("The number of retries to connect to a dependent component")
-	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", defaultMaxConnectionRetries, help)
-
-	help = fmt.Sprintf("The number of seconds between each connection retry attempt")
-	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", defaultConnectionRetryInterval, help)
-
-	help = fmt.Sprintf("The number of seconds between liveness probes while in a live state")
-	flag.DurationVar(&(cf.LiveProbeInterval), "live_probe_interval", defaultLiveProbeInterval, help)
-
-	help = fmt.Sprintf("The number of seconds between liveness probes while in a not live state")
-	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", defaultNotLiveProbeInterval, help)
-
-	help = fmt.Sprintf("The host on which to listen to answer liveness and readiness probe queries over HTTP.")
-	flag.StringVar(&(cf.ProbeHost), "probe_host", defaultProbeHost, help)
-
-	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
-	flag.IntVar(&(cf.ProbePort), "probe_port", defaultProbePort, help)
-
-	flag.Parse()
+	cf := &RWCoreFlags{}
+	p := flags.NewParser(cf, flags.Auto)
+	_, _ = p.ParseArgs(os.Args[1:])
+	return cf
 }
