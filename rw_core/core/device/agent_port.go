@@ -29,7 +29,7 @@ import (
 
 // getPorts retrieves the ports information of the device based on the port type.
 func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
-	logger.Debugw("getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
+	logger.Debugw(ctx, "getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
 	ports := &voltha.Ports{}
 	if device, _ := agent.deviceMgr.getDevice(ctx, agent.deviceID); device != nil {
 		for _, port := range device.Ports {
@@ -42,7 +42,7 @@ func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType)
 }
 
 func (agent *Agent) updatePortsOperState(ctx context.Context, operStatus voltha.OperStatus_Types) error {
-	logger.Debugw("updatePortsOperState", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "updatePortsOperState", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -73,13 +73,13 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 			port.OperStatus = operStatus
 		}
 	}
-	logger.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
+	logger.Debugw(ctx, "portStatusUpdate", log.Fields{"deviceId": cloned.Id})
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
 
 func (agent *Agent) deleteAllPorts(ctx context.Context) error {
-	logger.Debugw("deleteAllPorts", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw(ctx, "deleteAllPorts", log.Fields{"deviceId": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
@@ -89,16 +89,16 @@ func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 
 	if cloned.AdminState != voltha.AdminState_DISABLED && cloned.AdminState != voltha.AdminState_DELETED {
 		err := status.Error(codes.FailedPrecondition, fmt.Sprintf("invalid-state-%v", cloned.AdminState))
-		logger.Warnw("invalid-state-removing-ports", log.Fields{"state": cloned.AdminState, "error": err})
+		logger.Warnw(ctx, "invalid-state-removing-ports", log.Fields{"state": cloned.AdminState, "error": err})
 		return err
 	}
 	if len(cloned.Ports) == 0 {
-		logger.Debugw("no-ports-present", log.Fields{"deviceId": agent.deviceID})
+		logger.Debugw(ctx, "no-ports-present", log.Fields{"deviceId": agent.deviceID})
 		return nil
 	}
 
 	cloned.Ports = []*voltha.Port{}
-	logger.Debugw("portStatusUpdate", log.Fields{"deviceId": cloned.Id})
+	logger.Debugw(ctx, "portStatusUpdate", log.Fields{"deviceId": cloned.Id})
 	// Store the device
 	return agent.updateDeviceInStoreWithoutLock(ctx, cloned, false, "")
 }
@@ -108,26 +108,26 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("addPort", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw(ctx, "addPort", log.Fields{"deviceId": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 	updatePort := false
 	if cloned.Ports == nil {
 		//	First port
-		logger.Debugw("addPort-first-port-to-add", log.Fields{"deviceId": agent.deviceID})
+		logger.Debugw(ctx, "addPort-first-port-to-add", log.Fields{"deviceId": agent.deviceID})
 		cloned.Ports = make([]*voltha.Port, 0)
 	} else {
 		for _, p := range cloned.Ports {
 			if p.Type == port.Type && p.PortNo == port.PortNo {
 				if p.Label == "" && p.Type == voltha.Port_PON_OLT {
 					//Creation of OLT PON port is being processed after a default PON port was created.  Just update it.
-					logger.Infow("update-pon-port-created-by-default", log.Fields{"default-port": p, "port-to-add": port})
+					logger.Infow(ctx, "update-pon-port-created-by-default", log.Fields{"default-port": p, "port-to-add": port})
 					p.Label = port.Label
 					p.OperStatus = port.OperStatus
 					updatePort = true
 					break
 				}
-				logger.Debugw("port already exists", log.Fields{"port": port})
+				logger.Debugw(ctx, "port already exists", log.Fields{"port": port})
 				return nil
 			}
 		}
@@ -147,7 +147,7 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("adding-peer-peerPort", log.Fields{"device-id": agent.deviceID, "peer-peerPort": peerPort})
+	logger.Debugw(ctx, "adding-peer-peerPort", log.Fields{"device-id": agent.deviceID, "peer-peerPort": peerPort})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -157,7 +157,7 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 		if port.PortNo == peerPort.PortNo { // found peerPort
 			cp := proto.Clone(peerPort).(*voltha.Port_PeerPort)
 			port.Peers = append(port.Peers, cp)
-			logger.Debugw("found-peer", log.Fields{"device-id": agent.deviceID, "portNo": peerPort.PortNo, "deviceId": agent.deviceID})
+			logger.Debugw(ctx, "found-peer", log.Fields{"device-id": agent.deviceID, "portNo": peerPort.PortNo, "deviceId": agent.deviceID})
 			found = true
 			break
 		}
@@ -173,7 +173,7 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 			Peers:      []*voltha.Port_PeerPort{proto.Clone(peerPort).(*voltha.Port_PeerPort)},
 		}
 		cloned.Ports = append(cloned.Ports, ponPort)
-		logger.Infow("adding-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
+		logger.Infow(ctx, "adding-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
 	}
 
 	// Store the device
@@ -185,7 +185,7 @@ func (agent *Agent) disablePort(ctx context.Context, Port *voltha.Port) error {
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("disablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
+	logger.Debugw(ctx, "disablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
 	var cp *voltha.Port
 	// Get the most up to date the device info
 	device := agent.getDeviceWithoutLock()
@@ -206,7 +206,7 @@ func (agent *Agent) disablePort(ctx context.Context, Port *voltha.Port) error {
 	}
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
-		logger.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		logger.Debugw(ctx, "updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
 		return err
 	}
 
@@ -226,7 +226,7 @@ func (agent *Agent) enablePort(ctx context.Context, Port *voltha.Port) error {
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("enablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
+	logger.Debugw(ctx, "enablePort", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo})
 
 	var cp *voltha.Port
 	// Get the most up to date the device info
@@ -248,7 +248,7 @@ func (agent *Agent) enablePort(ctx context.Context, Port *voltha.Port) error {
 	}
 	// Store the device
 	if err := agent.updateDeviceInStoreWithoutLock(ctx, device, false, ""); err != nil {
-		logger.Debugw("updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
+		logger.Debugw(ctx, "updateDeviceInStoreWithoutLock error ", log.Fields{"device-id": agent.deviceID, "port-no": Port.PortNo, "error": err})
 		return err
 	}
 	//send request to adapter

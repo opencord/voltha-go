@@ -60,7 +60,7 @@ func (loader *Loader) Load(ctx context.Context) {
 
 	var groups []*ofp.OfpGroupEntry
 	if err := loader.dbProxy.List(ctx, &groups); err != nil {
-		logger.Errorw("failed-to-list-groups-from-cluster-data-proxy", log.Fields{"error": err})
+		logger.Errorw(ctx, "failed-to-list-groups-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
 	for _, group := range groups {

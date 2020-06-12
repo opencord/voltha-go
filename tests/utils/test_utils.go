@@ -452,22 +452,22 @@ func StartSimulatedEnv(composePath string) error {
 }
 
 // StopSimulatedEnv stops kafka, etcd, olt, onu adapters, core
-func StopSimulatedEnv(composePath string) error {
+func StopSimulatedEnv(ctx context.Context, composePath string) error {
 	err := stopSimulatedOLTAndONUAdapters(composePath)
 	if err != nil {
-		logger.Errorw("unable-to-stop-simulated-olt-onu-adapters", log.Fields{"error": err})
+		logger.Errorw(ctx, "unable-to-stop-simulated-olt-onu-adapters", log.Fields{"error": err})
 	}
 	err = stopCore(composePath)
 	if err != nil {
-		logger.Errorw("unable-to-stop-core", log.Fields{"error": err})
+		logger.Errorw(ctx, "unable-to-stop-core", log.Fields{"error": err})
 	}
 	err = stopKafka(composePath)
 	if err != nil {
-		logger.Errorw("unable-to-stop-kafka", log.Fields{"error": err})
+		logger.Errorw(ctx, "unable-to-stop-kafka", log.Fields{"error": err})
 	}
 	err = stopEtcd(composePath)
 	if err != nil {
-		logger.Errorw("unable-to-stop-etcd", log.Fields{"error": err})
+		logger.Errorw(ctx, "unable-to-stop-etcd", log.Fields{"error": err})
 	}
 	return nil
 }

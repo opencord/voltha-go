@@ -60,7 +60,7 @@ func (loader *Loader) Load(ctx context.Context) {
 
 	var flows []*ofp.OfpFlowStats
 	if err := loader.dbProxy.List(ctx, &flows); err != nil {
-		logger.Errorw("failed-to-list-flows-from-cluster-data-proxy", log.Fields{"error": err})
+		logger.Errorw(ctx, "failed-to-list-flows-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
 	for _, flow := range flows {

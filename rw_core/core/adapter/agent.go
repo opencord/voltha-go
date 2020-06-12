@@ -22,6 +22,7 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"sync"
 	"time"
+	"context"
 )
 
 // agent represents adapter agent
@@ -36,10 +37,10 @@ func newAdapterAgent(adapter *voltha.Adapter) *agent {
 	}
 }
 
-func (aa *agent) getAdapter() *voltha.Adapter {
+func (aa *agent) getAdapter(ctx context.Context) *voltha.Adapter {
 	aa.lock.RLock()
 	defer aa.lock.RUnlock()
-	logger.Debugw("getAdapter", log.Fields{"adapter": aa.adapter})
+	logger.Debugw(ctx, "getAdapter", log.Fields{"adapter": aa.adapter})
 	return aa.adapter
 }
 

@@ -68,7 +68,7 @@ func (p *Path) Proxy(resource string) *Proxy {
 // List will retrieve information from the data model at the proxy's path location, and write it to the target slice
 // target must be a type of the form *[]<proto.Message Type>  For example: *[]*voltha.Device
 func (p *Proxy) List(ctx context.Context, target interface{}) error {
-	logger.Debugw("proxy-list", log.Fields{
+	logger.Debugw(ctx, "proxy-list", log.Fields{
 		"path": p.path,
 	})
 
@@ -92,7 +92,7 @@ func (p *Proxy) List(ctx context.Context, target interface{}) error {
 		return fmt.Errorf("failed to retrieve %s from kvstore: %s", p.path, err)
 	}
 
-	logger.Debugw("parsing-data-blobs", log.Fields{
+	logger.Debugw(ctx, "parsing-data-blobs", log.Fields{
 		"path": p.path,
 		"size": len(blobs),
 	})
@@ -115,7 +115,7 @@ func (p *Proxy) List(ctx context.Context, target interface{}) error {
 func (p *Proxy) Get(ctx context.Context, id string, target proto.Message) (bool, error) {
 	completePath := p.path + id
 
-	logger.Debugw("proxy-get", log.Fields{
+	logger.Debugw(ctx, "proxy-get", log.Fields{
 		"path": completePath,
 	})
 
@@ -126,7 +126,7 @@ func (p *Proxy) Get(ctx context.Context, id string, target proto.Message) (bool,
 		return false, nil // this blob does not exist
 	}
 
-	logger.Debugw("parsing-data-blobs", log.Fields{
+	logger.Debugw(ctx, "parsing-data-blobs", log.Fields{
 		"path": completePath,
 	})
 
@@ -140,7 +140,7 @@ func (p *Proxy) Get(ctx context.Context, id string, target proto.Message) (bool,
 func (p *Proxy) Set(ctx context.Context, id string, data proto.Message) error {
 	completePath := p.path + id
 
-	logger.Debugw("proxy-add", log.Fields{
+	logger.Debugw(ctx, "proxy-add", log.Fields{
 		"path": completePath,
 	})
 
@@ -159,7 +159,7 @@ func (p *Proxy) Set(ctx context.Context, id string, data proto.Message) error {
 func (p *Proxy) Remove(ctx context.Context, id string) error {
 	completePath := p.path + id
 
-	logger.Debugw("proxy-remove", log.Fields{
+	logger.Debugw(ctx, "proxy-remove", log.Fields{
 		"path": completePath,
 	})
 

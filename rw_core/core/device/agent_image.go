@@ -33,7 +33,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	logger.Debugw("downloadImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "downloadImage", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceWithoutLock()
 
@@ -48,7 +48,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 		cloned.ImageDownloads = []*voltha.ImageDownload{clonedImg}
 	} else {
 		if device.AdminState != voltha.AdminState_ENABLED {
-			logger.Debugw("device-not-enabled", log.Fields{"id": agent.deviceID})
+			logger.Debugw(ctx, "device-not-enabled", log.Fields{"id": agent.deviceID})
 			return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceID, voltha.AdminState_ENABLED)
 		}
 		// Save the image
@@ -91,7 +91,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	logger.Debugw("cancelImageDownload", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "cancelImageDownload", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceWithoutLock()
 
@@ -128,7 +128,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("activateImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "activateImage", log.Fields{"device-id": agent.deviceID})
 	cloned := agent.getDeviceWithoutLock()
 
 	// Verify whether the Image is in the list of image being downloaded
@@ -168,7 +168,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("revertImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "revertImage", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -203,7 +203,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 }
 
 func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	logger.Debugw("getImageDownloadStatus", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "getImageDownloadStatus", log.Fields{"device-id": agent.deviceID})
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
@@ -235,7 +235,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
+	logger.Debugw(ctx, "updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
 
 	cloned := agent.getDeviceWithoutLock()
 
@@ -263,7 +263,7 @@ func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownl
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("getImageDownload", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "getImageDownload", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.getDeviceWithoutLock()
 	for _, image := range cloned.ImageDownloads {
@@ -279,7 +279,7 @@ func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*v
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("listImageDownloads", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "listImageDownloads", log.Fields{"device-id": agent.deviceID})
 
 	return &voltha.ImageDownloads{Items: agent.getDeviceWithoutLock().ImageDownloads}, nil
 }
