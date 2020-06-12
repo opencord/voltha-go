@@ -50,15 +50,15 @@ type EndpointManager interface {
 
 	// GetEndpoint is called to get the endpoint to communicate with for a specific device and service type.  For
 	// now this will return the topic name
-	GetEndpoint(deviceID string, serviceType string) (Endpoint, error)
+	GetEndpoint(ctx context.Context, deviceID string, serviceType string) (Endpoint, error)
 
 	// IsDeviceOwnedByService is invoked when a specific service (service type + replicaNumber) is restarted and
 	// devices owned by that service need to be reconciled
-	IsDeviceOwnedByService(deviceID string, serviceType string, replicaNumber int32) (bool, error)
+	IsDeviceOwnedByService(ctx context.Context, deviceID string, serviceType string, replicaNumber int32) (bool, error)
 
 	// GetReplicaAssignment returns the replica number of the service that owns the deviceID.  This is used by the
 	// test only
-	GetReplicaAssignment(deviceID string, serviceType string) (ReplicaID, error)
+	GetReplicaAssignment(ctx context.Context, deviceID string, serviceType string) (ReplicaID, error)
 }
 
 type service struct {
@@ -119,9 +119,9 @@ func NewEndpointManager(backend *db.Backend, opts ...EndpointManagerOption) Endp
 	return newEndpointManager(backend, opts...)
 }
 
-func (ep *endpointManager) GetEndpoint(deviceID string, serviceType string) (Endpoint, error) {
-	logger.Debugw("getting-endpoint", log.Fields{"device-id": deviceID, "service": serviceType})
-	owner, err := ep.getOwner(deviceID, serviceType)
+func (ep *endpointManager) GetEndpoint(ctx context.Context, deviceID string, serviceType string) (Endpoint, error) {
+	logger.Debugw(ctx, "getting-endpoint", log.Fields{"device-id": deviceID, "service": serviceType})
+	owner, err := ep.getOwner(ctx, deviceID, serviceType)
 	if err != nil {
 		return "", err
 	}
@@ -133,13 +133,13 @@ func (ep *endpointManager) GetEndpoint(deviceID string, serviceType string) (End
 	if endpoint == "" {
 		return "", status.Errorf(codes.Unavailable, "endpoint-not-set-%s", serviceType)
 	}
-	logger.Debugw("returning-endpoint", log.Fields{"device-id": deviceID, "service": serviceType, "endpoint": endpoint})
+	logger.Debugw(ctx, "returning-endpoint", log.Fields{"device-id": deviceID, "service": serviceType, "endpoint": endpoint})
 	return endpoint, nil
 }
 
-func (ep *endpointManager) IsDeviceOwnedByService(deviceID string, serviceType string, replicaNumber int32) (bool, error) {
-	logger.Debugw("device-ownership", log.Fields{"device-id": deviceID, "service": serviceType, "replica-number": replicaNumber})
-	owner, err := ep.getOwner(deviceID, serviceType)
+func (ep *endpointManager) IsDeviceOwnedByService(ctx context.Context, deviceID string, serviceType string, replicaNumber int32) (bool, error) {
+	logger.Debugw(ctx, "device-ownership", log.Fields{"device-id": deviceID, "service": serviceType, "replica-number": replicaNumber})
+	owner, err := ep.getOwner(ctx, deviceID, serviceType)
 	if err != nil {
 		return false, nil
 	}
@@ -150,8 +150,8 @@ func (ep *endpointManager) IsDeviceOwnedByService(deviceID string, serviceType s
 	return m.getReplica() == ReplicaID(replicaNumber), nil
 }
 
-func (ep *endpointManager) GetReplicaAssignment(deviceID string, serviceType string) (ReplicaID, error) {
-	owner, err := ep.getOwner(deviceID, serviceType)
+func (ep *endpointManager) GetReplicaAssignment(ctx context.Context, deviceID string, serviceType string) (ReplicaID, error) {
+	owner, err := ep.getOwner(ctx, deviceID, serviceType)
 	if err != nil {
 		return 0, nil
 	}
@@ -162,8 +162,8 @@ func (ep *endpointManager) GetReplicaAssignment(deviceID string, serviceType str
 	return m.getReplica(), nil
 }
 
-func (ep *endpointManager) getOwner(deviceID string, serviceType string) (consistent.Member, error) {
-	serv, dType, err := ep.getServiceAndDeviceType(serviceType)
+func (ep *endpointManager) getOwner(ctx context.Context, deviceID string, serviceType string) (consistent.Member, error) {
+	serv, dType, err := ep.getServiceAndDeviceType(ctx, serviceType)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (ep *endpointManager) getOwner(deviceID string, serviceType string) (consis
 	return serv.consistentRing.LocateKey(key), nil
 }
 
-func (ep *endpointManager) getServiceAndDeviceType(serviceType string) (*service, string, error) {
+func (ep *endpointManager) getServiceAndDeviceType(ctx context.Context, serviceType string) (*service, string, error) {
 	// Check whether service exist
 	ep.servicesLock.RLock()
 	serv, serviceExist := ep.services[serviceType]
@@ -179,7 +179,7 @@ func (ep *endpointManager) getServiceAndDeviceType(serviceType string) (*service
 
 	// Load the service and device types if needed
 	if !serviceExist || serv == nil || int(serv.totalReplicas) != len(serv.consistentRing.GetMembers()) {
-		if err := ep.loadServices(); err != nil {
+		if err := ep.loadServices(ctx); err != nil {
 			return nil, "", err
 		}
 
@@ -214,7 +214,7 @@ func (ep *endpointManager) getConsistentConfig() consistent.Config {
 // loadServices loads the services (adapters) and device types in memory. Because of the small size of the data and
 // the data format in the dB being binary protobuf then it is better to load all the data if inconsistency is detected,
 // instead of watching for updates in the dB and acting on it.
-func (ep *endpointManager) loadServices() error {
+func (ep *endpointManager) loadServices(ctx context.Context) error {
 	ep.servicesLock.Lock()
 	defer ep.servicesLock.Unlock()
 	ep.deviceTypeServiceMapLock.Lock()
@@ -276,13 +276,13 @@ func (ep *endpointManager) loadServices() error {
 	if logger.V(log.DebugLevel) {
 		for key, val := range ep.services {
 			members := val.consistentRing.GetMembers()
-			logger.Debugw("service", log.Fields{"service": key, "expected-replica": val.totalReplicas, "replicas": len(val.consistentRing.GetMembers())})
+			logger.Debugw(ctx, "service", log.Fields{"service": key, "expected-replica": val.totalReplicas, "replicas": len(val.consistentRing.GetMembers())})
 			for _, m := range members {
 				n := m.(Member)
-				logger.Debugw("service-loaded", log.Fields{"serviceId": n.getID(), "serviceType": n.getServiceType(), "replica": n.getReplica(), "endpoint": n.getEndPoint()})
+				logger.Debugw(ctx, "service-loaded", log.Fields{"serviceId": n.getID(), "serviceType": n.getServiceType(), "replica": n.getReplica(), "endpoint": n.getEndPoint()})
 			}
 		}
-		logger.Debugw("device-types-loaded", log.Fields{"device-types": ep.deviceTypeServiceMap})
+		logger.Debugw(ctx, "device-types-loaded", log.Fields{"device-types": ep.deviceTypeServiceMap})
 	}
 	return nil
 }

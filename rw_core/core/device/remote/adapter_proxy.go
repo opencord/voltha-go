@@ -48,9 +48,9 @@ func (ap *AdapterProxy) getCoreTopic() kafka.Topic {
 	return kafka.Topic{Name: ap.coreTopic}
 }
 
-func (ap *AdapterProxy) getAdapterTopic(deviceID string, adapterType string) (*kafka.Topic, error) {
+func (ap *AdapterProxy) getAdapterTopic(ctx context.Context, deviceID string, adapterType string) (*kafka.Topic, error) {
 
-	endpoint, err := ap.GetEndpoint(deviceID, adapterType)
+	endpoint, err := ap.GetEndpoint(ctx, deviceID, adapterType)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (ap *AdapterProxy) sendRPC(ctx context.Context, rpc string, toTopic *kafka.
 	// Wait for first response which would indicate whether the request was successfully sent to kafka.
 	firstResponse, ok := <-respChnl
 	if !ok || firstResponse.MType != kafka.RpcSent {
-		logger.Errorw("failure to request to kafka", log.Fields{"rpc": rpc, "device-id": deviceID, "error": firstResponse.Err})
+		logger.Errorw(ctx, "failure to request to kafka", log.Fields{"rpc": rpc, "device-id": deviceID, "error": firstResponse.Err})
 		return nil, firstResponse.Err
 	}
 	// return the kafka channel for the caller to wait for the response of the RPC call
@@ -76,9 +76,9 @@ func (ap *AdapterProxy) sendRPC(ctx context.Context, rpc string, toTopic *kafka.
 
 // AdoptDevice invokes adopt device rpc
 func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("AdoptDevice", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "AdoptDevice", log.Fields{"device-id": device.Id})
 	rpc := "adopt_device"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -87,15 +87,15 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 	}
 	replyToTopic := ap.getCoreTopic()
 	ap.deviceTopicRegistered = true
-	logger.Debugw("adoptDevice-send-request", log.Fields{"device-id": device.Id, "deviceType": device.Type, "serialNumber": device.SerialNumber})
+	logger.Debugw(ctx, "adoptDevice-send-request", log.Fields{"device-id": device.Id, "deviceType": device.Type, "serialNumber": device.SerialNumber})
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
 }
 
 // DisableDevice invokes disable device rpc
 func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("DisableDevice", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "DisableDevice", log.Fields{"device-id": device.Id})
 	rpc := "disable_device"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -108,9 +108,9 @@ func (ap *AdapterProxy) DisableDevice(ctx context.Context, device *voltha.Device
 
 // ReEnableDevice invokes reenable device rpc
 func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("ReEnableDevice", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "ReEnableDevice", log.Fields{"device-id": device.Id})
 	rpc := "reenable_device"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -123,9 +123,9 @@ func (ap *AdapterProxy) ReEnableDevice(ctx context.Context, device *voltha.Devic
 
 // RebootDevice invokes reboot device rpc
 func (ap *AdapterProxy) RebootDevice(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("RebootDevice", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "RebootDevice", log.Fields{"device-id": device.Id})
 	rpc := "reboot_device"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +138,9 @@ func (ap *AdapterProxy) RebootDevice(ctx context.Context, device *voltha.Device)
 
 // DeleteDevice invokes delete device rpc
 func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("DeleteDevice", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "DeleteDevice", log.Fields{"device-id": device.Id})
 	rpc := "delete_device"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -153,9 +153,9 @@ func (ap *AdapterProxy) DeleteDevice(ctx context.Context, device *voltha.Device)
 
 // GetOfpDeviceInfo invokes get ofp device info rpc
 func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("GetOfpDeviceInfo", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "GetOfpDeviceInfo", log.Fields{"device-id": device.Id})
 	rpc := "get_ofp_device_info"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -168,9 +168,9 @@ func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Dev
 
 // ReconcileDevice invokes reconcile device rpc
 func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("ReconcileDevice", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "ReconcileDevice", log.Fields{"device-id": device.Id})
 	rpc := "reconcile_device"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -183,9 +183,9 @@ func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Devi
 
 // DownloadImage invokes download image rpc
 func (ap *AdapterProxy) DownloadImage(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("DownloadImage", log.Fields{"device-id": device.Id, "image": download.Name})
+	logger.Debugw(ctx, "DownloadImage", log.Fields{"device-id": device.Id, "image": download.Name})
 	rpc := "download_image"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -199,9 +199,9 @@ func (ap *AdapterProxy) DownloadImage(ctx context.Context, device *voltha.Device
 
 // GetImageDownloadStatus invokes get image download status rpc
 func (ap *AdapterProxy) GetImageDownloadStatus(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("GetImageDownloadStatus", log.Fields{"device-id": device.Id, "image": download.Name})
+	logger.Debugw(ctx, "GetImageDownloadStatus", log.Fields{"device-id": device.Id, "image": download.Name})
 	rpc := "get_image_download_status"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -215,9 +215,9 @@ func (ap *AdapterProxy) GetImageDownloadStatus(ctx context.Context, device *volt
 
 // CancelImageDownload invokes cancel image download rpc
 func (ap *AdapterProxy) CancelImageDownload(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("CancelImageDownload", log.Fields{"device-id": device.Id, "image": download.Name})
+	logger.Debugw(ctx, "CancelImageDownload", log.Fields{"device-id": device.Id, "image": download.Name})
 	rpc := "cancel_image_download"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -231,9 +231,9 @@ func (ap *AdapterProxy) CancelImageDownload(ctx context.Context, device *voltha.
 
 // ActivateImageUpdate invokes activate image update rpc
 func (ap *AdapterProxy) ActivateImageUpdate(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("ActivateImageUpdate", log.Fields{"device-id": device.Id, "image": download.Name})
+	logger.Debugw(ctx, "ActivateImageUpdate", log.Fields{"device-id": device.Id, "image": download.Name})
 	rpc := "activate_image_update"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -247,9 +247,9 @@ func (ap *AdapterProxy) ActivateImageUpdate(ctx context.Context, device *voltha.
 
 // RevertImageUpdate invokes revert image update rpc
 func (ap *AdapterProxy) RevertImageUpdate(ctx context.Context, device *voltha.Device, download *voltha.ImageDownload) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("RevertImageUpdate", log.Fields{"device-id": device.Id, "image": download.Name})
+	logger.Debugw(ctx, "RevertImageUpdate", log.Fields{"device-id": device.Id, "image": download.Name})
 	rpc := "revert_image_update"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -262,8 +262,8 @@ func (ap *AdapterProxy) RevertImageUpdate(ctx context.Context, device *voltha.De
 }
 
 func (ap *AdapterProxy) PacketOut(ctx context.Context, deviceType string, deviceID string, outPort uint32, packet *openflow_13.OfpPacketOut) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("PacketOut", log.Fields{"device-id": deviceID, "device-type": deviceType, "out-port": outPort})
-	toTopic, err := ap.getAdapterTopic(deviceID, deviceType)
+	logger.Debugw(ctx, "PacketOut", log.Fields{"device-id": deviceID, "device-type": deviceType, "out-port": outPort})
+	toTopic, err := ap.getAdapterTopic(ctx, deviceID, deviceType)
 	if err != nil {
 		return nil, err
 	}
@@ -279,8 +279,8 @@ func (ap *AdapterProxy) PacketOut(ctx context.Context, deviceType string, device
 
 // UpdateFlowsBulk invokes update flows bulk rpc
 func (ap *AdapterProxy) UpdateFlowsBulk(ctx context.Context, device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("UpdateFlowsBulk", log.Fields{"device-id": device.Id, "flow-count": len(flows.Items), "group-count": len(groups.Items), "flow-metadata": flowMetadata})
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	logger.Debugw(ctx, "UpdateFlowsBulk", log.Fields{"device-id": device.Id, "flow-count": len(flows.Items), "group-count": len(groups.Items), "flow-metadata": flowMetadata})
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (ap *AdapterProxy) UpdateFlowsBulk(ctx context.Context, device *voltha.Devi
 
 // UpdateFlowsIncremental invokes update flows incremental rpc
 func (ap *AdapterProxy) UpdateFlowsIncremental(ctx context.Context, device *voltha.Device, flowChanges *openflow_13.FlowChanges, groupChanges *openflow_13.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("UpdateFlowsIncremental",
+	logger.Debugw(ctx, "UpdateFlowsIncremental",
 		log.Fields{
 			"device-id":             device.Id,
 			"flow-to-add-count":     len(flowChanges.ToAdd.Items),
@@ -306,7 +306,7 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(ctx context.Context, device *volt
 			"group-to-delete-count": len(groupChanges.ToRemove.Items),
 			"group-to-update-count": len(groupChanges.ToUpdate.Items),
 		})
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -323,8 +323,8 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(ctx context.Context, device *volt
 
 // UpdatePmConfigs invokes update pm configs rpc
 func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Device, pmConfigs *voltha.PmConfigs) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("UpdatePmConfigs", log.Fields{"device-id": device.Id, "pm-configs-id": pmConfigs.Id})
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	logger.Debugw(ctx, "UpdatePmConfigs", log.Fields{"device-id": device.Id, "pm-configs-id": pmConfigs.Id})
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -339,9 +339,9 @@ func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Devi
 
 // SimulateAlarm invokes simulate alarm rpc
 func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device, simulateReq *voltha.SimulateAlarmRequest) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("SimulateAlarm", log.Fields{"device-id": device.Id, "simulate-req-id": simulateReq.Id})
+	logger.Debugw(ctx, "SimulateAlarm", log.Fields{"device-id": device.Id, "simulate-req-id": simulateReq.Id})
 	rpc := "simulate_alarm"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -355,9 +355,9 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 }
 
 func (ap *AdapterProxy) DisablePort(ctx context.Context, device *voltha.Device, port *voltha.Port) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("DisablePort", log.Fields{"device-id": device.Id, "port-no": port.PortNo})
+	logger.Debugw(ctx, "DisablePort", log.Fields{"device-id": device.Id, "port-no": port.PortNo})
 	rpc := "disable_port"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -370,9 +370,9 @@ func (ap *AdapterProxy) DisablePort(ctx context.Context, device *voltha.Device, 
 }
 
 func (ap *AdapterProxy) EnablePort(ctx context.Context, device *voltha.Device, port *voltha.Port) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("EnablePort", log.Fields{"device-id": device.Id, "port-no": port.PortNo})
+	logger.Debugw(ctx, "EnablePort", log.Fields{"device-id": device.Id, "port-no": port.PortNo})
 	rpc := "enable_port"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -386,9 +386,9 @@ func (ap *AdapterProxy) EnablePort(ctx context.Context, device *voltha.Device, p
 
 // ChildDeviceLost invokes child device_lost rpc
 func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, deviceID string, pPortNo uint32, onuID uint32) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("ChildDeviceLost", log.Fields{"device-id": deviceID, "parent-port-no": pPortNo, "onu-id": onuID})
+	logger.Debugw(ctx, "ChildDeviceLost", log.Fields{"device-id": deviceID, "parent-port-no": pPortNo, "onu-id": onuID})
 	rpc := "child_device_lost"
-	toTopic, err := ap.getAdapterTopic(deviceID, deviceType)
+	toTopic, err := ap.getAdapterTopic(ctx, deviceID, deviceType)
 	if err != nil {
 		return nil, err
 	}
@@ -402,9 +402,9 @@ func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, 
 }
 
 func (ap *AdapterProxy) StartOmciTest(ctx context.Context, device *voltha.Device, omcitestrequest *voltha.OmciTestRequest) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("Omci_test_Request_adapter_proxy", log.Fields{"device": device, "omciTestRequest": omcitestrequest})
+	logger.Debugw(ctx, "Omci_test_Request_adapter_proxy", log.Fields{"device": device, "omciTestRequest": omcitestrequest})
 	rpc := "start_omci_test"
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -420,7 +420,7 @@ func (ap *AdapterProxy) StartOmciTest(ctx context.Context, device *voltha.Device
 func (ap *AdapterProxy) GetExtValue(ctx context.Context, pdevice *voltha.Device, cdevice *voltha.Device, id string, valuetype voltha.ValueType_Type) (chan *kafka.RpcResponse, error) {
 	log.Debugw("GetExtValue", log.Fields{"device-id": pdevice.Id, "onuid": id})
 	rpc := "get_ext_value"
-	toTopic, err := ap.getAdapterTopic(pdevice.Id, pdevice.Adapter)
+	toTopic, err := ap.getAdapterTopic(ctx, pdevice.Id, pdevice.Adapter)
 	if err != nil {
 		return nil, err
 	}

@@ -17,6 +17,7 @@
 package common
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -96,9 +97,9 @@ func (ep *EventProxy) getEventHeader(eventName string,
 }
 
 /* Send out device events*/
-func (ep *EventProxy) SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
+func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.DeviceEvent, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
 	if deviceEvent == nil {
-		logger.Error("Recieved empty device event")
+		logger.Error(ctx, "Recieved empty device event")
 		return errors.New("Device event nil")
 	}
 	var event voltha.Event
@@ -109,11 +110,11 @@ func (ep *EventProxy) SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category 
 		return err
 	}
 	event.EventType = &de
-	if err := ep.sendEvent(&event); err != nil {
-		logger.Errorw("Failed to send device event to KAFKA bus", log.Fields{"device-event": deviceEvent})
+	if err := ep.sendEvent(ctx, &event); err != nil {
+		logger.Errorw(ctx, "Failed to send device event to KAFKA bus", log.Fields{"device-event": deviceEvent})
 		return err
 	}
-	logger.Infow("Successfully sent device event KAFKA", log.Fields{"Id": event.Header.Id, "Category": event.Header.Category,
+	logger.Infow(ctx, "Successfully sent device event KAFKA", log.Fields{"Id": event.Header.Id, "Category": event.Header.Category,
 		"SubCategory": event.Header.SubCategory, "Type": event.Header.Type, "TypeVersion": event.Header.TypeVersion,
 		"ReportedTs": event.Header.ReportedTs, "ResourceId": deviceEvent.ResourceId, "Context": deviceEvent.Context,
 		"DeviceEventName": deviceEvent.DeviceEventName})
@@ -123,9 +124,9 @@ func (ep *EventProxy) SendDeviceEvent(deviceEvent *voltha.DeviceEvent, category 
 }
 
 // SendKpiEvent is to send kpi events to voltha.event topic
-func (ep *EventProxy) SendKpiEvent(id string, kpiEvent *voltha.KpiEvent2, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
+func (ep *EventProxy) SendKpiEvent(ctx context.Context, id string, kpiEvent *voltha.KpiEvent2, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
 	if kpiEvent == nil {
-		logger.Error("Recieved empty kpi event")
+		logger.Error(ctx, "Recieved empty kpi event")
 		return errors.New("KPI event nil")
 	}
 	var event voltha.Event
@@ -136,11 +137,11 @@ func (ep *EventProxy) SendKpiEvent(id string, kpiEvent *voltha.KpiEvent2, catego
 		return err
 	}
 	event.EventType = &de
-	if err := ep.sendEvent(&event); err != nil {
-		logger.Errorw("Failed to send kpi event to KAFKA bus", log.Fields{"device-event": kpiEvent})
+	if err := ep.sendEvent(ctx, &event); err != nil {
+		logger.Errorw(ctx, "Failed to send kpi event to KAFKA bus", log.Fields{"device-event": kpiEvent})
 		return err
 	}
-	logger.Infow("Successfully sent kpi event to KAFKA", log.Fields{"Id": event.Header.Id, "Category": event.Header.Category,
+	logger.Infow(ctx, "Successfully sent kpi event to KAFKA", log.Fields{"Id": event.Header.Id, "Category": event.Header.Category,
 		"SubCategory": event.Header.SubCategory, "Type": event.Header.Type, "TypeVersion": event.Header.TypeVersion,
 		"ReportedTs": event.Header.ReportedTs, "KpiEventName": "STATS_EVENT"})
 
@@ -150,11 +151,11 @@ func (ep *EventProxy) SendKpiEvent(id string, kpiEvent *voltha.KpiEvent2, catego
 
 /* TODO: Send out KPI events*/
 
-func (ep *EventProxy) sendEvent(event *voltha.Event) error {
-	if err := ep.kafkaClient.Send(event, &ep.eventTopic); err != nil {
+func (ep *EventProxy) sendEvent(ctx context.Context, event *voltha.Event) error {
+	if err := ep.kafkaClient.Send(ctx, event, &ep.eventTopic); err != nil {
 		return err
 	}
-	logger.Debugw("Sent event to kafka", log.Fields{"event": event})
+	logger.Debugw(ctx, "Sent event to kafka", log.Fields{"event": event})
 
 	return nil
 }

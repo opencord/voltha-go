@@ -96,14 +96,14 @@ type ComponentConfig struct {
 	kvStoreEventChan chan *kvstore.Event
 }
 
-func NewConfigManager(kvClient kvstore.Client, kvStoreType, kvStoreAddress string, kvStoreTimeout time.Duration) *ConfigManager {
+func NewConfigManager(ctx context.Context, kvClient kvstore.Client, kvStoreType, kvStoreAddress string, kvStoreTimeout time.Duration) *ConfigManager {
 	var kvStorePrefix string
 	if prefix, present := os.LookupEnv("KV_STORE_DATAPATH_PREFIX"); present {
 		kvStorePrefix = prefix
-		logger.Infow("KV_STORE_DATAPATH_PREFIX env variable is set, ", log.Fields{"kvStoreDataPathPrefix": kvStorePrefix})
+		logger.Infow(ctx, "KV_STORE_DATAPATH_PREFIX env variable is set, ", log.Fields{"kvStoreDataPathPrefix": kvStorePrefix})
 	} else {
 		kvStorePrefix = defaultkvStoreDataPathPrefix
-		logger.Infow("KV_STORE_DATAPATH_PREFIX env variable is not set, using default", log.Fields{"kvStoreDataPathPrefix": defaultkvStoreDataPathPrefix})
+		logger.Infow(ctx, "KV_STORE_DATAPATH_PREFIX env variable is not set, using default", log.Fields{"kvStoreDataPathPrefix": defaultkvStoreDataPathPrefix})
 	}
 	return &ConfigManager{
 		KVStoreConfigPrefix:   defaultkvStoreConfigPath,
@@ -176,31 +176,31 @@ func (c *ComponentConfig) makeConfigPath() string {
 func (c *ComponentConfig) MonitorForConfigChange(ctx context.Context) chan *ConfigChangeEvent {
 	key := c.makeConfigPath()
 
-	logger.Debugw("monitoring-for-config-change", log.Fields{"key": key})
+	logger.Debugw(ctx, "monitoring-for-config-change", log.Fields{"key": key})
 
 	c.changeEventChan = make(chan *ConfigChangeEvent, 1)
 
 	c.kvStoreEventChan = c.cManager.Backend.CreateWatch(ctx, key, true)
 
-	go c.processKVStoreWatchEvents()
+	go c.processKVStoreWatchEvents(ctx)
 
 	return c.changeEventChan
 }
 
 // processKVStoreWatchEvents process event channel recieved from the Backend for any ChangeType
 // It checks for the EventType is valid or not.For the valid EventTypes creates ConfigChangeEvent and send it on channel
-func (c *ComponentConfig) processKVStoreWatchEvents() {
+func (c *ComponentConfig) processKVStoreWatchEvents(ctx context.Context) {
 
 	ccKeyPrefix := c.makeConfigPath()
 
-	logger.Debugw("processing-kvstore-event-change", log.Fields{"key-prefix": ccKeyPrefix})
+	logger.Debugw(ctx, "processing-kvstore-event-change", log.Fields{"key-prefix": ccKeyPrefix})
 
 	ccPathPrefix := c.cManager.Backend.PathPrefix + ccKeyPrefix + kvStorePathSeparator
 
 	for watchResp := range c.kvStoreEventChan {
 
 		if watchResp.EventType == kvstore.CONNECTIONDOWN || watchResp.EventType == kvstore.UNKNOWN {
-			logger.Warnw("received-invalid-change-type-in-watch-channel-from-kvstore", log.Fields{"change-type": watchResp.EventType})
+			logger.Warnw(ctx, "received-invalid-change-type-in-watch-channel-from-kvstore", log.Fields{"change-type": watchResp.EventType})
 			continue
 		}
 
@@ -220,7 +220,7 @@ func (c *ComponentConfig) processKVStoreWatchEvents() {
 func (c *ComponentConfig) Retrieve(ctx context.Context, configKey string) (string, error) {
 	key := c.makeConfigPath() + "/" + configKey
 
-	logger.Debugw("retrieving-config", log.Fields{"key": key})
+	logger.Debugw(ctx, "retrieving-config", log.Fields{"key": key})
 
 	if kvpair, err := c.cManager.Backend.Get(ctx, key); err != nil {
 		return "", err
@@ -230,7 +230,7 @@ func (c *ComponentConfig) Retrieve(ctx context.Context, configKey string) (strin
 		}
 
 		value := strings.Trim(fmt.Sprintf("%s", kvpair.Value), "\"")
-		logger.Debugw("retrieved-config", log.Fields{"key": key, "value": value})
+		logger.Debugw(ctx, "retrieved-config", log.Fields{"key": key, "value": value})
 		return value, nil
 	}
 }
@@ -238,7 +238,7 @@ func (c *ComponentConfig) Retrieve(ctx context.Context, configKey string) (strin
 func (c *ComponentConfig) RetrieveAll(ctx context.Context) (map[string]string, error) {
 	key := c.makeConfigPath()
 
-	logger.Debugw("retreiving-list", log.Fields{"key": key})
+	logger.Debugw(ctx, "retreiving-list", log.Fields{"key": key})
 
 	data, err := c.cManager.Backend.List(ctx, key)
 	if err != nil {
@@ -261,7 +261,7 @@ func (c *ComponentConfig) RetrieveAll(ctx context.Context) (map[string]string, e
 func (c *ComponentConfig) Save(ctx context.Context, configKey string, configValue string) error {
 	key := c.makeConfigPath() + "/" + configKey
 
-	logger.Debugw("saving-config", log.Fields{"key": key, "value": configValue})
+	logger.Debugw(ctx, "saving-config", log.Fields{"key": key, "value": configValue})
 
 	//save the data for update config
 	if err := c.cManager.Backend.Put(ctx, key, configValue); err != nil {
@@ -274,7 +274,7 @@ func (c *ComponentConfig) Delete(ctx context.Context, configKey string) error {
 	//construct key using makeConfigPath
 	key := c.makeConfigPath() + "/" + configKey
 
-	logger.Debugw("deleting-config", log.Fields{"key": key})
+	logger.Debugw(ctx, "deleting-config", log.Fields{"key": key})
 	//delete the config
 	if err := c.cManager.Backend.Delete(ctx, key); err != nil {
 		return err
