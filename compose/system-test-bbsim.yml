@@ -76,16 +76,11 @@ services:
     entrypoint:
       - /app/rw_core
       - -kv_store_type=etcd
-      - -kv_store_host=${DOCKER_HOST_IP}
-      - -kv_store_port=2379
-      - -grpc_port=50057
+      - -kv_store_address=${DOCKER_HOST_IP}:2379
       - -banner=true
-      - -kafka_adapter_host=${DOCKER_HOST_IP}
-      - -kafka_adapter_port=9092
-      - -kafka_cluster_host=${DOCKER_HOST_IP}
-      - -kafka_cluster_port=9092
+      - -kafka_adapter_address=${DOCKER_HOST_IP}:9092
+      - -kafka_cluster_address=${DOCKER_HOST_IP}:9092
       - -rw_core_topic=rwcore
-      - -kv_store_data_prefix=service/voltha
       - -in_competing_mode=false
       - -log_level=DEBUG
     volumes:
@@ -132,13 +127,10 @@ services:
     image: "${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-openolt-adapter:${DOCKER_TAG}"
     command: [
       "/app/openolt",
-      "--kafka_adapter_host=${DOCKER_HOST_IP}",
-      "--kafka_adapter_port=9092",
-      "--kafka_cluster_host=${DOCKER_HOST_IP}",
-      "--kafka_cluster_port=9092",
+      "--kafka_adapter_address=${DOCKER_HOST_IP}:9092",
+      "--kafka_cluster_address=${DOCKER_HOST_IP}:9092",
       "--core_topic=rwcore",
-      "--kv_store_host=${DOCKER_HOST_IP}",
-      "--kv_store_port=2379",
+      "--kv_store_address=${DOCKER_HOST_IP}:2379",
       "--log_level=DEBUG"
     ]
     ports:
@@ -163,6 +155,7 @@ services:
     networks:
       - default
     restart: unless-stopped
+
 
 
   bbsim:
