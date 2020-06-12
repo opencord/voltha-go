@@ -77,18 +77,18 @@ func init() {
 
 	coreKafkaProxy.Start()
 	adapterKafkaProxy.Start()
-	subscribeTarget(coreKafkaProxy)
+	subscribeTarget(context.Background(), coreKafkaProxy)
 }
 
-func subscribeTarget(kmp *kk.InterContainerProxy) {
+func subscribeTarget(ctx context.Context, kmp *kk.InterContainerProxy) {
 	topic := kk.Topic{Name: "Core"}
 	requestProxy := &api.AdapterRequestHandlerProxy{TestMode: true}
-	kmp.SubscribeWithRequestHandlerInterface(topic, requestProxy)
+	kmp.SubscribeWithRequestHandlerInterface(ctx, topic, requestProxy)
 }
 
-func waitForRPCMessage(topic kk.Topic, ch <-chan *ic.InterContainerMessage, doneCh chan string) {
+func waitForRPCMessage(ctx context.Context, topic kk.Topic, ch <-chan *ic.InterContainerMessage, doneCh chan string) {
 	for msg := range ch {
-		logger.Debugw("Got-RPC-message", log.Fields{"msg": msg})
+		logger.Debugw(ctx, "Got-RPC-message", log.Fields{"msg": msg})
 		//	Unpack message
 		requestBody := &ic.InterContainerRequestBody{}
 		if err := ptypes.UnmarshalAny(msg.Body, requestBody); err != nil {
@@ -175,12 +175,12 @@ func TestIncorrectAPI(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
 	//Unpack the result into the actual proto object
 	unpackResult := &ic.Error{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.NotNil(t, unpackResult)
 }
@@ -198,12 +198,12 @@ func TestIncorrectAPIParams(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
 	//Unpack the result into the actual proto object
 	unpackResult := &ic.Error{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.NotNil(t, unpackResult)
 }
@@ -225,11 +225,11 @@ func TestGetDevice(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(ctx, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
 	unpackResult := &voltha.Device{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.Equal(t, unpackResult, expectedResponse)
 }
@@ -250,11 +250,11 @@ func TestGetDeviceTimeout(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(ctx, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
 	unpackResult := &ic.Error{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.NotNil(t, unpackResult)
 }
@@ -273,11 +273,11 @@ func TestGetChildDevice(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
 	unpackResult := &voltha.Device{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.Equal(t, unpackResult, expectedResponse)
 }
@@ -296,11 +296,11 @@ func TestGetChildDevices(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
 	unpackResult := &voltha.Device{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.Equal(t, unpackResult, expectedResponse)
 }
@@ -323,11 +323,11 @@ func TestGetPorts(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
 	unpackResult := &voltha.Ports{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	expectedLen := len(unpackResult.Items) >= 1
 	assert.Equal(t, true, expectedLen)
@@ -346,12 +346,12 @@ func TestGetPortsMissingArgs(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
 	//Unpack the result into the actual proto object
 	unpackResult := &ic.Error{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.NotNil(t, unpackResult)
 }
@@ -390,7 +390,7 @@ func TestChildDeviceDetected(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
 	assert.Nil(t, result)
 }
@@ -429,7 +429,7 @@ func TestChildDeviceDetectedNoWait(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, false, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
 	assert.Nil(t, result)
 }
@@ -458,11 +458,11 @@ func TestChildDeviceDetectedMissingArgs(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, false)
 	unpackResult := &ic.Error{}
 	if err := ptypes.UnmarshalAny(result, unpackResult); err != nil {
-		logger.Warnw("cannot-unmarshal-response", log.Fields{"error": err})
+		logger.Warnw(ctx, "cannot-unmarshal-response", log.Fields{"error": err})
 	}
 	assert.NotNil(t, unpackResult)
 }
@@ -492,7 +492,7 @@ func TestDeviceStateChange(t *testing.T) {
 	start := time.Now()
 	status, result := adapterKafkaProxy.InvokeRPC(nil, rpc, &topic, &topic, true, TEST_RPC_KEY, args...)
 	elapsed := time.Since(start)
-	logger.Infow("Result", log.Fields{"status": status, "result": result, "time": elapsed})
+	logger.Infow(ctx, "Result", log.Fields{"status": status, "result": result, "time": elapsed})
 	assert.Equal(t, status, true)
 	assert.Nil(t, result)
 }
@@ -505,7 +505,7 @@ func subscribeToTopic(topic *kk.Topic, waitingChannel chan *ic.InterContainerMes
 	}
 	msg := <-ch
 
-	logger.Debugw("msg-received", log.Fields{"msg": msg})
+	logger.Debugw(ctx, "msg-received", log.Fields{"msg": msg})
 	waitingChannel <- msg
 	return nil
 }
@@ -540,7 +540,7 @@ func TestDeviceDiscovery(t *testing.T) {
 	assert.Equal(t, dd.DeviceType, "TestDevicetype")
 	assert.Equal(t, dd.ParentId, "TestParentId")
 	assert.Equal(t, dd.Publisher, "myPODName")
-	logger.Debugw("TotalTime", log.Fields{"time": totalTime})
+	logger.Debugw(ctx, "TotalTime", log.Fields{"time": totalTime})
 }
 
 func TestStopKafkaProxy(t *testing.T) {
@@ -549,5 +549,5 @@ func TestStopKafkaProxy(t *testing.T) {
 }
 
 //func TestMain(m *testing.T) {
-//	logger.Info("Main")
+//	logger.Info(ctx, "Main")
 //}

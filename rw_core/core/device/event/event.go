@@ -19,6 +19,7 @@ package event
 import (
 	"encoding/hex"
 	"sync"
+	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -42,10 +43,10 @@ func NewManager() *Manager {
 	}
 }
 
-func (q *Manager) SendPacketIn(deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
+func (q *Manager) SendPacketIn(ctx context.Context, deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
 	// TODO: Augment the OF PacketIn to include the transactionId
 	packetIn := openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
-	logger.Debugw("SendPacketIn", log.Fields{"packetIn": packetIn})
+	logger.Debugw(ctx, "SendPacketIn", log.Fields{"packetIn": packetIn})
 	q.packetInQueue <- packetIn
 }
 
@@ -59,28 +60,28 @@ type streamTracker struct {
 
 var streamingTracker = &streamTracker{calls: make(map[string]*callTracker)}
 
-func (q *Manager) getStreamingTracker(method string, done chan<- bool) *callTracker {
+func (q *Manager) getStreamingTracker(ctx context.Context, method string, done chan<- bool) *callTracker {
 	streamingTracker.Lock()
 	defer streamingTracker.Unlock()
 	if _, ok := streamingTracker.calls[method]; ok {
 		// bail out the other packet in thread
-		logger.Debugf("%s streaming call already running. Exiting it", method)
+		logger.Debugf(ctx, "%s streaming call already running. Exiting it", method)
 		done <- true
-		logger.Debugf("Last %s exited. Continuing ...", method)
+		logger.Debugf(ctx, "Last %s exited. Continuing ...", method)
 	} else {
 		streamingTracker.calls[method] = &callTracker{failedPacket: nil}
 	}
 	return streamingTracker.calls[method]
 }
 
-func (q *Manager) flushFailedPackets(tracker *callTracker) error {
+func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) error {
 	if tracker.failedPacket != nil {
 		switch tracker.failedPacket.(type) {
 		case openflow_13.PacketIn:
-			logger.Debug("Enqueueing last failed packetIn")
+			logger.Debug(ctx, "Enqueueing last failed packetIn")
 			q.packetInQueue <- tracker.failedPacket.(openflow_13.PacketIn)
 		case openflow_13.ChangeEvent:
-			logger.Debug("Enqueueing last failed changeEvent")
+			logger.Debug(ctx, "Enqueueing last failed changeEvent")
 			q.changeEventQueue <- tracker.failedPacket.(openflow_13.ChangeEvent)
 		}
 	}
@@ -89,23 +90,24 @@ func (q *Manager) flushFailedPackets(tracker *callTracker) error {
 
 // ReceivePacketsIn receives packets from adapter
 func (q *Manager) ReceivePacketsIn(_ *empty.Empty, packetsIn voltha.VolthaService_ReceivePacketsInServer) error {
-	var streamingTracker = q.getStreamingTracker("ReceivePacketsIn", q.packetInQueueDone)
-	logger.Debugw("ReceivePacketsIn-request", log.Fields{"packetsIn": packetsIn})
+	ctx := context.Background()
+	var streamingTracker = q.getStreamingTracker(ctx, "ReceivePacketsIn", q.packetInQueueDone)
+	logger.Debugw(ctx, "ReceivePacketsIn-request", log.Fields{"packetsIn": packetsIn})
 
-	err := q.flushFailedPackets(streamingTracker)
+	err := q.flushFailedPackets(ctx, streamingTracker)
 	if err != nil {
-		logger.Errorw("unable-to-flush-failed-packets", log.Fields{"error": err})
+		logger.Errorw(ctx, "unable-to-flush-failed-packets", log.Fields{"error": err})
 	}
 
 loop:
 	for {
 		select {
 		case packet := <-q.packetInQueue:
-			logger.Debugw("sending-packet-in", log.Fields{
+			logger.Debugw(ctx, "sending-packet-in", log.Fields{
 				"packet": hex.EncodeToString(packet.PacketIn.Data),
 			})
 			if err := packetsIn.Send(&packet); err != nil {
-				logger.Errorw("failed-to-send-packet", log.Fields{"error": err})
+				logger.Errorw(ctx, "failed-to-send-packet", log.Fields{"error": err})
 				// save the last failed packet in
 				streamingTracker.failedPacket = packet
 			} else {
@@ -115,7 +117,7 @@ loop:
 				}
 			}
 		case <-q.packetInQueueDone:
-			logger.Debug("Another ReceivePacketsIn running. Bailing out ...")
+			logger.Debug(ctx, "Another ReceivePacketsIn running. Bailing out ...")
 			break loop
 		}
 	}
@@ -124,8 +126,8 @@ loop:
 	return nil
 }
 
-func (q *Manager) SendChangeEvent(deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
-	logger.Debugw("SendChangeEvent", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
+func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
+	logger.Debugw(ctx, "SendChangeEvent", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
 	q.changeEventQueue <- openflow_13.ChangeEvent{
 		Id: deviceID,
 		Event: &openflow_13.ChangeEvent_PortStatus{
@@ -139,12 +141,13 @@ func (q *Manager) SendChangeEvent(deviceID string, reason openflow_13.OfpPortRea
 
 // ReceiveChangeEvents receives change in events
 func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
-	var streamingTracker = q.getStreamingTracker("ReceiveChangeEvents", q.changeEventQueueDone)
-	logger.Debugw("ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
+	ctx := context.Background()
+	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveChangeEvents", q.changeEventQueueDone)
+	logger.Debugw(ctx, "ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
 
-	err := q.flushFailedPackets(streamingTracker)
+	err := q.flushFailedPackets(ctx, streamingTracker)
 	if err != nil {
-		logger.Errorw("unable-to-flush-failed-packets", log.Fields{"error": err})
+		logger.Errorw(ctx, "unable-to-flush-failed-packets", log.Fields{"error": err})
 	}
 
 loop:
@@ -152,9 +155,9 @@ loop:
 		select {
 		// Dequeue a change event
 		case event := <-q.changeEventQueue:
-			logger.Debugw("sending-change-event", log.Fields{"event": event})
+			logger.Debugw(ctx, "sending-change-event", log.Fields{"event": event})
 			if err := changeEvents.Send(&event); err != nil {
-				logger.Errorw("failed-to-send-change-event", log.Fields{"error": err})
+				logger.Errorw(ctx, "failed-to-send-change-event", log.Fields{"error": err})
 				// save last failed changeevent
 				streamingTracker.failedPacket = event
 			} else {
@@ -164,7 +167,7 @@ loop:
 				}
 			}
 		case <-q.changeEventQueueDone:
-			logger.Debug("Another ReceiveChangeEvents already running. Bailing out ...")
+			logger.Debug(ctx, "Another ReceiveChangeEvents already running. Bailing out ...")
 			break loop
 		}
 	}

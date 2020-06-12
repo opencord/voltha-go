@@ -62,7 +62,7 @@ func (loader *Loader) Load(ctx context.Context) {
 
 	var ports []*voltha.LogicalPort
 	if err := loader.dbProxy.List(ctx, &ports); err != nil {
-		logger.Errorw("failed-to-list-ports-from-cluster-data-proxy", log.Fields{"error": err})
+		logger.Errorw(ctx, "failed-to-list-ports-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
 	for _, port := range ports {

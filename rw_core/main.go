@@ -32,7 +32,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/version"
 )
 
-func waitForExit() int {
+func waitForExit(ctx context.Context) int {
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel,
 		syscall.SIGHUP,
@@ -46,10 +46,10 @@ func waitForExit() int {
 		syscall.SIGINT,
 		syscall.SIGTERM,
 		syscall.SIGQUIT:
-		logger.Infow("closing-signal-received", log.Fields{"signal": s})
+		logger.Infow(ctx, "closing-signal-received", log.Fields{"signal": s})
 		return 0
 	default:
-		logger.Infow("unexpected-signal-received", log.Fields{"signal": s})
+		logger.Infow(ctx, "unexpected-signal-received", log.Fields{"signal": s})
 		return 1
 	}
 }
@@ -72,6 +72,8 @@ func printVersion() {
 func main() {
 	start := time.Now()
 
+	ctx := context.Background()
+
 	cf := config.NewRWCoreFlags()
 	cf.ParseCommandArguments()
 
@@ -81,7 +83,7 @@ func main() {
 	if len(hostName) > 0 {
 		instanceID = hostName
 	} else {
-		logger.Fatal("HOSTNAME not set")
+		logger.Fatal(ctx, "HOSTNAME not set")
 	}
 
 	realMain()
@@ -93,12 +95,12 @@ func main() {
 
 	//Setup default logger - applies for packages that do not have specific logger set
 	if _, err := log.SetDefaultLogger(log.JSON, logLevel, log.Fields{"instanceId": instanceID}); err != nil {
-		logger.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+		logger.With(log.Fields{"error": err}).Fatal(ctx, "Cannot setup logging")
 	}
 
 	// Update all loggers (provisioned via init) with a common field
 	if err := log.UpdateAllLoggers(log.Fields{"instanceId": instanceID}); err != nil {
-		logger.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+		logger.With(log.Fields{"error": err}).Fatal(ctx, "Cannot setup logging")
 	}
 
 	// Update all loggers to log level specified as input parameter
@@ -109,7 +111,7 @@ func main() {
 	defer func() {
 		err := log.CleanUp()
 		if err != nil {
-			logger.Errorw("unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
+			logger.Errorw(ctx, "unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
 		}
 	}()
 
@@ -124,7 +126,7 @@ func main() {
 		printBanner()
 	}
 
-	logger.Infow("rw-core-config", log.Fields{"config": *cf})
+	logger.Infow(ctx, "rw-core-config", log.Fields{"config": *cf})
 
 	// Create a context adding the status update channel
 	ctx, cancel := context.WithCancel(context.Background())
@@ -136,7 +138,7 @@ func main() {
 	 * objects there can be a single probe end point for the process.
 	 */
 	p := &probe.Probe{}
-	go p.ListenAndServe(cf.ProbeAddress)
+	go p.ListenAndServe(ctx, cf.ProbeAddress)
 
 	// Add the probe to the context to pass to all the services started
 	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
@@ -144,12 +146,12 @@ func main() {
 	// create and start the core
 	core := c.NewCore(probeCtx, instanceID, cf)
 
-	code := waitForExit()
-	logger.Infow("received-a-closing-signal", log.Fields{"code": code})
+	code := waitForExit(ctx)
+	logger.Infow(ctx, "received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
 	core.Stop()
 
 	elapsed := time.Since(start)
-	logger.Infow("rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})
+	logger.Infow(ctx, "rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})
 }

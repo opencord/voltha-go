@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"context"
 
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
@@ -81,72 +82,72 @@ func (ta *Adapter) updateDevice(d *voltha.Device) {
 }
 
 // Adapter_descriptor -
-func (ta *Adapter) Adapter_descriptor() error { // nolint
+func (ta *Adapter) Adapter_descriptor(ctx context.Context) error { // nolint
 	return nil
 }
 
 // Device_types -
-func (ta *Adapter) Device_types() (*voltha.DeviceTypes, error) { // nolint
+func (ta *Adapter) Device_types(ctx context.Context) (*voltha.DeviceTypes, error) { // nolint
 	return nil, nil
 }
 
 // Health -
-func (ta *Adapter) Health() (*voltha.HealthStatus, error) {
+func (ta *Adapter) Health(ctx context.Context) (*voltha.HealthStatus, error) {
 	return nil, nil
 }
 
 // Adopt_device -
-func (ta *Adapter) Adopt_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Adopt_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Reconcile_device -
-func (ta *Adapter) Reconcile_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Reconcile_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Abandon_device -
-func (ta *Adapter) Abandon_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Abandon_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Disable_device -
-func (ta *Adapter) Disable_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Disable_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Reenable_device -
-func (ta *Adapter) Reenable_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Reenable_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Reboot_device -
-func (ta *Adapter) Reboot_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Reboot_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Self_test_device -
-func (ta *Adapter) Self_test_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Self_test_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Delete_device -
-func (ta *Adapter) Delete_device(device *voltha.Device) error { // nolint
+func (ta *Adapter) Delete_device(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Get_device_details -
-func (ta *Adapter) Get_device_details(device *voltha.Device) error { // nolint
+func (ta *Adapter) Get_device_details(ctx context.Context, device *voltha.Device) error { // nolint
 	return nil
 }
 
 // Update_flows_bulk -
-func (ta *Adapter) Update_flows_bulk(device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) error { // nolint
+func (ta *Adapter) Update_flows_bulk(ctx context.Context, device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) error { // nolint
 	return nil
 }
 
 // Update_flows_incrementally mocks the incremental flow update
-func (ta *Adapter) Update_flows_incrementally(device *voltha.Device, flows *of.FlowChanges, groups *of.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error { // nolint
+func (ta *Adapter) Update_flows_incrementally(ctx context.Context, device *voltha.Device, flows *of.FlowChanges, groups *of.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error { // nolint
 	ta.flowLock.Lock()
 	defer ta.flowLock.Unlock()
 
@@ -170,27 +171,27 @@ func (ta *Adapter) Update_flows_incrementally(device *voltha.Device, flows *of.F
 }
 
 // Update_pm_config -
-func (ta *Adapter) Update_pm_config(device *voltha.Device, pmConfigs *voltha.PmConfigs) error { // nolint
+func (ta *Adapter) Update_pm_config(ctx context.Context, device *voltha.Device, pmConfigs *voltha.PmConfigs) error { // nolint
 	return nil
 }
 
 // Receive_packet_out -
-func (ta *Adapter) Receive_packet_out(deviceID string, egressPortNo int, msg *of.OfpPacketOut) error { // nolint
+func (ta *Adapter) Receive_packet_out(ctx context.Context, deviceID string, egressPortNo int, msg *of.OfpPacketOut) error { // nolint
 	return nil
 }
 
 // Suppress_event -
-func (ta *Adapter) Suppress_event(filter *voltha.EventFilter) error { // nolint
+func (ta *Adapter) Suppress_event(ctx context.Context, filter *voltha.EventFilter) error { // nolint
 	return nil
 }
 
 // Unsuppress_event -
-func (ta *Adapter) Unsuppress_event(filter *voltha.EventFilter) error { // nolint
+func (ta *Adapter) Unsuppress_event(ctx context.Context, filter *voltha.EventFilter) error { // nolint
 	return nil
 }
 
 // Get_ofp_device_info -
-func (ta *Adapter) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapability, error) { // nolint
+func (ta *Adapter) Get_ofp_device_info(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) { // nolint
 	return &ic.SwitchCapability{
 		Desc: &of.OfpDesc{
 			HwDesc:    "adapter_mock",
@@ -209,7 +210,7 @@ func (ta *Adapter) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapabil
 }
 
 // Get_ofp_port_info -
-func (ta *Adapter) Get_ofp_port_info(device *voltha.Device, portNo int64) (*ic.PortCapability, error) { // nolint
+func (ta *Adapter) Get_ofp_port_info(ctx context.Context, device *voltha.Device, portNo int64) (*ic.PortCapability, error) { // nolint
 	capability := uint32(of.OfpPortFeatures_OFPPF_1GB_FD | of.OfpPortFeatures_OFPPF_FIBER)
 	return &ic.PortCapability{
 		Port: &voltha.LogicalPort{
@@ -230,56 +231,56 @@ func (ta *Adapter) Get_ofp_port_info(device *voltha.Device, portNo int64) (*ic.P
 }
 
 // Process_inter_adapter_message -
-func (ta *Adapter) Process_inter_adapter_message(msg *ic.InterAdapterMessage) error { // nolint
+func (ta *Adapter) Process_inter_adapter_message(ctx context.Context, msg *ic.InterAdapterMessage) error { // nolint
 	return nil
 }
 
 // Download_image -
-func (ta *Adapter) Download_image(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
+func (ta *Adapter) Download_image(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
 	return nil, nil
 }
 
 // Get_image_download_status -
-func (ta *Adapter) Get_image_download_status(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
+func (ta *Adapter) Get_image_download_status(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
 	return nil, nil
 }
 
 // Cancel_image_download -
-func (ta *Adapter) Cancel_image_download(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
+func (ta *Adapter) Cancel_image_download(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
 	return nil, nil
 }
 
 // Activate_image_update -
-func (ta *Adapter) Activate_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
+func (ta *Adapter) Activate_image_update(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
 	return nil, nil
 }
 
 // Revert_image_update -
-func (ta *Adapter) Revert_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
+func (ta *Adapter) Revert_image_update(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
 	return nil, nil
 }
 
 // Enable_port -
-func (ta *Adapter) Enable_port(deviceId string, port *voltha.Port) error { //nolint
+func (ta *Adapter) Enable_port(ctx context.Context, deviceId string, port *voltha.Port) error { //nolint
 	return nil
 }
 
 // Disable_port -
-func (ta *Adapter) Disable_port(deviceId string, port *voltha.Port) error { //nolint
+func (ta *Adapter) Disable_port(ctx context.Context, deviceId string, port *voltha.Port) error { //nolint
 	return nil
 }
 
 // Child_device_lost -
-func (ta *Adapter) Child_device_lost(pDeviceID string, pPortNo uint32, onuID uint32) error { //nolint
+func (ta *Adapter) Child_device_lost(ctx context.Context, pDeviceID string, pPortNo uint32, onuID uint32) error { //nolint
 	return nil
 }
 
 // Start_omci_test
-func (ta *Adapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) { //nolint
+func (ta *Adapter) Start_omci_test(ctx context.Context, device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) { //nolint
 	return nil, nil
 }
 
-func (ta *Adapter) Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { //nolint
+func (ta *Adapter) Get_ext_value(ctx context.Context, deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { //nolint
 	return nil, nil
 }
 
