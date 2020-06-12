@@ -29,7 +29,7 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("updatePmConfigs", log.Fields{"device-id": pmConfigs.Id})
+	logger.Debugw(ctx, "updatePmConfigs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.getDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
@@ -53,7 +53,7 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("initPmConfigs", log.Fields{"device-id": pmConfigs.Id})
+	logger.Debugw(ctx, "initPmConfigs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.getDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
@@ -65,7 +65,7 @@ func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw("listPmConfigs", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "listPmConfigs", log.Fields{"device-id": agent.deviceID})
 
 	return agent.getDeviceWithoutLock().PmConfigs, nil
 }

@@ -44,14 +44,13 @@ type ConsulClient struct {
 }
 
 // NewConsulClient returns a new client for the Consul KV store
-func NewConsulClient(addr string, timeout time.Duration) (*ConsulClient, error) {
-
+func NewConsulClient(ctx context.Context, addr string, timeout time.Duration) (*ConsulClient, error) {
 	config := consulapi.DefaultConfig()
 	config.Address = addr
 	config.WaitTime = timeout
 	consul, err := consulapi.NewClient(config)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(ctx, err)
 		return nil, err
 	}
 
@@ -63,7 +62,7 @@ func NewConsulClient(addr string, timeout time.Duration) (*ConsulClient, error) 
 
 // IsConnectionUp returns whether the connection to the Consul KV store is up
 func (c *ConsulClient) IsConnectionUp(ctx context.Context) bool {
-	logger.Error("Unimplemented function")
+	logger.Error(ctx, "Unimplemented function")
 	return false
 }
 
@@ -80,7 +79,7 @@ func (c *ConsulClient) List(ctx context.Context, key string) (map[string]*KVPair
 	// For now we ignore meta data
 	kvps, _, err := kv.List(key, &queryOptions)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(ctx, err)
 		return nil, err
 	}
 	m := make(map[string]*KVPair)
@@ -103,7 +102,7 @@ func (c *ConsulClient) Get(ctx context.Context, key string) (*KVPair, error) {
 	// For now we ignore meta data
 	kvp, _, err := kv.Get(key, &queryOptions)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(ctx, err)
 		return nil, err
 	}
 	if kvp != nil {
@@ -122,7 +121,7 @@ func (c *ConsulClient) Put(ctx context.Context, key string, value interface{}) e
 	var val []byte
 	var er error
 	if val, er = ToByte(value); er != nil {
-		logger.Error(er)
+		logger.Error(ctx, er)
 		return er
 	}
 
@@ -134,7 +133,7 @@ func (c *ConsulClient) Put(ctx context.Context, key string, value interface{}) e
 	defer c.writeLock.Unlock()
 	_, err := kv.Put(&kvp, &writeOptions)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(ctx, err)
 		return err
 	}
 	return nil
@@ -149,26 +148,26 @@ func (c *ConsulClient) Delete(ctx context.Context, key string) error {
 	defer c.writeLock.Unlock()
 	_, err := kv.Delete(key, &writeOptions)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(ctx, err)
 		return err
 	}
 	return nil
 }
 
-func (c *ConsulClient) deleteSession() {
+func (c *ConsulClient) deleteSession(ctx context.Context) {
 	if c.sessionID != "" {
-		logger.Debug("cleaning-up-session")
+		logger.Debug(ctx, "cleaning-up-session")
 		session := c.consul.Session()
 		_, err := session.Destroy(c.sessionID, nil)
 		if err != nil {
-			logger.Errorw("error-cleaning-session", log.Fields{"session": c.sessionID, "error": err})
+			logger.Errorw(ctx, "error-cleaning-session", log.Fields{"session": c.sessionID, "error": err})
 		}
 	}
 	c.sessionID = ""
 	c.session = nil
 }
 
-func (c *ConsulClient) createSession(ttl time.Duration, retries int) (*consulapi.Session, string, error) {
+func (c *ConsulClient) createSession(ctx context.Context, ttl time.Duration, retries int) (*consulapi.Session, string, error) {
 	session := c.consul.Session()
 	entry := &consulapi.SessionEntry{
 		Behavior: consulapi.SessionBehaviorDelete,
@@ -178,17 +177,17 @@ func (c *ConsulClient) createSession(ttl time.Duration, retries int) (*consulapi
 	for {
 		id, meta, err := session.Create(entry, nil)
 		if err != nil {
-			logger.Errorw("create-session-error", log.Fields{"error": err})
+			logger.Errorw(ctx, "create-session-error", log.Fields{"error": err})
 			if retries == 0 {
 				return nil, "", err
 			}
 		} else if meta.RequestTime == 0 {
-			logger.Errorw("create-session-bad-meta-data", log.Fields{"meta-data": meta})
+			logger.Errorw(ctx, "create-session-bad-meta-data", log.Fields{"meta-data": meta})
 			if retries == 0 {
 				return nil, "", errors.New("bad-meta-data")
 			}
 		} else if id == "" {
-			logger.Error("create-session-nil-id")
+			logger.Error(ctx, "create-session-nil-id")
 			if retries == 0 {
 				return nil, "", errors.New("ID-nil")
 			}
@@ -199,7 +198,7 @@ func (c *ConsulClient) createSession(ttl time.Duration, retries int) (*consulapi
 		if retries > 0 {
 			retries--
 		}
-		logger.Debug("retrying-session-create-after-a-second-delay")
+		logger.Debug(ctx, "retrying-session-create-after-a-second-delay")
 		time.Sleep(time.Duration(1) * time.Second)
 	}
 }
@@ -226,30 +225,30 @@ func (c *ConsulClient) Reserve(ctx context.Context, key string, value interface{
 	var val []byte
 	var er error
 	if val, er = ToByte(value); er != nil {
-		logger.Error(er)
+		logger.Error(ctx, er)
 		return nil, er
 	}
 
 	// Cleanup any existing session and recreate new ones.  A key is reserved against a session
 	if c.sessionID != "" {
-		c.deleteSession()
+		c.deleteSession(ctx)
 	}
 
 	// Clear session if reservation is not successful
 	reservationSuccessful := false
 	defer func() {
 		if !reservationSuccessful {
-			logger.Debug("deleting-session")
-			c.deleteSession()
+			logger.Debug(ctx, "deleting-session")
+			c.deleteSession(ctx)
 		}
 	}()
 
-	session, sessionID, err := c.createSession(ttl, -1)
+	session, sessionID, err := c.createSession(ctx, ttl, -1)
 	if err != nil {
-		logger.Errorw("no-session-created", log.Fields{"error": err})
+		logger.Errorw(ctx, "no-session-created", log.Fields{"error": err})
 		return "", errors.New("no-session-created")
 	}
-	logger.Debugw("session-created", log.Fields{"session-id": sessionID})
+	logger.Debugw(ctx, "session-created", log.Fields{"session-id": sessionID})
 	c.sessionID = sessionID
 	c.session = session
 
@@ -258,11 +257,11 @@ func (c *ConsulClient) Reserve(ctx context.Context, key string, value interface{
 	kvp := consulapi.KVPair{Key: key, Value: val, Session: c.sessionID}
 	result, _, err := kv.Acquire(&kvp, nil)
 	if err != nil {
-		logger.Errorw("error-acquiring-keys", log.Fields{"error": err})
+		logger.Errorw(ctx, "error-acquiring-keys", log.Fields{"error": err})
 		return nil, err
 	}
 
-	logger.Debugw("key-acquired", log.Fields{"key": key, "status": result})
+	logger.Debugw(ctx, "key-acquired", log.Fields{"key": key, "status": result})
 
 	// Irrespective whether we were successful in acquiring the key, let's read it back and see if it's us.
 	m, err := c.Get(ctx, key)
@@ -270,7 +269,7 @@ func (c *ConsulClient) Reserve(ctx context.Context, key string, value interface{
 		return nil, err
 	}
 	if m != nil {
-		logger.Debugw("response-received", log.Fields{"key": m.Key, "m.value": string(m.Value.([]byte)), "value": value})
+		logger.Debugw(ctx, "response-received", log.Fields{"key": m.Key, "m.value": string(m.Value.([]byte)), "value": value})
 		if m.Key == key && isEqual(m.Value, value) {
 			// My reservation is successful - register it.  For now, support is only for 1 reservation per key
 			// per session.
@@ -300,11 +299,11 @@ func (c *ConsulClient) ReleaseAllReservations(ctx context.Context) error {
 		kvp = consulapi.KVPair{Key: key, Value: value.([]byte), Session: c.sessionID}
 		result, _, err = kv.Release(&kvp, nil)
 		if err != nil {
-			logger.Errorw("cannot-release-reservation", log.Fields{"key": key, "error": err})
+			logger.Errorw(ctx, "cannot-release-reservation", log.Fields{"key": key, "error": err})
 			return err
 		}
 		if !result {
-			logger.Errorw("cannot-release-reservation", log.Fields{"key": key})
+			logger.Errorw(ctx, "cannot-release-reservation", log.Fields{"key": key})
 		}
 		delete(c.keyReservations, key)
 	}
@@ -384,21 +383,21 @@ func (c *ConsulClient) Watch(ctx context.Context, key string, withPrefix bool) c
 
 // CloseWatch closes a specific watch. Both the key and the channel are required when closing a watch as there
 // may be multiple listeners on the same key.  The previously created channel serves as a key
-func (c *ConsulClient) CloseWatch(key string, ch chan *Event) {
+func (c *ConsulClient) CloseWatch(ctx context.Context, key string, ch chan *Event) {
 	// First close the context
 	var ok bool
 	var watchedChannelsContexts []*channelContextMap
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	if watchedChannelsContexts, ok = c.watchedChannelsContext[key]; !ok {
-		logger.Errorw("key-has-no-watched-context-or-channel", log.Fields{"key": key})
+		logger.Errorw(ctx, "key-has-no-watched-context-or-channel", log.Fields{"key": key})
 		return
 	}
 	// Look for the channels
 	var pos = -1
 	for i, chCtxMap := range watchedChannelsContexts {
 		if chCtxMap.channel == ch {
-			logger.Debug("channel-found")
+			logger.Debug(ctx, "channel-found")
 			chCtxMap.cancel()
 			//close the channel
 			close(ch)
@@ -410,7 +409,7 @@ func (c *ConsulClient) CloseWatch(key string, ch chan *Event) {
 	if pos >= 0 {
 		c.watchedChannelsContext[key] = append(c.watchedChannelsContext[key][:pos], c.watchedChannelsContext[key][pos+1:]...)
 	}
-	logger.Debugw("watched-channel-exiting", log.Fields{"key": key, "channel": c.watchedChannelsContext[key]})
+	logger.Debugw(ctx, "watched-channel-exiting", log.Fields{"key": key, "channel": c.watchedChannelsContext[key]})
 }
 
 func (c *ConsulClient) isKVEqual(kv1 *consulapi.KVPair, kv2 *consulapi.KVPair) bool {
@@ -430,10 +429,10 @@ func (c *ConsulClient) isKVEqual(kv1 *consulapi.KVPair, kv2 *consulapi.KVPair) b
 	return true
 }
 
-func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key string, ch chan *Event) {
-	logger.Debugw("start-watching-channel", log.Fields{"key": key, "channel": ch})
+func (c *ConsulClient) listenForKeyChange(ctx context.Context, key string, ch chan *Event) {
+	logger.Debugw(ctx, "start-watching-channel", log.Fields{"key": key, "channel": ch})
 
-	defer c.CloseWatch(key, ch)
+	defer c.CloseWatch(ctx, key, ch)
 	kv := c.consul.KV()
 	var queryOptions consulapi.QueryOptions
 	queryOptions.WaitTime = defaultKVGetTimeout
@@ -441,7 +440,7 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 	// Get the existing value, if any
 	previousKVPair, meta, err := kv.Get(key, &queryOptions)
 	if err != nil {
-		logger.Debug(err)
+		logger.Debug(ctx, err)
 	}
 	lastIndex := meta.LastIndex
 
@@ -449,37 +448,37 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 	//var waitOptions consulapi.QueryOptions
 	var pair *consulapi.KVPair
 	//watchContext, _ := context.WithCancel(context.Background())
-	waitOptions := queryOptions.WithContext(watchContext)
+	waitOptions := queryOptions.WithContext(ctx)
 	for {
 		//waitOptions = consulapi.QueryOptions{WaitIndex: lastIndex}
 		waitOptions.WaitIndex = lastIndex
 		pair, meta, err = kv.Get(key, waitOptions)
 		select {
-		case <-watchContext.Done():
-			logger.Debug("done-event-received-exiting")
+		case <-ctx.Done():
+			logger.Debug(ctx, "done-event-received-exiting")
 			return
 		default:
 			if err != nil {
-				logger.Warnw("error-from-watch", log.Fields{"error": err})
+				logger.Warnw(ctx, "error-from-watch", log.Fields{"error": err})
 				ch <- NewEvent(CONNECTIONDOWN, key, []byte(""), -1)
 			} else {
-				logger.Debugw("index-state", log.Fields{"lastindex": lastIndex, "newindex": meta.LastIndex, "key": key})
+				logger.Debugw(ctx, "index-state", log.Fields{"lastindex": lastIndex, "newindex": meta.LastIndex, "key": key})
 			}
 		}
 		if err != nil {
-			logger.Debug(err)
+			logger.Debug(ctx, err)
 			// On error, block for 10 milliseconds to prevent endless loop
 			time.Sleep(10 * time.Millisecond)
 		} else if meta.LastIndex <= lastIndex {
-			logger.Info("no-index-change-or-negative")
+			logger.Info(ctx, "no-index-change-or-negative")
 		} else {
-			logger.Debugw("update-received", log.Fields{"pair": pair})
+			logger.Debugw(ctx, "update-received", log.Fields{"pair": pair})
 			if pair == nil {
 				ch <- NewEvent(DELETE, key, []byte(""), -1)
 			} else if !c.isKVEqual(pair, previousKVPair) {
 				// Push the change onto the channel if the data has changed
 				// For now just assume it's a PUT change
-				logger.Debugw("pair-details", log.Fields{"session": pair.Session, "key": pair.Key, "value": pair.Value})
+				logger.Debugw(ctx, "pair-details", log.Fields{"session": pair.Session, "key": pair.Key, "value": pair.Value})
 				ch <- NewEvent(PUT, pair.Key, pair.Value, -1)
 			}
 			previousKVPair = pair
@@ -489,7 +488,7 @@ func (c *ConsulClient) listenForKeyChange(watchContext context.Context, key stri
 }
 
 // Close closes the KV store client
-func (c *ConsulClient) Close() {
+func (c *ConsulClient) Close(ctx context.Context) {
 	var writeOptions consulapi.WriteOptions
 	// Inform any goroutine it's time to say goodbye.
 	c.writeLock.Lock()
@@ -500,7 +499,7 @@ func (c *ConsulClient) Close() {
 
 	// Clear the sessionID
 	if _, err := c.consul.Session().Destroy(c.sessionID, &writeOptions); err != nil {
-		logger.Errorw("error-closing-client", log.Fields{"error": err})
+		logger.Errorw(ctx, "error-closing-client", log.Fields{"error": err})
 	}
 }
 

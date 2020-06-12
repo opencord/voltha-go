@@ -44,10 +44,10 @@ func (agent *Agent) listDeviceGroups() map[uint32]*ofp.OfpGroupEntry {
 }
 
 func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	logger.Debugw("add-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "groups": newGroups, "flow-metadata": flowMetadata})
+	logger.Debugw(ctx, "add-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "groups": newGroups, "flow-metadata": flowMetadata})
 
 	if (len(newGroups)) == 0 {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
+		logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -92,7 +92,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 				updatedAllGroups = replaceGroupInList(updatedAllGroups, groupToChange, group)
 			} else {
 				//No need to change the group. It is already exist.
-				logger.Debugw("No-need-to-change-already-existing-group", log.Fields{"device-id": agent.deviceID, "group": newGroups, "flow-metadata": flowMetadata})
+				logger.Debugw(ctx, "No-need-to-change-already-existing-group", log.Fields{"device-id": agent.deviceID, "group": newGroups, "flow-metadata": flowMetadata})
 			}
 		}
 
@@ -100,7 +100,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	}
 	// Sanity check
 	if (len(groupsToAdd)) == 0 {
-		logger.Debugw("no-groups-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
+		logger.Debugw(ctx, "no-groups-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -135,10 +135,10 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 }
 
 func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	logger.Debugw("delete-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "groups": groupsToDel})
+	logger.Debugw(ctx, "delete-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "groups": groupsToDel})
 
 	if (len(groupsToDel)) == 0 {
-		logger.Debugw("nothing-to-delete", log.Fields{"device-id": agent.deviceID})
+		logger.Debugw(ctx, "nothing-to-delete", log.Fields{"device-id": agent.deviceID})
 		return coreutils.DoneResponse(), nil
 	}
 	device := agent.getDeviceWithoutLock()
@@ -202,10 +202,10 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 }
 
 func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	logger.Debugw("updateGroupsToAdapter", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
+	logger.Debugw(ctx, "updateGroupsToAdapter", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
 
 	if (len(updatedGroups)) == 0 {
-		logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
+		logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -253,7 +253,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		}
 		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
 	} else {
-		logger.Debugw("updating-groups",
+		logger.Debugw(ctx, "updating-groups",
 			log.Fields{
 				"device-id":        agent.deviceID,
 				"groups-to-update": groupsToUpdate,
@@ -261,7 +261,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 
 		// Sanity check
 		if (len(groupsToUpdate)) == 0 {
-			logger.Debugw("nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": groupsToUpdate})
+			logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": groupsToUpdate})
 			cancel()
 			return coreutils.DoneResponse(), nil
 		}

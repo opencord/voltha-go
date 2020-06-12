@@ -17,12 +17,13 @@
 package mocks
 
 import (
+	"context"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
 	"testing"
 )
 
 func TestONUAdapterImplementsIAdapter(t *testing.T) {
-	adapter := NewONUAdapter(nil)
+	adapter := NewONUAdapter(context.Background(), nil)
 
 	if _, ok := interface{}(adapter).(adapters.IAdapter); !ok {
 		t.Error("ONU adapter does not implement voltha-lib-go/v2/pkg/adapters/IAdapter interface")

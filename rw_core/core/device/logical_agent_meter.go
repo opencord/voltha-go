@@ -42,7 +42,7 @@ func (agent *LogicalAgent) listLogicalDeviceMeters() map[uint32]*ofp.OfpMeterEnt
 
 // updateMeterTable updates the meter table of that logical device
 func (agent *LogicalAgent) updateMeterTable(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
-	logger.Debug("updateMeterTable")
+	logger.Debug(ctx, "updateMeterTable")
 	if meterMod == nil {
 		return nil
 	}
@@ -59,12 +59,12 @@ func (agent *LogicalAgent) updateMeterTable(ctx context.Context, meterMod *ofp.O
 }
 
 func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
-	logger.Debugw("meterAdd", log.Fields{"metermod": *meterMod})
+	logger.Debugw(ctx, "meterAdd", log.Fields{"metermod": *meterMod})
 	if meterMod == nil {
 		return nil
 	}
 
-	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
+	meterEntry := fu.MeterEntryFromMeterMod(ctx, meterMod)
 
 	meterHandle, created, err := agent.meterLoader.LockOrCreate(ctx, meterEntry)
 	if err != nil {
@@ -73,22 +73,22 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 	defer meterHandle.Unlock()
 
 	if created {
-		logger.Debugw("Meter-added-successfully", log.Fields{"Added-meter": meterEntry})
+		logger.Debugw(ctx, "Meter-added-successfully", log.Fields{"Added-meter": meterEntry})
 	} else {
-		logger.Infow("Meter-already-exists", log.Fields{"meter": *meterMod})
+		logger.Infow(ctx, "Meter-already-exists", log.Fields{"meter": *meterMod})
 	}
 	return nil
 }
 
 func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
-	logger.Debug("meterDelete", log.Fields{"meterMod": *meterMod})
+	logger.Debug(ctx, "meterDelete", log.Fields{"meterMod": *meterMod})
 	if meterMod == nil {
 		return nil
 	}
 
 	meterHandle, have := agent.meterLoader.Lock(meterMod.MeterId)
 	if !have {
-		logger.Warnw("meter-not-found", log.Fields{"meterID": meterMod.MeterId})
+		logger.Warnw(ctx, "meter-not-found", log.Fields{"meterID": meterMod.MeterId})
 		return nil
 	}
 	defer meterHandle.Unlock()
@@ -103,12 +103,12 @@ func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMet
 		return err
 	}
 
-	logger.Debugw("meterDelete-success", log.Fields{"meterID": meterMod.MeterId})
+	logger.Debugw(ctx, "meterDelete-success", log.Fields{"meterID": meterMod.MeterId})
 	return nil
 }
 
 func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
-	logger.Debug("meterModify")
+	logger.Debug(ctx, "meterModify")
 	if meterMod == nil {
 		return nil
 	}
@@ -120,12 +120,12 @@ func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMet
 	defer meterHandle.Unlock()
 
 	oldMeter := meterHandle.GetReadOnly()
-	newMeter := fu.MeterEntryFromMeterMod(meterMod)
+	newMeter := fu.MeterEntryFromMeterMod(ctx, meterMod)
 	newMeter.Stats.FlowCount = oldMeter.Stats.FlowCount
 
 	if err := meterHandle.Update(ctx, newMeter); err != nil {
 		return err
 	}
-	logger.Debugw("replaced-with-new-meter", log.Fields{"oldMeter": oldMeter, "newMeter": newMeter})
+	logger.Debugw(ctx, "replaced-with-new-meter", log.Fields{"oldMeter": oldMeter, "newMeter": newMeter})
 	return nil
 }

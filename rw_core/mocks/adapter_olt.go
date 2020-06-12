@@ -41,14 +41,14 @@ type OLTAdapter struct {
 }
 
 // NewOLTAdapter - creates OLT adapter instance
-func NewOLTAdapter(cp adapterif.CoreProxy) *OLTAdapter {
+func NewOLTAdapter(ctx context.Context, cp adapterif.CoreProxy) *OLTAdapter {
 	return &OLTAdapter{
 		Adapter: NewAdapter(cp),
 	}
 }
 
 // Adopt_device creates new handler for added device
-func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
+func (oltA *OLTAdapter) Adopt_device(ctx context.Context, device *voltha.Device) error { // nolint
 	go func() {
 		d := proto.Clone(device).(*voltha.Device)
 		d.Root = true
@@ -58,7 +58,7 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 		d.MacAddress = strings.ToUpper(com.GetRandomMacAddress())
 		oltA.storeDevice(d)
 		if res := oltA.coreProxy.DeviceUpdate(context.TODO(), d); res != nil {
-			logger.Fatalf("deviceUpdate-failed-%s", res)
+			logger.Fatalf(ctx, "deviceUpdate-failed-%s", res)
 		}
 		capability := uint32(of.OfpPortFeatures_OFPPF_1GB_FD | of.OfpPortFeatures_OFPPF_FIBER)
 		nniPort := &voltha.Port{
@@ -79,7 +79,7 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 		}
 		var err error
 		if err = oltA.coreProxy.PortCreated(context.TODO(), d.Id, nniPort); err != nil {
-			logger.Fatalf("PortCreated-failed-%s", err)
+			logger.Fatalf(ctx, "PortCreated-failed-%s", err)
 		}
 
 		ponPort := &voltha.Port{
@@ -89,19 +89,19 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 			OperStatus: voltha.OperStatus_ACTIVE,
 		}
 		if err = oltA.coreProxy.PortCreated(context.TODO(), d.Id, ponPort); err != nil {
-			logger.Fatalf("PortCreated-failed-%s", err)
+			logger.Fatalf(ctx, "PortCreated-failed-%s", err)
 		}
 
 		d.ConnectStatus = voltha.ConnectStatus_REACHABLE
 		d.OperStatus = voltha.OperStatus_ACTIVE
 
 		if err = oltA.coreProxy.DeviceStateUpdate(context.TODO(), d.Id, d.ConnectStatus, d.OperStatus); err != nil {
-			logger.Fatalf("Device-state-update-failed-%s", err)
+			logger.Fatalf(ctx, "Device-state-update-failed-%s", err)
 		}
 
 		//Get the latest device data from the Core
 		if d, err = oltA.coreProxy.GetDevice(context.TODO(), d.Id, d.Id); err != nil {
-			logger.Fatalf("getting-device-failed-%s", err)
+			logger.Fatalf(ctx, "getting-device-failed-%s", err)
 		}
 
 		oltA.updateDevice(d)
@@ -119,7 +119,7 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 					"onu_adapter_mock",
 					com.GetRandomSerialNumber(),
 					int64(seqNo)); err != nil {
-					logger.Fatalf("failure-sending-child-device-%s", err)
+					logger.Fatalf(ctx, "failure-sending-child-device-%s", err)
 				}
 			}(i)
 		}
@@ -128,9 +128,9 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 }
 
 // Get_ofp_device_info returns ofp device info
-func (oltA *OLTAdapter) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapability, error) { // nolint
+func (oltA *OLTAdapter) Get_ofp_device_info(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) { // nolint
 	if d := oltA.getDevice(device.Id); d == nil {
-		logger.Fatalf("device-not-found-%s", device.Id)
+		logger.Fatalf(ctx, "device-not-found-%s", device.Id)
 	}
 	return &ic.SwitchCapability{
 		Desc: &of.OfpDesc{
@@ -160,16 +160,16 @@ func (oltA *OLTAdapter) GetStartingUNIPortNo() int {
 }
 
 // Disable_device disables device
-func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
+func (oltA *OLTAdapter) Disable_device(ctx context.Context, device *voltha.Device) error { // nolint
 	go func() {
 		if d := oltA.getDevice(device.Id); d == nil {
-			logger.Fatalf("device-not-found-%s", device.Id)
+			logger.Fatalf(ctx, "device-not-found-%s", device.Id)
 		}
 
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to disable
 		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.OperStatus_UNKNOWN); err != nil {
-			logger.Warnw("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
 		//Update the device operational state
@@ -178,7 +178,7 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
 
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
 			// Device may already have been deleted in the core
-			logger.Warnw("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
 			return
 		}
 
@@ -187,47 +187,47 @@ func (oltA *OLTAdapter) Disable_device(device *voltha.Device) error { // nolint
 		// Tell the Core that all child devices have been disabled (by default it's an action already taken by the Core
 		if err := oltA.coreProxy.ChildDevicesLost(context.TODO(), cloned.Id); err != nil {
 			// Device may already have been deleted in the core
-			logger.Warnw("lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 	}()
 	return nil
 }
 
 // Reenable_device reenables device
-func (oltA *OLTAdapter) Reenable_device(device *voltha.Device) error { // nolint
+func (oltA *OLTAdapter) Reenable_device(ctx context.Context, device *voltha.Device) error { // nolint
 	go func() {
 		if d := oltA.getDevice(device.Id); d == nil {
-			logger.Fatalf("device-not-found-%s", device.Id)
+			logger.Fatalf(ctx, "device-not-found-%s", device.Id)
 		}
 
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to enable
 		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.OperStatus_ACTIVE); err != nil {
-			logger.Fatalf("updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
 		//Update the device state
 		cloned.OperStatus = voltha.OperStatus_ACTIVE
 
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
-			logger.Fatalf("device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
 		// Tell the Core that all child devices have been enabled
 		if err := oltA.coreProxy.ChildDevicesDetected(context.TODO(), cloned.Id); err != nil {
-			logger.Fatalf("detection-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "detection-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 	}()
 	return nil
 }
 
 // Enable_port -
-func (oltA *OLTAdapter) Enable_port(deviceId string, Port *voltha.Port) error { //nolint
+func (oltA *OLTAdapter) Enable_port(ctx context.Context, deviceId string, Port *voltha.Port) error { //nolint
 	go func() {
 
 		if Port.Type == voltha.Port_PON_OLT {
 			if err := oltA.coreProxy.PortStateUpdate(context.TODO(), deviceId, voltha.Port_PON_OLT, Port.PortNo, voltha.OperStatus_ACTIVE); err != nil {
-				logger.Fatalf("updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
+				logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
 			}
 		}
 
@@ -236,13 +236,13 @@ func (oltA *OLTAdapter) Enable_port(deviceId string, Port *voltha.Port) error { 
 }
 
 // Disable_port -
-func (oltA *OLTAdapter) Disable_port(deviceId string, Port *voltha.Port) error { //nolint
+func (oltA *OLTAdapter) Disable_port(ctx context.Context, deviceId string, Port *voltha.Port) error { //nolint
 	go func() {
 
 		if Port.Type == voltha.Port_PON_OLT {
 			if err := oltA.coreProxy.PortStateUpdate(context.TODO(), deviceId, voltha.Port_PON_OLT, Port.PortNo, voltha.OperStatus_DISCOVERED); err != nil {
 				// Corresponding device may have been deleted
-				logger.Warnw("updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
+				logger.Warnw(ctx, "updating-ports-failed", log.Fields{"device-id": deviceId, "error": err})
 			}
 		}
 	}()
@@ -250,33 +250,33 @@ func (oltA *OLTAdapter) Disable_port(deviceId string, Port *voltha.Port) error {
 }
 
 // Child_device_lost deletes ONU and its references
-func (oltA *OLTAdapter) Child_device_lost(deviceID string, pPortNo uint32, onuID uint32) error { // nolint
+func (oltA *OLTAdapter) Child_device_lost(ctx context.Context, deviceID string, pPortNo uint32, onuID uint32) error { // nolint
 	return nil
 }
 
 // Reboot_device -
-func (oltA *OLTAdapter) Reboot_device(device *voltha.Device) error { // nolint
-	logger.Infow("reboot-device", log.Fields{"deviceId": device.Id})
+func (oltA *OLTAdapter) Reboot_device(ctx context.Context, device *voltha.Device) error { // nolint
+	logger.Infow(ctx, "reboot-device", log.Fields{"deviceId": device.Id})
 
 	go func() {
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), device.Id, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN); err != nil {
-			logger.Fatalf("device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
+			logger.Fatalf(ctx, "device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), device.Id, voltha.OperStatus_UNKNOWN); err != nil {
 			// Not an error as the previous command will start the process of clearing the OLT
-			logger.Infow("port-update-failed", log.Fields{"device-id": device.Id, "error": err})
+			logger.Infow(ctx, "port-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 	}()
 	return nil
 }
 
 // TODO: REMOVE Start_omci_test begins an omci self-test
-func (oltA *OLTAdapter) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*ic.TestResponse, error) { // nolint
+func (oltA *OLTAdapter) Start_omci_test(ctx context.Context, device *voltha.Device, request *voltha.OmciTestRequest) (*ic.TestResponse, error) { // nolint
 	_ = device
 	return nil, errors.New("start-omci-test-not-implemented")
 }
 
-func (oltA *OLTAdapter) Get_ext_value(deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { // nolint
+func (oltA *OLTAdapter) Get_ext_value(ctx context.Context, deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { // nolint
 	_ = deviceId
 	_ = device
 	_ = valueflag

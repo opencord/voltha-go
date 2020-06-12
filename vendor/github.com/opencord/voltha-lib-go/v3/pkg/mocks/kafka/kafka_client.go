@@ -16,6 +16,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -42,12 +43,12 @@ func NewKafkaClient() *KafkaClient {
 	}
 }
 
-func (kc *KafkaClient) Start() error {
-	logger.Debug("kafka-client-started")
+func (kc *KafkaClient) Start(ctx context.Context) error {
+	logger.Debug(ctx, "kafka-client-started")
 	return nil
 }
 
-func (kc *KafkaClient) Stop() {
+func (kc *KafkaClient) Stop(ctx context.Context) {
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	for topic, chnls := range kc.topicsChannelMap {
@@ -56,11 +57,11 @@ func (kc *KafkaClient) Stop() {
 		}
 		delete(kc.topicsChannelMap, topic)
 	}
-	logger.Debug("kafka-client-stopped")
+	logger.Debug(ctx, "kafka-client-stopped")
 }
 
-func (kc *KafkaClient) CreateTopic(topic *kafka.Topic, numPartition int, repFactor int) error {
-	logger.Debugw("CreatingTopic", log.Fields{"topic": topic.Name, "numPartition": numPartition, "replicationFactor": repFactor})
+func (kc *KafkaClient) CreateTopic(ctx context.Context, topic *kafka.Topic, numPartition int, repFactor int) error {
+	logger.Debugw(ctx, "CreatingTopic", log.Fields{"topic": topic.Name, "numPartition": numPartition, "replicationFactor": repFactor})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	if _, ok := kc.topicsChannelMap[topic.Name]; ok {
@@ -71,16 +72,16 @@ func (kc *KafkaClient) CreateTopic(topic *kafka.Topic, numPartition int, repFact
 	return nil
 }
 
-func (kc *KafkaClient) DeleteTopic(topic *kafka.Topic) error {
-	logger.Debugw("DeleteTopic", log.Fields{"topic": topic.Name})
+func (kc *KafkaClient) DeleteTopic(ctx context.Context, topic *kafka.Topic) error {
+	logger.Debugw(ctx, "DeleteTopic", log.Fields{"topic": topic.Name})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	delete(kc.topicsChannelMap, topic.Name)
 	return nil
 }
 
-func (kc *KafkaClient) Subscribe(topic *kafka.Topic, kvArgs ...*kafka.KVArg) (<-chan *ic.InterContainerMessage, error) {
-	logger.Debugw("Subscribe", log.Fields{"topic": topic.Name, "args": kvArgs})
+func (kc *KafkaClient) Subscribe(ctx context.Context, topic *kafka.Topic, kvArgs ...*kafka.KVArg) (<-chan *ic.InterContainerMessage, error) {
+	logger.Debugw(ctx, "Subscribe", log.Fields{"topic": topic.Name, "args": kvArgs})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	ch := make(chan *ic.InterContainerMessage)
@@ -93,8 +94,8 @@ func removeChannel(s []chan *ic.InterContainerMessage, i int) []chan *ic.InterCo
 	return s[:len(s)-1]
 }
 
-func (kc *KafkaClient) UnSubscribe(topic *kafka.Topic, ch <-chan *ic.InterContainerMessage) error {
-	logger.Debugw("UnSubscribe", log.Fields{"topic": topic.Name})
+func (kc *KafkaClient) UnSubscribe(ctx context.Context, topic *kafka.Topic, ch <-chan *ic.InterContainerMessage) error {
+	logger.Debugw(ctx, "UnSubscribe", log.Fields{"topic": topic.Name})
 	kc.lock.Lock()
 	defer kc.lock.Unlock()
 	if chnls, ok := kc.topicsChannelMap[topic.Name]; ok {
@@ -112,11 +113,11 @@ func (kc *KafkaClient) UnSubscribe(topic *kafka.Topic, ch <-chan *ic.InterContai
 	return nil
 }
 
-func (kc *KafkaClient) SubscribeForMetadata(_ func(fromTopic string, timestamp time.Time)) {
-	logger.Debug("SubscribeForMetadata - unimplemented")
+func (kc *KafkaClient) SubscribeForMetadata(ctx context.Context, _ func(fromTopic string, timestamp time.Time)) {
+	logger.Debug(ctx, "SubscribeForMetadata - unimplemented")
 }
 
-func (kc *KafkaClient) Send(msg interface{}, topic *kafka.Topic, keys ...string) error {
+func (kc *KafkaClient) Send(ctx context.Context, msg interface{}, topic *kafka.Topic, keys ...string) error {
 	req, ok := msg.(*ic.InterContainerMessage)
 	if !ok {
 		return status.Error(codes.InvalidArgument, "msg-not-InterContainerMessage-type")
@@ -127,22 +128,22 @@ func (kc *KafkaClient) Send(msg interface{}, topic *kafka.Topic, keys ...string)
 	kc.lock.RLock()
 	defer kc.lock.RUnlock()
 	for _, ch := range kc.topicsChannelMap[topic.Name] {
-		logger.Debugw("Publishing", log.Fields{"fromTopic": req.Header.FromTopic, "toTopic": topic.Name, "id": req.Header.Id})
+		logger.Debugw(ctx, "Publishing", log.Fields{"fromTopic": req.Header.FromTopic, "toTopic": topic.Name, "id": req.Header.Id})
 		ch <- req
 	}
 	return nil
 }
 
-func (kc *KafkaClient) SendLiveness() error {
+func (kc *KafkaClient) SendLiveness(ctx context.Context) error {
 	return status.Error(codes.Unimplemented, "SendLiveness")
 }
 
-func (kc *KafkaClient) EnableLivenessChannel(enable bool) chan bool {
-	logger.Debug("EnableLivenessChannel - unimplemented")
+func (kc *KafkaClient) EnableLivenessChannel(ctx context.Context, enable bool) chan bool {
+	logger.Debug(ctx, "EnableLivenessChannel - unimplemented")
 	return nil
 }
 
-func (kc *KafkaClient) EnableHealthinessChannel(enable bool) chan bool {
-	logger.Debug("EnableHealthinessChannel - unimplemented")
+func (kc *KafkaClient) EnableHealthinessChannel(ctx context.Context, enable bool) chan bool {
+	logger.Debug(ctx, "EnableHealthinessChannel - unimplemented")
 	return nil
 }

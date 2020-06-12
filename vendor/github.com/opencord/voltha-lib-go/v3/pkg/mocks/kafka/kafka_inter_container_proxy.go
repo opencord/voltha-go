@@ -54,16 +54,17 @@ type MockKafkaICProxy struct {
 	InvokeRpcSpy InvokeRpcSpy
 }
 
-func (s *MockKafkaICProxy) Start() error { return nil }
+func (s *MockKafkaICProxy) Start(ctx context.Context) error { return nil }
 func (s *MockKafkaICProxy) GetDefaultTopic() *kafka.Topic {
 	t := kafka.Topic{
 		Name: "test-topic",
 	}
 	return &t
 }
-func (s *MockKafkaICProxy) DeleteTopic(topic kafka.Topic) error { return nil }
 
-func (s *MockKafkaICProxy) Stop() {}
+func (s *MockKafkaICProxy) DeleteTopic(ctx context.Context, topic kafka.Topic) error { return nil }
+
+func (s *MockKafkaICProxy) Stop(ctx context.Context) {}
 
 func (s *MockKafkaICProxy) InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *kafka.Topic, replyToTopic *kafka.Topic,
 	waitForResponse bool, key string, kvArgs ...*kafka.KVArg) chan *kafka.RpcResponse {
@@ -121,12 +122,16 @@ func (s *MockKafkaICProxy) InvokeRPC(ctx context.Context, rpc string, toTopic *k
 
 	return success, &response
 }
-func (s *MockKafkaICProxy) SubscribeWithRequestHandlerInterface(topic kafka.Topic, handler interface{}) error {
+func (s *MockKafkaICProxy) SubscribeWithRequestHandlerInterface(ctx context.Context, topic kafka.Topic, handler interface{}) error {
 	return nil
 }
-func (s *MockKafkaICProxy) SubscribeWithDefaultRequestHandler(topic kafka.Topic, initialOffset int64) error {
+func (s *MockKafkaICProxy) SubscribeWithDefaultRequestHandler(ctx context.Context, topic kafka.Topic, initialOffset int64) error {
 	return nil
 }
-func (s *MockKafkaICProxy) UnSubscribeFromRequestHandler(topic kafka.Topic) error { return nil }
-func (s *MockKafkaICProxy) EnableLivenessChannel(enable bool) chan bool           { return nil }
-func (s *MockKafkaICProxy) SendLiveness() error                                   { return nil }
+func (s *MockKafkaICProxy) UnSubscribeFromRequestHandler(ctx context.Context, topic kafka.Topic) error {
+	return nil
+}
+func (s *MockKafkaICProxy) EnableLivenessChannel(ctx context.Context, enable bool) chan bool {
+	return nil
+}
+func (s *MockKafkaICProxy) SendLiveness(ctx context.Context) error { return nil }
