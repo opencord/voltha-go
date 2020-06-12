@@ -45,6 +45,7 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
 	// If the context has a probe then fetch it and register our services
 	if p := probe.GetProbeFromContext(ctx); p != nil {
 		p.RegisterService(
+			ctx,
 			"message-bus",
 			"kv-store",
 			"adapter-manager",
@@ -61,25 +62,25 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
 }
 
 func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) {
-	logger.Info("starting-core-services", log.Fields{"coreId": id})
+	logger.Info(ctx, "starting-core-services", log.Fields{"coreId": id})
 
 	// deferred functions are used to run cleanup
 	// failing partway will stop anything that's been started
 	defer close(core.stopped)
 	defer core.shutdown()
 
-	logger.Info("Starting RW Core components")
+	logger.Info(ctx, "Starting RW Core components")
 
 	// setup kv client
-	logger.Debugw("create-kv-client", log.Fields{"kvstore": cf.KVStoreType})
-	kvClient, err := newKVClient(cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
+	logger.Debugw(ctx, "create-kv-client", log.Fields{"kvstore": cf.KVStoreType})
+	kvClient, err := newKVClient(ctx, cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(ctx, err)
 	}
 	defer stopKVClient(context.Background(), kvClient)
 
 	// sync logging config with kv store
-	cm := conf.NewConfigManager(kvClient, cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
+	cm := conf.NewConfigManager(ctx, kvClient, cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
 	go conf.StartLogLevelConfigProcessing(cm, ctx)
 
 	backend := cm.Backend
@@ -87,7 +88,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// wait until connection to KV Store is up
 	if err := waitUntilKVStoreReachableOrMaxTries(ctx, kvClient, cf.MaxConnectionRetries, cf.ConnectionRetryInterval); err != nil {
-		logger.Fatal("Unable-to-connect-to-KV-store")
+		logger.Fatal(ctx, "Unable-to-connect-to-KV-store")
 	}
 	go monitorKVStoreLiveness(ctx, backend, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
 
@@ -112,17 +113,17 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	dbPath := model.NewDBPath(backend)
 
 	// load adapters & device types while other things are starting
-	adapterMgr := adapter.NewAdapterManager(dbPath, id, kafkaClient)
+	adapterMgr := adapter.NewAdapterManager(ctx, dbPath, id, kafkaClient)
 	go adapterMgr.Start(ctx)
 
 	// connect to kafka, then wait until reachable and publisher/consumer created
 	// core.kmp must be created before deviceMgr and adapterMgr
 	kmp, err := startKafkInterContainerProxy(ctx, kafkaClient, cf.KafkaAdapterAddress, cf.CoreTopic, cf.AffinityRouterTopic, cf.ConnectionRetryInterval)
 	if err != nil {
-		logger.Warn("Failed to setup kafka connection")
+		logger.Warn(ctx, "Failed to setup kafka connection")
 		return
 	}
-	defer kmp.Stop()
+	defer kmp.Stop(ctx)
 	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
 
 	// create the core of the system, the device managers
@@ -130,7 +131,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout)
 
 	// register kafka RPC handler
-	registerAdapterRequestHandlers(kmp, deviceMgr, adapterMgr, cf.CoreTopic)
+	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf.CoreTopic)
 
 	// start gRPC handler
 	grpcServer := grpcserver.NewGrpcServer(cf.GrpcAddress, nil, false, probe.GetProbeFromContext(ctx))
@@ -149,13 +150,13 @@ func (core *Core) Stop() {
 
 // startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server
 func startGRPCService(ctx context.Context, server *grpcserver.GrpcServer, handler voltha.VolthaServiceServer) {
-	logger.Info("grpc-server-created")
+	logger.Info(ctx, "grpc-server-created")
 
 	server.AddService(func(gs *grpc.Server) { voltha.RegisterVolthaServiceServer(gs, handler) })
-	logger.Info("grpc-service-added")
+	logger.Info(ctx, "grpc-service-added")
 
 	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusRunning)
-	logger.Info("grpc-server-started")
+	logger.Info(ctx, "grpc-server-started")
 	// Note that there is a small window here in which the core could return its status as ready,
 	// when it really isn't.  This is unlikely to cause issues, as the delay is incredibly short.
 	server.Start(ctx)

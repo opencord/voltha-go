@@ -26,7 +26,7 @@ import (
 )
 
 // GetMeterConfig returns meters which which are used by the given flows
-func (agent *LogicalAgent) GetMeterConfig(flows map[uint64]*ofp.OfpFlowStats) (map[uint32]*ofp.OfpMeterConfig, error) {
+func (agent *LogicalAgent) GetMeterConfig(ctx context.Context, flows map[uint64]*ofp.OfpFlowStats) (map[uint32]*ofp.OfpMeterConfig, error) {
 	metersConfig := make(map[uint32]*ofp.OfpMeterConfig)
 	for _, flow := range flows {
 		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 {
@@ -34,20 +34,20 @@ func (agent *LogicalAgent) GetMeterConfig(flows map[uint64]*ofp.OfpFlowStats) (m
 				// Meter is present in the flow, Get from logical device
 				meterHandle, have := agent.meterLoader.Lock(flowMeterID)
 				if !have {
-					logger.Errorw("Meter-referred-by-flow-is-not-found-in-logicaldevice",
+					logger.Errorw(ctx, "Meter-referred-by-flow-is-not-found-in-logicaldevice",
 						log.Fields{"meterID": flowMeterID, "Available-meters": metersConfig, "flow": *flow})
 					return nil, fmt.Errorf("Meter-referred-by-flow-is-not-found-in-logicaldevice.MeterId-%d", flowMeterID)
 				}
 
 				meter := meterHandle.GetReadOnly()
 				metersConfig[flowMeterID] = meter.Config
-				logger.Debugw("Found meter in logical device", log.Fields{"meterID": flowMeterID, "meter-band": meter.Config})
+				logger.Debugw(ctx, "Found meter in logical device", log.Fields{"meterID": flowMeterID, "meter-band": meter.Config})
 
 				meterHandle.Unlock()
 			}
 		}
 	}
-	logger.Debugw("meter-bands-for-flows", log.Fields{"flows": len(flows), "meters": metersConfig})
+	logger.Debugw(ctx, "meter-bands-for-flows", log.Fields{"flows": len(flows), "meters": metersConfig})
 	return metersConfig, nil
 }
 
@@ -55,9 +55,9 @@ func (agent *LogicalAgent) GetMeterConfig(flows map[uint64]*ofp.OfpFlowStats) (m
 func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modCommand *ofp.OfpFlowMod, flow *ofp.OfpFlowStats, revertUpdate bool) bool {
 	flowCommand := modCommand.GetCommand()
 	meterID := fu.GetMeterIdFromFlow(flow)
-	logger.Debugw("Meter-id-in-flow-mod", log.Fields{"meterId": meterID})
+	logger.Debugw(ctx, "Meter-id-in-flow-mod", log.Fields{"meterId": meterID})
 	if meterID == 0 {
-		logger.Debugw("No-meter-present-in-the-flow", log.Fields{"flow": *flow})
+		logger.Debugw(ctx, "No-meter-present-in-the-flow", log.Fields{"flow": *flow})
 		return true
 	}
 
@@ -67,7 +67,7 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 
 	meterHandle, have := agent.meterLoader.Lock(meterID)
 	if !have {
-		logger.Debugw("Meter-is-not-present-in-logical-device", log.Fields{"meterID": meterID})
+		logger.Debugw(ctx, "Meter-is-not-present-in-logical-device", log.Fields{"meterID": meterID})
 		return true
 	}
 	defer meterHandle.Unlock()
@@ -94,10 +94,10 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 		Stats:  &newStats,
 	}
 	if err := meterHandle.Update(ctx, newMeter); err != nil {
-		logger.Debugw("unable-to-update-meter-in-db", log.Fields{"logicalDevice": agent.logicalDeviceID, "meterID": meterID})
+		logger.Debugw(ctx, "unable-to-update-meter-in-db", log.Fields{"logicalDevice": agent.logicalDeviceID, "meterID": meterID})
 		return false
 	}
 
-	logger.Debugw("updated-meter-flow-stats", log.Fields{"meterId": meterID})
+	logger.Debugw(ctx, "updated-meter-flow-stats", log.Fields{"meterId": meterID})
 	return true
 }

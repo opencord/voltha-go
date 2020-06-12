@@ -29,13 +29,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func newKVClient(storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
-	logger.Infow("kv-store-type", log.Fields{"store": storeType})
+func newKVClient(ctx context.Context, storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
+	logger.Infow(ctx, "kv-store-type", log.Fields{"store": storeType})
 	switch storeType {
 	case "consul":
-		return kvstore.NewConsulClient(address, timeout)
+		return kvstore.NewConsulClient(ctx, address, timeout)
 	case "etcd":
-		return kvstore.NewEtcdClient(address, timeout, log.FatalLevel)
+		return kvstore.NewEtcdClient(ctx, address, timeout, log.FatalLevel)
 	}
 	return nil, errors.New("unsupported-kv-store")
 }
@@ -43,19 +43,19 @@ func newKVClient(storeType string, address string, timeout time.Duration) (kvsto
 func stopKVClient(ctx context.Context, kvClient kvstore.Client) {
 	// Release all reservations
 	if err := kvClient.ReleaseAllReservations(ctx); err != nil {
-		logger.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
+		logger.Infow(ctx, "fail-to-release-all-reservations", log.Fields{"error": err})
 	}
 	// Close the DB connection
-	kvClient.Close()
+	kvClient.Close(ctx)
 }
 
 // waitUntilKVStoreReachableOrMaxTries will wait until it can connect to a KV store or until maxtries has been reached
 func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.Client, maxRetries int, retryInterval time.Duration) error {
-	logger.Infow("verifying-KV-store-connectivity", log.Fields{"retries": maxRetries, "retryInterval": retryInterval})
+	logger.Infow(ctx, "verifying-KV-store-connectivity", log.Fields{"retries": maxRetries, "retryInterval": retryInterval})
 	count := 0
 	for {
 		if !kvClient.IsConnectionUp(ctx) {
-			logger.Info("KV-store-unreachable")
+			logger.Info(ctx, "KV-store-unreachable")
 			if maxRetries != -1 {
 				if count >= maxRetries {
 					return status.Error(codes.Unavailable, "kv store unreachable")
@@ -70,13 +70,13 @@ func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.C
 				return ctx.Err()
 			case <-time.After(retryInterval):
 			}
-			logger.Infow("retry-KV-store-connectivity", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
+			logger.Infow(ctx, "retry-KV-store-connectivity", log.Fields{"retryCount": count, "maxRetries": maxRetries, "retryInterval": retryInterval})
 		} else {
 			break
 		}
 	}
 	probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusRunning)
-	logger.Info("KV-store-reachable")
+	logger.Info(ctx, "KV-store-reachable")
 	return nil
 }
 
@@ -95,12 +95,12 @@ func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.C
  * start issuing UNAVAILABLE response while the probe is not ready.
  */
 func monitorKVStoreLiveness(ctx context.Context, backend *db.Backend, liveProbeInterval, notLiveProbeInterval time.Duration) {
-	logger.Info("start-monitoring-kvstore-liveness")
+	logger.Info(ctx, "start-monitoring-kvstore-liveness")
 
 	// Instruct backend to create Liveness channel for transporting state updates
-	livenessChannel := backend.EnableLivenessChannel()
+	livenessChannel := backend.EnableLivenessChannel(ctx)
 
-	logger.Debug("enabled-kvstore-liveness-channel")
+	logger.Debug(ctx, "enabled-kvstore-liveness-channel")
 
 	// Default state for kvstore is alive for rw_core
 	timeout := liveProbeInterval
@@ -110,17 +110,17 @@ loop:
 		select {
 
 		case liveness := <-livenessChannel:
-			logger.Debugw("received-liveness-change-notification", log.Fields{"liveness": liveness})
+			logger.Debugw(ctx, "received-liveness-change-notification", log.Fields{"liveness": liveness})
 
 			if !liveness {
 				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
-				logger.Info("kvstore-set-server-notready")
+				logger.Info(ctx, "kvstore-set-server-notready")
 
 				timeout = notLiveProbeInterval
 
 			} else {
 				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusRunning)
-				logger.Info("kvstore-set-server-ready")
+				logger.Info(ctx, "kvstore-set-server-ready")
 
 				timeout = liveProbeInterval
 			}
@@ -133,7 +133,7 @@ loop:
 			break loop
 
 		case <-timeoutTimer.C:
-			logger.Info("kvstore-perform-liveness-check-on-timeout")
+			logger.Info(ctx, "kvstore-perform-liveness-check-on-timeout")
 
 			// Trigger Liveness check if no liveness update received within the timeout period.
 			// The Liveness check will push Live state to same channel which this routine is

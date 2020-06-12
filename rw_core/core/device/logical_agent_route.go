@@ -28,14 +28,14 @@ import (
 
 // GetRoute returns a route
 func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, egressPortNo uint32) ([]route.Hop, error) {
-	logger.Debugw("getting-route", log.Fields{"ingress-port": ingressPortNo, "egress-port": egressPortNo})
+	logger.Debugw(ctx, "getting-route", log.Fields{"ingress-port": ingressPortNo, "egress-port": egressPortNo})
 	routes := make([]route.Hop, 0)
 
 	// Note: A port value of 0 is equivalent to a nil port
 
 	// Controller-bound flow
 	if egressPortNo != 0 && ((egressPortNo & 0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER)) {
-		logger.Debugw("controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo})
+		logger.Debugw(ctx, "controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo})
 		if agent.isNNIPort(ingressPortNo) {
 			//This is a trap on the NNI Port
 			if agent.deviceRoutes.IsRoutesEmpty() {
@@ -57,7 +57,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		// Treat it as if the output port is the first NNI of the OLT
 		var err error
 		if egressPortNo, err = agent.getAnyNNIPort(); err != nil {
-			logger.Warnw("no-nni-port", log.Fields{"error": err})
+			logger.Warnw(ctx, "no-nni-port", log.Fields{"error": err})
 			return nil, err
 		}
 	}
@@ -92,16 +92,16 @@ func (agent *LogicalAgent) GetDeviceRoutes() *route.DeviceRoutes {
 
 //rebuildRoutes rebuilds the device routes
 func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
-	logger.Debugf("building-routes", log.Fields{"logical-device-id": agent.logicalDeviceID})
+	logger.Debugf(ctx, "building-routes", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	if err := agent.deviceRoutes.ComputeRoutes(ctx, agent.listLogicalDevicePorts()); err != nil {
+	if err := agent.deviceRoutes.ComputeRoutes(ctx, agent.listLogicalDevicePorts(ctx)); err != nil {
 		return err
 	}
-	if err := agent.deviceRoutes.Print(); err != nil {
+	if err := agent.deviceRoutes.Print(ctx); err != nil {
 		return err
 	}
 	return nil
@@ -109,12 +109,12 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 
 //updateRoutes updates the device routes
 func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Device, lp *voltha.LogicalPort, lps map[uint32]*voltha.LogicalPort) error {
-	logger.Debugw("updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "port:": lp})
+	logger.Debugw(ctx, "updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "port:": lp})
 
 	if err := agent.deviceRoutes.AddPort(ctx, lp, device, lps); err != nil {
 		return err
 	}
-	if err := agent.deviceRoutes.Print(); err != nil {
+	if err := agent.deviceRoutes.Print(ctx); err != nil {
 		return err
 	}
 	return nil
@@ -122,12 +122,12 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Devi
 
 //updateAllRoutes updates the device routes using all the logical ports on that device
 func (agent *LogicalAgent) updateAllRoutes(ctx context.Context, device *voltha.Device) error {
-	logger.Debugw("updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "ports-count": len(device.Ports)})
+	logger.Debugw(ctx, "updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "ports-count": len(device.Ports)})
 
-	if err := agent.deviceRoutes.AddAllPorts(ctx, device, agent.listLogicalDevicePorts()); err != nil {
+	if err := agent.deviceRoutes.AddAllPorts(ctx, device, agent.listLogicalDevicePorts(ctx)); err != nil {
 		return err
 	}
-	if err := agent.deviceRoutes.Print(); err != nil {
+	if err := agent.deviceRoutes.Print(ctx); err != nil {
 		return err
 	}
 	return nil
