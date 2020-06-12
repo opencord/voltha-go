@@ -67,15 +67,17 @@ func init() {
 		kafka.MsgClient(kc),
 		kafka.DefaultTopic(&kafka.Topic{Name: coreName}))
 
-	if err = coreKafkaICProxy.Start(); err != nil {
-		logger.Fatalw("Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
+	ctx := context.Background()
+
+	if err = coreKafkaICProxy.Start(ctx); err != nil {
+		logger.Fatalw(ctx, "Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
-	if err = coreKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: coreName}, 0); err != nil {
-		logger.Fatalw("Failure-subscribing-core-request-handler", log.Fields{"error": err})
+	if err = coreKafkaICProxy.SubscribeWithDefaultRequestHandler(ctx, kafka.Topic{Name: coreName}, 0); err != nil {
+		logger.Fatalw(ctx, "Failure-subscribing-core-request-handler", log.Fields{"error": err})
 	}
 
 	// Setup adapter inter-container proxy and adapter request handler
-	adapterCoreProxy := com.NewCoreProxy(nil, adapterName, coreName)
+	adapterCoreProxy := com.NewCoreProxy(ctx, nil, adapterName, coreName)
 	adapter = cm.NewAdapter(adapterCoreProxy)
 	adapterReqHandler = com.NewRequestHandlerProxy(coreInstanceID, adapter, adapterCoreProxy)
 	adapterKafkaICProxy = kafka.NewInterContainerProxy(
@@ -83,11 +85,11 @@ func init() {
 		kafka.DefaultTopic(&kafka.Topic{Name: adapterName}),
 		kafka.RequestHandlerInterface(adapterReqHandler))
 
-	if err = adapterKafkaICProxy.Start(); err != nil {
-		logger.Fatalw("Failure-starting-adapter-kafka-intercontainerProxy", log.Fields{"error": err})
+	if err = adapterKafkaICProxy.Start(ctx); err != nil {
+		logger.Fatalw(ctx, "Failure-starting-adapter-kafka-intercontainerProxy", log.Fields{"error": err})
 	}
-	if err = adapterKafkaICProxy.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: adapterName}, 0); err != nil {
-		logger.Fatalw("Failure-subscribing-adapter-request-handler", log.Fields{"error": err})
+	if err = adapterKafkaICProxy.SubscribeWithDefaultRequestHandler(ctx, kafka.Topic{Name: adapterName}, 0); err != nil {
+		logger.Fatalw(ctx, "Failure-subscribing-adapter-request-handler", log.Fields{"error": err})
 	}
 }
 
@@ -174,7 +176,7 @@ func testGetSwitchCapabilityFromAdapter(t *testing.T) {
 	err = ptypes.UnmarshalAny(response, switchCap)
 	assert.Nil(t, err)
 	assert.NotNil(t, switchCap)
-	expectedCap, _ := adapter.Get_ofp_device_info(d)
+	expectedCap, _ := adapter.Get_ofp_device_info(ctx, d)
 	assert.Equal(t, switchCap.String(), expectedCap.String())
 }
 

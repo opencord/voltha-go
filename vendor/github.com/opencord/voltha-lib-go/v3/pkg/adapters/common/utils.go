@@ -16,6 +16,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
@@ -75,7 +76,7 @@ func GetRandomString(n int) string {
 	return string(b)
 }
 
-func ICProxyErrorCodeToGrpcErrorCode(icErr ic.ErrorCodeCodes) codes.Code {
+func ICProxyErrorCodeToGrpcErrorCode(ctx context.Context, icErr ic.ErrorCodeCodes) codes.Code {
 	switch icErr {
 	case ic.ErrorCode_INVALID_PARAMETERS:
 		return codes.InvalidArgument
@@ -84,7 +85,7 @@ func ICProxyErrorCodeToGrpcErrorCode(icErr ic.ErrorCodeCodes) codes.Code {
 	case ic.ErrorCode_DEADLINE_EXCEEDED:
 		return codes.DeadlineExceeded
 	default:
-		logger.Warnw("cannnot-map-ic-error-code-to-grpc-error-code", log.Fields{"err": icErr})
+		logger.Warnw(ctx, "cannnot-map-ic-error-code-to-grpc-error-code", log.Fields{"err": icErr})
 		return codes.Internal
 	}
 }

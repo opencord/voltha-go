@@ -17,6 +17,7 @@
 package adapter
 
 import (
+	"context"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -36,10 +37,10 @@ func newAdapterAgent(adapter *voltha.Adapter) *agent {
 	}
 }
 
-func (aa *agent) getAdapter() *voltha.Adapter {
+func (aa *agent) getAdapter(ctx context.Context) *voltha.Adapter {
 	aa.lock.RLock()
 	defer aa.lock.RUnlock()
-	logger.Debugw("getAdapter", log.Fields{"adapter": aa.adapter})
+	logger.Debugw(ctx, "getAdapter", log.Fields{"adapter": aa.adapter})
 	return aa.adapter
 }
 
