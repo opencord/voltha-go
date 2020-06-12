@@ -19,13 +19,14 @@ package utils
 import (
 	"os"
 	"time"
+	"context"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 // ResponseCallback is the function signature for callbacks to execute after a response is received.
-type ResponseCallback func(rpc string, response interface{}, reqArgs ...interface{})
+type ResponseCallback func(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{})
 
 // DeviceID represent device id attribute
 type DeviceID struct {

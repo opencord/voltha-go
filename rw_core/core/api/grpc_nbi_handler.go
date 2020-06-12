@@ -49,8 +49,8 @@ func NewNBIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalMa
 }
 
 // GetVoltha currently just returns version information
-func (handler *NBIHandler) GetVoltha(context.Context, *empty.Empty) (*voltha.Voltha, error) {
-	logger.Debug("GetVoltha")
+func (handler *NBIHandler) GetVoltha(ctx context.Context, _ *empty.Empty) (*voltha.Voltha, error) {
+	logger.Debug(ctx, "GetVoltha")
 	/*
 	 * For now, encode all the version information into a JSON object and
 	 * pass that back as "version" so the client can get all the
@@ -59,7 +59,7 @@ func (handler *NBIHandler) GetVoltha(context.Context, *empty.Empty) (*voltha.Vol
 	 */
 	data, err := json.Marshal(&version.VersionInfo)
 	if err != nil {
-		logger.Warnf("Unable to encode version information as JSON: %s", err.Error())
+		logger.Warnf(ctx, "Unable to encode version information as JSON: %s", err.Error())
 		return &voltha.Voltha{Version: version.VersionInfo.Version}, nil
 	}
 	return &voltha.Voltha{Version: string(data)}, nil

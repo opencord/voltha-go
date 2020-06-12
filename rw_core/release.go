@@ -18,6 +18,9 @@
 
 package main
 
+import "context"
+
 func realMain() {
-	logger.Infoln("NOT PROFILING")
+	ctx := context.Background()
+	logger.Infoln(ctx, "NOT PROFILING")
 }

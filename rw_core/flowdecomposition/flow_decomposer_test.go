@@ -384,7 +384,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	tfd.defaultRules.AddFlowsAndGroup("onu4", fg)
 
 	//Set up the device graph - flow decomposer uses it only to verify whether a port is a root port.
-	tfd.deviceRoutes = route.NewDeviceRoutes("ldid", tfd.getDeviceHelper)
+	tfd.deviceRoutes = route.NewDeviceRoutes(context.Background(), "ldid", tfd.getDeviceHelper)
 	tfd.deviceRoutes.RootPorts = make(map[uint32]uint32)
 	tfd.deviceRoutes.RootPorts[10] = 10
 
@@ -413,7 +413,7 @@ func (tfd *testFlowDecomposer) GetAllDefaultRules() *fu.DeviceRules {
 	return tfd.defaultRules
 }
 
-func (tfd *testFlowDecomposer) GetWildcardInputPorts(excludePort uint32) map[uint32]struct{} {
+func (tfd *testFlowDecomposer) GetWildcardInputPorts(ctx context.Context, excludePort uint32) map[uint32]struct{} {
 	lPorts := make(map[uint32]struct{})
 	for portNo := range tfd.logicalPorts {
 		if portNo != excludePort {
@@ -866,7 +866,8 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 }
 
 func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
-	logger.Debugf("Starting Test Unicast Downstream")
+	ctx := context.Background()
+	logger.Debugf(ctx, "Starting Test Unicast Downstream")
 	fa1 := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 0},
 		MatchFields: []*ofp.OfpOxmOfbField{

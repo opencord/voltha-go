@@ -25,7 +25,7 @@ import (
 
 func realMain() {
 	go func() {
-		logger.Infoln(http.ListenAndServe("0.0.0.0:6060", nil))
+		logger.Infoln(ctx, http.ListenAndServe("0.0.0.0:6060", nil))
 	}()
 
 }

@@ -65,7 +65,7 @@ type DeviceRoutes struct {
 }
 
 // NewDeviceRoutes creates device graph instance
-func NewDeviceRoutes(logicalDeviceID string, getDevice GetDeviceFunc) *DeviceRoutes {
+func NewDeviceRoutes(ctx context.Context, logicalDeviceID string, getDevice GetDeviceFunc) *DeviceRoutes {
 	var dr DeviceRoutes
 	dr.logicalDeviceID = logicalDeviceID
 	dr.getDeviceFromModel = getDevice
@@ -74,7 +74,7 @@ func NewDeviceRoutes(logicalDeviceID string, getDevice GetDeviceFunc) *DeviceRou
 	dr.devicesPonPorts = make(map[string][]*voltha.Port)
 	dr.childConnectionPort = make(map[string]uint32)
 	dr.logicalPorts = make(map[uint32]*voltha.LogicalPort)
-	logger.Debug("new device routes created ...")
+	logger.Debug(ctx, "new device routes created ...")
 	return &dr
 }
 
@@ -124,7 +124,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps map[uint32]*volth
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
 
-	logger.Debugw("computing-all-routes", log.Fields{"len-logical-ports": len(lps)})
+	logger.Debugw(ctx, "computing-all-routes", log.Fields{"len-logical-ports": len(lps)})
 	var err error
 	defer func() {
 		// On error, clear the routes - any flow request or a port add/delete will trigger the rebuild
@@ -175,7 +175,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps map[uint32]*volth
 		}
 		for _, rootDevicePort := range rootDevice.Ports {
 			if rootDevicePort.Type == voltha.Port_PON_OLT {
-				logger.Debugw("peers", log.Fields{"root-device-id": rootDevice.Id, "port-no": rootDevicePort.PortNo, "len-peers": len(rootDevicePort.Peers)})
+				logger.Debugw(ctx, "peers", log.Fields{"root-device-id": rootDevice.Id, "port-no": rootDevicePort.PortNo, "len-peers": len(rootDevicePort.Peers)})
 				for _, rootDevicePeer := range rootDevicePort.Peers {
 					childDevice, err = dr.getDeviceWithCacheUpdate(ctx, rootDevicePeer.DeviceId)
 					if err != nil {
@@ -210,7 +210,7 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps map[uint32]*volth
 // AddPort augments the current set of routes with new routes corresponding to the logical port "lp".  If the routes have
 // not been built yet then use logical port "lps" to compute all current routes (lps includes lp)
 func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
-	logger.Debugw("add-port-to-routes", log.Fields{"port": lp, "count-logical-ports": len(lps)})
+	logger.Debugw(ctx, "add-port-to-routes", log.Fields{"port": lp, "count-logical-ports": len(lps)})
 
 	// Adding NNI port
 	if lp.RootPort {
@@ -223,7 +223,7 @@ func (dr *DeviceRoutes) AddPort(ctx context.Context, lp *voltha.LogicalPort, dev
 
 // AddUNIPort setup routes between the logical UNI port lp and all registered NNI ports
 func (dr *DeviceRoutes) AddUNIPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
-	logger.Debugw("add-uni-port-to-routes", log.Fields{"port": lp, "count-logical-ports": len(lps)})
+	logger.Debugw(ctx, "add-uni-port-to-routes", log.Fields{"port": lp, "count-logical-ports": len(lps)})
 
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
@@ -260,7 +260,7 @@ func (dr *DeviceRoutes) AddUNIPort(ctx context.Context, lp *voltha.LogicalPort, 
 
 // AddNNIPort setup routes between the logical NNI port lp and all registered UNI ports
 func (dr *DeviceRoutes) AddNNIPort(ctx context.Context, lp *voltha.LogicalPort, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
-	logger.Debugw("add-port-to-routes", log.Fields{"port": lp, "logical-ports-count": len(lps), "device-id": device.Id})
+	logger.Debugw(ctx, "add-port-to-routes", log.Fields{"port": lp, "logical-ports-count": len(lps), "device-id": device.Id})
 
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
@@ -282,7 +282,7 @@ func (dr *DeviceRoutes) AddNNIPort(ctx context.Context, lp *voltha.LogicalPort, 
 
 	for _, rootDevicePort := range device.Ports {
 		if rootDevicePort.Type == voltha.Port_PON_OLT {
-			logger.Debugw("peers", log.Fields{"root-device-id": device.Id, "port-no": rootDevicePort.PortNo, "len-peers": len(rootDevicePort.Peers)})
+			logger.Debugw(ctx, "peers", log.Fields{"root-device-id": device.Id, "port-no": rootDevicePort.PortNo, "len-peers": len(rootDevicePort.Peers)})
 			for _, rootDevicePeer := range rootDevicePort.Peers {
 				childDevice, err := dr.getDeviceWithCacheUpdate(ctx, rootDevicePeer.DeviceId)
 				if err != nil {
@@ -318,7 +318,7 @@ func (dr *DeviceRoutes) AddNNIPort(ctx context.Context, lp *voltha.LogicalPort, 
 
 // AddAllPorts setups up new routes using all ports on the device. lps includes the device's logical port
 func (dr *DeviceRoutes) AddAllPorts(ctx context.Context, device *voltha.Device, lps map[uint32]*voltha.LogicalPort) error {
-	logger.Debugw("add-all-port-to-routes", log.Fields{"logical-ports-count": len(lps), "device-id": device.Id})
+	logger.Debugw(ctx, "add-all-port-to-routes", log.Fields{"logical-ports-count": len(lps), "device-id": device.Id})
 	for _, lp := range lps {
 		if lp.DeviceId == device.Id {
 			if err := dr.AddPort(ctx, lp, device, lps); err != nil {
@@ -330,10 +330,10 @@ func (dr *DeviceRoutes) AddAllPorts(ctx context.Context, device *voltha.Device, 
 }
 
 // Print prints routes
-func (dr *DeviceRoutes) Print() error {
+func (dr *DeviceRoutes) Print(ctx context.Context) error {
 	dr.routeBuildLock.RLock()
 	defer dr.routeBuildLock.RUnlock()
-	logger.Debugw("Print", log.Fields{"logical-device-id": dr.logicalDeviceID, "logical-ports": dr.logicalPorts})
+	logger.Debugw(ctx, "Print", log.Fields{"logical-device-id": dr.logicalDeviceID, "logical-ports": dr.logicalPorts})
 	if logger.V(log.DebugLevel) {
 		output := ""
 		routeNumber := 1
@@ -348,9 +348,9 @@ func (dr *DeviceRoutes) Print() error {
 			routeNumber++
 		}
 		if len(dr.Routes) == 0 {
-			logger.Debugw("no-routes-found", log.Fields{"logical-device-id": dr.logicalDeviceID})
+			logger.Debugw(ctx, "no-routes-found", log.Fields{"logical-device-id": dr.logicalDeviceID})
 		} else {
-			logger.Debugw("graph_routes", log.Fields{"lDeviceId": dr.logicalDeviceID, "Routes": output})
+			logger.Debugw(ctx, "graph_routes", log.Fields{"lDeviceId": dr.logicalDeviceID, "Routes": output})
 		}
 	}
 	return nil
@@ -414,7 +414,7 @@ func (dr *DeviceRoutes) GetHalfRoute(nniAsEgress bool, ingress, egress uint32) (
 func (dr *DeviceRoutes) getDeviceWithCacheUpdate(ctx context.Context, deviceID string) (*voltha.Device, error) {
 	device, err := dr.getDeviceFromModel(ctx, deviceID)
 	if err != nil {
-		logger.Errorw("device-not-found", log.Fields{"deviceId": deviceID, "error": err})
+		logger.Errorw(ctx, "device-not-found", log.Fields{"deviceId": deviceID, "error": err})
 		return nil, err
 	}
 	dr.updateCache(device)
@@ -477,7 +477,7 @@ func (dr *DeviceRoutes) getChildPonPort(ctx context.Context, deviceID string) (u
 
 	// Get child device from model
 	if _, err := dr.getDeviceWithCacheUpdate(ctx, deviceID); err != nil {
-		logger.Errorw("device-not-found", log.Fields{"device-id": deviceID, "error": err})
+		logger.Errorw(ctx, "device-not-found", log.Fields{"device-id": deviceID, "error": err})
 		return 0, err
 	}
 
@@ -498,7 +498,7 @@ func (dr *DeviceRoutes) getParentPonPort(ctx context.Context, deviceID string, c
 
 	// Get parent device from the model
 	if _, err := dr.getDeviceWithCacheUpdate(ctx, deviceID); err != nil {
-		logger.Errorw("device-not-found", log.Fields{"deviceId": deviceID, "error": err})
+		logger.Errorw(ctx, "device-not-found", log.Fields{"deviceId": deviceID, "error": err})
 		return 0, err
 	}
 	// Try again

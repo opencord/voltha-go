@@ -297,7 +297,7 @@ func getHandler(previous *deviceState, current *deviceState, transition *Transit
 }
 
 // GetTransitionHandler returns transition handler & a flag that's set if the transition is invalid
-func (tMap *TransitionMap) GetTransitionHandler(device *voltha.Device, pState *deviceState) []TransitionHandler {
+func (tMap *TransitionMap) GetTransitionHandler(ctx context.Context, device *voltha.Device, pState *deviceState) []TransitionHandler {
 	//1. Get the previous and current set of states
 	cState := getDeviceStates(device)
 
@@ -306,13 +306,13 @@ func (tMap *TransitionMap) GetTransitionHandler(device *voltha.Device, pState *d
 		return nil
 	}
 
-	//logger.Infow("deviceType", log.Fields{"device": pDevice})
+	//logger.Infow(ctx, "deviceType", log.Fields{"device": pDevice})
 	deviceType := parent
 	if !device.Root {
-		logger.Info("device is child")
+		logger.Info(ctx, "device is child")
 		deviceType = child
 	}
-	logger.Infof("deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, device.Id, pState, cState)
+	logger.Infof(ctx, "deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, device.Id, pState, cState)
 
 	//2. Go over transition array to get the right transition
 	var currentMatch []TransitionHandler

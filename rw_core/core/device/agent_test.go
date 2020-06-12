@@ -63,13 +63,13 @@ type DATest struct {
 	done             chan int
 }
 
-func newDATest() *DATest {
+func newDATest(ctx context.Context) *DATest {
 	test := &DATest{}
 	// Start the embedded etcd server
 	var err error
-	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer("voltha.rwcore.da.test", "voltha.rwcore.da.etcd", "error")
+	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer(ctx, "voltha.rwcore.da.test", "voltha.rwcore.da.etcd", "error")
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(ctx, err)
 	}
 	// Create the kafka client
 	test.kClient = mock_kafka.NewKafkaClient()
@@ -111,7 +111,7 @@ func newDATest() *DATest {
 	return test
 }
 
-func (dat *DATest) startCore(inCompeteMode bool) {
+func (dat *DATest) startCore(ctx context.Context, inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
@@ -119,10 +119,10 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
-		logger.Fatal("Cannot get a freeport for grpc")
+		logger.Fatal(ctx, "Cannot get a freeport for grpc")
 	}
 	cfg.GrpcAddress = "127.0.0.1" + ":" + strconv.Itoa(grpcPort)
-	client := tst.SetupKVClient(cfg, dat.coreInstanceID)
+	client := tst.SetupKVClient(ctx, cfg, dat.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
@@ -137,29 +137,29 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
-	dat.adapterMgr = adapter.NewAdapterManager(proxy, dat.coreInstanceID, dat.kClient)
+	dat.adapterMgr = adapter.NewAdapterManager(ctx, proxy, dat.coreInstanceID, dat.kClient)
 
 	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
 	dat.adapterMgr.Start(context.Background())
-	if err = dat.kmp.Start(); err != nil {
-		logger.Fatal("Cannot start InterContainerProxy")
+	if err = dat.kmp.Start(ctx); err != nil {
+		logger.Fatal(ctx, "Cannot start InterContainerProxy")
 	}
 
-	if err := dat.kmp.SubscribeWithDefaultRequestHandler(kafka.Topic{Name: cfg.CoreTopic}, kafka.OffsetNewest); err != nil {
-		logger.Fatalf("Cannot add default request handler: %s", err)
+	if err := dat.kmp.SubscribeWithDefaultRequestHandler(ctx, kafka.Topic{Name: cfg.CoreTopic}, kafka.OffsetNewest); err != nil {
+		logger.Fatalf(ctx, "Cannot add default request handler: %s", err)
 	}
 
 }
 
-func (dat *DATest) stopAll() {
+func (dat *DATest) stopAll(ctx context.Context) {
 	if dat.kClient != nil {
-		dat.kClient.Stop()
+		dat.kClient.Stop(ctx)
 	}
 	if dat.kmp != nil {
-		dat.kmp.Stop()
+		dat.kmp.Stop(ctx)
 	}
 	if dat.etcdServer != nil {
-		tst.StopEmbeddedEtcdServer(dat.etcdServer)
+		tst.StopEmbeddedEtcdServer(ctx, dat.etcdServer)
 	}
 }
 
@@ -246,13 +246,14 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 }
 
 func TestConcurrentDevices(t *testing.T) {
+	ctx := context.Background()
 	for i := 0; i < 2; i++ {
-		da := newDATest()
+		da := newDATest(ctx)
 		assert.NotNil(t, da)
-		defer da.stopAll()
+		defer da.stopAll(ctx)
 		log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 		// Start the Core
-		da.startCore(false)
+		da.startCore(ctx, false)
 
 		var wg sync.WaitGroup
 		numConCurrentDeviceAgents := 20
@@ -266,33 +267,35 @@ func TestConcurrentDevices(t *testing.T) {
 	}
 }
 func TestFlowUpdates(t *testing.T) {
-	da := newDATest()
+	ctx := context.Background()
+	da := newDATest(ctx)
 	assert.NotNil(t, da)
-	defer da.stopAll()
+	defer da.stopAll(ctx)
 
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 	// Start the Core
-	da.startCore(false)
-	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
+	da.startCore(ctx, false)
+	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(ctx, t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
 
 	a := da.createDeviceAgent(t)
 	cloned := a.getDeviceWithoutLock()
-	err := a.updateDeviceStateInStoreWithoutLock(context.Background(), cloned, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
+	err := a.updateDeviceStateInStoreWithoutLock(ctx, cloned, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
 	assert.Nil(t, err)
 	da.testFlowAddDeletes(t, a)
 }
 
 func TestGroupUpdates(t *testing.T) {
-	da := newDATest()
+	ctx := context.Background()
+	da := newDATest(ctx)
 	assert.NotNil(t, da)
-	defer da.stopAll()
+	defer da.stopAll(ctx)
 
 	// Start the Core
-	da.startCore(false)
-	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
+	da.startCore(ctx, false)
+	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(ctx, t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
 	a := da.createDeviceAgent(t)
 	cloned := a.getDeviceWithoutLock()
-	err := a.updateDeviceStateInStoreWithoutLock(context.Background(), cloned, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
+	err := a.updateDeviceStateInStoreWithoutLock(ctx, cloned, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
 	assert.Nil(t, err)
 	da.testGroupAddDeletes(t, a)
 }
