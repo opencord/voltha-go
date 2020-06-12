@@ -16,9 +16,9 @@
 package kafka
 
 import (
-	"time"
-
+	"context"
 	ca "github.com/opencord/voltha-protos/v3/go/inter_container"
+	"time"
 )
 
 const (
@@ -61,15 +61,15 @@ const (
 
 // MsgClient represents the set of APIs  a Kafka MsgClient must implement
 type Client interface {
-	Start() error
-	Stop()
-	CreateTopic(topic *Topic, numPartition int, repFactor int) error
-	DeleteTopic(topic *Topic) error
-	Subscribe(topic *Topic, kvArgs ...*KVArg) (<-chan *ca.InterContainerMessage, error)
-	UnSubscribe(topic *Topic, ch <-chan *ca.InterContainerMessage) error
-	SubscribeForMetadata(func(fromTopic string, timestamp time.Time))
-	Send(msg interface{}, topic *Topic, keys ...string) error
-	SendLiveness() error
-	EnableLivenessChannel(enable bool) chan bool
-	EnableHealthinessChannel(enable bool) chan bool
+	Start(ctx context.Context) error
+	Stop(ctx context.Context)
+	CreateTopic(ctx context.Context, topic *Topic, numPartition int, repFactor int) error
+	DeleteTopic(ctx context.Context, topic *Topic) error
+	Subscribe(ctx context.Context, topic *Topic, kvArgs ...*KVArg) (<-chan *ca.InterContainerMessage, error)
+	UnSubscribe(ctx context.Context, topic *Topic, ch <-chan *ca.InterContainerMessage) error
+	SubscribeForMetadata(context.Context, func(fromTopic string, timestamp time.Time))
+	Send(ctx context.Context, msg interface{}, topic *Topic, keys ...string) error
+	SendLiveness(ctx context.Context) error
+	EnableLivenessChannel(ctx context.Context, enable bool) chan bool
+	EnableHealthinessChannel(ctx context.Context, enable bool) chan bool
 }

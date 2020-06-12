@@ -69,13 +69,13 @@ type NBTest struct {
 	maxTimeout        time.Duration
 }
 
-func newNBTest() *NBTest {
+func newNBTest(ctx context.Context) *NBTest {
 	test := &NBTest{}
 	// Start the embedded etcd server
 	var err error
-	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer("voltha.rwcore.nb.test", "voltha.rwcore.nb.etcd", "error")
+	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer(ctx, "voltha.rwcore.nb.test", "voltha.rwcore.nb.etcd", "error")
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(ctx, err)
 	}
 	// Create the kafka client
 	test.kClient = mock_kafka.NewKafkaClient()
@@ -97,11 +97,11 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(nb.kvClientPort)
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
-		logger.Fatal("Cannot get a freeport for grpc")
+		logger.Fatal(ctx, "Cannot get a freeport for grpc")
 	}
 	cfg.GrpcAddress = "127.0.0.1" + ":" + strconv.Itoa(grpcPort)
 	setCoreCompeteMode(inCompeteMode)
-	client := tst.SetupKVClient(cfg, nb.coreInstanceID)
+	client := tst.SetupKVClient(ctx, cfg, nb.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
@@ -115,28 +115,28 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
-	nb.adapterMgr = adapter.NewAdapterManager(proxy, nb.coreInstanceID, nb.kClient)
+	nb.adapterMgr = adapter.NewAdapterManager(ctx, proxy, nb.coreInstanceID, nb.kClient)
 	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CoreTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
 	nb.adapterMgr.Start(ctx)
 
-	if err := nb.kmp.Start(); err != nil {
-		logger.Fatalf("Cannot start InterContainerProxy: %s", err)
+	if err := nb.kmp.Start(ctx); err != nil {
+		logger.Fatalf(ctx, "Cannot start InterContainerProxy: %s", err)
 	}
 	requestProxy := NewAdapterRequestHandlerProxy(nb.deviceMgr, nb.adapterMgr)
-	if err := nb.kmp.SubscribeWithRequestHandlerInterface(kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
-		logger.Fatalf("Cannot add request handler: %s", err)
+	if err := nb.kmp.SubscribeWithRequestHandlerInterface(ctx, kafka.Topic{Name: cfg.CoreTopic}, requestProxy); err != nil {
+		logger.Fatalf(ctx, "Cannot add request handler: %s", err)
 	}
 }
 
-func (nb *NBTest) stopAll() {
+func (nb *NBTest) stopAll(ctx context.Context) {
 	if nb.kClient != nil {
-		nb.kClient.Stop()
+		nb.kClient.Stop(ctx)
 	}
 	if nb.kmp != nil {
-		nb.kmp.Stop()
+		nb.kmp.Stop(ctx)
 	}
 	if nb.etcdServer != nil {
-		tst.StopEmbeddedEtcdServer(nb.etcdServer)
+		tst.StopEmbeddedEtcdServer(ctx, nb.etcdServer)
 	}
 }
 
@@ -278,6 +278,7 @@ func (nb *NBTest) testCoreWithoutData(t *testing.T, nbi *NBIHandler) {
 }
 
 func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *NBIHandler) {
+	ctx := context.Background()
 	adapters, err := nbi.ListAdapters(getContext(), &empty.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, adapters)
@@ -289,7 +290,7 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *NBIHandler) {
 		case nb.onuAdapterName:
 			assert.Equal(t, "Voltha-onu", a.Vendor)
 		default:
-			logger.Fatal("unregistered-adapter", a.Id)
+			logger.Fatal(ctx, "unregistered-adapter", a.Id)
 		}
 	}
 	deviceTypes, err := nbi.ListDeviceTypes(getContext(), &empty.Empty{})
@@ -307,7 +308,7 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi *NBIHandler) {
 			assert.Equal(t, false, dt.AcceptsBulkFlowUpdate)
 			assert.Equal(t, true, dt.AcceptsAddRemoveFlowUpdates)
 		default:
-			logger.Fatal("invalid-device-type", dt.Id)
+			logger.Fatal(ctx, "invalid-device-type", dt.Id)
 		}
 	}
 }
@@ -1191,24 +1192,25 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
 }
 
 func TestSuiteNbiApiHandler(t *testing.T) {
+	ctx := context.Background()
 	f, err := os.Create("../../../tests/results/profile.cpu")
 	if err != nil {
-		logger.Fatalf("could not create CPU profile: %v\n ", err)
+		logger.Fatalf(ctx, "could not create CPU profile: %v\n ", err)
 	}
 	defer f.Close()
 	runtime.SetBlockProfileRate(1)
 	runtime.SetMutexProfileFraction(-1)
 	if err := pprof.StartCPUProfile(f); err != nil {
-		logger.Fatalf("could not start CPU profile: %v\n", err)
+		logger.Fatalf(ctx, "could not start CPU profile: %v\n", err)
 	}
 	defer pprof.StopCPUProfile()
 
 	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 
-	nb := newNBTest()
+	nb := newNBTest(ctx)
 	assert.NotNil(t, nb)
 
-	defer nb.stopAll()
+	defer nb.stopAll(ctx)
 
 	// Start the Core
 	nb.startCore(false)
@@ -1220,7 +1222,7 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 	nb.testCoreWithoutData(t, nbi)
 
 	// Create/register the adapters
-	nb.oltAdapter, nb.onuAdapter = tst.CreateAndregisterAdapters(t, nb.kClient, nb.coreInstanceID, nb.oltAdapterName, nb.onuAdapterName, nb.adapterMgr)
+	nb.oltAdapter, nb.onuAdapter = tst.CreateAndregisterAdapters(ctx, t, nb.kClient, nb.coreInstanceID, nb.oltAdapterName, nb.onuAdapterName, nb.adapterMgr)
 	nb.numONUPerOLT = nb.oltAdapter.GetNumONUPerOLT()
 	nb.startingUNIPortNo = nb.oltAdapter.GetStartingUNIPortNo()
 

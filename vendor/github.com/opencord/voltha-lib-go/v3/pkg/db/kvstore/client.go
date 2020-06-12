@@ -88,6 +88,6 @@ type Client interface {
 	AcquireLock(ctx context.Context, lockName string, timeout time.Duration) error
 	ReleaseLock(lockName string) error
 	IsConnectionUp(ctx context.Context) bool // timeout in second
-	CloseWatch(key string, ch chan *Event)
-	Close()
+	CloseWatch(ctx context.Context, key string, ch chan *Event)
+	Close(ctx context.Context)
 }

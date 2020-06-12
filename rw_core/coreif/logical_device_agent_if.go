@@ -30,7 +30,7 @@ import (
 type LogicalDeviceAgent interface {
 	GetDeviceRoutes() *route.DeviceRoutes
 	GetLogicalDevice(ctx context.Context) (*voltha.LogicalDevice, error)
-	GetWildcardInputPorts(excludePort uint32) map[uint32]struct{}
+	GetWildcardInputPorts(ctx context.Context, excludePort uint32) map[uint32]struct{}
 	GetRoute(ctx context.Context, ingressPortNo uint32, egressPortNo uint32) ([]route.Hop, error)
 	GetNNIPorts() map[uint32]struct{}
 }

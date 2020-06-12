@@ -77,8 +77,8 @@ func newLogicalDeviceManager(ld *voltha.LogicalDevice, ch chan portRegistration,
 	}
 }
 
-func (ldM *logicalDeviceManager) start(getDevice GetDeviceFunc, buildRoutes bool) {
-	ldM.deviceRoutes = NewDeviceRoutes(ldM.logicalDeviceID, getDevice)
+func (ldM *logicalDeviceManager) start(ctx context.Context, getDevice GetDeviceFunc, buildRoutes bool) {
+	ldM.deviceRoutes = NewDeviceRoutes(ctx, ldM.logicalDeviceID, getDevice)
 	ofpPortNo := uint32(1)
 	for portReg := range ldM.ldChnl {
 		if portReg.port == nil {
@@ -274,7 +274,8 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 	onuMgr := newOnuManager(oltMgr, numOnuPerOltPonPort, numUniPerOnu, 2)
 	getDevice := onuMgr.GetDeviceHelper
 	// Start the managers.  Only the devices are created.  No routes will be built.
-	go ldMgr.start(getDevice, false)
+	ctx := context.Background()
+	go ldMgr.start(ctx, getDevice, false)
 	go oltMgr.start()
 	go onuMgr.start(numNNIPort+1, numPonPortOnOlt)
 
@@ -320,8 +321,10 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	oltMgr := newOltManager(oltDeviceID, ldMgr, numNNIPort, numPonPortOnOlt, oltMgrChnl)
 	onuMgr := newOnuManager(oltMgr, numOnuPerOltPonPort, numUniPerOnu, 2)
 	getDevice := onuMgr.GetDeviceHelper
+
+	ctx := context.Background()
 	// Start the managers and trigger the routes to be built as the logical ports become available
-	go ldMgr.start(getDevice, true)
+	go ldMgr.start(ctx, getDevice, true)
 	go oltMgr.start()
 	go onuMgr.start(numNNIPort+1, numPonPortOnOlt)
 
@@ -330,7 +333,7 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	close(oltMgrChnl)
 	close(ldMgrChnl)
 
-	ldMgr.deviceRoutes.Print()
+	ldMgr.deviceRoutes.Print(ctx)
 
 	// Validate the routes are up to date
 	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ldMgr.ports))
@@ -364,8 +367,9 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 	oltMgr1 := newOltManager(oltDeviceID, ldMgr1, numNNIPort, numPonPortOnOlt, oltMgrChnl1)
 	onuMgr1 := newOnuManager(oltMgr1, numOnuPerOltPonPort, numUniPerOnu, 2)
 	getDevice := onuMgr1.GetDeviceHelper
+	ctx := context.Background()
 	// Start the managers.  Only the devices are created.  No routes will be built.
-	go ldMgr1.start(getDevice, false)
+	go ldMgr1.start(ctx, getDevice, false)
 	go oltMgr1.start()
 	go onuMgr1.start(numNNIPort+1, numPonPortOnOlt)
 
@@ -388,7 +392,7 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 	oltMgr2 := newOltManager(oltDeviceID, ldMgr2, numNNIPort, numPonPortOnOlt, oltMgrChnl2)
 	onuMgr2 := newOnuManager(oltMgr2, numOnuPerOltPonPort, numUniPerOnu, 2)
 	// Start the managers.  Only the devices are created.  No routes will be built.
-	go ldMgr2.start(getDevice, true)
+	go ldMgr2.start(ctx, getDevice, true)
 	go oltMgr2.start()
 	go onuMgr2.start(numNNIPort+1, numPonPortOnOlt)
 
