@@ -57,13 +57,13 @@ type LDATest struct {
 	done             chan int
 }
 
-func newLDATest() *LDATest {
+func newLDATest(ctx context.Context) *LDATest {
 	test := &LDATest{}
 	// Start the embedded etcd server
 	var err error
-	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer("voltha.rwcore.lda.test", "voltha.rwcore.lda.etcd", "error")
+	test.etcdServer, test.kvClientPort, err = tst.StartEmbeddedEtcdServer(ctx, "voltha.rwcore.lda.test", "voltha.rwcore.lda.etcd", "error")
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(ctx, err)
 	}
 	// Create the kafka client
 	test.kClient = mock_kafka.NewKafkaClient()
@@ -131,7 +131,7 @@ func newLDATest() *LDATest {
 	return test
 }
 
-func (lda *LDATest) startCore(inCompeteMode bool) {
+func (lda *LDATest) startCore(ctx context.Context, inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = lda.defaultTimeout
@@ -139,10 +139,10 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
-		logger.Fatal("Cannot get a freeport for grpc")
+		logger.Fatal(ctx, "Cannot get a freeport for grpc")
 	}
 	cfg.GrpcAddress = "127.0.0.1" + ":" + strconv.Itoa(grpcPort)
-	client := tst.SetupKVClient(cfg, lda.coreInstanceID)
+	client := tst.SetupKVClient(ctx, cfg, lda.coreInstanceID)
 	backend := &db.Backend{
 		Client:                  client,
 		StoreType:               cfg.KVStoreType,
@@ -157,24 +157,24 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
-	adapterMgr := adapter.NewAdapterManager(proxy, lda.coreInstanceID, lda.kClient)
+	adapterMgr := adapter.NewAdapterManager(ctx, proxy, lda.coreInstanceID, lda.kClient)
 
 	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CoreTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
-	if err = lda.kmp.Start(); err != nil {
-		logger.Fatal("Cannot start InterContainerProxy")
+	if err = lda.kmp.Start(ctx); err != nil {
+		logger.Fatal(ctx, "Cannot start InterContainerProxy")
 	}
 	adapterMgr.Start(context.Background())
 }
 
-func (lda *LDATest) stopAll() {
+func (lda *LDATest) stopAll(ctx context.Context) {
 	if lda.kClient != nil {
-		lda.kClient.Stop()
+		lda.kClient.Stop(ctx)
 	}
 	if lda.kmp != nil {
-		lda.kmp.Stop()
+		lda.kmp.Stop(ctx)
 	}
 	if lda.etcdServer != nil {
-		tst.StopEmbeddedEtcdServer(lda.etcdServer)
+		tst.StopEmbeddedEtcdServer(ctx, lda.etcdServer)
 	}
 }
 
@@ -184,7 +184,7 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 	clonedLD := proto.Clone(lda.logicalDevice).(*voltha.LogicalDevice)
 	clonedLD.Id = com.GetRandomString(10)
 	clonedLD.DatapathId = rand.Uint64()
-	lDeviceAgent := newLogicalAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbPath, lDeviceMgr.ldProxy, lDeviceMgr.defaultTimeout)
+	lDeviceAgent := newLogicalAgent(context.Background(), clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbPath, lDeviceMgr.ldProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
 	for _, port := range clonedLD.Ports {
 		handle, created, err := lDeviceAgent.portLoader.LockOrCreate(context.Background(), port)
@@ -247,14 +247,15 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 		},
 	}
 	localWG.Add(1)
+	ctx := context.Background()
 	go func() {
-		err := ldAgent.meterAdd(context.Background(), meterMod)
+		err := ldAgent.meterAdd(ctx, meterMod)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
 	// wait for go routines to be done
 	localWG.Wait()
-	meterEntry := fu.MeterEntryFromMeterMod(meterMod)
+	meterEntry := fu.MeterEntryFromMeterMod(ctx, meterMod)
 
 	meterHandle, have := ldAgent.meterLoader.Lock(meterMod.MeterId)
 	assert.Equal(t, have, true)
@@ -271,7 +272,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	expectedChange.Ports[2].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 	expectedChange.Ports[2].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
 
-	updatedLogicalDevicePorts := ldAgent.listLogicalDevicePorts()
+	updatedLogicalDevicePorts := ldAgent.listLogicalDevicePorts(context.Background())
 	for _, p := range expectedChange.Ports {
 		assert.True(t, proto.Equal(p, updatedLogicalDevicePorts[p.DevicePortNo]))
 	}
@@ -279,12 +280,13 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 }
 
 func TestConcurrentLogicalDeviceUpdate(t *testing.T) {
-	lda := newLDATest()
+	ctx := context.Background()
+	lda := newLDATest(ctx)
 	assert.NotNil(t, lda)
-	defer lda.stopAll()
+	defer lda.stopAll(ctx)
 
 	// Start the Core
-	lda.startCore(false)
+	lda.startCore(ctx, false)
 
 	var wg sync.WaitGroup
 	numConCurrentLogicalDeviceAgents := 3

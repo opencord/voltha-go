@@ -75,7 +75,7 @@ startloop:
 				mytime = time.Now()
 			}
 			totalTime = totalTime + (time.Now().UnixNano()-msg.Header.Timestamp)/int64(time.Millisecond)
-			//logger.Debugw("msg-received", log.Fields{"msg":msg})
+			//logger.Debugw(ctx, "msg-received", log.Fields{"msg":msg})
 			totalMessageReceived = totalMessageReceived + 1
 			if totalMessageReceived == maxMessages {
 				doneCh <- "All received"
@@ -86,7 +86,7 @@ startloop:
 			}
 		}
 	}
-	logger.Infow("Received all messages", log.Fields{"total": time.Since(mytime)})
+	logger.Infow(ctx, "Received all messages", log.Fields{"total": time.Since(mytime)})
 }
 
 func sendMessages(topic *kk.Topic, numMessages int, fn sendToKafka) error {
@@ -104,7 +104,7 @@ func sendMessages(topic *kk.Topic, numMessages int, fn sendToKafka) error {
 		var err error
 		body := &ic.InterContainerRequestBody{Rpc: "testRPC", Args: []*ic.Argument{}}
 		if marshalledArg, err = ptypes.MarshalAny(body); err != nil {
-			logger.Warnw("cannot-marshal-request", log.Fields{"error": err})
+			logger.Warnw(ctx, "cannot-marshal-request", log.Fields{"error": err})
 			return err
 		}
 		msg.Body = marshalledArg
@@ -154,7 +154,7 @@ func TestPartitionConsumer(t *testing.T) {
 	assert.Nil(t, err)
 	partionClient.Stop()
 	assert.Equal(t, numMessageToSend, totalMessageReceived)
-	logger.Infow("Partition consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
+	logger.Infow(ctx, "Partition consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
 }
 
 func TestGroupConsumer(t *testing.T) {
@@ -168,7 +168,7 @@ func TestGroupConsumer(t *testing.T) {
 	assert.Nil(t, err)
 	groupClient.Stop()
 	assert.Equal(t, numMessageToSend, totalMessageReceived)
-	logger.Infow("Group consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
+	logger.Infow(ctx, "Group consumer completed", log.Fields{"TotalMesages": totalMessageReceived, "TotalTime": totalTime, "val": val, "AverageTime": totalTime / int64(totalMessageReceived), "execTime": time.Since(start)})
 
 }
 

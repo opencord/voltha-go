@@ -60,7 +60,7 @@ func (loader *Loader) Load(ctx context.Context) {
 
 	var meters []*ofp.OfpMeterEntry
 	if err := loader.dbProxy.List(ctx, &meters); err != nil {
-		logger.Errorw("failed-to-list-meters-from-cluster-data-proxy", log.Fields{"error": err})
+		logger.Errorw(ctx, "failed-to-list-meters-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
 	for _, meter := range meters {
