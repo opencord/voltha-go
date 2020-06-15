@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f361cdad_f3bc0eb5",
+        "filename": "compose/system-test-bbsim.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-06-15T21:43:24Z",
+      "side": 0,
+      "message": "It is possible to set as an environment but as you said I preferred to use the default here.",
+      "parentUuid": "71554304_2d252cd0",
+      "range": {
+        "startLine": 88,
+        "startChar": 9,
+        "endLine": 88,
+        "endChar": 44
+      },
+      "revId": "fa9d6d44085b2b99b65e14a74f6602f242ca8e6e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "822976b0_abd4628f",
         "filename": "compose/system-test.yml",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2020-06-15T21:36:21Z",
       "side": 0,
       "message": "Is there no longer a grpc_port argument?",
+      "range": {
+        "startLine": 81,
+        "startChar": 10,
+        "endLine": 81,
+        "endChar": 26
+      },
+      "revId": "fa9d6d44085b2b99b65e14a74f6602f242ca8e6e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22bdd7a7_0917dd7d",
+        "filename": "compose/system-test.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-06-15T21:43:24Z",
+      "side": 0,
+      "message": "Instead there is a grpc_address now which is defined as :\n  -grpc_address string\n    \tGRPC server - address (default \":50057\")\nSo I let it use the default value.",
+      "parentUuid": "822976b0_abd4628f",
       "range": {
         "startLine": 81,
         "startChar": 10,
