@@ -52,6 +52,8 @@ const (
 	defaultLiveProbeInterval         = 60 * time.Second
 	defaultNotLiveProbeInterval      = 5 * time.Second // Probe more frequently when not alive
 	defaultProbeAddress              = ":8080"
+	defaultTraceEnabled              = false
+	defaultTraceAgentAddress         = "127.0.0.1:6831"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -83,6 +85,8 @@ type RWCoreFlags struct {
 	LiveProbeInterval         time.Duration
 	NotLiveProbeInterval      time.Duration
 	ProbeAddress              string
+	TraceEnabled              bool
+	TraceAgentAddress         string
 }
 
 // NewRWCoreFlags returns a new RWCore config
@@ -114,6 +118,8 @@ func NewRWCoreFlags() *RWCoreFlags {
 		LiveProbeInterval:         defaultLiveProbeInterval,
 		NotLiveProbeInterval:      defaultNotLiveProbeInterval,
 		ProbeAddress:              defaultProbeAddress,
+		TraceEnabled:              defaultTraceEnabled,
+		TraceAgentAddress:         defaultTraceAgentAddress,
 	}
 	return &rwCoreFlag
 }
@@ -189,6 +195,12 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The address on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.StringVar(&(cf.ProbeAddress), "probe_address", defaultProbeAddress, help)
+
+	help = fmt.Sprintf("Generate and Send Traces?")
+	flag.BoolVar(&(cf.TraceEnabled), "trace_enabled", defaultTraceEnabled, help)
+
+	help = fmt.Sprintf("The address of tracing agent to which span info should be sent.")
+	flag.StringVar(&(cf.TraceAgentAddress), "trace_agent_address", defaultTraceAgentAddress, help)
 
 	flag.Parse()
 }
