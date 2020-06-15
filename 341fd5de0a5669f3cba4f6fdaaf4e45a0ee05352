@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62b42738_50cd7659",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-15T19:01:13Z",
+      "side": 1,
+      "message": "Since this is being called in a new gothread, and will outlive the calling process, a new context must be created here, else this process will be canceled/timeout when the calling process does.\n\n(This must be done in all cases where a new gothread is created that could outlive the calling process.)",
+      "range": {
+        "startLine": 378,
+        "startChar": 31,
+        "endLine": 378,
+        "endChar": 34
+      },
+      "revId": "341fd5de0a5669f3cba4f6fdaaf4e45a0ee05352",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
