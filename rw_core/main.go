@@ -106,8 +106,6 @@ func main() {
 	// Update all loggers to log level specified as input parameter
 	log.SetAllLogLevel(logLevel)
 
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-
 	defer func() {
 		err := log.CleanUp()
 		if err != nil {
@@ -142,6 +140,13 @@ func main() {
 
 	// Add the probe to the context to pass to all the services started
 	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
+
+	closer, err := log.InitTracingAndLogCorrelation(cf.TraceEnabled, cf.TraceAgentAddress, cf.LogCorrelationEnabled)
+	if err != nil {
+		logger.Warnw(ctx, "unable-to-initialize-tracing-and-log-correlation-module", log.Fields{"error": err})
+	} else {
+		defer closer.Close()
+	}
 
 	// create and start the core
 	core := c.NewCore(probeCtx, instanceID, cf)
