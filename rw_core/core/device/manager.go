@@ -37,6 +37,7 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -411,6 +412,9 @@ func (dMgr *Manager) IsRootDevice(id string) (bool, error) {
 
 // ListDevices retrieves the latest devices from the data model
 func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.Devices, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "list-devices")
+	defer span.Finish()
+
 	logger.Debug("ListDevices")
 	result := &voltha.Devices{}
 

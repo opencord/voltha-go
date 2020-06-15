@@ -114,12 +114,15 @@ github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd
 github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka
 github.com/opencord/voltha-lib-go/v3/pkg/probe
 github.com/opencord/voltha-lib-go/v3/pkg/version
-# github.com/opencord/voltha-protos/v3 v3.3.3
+# github.com/opencord/voltha-protos/v3 v3.3.9
 github.com/opencord/voltha-protos/v3/go/common
 github.com/opencord/voltha-protos/v3/go/inter_container
 github.com/opencord/voltha-protos/v3/go/omci
 github.com/opencord/voltha-protos/v3/go/openflow_13
 github.com/opencord/voltha-protos/v3/go/voltha
+# github.com/opentracing/opentracing-go v1.1.0
+github.com/opentracing/opentracing-go
+github.com/opentracing/opentracing-go/log
 # github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 github.com/phayes/freeport
 # github.com/pierrec/lz4 v2.3.0+incompatible
