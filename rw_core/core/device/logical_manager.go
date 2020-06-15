@@ -33,6 +33,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -97,6 +98,9 @@ func (ldMgr *LogicalManager) GetLogicalDevice(ctx context.Context, id *voltha.ID
 
 //ListLogicalDevices returns the list of all logical devices
 func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Empty) (*voltha.LogicalDevices, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "list-logical-devices")
+	defer span.Finish()
+
 	logger.Debug("ListAllLogicalDevices")
 
 	var logicalDevices []*voltha.LogicalDevice
