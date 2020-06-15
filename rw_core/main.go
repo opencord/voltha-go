@@ -104,8 +104,6 @@ func main() {
 	// Update all loggers to log level specified as input parameter
 	log.SetAllLogLevel(logLevel)
 
-	//log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
-
 	defer func() {
 		err := log.CleanUp()
 		if err != nil {
@@ -140,6 +138,15 @@ func main() {
 
 	// Add the probe to the context to pass to all the services started
 	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
+
+	if cf.TraceEnabled {
+		closer, err := log.StartTracing(cf.TraceAgentAddress)
+		if err != nil {
+			logger.Warnw("unable-to-initialize-jaeger-tracing", log.Fields{"error": err})
+		} else {
+			defer closer.Close()
+		}
+	}
 
 	// create and start the core
 	core := c.NewCore(probeCtx, instanceID, cf)
