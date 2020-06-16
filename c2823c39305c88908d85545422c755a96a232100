@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d56bd418_f207c70e",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-16T14:54:08Z",
+      "side": 1,
+      "message": "As I pointed out in \n\nhttps://gerrit.opencord.org/#/c/19201/\n\nthe span should still be passed through even when a new context is needed for cancellation:\n\nPull span out of context \u003d\u003e create new context with the span (or with a new sub-span?) \u003d\u003e pass new context.",
+      "range": {
+        "startLine": 378,
+        "startChar": 31,
+        "endLine": 378,
+        "endChar": 51
+      },
+      "revId": "c2823c39305c88908d85545422c755a96a232100",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
