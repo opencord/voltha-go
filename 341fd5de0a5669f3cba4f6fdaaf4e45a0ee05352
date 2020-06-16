@@ -22,6 +22,30 @@
       "revId": "341fd5de0a5669f3cba4f6fdaaf4e45a0ee05352",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ce0bc56_19edddcd",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1000612
+      },
+      "writtenOn": "2020-06-16T14:50:54Z",
+      "side": 1,
+      "message": "Thanks for the review, for now I have replaced \"ctx\" with new \"context.Background()\". This would later be changed as part of VOL-3070 where we would inject the opentracing span in rw-core for NBI operations. There we would take the span from old ctx and a new ctx would be created and passed.",
+      "parentUuid": "62b42738_50cd7659",
+      "range": {
+        "startLine": 378,
+        "startChar": 31,
+        "endLine": 378,
+        "endChar": 34
+      },
+      "revId": "341fd5de0a5669f3cba4f6fdaaf4e45a0ee05352",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
