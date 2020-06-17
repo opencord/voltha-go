@@ -866,14 +866,6 @@ func (dMgr *Manager) GetPorts(ctx context.Context, deviceID string, portType vol
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) getPortCapability(ctx context.Context, deviceID string, portNo uint32) (*ic.PortCapability, error) {
-	logger.Debugw("getPortCapability", log.Fields{"deviceid": deviceID})
-	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
-		return agent.getPortCapability(ctx, portNo)
-	}
-	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
-}
-
 func (dMgr *Manager) UpdateDeviceStatus(ctx context.Context, deviceID string, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
 	logger.Debugw("UpdateDeviceStatus", log.Fields{"deviceid": deviceID, "operStatus": operStatus, "connStatus": connStatus})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {

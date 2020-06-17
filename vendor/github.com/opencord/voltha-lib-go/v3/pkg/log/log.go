@@ -41,6 +41,7 @@
 package log
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	zp "go.uber.org/zap"
@@ -71,41 +72,41 @@ const CONSOLE = "console"
 // JSON formats the log using json format, mostly used by an automated logging system consumption
 const JSON = "json"
 
-// Logger represents an abstract logging interface.  Any logging implementation used
+// Context Aware Logger represents an abstract logging interface.  Any logging implementation used
 // will need to abide by this interface
-type Logger interface {
-	Debug(...interface{})
-	Debugln(...interface{})
-	Debugf(string, ...interface{})
-	Debugw(string, Fields)
+type CLogger interface {
+	Debug(context.Context, ...interface{})
+	Debugln(context.Context, ...interface{})
+	Debugf(context.Context, string, ...interface{})
+	Debugw(context.Context, string, Fields)
 
-	Info(...interface{})
-	Infoln(...interface{})
-	Infof(string, ...interface{})
-	Infow(string, Fields)
+	Info(context.Context, ...interface{})
+	Infoln(context.Context, ...interface{})
+	Infof(context.Context, string, ...interface{})
+	Infow(context.Context, string, Fields)
 
-	Warn(...interface{})
-	Warnln(...interface{})
-	Warnf(string, ...interface{})
-	Warnw(string, Fields)
+	Warn(context.Context, ...interface{})
+	Warnln(context.Context, ...interface{})
+	Warnf(context.Context, string, ...interface{})
+	Warnw(context.Context, string, Fields)
 
-	Error(...interface{})
-	Errorln(...interface{})
-	Errorf(string, ...interface{})
-	Errorw(string, Fields)
+	Error(context.Context, ...interface{})
+	Errorln(context.Context, ...interface{})
+	Errorf(context.Context, string, ...interface{})
+	Errorw(context.Context, string, Fields)
 
-	Fatal(...interface{})
-	Fatalln(...interface{})
-	Fatalf(string, ...interface{})
-	Fatalw(string, Fields)
+	Fatal(context.Context, ...interface{})
+	Fatalln(context.Context, ...interface{})
+	Fatalf(context.Context, string, ...interface{})
+	Fatalw(context.Context, string, Fields)
 
-	With(Fields) Logger
+	With(Fields) CLogger
 
 	// The following are added to be able to use this logger as a gRPC LoggerV2 if needed
 	//
-	Warning(...interface{})
-	Warningln(...interface{})
-	Warningf(string, ...interface{})
+	Warning(context.Context, ...interface{})
+	Warningln(context.Context, ...interface{})
+	Warningf(context.Context, string, ...interface{})
 
 	// V reports whether verbosity level l is at least the requested verbose level.
 	V(l LogLevel) bool
@@ -117,13 +118,13 @@ type Logger interface {
 // Fields is used as key-value pairs for structured logging
 type Fields map[string]interface{}
 
-var defaultLogger *logger
+var defaultLogger *clogger
 var cfg zp.Config
 
-var loggers map[string]*logger
+var loggers map[string]*clogger
 var cfgs map[string]zp.Config
 
-type logger struct {
+type clogger struct {
 	log         *zp.SugaredLogger
 	parent      *zp.Logger
 	packageName string
@@ -238,7 +239,7 @@ func ConstructZapConfig(outputType string, level LogLevel, fields Fields) zp.Con
 
 // SetLogger needs to be invoked before the logger API can be invoked.  This function
 // initialize the default logger (zap's sugaredlogger)
-func SetDefaultLogger(outputType string, level LogLevel, defaultFields Fields) (Logger, error) {
+func SetDefaultLogger(outputType string, level LogLevel, defaultFields Fields) (CLogger, error) {
 	// Build a custom config using zap
 	cfg = getDefaultConfig(outputType, level, defaultFields)
 
@@ -247,7 +248,7 @@ func SetDefaultLogger(outputType string, level LogLevel, defaultFields Fields) (
 		return nil, err
 	}
 
-	defaultLogger = &logger{
+	defaultLogger = &clogger{
 		log:    l.Sugar(),
 		parent: l,
 	}
@@ -264,12 +265,12 @@ func SetDefaultLogger(outputType string, level LogLevel, defaultFields Fields) (
 // be available to it, notably log tracing with filename.functionname.linenumber annotation.
 //
 // pkgNames parameter should be used for testing only as this function detects the caller's package.
-func AddPackage(outputType string, level LogLevel, defaultFields Fields, pkgNames ...string) (Logger, error) {
+func RegisterPackage(outputType string, level LogLevel, defaultFields Fields, pkgNames ...string) (CLogger, error) {
 	if cfgs == nil {
 		cfgs = make(map[string]zp.Config)
 	}
 	if loggers == nil {
-		loggers = make(map[string]*logger)
+		loggers = make(map[string]*clogger)
 	}
 
 	var pkgName string
@@ -292,7 +293,7 @@ func AddPackage(outputType string, level LogLevel, defaultFields Fields, pkgName
 		return nil, err
 	}
 
-	loggers[pkgName] = &logger{
+	loggers[pkgName] = &clogger{
 		log:         l.Sugar(),
 		parent:      l,
 		packageName: pkgName,
@@ -502,311 +503,149 @@ func getCallerInfo() (string, string, string, int) {
 	return packageName, fileName, funcName, foundFrame.Line
 }
 
-func getPackageLevelSugaredLogger() *zp.SugaredLogger {
-	pkgName, _, _, _ := getCallerInfo()
-	if _, exist := loggers[pkgName]; exist {
-		return loggers[pkgName].log
-	}
-	return defaultLogger.log
-}
-
-func getPackageLevelLogger() Logger {
-	pkgName, _, _, _ := getCallerInfo()
-	if _, exist := loggers[pkgName]; exist {
-		return loggers[pkgName]
-	}
-	return defaultLogger
-}
-
-func serializeMap(fields Fields) []interface{} {
-	data := make([]interface{}, len(fields)*2)
-	i := 0
-	for k, v := range fields {
-		data[i] = k
-		data[i+1] = v
-		i = i + 2
-	}
-	return data
-}
-
 // With returns a logger initialized with the key-value pairs
-func (l logger) With(keysAndValues Fields) Logger {
-	return logger{log: l.log.With(serializeMap(keysAndValues)...), parent: l.parent}
+func (l clogger) With(keysAndValues Fields) CLogger {
+	return clogger{log: l.log.With(serializeMap(keysAndValues)...), parent: l.parent}
 }
 
 // Debug logs a message at level Debug on the standard logger.
-func (l logger) Debug(args ...interface{}) {
-	l.log.Debug(args...)
+func (l clogger) Debug(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Debug(args...)
 }
 
 // Debugln logs a message at level Debug on the standard logger with a line feed. Default in any case.
-func (l logger) Debugln(args ...interface{}) {
-	l.log.Debug(args...)
+func (l clogger) Debugln(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Debug(args...)
 }
 
 // Debugw logs a message at level Debug on the standard logger.
-func (l logger) Debugf(format string, args ...interface{}) {
-	l.log.Debugf(format, args...)
+func (l clogger) Debugf(ctx context.Context, format string, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Debugf(format, args...)
 }
 
 // Debugw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
-func (l logger) Debugw(msg string, keysAndValues Fields) {
+func (l clogger) Debugw(ctx context.Context, msg string, keysAndValues Fields) {
 	if l.V(DebugLevel) {
-		l.log.Debugw(msg, serializeMap(keysAndValues)...)
+		l.log.With(ExtractContextAttributes(ctx)...).Debugw(msg, serializeMap(keysAndValues)...)
 	}
 }
 
 // Info logs a message at level Info on the standard logger.
-func (l logger) Info(args ...interface{}) {
-	l.log.Info(args...)
+func (l clogger) Info(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Info(args...)
 }
 
 // Infoln logs a message at level Info on the standard logger with a line feed. Default in any case.
-func (l logger) Infoln(args ...interface{}) {
-	l.log.Info(args...)
+func (l clogger) Infoln(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Info(args...)
 	//msg := fmt.Sprintln(args...)
 	//l.sourced().Info(msg[:len(msg)-1])
 }
 
 // Infof logs a message at level Info on the standard logger.
-func (l logger) Infof(format string, args ...interface{}) {
-	l.log.Infof(format, args...)
+func (l clogger) Infof(ctx context.Context, format string, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Infof(format, args...)
 }
 
 // Infow logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
-func (l logger) Infow(msg string, keysAndValues Fields) {
+func (l clogger) Infow(ctx context.Context, msg string, keysAndValues Fields) {
 	if l.V(InfoLevel) {
-		l.log.Infow(msg, serializeMap(keysAndValues)...)
+		l.log.With(ExtractContextAttributes(ctx)...).Infow(msg, serializeMap(keysAndValues)...)
 	}
 }
 
 // Warn logs a message at level Warn on the standard logger.
-func (l logger) Warn(args ...interface{}) {
-	l.log.Warn(args...)
+func (l clogger) Warn(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Warn(args...)
 }
 
 // Warnln logs a message at level Warn on the standard logger with a line feed. Default in any case.
-func (l logger) Warnln(args ...interface{}) {
-	l.log.Warn(args...)
+func (l clogger) Warnln(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Warn(args...)
 }
 
 // Warnf logs a message at level Warn on the standard logger.
-func (l logger) Warnf(format string, args ...interface{}) {
-	l.log.Warnf(format, args...)
+func (l clogger) Warnf(ctx context.Context, format string, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Warnf(format, args...)
 }
 
 // Warnw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
-func (l logger) Warnw(msg string, keysAndValues Fields) {
+func (l clogger) Warnw(ctx context.Context, msg string, keysAndValues Fields) {
 	if l.V(WarnLevel) {
-		l.log.Warnw(msg, serializeMap(keysAndValues)...)
+		l.log.With(ExtractContextAttributes(ctx)...).Warnw(msg, serializeMap(keysAndValues)...)
 	}
 }
 
 // Error logs a message at level Error on the standard logger.
-func (l logger) Error(args ...interface{}) {
-	l.log.Error(args...)
+func (l clogger) Error(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Error(args...)
 }
 
 // Errorln logs a message at level Error on the standard logger with a line feed. Default in any case.
-func (l logger) Errorln(args ...interface{}) {
-	l.log.Error(args...)
+func (l clogger) Errorln(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Error(args...)
 }
 
 // Errorf logs a message at level Error on the standard logger.
-func (l logger) Errorf(format string, args ...interface{}) {
-	l.log.Errorf(format, args...)
+func (l clogger) Errorf(ctx context.Context, format string, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Errorf(format, args...)
 }
 
 // Errorw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
-func (l logger) Errorw(msg string, keysAndValues Fields) {
+func (l clogger) Errorw(ctx context.Context, msg string, keysAndValues Fields) {
 	if l.V(ErrorLevel) {
-		l.log.Errorw(msg, serializeMap(keysAndValues)...)
+		l.log.With(ExtractContextAttributes(ctx)...).Errorw(msg, serializeMap(keysAndValues)...)
 	}
 }
 
 // Fatal logs a message at level Fatal on the standard logger.
-func (l logger) Fatal(args ...interface{}) {
-	l.log.Fatal(args...)
+func (l clogger) Fatal(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Fatal(args...)
 }
 
 // Fatalln logs a message at level Fatal on the standard logger with a line feed. Default in any case.
-func (l logger) Fatalln(args ...interface{}) {
-	l.log.Fatal(args...)
+func (l clogger) Fatalln(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Fatal(args...)
 }
 
 // Fatalf logs a message at level Fatal on the standard logger.
-func (l logger) Fatalf(format string, args ...interface{}) {
-	l.log.Fatalf(format, args...)
+func (l clogger) Fatalf(ctx context.Context, format string, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Fatalf(format, args...)
 }
 
 // Fatalw logs a message with some additional context. The variadic key-value
 // pairs are treated as they are in With.
-func (l logger) Fatalw(msg string, keysAndValues Fields) {
+func (l clogger) Fatalw(ctx context.Context, msg string, keysAndValues Fields) {
 	if l.V(FatalLevel) {
-		l.log.Fatalw(msg, serializeMap(keysAndValues)...)
+		l.log.With(ExtractContextAttributes(ctx)...).Fatalw(msg, serializeMap(keysAndValues)...)
 	}
 }
 
 // Warning logs a message at level Warn on the standard logger.
-func (l logger) Warning(args ...interface{}) {
-	l.log.Warn(args...)
+func (l clogger) Warning(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Warn(args...)
 }
 
 // Warningln logs a message at level Warn on the standard logger with a line feed. Default in any case.
-func (l logger) Warningln(args ...interface{}) {
-	l.log.Warn(args...)
+func (l clogger) Warningln(ctx context.Context, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Warn(args...)
 }
 
 // Warningf logs a message at level Warn on the standard logger.
-func (l logger) Warningf(format string, args ...interface{}) {
-	l.log.Warnf(format, args...)
+func (l clogger) Warningf(ctx context.Context, format string, args ...interface{}) {
+	l.log.With(ExtractContextAttributes(ctx)...).Warnf(format, args...)
 }
 
 // V reports whether verbosity level l is at least the requested verbose level.
-func (l logger) V(level LogLevel) bool {
+func (l clogger) V(level LogLevel) bool {
 	return l.parent.Core().Enabled(logLevelToLevel(level))
 }
 
 // GetLogLevel returns the current level of the logger
-func (l logger) GetLogLevel() LogLevel {
+func (l clogger) GetLogLevel() LogLevel {
 	return levelToLogLevel(cfgs[l.packageName].Level.Level())
-}
-
-// With returns a logger initialized with the key-value pairs
-func With(keysAndValues Fields) Logger {
-	return logger{log: getPackageLevelSugaredLogger().With(serializeMap(keysAndValues)...), parent: defaultLogger.parent}
-}
-
-// Debug logs a message at level Debug on the standard logger.
-func Debug(args ...interface{}) {
-	getPackageLevelSugaredLogger().Debug(args...)
-}
-
-// Debugln logs a message at level Debug on the standard logger.
-func Debugln(args ...interface{}) {
-	getPackageLevelSugaredLogger().Debug(args...)
-}
-
-// Debugf logs a message at level Debug on the standard logger.
-func Debugf(format string, args ...interface{}) {
-	getPackageLevelSugaredLogger().Debugf(format, args...)
-}
-
-// Debugw logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-func Debugw(msg string, keysAndValues Fields) {
-	getPackageLevelSugaredLogger().Debugw(msg, serializeMap(keysAndValues)...)
-}
-
-// Info logs a message at level Info on the standard logger.
-func Info(args ...interface{}) {
-	getPackageLevelSugaredLogger().Info(args...)
-}
-
-// Infoln logs a message at level Info on the standard logger.
-func Infoln(args ...interface{}) {
-	getPackageLevelSugaredLogger().Info(args...)
-}
-
-// Infof logs a message at level Info on the standard logger.
-func Infof(format string, args ...interface{}) {
-	getPackageLevelSugaredLogger().Infof(format, args...)
-}
-
-//Infow logs a message with some additional context. The variadic key-value
-//pairs are treated as they are in With.
-func Infow(msg string, keysAndValues Fields) {
-	getPackageLevelSugaredLogger().Infow(msg, serializeMap(keysAndValues)...)
-}
-
-// Warn logs a message at level Warn on the standard logger.
-func Warn(args ...interface{}) {
-	getPackageLevelSugaredLogger().Warn(args...)
-}
-
-// Warnln logs a message at level Warn on the standard logger.
-func Warnln(args ...interface{}) {
-	getPackageLevelSugaredLogger().Warn(args...)
-}
-
-// Warnf logs a message at level Warn on the standard logger.
-func Warnf(format string, args ...interface{}) {
-	getPackageLevelSugaredLogger().Warnf(format, args...)
-}
-
-// Warnw logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-func Warnw(msg string, keysAndValues Fields) {
-	getPackageLevelSugaredLogger().Warnw(msg, serializeMap(keysAndValues)...)
-}
-
-// Error logs a message at level Error on the standard logger.
-func Error(args ...interface{}) {
-	getPackageLevelSugaredLogger().Error(args...)
-}
-
-// Errorln logs a message at level Error on the standard logger.
-func Errorln(args ...interface{}) {
-	getPackageLevelSugaredLogger().Error(args...)
-}
-
-// Errorf logs a message at level Error on the standard logger.
-func Errorf(format string, args ...interface{}) {
-	getPackageLevelSugaredLogger().Errorf(format, args...)
-}
-
-// Errorw logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-func Errorw(msg string, keysAndValues Fields) {
-	getPackageLevelSugaredLogger().Errorw(msg, serializeMap(keysAndValues)...)
-}
-
-// Fatal logs a message at level Fatal on the standard logger.
-func Fatal(args ...interface{}) {
-	getPackageLevelSugaredLogger().Fatal(args...)
-}
-
-// Fatalln logs a message at level Fatal on the standard logger.
-func Fatalln(args ...interface{}) {
-	getPackageLevelSugaredLogger().Fatal(args...)
-}
-
-// Fatalf logs a message at level Fatal on the standard logger.
-func Fatalf(format string, args ...interface{}) {
-	getPackageLevelSugaredLogger().Fatalf(format, args...)
-}
-
-// Fatalw logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-func Fatalw(msg string, keysAndValues Fields) {
-	getPackageLevelSugaredLogger().Fatalw(msg, serializeMap(keysAndValues)...)
-}
-
-// Warning logs a message at level Warn on the standard logger.
-func Warning(args ...interface{}) {
-	getPackageLevelSugaredLogger().Warn(args...)
-}
-
-// Warningln logs a message at level Warn on the standard logger.
-func Warningln(args ...interface{}) {
-	getPackageLevelSugaredLogger().Warn(args...)
-}
-
-// Warningf logs a message at level Warn on the standard logger.
-func Warningf(format string, args ...interface{}) {
-	getPackageLevelSugaredLogger().Warnf(format, args...)
-}
-
-// V reports whether verbosity level l is at least the requested verbose level.
-func V(level LogLevel) bool {
-	return getPackageLevelLogger().V(level)
-}
-
-//GetLogLevel returns the log level of the invoking package
-func GetLogLevel() LogLevel {
-	return getPackageLevelLogger().GetLogLevel()
 }

@@ -70,12 +70,24 @@ func (onuA *ONUAdapter) Adopt_device(device *voltha.Device) error { // nolint
 			}
 		}
 
+		capability := uint32(of.OfpPortFeatures_OFPPF_1GB_FD | of.OfpPortFeatures_OFPPF_FIBER)
 		uniPort := &voltha.Port{
 			PortNo:     uniPortNo,
 			Label:      fmt.Sprintf("uni-%d", uniPortNo),
 			Type:       voltha.Port_ETHERNET_UNI,
 			OperStatus: voltha.OperStatus_ACTIVE,
+			OfpPort: &of.OfpPort{
+				HwAddr:     macAddressToUint32Array("12:12:12:12:12:12"),
+				Config:     0,
+				State:      uint32(of.OfpPortState_OFPPS_LIVE),
+				Curr:       capability,
+				Advertised: capability,
+				Peer:       capability,
+				CurrSpeed:  uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
+				MaxSpeed:   uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
+			},
 		}
+
 		var err error
 		if err = onuA.coreProxy.PortCreated(context.TODO(), d.Id, uniPort); err != nil {
 			logger.Fatalf("PortCreated-failed-%s", err)
@@ -112,30 +124,6 @@ func (onuA *ONUAdapter) Adopt_device(device *voltha.Device) error { // nolint
 		onuA.updateDevice(d)
 	}()
 	return nil
-}
-
-// Get_ofp_port_info returns ofp device info
-func (onuA *ONUAdapter) Get_ofp_port_info(device *voltha.Device, portNo int64) (*ic.PortCapability, error) { // nolint
-	if d := onuA.getDevice(device.Id); d == nil {
-		logger.Fatalf("device-not-found-%s", device.Id)
-	}
-	capability := uint32(of.OfpPortFeatures_OFPPF_1GB_FD | of.OfpPortFeatures_OFPPF_FIBER)
-	return &ic.PortCapability{
-		Port: &voltha.LogicalPort{
-			OfpPort: &of.OfpPort{
-				HwAddr:     macAddressToUint32Array("12:12:12:12:12:12"),
-				Config:     0,
-				State:      uint32(of.OfpPortState_OFPPS_LIVE),
-				Curr:       capability,
-				Advertised: capability,
-				Peer:       capability,
-				CurrSpeed:  uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
-				MaxSpeed:   uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
-			},
-			DeviceId:     device.Id,
-			DevicePortNo: uint32(portNo),
-		},
-	}, nil
 }
 
 // Disable_device disables device
