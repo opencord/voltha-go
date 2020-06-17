@@ -178,24 +178,6 @@ func testGetSwitchCapabilityFromAdapter(t *testing.T) {
 	assert.Equal(t, switchCap.String(), expectedCap.String())
 }
 
-func testGetPortInfoFromAdapter(t *testing.T) {
-	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
-	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	portNo := uint32(1)
-	rpcResponse, err := ap.GetOfpPortInfo(ctx, d, portNo)
-	assert.Nil(t, err)
-	response, err := waitForResponse(ctx, rpcResponse)
-	assert.Nil(t, err)
-	portCap := &ic.PortCapability{}
-	err = ptypes.UnmarshalAny(response, portCap)
-	assert.Nil(t, err)
-	assert.NotNil(t, portCap)
-	expectedPortInfo, _ := adapter.Get_ofp_port_info(d, int64(portNo))
-	assert.Equal(t, portCap.String(), expectedPortInfo.String())
-}
-
 func testPacketOut(t *testing.T) {
 	ap := NewAdapterProxy(coreKafkaICProxy, coreName, mock_kafka.NewEndpointManager())
 	d := &voltha.Device{Id: "deviceId", Adapter: adapterName}
@@ -243,15 +225,12 @@ func TestSuiteAdapterProxy(t *testing.T) {
 	//2.  Test get switch capability
 	testGetSwitchCapabilityFromAdapter(t)
 
-	//3.  Test get port info
-	testGetPortInfoFromAdapter(t)
-
-	//4. Test PacketOut
+	//3. Test PacketOut
 	testPacketOut(t)
 
-	//	5. Test flow updates
+	//4. Test flow updates
 	testFlowUpdates(t)
 
-	//6. Pm configs
+	//5. Pm configs
 	testPmUpdates(t)
 }

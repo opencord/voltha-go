@@ -42,7 +42,6 @@ type IAdapter interface {
 	Suppress_event(filter *voltha.EventFilter) error
 	Unsuppress_event(filter *voltha.EventFilter) error
 	Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapability, error)
-	Get_ofp_port_info(device *voltha.Device, port_no int64) (*ic.PortCapability, error)
 	Process_inter_adapter_message(msg *ic.InterAdapterMessage) error
 	Download_image(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
 	Get_image_download_status(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)

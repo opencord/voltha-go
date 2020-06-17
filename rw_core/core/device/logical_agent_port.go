@@ -313,22 +313,23 @@ func (agent *LogicalAgent) disableLogicalPort(ctx context.Context, lPortNo uint3
 // (true, nil).   If the device is not in the correct state it will return (false, nil) as this is a valid
 // scenario. This also applies to the case where the port was already added.
 func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha.Device, port *voltha.Port) error {
-	logger.Debugw("addNNILogicalPort", log.Fields{"NNI": port})
+	logger.Debugw("addNNILogicalPort", log.Fields{"logical-device-id": agent.logicalDeviceID, "nni-port": port})
 
 	label := fmt.Sprintf("nni-%d", port.PortNo)
-	tmpPort := &voltha.LogicalPort{
+	ofpPort := *port.OfpPort
+	ofpPort.HwAddr = append([]uint32{}, port.OfpPort.HwAddr...)
+	ofpPort.PortNo = port.PortNo
+	ofpPort.Name = label
+	nniPort := &voltha.LogicalPort{
 		RootPort:     true,
 		DeviceId:     device.Id,
 		Id:           label,
 		DevicePortNo: port.PortNo,
-		OfpPort: &voltha.OfpPort{
-			PortNo: port.PortNo,
-			Name:   label,
-		},
+		OfpPort:      &ofpPort,
 		OfpPortStats: &ofp.OfpPortStats{},
 	}
 
-	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, tmpPort)
+	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, nniPort)
 	if err != nil {
 		return err
 	}
@@ -339,50 +340,20 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, device *voltha
 		return nil
 	}
 
-	// TODO: VOL-3202 Change the port creation logic to include the port capability.  This will eliminate
-	//       the port capability request that the Core makes following a port create event.
-	// TODO: VOL-3202 the port lock should not be held while getPortCapability() runs (preferably not while *any*
-	//       external request runs), this is a temporary hack to avoid updating port state before the port is ready
-
-	// First get the port capability
-	portCap, err := agent.deviceMgr.getPortCapability(ctx, device.Id, port.PortNo)
-	if err != nil {
-		logger.Errorw("error-retrieving-port-capabilities", log.Fields{"error": err})
-		return err
-	}
-
-	newPort := portCap.Port
-	newPort.RootPort = true
-	newPort.DeviceId = device.Id
-	newPort.Id = label
-	newPort.DevicePortNo = port.PortNo
-	newPort.OfpPort.PortNo = port.PortNo
-	newPort.OfpPort.Name = label
-
-	// TODO: VOL-3202 shouldn't create tmp port then update, should prepare complete port first then LockOrCreate()
-	//      the use of context.Background() is required to ensure we don't get an inconsistent logical port state
-	//      while doing this, and can be removed later.
-	if err := portHandle.Update(ctx, newPort); err != nil {
-		if err := portHandle.Delete(context.Background()); err != nil {
-			return fmt.Errorf("unable-to-delete-%d: %s", port.PortNo, err)
-		}
-		return err
-	}
-
 	// ensure that no events will be sent until this one is
 	queuePosition := agent.orderedEvents.assignQueuePosition()
 
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
 		// First setup the routes
-		if err := agent.updateRoutes(context.Background(), device, newPort, agent.listLogicalDevicePorts()); err != nil {
+		if err := agent.updateRoutes(context.Background(), device, nniPort, agent.listLogicalDevicePorts()); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
-			logger.Infow("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": newPort.OfpPort.PortNo, "error": err})
+			logger.Infow("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": nniPort.OfpPort.PortNo, "error": err})
 		}
 
 		// send event, and allow any queued events to be sent as well
-		queuePosition.send(agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, newPort.OfpPort)
+		queuePosition.send(agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, nniPort.OfpPort)
 	}()
 	return nil
 }
@@ -397,19 +368,19 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 		logger.Infow("device-not-ready", log.Fields{"deviceId": childDevice.Id, "admin": childDevice.AdminState, "oper": childDevice.OperStatus})
 		return nil
 	}
-
-	tmpPort := &voltha.LogicalPort{
+	ofpPort := *port.OfpPort
+	ofpPort.HwAddr = append([]uint32{}, port.OfpPort.HwAddr...)
+	ofpPort.PortNo = port.PortNo
+	uniPort := &voltha.LogicalPort{
 		RootPort:     false,
 		DeviceId:     childDevice.Id,
 		Id:           port.Label,
 		DevicePortNo: port.PortNo,
-		OfpPort: &voltha.OfpPort{
-			PortNo: port.PortNo,
-		},
+		OfpPort:      &ofpPort,
 		OfpPortStats: &ofp.OfpPortStats{},
 	}
 
-	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, tmpPort)
+	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, uniPort)
 	if err != nil {
 		return err
 	}
@@ -420,49 +391,20 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, childDevice *v
 		return nil
 	}
 
-	// TODO: VOL-3202 Change the port creation logic to include the port capability.  This will eliminate
-	//       the port capability request that the Core makes following a port create event.
-	// TODO: VOL-3202 the port lock should not be held while getPortCapability() runs (preferably not while *any*
-	//       external request runs), this is a temporary hack to avoid updating port state before the port is ready
-
-	// First get the port capability
-	portCap, err := agent.deviceMgr.getPortCapability(ctx, childDevice.Id, port.PortNo)
-	if err != nil {
-		logger.Errorw("error-retrieving-port-capabilities", log.Fields{"error": err})
-		return err
-	}
-
-	logger.Debugw("adding-uni", log.Fields{"deviceId": childDevice.Id})
-	newPort := portCap.Port
-	newPort.RootPort = false
-	newPort.DeviceId = childDevice.Id
-	newPort.Id = port.Label
-	newPort.DevicePortNo = port.PortNo
-	newPort.OfpPort.PortNo = port.PortNo
-
-	// TODO: VOL-3202 shouldn't create tmp port then update, should prepare complete port first then LockOrCreate()
-	//      the use of context.Background() is required to ensure we don't get an inconsistent logical port state
-	//      while doing this, and can be removed later.
-	if err := portHandle.Update(ctx, newPort); err != nil {
-		if err := portHandle.Delete(context.Background()); err != nil {
-			return fmt.Errorf("unable-to-delete-%d: %s", port.PortNo, err)
-		}
-		return err
-	}
-
 	// ensure that no events will be sent until this one is
 	queuePosition := agent.orderedEvents.assignQueuePosition()
 
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
 		// First setup the routes
-		if err := agent.updateRoutes(context.Background(), childDevice, newPort, agent.listLogicalDevicePorts()); err != nil {
+		if err := agent.updateRoutes(context.Background(), childDevice, uniPort, agent.listLogicalDevicePorts()); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
-			logger.Infow("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": newPort.OfpPort.PortNo, "error": err})
+			logger.Infow("routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": uniPort.OfpPort.PortNo, "error": err})
 		}
+
 		// send event, and allow any queued events to be sent as well
-		queuePosition.send(agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, newPort.OfpPort)
+		queuePosition.send(agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
 	}()
 	return nil
 }

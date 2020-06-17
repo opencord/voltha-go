@@ -166,21 +166,6 @@ func (ap *AdapterProxy) GetOfpDeviceInfo(ctx context.Context, device *voltha.Dev
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
 }
 
-// GetOfpPortInfo invokes get ofp port info rpc
-func (ap *AdapterProxy) GetOfpPortInfo(ctx context.Context, device *voltha.Device, portNo uint32) (chan *kafka.RpcResponse, error) {
-	logger.Debugw("GetOfpPortInfo", log.Fields{"device-id": device.Id, "port-no": portNo})
-	toTopic, err := ap.getAdapterTopic(device.Id, device.Adapter)
-	if err != nil {
-		return nil, err
-	}
-	args := []*kafka.KVArg{
-		{Key: "device", Value: device},
-		{Key: "port_no", Value: &ic.IntType{Val: int64(portNo)}},
-	}
-	replyToTopic := ap.getCoreTopic()
-	return ap.sendRPC(ctx, "get_ofp_port_info", toTopic, &replyToTopic, true, device.Id, args...)
-}
-
 // ReconcileDevice invokes reconcile device rpc
 func (ap *AdapterProxy) ReconcileDevice(ctx context.Context, device *voltha.Device) (chan *kafka.RpcResponse, error) {
 	logger.Debugw("ReconcileDevice", log.Fields{"device-id": device.Id})

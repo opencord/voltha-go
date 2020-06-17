@@ -21,9 +21,7 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,32 +41,6 @@ func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType)
 	return ports
 }
 
-// getPortCapability retrieves the port capability of a device
-func (agent *Agent) getPortCapability(ctx context.Context, portNo uint32) (*ic.PortCapability, error) {
-	logger.Debugw("getPortCapability", log.Fields{"device-id": agent.deviceID})
-	device, err := agent.getDevice(ctx)
-	if err != nil {
-		return nil, err
-	}
-	ch, err := agent.adapterProxy.GetOfpPortInfo(ctx, device, portNo)
-	if err != nil {
-		return nil, err
-	}
-	// Wait for adapter response
-	rpcResponse, ok := <-ch
-	if !ok {
-		return nil, status.Errorf(codes.Aborted, "channel-closed")
-	}
-	if rpcResponse.Err != nil {
-		return nil, rpcResponse.Err
-	}
-	// Successful response
-	portCap := &ic.PortCapability{}
-	if err := ptypes.UnmarshalAny(rpcResponse.Reply, portCap); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
-	}
-	return portCap, nil
-}
 func (agent *Agent) updatePortsOperState(ctx context.Context, operStatus voltha.OperStatus_Types) error {
 	logger.Debugw("updatePortsOperState", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {

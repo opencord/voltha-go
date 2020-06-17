@@ -524,43 +524,6 @@ func (rhp *RequestHandlerProxy) Get_ofp_device_info(args []*ic.Argument) (*ic.Sw
 	return cap, nil
 }
 
-func (rhp *RequestHandlerProxy) Get_ofp_port_info(args []*ic.Argument) (*ic.PortCapability, error) {
-	if len(args) < 3 {
-		logger.Warn("invalid-number-of-args", log.Fields{"args": args})
-		err := errors.New("invalid-number-of-args")
-		return nil, err
-	}
-	device := &voltha.Device{}
-	pNo := &ic.IntType{}
-	transactionID := &ic.StrType{}
-	for _, arg := range args {
-		switch arg.Key {
-		case "device":
-			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
-				logger.Warnw("cannot-unmarshal-device", log.Fields{"error": err})
-				return nil, err
-			}
-		case "port_no":
-			if err := ptypes.UnmarshalAny(arg.Value, pNo); err != nil {
-				logger.Warnw("cannot-unmarshal-port-no", log.Fields{"error": err})
-				return nil, err
-			}
-		case kafka.TransactionKey:
-			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
-				logger.Warnw("cannot-unmarshal-transaction-ID", log.Fields{"error": err})
-				return nil, err
-			}
-		}
-	}
-	logger.Debugw("Get_ofp_port_info", log.Fields{"deviceId": device.Id, "portNo": pNo.Val})
-	var cap *ic.PortCapability
-	var err error
-	if cap, err = rhp.adapter.Get_ofp_port_info(device, pNo.Val); err != nil {
-		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
-	}
-	return cap, nil
-}
-
 func (rhp *RequestHandlerProxy) Process_inter_adapter_message(args []*ic.Argument) (*empty.Empty, error) {
 	if len(args) < 2 {
 		logger.Warn("invalid-number-of-args", log.Fields{"args": args})
