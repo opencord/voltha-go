@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94a0df05_2191bc02",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-17T21:56:20Z",
+      "side": 1,
+      "message": "Incoming requests like this should have spans in the ctx already, right?  Does it make more sense to inject spans in the ofagent (\u0026 voltctl?), and have these spans propagate?\n\n(Is this just for testing?  If so, this shouldn\u0027t be merged into master.)",
+      "revId": "d51f09b4752d6532a65bad3ae45a61bea93fb0f2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
