@@ -208,27 +208,6 @@ func (ta *Adapter) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCapabil
 	}, nil
 }
 
-// Get_ofp_port_info -
-func (ta *Adapter) Get_ofp_port_info(device *voltha.Device, portNo int64) (*ic.PortCapability, error) { // nolint
-	capability := uint32(of.OfpPortFeatures_OFPPF_1GB_FD | of.OfpPortFeatures_OFPPF_FIBER)
-	return &ic.PortCapability{
-		Port: &voltha.LogicalPort{
-			OfpPort: &of.OfpPort{
-				HwAddr:     macAddressToUint32Array("11:11:33:44:55:66"),
-				Config:     0,
-				State:      uint32(of.OfpPortState_OFPPS_LIVE),
-				Curr:       capability,
-				Advertised: capability,
-				Peer:       capability,
-				CurrSpeed:  uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
-				MaxSpeed:   uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
-			},
-			DeviceId:     device.Id,
-			DevicePortNo: uint32(portNo),
-		},
-	}, nil
-}
-
 // Process_inter_adapter_message -
 func (ta *Adapter) Process_inter_adapter_message(msg *ic.InterAdapterMessage) error { // nolint
 	return nil

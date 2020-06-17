@@ -60,11 +60,22 @@ func (oltA *OLTAdapter) Adopt_device(device *voltha.Device) error { // nolint
 		if res := oltA.coreProxy.DeviceUpdate(context.TODO(), d); res != nil {
 			logger.Fatalf("deviceUpdate-failed-%s", res)
 		}
+		capability := uint32(of.OfpPortFeatures_OFPPF_1GB_FD | of.OfpPortFeatures_OFPPF_FIBER)
 		nniPort := &voltha.Port{
 			PortNo:     2,
 			Label:      fmt.Sprintf("nni-%d", 2),
 			Type:       voltha.Port_ETHERNET_NNI,
 			OperStatus: voltha.OperStatus_ACTIVE,
+			OfpPort: &of.OfpPort{
+				HwAddr:     macAddressToUint32Array("11:22:33:44:55:66"),
+				Config:     0,
+				State:      uint32(of.OfpPortState_OFPPS_LIVE),
+				Curr:       capability,
+				Advertised: capability,
+				Peer:       capability,
+				CurrSpeed:  uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
+				MaxSpeed:   uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
+			},
 		}
 		var err error
 		if err = oltA.coreProxy.PortCreated(context.TODO(), d.Id, nniPort); err != nil {
@@ -134,30 +145,6 @@ func (oltA *OLTAdapter) Get_ofp_device_info(device *voltha.Device) (*ic.SwitchCa
 				of.OfpCapabilities_OFPC_TABLE_STATS |
 				of.OfpCapabilities_OFPC_PORT_STATS |
 				of.OfpCapabilities_OFPC_GROUP_STATS),
-		},
-	}, nil
-}
-
-// Get_ofp_port_info returns ofp port info
-func (oltA *OLTAdapter) Get_ofp_port_info(device *voltha.Device, portNo int64) (*ic.PortCapability, error) { // nolint
-	if d := oltA.getDevice(device.Id); d == nil {
-		logger.Fatalf("device-not-found-%s", device.Id)
-	}
-	capability := uint32(of.OfpPortFeatures_OFPPF_1GB_FD | of.OfpPortFeatures_OFPPF_FIBER)
-	return &ic.PortCapability{
-		Port: &voltha.LogicalPort{
-			OfpPort: &of.OfpPort{
-				HwAddr:     macAddressToUint32Array("11:22:33:44:55:66"),
-				Config:     0,
-				State:      uint32(of.OfpPortState_OFPPS_LIVE),
-				Curr:       capability,
-				Advertised: capability,
-				Peer:       capability,
-				CurrSpeed:  uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
-				MaxSpeed:   uint32(of.OfpPortFeatures_OFPPF_1GB_FD),
-			},
-			DeviceId:     device.Id,
-			DevicePortNo: uint32(portNo),
 		},
 	}, nil
 }
