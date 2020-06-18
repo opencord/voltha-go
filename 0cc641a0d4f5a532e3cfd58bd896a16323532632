@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ecd4f05f_91a6bc91",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-06-18T18:29:35Z",
+      "side": 1,
+      "message": "Yes, we still need to do this for log correlation to work.\n\nHowever, I am creating helper methods in log package which would be called instead of direct opentracing.StartSpanFromContext. We can put a flag in them to avoid even span creation if we want to even disable log correlation. Such a flag would also allow to check the overhead of this span creation.",
+      "parentUuid": "3fa1c08a_8e617628",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 102,
+        "endChar": 20
+      },
+      "revId": "0cc641a0d4f5a532e3cfd58bd896a16323532632",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "01efe2fe_8d06baf2",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2020-06-18T17:07:28Z",
       "side": 1,
       "message": "if tracing is disabled, should we be doing this? (repeat for each time this code is here)",
+      "range": {
+        "startLine": 415,
+        "startChar": 1,
+        "endLine": 416,
+        "endChar": 20
+      },
+      "revId": "0cc641a0d4f5a532e3cfd58bd896a16323532632",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af12b55e_c622fad6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-06-18T18:29:35Z",
+      "side": 1,
+      "message": "See my comment in logical_manager.go",
+      "parentUuid": "01efe2fe_8d06baf2",
       "range": {
         "startLine": 415,
         "startChar": 1,
