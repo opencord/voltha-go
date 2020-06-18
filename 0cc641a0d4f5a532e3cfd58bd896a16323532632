@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fa1c08a_8e617628",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-18T17:07:28Z",
+      "side": 1,
+      "message": "if tracing is disabled should we be doing this?",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 102,
+        "endChar": 20
+      },
+      "revId": "0cc641a0d4f5a532e3cfd58bd896a16323532632",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01efe2fe_8d06baf2",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-18T17:07:28Z",
+      "side": 1,
+      "message": "if tracing is disabled, should we be doing this? (repeat for each time this code is here)",
+      "range": {
+        "startLine": 415,
+        "startChar": 1,
+        "endLine": 416,
+        "endChar": 20
+      },
+      "revId": "0cc641a0d4f5a532e3cfd58bd896a16323532632",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
