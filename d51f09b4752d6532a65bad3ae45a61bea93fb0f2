@@ -16,6 +16,24 @@
       "revId": "d51f09b4752d6532a65bad3ae45a61bea93fb0f2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7e2f827_adcd1e0d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-06-18T07:45:17Z",
+      "side": 1,
+      "message": "Yes. Ctx may have span already. If we implement span generation in voltctl, the incoming ctx will have the span already and then this statement will generate a child span with that received span as parent which is what is desired.\n\nYes, we are working on generating spans in ofagent, rw_core and openolt adapter (in phase 1) and then voltctl and bbsim (phase 2). The spans will travel across grpc and kafka rpc interfaces and PoCs on same are working fine in my local setup. Working on finetuning them and will push for review once current patches are merged.",
+      "parentUuid": "94a0df05_2191bc02",
+      "revId": "d51f09b4752d6532a65bad3ae45a61bea93fb0f2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
