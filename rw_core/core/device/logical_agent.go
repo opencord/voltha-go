@@ -66,13 +66,14 @@ type LogicalAgent struct {
 
 func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
 	deviceMgr *Manager, dbProxy *model.Path, ldProxy *model.Proxy, defaultTimeout time.Duration) *LogicalAgent {
-	agent := &LogicalAgent{
+	return &LogicalAgent{
 		logicalDeviceID: id,
 		serialNumber:    sn,
 		rootDeviceID:    deviceID,
 		deviceMgr:       deviceMgr,
 		ldProxy:         ldProxy,
 		ldeviceMgr:      ldeviceMgr,
+		deviceRoutes:    route.NewDeviceRoutes(id, deviceID, deviceMgr.listDevicePorts),
 		flowDecomposer:  fd.NewFlowDecomposer(deviceMgr),
 		defaultTimeout:  defaultTimeout,
 		requestQueue:    coreutils.NewRequestQueue(),
@@ -82,8 +83,6 @@ func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string,
 		meterLoader: meter.NewLoader(dbProxy.SubPath("logical_meters").Proxy(id)),
 		portLoader:  port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
 	}
-	agent.deviceRoutes = route.NewDeviceRoutes(ctx, agent.logicalDeviceID, agent.deviceMgr.getDevice)
-	return agent
 }
 
 // start creates the logical device and add it to the data model
@@ -123,9 +122,6 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
 		logger.Debugw(ctx, "Switch-capability", log.Fields{"Desc": ld.Desc, "fromAd": switchCap.Desc})
 		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
-		ld.Flows = &ofp.Flows{Items: nil}
-		ld.FlowGroups = &ofp.FlowGroups{Items: nil}
-		ld.Ports = []*voltha.LogicalPort{}
 
 		// Save the logical device
 		if err := agent.ldProxy.Set(ctx, ld.Id, ld); err != nil {
@@ -159,6 +155,9 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 
 		// Update the last data
 		agent.logicalDevice = ld
+
+		// now that the root device is known, create DeviceRoutes with it
+		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.rootDeviceID, agent.deviceMgr.listDevicePorts)
 
 		// load the flows, meters and groups from KV to cache
 		agent.flowLoader.Load(ctx)
