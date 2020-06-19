@@ -69,7 +69,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		dbPath:                  dbPath,
 		dProxy:                  dbPath.Proxy("devices"),
 		adapterMgr:              adapterMgr,
-		defaultTimeout:          defaultCoreTimeout * time.Millisecond,
+		defaultTimeout:          defaultCoreTimeout,
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
 	deviceMgr.stateTransitions = NewTransitionMap(deviceMgr)
