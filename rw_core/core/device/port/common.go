@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package mocks
+// Package core Common Logger initialization
+package port
 
 import (
-	"context"
-	"testing"
-
-	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 )
 
-func TestOLTAdapterImplementsIAdapter(t *testing.T) {
-	adapter := NewOLTAdapter(context.Background(), nil)
+var logger log.CLogger
 
-	if _, ok := interface{}(adapter).(adapters.IAdapter); !ok {
-		t.Error("OLT adapter does not implement voltha-lib-go/v2/pkg/adapters/IAdapter interface")
+func init() {
+	// Setup this package so that it's log level can be modified at run time
+	var err error
+	logger, err = log.RegisterPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "port"})
+	if err != nil {
+		panic(err)
 	}
 }

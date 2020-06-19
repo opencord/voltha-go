@@ -19,6 +19,7 @@ package api
 import (
 	"context"
 	"errors"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -455,12 +456,18 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(ctx context.Context, arg
 		return nil, err
 	}
 	deviceID := &voltha.ID{}
+	portTypeFilter := &ic.IntType{}
 	operStatus := &ic.IntType{}
 	transactionID := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
 			if err := ptypes.UnmarshalAny(arg.Value, deviceID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port_type_filter":
+			if err := ptypes.UnmarshalAny(arg.Value, portTypeFilter); err != nil {
 				logger.Warnw(ctx, "cannot-unmarshal-device-id", log.Fields{"error": err})
 				return nil, err
 			}
@@ -478,7 +485,7 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(ctx context.Context, arg
 	}
 	logger.Debugw(ctx, "PortsStateUpdate", log.Fields{"deviceID": deviceID.Id, "operStatus": operStatus, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.UpdatePortsState(context.TODO(), deviceID.Id, voltha.OperStatus_Types(operStatus.Val)); err != nil {
+	if err := rhp.deviceMgr.UpdatePortsState(context.TODO(), deviceID.Id, uint32(portTypeFilter.Val), voltha.OperStatus_Types(operStatus.Val)); err != nil {
 		logger.Debugw(ctx, "unable-to-update-ports-state", log.Fields{"error": err})
 		return nil, err
 	}
@@ -570,6 +577,68 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(ctx context.Context, args 
 		return nil, err
 	}
 	return &empty.Empty{}, nil
+}
+
+// GetDevicePort returns a single port
+func (rhp *AdapterRequestHandlerProxy) GetDevicePort(ctx context.Context, args []*ic.Argument) (*voltha.Port, error) {
+	if len(args) < 3 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceID := &voltha.ID{}
+	portNo := &ic.IntType{}
+	transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case "port_no":
+			if err := ptypes.UnmarshalAny(arg.Value, portNo); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-port-no", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	logger.Debugw(ctx, "GetDevicePort", log.Fields{"deviceID": deviceID.Id, "portNo": portNo.Val, "transactionID": transactionID.Val})
+
+	return rhp.deviceMgr.GetDevicePort(context.TODO(), deviceID.Id, uint32(portNo.Val))
+}
+
+// ListDevicePorts returns all ports belonging to the device
+func (rhp *AdapterRequestHandlerProxy) ListDevicePorts(ctx context.Context, args []*ic.Argument) (*voltha.Ports, error) {
+	if len(args) < 2 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+	deviceID := &voltha.ID{}
+	transactionID := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device_id":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device-id", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+	logger.Debugw(ctx, "ListDevicePorts", log.Fields{"deviceID": deviceID.Id, "transactionID": transactionID.Val})
+
+	return rhp.deviceMgr.ListDevicePorts(context.TODO(), deviceID)
 }
 
 // ChildDevicesLost indicates that a parent device is in a state (Disabled) where it cannot manage the child devices.
