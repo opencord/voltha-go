@@ -18,6 +18,10 @@ package remote
 import (
 	"context"
 	"crypto/rand"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/golang/protobuf/ptypes"
 	any2 "github.com/golang/protobuf/ptypes/any"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
@@ -31,9 +35,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
-	"testing"
-	"time"
 )
 
 const (

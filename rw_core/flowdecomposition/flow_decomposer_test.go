@@ -32,56 +32,58 @@ import (
 
 type testDeviceManager struct {
 	mocks.DeviceManager
-	devices map[string]*voltha.Device
+	devices     map[string]*voltha.Device
+	devicePorts map[string]map[uint32]*voltha.Port
 }
 
 func newTestDeviceManager() *testDeviceManager {
 	var tdm testDeviceManager
 	tdm.devices = make(map[string]*voltha.Device)
+	tdm.devicePorts = make(map[string]map[uint32]*voltha.Port)
 	tdm.devices["olt"] = &voltha.Device{
 		Id:       "olt",
 		Root:     true,
 		ParentId: "logical_device",
-		Ports: []*voltha.Port{
-			{PortNo: 1, Label: "pon"},
-			{PortNo: 2, Label: "nni"},
-		},
+	}
+	tdm.devicePorts["olt"] = map[uint32]*voltha.Port{
+		1: {PortNo: 1, Label: "pon"},
+		2: {PortNo: 2, Label: "nni"},
 	}
 	tdm.devices["onu1"] = &voltha.Device{
 		Id:       "onu1",
 		Root:     false,
 		ParentId: "olt",
-		Ports: []*voltha.Port{
-			{PortNo: 1, Label: "pon"},
-			{PortNo: 2, Label: "uni"},
-		},
+	}
+	tdm.devicePorts["onu1"] = map[uint32]*voltha.Port{
+		1: {PortNo: 1, Label: "pon"},
+		2: {PortNo: 2, Label: "uni"},
 	}
 	tdm.devices["onu2"] = &voltha.Device{
 		Id:       "onu2",
 		Root:     false,
 		ParentId: "olt",
-		Ports: []*voltha.Port{
-			{PortNo: 1, Label: "pon"},
-			{PortNo: 2, Label: "uni"},
-		},
+	}
+	tdm.devicePorts["onu2"] = map[uint32]*voltha.Port{
+		1: {PortNo: 1, Label: "pon"},
+		2: {PortNo: 2, Label: "uni"},
 	}
 	tdm.devices["onu3"] = &voltha.Device{
 		Id:       "onu3",
 		Root:     false,
 		ParentId: "olt",
-		Ports: []*voltha.Port{
-			{PortNo: 1, Label: "pon"},
-			{PortNo: 2, Label: "uni"},
-		},
+	}
+	tdm.devicePorts["onu3"] = map[uint32]*voltha.Port{
+		1: {PortNo: 1, Label: "pon"},
+		2: {PortNo: 2, Label: "uni"},
 	}
 	tdm.devices["onu4"] = &voltha.Device{
 		Id:       "onu4",
 		Root:     false,
 		ParentId: "olt",
-		Ports: []*voltha.Port{
-			{PortNo: 1, Label: "pon"},
-			{PortNo: 2, Label: "uni"},
-		},
+	}
+	tdm.devicePorts["onu4"] = map[uint32]*voltha.Port{
+		1: {PortNo: 1, Label: "pon"},
+		2: {PortNo: 2, Label: "uni"},
 	}
 	return &tdm
 }
@@ -91,6 +93,13 @@ func (tdm *testDeviceManager) GetDevice(ctx context.Context, deviceID *voltha.ID
 		return d, nil
 	}
 	return nil, errors.New("ABSENT")
+}
+func (tdm *testDeviceManager) listDevicePorts(ctx context.Context, deviceID string) (map[uint32]*voltha.Port, error) {
+	ports, have := tdm.devicePorts[deviceID]
+	if !have {
+		return nil, errors.New("ABSENT")
+	}
+	return ports, nil
 }
 func (tdm *testDeviceManager) IsRootDevice(deviceID string) (bool, error) {
 	if d, ok := tdm.devices[deviceID]; ok {
@@ -134,62 +143,62 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 1}] = []route.Hop{
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "onu1",
-			Ingress:  tfd.dMgr.devices["onu1"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["onu1"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 
 	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 2}] = []route.Hop{
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "onu2",
-			Ingress:  tfd.dMgr.devices["onu2"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["onu2"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 3}] = []route.Hop{
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "onu3",
-			Ingress:  tfd.dMgr.devices["onu3"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["onu3"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 4}] = []route.Hop{
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "onu4",
-			Ingress:  tfd.dMgr.devices["onu4"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["onu4"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  2,
+			Egress:   2,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  2,
+			Egress:   2,
 		},
 	}
 
@@ -198,49 +207,49 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	tfd.routes[route.OFPortLink{Ingress: 1, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu1",
-			Ingress:  tfd.dMgr.devices["onu1"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu1"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 2, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu2",
-			Ingress:  tfd.dMgr.devices["onu2"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu2"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 3, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu3",
-			Ingress:  tfd.dMgr.devices["onu3"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu3"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 4, Egress: 10}] = []route.Hop{
 		{
 			DeviceID: "onu4",
-			Ingress:  tfd.dMgr.devices["onu4"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu4"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 
@@ -250,49 +259,49 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	tfd.routes[route.OFPortLink{Ingress: 1, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu1",
-			Ingress:  tfd.dMgr.devices["onu1"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu1"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 2, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu2",
-			Ingress:  tfd.dMgr.devices["onu2"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu2"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 3, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu3",
-			Ingress:  tfd.dMgr.devices["onu3"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu3"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 	tfd.routes[route.OFPortLink{Ingress: 4, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "onu4",
-			Ingress:  tfd.dMgr.devices["onu4"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["onu4"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 
@@ -301,8 +310,8 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 0}] = []route.Hop{
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[1].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[0].PortNo,
+			Ingress:  2,
+			Egress:   1,
 		},
 		{}, // 2nd hop is not known yet
 	}
@@ -311,8 +320,8 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 		{}, // 1st hop is wildcard
 		{
 			DeviceID: "olt",
-			Ingress:  tfd.dMgr.devices["olt"].Ports[0].PortNo,
-			Egress:   tfd.dMgr.devices["olt"].Ports[1].PortNo,
+			Ingress:  1,
+			Egress:   2,
 		},
 	}
 
@@ -384,17 +393,13 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	tfd.defaultRules.AddFlowsAndGroup("onu4", fg)
 
 	//Set up the device graph - flow decomposer uses it only to verify whether a port is a root port.
-	tfd.deviceRoutes = route.NewDeviceRoutes(context.Background(), "ldid", tfd.getDeviceHelper)
+	tfd.deviceRoutes = route.NewDeviceRoutes("ldid", "olt", tfd.dMgr.listDevicePorts)
 	tfd.deviceRoutes.RootPorts = make(map[uint32]uint32)
 	tfd.deviceRoutes.RootPorts[10] = 10
 
 	tfd.fd = NewFlowDecomposer(tfd.dMgr)
 
 	return &tfd
-}
-
-func (tfd *testFlowDecomposer) getDeviceHelper(ctx context.Context, deviceID string) (*voltha.Device, error) {
-	return tfd.dMgr.GetDevice(ctx, &voltha.ID{Id: deviceID})
 }
 
 func (tfd *testFlowDecomposer) GetDeviceLogicalID() string {

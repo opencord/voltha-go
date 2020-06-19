@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
@@ -27,7 +29,6 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"strings"
 )
 
 // ONUAdapter represent ONU adapter attributes
@@ -134,7 +135,7 @@ func (onuA *ONUAdapter) Disable_device(ctx context.Context, device *voltha.Devic
 		}
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to disable
-		if err := onuA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.OperStatus_UNKNOWN); err != nil {
+		if err := onuA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.Port_ALL, voltha.OperStatus_UNKNOWN); err != nil {
 			// Device may also have been deleted in the Core
 			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
 			return
@@ -161,7 +162,7 @@ func (onuA *ONUAdapter) Reenable_device(ctx context.Context, device *voltha.Devi
 
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to enable
-		if err := onuA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.OperStatus_ACTIVE); err != nil {
+		if err := onuA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.Port_ALL, voltha.OperStatus_ACTIVE); err != nil {
 			logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
