@@ -48,13 +48,15 @@ type portRegistration struct {
 
 //onuRegistration is a message sent from an ONU device to an OLT device to register an ONU
 type onuRegistration struct {
-	onu      *voltha.Device
+	onuID    string
+	onuPorts map[uint32]*voltha.Port
 	oltPonNo uint32
 	onuPonNo uint32
 }
 
 type logicalDeviceManager struct {
 	logicalDeviceID string
+	rootDeviceID    string
 	ports           map[uint32]*voltha.LogicalPort
 	deviceRoutes    *DeviceRoutes
 	ldChnl          chan portRegistration
@@ -62,23 +64,19 @@ type logicalDeviceManager struct {
 	done            chan struct{}
 }
 
-func newLogicalDeviceManager(ld *voltha.LogicalDevice, ch chan portRegistration, totalLogicalPorts int, done chan struct{}) *logicalDeviceManager {
-	ports := make(map[uint32]*voltha.LogicalPort)
-	for _, p := range ld.Ports {
-		ports[p.DevicePortNo] = p
-	}
-
+func newLogicalDeviceManager(ld *voltha.LogicalDevice, rootDeviceID string, ch chan portRegistration, totalLogicalPorts int, done chan struct{}) *logicalDeviceManager {
 	return &logicalDeviceManager{
 		logicalDeviceID: ld.Id,
-		ports:           ports,
+		rootDeviceID:    rootDeviceID,
+		ports:           make(map[uint32]*voltha.LogicalPort),
 		ldChnl:          ch,
 		numLogicalPorts: totalLogicalPorts,
 		done:            done,
 	}
 }
 
-func (ldM *logicalDeviceManager) start(ctx context.Context, getDevice GetDeviceFunc, buildRoutes bool) {
-	ldM.deviceRoutes = NewDeviceRoutes(ctx, ldM.logicalDeviceID, getDevice)
+func (ldM *logicalDeviceManager) start(ctx context.Context, listDevicePorts listDevicePortsFunc, buildRoutes bool) {
+	ldM.deviceRoutes = NewDeviceRoutes(ldM.logicalDeviceID, ldM.rootDeviceID, listDevicePorts)
 	ofpPortNo := uint32(1)
 	for portReg := range ldM.ldChnl {
 		if portReg.port == nil {
@@ -94,11 +92,11 @@ func (ldM *logicalDeviceManager) start(ctx context.Context, getDevice GetDeviceF
 		}
 		ldM.ports[lp.DevicePortNo] = lp
 		if buildRoutes {
-			device, err := getDevice(context.WithValue(context.Background(), testSetupPhase, true), lp.DeviceId)
+			devicePorts, err := listDevicePorts(context.WithValue(context.Background(), testSetupPhase, true), lp.DeviceId)
 			if err != nil {
 				fmt.Println("Error when getting device:", lp.DeviceId, err)
 			}
-			if err := ldM.deviceRoutes.AddPort(context.Background(), lp, device, ldM.ports); err != nil && !strings.Contains(err.Error(), "code = FailedPrecondition") {
+			if err := ldM.deviceRoutes.AddPort(context.Background(), lp, lp.DeviceId, devicePorts, ldM.ports); err != nil && !strings.Contains(err.Error(), "code = FailedPrecondition") {
 				fmt.Println("(Error when adding port:", lp, len(ldM.ports), err)
 			}
 		}
@@ -109,7 +107,8 @@ func (ldM *logicalDeviceManager) start(ctx context.Context, getDevice GetDeviceF
 }
 
 type oltManager struct {
-	olt              *voltha.Device
+	oltID            string
+	oltPorts         map[uint32]*voltha.Port
 	logicalDeviceMgr *logicalDeviceManager
 	numNNIPort       int
 	numPonPortOnOlt  int
@@ -118,7 +117,8 @@ type oltManager struct {
 
 func newOltManager(oltDeviceID string, ldMgr *logicalDeviceManager, numNNIPort int, numPonPortOnOlt int, ch chan onuRegistration) *oltManager {
 	return &oltManager{
-		olt:              &voltha.Device{Id: oltDeviceID, ParentId: ldMgr.logicalDeviceID, Root: true},
+		oltID:            oltDeviceID, // ParentId: ldMgr.logicalDeviceID, Root: true},
+		oltPorts:         make(map[uint32]*voltha.Port),
 		logicalDeviceMgr: ldMgr,
 		numNNIPort:       numNNIPort,
 		numPonPortOnOlt:  numPonPortOnOlt,
@@ -127,41 +127,40 @@ func newOltManager(oltDeviceID string, ldMgr *logicalDeviceManager, numNNIPort i
 }
 
 func (oltM *oltManager) start() {
-	oltM.olt.Ports = make([]*voltha.Port, 0)
 	// Setup the OLT nni ports and trigger the nni ports creation
 	for nniPort := 1; nniPort < oltM.numNNIPort+1; nniPort++ {
-		p := &voltha.Port{Label: fmt.Sprintf("nni-%d", nniPort), PortNo: uint32(nniPort), DeviceId: oltM.olt.Id, Type: voltha.Port_ETHERNET_NNI}
-		oltM.olt.Ports = append(oltM.olt.Ports, p)
+		p := &voltha.Port{Label: fmt.Sprintf("nni-%d", nniPort), PortNo: uint32(nniPort), DeviceId: oltM.oltID, Type: voltha.Port_ETHERNET_NNI}
+		oltM.oltPorts[p.PortNo] = p
 		oltM.logicalDeviceMgr.ldChnl <- portRegistration{port: p, rootPort: true}
 	}
 
 	// Create OLT pon ports
 	for ponPort := oltM.numNNIPort + 1; ponPort < oltM.numPonPortOnOlt+oltM.numNNIPort+1; ponPort++ {
-		p := voltha.Port{PortNo: uint32(ponPort), DeviceId: oltM.olt.Id, Type: voltha.Port_PON_OLT}
-		oltM.olt.Ports = append(oltM.olt.Ports, &p)
+		p := &voltha.Port{PortNo: uint32(ponPort), DeviceId: oltM.oltID, Type: voltha.Port_PON_OLT}
+		oltM.oltPorts[p.PortNo] = p
 	}
 
 	// Wait for onu registration
 	for onuReg := range oltM.oltChnl {
-		if onuReg.onu == nil {
+		if onuReg.onuPorts == nil {
 			// All onu has registered - exit the loop
 			break
 		}
-		oltM.registerOnu(onuReg.onu, onuReg.oltPonNo, onuReg.onuPonNo)
+		oltM.registerOnu(onuReg.onuID, onuReg.onuPorts, onuReg.oltPonNo, onuReg.onuPonNo)
 	}
 	// Inform the logical device manager we are done
 	oltM.logicalDeviceMgr.ldChnl <- portRegistration{port: nil}
 }
 
-func (oltM *oltManager) registerOnu(onu *voltha.Device, oltPonNo uint32, onuPonNo uint32) {
+func (oltM *oltManager) registerOnu(onuID string, onuPorts map[uint32]*voltha.Port, oltPonNo uint32, onuPonNo uint32) {
 	// Update the olt pon peers
-	for _, port := range oltM.olt.Ports {
+	for _, port := range oltM.oltPorts {
 		if port.Type == voltha.Port_PON_OLT && port.PortNo == oltPonNo {
-			port.Peers = append(port.Peers, &voltha.Port_PeerPort{DeviceId: onu.Id, PortNo: onuPonNo})
+			port.Peers = append(port.Peers, &voltha.Port_PeerPort{DeviceId: onuID, PortNo: onuPonNo})
 		}
 	}
 	// For each uni port on the ONU trigger the creation of a logical port
-	for _, port := range onu.Ports {
+	for _, port := range onuPorts {
 		if port.Type == voltha.Port_ETHERNET_UNI {
 			oltM.logicalDeviceMgr.ldChnl <- portRegistration{port: port, rootPort: false}
 		}
@@ -177,6 +176,7 @@ type onuManager struct {
 	numGetDeviceInvokedLock sync.RWMutex
 	deviceLock              sync.RWMutex
 	onus                    []*voltha.Device
+	onuPorts                map[string]map[uint32]*voltha.Port
 }
 
 func newOnuManager(oltMgr *oltManager, numOnus int, numUnisPerOnu int, startingUniPortNo int) *onuManager {
@@ -186,6 +186,7 @@ func newOnuManager(oltMgr *oltManager, numOnus int, numUnisPerOnu int, startingU
 		numUnisPerOnu:     numUnisPerOnu,
 		startingUniPortNo: startingUniPortNo,
 		onus:              make([]*voltha.Device, 0),
+		onuPorts:          make(map[string]map[uint32]*voltha.Port),
 	}
 }
 
@@ -198,22 +199,24 @@ func (onuM *onuManager) start(startingOltPeerPortNo int, numPonPortOnOlt int) {
 				var onu *voltha.Device
 				defer wg.Done()
 				id := fmt.Sprintf("%d-onu-%d", oltPonNum, onuID)
-				onu = &voltha.Device{Id: id, ParentId: onuM.oltMgr.olt.Id, ParentPortNo: uint32(oltPonNum)}
+				onu = &voltha.Device{Id: id, ParentId: onuM.oltMgr.oltID, ParentPortNo: uint32(oltPonNum)}
 				ponPort := &voltha.Port{Label: fmt.Sprintf("%s:pon-%d", onu.Id, onuID), PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
 				ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
-				peerPort := voltha.Port_PeerPort{DeviceId: onuM.oltMgr.olt.Id, PortNo: uint32(oltPonNum)}
+				peerPort := voltha.Port_PeerPort{DeviceId: onuM.oltMgr.oltID, PortNo: uint32(oltPonNum)}
 				ponPort.Peers = append(ponPort.Peers, &peerPort)
-				onu.Ports = make([]*voltha.Port, 0)
-				onu.Ports = append(onu.Ports, ponPort)
+				onuPorts := make(map[uint32]*voltha.Port)
+				onuPorts[ponPort.PortNo] = ponPort
 				for j := onuM.startingUniPortNo; j < onuM.numUnisPerOnu+onuM.startingUniPortNo; j++ {
 					uniPort := &voltha.Port{Label: fmt.Sprintf("%s:uni-%d", onu.Id, j), PortNo: uint32(oltPonNum)<<12 + uint32(onuID+1)<<4 + uint32(j), DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
-					onu.Ports = append(onu.Ports, uniPort)
+					onuPorts[uniPort.PortNo] = uniPort
 				}
 				onuM.deviceLock.Lock()
 				onuM.onus = append(onuM.onus, onu)
+				onuM.onuPorts[id] = onuPorts
 				onuM.deviceLock.Unlock()
 				onuM.oltMgr.oltChnl <- onuRegistration{
-					onu:      onu,
+					onuID:    onu.Id,
+					onuPorts: onuPorts,
 					oltPonNo: uint32(oltPonNum),
 					onuPonNo: 1,
 				}
@@ -223,34 +226,30 @@ func (onuM *onuManager) start(startingOltPeerPortNo int, numPonPortOnOlt int) {
 	wg.Wait()
 	//send an empty device to indicate the end of onu registration
 	onuM.oltMgr.oltChnl <- onuRegistration{
-		onu:      nil,
+		onuPorts: nil,
 		oltPonNo: 0,
 		onuPonNo: 1,
 	}
 }
 
-func (onuM *onuManager) getOnu(deviceID string) *voltha.Device {
+func (onuM *onuManager) getOnuPorts(deviceID string) (map[uint32]*voltha.Port, bool) {
 	onuM.deviceLock.Lock()
 	defer onuM.deviceLock.Unlock()
-	for _, onu := range onuM.onus {
-		if onu.Id == deviceID {
-			return onu
-		}
-	}
-	return nil
+	ports, have := onuM.onuPorts[deviceID]
+	return ports, have
 }
 
-func (onuM *onuManager) GetDeviceHelper(ctx context.Context, id string) (*voltha.Device, error) {
+func (onuM *onuManager) ListDevicePortsHelper(ctx context.Context, id string) (map[uint32]*voltha.Port, error) {
 	if ctx.Value(testSetupPhase) != true {
 		onuM.numGetDeviceInvokedLock.Lock()
 		onuM.numGetDeviceInvoked++
 		onuM.numGetDeviceInvokedLock.Unlock()
 	}
 	if id == oltDeviceID {
-		return onuM.oltMgr.olt, nil
+		return onuM.oltMgr.oltPorts, nil
 	}
-	if onu := onuM.getOnu(id); onu != nil {
-		return onu, nil
+	if onuPorts, have := onuM.getOnuPorts(id); have {
+		return onuPorts, nil
 	}
 	return nil, errors.New("not-found")
 }
@@ -268,14 +267,13 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 	// Create all the devices and logical device before computing the routes in one go
 	ld := &voltha.LogicalDevice{Id: logicalDeviceID}
 	ldMgrChnl := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
-	ldMgr := newLogicalDeviceManager(ld, ldMgrChnl, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
+	ldMgr := newLogicalDeviceManager(ld, oltDeviceID, ldMgrChnl, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)
 	oltMgr := newOltManager(oltDeviceID, ldMgr, numNNIPort, numPonPortOnOlt, oltMgrChnl)
 	onuMgr := newOnuManager(oltMgr, numOnuPerOltPonPort, numUniPerOnu, 2)
-	getDevice := onuMgr.GetDeviceHelper
 	// Start the managers.  Only the devices are created.  No routes will be built.
 	ctx := context.Background()
-	go ldMgr.start(ctx, getDevice, false)
+	go ldMgr.start(ctx, onuMgr.ListDevicePortsHelper, false)
 	go oltMgr.start()
 	go onuMgr.start(numNNIPort+1, numPonPortOnOlt)
 
@@ -316,14 +314,13 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	// Create all the devices and logical device before computing the routes in one go
 	ld := &voltha.LogicalDevice{Id: logicalDeviceID}
 	ldMgrChnl := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
-	ldMgr := newLogicalDeviceManager(ld, ldMgrChnl, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
+	ldMgr := newLogicalDeviceManager(ld, oltDeviceID, ldMgrChnl, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)
 	oltMgr := newOltManager(oltDeviceID, ldMgr, numNNIPort, numPonPortOnOlt, oltMgrChnl)
 	onuMgr := newOnuManager(oltMgr, numOnuPerOltPonPort, numUniPerOnu, 2)
-	getDevice := onuMgr.GetDeviceHelper
-
-	ctx := context.Background()
+	getDevice := onuMgr.ListDevicePortsHelper
 	// Start the managers and trigger the routes to be built as the logical ports become available
+	ctx := context.Background()
 	go ldMgr.start(ctx, getDevice, true)
 	go oltMgr.start()
 	go onuMgr.start(numNNIPort+1, numPonPortOnOlt)
@@ -362,11 +359,11 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 	// Create all the devices and logical device before computing the routes in one go
 	ld1 := &voltha.LogicalDevice{Id: logicalDeviceID}
 	ldMgrChnl1 := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
-	ldMgr1 := newLogicalDeviceManager(ld1, ldMgrChnl1, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
+	ldMgr1 := newLogicalDeviceManager(ld1, oltDeviceID, ldMgrChnl1, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl1 := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)
 	oltMgr1 := newOltManager(oltDeviceID, ldMgr1, numNNIPort, numPonPortOnOlt, oltMgrChnl1)
 	onuMgr1 := newOnuManager(oltMgr1, numOnuPerOltPonPort, numUniPerOnu, 2)
-	getDevice := onuMgr1.GetDeviceHelper
+	getDevice := onuMgr1.ListDevicePortsHelper
 	ctx := context.Background()
 	// Start the managers.  Only the devices are created.  No routes will be built.
 	go ldMgr1.start(ctx, getDevice, false)
@@ -387,7 +384,7 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 	// Create all the devices and logical device before computing the routes in one go
 	ld2 := &voltha.LogicalDevice{Id: logicalDeviceID}
 	ldMgrChnl2 := make(chan portRegistration, numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu)
-	ldMgr2 := newLogicalDeviceManager(ld2, ldMgrChnl2, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
+	ldMgr2 := newLogicalDeviceManager(ld2, oltDeviceID, ldMgrChnl2, numNNIPort+numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, done)
 	oltMgrChnl2 := make(chan onuRegistration, numPonPortOnOlt*numOnuPerOltPonPort)
 	oltMgr2 := newOltManager(oltDeviceID, ldMgr2, numNNIPort, numPonPortOnOlt, oltMgrChnl2)
 	onuMgr2 := newOnuManager(oltMgr2, numOnuPerOltPonPort, numUniPerOnu, 2)

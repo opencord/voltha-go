@@ -18,6 +18,7 @@ package adapterif
 
 import (
 	"context"
+
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
@@ -25,14 +26,13 @@ import (
 type CoreProxy interface {
 	UpdateCoreReference(deviceID string, coreReference string)
 	DeleteCoreReference(deviceID string)
-	// getCoreTopic(deviceID string) kafka.Topic
-	//GetAdapterTopic(args ...string) kafka.Topic
-	// getAdapterTopic(args ...string) kafka.Topic
 	RegisterAdapter(ctx context.Context, adapter *voltha.Adapter, deviceTypes *voltha.DeviceTypes) error
 	DeviceUpdate(ctx context.Context, device *voltha.Device) error
 	PortCreated(ctx context.Context, deviceID string, port *voltha.Port) error
-	PortsStateUpdate(ctx context.Context, deviceID string, operStatus voltha.OperStatus_Types) error
+	PortsStateUpdate(ctx context.Context, deviceID string, filter voltha.Port_PortType, operStatus voltha.OperStatus_Types) error
 	DeleteAllPorts(ctx context.Context, deviceID string) error
+	GetDevicePort(ctx context.Context, deviceID string, portNo uint32) (*voltha.Port, error)
+	ListDevicePorts(ctx context.Context, deviceID string) ([]*voltha.Port, error)
 	DeviceStateUpdate(ctx context.Context, deviceID string,
 		connStatus voltha.ConnectStatus_Types, operStatus voltha.OperStatus_Types) error
 

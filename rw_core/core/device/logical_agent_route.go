@@ -108,10 +108,10 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 }
 
 //updateRoutes updates the device routes
-func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Device, lp *voltha.LogicalPort, lps map[uint32]*voltha.LogicalPort) error {
-	logger.Debugw(ctx, "updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "port:": lp})
+func (agent *LogicalAgent) updateRoutes(ctx context.Context, deviceID string, devicePorts map[uint32]*voltha.Port, lp *voltha.LogicalPort, lps map[uint32]*voltha.LogicalPort) error {
+	logger.Debugw(ctx, "updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": deviceID, "port:": lp})
 
-	if err := agent.deviceRoutes.AddPort(ctx, lp, device, lps); err != nil {
+	if err := agent.deviceRoutes.AddPort(ctx, lp, deviceID, devicePorts, lps); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(ctx); err != nil {
@@ -121,10 +121,10 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, device *voltha.Devi
 }
 
 //updateAllRoutes updates the device routes using all the logical ports on that device
-func (agent *LogicalAgent) updateAllRoutes(ctx context.Context, device *voltha.Device) error {
-	logger.Debugw(ctx, "updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": device.Id, "ports-count": len(device.Ports)})
+func (agent *LogicalAgent) updateAllRoutes(ctx context.Context, deviceID string, devicePorts map[uint32]*voltha.Port) error {
+	logger.Debugw(ctx, "updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": deviceID, "ports-count": len(devicePorts)})
 
-	if err := agent.deviceRoutes.AddAllPorts(ctx, device, agent.listLogicalDevicePorts(ctx)); err != nil {
+	if err := agent.deviceRoutes.AddAllPorts(ctx, deviceID, devicePorts, agent.listLogicalDevicePorts(ctx)); err != nil {
 		return err
 	}
 	if err := agent.deviceRoutes.Print(ctx); err != nil {
