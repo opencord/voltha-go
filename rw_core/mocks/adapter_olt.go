@@ -20,20 +20,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/gogo/protobuf/proto"
+	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
 	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
 	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"strings"
 )
 
 const (
 	numONUPerOLT      = 4
 	startingUNIPortNo = 100
 )
+
+// static implementation check
+var _ adapters.IAdapter = &OLTAdapter{}
 
 // OLTAdapter represent OLT adapter
 type OLTAdapter struct {
@@ -168,7 +173,7 @@ func (oltA *OLTAdapter) Disable_device(ctx context.Context, device *voltha.Devic
 
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to disable
-		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.OperStatus_UNKNOWN); err != nil {
+		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, 0, voltha.OperStatus_UNKNOWN); err != nil {
 			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
@@ -202,7 +207,7 @@ func (oltA *OLTAdapter) Reenable_device(ctx context.Context, device *voltha.Devi
 
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to enable
-		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, voltha.OperStatus_ACTIVE); err != nil {
+		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, 0, voltha.OperStatus_ACTIVE); err != nil {
 			logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
 		}
 
@@ -262,7 +267,7 @@ func (oltA *OLTAdapter) Reboot_device(ctx context.Context, device *voltha.Device
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), device.Id, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN); err != nil {
 			logger.Fatalf(ctx, "device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
-		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), device.Id, voltha.OperStatus_UNKNOWN); err != nil {
+		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), device.Id, 0, voltha.OperStatus_UNKNOWN); err != nil {
 			// Not an error as the previous command will start the process of clearing the OLT
 			logger.Infow(ctx, "port-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
