@@ -60,6 +60,7 @@ type DATest struct {
 	defaultTimeout   time.Duration
 	maxTimeout       time.Duration
 	device           *voltha.Device
+	devicePorts      map[uint32]*voltha.Port
 	done             chan int
 }
 
@@ -101,12 +102,12 @@ func newDATest() *DATest {
 		Reason:        "All good",
 		ConnectStatus: voltha.ConnectStatus_UNKNOWN,
 		Custom:        nil,
-		Ports: []*voltha.Port{
-			{PortNo: 1, Label: "pon-1", Type: voltha.Port_PON_ONU, AdminState: voltha.AdminState_ENABLED,
-				OperStatus: voltha.OperStatus_ACTIVE, Peers: []*voltha.Port_PeerPort{{DeviceId: parentID, PortNo: 1}}},
-			{PortNo: 100, Label: "uni-100", Type: voltha.Port_ETHERNET_UNI, AdminState: voltha.AdminState_ENABLED,
-				OperStatus: voltha.OperStatus_ACTIVE},
-		},
+	}
+	test.devicePorts = map[uint32]*voltha.Port{
+		1: {PortNo: 1, Label: "pon-1", Type: voltha.Port_PON_ONU, AdminState: voltha.AdminState_ENABLED,
+			OperStatus: voltha.OperStatus_ACTIVE, Peers: []*voltha.Port_PeerPort{{DeviceId: parentID, PortNo: 1}}},
+		100: {PortNo: 100, Label: "uni-100", Type: voltha.Port_ETHERNET_UNI, AdminState: voltha.AdminState_ENABLED,
+			OperStatus: voltha.OperStatus_ACTIVE},
 	}
 	return test
 }
@@ -170,12 +171,17 @@ func (dat *DATest) createDeviceAgent(t *testing.T) *Agent {
 	d, err := deviceAgent.start(context.TODO(), clonedDevice)
 	assert.Nil(t, err)
 	assert.NotNil(t, d)
+	for _, port := range dat.devicePorts {
+		err := deviceAgent.addPort(context.TODO(), port)
+		assert.Nil(t, err)
+	}
 	deviceMgr.addDeviceAgentToMap(deviceAgent)
 	return deviceAgent
 }
 
 func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *sync.WaitGroup) {
 	originalDevice, err := da.getDevice(context.Background())
+	originalDevicePorts := da.listDevicePorts()
 	assert.Nil(t, err)
 	assert.NotNil(t, originalDevice)
 	var localWG sync.WaitGroup
@@ -229,7 +235,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 	expectedChange := proto.Clone(originalDevice).(*voltha.Device)
 	expectedChange.OperStatus = voltha.OperStatus_ACTIVE
 	expectedChange.ConnectStatus = voltha.ConnectStatus_REACHABLE
-	expectedChange.Ports = append(expectedChange.Ports, portToAdd)
 	expectedChange.Root = root
 	expectedChange.Vendor = vendor
 	expectedChange.Model = model
@@ -239,8 +244,11 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 	expectedChange.Reason = reason
 
 	updatedDevice, _ := da.getDevice(context.Background())
+	updatedDevicePorts := da.listDevicePorts()
 	assert.NotNil(t, updatedDevice)
 	assert.True(t, proto.Equal(expectedChange, updatedDevice))
+	assert.Equal(t, len(originalDevicePorts)+1, len(updatedDevicePorts))
+	assert.True(t, proto.Equal(updatedDevicePorts[portToAdd.PortNo], portToAdd))
 
 	globalWG.Done()
 }

@@ -207,6 +207,8 @@ func (nb *NBTest) verifyDevices(t *testing.T, nbi *NBIHandler) {
 			// Now, verify the details of the device.  First get the latest update
 			d, err := nbi.GetDevice(getContext(), &voltha.ID{Id: device.Id})
 			assert.Nil(t, err)
+			dPorts, err := nbi.ListDevicePorts(getContext(), &voltha.ID{Id: device.Id})
+			assert.Nil(t, err)
 			assert.Equal(t, voltha.AdminState_ENABLED, d.AdminState)
 			assert.Equal(t, voltha.ConnectStatus_REACHABLE, d.ConnectStatus)
 			assert.Equal(t, voltha.OperStatus_ACTIVE, d.OperStatus)
@@ -229,8 +231,8 @@ func (nb *NBTest) verifyDevices(t *testing.T, nbi *NBIHandler) {
 			} else {
 				assert.Error(t, errors.New("invalid-device-type"))
 			}
-			assert.Equal(t, 2, len(d.Ports))
-			for _, p := range d.Ports {
+			assert.Equal(t, 2, len(dPorts.Items))
+			for _, p := range dPorts.Items {
 				assert.Equal(t, voltha.AdminState_ENABLED, p.AdminState)
 				assert.Equal(t, voltha.OperStatus_ACTIVE, p.OperStatus)
 				if p.Type == voltha.Port_ETHERNET_NNI || p.Type == voltha.Port_ETHERNET_UNI {
@@ -636,8 +638,10 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 	oltDevice, err := nb.getADevice(true, nbi)
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
+	oltPorts, err := nbi.ListDevicePorts(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
 
-	for _, cp = range oltDevice.Ports {
+	for _, cp = range oltPorts.Items {
 		if cp.Type == voltha.Port_PON_OLT {
 			break
 		}
@@ -650,15 +654,15 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 	_, err = nbi.DisablePort(getContext(), cp)
 	assert.Nil(t, err)
 	// Wait for the olt device Port  to be disabled
-	var vdFunction isDeviceConditionSatisfied = func(device *voltha.Device) bool {
-		for _, port := range device.Ports {
+	var vdFunction isDevicePortsConditionSatisfied = func(ports *voltha.Ports) bool {
+		for _, port := range ports.Items {
 			if port.PortNo == cp.PortNo {
 				return port.AdminState == voltha.AdminState_DISABLED
 			}
 		}
 		return false
 	}
-	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
+	err = waitUntilDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
 	assert.Nil(t, err)
 	// Wait for the logical device to satisfy the expected condition
 	var vlFunction = func(ports []*voltha.LogicalPort) bool {
@@ -678,15 +682,15 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 
 	// Wait for the olt device Port to be enabled
-	vdFunction = func(device *voltha.Device) bool {
-		for _, port := range device.Ports {
+	vdFunction = func(ports *voltha.Ports) bool {
+		for _, port := range ports.Items {
 			if port.PortNo == cp.PortNo {
 				return port.AdminState == voltha.AdminState_ENABLED
 			}
 		}
 		return false
 	}
-	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
+	err = waitUntilDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, vdFunction, nbi)
 	assert.Nil(t, err)
 	// Wait for the logical device to satisfy the expected condition
 	vlFunction = func(ports []*voltha.LogicalPort) bool {
@@ -702,7 +706,7 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 
 	// Disable a non-PON port
-	for _, cp = range oltDevice.Ports {
+	for _, cp = range oltPorts.Items {
 		if cp.Type != voltha.Port_PON_OLT {
 			break
 		}

@@ -348,7 +348,7 @@ func (ldMgr *LogicalManager) GetLogicalDevicePort(ctx context.Context, lPortID *
 
 // updateLogicalPort sets up a logical port on the logical device based on the device port
 // information, if needed
-func (ldMgr *LogicalManager) updateLogicalPort(ctx context.Context, device *voltha.Device, port *voltha.Port) error {
+func (ldMgr *LogicalManager) updateLogicalPort(ctx context.Context, device *voltha.Device, devicePorts map[uint32]*voltha.Port, port *voltha.Port) error {
 	ldID, err := ldMgr.getLogicalDeviceID(ctx, device)
 	if err != nil || *ldID == "" {
 		// This is not an error as the logical device may not have been created at this time.  In such a case,
@@ -356,7 +356,7 @@ func (ldMgr *LogicalManager) updateLogicalPort(ctx context.Context, device *volt
 		return nil
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
-		if err := agent.updateLogicalPort(ctx, device, port); err != nil {
+		if err := agent.updateLogicalPort(ctx, device, devicePorts, port); err != nil {
 			return err
 		}
 	}
@@ -381,7 +381,7 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 	return nil
 }
 
-func (ldMgr *LogicalManager) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device) error {
+func (ldMgr *LogicalManager) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device, childDevicePorts map[uint32]*voltha.Port) error {
 	logger.Debugw("setupUNILogicalPorts", log.Fields{"childDeviceId": childDevice.Id, "parentDeviceId": childDevice.ParentId, "current-data": childDevice})
 	// Sanity check
 	if childDevice.Root {
@@ -399,7 +399,7 @@ func (ldMgr *LogicalManager) setupUNILogicalPorts(ctx context.Context, childDevi
 	}
 
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, logDeviceID); agent != nil {
-		if err := agent.setupUNILogicalPorts(ctx, childDevice); err != nil {
+		if err := agent.setupUNILogicalPorts(ctx, childDevice, childDevicePorts); err != nil {
 			return err
 		}
 	}

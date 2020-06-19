@@ -38,6 +38,7 @@ var (
 type isLogicalDeviceConditionSatisfied func(ld *voltha.LogicalDevice) bool
 type isLogicalDevicePortsConditionSatisfied func(ports []*voltha.LogicalPort) bool
 type isDeviceConditionSatisfied func(ld *voltha.Device) bool
+type isDevicePortsConditionSatisfied func(ports *voltha.Ports) bool
 type isDevicesConditionSatisfied func(ds *voltha.Devices) bool
 type isLogicalDevicesConditionSatisfied func(lds *voltha.LogicalDevices) bool
 type isConditionSatisfied func() bool
@@ -68,6 +69,36 @@ func waitUntilDeviceReadiness(deviceID string,
 		for {
 			device, _ := nbi.GetDevice(getContext(), &voltha.ID{Id: deviceID})
 			if verificationFunction(device) {
+				ch <- 1
+				break
+			}
+			if done {
+				break
+			}
+			time.Sleep(retryInterval)
+		}
+	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-ch:
+		return nil
+	case <-timer.C:
+		done = true
+		return fmt.Errorf("expected-states-not-reached-for-device%s", deviceID)
+	}
+}
+
+func waitUntilDevicePortsReadiness(deviceID string,
+	timeout time.Duration,
+	verificationFunction isDevicePortsConditionSatisfied,
+	nbi *NBIHandler) error {
+	ch := make(chan int, 1)
+	done := false
+	go func() {
+		for {
+			ports, _ := nbi.ListDevicePorts(getContext(), &voltha.ID{Id: deviceID})
+			if verificationFunction(ports) {
 				ch <- 1
 				break
 			}

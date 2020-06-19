@@ -53,6 +53,7 @@ type LDATest struct {
 	defaultTimeout   time.Duration
 	maxTimeout       time.Duration
 	logicalDevice    *voltha.LogicalDevice
+	logicalPorts     map[uint32]*voltha.LogicalPort
 	deviceIds        []string
 	done             chan int
 }
@@ -89,42 +90,42 @@ func newLDATest() *LDATest {
 				ofp.OfpCapabilities_OFPC_GROUP_STATS),
 		},
 		RootDeviceId: test.deviceIds[0],
-		Ports: []*voltha.LogicalPort{
-			{
-				Id:           "1001",
-				DeviceId:     test.deviceIds[0],
-				DevicePortNo: 1,
-				RootPort:     true,
-				OfpPort: &ofp.OfpPort{
-					PortNo: 1,
-					Name:   "port1",
-					Config: 4,
-					State:  4,
-				},
+	}
+	test.logicalPorts = map[uint32]*voltha.LogicalPort{
+		1: {
+			Id:           "1001",
+			DeviceId:     test.deviceIds[0],
+			DevicePortNo: 1,
+			RootPort:     true,
+			OfpPort: &ofp.OfpPort{
+				PortNo: 1,
+				Name:   "port1",
+				Config: 4,
+				State:  4,
 			},
-			{
-				Id:           "1002",
-				DeviceId:     test.deviceIds[1],
-				DevicePortNo: 2,
-				RootPort:     false,
-				OfpPort: &ofp.OfpPort{
-					PortNo: 2,
-					Name:   "port2",
-					Config: 4,
-					State:  4,
-				},
+		},
+		2: {
+			Id:           "1002",
+			DeviceId:     test.deviceIds[1],
+			DevicePortNo: 2,
+			RootPort:     false,
+			OfpPort: &ofp.OfpPort{
+				PortNo: 2,
+				Name:   "port2",
+				Config: 4,
+				State:  4,
 			},
-			{
-				Id:           "1003",
-				DeviceId:     test.deviceIds[2],
-				DevicePortNo: 3,
-				RootPort:     false,
-				OfpPort: &ofp.OfpPort{
-					PortNo: 3,
-					Name:   "port3",
-					Config: 4,
-					State:  4,
-				},
+		},
+		3: {
+			Id:           "1003",
+			DeviceId:     test.deviceIds[2],
+			DevicePortNo: 3,
+			RootPort:     false,
+			OfpPort: &ofp.OfpPort{
+				PortNo: 3,
+				Name:   "port3",
+				Config: 4,
+				State:  4,
 			},
 		},
 	}
@@ -186,14 +187,15 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 	clonedLD.DatapathId = rand.Uint64()
 	lDeviceAgent := newLogicalAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbPath, lDeviceMgr.ldProxy, lDeviceMgr.defaultTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
-	for _, port := range clonedLD.Ports {
-		handle, created, err := lDeviceAgent.portLoader.LockOrCreate(context.Background(), port)
+	for _, port := range lda.logicalPorts {
+		clonedPort := proto.Clone(port).(*voltha.LogicalPort)
+		handle, created, err := lDeviceAgent.portLoader.LockOrCreate(context.Background(), clonedPort)
 		if err != nil {
 			panic(err)
 		}
 		handle.Unlock()
 		if !created {
-			t.Errorf("port %d already exists", port.OfpPort.PortNo)
+			t.Errorf("port %d already exists", clonedPort.OfpPort.PortNo)
 		}
 	}
 	err := lDeviceAgent.ldProxy.Set(context.Background(), clonedLD.Id, clonedLD)
@@ -203,14 +205,14 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 }
 
 func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *LogicalAgent, globalWG *sync.WaitGroup) {
-	originalLogicalDevice, _ := ldAgent.GetLogicalDevice(context.Background())
-	assert.NotNil(t, originalLogicalDevice)
+	originalLogicalPorts := ldAgent.listLogicalDevicePorts()
+	assert.NotNil(t, originalLogicalPorts)
 	var localWG sync.WaitGroup
 
 	// Change the state of the first port to FAILED
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[0].DevicePortNo, voltha.OperStatus_FAILED)
+		err := ldAgent.updatePortState(context.Background(), 1, voltha.OperStatus_FAILED)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -218,7 +220,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the second port to TESTING
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[1].DevicePortNo, voltha.OperStatus_TESTING)
+		err := ldAgent.updatePortState(context.Background(), 2, voltha.OperStatus_TESTING)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -226,9 +228,9 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the third port to UNKNOWN and then back to ACTIVE
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_UNKNOWN)
+		err := ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_UNKNOWN)
 		assert.Nil(t, err)
-		err = ldAgent.updatePortState(context.Background(), lda.logicalDevice.Ports[2].DevicePortNo, voltha.OperStatus_ACTIVE)
+		err = ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_ACTIVE)
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -263,17 +265,27 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 		meterHandle.Unlock()
 	}
 
-	expectedChange := proto.Clone(originalLogicalDevice).(*voltha.LogicalDevice)
-	expectedChange.Ports[0].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	expectedChange.Ports[0].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
-	expectedChange.Ports[1].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	expectedChange.Ports[1].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
-	expectedChange.Ports[2].OfpPort.Config = originalLogicalDevice.Ports[0].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	expectedChange.Ports[2].OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
+	expectedLogicalPorts := make(map[uint32]*voltha.LogicalPort)
+	for _, port := range originalLogicalPorts {
+		clonedPort := proto.Clone(port).(*voltha.LogicalPort)
+		switch clonedPort.OfpPort.PortNo {
+		case 1:
+			clonedPort.OfpPort.Config = originalLogicalPorts[1].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+			clonedPort.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+		case 2:
+			clonedPort.OfpPort.Config = originalLogicalPorts[1].OfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+			clonedPort.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+		case 3:
+			clonedPort.OfpPort.Config = originalLogicalPorts[1].OfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+			clonedPort.OfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
+		}
+		expectedLogicalPorts[clonedPort.OfpPort.PortNo] = clonedPort
+	}
 
 	updatedLogicalDevicePorts := ldAgent.listLogicalDevicePorts()
-	for _, p := range expectedChange.Ports {
-		assert.True(t, proto.Equal(p, updatedLogicalDevicePorts[p.DevicePortNo]))
+	assert.Equal(t, len(expectedLogicalPorts), len(updatedLogicalDevicePorts))
+	for _, p := range updatedLogicalDevicePorts {
+		assert.True(t, proto.Equal(p, expectedLogicalPorts[p.OfpPort.PortNo]))
 	}
 	globalWG.Done()
 }

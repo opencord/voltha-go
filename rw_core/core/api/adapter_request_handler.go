@@ -19,6 +19,7 @@ package api
 import (
 	"context"
 	"errors"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -106,8 +107,14 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(args []*ic.Argument) (*voltha.D
 	device, err := rhp.deviceMgr.GetDevice(context.TODO(), pID)
 	if err != nil {
 		logger.Debugw("get-device-failed", log.Fields{"deviceID": pID.Id, "error": err})
+		return device, err
 	}
-	return device, err
+	ports, err := rhp.deviceMgr.ListDevicePorts(context.TODO(), pID)
+	if err != nil {
+		return device, err
+	}
+	device.Ports = ports.Items
+	return device, nil
 }
 
 // DeviceUpdate updates device using adapter data

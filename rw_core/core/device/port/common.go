@@ -1,5 +1,3 @@
-// +build integration
-
 /*
  * Copyright 2020-present Open Networking Foundation
  *
@@ -15,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package api
+
+// Package core Common Logger initialization
+package port
 
 import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -26,7 +26,7 @@ var logger log.Logger
 func init() {
 	// Setup this package so that it's log level can be modified at run time
 	var err error
-	logger, err = log.AddPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "api"})
+	logger, err = log.AddPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "port"})
 	if err != nil {
 		panic(err)
 	}

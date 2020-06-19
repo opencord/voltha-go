@@ -28,7 +28,6 @@ import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-protos/v3/go/common"
 	"github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
@@ -44,10 +43,7 @@ var (
 	TestProxyLogicalDeviceID       string
 	TestProxyTargetDeviceID        string
 	TestProxyTargetLogicalDeviceID string
-	TestProxyLogicalPorts          []*voltha.LogicalPort
-	TestProxyPorts                 []*voltha.Port
 	TestProxyStats                 *openflow_13.OfpFlowStats
-	TestProxyFlows                 *openflow_13.Flows
 	TestProxyDevice                *voltha.Device
 	TestProxyLogicalDevice         *voltha.LogicalDevice
 	TestProxyAdapter               *voltha.Adapter
@@ -72,46 +68,19 @@ func init() {
 	TestProxyRootDevice = proxy.Proxy("device")
 	TestProxyRootAdapter = proxy.Proxy("adapters")
 
-	TestProxyLogicalPorts = []*voltha.LogicalPort{
-		{
-			Id:           "123",
-			DeviceId:     "logicalport-0-device-id",
-			DevicePortNo: 123,
-			RootPort:     false,
-		},
-	}
-	TestProxyPorts = []*voltha.Port{
-		{
-			PortNo:     123,
-			Label:      "test-port-0",
-			Type:       voltha.Port_PON_OLT,
-			AdminState: common.AdminState_ENABLED,
-			OperStatus: common.OperStatus_ACTIVE,
-			DeviceId:   "etcd_port-0-device-id",
-			Peers:      []*voltha.Port_PeerPort{},
-		},
-	}
-
 	TestProxyStats = &openflow_13.OfpFlowStats{
 		Id: 1111,
-	}
-	TestProxyFlows = &openflow_13.Flows{
-		Items: []*openflow_13.OfpFlowStats{TestProxyStats},
 	}
 	TestProxyDevice = &voltha.Device{
 		Id:         TestProxyDeviceID,
 		Type:       "simulated_olt",
 		Address:    &voltha.Device_HostAndPort{HostAndPort: "1.2.3.4:5555"},
 		AdminState: voltha.AdminState_PREPROVISIONED,
-		Flows:      TestProxyFlows,
-		Ports:      TestProxyPorts,
 	}
 
 	TestProxyLogicalDevice = &voltha.LogicalDevice{
 		Id:         TestProxyDeviceID,
 		DatapathId: 0,
-		Ports:      TestProxyLogicalPorts,
-		Flows:      TestProxyFlows,
 	}
 
 	TestProxyAdapter = &voltha.Adapter{
