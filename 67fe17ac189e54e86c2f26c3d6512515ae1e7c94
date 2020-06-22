@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b2dec29b_ab68a46e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-06-22T18:32:48Z",
+      "side": 1,
+      "message": "Yes, it is just for testing but won\u0027t case any harm. Span injection for all other API methods will be performed as a different JIRA",
+      "parentUuid": "74078670_07c4993d",
+      "revId": "67fe17ac189e54e86c2f26c3d6512515ae1e7c94",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b55c38b3_a7747763",
         "filename": "rw_core/main.go",
         "patchSetId": 5
@@ -39,6 +57,30 @@
       "revId": "67fe17ac189e54e86c2f26c3d6512515ae1e7c94",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eed134ba_020fbfbc",
+        "filename": "rw_core/main.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-06-22T18:32:48Z",
+      "side": 1,
+      "message": "Just renaming the method as per suggestion from David and Scott. Also, added independent flag for log correlation part. Will implement retry only after Release 2.4",
+      "parentUuid": "b55c38b3_a7747763",
+      "range": {
+        "startLine": 142,
+        "startChar": 20,
+        "endLine": 142,
+        "endChar": 48
+      },
+      "revId": "67fe17ac189e54e86c2f26c3d6512515ae1e7c94",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
