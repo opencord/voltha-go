@@ -240,7 +240,7 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(deviceRules *fu.DeviceRule
 	return responses
 }
 
-func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata, mod *ofp.OfpFlowMod) []coreutils.Response {
 	logger.Debugw("send-delete-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
@@ -252,7 +252,12 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(deviceRules *fu.Devic
 			defer cancel()
 			start := time.Now()
 			if err := agent.deviceMgr.deleteFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Errorw("flow-delete-failed", log.Fields{"deviceID": deviceId, "error": err, "wait-time": time.Since(start)})
+				logger.Errorw("flows-and-groups-delete-failed", log.Fields{
+					"device-id":   deviceId,
+					"error":       err,
+					"flow-cookie": mod.Cookie,
+					"wait-time":   time.Since(start),
+				})
 				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s", deviceId))
 			}
 			response.Done()
@@ -281,7 +286,7 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(deviceRules *fu.DeviceRu
 	return responses
 }
 
-func (agent *LogicalAgent) deleteFlowsFromParentDevice(flows map[uint64]*ofp.OfpFlowStats, metadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) deleteFlowsFromParentDevice(flows map[uint64]*ofp.OfpFlowStats, metadata *voltha.FlowMetadata, mod *ofp.OfpFlowMod) []coreutils.Response {
 	logger.Debugw("deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "flows": flows})
 	responses := make([]coreutils.Response, 0)
 	for _, flow := range flows {
@@ -299,7 +304,11 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(flows map[uint64]*ofp.Ofp
 			subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 			defer cancel()
 			if err := agent.deviceMgr.deleteParentFlows(subCtx, agent.rootDeviceID, uniPort, metadata); err != nil {
-				logger.Error("flow-delete-failed", log.Fields{"device-id": agent.rootDeviceID, "error": err})
+				logger.Error("flow-delete-failed-from-parent-device", log.Fields{
+					"device-id":   agent.rootDeviceID,
+					"error":       err,
+					"flow-cookie": mod.Cookie,
+				})
 				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s %v", agent.rootDeviceID, err))
 			}
 			response.Done()
