@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "cebdbcb7_bb62bfac",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-06-22T19:21:11Z",
+      "side": 1,
+      "message": "Yes, we intend to use interceptor for all API methods wherever possible. Planning to use https://github.com/grpc-ecosystem/go-grpc-middleware which seems to be more mature",
+      "parentUuid": "0c63182a_360df4ca",
+      "revId": "67fe17ac189e54e86c2f26c3d6512515ae1e7c94",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b55c38b3_a7747763",
         "filename": "rw_core/main.go",
         "patchSetId": 5
