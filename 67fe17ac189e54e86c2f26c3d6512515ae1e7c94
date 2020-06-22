@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0c63182a_360df4ca",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-06-22T19:10:40Z",
+      "side": 1,
+      "message": "Looking at \nhttps://github.com/grpc-ecosystem/grpc-opentracing/tree/master/go/otgrpc\nIs is possible to inject the span at the grpc server level using a grpc interceptor, or similar?\n\nIt would be nice if this could be done without requiring this code snippet in every request handler.",
+      "parentUuid": "b2dec29b_ab68a46e",
+      "revId": "67fe17ac189e54e86c2f26c3d6512515ae1e7c94",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b55c38b3_a7747763",
         "filename": "rw_core/main.go",
         "patchSetId": 5
