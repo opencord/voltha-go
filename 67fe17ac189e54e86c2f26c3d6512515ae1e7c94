@@ -117,6 +117,29 @@
       "revId": "67fe17ac189e54e86c2f26c3d6512515ae1e7c94",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52b742cf_bd8b842f",
+        "filename": "rw_core/main.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-22T19:53:17Z",
+      "side": 1,
+      "message": "nit: would remove jaeger here as that is abstracted away a bit.",
+      "range": {
+        "startLine": 144,
+        "startChar": 37,
+        "endLine": 144,
+        "endChar": 43
+      },
+      "revId": "67fe17ac189e54e86c2f26c3d6512515ae1e7c94",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
