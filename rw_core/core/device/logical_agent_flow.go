@@ -208,13 +208,17 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	}
 
 	// Update the devices
-	respChnls := agent.deleteFlowsAndGroupsFromDevices(deviceRules, metadata)
+	respChnls := agent.deleteFlowsAndGroupsFromDevices(deviceRules, metadata, mod)
 
 	// Wait for the responses
 	go func() {
 		// Since this action is taken following an add failure, we may also receive a failure for the revert
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw("failure-reverting-added-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+			logger.Warnw("failure-reverting-added-flows", log.Fields{
+				"logicalDeviceId": agent.logicalDeviceID,
+				"flow-cookie": mod.Cookie,
+				"errors": res,
+			})
 		}
 	}()
 
@@ -306,9 +310,9 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 
 		// Update the devices
 		if partialRoute {
-			respChnls = agent.deleteFlowsFromParentDevice(toDelete, toMetadata(metersConfig))
+			respChnls = agent.deleteFlowsFromParentDevice(toDelete, toMetadata(metersConfig), mod)
 		} else {
-			respChnls = agent.deleteFlowsAndGroupsFromDevices(deviceRules, toMetadata(metersConfig))
+			respChnls = agent.deleteFlowsAndGroupsFromDevices(deviceRules, toMetadata(metersConfig), mod)
 		}
 
 		// Wait for the responses
@@ -381,15 +385,19 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 	}
 	// Update the devices
 	if partialRoute {
-		respChnls = agent.deleteFlowsFromParentDevice(flowsToDelete, toMetadata(flowMetadata))
+		respChnls = agent.deleteFlowsFromParentDevice(flowsToDelete, toMetadata(flowMetadata), mod)
 	} else {
-		respChnls = agent.deleteFlowsAndGroupsFromDevices(deviceRules, toMetadata(flowMetadata))
+		respChnls = agent.deleteFlowsAndGroupsFromDevices(deviceRules, toMetadata(flowMetadata), mod)
 	}
 
 	// Wait for completion
 	go func() {
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw("failure-deleting-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+			logger.Warnw("failure-deleting-device-flows", log.Fields{
+				"flowCookie": mod.Cookie,
+				"logicalDeviceId": agent.logicalDeviceID,
+				"errors": res,
+			})
 			//TODO: Revert flow changes
 		}
 	}()
