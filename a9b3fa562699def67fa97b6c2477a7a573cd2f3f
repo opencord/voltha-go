@@ -16,6 +16,24 @@
       "revId": "a9b3fa562699def67fa97b6c2477a7a573cd2f3f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7838f39e_d6b611c4",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-23T14:18:27Z",
+      "side": 1,
+      "message": "My concern was that it was a public event and I wasn\u0027t sure exactly who if any one outside of voltha might be listening. Also I thought it might be a useful event if someone wanted to monitor when new devices are added to the system.\n\nAll that being said, happy to remove it. Thoughts?",
+      "parentUuid": "9e358621_8564ff50",
+      "revId": "a9b3fa562699def67fa97b6c2477a7a573cd2f3f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
