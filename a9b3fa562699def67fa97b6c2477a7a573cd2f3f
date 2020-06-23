@@ -70,6 +70,24 @@
       "revId": "a9b3fa562699def67fa97b6c2477a7a573cd2f3f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90da3b9f_41d0f77c",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-23T15:03:39Z",
+      "side": 1,
+      "message": "this also means, i think, dependent changes in lib-go, as it panics if you don\u0027t specify a discovery topic.",
+      "parentUuid": "3672adec_0ef056ea",
+      "revId": "a9b3fa562699def67fa97b6c2477a7a573cd2f3f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
