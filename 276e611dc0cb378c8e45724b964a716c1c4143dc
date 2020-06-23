@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7276723d_9c5ce7df",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-23T19:28:46Z",
+      "side": 1,
+      "message": "device-id ... while you are here? it helps when evaluating log messages in EFK",
+      "range": {
+        "startLine": 256,
+        "startChar": 6,
+        "endLine": 256,
+        "endChar": 14
+      },
+      "revId": "276e611dc0cb378c8e45724b964a716c1c4143dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "471655a9_f4668aed",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-23T19:28:46Z",
+      "side": 1,
+      "message": "it is called `flow-cookie` above",
+      "range": {
+        "startLine": 310,
+        "startChar": 6,
+        "endLine": 310,
+        "endChar": 14
+      },
+      "revId": "276e611dc0cb378c8e45724b964a716c1c4143dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
