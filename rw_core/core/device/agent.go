@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device/flow"
 	"github.com/opencord/voltha-go/rw_core/core/device/group"
@@ -791,4 +792,31 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 	}
 	logger.Debugw(ctx, "getExtValue-Success-device-agent", log.Fields{"Resp": Resp})
 	return Resp, nil
+}
+
+func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, value *voltha.ValueSet) (*empty.Empty, error) {
+	log.Debugw("setExtValue", log.Fields{"device-id": value.Id})
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return nil, err
+	}
+
+	//send request to adapter
+	ch, err := agent.adapterProxy.SetExtValue(ctx, device, value)
+	agent.requestQueue.RequestComplete()
+	if err != nil {
+		return nil, err
+	}
+
+	// Wait for the adapter response
+	rpcResponse, ok := <-ch
+	if !ok {
+		return nil, status.Errorf(codes.Aborted, "channel-closed-device-id-%s", agent.deviceID)
+	}
+	if rpcResponse.Err != nil {
+		return nil, rpcResponse.Err
+	}
+
+	// Unmarshal and return the response
+	logger.Debug(ctx, "setExtValue-Success-device-agent")
+	return &empty.Empty{}, nil
 }
