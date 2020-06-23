@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e358621_8564ff50",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-23T13:59:51Z",
+      "side": 1,
+      "message": "The device discovery topic can be removed.  It was used to inform the affinity router that new ONU devices have been discovered such that it can update its routing map to know where to send a request for a given ONU.",
+      "revId": "a9b3fa562699def67fa97b6c2477a7a573cd2f3f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
