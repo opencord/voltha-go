@@ -94,7 +94,6 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = nb.defaultTimeout
 	cfg.DefaultCoreTimeout = nb.defaultTimeout
-	cfg.InCompetingMode = inCompeteMode
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(nb.kvClientPort)
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
@@ -112,8 +111,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	nb.kmp = kafka.NewInterContainerProxy(
 		kafka.InterContainerAddress(cfg.KafkaAdapterAddress),
 		kafka.MsgClient(nb.kClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
-		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}))
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)

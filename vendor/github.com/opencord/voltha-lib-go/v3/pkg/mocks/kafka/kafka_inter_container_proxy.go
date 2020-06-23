@@ -18,6 +18,7 @@ package kafka
 
 import (
 	"context"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -61,9 +62,7 @@ func (s *MockKafkaICProxy) GetDefaultTopic() *kafka.Topic {
 	return &t
 }
 func (s *MockKafkaICProxy) DeleteTopic(topic kafka.Topic) error { return nil }
-func (s *MockKafkaICProxy) DeviceDiscovered(deviceId string, deviceType string, parentId string, publisher string) error {
-	return nil
-}
+
 func (s *MockKafkaICProxy) Stop() {}
 
 func (s *MockKafkaICProxy) InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *kafka.Topic, replyToTopic *kafka.Topic,

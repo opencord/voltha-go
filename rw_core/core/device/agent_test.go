@@ -111,12 +111,11 @@ func newDATest() *DATest {
 	return test
 }
 
-func (dat *DATest) startCore(inCompeteMode bool) {
+func (dat *DATest) startCore() {
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(dat.kvClientPort)
-	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
 		logger.Fatal("Cannot get a freeport for grpc")
@@ -132,8 +131,7 @@ func (dat *DATest) startCore(inCompeteMode bool) {
 	dat.kmp = kafka.NewInterContainerProxy(
 		kafka.InterContainerAddress(cfg.KafkaAdapterAddress),
 		kafka.MsgClient(dat.kClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
-		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}))
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
@@ -252,7 +250,7 @@ func TestConcurrentDevices(t *testing.T) {
 		defer da.stopAll()
 		log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 		// Start the Core
-		da.startCore(false)
+		da.startCore()
 
 		var wg sync.WaitGroup
 		numConCurrentDeviceAgents := 20
@@ -272,7 +270,7 @@ func TestFlowUpdates(t *testing.T) {
 
 	log.SetPackageLogLevel("github.com/opencord/voltha-go/rw_core/core", log.DebugLevel)
 	// Start the Core
-	da.startCore(false)
+	da.startCore()
 	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
 
 	a := da.createDeviceAgent(t)
@@ -288,7 +286,7 @@ func TestGroupUpdates(t *testing.T) {
 	defer da.stopAll()
 
 	// Start the Core
-	da.startCore(false)
+	da.startCore()
 	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
 	a := da.createDeviceAgent(t)
 	cloned := a.getDeviceWithoutLock()

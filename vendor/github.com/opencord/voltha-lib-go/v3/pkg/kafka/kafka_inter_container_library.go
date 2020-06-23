@@ -19,12 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -66,7 +67,6 @@ type InterContainerProxy interface {
 	Start() error
 	Stop()
 	GetDefaultTopic() *Topic
-	DeviceDiscovered(deviceId string, deviceType string, parentId string, publisher string) error
 	InvokeRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic, waitForResponse bool, key string, kvArgs ...*KVArg) (bool, *any.Any)
 	InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic, waitForResponse bool, key string, kvArgs ...*KVArg) chan *RpcResponse
 	SubscribeWithRequestHandlerInterface(topic Topic, handler interface{}) error
@@ -82,7 +82,6 @@ type interContainerProxy struct {
 	kafkaAddress                   string
 	defaultTopic                   *Topic
 	defaultRequestHandlerInterface interface{}
-	deviceDiscoveryTopic           *Topic
 	kafkaClient                    Client
 	doneCh                         chan struct{}
 	doneOnce                       sync.Once
@@ -115,12 +114,6 @@ func InterContainerAddress(address string) InterContainerProxyOption {
 func DefaultTopic(topic *Topic) InterContainerProxyOption {
 	return func(args *interContainerProxy) {
 		args.defaultTopic = topic
-	}
-}
-
-func DeviceDiscoveryTopic(topic *Topic) InterContainerProxyOption {
-	return func(args *interContainerProxy) {
-		args.deviceDiscoveryTopic = topic
 	}
 }
 
@@ -197,48 +190,6 @@ func (kp *interContainerProxy) Stop() {
 
 func (kp *interContainerProxy) GetDefaultTopic() *Topic {
 	return kp.defaultTopic
-}
-
-// DeviceDiscovered publish the discovered device onto the kafka messaging bus
-func (kp *interContainerProxy) DeviceDiscovered(deviceId string, deviceType string, parentId string, publisher string) error {
-	logger.Debugw("sending-device-discovery-msg", log.Fields{"deviceId": deviceId})
-	//	Simple validation
-	if deviceId == "" || deviceType == "" {
-		logger.Errorw("invalid-parameters", log.Fields{"id": deviceId, "type": deviceType})
-		return errors.New("invalid-parameters")
-	}
-	//	Create the device discovery message
-	header := &ic.Header{
-		Id:        uuid.New().String(),
-		Type:      ic.MessageType_DEVICE_DISCOVERED,
-		FromTopic: kp.defaultTopic.Name,
-		ToTopic:   kp.deviceDiscoveryTopic.Name,
-		Timestamp: ptypes.TimestampNow(),
-	}
-	body := &ic.DeviceDiscovered{
-		Id:         deviceId,
-		DeviceType: deviceType,
-		ParentId:   parentId,
-		Publisher:  publisher,
-	}
-
-	var marshalledData *any.Any
-	var err error
-	if marshalledData, err = ptypes.MarshalAny(body); err != nil {
-		logger.Errorw("cannot-marshal-request", log.Fields{"error": err})
-		return err
-	}
-	msg := &ic.InterContainerMessage{
-		Header: header,
-		Body:   marshalledData,
-	}
-
-	// Send the message
-	if err := kp.kafkaClient.Send(msg, kp.deviceDiscoveryTopic); err != nil {
-		logger.Errorw("cannot-send-device-discovery-message", log.Fields{"error": err})
-		return err
-	}
-	return nil
 }
 
 // InvokeAsyncRPC is used to make an RPC request asynchronously
