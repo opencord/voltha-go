@@ -52,6 +52,24 @@
       "revId": "a9b3fa562699def67fa97b6c2477a7a573cd2f3f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3672adec_0ef056ea",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-23T15:01:40Z",
+      "side": 1,
+      "message": "ok. will remove.",
+      "parentUuid": "14f8f0c9_6601e04a",
+      "revId": "a9b3fa562699def67fa97b6c2477a7a573cd2f3f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
