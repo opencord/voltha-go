@@ -136,7 +136,6 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = lda.defaultTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(lda.kvClientPort)
-	cfg.InCompetingMode = inCompeteMode
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
 		logger.Fatal("Cannot get a freeport for grpc")
@@ -153,7 +152,7 @@ func (lda *LDATest) startCore(inCompeteMode bool) {
 		kafka.InterContainerAddress(cfg.KafkaAdapterAddress),
 		kafka.MsgClient(lda.kClient),
 		kafka.DefaultTopic(&kafka.Topic{Name: cfg.CoreTopic}),
-		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.AffinityRouterTopic}))
+		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: cfg.DeviceDiscoveryTopic}))
 
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
