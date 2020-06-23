@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "08764049_b652813f",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T19:37:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a7a6bfd_3c2a2b10",
+      "range": {
+        "startLine": 218,
+        "startChar": 5,
+        "endLine": 218,
+        "endChar": 20
+      },
+      "revId": "276e611dc0cb378c8e45724b964a716c1c4143dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "182a5e65_be814d34",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 3
@@ -130,6 +154,30 @@
       "writtenOn": "2020-06-23T19:32:28Z",
       "side": 1,
       "message": "error? singular?",
+      "range": {
+        "startLine": 220,
+        "startChar": 5,
+        "endLine": 220,
+        "endChar": 11
+      },
+      "revId": "276e611dc0cb378c8e45724b964a716c1c4143dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a3652ca_96dd034c",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T19:37:02Z",
+      "side": 1,
+      "message": "WaitForNilOrErrorResponses returns a list of errors, that\u0027s why the plural",
+      "parentUuid": "182a5e65_be814d34",
       "range": {
         "startLine": 220,
         "startChar": 5,
@@ -165,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "44f20c71_5689cf26",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T19:37:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22133ddc_899c5614",
+      "range": {
+        "startLine": 397,
+        "startChar": 5,
+        "endLine": 397,
+        "endChar": 15
+      },
+      "revId": "276e611dc0cb378c8e45724b964a716c1c4143dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "35fe914b_f6c61257",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 3
@@ -188,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "50b89006_c8fff257",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T19:37:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "35fe914b_f6c61257",
+      "range": {
+        "startLine": 398,
+        "startChar": 5,
+        "endLine": 398,
+        "endChar": 20
+      },
+      "revId": "276e611dc0cb378c8e45724b964a716c1c4143dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc68e1d3_e54c45d3",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 3
@@ -199,6 +295,30 @@
       "writtenOn": "2020-06-23T19:32:28Z",
       "side": 1,
       "message": "error? singular?",
+      "range": {
+        "startLine": 399,
+        "startChar": 5,
+        "endLine": 399,
+        "endChar": 11
+      },
+      "revId": "276e611dc0cb378c8e45724b964a716c1c4143dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34ea91ca_37d71ed5",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T19:37:02Z",
+      "side": 1,
+      "message": "same as above",
+      "parentUuid": "bc68e1d3_e54c45d3",
       "range": {
         "startLine": 399,
         "startChar": 5,
