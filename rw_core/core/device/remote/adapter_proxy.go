@@ -458,3 +458,22 @@ func (ap *AdapterProxy) GetExtValue(ctx context.Context, pdevice *voltha.Device,
 	replyToTopic := ap.getCoreTopic()
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, pdevice.Id, args...)
 }
+
+// SetExtValue  set some given configs or value
+func (ap *AdapterProxy) SetExtValue(ctx context.Context, device *voltha.Device, value *voltha.ValueSet) (chan *kafka.RpcResponse, error) {
+	log.Debugw("GetExtValue", log.Fields{"device-id": value.Id})
+	rpc := "get_ext_value"
+	toTopic, err := ap.getAdapterTopic(value.Id, device.Adapter)
+	if err != nil {
+		return nil, err
+	}
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := []*kafka.KVArg{
+		{
+			Key:   "value",
+			Value: value},
+	}
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, value.Id, args...)
+}
