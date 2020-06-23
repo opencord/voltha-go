@@ -117,7 +117,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// connect to kafka, then wait until reachable and publisher/consumer created
 	// core.kmp must be created before deviceMgr and adapterMgr
-	kmp, err := startKafkInterContainerProxy(ctx, kafkaClient, cf.KafkaAdapterAddress, cf.CoreTopic, cf.AffinityRouterTopic, cf.ConnectionRetryInterval)
+	kmp, err := startKafkInterContainerProxy(ctx, kafkaClient, cf.KafkaAdapterAddress, cf.CoreTopic, cf.DeviceDiscoveryTopic, cf.ConnectionRetryInterval)
 	if err != nil {
 		logger.Warn("Failed to setup kafka connection")
 		return
