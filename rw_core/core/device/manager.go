@@ -1562,3 +1562,22 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifi
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
 }
+
+// SetExtValue  set some given configs or value
+func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*empty.Empty, error) {
+	log.Debugw("setExtValue", log.Fields{"onu-id": value.Id})
+	device, err := dMgr.getDeviceReadOnly(ctx, value.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
+	}
+	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
+		resp, err := agent.setExtValue(ctx, device, value)
+		if err != nil {
+			return nil, err
+		}
+		log.Debugw("setExtValue-result", log.Fields{"result": resp})
+		return resp, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
+
+}
