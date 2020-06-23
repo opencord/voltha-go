@@ -29,7 +29,7 @@ import (
 )
 
 // startKafkInterContainerProxy is responsible for starting the Kafka Interadapter Proxy
-func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client, address string, coreTopic, affinityRouterTopic string, connectionRetryInterval time.Duration) (kafka.InterContainerProxy, error) {
+func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client, address string, coreTopic, deviceDiscoveryTopic string, connectionRetryInterval time.Duration) (kafka.InterContainerProxy, error) {
 	logger.Infow("initialize-kafka-manager", log.Fields{"address": address, "topic": coreTopic})
 
 	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPreparing)
@@ -39,7 +39,7 @@ func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client,
 		kafka.InterContainerAddress(address),
 		kafka.MsgClient(kafkaClient),
 		kafka.DefaultTopic(&kafka.Topic{Name: coreTopic}),
-		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: affinityRouterTopic}))
+		kafka.DeviceDiscoveryTopic(&kafka.Topic{Name: deviceDiscoveryTopic}))
 
 	probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusPrepared)
 

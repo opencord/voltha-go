@@ -19,6 +19,10 @@ package kafka
 
 import (
 	"context"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/rw_core/core/api"
@@ -27,9 +31,6 @@ import (
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
-	"time"
 )
 
 /*
@@ -43,12 +44,12 @@ const (
 var coreKafkaProxy *kk.InterContainerProxy
 var adapterKafkaProxy *kk.InterContainerProxy
 var kafkaPartitionClient kk.Client
-var affinityRouterTopic string
+var deviceDiscoveryTopic string
 var hostIP string
 var kafkaClient kk.Client
 
 func init() {
-	affinityRouterTopic = "AffinityRouter"
+	deviceDiscoveryTopic = "deviceDiscovery"
 	hostIP = os.Getenv("DOCKER_HOST_IP")
 	kafkaClient = kk.NewSaramaClient(
 		kk.Host(hostIP),
@@ -59,7 +60,7 @@ func init() {
 		kk.InterContainerPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Core"}),
 		kk.MsgClient(kafkaClient),
-		kk.DeviceDiscoveryTopic(&kk.Topic{Name: affinityRouterTopic}))
+		kk.DeviceDiscoveryTopic(&kk.Topic{Name: deviceDiscoveryTopic}))
 
 	adapterKafkaProxy = kk.NewInterContainerProxy(
 		kk.InterContainerHost(hostIP),
@@ -517,11 +518,11 @@ func TestDeviceDiscovery(t *testing.T) {
 		kk.InterContainerPort(9092),
 		kk.DefaultTopic(&kk.Topic{Name: "Test"}),
 		kk.MsgClient(kafkaClient),
-		kk.DeviceDiscoveryTopic(&kk.Topic{Name: affinityRouterTopic}))
+		kk.DeviceDiscoveryTopic(&kk.Topic{Name: deviceDiscoveryTopic}))
 
 	//	First start to wait for the message
 	waitingChannel := make(chan *ic.InterContainerMessage)
-	go subscribeToTopic(&kk.Topic{Name: affinityRouterTopic}, waitingChannel)
+	go subscribeToTopic(&kk.Topic{Name: deviceDiscoveryTopic}, waitingChannel)
 
 	// Sleep to make sure the consumer is ready
 	time.Sleep(time.Millisecond * 100)
