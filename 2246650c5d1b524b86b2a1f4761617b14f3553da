@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbeb4610_1debfcfd",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-23T22:02:00Z",
+      "side": 1,
+      "message": "No longer needed, right?",
+      "revId": "2246650c5d1b524b86b2a1f4761617b14f3553da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
