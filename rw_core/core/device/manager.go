@@ -1055,14 +1055,6 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 		}()
 	}
 
-	// Publish on the messaging bus that we have discovered new devices
-	go func() {
-		err := dMgr.kafkaICProxy.DeviceDiscovered(agent.deviceID, deviceType, parentDeviceID, dMgr.coreInstanceID)
-		if err != nil {
-			logger.Errorw("unable-to-discover-the-device", log.Fields{"error": err})
-		}
-	}()
-
 	return childDevice, nil
 }
 

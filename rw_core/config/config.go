@@ -41,8 +41,6 @@ const (
 	defaultRWCoreKey                 = "pki/voltha.key"
 	defaultRWCoreCert                = "pki/voltha.crt"
 	defaultRWCoreCA                  = "pki/voltha-CA.pem"
-	defaultAffinityRouterTopic       = "affinityRouter"
-	defaultInCompetingMode           = true
 	defaultLongRunningRequestTimeout = 2000 * time.Millisecond
 	defaultDefaultRequestTimeout     = 1000 * time.Millisecond
 	defaultCoreTimeout               = 1000 * time.Millisecond
@@ -72,8 +70,6 @@ type RWCoreFlags struct {
 	RWCoreKey                 string
 	RWCoreCert                string
 	RWCoreCA                  string
-	AffinityRouterTopic       string
-	InCompetingMode           bool
 	LongRunningRequestTimeout time.Duration
 	DefaultRequestTimeout     time.Duration
 	DefaultCoreTimeout        time.Duration
@@ -103,8 +99,6 @@ func NewRWCoreFlags() *RWCoreFlags {
 		RWCoreKey:                 defaultRWCoreKey,
 		RWCoreCert:                defaultRWCoreCert,
 		RWCoreCA:                  defaultRWCoreCA,
-		AffinityRouterTopic:       defaultAffinityRouterTopic,
-		InCompetingMode:           defaultInCompetingMode,
 		DefaultRequestTimeout:     defaultDefaultRequestTimeout,
 		LongRunningRequestTimeout: defaultLongRunningRequestTimeout,
 		DefaultCoreTimeout:        defaultCoreTimeout,
@@ -136,11 +130,7 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 	help = fmt.Sprintf("RW Core topic")
 	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", defaultCoreTopic, help)
 
-	help = fmt.Sprintf("Affinity Router topic")
-	flag.StringVar(&(cf.AffinityRouterTopic), "affinity_router_topic", defaultAffinityRouterTopic, help)
-
-	help = fmt.Sprintf("In competing Mode - two cores competing to handle a transaction ")
-	flag.BoolVar(&cf.InCompetingMode, "in_competing_mode", defaultInCompetingMode, help)
+	flag.Bool("in_competing_mode", false, "deprecated")
 
 	help = fmt.Sprintf("KV store type")
 	flag.StringVar(&(cf.KVStoreType), "kv_store_type", defaultKVStoreType, help)
