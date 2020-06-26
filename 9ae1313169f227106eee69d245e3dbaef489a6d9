@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "697d3ba4_89ebdf78",
+        "filename": "tests/kafka/kafka_inter_container_messaging_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-26T13:34:44Z",
+      "side": 1,
+      "message": "These tests can be removed.  This can be done in a separate Jira as the entire tests directory is no longer used.",
+      "revId": "9ae1313169f227106eee69d245e3dbaef489a6d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
