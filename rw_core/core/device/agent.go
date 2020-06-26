@@ -562,6 +562,7 @@ func (agent *Agent) mergeDeviceInfoFromAdapter(device *voltha.Device) (*voltha.D
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
 	cloned.Reason = device.Reason
+	cloned.ImageDownloads = device.ImageDownloads
 	return cloned, nil
 }
 

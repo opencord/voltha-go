@@ -190,12 +190,6 @@ func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
 		Transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			currentState:  deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
-	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
-			deviceType:    any,
-			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
@@ -228,13 +222,6 @@ func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
 			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
-	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
-			deviceType:    any,
-			previousState: deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
-
 	return &transitionMap
 }
 
