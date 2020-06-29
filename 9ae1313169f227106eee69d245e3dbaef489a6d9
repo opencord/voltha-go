@@ -16,6 +16,24 @@
       "revId": "9ae1313169f227106eee69d245e3dbaef489a6d9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3973dd8c_35bafe95",
+        "filename": "tests/kafka/kafka_inter_container_messaging_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-06-29T23:30:46Z",
+      "side": 1,
+      "message": "VOL-3294",
+      "parentUuid": "697d3ba4_89ebdf78",
+      "revId": "9ae1313169f227106eee69d245e3dbaef489a6d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
