@@ -328,7 +328,7 @@ func (ap *AdapterProxy) UpdatePmConfigs(ctx context.Context, device *voltha.Devi
 	if err != nil {
 		return nil, err
 	}
-	rpc := "Update_pm_config"
+	rpc := "update_pm_config"
 	args := []*kafka.KVArg{
 		{Key: "device", Value: device},
 		{Key: "pm_configs", Value: pmConfigs},
