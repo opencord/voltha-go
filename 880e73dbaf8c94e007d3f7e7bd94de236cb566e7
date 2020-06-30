@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d186b576_1e26d639",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-06-30T08:14:36Z",
+      "side": 1,
+      "message": "would a map make more sense to have image name and image value to get easy access ?\nAlso I\u0027m not sure about the usecase of downloading multiple images at the same time. Iwas expecting just one to be here.",
+      "revId": "880e73dbaf8c94e007d3f7e7bd94de236cb566e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
