@@ -1,0 +1,9 @@
+Verified+1: Jenkins Jenkins <do-not-reply@opencord.org>
+Code-Review+2: Andrea Campanella <andrea@opennetworking.org>
+Code-Review+1: Kent Hagerman <khagerma@ciena.com>
+Code-Review+1: khenaidoo Nursimulu <knursimu@ciena.com>
+Submitted-by: Andrea Campanella <andrea@opennetworking.org>
+Submitted-at: Tue, 30 Jun 2020 12:51:59 +0000
+Reviewed-on: https://gerrit.opencord.org/c/voltha-go/+/19507
+Project: voltha-go
+Branch: refs/heads/master
