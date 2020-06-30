@@ -16,6 +16,74 @@
       "revId": "880e73dbaf8c94e007d3f7e7bd94de236cb566e7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "021e3f61_9b00675f",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-30T13:30:50Z",
+      "side": 1,
+      "message": "Here we are saying the operation is a success after we sent the message to kafka.   Is this applicable for image download given that this can be a lengthy operation and a higher change of failure compare to other operations.    Would it be useful to have \"in progress\" status sent back first, then upon the actual response from the adapter take the necessary action (e.g. change the image download status to success o\u003dr failure or even send a kafka message indicating the operation status?)",
+      "revId": "880e73dbaf8c94e007d3f7e7bd94de236cb566e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bd6cbf0_94b0b3be",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-30T13:30:50Z",
+      "side": 1,
+      "message": "This for loop goes over the set of image downloads just as isImageRegistered().   Would it be good to have a separate function getImage(...) that returns the image as stored in the Core or an error if not present?   This will avoid a number of for loops.",
+      "revId": "880e73dbaf8c94e007d3f7e7bd94de236cb566e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e406c9e_d72ab0a4",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-30T13:30:50Z",
+      "side": 1,
+      "message": "This state is not saved to KV",
+      "revId": "880e73dbaf8c94e007d3f7e7bd94de236cb566e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ab98572_de17e0bf",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-30T13:30:50Z",
+      "side": 1,
+      "message": "This code can be included in the for loop below, hence removing one for loop.",
+      "revId": "880e73dbaf8c94e007d3f7e7bd94de236cb566e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
