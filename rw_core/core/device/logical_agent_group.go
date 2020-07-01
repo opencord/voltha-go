@@ -106,7 +106,6 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 
 	affectedFlows := make(map[uint64]*ofp.OfpFlowStats)
 	affectedGroups := make(map[uint32]*ofp.OfpGroupEntry)
-	var groupsChanged bool
 
 	toDelete := map[uint32]struct{}{groupMod.GroupId: {}}
 	if groupMod.GroupId == uint32(ofp.OfpGroup_OFPG_ALL) {
