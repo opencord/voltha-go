@@ -99,14 +99,13 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 }
 
 func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGroupMod) error {
-	logger.Debug("groupDelete")
+	logger.Debugw("groupDelete", log.Fields{"groupMod": groupMod})
 	if groupMod == nil {
 		return nil
 	}
 
 	affectedFlows := make(map[uint64]*ofp.OfpFlowStats)
 	affectedGroups := make(map[uint32]*ofp.OfpGroupEntry)
-	var groupsChanged bool
 
 	toDelete := map[uint32]struct{}{groupMod.GroupId: {}}
 	if groupMod.GroupId == uint32(ofp.OfpGroup_OFPG_ALL) {
@@ -134,27 +133,43 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 			}
 		}
 	}
-	groupsChanged = true
 
-	//TODO: groupsChanged is always true here?  use `len(affectedFlows)!=0` or `len(affectedGroups)!=0` instead?
-	if groupsChanged {
-		deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, affectedFlows, affectedGroups)
+	if len(affectedGroups) == 0 {
+		logger.Debugw("no-group-to-delete", log.Fields{"groupId": groupMod.GroupId})
+		return nil
+	}
+
+	var deviceRules *fu.DeviceRules
+	var err error
+
+	if len(affectedFlows) != 0 {
+		deviceRules, err = agent.flowDecomposer.DecomposeRules(ctx, agent, affectedFlows, affectedGroups)
 		if err != nil {
 			return err
 		}
-		logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
-
-		// Update the devices
-		respChnls := agent.updateFlowsAndGroupsOfDevice(deviceRules, nil)
-
-		// Wait for completion
-		go func() {
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-				logger.Warnw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
-				//TODO: Revert flow changes
-			}
-		}()
+	} else {
+		//no flow is affected, just remove the groups
+		deviceRules = fu.NewDeviceRules()
+		deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
 	}
+	//add groups to deviceRules
+	for _, groupEntry := range affectedGroups {
+		fg := fu.NewFlowsAndGroups()
+		fg.AddGroup(groupEntry)
+		deviceRules.AddFlowsAndGroup(agent.rootDeviceID, fg)
+	}
+	logger.Debugw("rules", log.Fields{"rules": deviceRules.String()})
+
+	// delete groups and related flows, if any
+	respChnls := agent.deleteFlowsAndGroupsFromDevices(deviceRules, &voltha.FlowMetadata{}, &ofp.OfpFlowMod{})
+
+	// Wait for completion
+	go func() {
+		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+			logger.Warnw("failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+			//TODO: Revert flow changes
+		}
+	}()
 	return nil
 }
 
