@@ -16,6 +16,24 @@
       "revId": "68224faa2f29434164ac8247aea5fce8341e1e50",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb9bddcf_15746e8b",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000498
+      },
+      "writtenOn": "2020-07-03T14:19:16Z",
+      "side": 1,
+      "message": "make sense. I repeated the same code block in both if else conditions. I will move it under the if block. Thanks.",
+      "parentUuid": "aad5bad5_dd22c736",
+      "revId": "68224faa2f29434164ac8247aea5fce8341e1e50",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
