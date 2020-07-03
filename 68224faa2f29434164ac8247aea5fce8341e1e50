@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aad5bad5_dd22c736",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-03T10:19:30Z",
+      "side": 1,
+      "message": "this can be moved after the else clause at line 167 and the one from line 162 to 166 can be removed entirely. you are always adding to the deviceRules object, it just depends how you build that object.",
+      "revId": "68224faa2f29434164ac8247aea5fce8341e1e50",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
