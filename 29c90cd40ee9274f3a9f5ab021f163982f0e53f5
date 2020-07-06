@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56f95280_4264b0c1",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-06T16:05:50Z",
+      "side": 1,
+      "message": "Should this logic be part of the flow decomposition logic for multicast flows or part of a different decomposition?",
+      "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
