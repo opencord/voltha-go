@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "278c00a2_a4b1a975",
+        "filename": "rw_core/profile.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-13T17:54:55Z",
+      "side": 1,
+      "message": "Nitpick: Use context.Background() directly.",
+      "range": {
+        "startLine": 30,
+        "startChar": 16,
+        "endLine": 30,
+        "endChar": 19
+      },
+      "revId": "93b2f62d7bb43165a0e01fa54a25a41edc6f4e2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
