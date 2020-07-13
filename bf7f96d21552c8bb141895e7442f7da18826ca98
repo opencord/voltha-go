@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7c12642b_39fddd57",
+        "filename": "rw_core/core/api/adapter_request_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-07-13T21:42:22Z",
+      "side": 1,
+      "message": "Why is it plural if it returns only one port?",
+      "range": {
+        "startLine": 583,
+        "startChar": 39,
+        "endLine": 583,
+        "endChar": 53
+      },
+      "revId": "bf7f96d21552c8bb141895e7442f7da18826ca98",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d4cdb4a7_eebf8512",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 4
