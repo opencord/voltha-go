@@ -16,6 +16,24 @@
       "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad4d182b_fb9485a5",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000498
+      },
+      "writtenOn": "2020-07-13T12:37:44Z",
+      "side": 1,
+      "message": "In contrast to flow rules, groups are not decomposed. VOLTHA Core directly sends them to the adapter without making any modification. Thus, there is no point in including them in a decomposition logic.",
+      "parentUuid": "56f95280_4264b0c1",
+      "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
