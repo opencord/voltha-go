@@ -34,6 +34,24 @@
       "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d337e4f7_6824195c",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-13T14:26:02Z",
+      "side": 1,
+      "message": "Understood.  While the flow decomposer does not decompose the group it does take it into consideration when decomposing multicast flows (see processMulticastFlow() in flowDecomposer).  It would be cleaner to have this logic in one place, especially if there will eventually be changes to other functions dealing with groups.  If there won\u0027t be similar code added to these other functions then I guess it\u0027s ok to have it here.",
+      "parentUuid": "ad4d182b_fb9485a5",
+      "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
