@@ -52,6 +52,24 @@
       "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa13cc1b_630242ef",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000498
+      },
+      "writtenOn": "2020-07-14T07:49:26Z",
+      "side": 1,
+      "message": "I appreciate the idea of keeping the logic in just one place. It may seem a little bit awkward to explicitly add groups to the deviceRules object returned by the flow decomposer. It would be good that the flow decomposer could return an object including all the necessary flow and groups to be sent to the adapter. However, the decomposer is used in a number of scenarios, such as multicast flow add/remove, and every scenario has different requirements. It does not seem possible to implement a common logic in the flow decomposer that would fit in all scenarios.",
+      "parentUuid": "d337e4f7_6824195c",
+      "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
