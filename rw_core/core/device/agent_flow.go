@@ -54,16 +54,6 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
-	updatedAllFlows := make([]*ofp.OfpFlowStats, 0)
-	if !dType.AcceptsAddRemoveFlowUpdates {
-		flowIDs := agent.flowLoader.ListIDs()
-		for flowID := range flowIDs {
-			if flowHandle, have := agent.flowLoader.Lock(flowID); have {
-				updatedAllFlows = append(updatedAllFlows, flowHandle.GetReadOnly())
-				flowHandle.Unlock()
-			}
-		}
-	}
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	for _, flow := range newFlows {
@@ -71,10 +61,8 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 		if err != nil {
 			return coreutils.DoneResponse(), err
 		}
-
 		if created {
 			flowsToAdd = append(flowsToAdd, flow)
-			updatedAllFlows = append(updatedAllFlows, flow)
 		} else {
 			flowToReplace := flowHandle.GetReadOnly()
 			if !proto.Equal(flowToReplace, flow) {
@@ -85,13 +73,11 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 				}
 				flowsToDelete = append(flowsToDelete, flowToReplace)
 				flowsToAdd = append(flowsToAdd, flow)
-				updatedAllFlows = replaceFlowInList(updatedAllFlows, flowToReplace, flow)
 			} else {
 				//No need to change the flow. It is already exist.
 				logger.Debugw(ctx, "No-need-to-change-already-existing-flow", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
 			}
 		}
-
 		flowHandle.Unlock()
 	}
 
@@ -105,7 +91,9 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &ofp.Flows{Items: updatedAllFlows}, &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}}, flowMetadata)
+
+		updatedAllFlows := agent.listDeviceFlows()
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, updatedAllFlows, nil, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -144,26 +132,12 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
-	updatedAllFlows := make([]*ofp.OfpFlowStats, 0)
-	if !dType.AcceptsAddRemoveFlowUpdates {
-		flowIDs := agent.flowLoader.ListIDs()
-		for flowID := range flowIDs {
-			if flowHandle, have := agent.flowLoader.Lock(flowID); have {
-				updatedAllFlows = append(updatedAllFlows, flowHandle.GetReadOnly())
-				flowHandle.Unlock()
-			}
-		}
-	}
 	for _, flow := range flowsToDel {
 		if flowHandle, have := agent.flowLoader.Lock(flow.Id); have {
 			// Update the store and cache
-			flowToDelete := flowHandle.GetReadOnly()
 			if err := flowHandle.Delete(ctx); err != nil {
 				flowHandle.Unlock()
 				return coreutils.DoneResponse(), err
-			}
-			if idx := fu.FindFlows(updatedAllFlows, flowToDelete); idx != -1 {
-				updatedAllFlows = deleteFlowWithoutPreservingOrder(updatedAllFlows, idx)
 			}
 			flowHandle.Unlock()
 		}
@@ -173,7 +147,9 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedAllFlows}, &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}}, flowMetadata)
+
+		updatedAllFlows := agent.listDeviceFlows()
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, updatedAllFlows, nil, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -215,19 +191,8 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
-	updatedAllFlows := make([]*ofp.OfpFlowStats, 0)
-	if !dType.AcceptsAddRemoveFlowUpdates {
-		flowIDs := agent.flowLoader.ListIDs()
-		for flowID := range flowIDs {
-			if flowHandle, have := agent.flowLoader.Lock(flowID); have {
-				updatedAllFlows = append(updatedAllFlows, flowHandle.GetReadOnly())
-				flowHandle.Unlock()
-			}
-		}
-	}
-	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
-	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
-
+	flowsToAdd := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
+	flowsToDelete := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
 	for _, flow := range updatedFlows {
 		if flowHandle, have := agent.flowLoader.Lock(flow.Id); have {
 			flowToDelete := flowHandle.GetReadOnly()
@@ -239,7 +204,6 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 
 			flowsToDelete = append(flowsToDelete, flowToDelete)
 			flowsToAdd = append(flowsToAdd, flow)
-			updatedAllFlows = replaceFlowInList(updatedAllFlows, flowToDelete, flow)
 			flowHandle.Unlock()
 		}
 	}
@@ -248,7 +212,8 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	response := coreutils.NewResponse()
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: updatedAllFlows}, &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}}, nil)
+		updatedAllFlows := agent.listDeviceFlows()
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, updatedAllFlows, nil, nil)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -286,23 +251,6 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	}
 
 	return response, nil
-}
-
-//replaceFlowInList removes the old flow from list and adds the new one.
-func replaceFlowInList(flowList []*ofp.OfpFlowStats, oldFlow *ofp.OfpFlowStats, newFlow *ofp.OfpFlowStats) []*ofp.OfpFlowStats {
-	if idx := fu.FindFlows(flowList, oldFlow); idx != -1 {
-		flowList = deleteFlowWithoutPreservingOrder(flowList, idx)
-	}
-	flowList = append(flowList, newFlow)
-	return flowList
-}
-
-//deleteFlowWithoutPreservingOrder removes a flow specified by index from the flows slice.  This function will
-//panic if the index is out of range.
-func deleteFlowWithoutPreservingOrder(flows []*ofp.OfpFlowStats, index int) []*ofp.OfpFlowStats {
-	flows[index] = flows[len(flows)-1]
-	flows[len(flows)-1] = nil
-	return flows[:len(flows)-1]
 }
 
 //filterOutFlows removes flows from a device using the uni-port as filter

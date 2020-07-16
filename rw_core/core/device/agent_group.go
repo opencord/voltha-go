@@ -22,7 +22,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
@@ -56,21 +55,10 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
-	updatedAllGroups := make([]*ofp.OfpGroupEntry, 0)
-	if !dType.AcceptsAddRemoveFlowUpdates {
-		groupIDs := agent.groupLoader.ListIDs()
-		for groupID := range groupIDs {
-			if grpHandle, have := agent.groupLoader.Lock(groupID); have {
-				updatedAllGroups = append(updatedAllGroups, grpHandle.GetReadOnly())
-				grpHandle.Unlock()
-			}
-		}
-	}
 
 	groupsToAdd := make([]*ofp.OfpGroupEntry, 0)
 	groupsToDelete := make([]*ofp.OfpGroupEntry, 0)
 	for _, group := range newGroups {
-
 		groupHandle, created, err := agent.groupLoader.LockOrCreate(ctx, group)
 		if err != nil {
 			return coreutils.DoneResponse(), err
@@ -78,7 +66,6 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 
 		if created {
 			groupsToAdd = append(groupsToAdd, group)
-			updatedAllGroups = append(updatedAllGroups, group)
 		} else {
 			groupToChange := groupHandle.GetReadOnly()
 			if !proto.Equal(groupToChange, group) {
@@ -89,7 +76,6 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 				}
 				groupsToDelete = append(groupsToDelete, groupToChange)
 				groupsToAdd = append(groupsToAdd, group)
-				updatedAllGroups = replaceGroupInList(updatedAllGroups, groupToChange, group)
 			} else {
 				//No need to change the group. It is already exist.
 				logger.Debugw(ctx, "No-need-to-change-already-existing-group", log.Fields{"device-id": agent.deviceID, "group": newGroups, "flow-metadata": flowMetadata})
@@ -108,7 +94,8 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: []*ofp.OfpFlowStats{}}, &voltha.FlowGroups{Items: updatedAllGroups}, flowMetadata)
+		updatedAllGroups := agent.listDeviceGroups()
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, nil, updatedAllGroups, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -146,16 +133,6 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
-	updatedAllGroups := make([]*ofp.OfpGroupEntry, 0)
-	if !dType.AcceptsAddRemoveFlowUpdates {
-		groupIDs := agent.groupLoader.ListIDs()
-		for groupID := range groupIDs {
-			if grpHandle, have := agent.groupLoader.Lock(groupID); have {
-				updatedAllGroups = append(updatedAllGroups, grpHandle.GetReadOnly())
-				grpHandle.Unlock()
-			}
-		}
-	}
 
 	for _, group := range groupsToDel {
 		if groupHandle, have := agent.groupLoader.Lock(group.Desc.GroupId); have {
@@ -163,9 +140,6 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 			if err := groupHandle.Delete(ctx); err != nil {
 				groupHandle.Unlock()
 				return coreutils.DoneResponse(), err
-			}
-			if idx := fu.FindGroup(updatedAllGroups, group.Desc.GroupId); idx != -1 {
-				updatedAllGroups = deleteGroupWithoutPreservingOrder(updatedAllGroups, idx)
 			}
 			groupHandle.Unlock()
 		}
@@ -175,7 +149,8 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: []*ofp.OfpFlowStats{}}, &voltha.FlowGroups{Items: updatedAllGroups}, flowMetadata)
+		updatedAllGroups := agent.listDeviceGroups()
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, nil, updatedAllGroups, flowMetadata)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -217,18 +192,8 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
-	updatedAllGroups := make([]*ofp.OfpGroupEntry, 0)
-	if !dType.AcceptsAddRemoveFlowUpdates {
-		groupIDs := agent.groupLoader.ListIDs()
-		for groupID := range groupIDs {
-			if grpHandle, have := agent.groupLoader.Lock(groupID); have {
-				updatedAllGroups = append(updatedAllGroups, grpHandle.GetReadOnly())
-				grpHandle.Unlock()
-			}
-		}
-	}
-	groupsToUpdate := make([]*ofp.OfpGroupEntry, 0)
 
+	groupsToUpdate := make([]*ofp.OfpGroupEntry, 0)
 	for _, group := range updatedGroups {
 		if groupHandle, have := agent.groupLoader.Lock(group.Desc.GroupId); have {
 			// Update the store and cache
@@ -237,7 +202,6 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 				return coreutils.DoneResponse(), err
 			}
 			groupsToUpdate = append(groupsToUpdate, group)
-			updatedAllGroups = replaceGroupInList(updatedAllGroups, groupHandle.GetReadOnly(), group)
 			groupHandle.Unlock()
 		}
 	}
@@ -246,7 +210,8 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 	response := coreutils.NewResponse()
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {
-		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, &voltha.Flows{Items: []*ofp.OfpFlowStats{}}, &voltha.FlowGroups{Items: updatedAllGroups}, nil)
+		updatedAllGroups := agent.listDeviceGroups()
+		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, nil, updatedAllGroups, nil)
 		if err != nil {
 			cancel()
 			return coreutils.DoneResponse(), err
@@ -284,21 +249,4 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 	}
 
 	return response, nil
-}
-
-//replaceGroupInList removes the old group from list and adds the new one.
-func replaceGroupInList(groupList []*ofp.OfpGroupEntry, oldGroup *ofp.OfpGroupEntry, newGroup *ofp.OfpGroupEntry) []*ofp.OfpGroupEntry {
-	if idx := fu.FindGroup(groupList, oldGroup.Desc.GroupId); idx != -1 {
-		groupList = deleteGroupWithoutPreservingOrder(groupList, idx)
-	}
-	groupList = append(groupList, newGroup)
-	return groupList
-}
-
-//deleteGroupWithoutPreservingOrder removes a group specified by index from the groups slice.  This function will
-//panic if the index is out of range.
-func deleteGroupWithoutPreservingOrder(groups []*ofp.OfpGroupEntry, index int) []*ofp.OfpGroupEntry {
-	groups[index] = groups[len(groups)-1]
-	groups[len(groups)-1] = nil
-	return groups[:len(groups)-1]
 }
