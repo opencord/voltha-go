@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "173cb7aa_c4156db4",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T09:25:12Z",
+      "side": 1,
+      "message": "do we want to return an error in case we can\u0027t lock ?",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e296407a_fbb822cf",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T09:25:12Z",
+      "side": 1,
+      "message": "use logger.Infow or Debugw",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f63b53a0_9fde9350",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T09:25:12Z",
+      "side": 1,
+      "message": "should we return error here ?",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b423d918_92cdd432",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T09:25:12Z",
+      "side": 1,
+      "message": "return err or even better the status.Errorf",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "638caf36_ae422f0d",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T09:25:12Z",
+      "side": 1,
+      "message": "why not return err here ?",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b40fffd_60eeabe9",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T09:25:12Z",
+      "side": 1,
+      "message": "can we have a retry mechanism instead of fatal ?",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
