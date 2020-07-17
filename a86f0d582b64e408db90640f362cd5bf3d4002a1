@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fea3003d_7900c6ce",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-17T14:03:37Z",
+      "side": 1,
+      "message": "The only case where this lock cannot be acquired is where the port no longer exists (if deleted by another thread), this is an expected situation, and there\u0027s nothing special to do.",
+      "parentUuid": "173cb7aa_c4156db4",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e296407a_fbb822cf",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2020-07-17T09:25:12Z",
       "side": 1,
       "message": "use logger.Infow or Debugw",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1581774_e9ebb599",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-17T14:03:37Z",
+      "side": 1,
+      "message": "Good catch, will remove.",
+      "parentUuid": "e296407a_fbb822cf",
       "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "36c90a09_813563db",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-17T14:03:37Z",
+      "side": 1,
+      "message": "Since this is run in a new thread, there\u0027s no caller to return the error to.",
+      "parentUuid": "f63b53a0_9fde9350",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b423d918_92cdd432",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 6
@@ -64,6 +118,24 @@
       "writtenOn": "2020-07-17T09:25:12Z",
       "side": 1,
       "message": "return err or even better the status.Errorf",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab3591b1_9455cad2",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-17T14:03:37Z",
+      "side": 1,
+      "message": "Again, this is run in a separate thread, so there\u0027s no caller to return the error to.",
+      "parentUuid": "b423d918_92cdd432",
       "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "50850b4f_030f9185",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-17T14:03:37Z",
+      "side": 1,
+      "message": "This is run in a new thread.",
+      "parentUuid": "638caf36_ae422f0d",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b40fffd_60eeabe9",
         "filename": "rw_core/mocks/adapter_onu.go",
         "patchSetId": 6
@@ -98,6 +188,24 @@
       "writtenOn": "2020-07-17T09:25:12Z",
       "side": 1,
       "message": "can we have a retry mechanism instead of fatal ?",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7da4e474_16ac3c8c",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-17T14:03:37Z",
+      "side": 1,
+      "message": "Possibly, but should be done in a separate jira.",
+      "parentUuid": "6b40fffd_60eeabe9",
       "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
