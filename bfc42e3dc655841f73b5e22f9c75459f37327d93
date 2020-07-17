@@ -16,6 +16,24 @@
       "revId": "bfc42e3dc655841f73b5e22f9c75459f37327d93",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3dddb808_7bf44b34",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-17T14:41:03Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "0e52abe0_ff9de471",
+      "revId": "bfc42e3dc655841f73b5e22f9c75459f37327d93",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
