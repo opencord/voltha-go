@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e52abe0_ff9de471",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-17T14:35:22Z",
+      "side": 1,
+      "message": "The adapters expects a voltha.FlowGroups type instead of a voltha.FlowGroups.Items() type.  Same for flows.",
+      "revId": "bfc42e3dc655841f73b5e22f9c75459f37327d93",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
