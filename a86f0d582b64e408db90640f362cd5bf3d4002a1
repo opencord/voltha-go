@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "10ac4139_399a02c7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T14:23:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fea3003d_7900c6ce",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e296407a_fbb822cf",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 6
@@ -69,6 +87,24 @@
       "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de05fd39_876cb99e",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T14:23:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f1581774_e9ebb599",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -107,6 +143,24 @@
     },
     {
       "key": {
+        "uuid": "c501e9c4_4033fa44",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T14:23:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "36c90a09_813563db",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b423d918_92cdd432",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 6
@@ -139,6 +193,24 @@
       "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4b9147d_35c27164",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T14:23:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ab3591b1_9455cad2",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -177,6 +249,24 @@
     },
     {
       "key": {
+        "uuid": "f4e834b4_2e82de20",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T14:23:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "50850b4f_030f9185",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b40fffd_60eeabe9",
         "filename": "rw_core/mocks/adapter_onu.go",
         "patchSetId": 6
@@ -206,6 +296,24 @@
       "side": 1,
       "message": "Possibly, but should be done in a separate jira.",
       "parentUuid": "6b40fffd_60eeabe9",
+      "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ef1968d_edf52efc",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-17T14:23:23Z",
+      "side": 1,
+      "message": "agreed, can you please open a jira ?",
+      "parentUuid": "7da4e474_16ac3c8c",
       "revId": "a86f0d582b64e408db90640f362cd5bf3d4002a1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
