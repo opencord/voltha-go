@@ -70,6 +70,24 @@
       "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3aafb62d_23e99b29",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-20T17:17:38Z",
+      "side": 1,
+      "message": "The flow decomposer decomposes logical flows and groups into flows for each device (parent and child).  It does not care whether the flows are being added or removed.   Therefore, it is possible to implement this in the flow decomposer.\n\nI will give this patch a +1 with the understanding that if this code is being repeated in other functions which handle groups then this code will need to be moved into the flow decomposer.",
+      "parentUuid": "fa13cc1b_630242ef",
+      "revId": "29c90cd40ee9274f3a9f5ab021f163982f0e53f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
