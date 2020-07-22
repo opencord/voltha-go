@@ -1306,13 +1306,13 @@ func (dMgr *Manager) GetAllChildDevices(ctx context.Context, parentDeviceID stri
 
 // SetupUNILogicalPorts creates UNI ports on the logical device that represents a child UNI interface
 func (dMgr *Manager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
-	logger.Info(ctx, "addUNILogicalPort")
+	logger.Info(ctx, "SetupUNILogicalPorts")
 	cDevicePorts, err := dMgr.listDevicePorts(ctx, cDevice.Id)
 	if err != nil {
 		return err
 	}
 	if err := dMgr.logicalDeviceMgr.setupUNILogicalPorts(ctx, cDevice, cDevicePorts); err != nil {
-		logger.Warnw(ctx, "addUNILogicalPort-error", log.Fields{"device": cDevice, "err": err})
+		logger.Warnw(ctx, "setupUNILogicalPorts-error", log.Fields{"device": cDevice, "err": err})
 		return err
 	}
 	return nil
