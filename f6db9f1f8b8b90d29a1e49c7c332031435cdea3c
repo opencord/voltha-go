@@ -16,6 +16,24 @@
       "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6abcf52f_736b97b1",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-23T18:20:48Z",
+      "side": 1,
+      "message": "There are currently no places where either getDeviceWithoutLock() or getDeviceReadOnly() are called without the lock.\n\nThe problem is that, in order to process state transitions inline (the original change that this patch addresses), the lock must be released beforehand.\n\nHowever, many of these functions use the device to make requests _after_ the state transition.  The device must be cloned in such cases anyway.\n\nThe idea is to change the guarantees made with devices, to make it safe to use the returned device once the lock has been released.  (Either to return to the caller, to pass to another function, or to marshal \u0026 send.)\n\nThis is a change to locks so they have the same type of guarantees as flow/group/meter/etc. locks.\n\ncloneDeviceWithoutLock() is just a convenience to clone the device before making changes.\n\n(Let me look to see if the clone in getDevice() is still necessary...)\n\nPresumably, since the device no longer has flows/groups/meters/etc. saved internally, cloning shouldn\u0027t be computationally expensive like it was before.  (This could be optimized by manually cloning the top-level device struct only, as is done in some places with i.e. logical_ports.)\n\nI\u0027m also considering adding a \"loader\" for devices / logicalDevices, though that\u0027s outside the scope of this patch.",
+      "parentUuid": "f82c40d2_1e095956",
+      "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
