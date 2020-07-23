@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2c268139_1e854e0f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-23T15:23:33Z",
+      "side": 1,
+      "message": "The \"WaitForGreenLight\" at line 395 is the lock acquisition for this case.\n\nAnd yes, the lock should be held when these functions are called.",
+      "parentUuid": "da092cc9_74e98479",
+      "revId": "896bb15efd2b62b2d2ce75e0f4f37d79bfc33df5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "529d3184_09c5fa2d",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "b55a1f10_350a3ff7",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-23T15:23:33Z",
+      "side": 1,
+      "message": "This package seems to use INFO to print each function\u0027s name as it runs.\n\nIf problematic, this can be addressed in a separate patch.",
+      "parentUuid": "529d3184_09c5fa2d",
+      "revId": "896bb15efd2b62b2d2ce75e0f4f37d79bfc33df5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6244ea54_c82d313c",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2020-07-23T15:09:33Z",
       "side": 1,
       "message": "DebugW and pass device info",
+      "revId": "896bb15efd2b62b2d2ce75e0f4f37d79bfc33df5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b022b85_c37c4857",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1309,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-23T15:23:33Z",
+      "side": 1,
+      "message": "Again, this package uses INFO for whatever reason.\n\nThis is just a spelling fix, to match the function name.",
+      "parentUuid": "6244ea54_c82d313c",
       "revId": "896bb15efd2b62b2d2ce75e0f4f37d79bfc33df5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
