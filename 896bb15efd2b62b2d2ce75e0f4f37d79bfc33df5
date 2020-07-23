@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da092cc9_74e98479",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-23T15:09:33Z",
+      "side": 1,
+      "message": "this gets called for example at line 400, but I do not see the lock getting acquired. do we expect the caller of DisableDevice to obtain such lock ? same applies for other calls in the class.",
+      "revId": "896bb15efd2b62b2d2ce75e0f4f37d79bfc33df5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "529d3184_09c5fa2d",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-23T15:09:33Z",
+      "side": 1,
+      "message": "DebugW",
+      "revId": "896bb15efd2b62b2d2ce75e0f4f37d79bfc33df5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6244ea54_c82d313c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1309,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-23T15:09:33Z",
+      "side": 1,
+      "message": "DebugW and pass device info",
+      "revId": "896bb15efd2b62b2d2ce75e0f4f37d79bfc33df5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
