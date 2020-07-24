@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "046a5c52_6348045c",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-24T12:48:32Z",
+      "side": 1,
+      "message": "There are different types of requests: 1) requests that change the state of the device, 2) requests that changes flows/groups/ports of that device.   Type (1) requests need to work on the latest device data (meaning the device needs to be reserved for each request) and Type (2) requests do not need to lock the device.    If this is correct, then I don\u0027t see why we need a clone for Type (1) and Type (2) requests.  Cloning indirectly implies that different requests may get different versions of the device, and since these requests are changing the device data then the last request will be overwriting all the previously updated data, unless there is a merge which is too error-prone to implement. \n\nIn getDevice() a clone is necessary since the caller may chose to update its local copy of the device (I won\u0027t be allowed to update the cached device as it did not obtain the device lock).",
+      "parentUuid": "6abcf52f_736b97b1",
+      "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "43e7d2f3_acd76f04",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 2
@@ -66,6 +84,41 @@
       "side": 1,
       "message": "The difference is that the caller will have to wait until after the the transition is complete.  (so if the caller\u0027s next action depends on any transition processing, it\u0027s guaranteed that the transition will be completed.)",
       "parentUuid": "43e7d2f3_acd76f04",
+      "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a759b527_b60f2658",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-24T12:48:32Z",
+      "side": 1,
+      "message": "So it only forces the caller to wait for the transition(s) to complete but another concurrent request can proceed without the transition(s) being complete, yes?",
+      "parentUuid": "b2574ca3_915bac21",
+      "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab1ba3d8_f091e047",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-24T12:48:32Z",
+      "side": 1,
+      "message": "The function is called numerous times for the adapters.  It only changes the device reason, hence no state transition.  The state transition function will be called nonetheless.   Should there be a flag to the updateDeviceAndReleaseLock() to specify whether state transition is required?   This also applies when the adapter updates the device data.",
       "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
