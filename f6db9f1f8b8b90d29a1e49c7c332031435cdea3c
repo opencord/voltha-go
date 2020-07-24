@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "6d45d79f_5f004236",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-24T13:47:33Z",
+      "side": 1,
+      "message": "So, you are only reversing the existing logic:  today a getDevice() clones the device but a type (1) request works directly on the cached version.   Also, with or without clone, in this commit, no two type (1) requests will proceed in parallel, yes?  Do you therefore need to have getDeviceReadOnly()?  Can getDevice() without Clone be used instead?\n\nRegarding performance, it would be interesting to see which functions get invoked the most in a typical workflow (looking at logs may give an insight): getDevice() or CloneDeviceWithoutLock().  The one that is invoked the most should not have the Clone in it.",
+      "parentUuid": "ccea814c_70ae6a41",
+      "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "43e7d2f3_acd76f04",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 2
