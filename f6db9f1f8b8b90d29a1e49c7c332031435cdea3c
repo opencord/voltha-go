@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "8a02f834_cb7123f3",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-27T21:12:27Z",
+      "side": 1,
+      "message": "That\u0027s correct, only one request that modifies the device will be allowed to run at a time.\n\nI don\u0027t think getDevice() needs to perform a clone, but I first need to verify that no caller modifies the returned device.\n\nAs far as I can tell, device read requests are much more common than device write requests.",
+      "parentUuid": "6d45d79f_5f004236",
+      "revId": "f6db9f1f8b8b90d29a1e49c7c332031435cdea3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "43e7d2f3_acd76f04",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 2
