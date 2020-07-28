@@ -99,7 +99,7 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*voltha.Device, error) {
 	needToStart := false
 	if agent.startOnce.Do(func() { needToStart = true }); !needToStart {
-		return agent.getDevice(ctx)
+		return agent.getDeviceReadOnly(ctx)
 	}
 	var startSucceeded bool
 	defer func() {
@@ -152,7 +152,7 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 	startSucceeded = true
 	logger.Debugw(ctx, "device-agent-started", log.Fields{"device-id": agent.deviceID})
 
-	return agent.getDevice(ctx)
+	return agent.getDeviceReadOnly(ctx)
 }
 
 // stop stops the device agent.  Not much to do for now
@@ -242,18 +242,18 @@ func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.C
 	}
 }
 
-// getDevice returns the device data from cache
-func (agent *Agent) getDevice(ctx context.Context) (*voltha.Device, error) {
+// getDeviceReadOnly returns a device which MUST NOT be modified, but is safe to keep forever.
+func (agent *Agent) getDeviceReadOnly(ctx context.Context) (*voltha.Device, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	return proto.Clone(agent.device).(*voltha.Device), nil
+	return agent.device, nil
 }
 
-// getDeviceReadOnly returns a device which MUST NOT be modified, but is safe to keep forever.  This is very efficient.
+// getDeviceReadOnlyWithoutLock returns a device which MUST NOT be modified, but is safe to keep forever.  This is very efficient.
 // The device lock MUST be held by the caller.
-func (agent *Agent) getDeviceReadOnly() *voltha.Device {
+func (agent *Agent) getDeviceReadOnlyWithoutLock() *voltha.Device {
 	return agent.device
 }
 
@@ -270,7 +270,7 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	}
 	logger.Debugw(ctx, "enableDevice", log.Fields{"device-id": agent.deviceID})
 
-	oldDevice := agent.getDeviceReadOnly()
+	oldDevice := agent.getDeviceReadOnlyWithoutLock()
 	if oldDevice.AdminState == voltha.AdminState_ENABLED {
 		logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
@@ -434,7 +434,7 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	defer agent.requestQueue.RequestComplete()
 	logger.Debugw(ctx, "rebootDevice", log.Fields{"device-id": agent.deviceID})
 
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.RebootDevice(subCtx, device)
 	if err != nil {
@@ -490,11 +490,11 @@ func (agent *Agent) setParentID(ctx context.Context, device *voltha.Device, pare
 func (agent *Agent) getSwitchCapability(ctx context.Context) (*ic.SwitchCapability, error) {
 	logger.Debugw(ctx, "getSwitchCapability", log.Fields{"device-id": agent.deviceID})
 
-	cloned, err := agent.getDevice(ctx)
+	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
 		return nil, err
 	}
-	ch, err := agent.adapterProxy.GetOfpDeviceInfo(ctx, cloned)
+	ch, err := agent.adapterProxy.GetOfpDeviceInfo(ctx, device)
 	if err != nil {
 		return nil, err
 	}
@@ -634,7 +634,7 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 	defer agent.requestQueue.RequestComplete()
 	logger.Debugw(ctx, "simulateAlarm", log.Fields{"id": agent.deviceID})
 
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 
 	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.SimulateAlarm(subCtx, device, simulateReq)
