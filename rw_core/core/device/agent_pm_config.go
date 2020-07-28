@@ -22,6 +22,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
@@ -59,11 +61,11 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 }
 
 func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error) {
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return nil, err
-	}
-	defer agent.requestQueue.RequestComplete()
 	logger.Debugw(ctx, "listPmConfigs", log.Fields{"device-id": agent.deviceID})
 
-	return agent.getDeviceReadOnly().PmConfigs, nil
+	device, err := agent.getDeviceReadOnly(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "%s", err)
+	}
+	return device.PmConfigs, nil
 }

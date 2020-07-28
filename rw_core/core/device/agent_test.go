@@ -179,7 +179,7 @@ func (dat *DATest) createDeviceAgent(t *testing.T) *Agent {
 }
 
 func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *sync.WaitGroup) {
-	originalDevice, err := da.getDevice(context.Background())
+	originalDevice, err := da.getDeviceReadOnly(context.Background())
 	originalDevicePorts := da.listDevicePorts()
 	assert.Nil(t, err)
 	assert.NotNil(t, originalDevice)
@@ -242,7 +242,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 	expectedChange.Vlan = vlan
 	expectedChange.Reason = reason
 
-	updatedDevice, _ := da.getDevice(context.Background())
+	updatedDevice, _ := da.getDeviceReadOnly(context.Background())
 	updatedDevicePorts := da.listDevicePorts()
 	assert.NotNil(t, updatedDevice)
 	fmt.Printf("1 %+v\n", expectedChange)
