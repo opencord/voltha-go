@@ -208,13 +208,13 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 	return returnErr
 }
 
-// GetLogicalDevice returns the latest logical device data
-func (agent *LogicalAgent) GetLogicalDevice(ctx context.Context) (*voltha.LogicalDevice, error) {
+// GetLogicalDeviceReadOnly returns the latest logical device data
+func (agent *LogicalAgent) GetLogicalDeviceReadOnly(ctx context.Context) (*voltha.LogicalDevice, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
 	defer agent.requestQueue.RequestComplete()
-	return proto.Clone(agent.logicalDevice).(*voltha.LogicalDevice), nil
+	return agent.logicalDevice, nil
 }
 
 func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {

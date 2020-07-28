@@ -90,7 +90,7 @@ func (ldMgr *LogicalManager) deleteLogicalDeviceAgent(logicalDeviceID string) {
 func (ldMgr *LogicalManager) GetLogicalDevice(ctx context.Context, id *voltha.ID) (*voltha.LogicalDevice, error) {
 	logger.Debugw(ctx, "getlogicalDevice", log.Fields{"logicaldeviceid": id})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id); agent != nil {
-		return agent.GetLogicalDevice(ctx)
+		return agent.GetLogicalDeviceReadOnly(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -273,7 +273,7 @@ func (ldMgr *LogicalManager) getLogicalDeviceIDFromDeviceID(ctx context.Context,
 	// Get the device
 	var device *voltha.Device
 	var err error
-	if device, err = ldMgr.deviceMgr.getDevice(ctx, deviceID); err != nil {
+	if device, err = ldMgr.deviceMgr.getDeviceReadOnly(ctx, deviceID); err != nil {
 		return nil, err
 	}
 	return ldMgr.getLogicalDeviceID(ctx, device)

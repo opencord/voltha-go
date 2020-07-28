@@ -297,15 +297,17 @@ func (dMgr *Manager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.De
 	return nil
 }
 
+// GetDevice exists primarily to implement the gRPC interface.
+// Internal functions should call getDeviceReadOnly instead.
 func (dMgr *Manager) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
-	return dMgr.getDevice(ctx, id.Id)
+	return dMgr.getDeviceReadOnly(ctx, id.Id)
 }
 
-// getDevice will returns a device, either from memory or from the dB, if present
-func (dMgr *Manager) getDevice(ctx context.Context, id string) (*voltha.Device, error) {
-	logger.Debugw(ctx, "getDevice", log.Fields{"deviceid": id})
+// getDeviceReadOnly will returns a device, either from memory or from the dB, if present
+func (dMgr *Manager) getDeviceReadOnly(ctx context.Context, id string) (*voltha.Device, error) {
+	logger.Debugw(ctx, "getDeviceReadOnly", log.Fields{"deviceid": id})
 	if agent := dMgr.getDeviceAgent(ctx, id); agent != nil {
-		return agent.getDevice(ctx)
+		return agent.getDeviceReadOnly(ctx)
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
@@ -337,7 +339,7 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, parentDeviceID string, 
 	var foundChildDevice *voltha.Device
 	for childDeviceID := range childDeviceIds {
 		var found bool
-		if searchDevice, err := dMgr.getDevice(ctx, childDeviceID); err == nil {
+		if searchDevice, err := dMgr.getDeviceReadOnly(ctx, childDeviceID); err == nil {
 
 			foundOnuID := false
 			if searchDevice.ProxyAddress.OnuId == uint32(onuID) {
@@ -394,7 +396,7 @@ func (dMgr *Manager) GetChildDeviceWithProxyAddress(ctx context.Context, proxyAd
 
 	var foundChildDevice *voltha.Device
 	for childDeviceID := range childDeviceIds {
-		if searchDevice, err := dMgr.getDevice(ctx, childDeviceID); err == nil {
+		if searchDevice, err := dMgr.getDeviceReadOnly(ctx, childDeviceID); err == nil {
 			if searchDevice.ProxyAddress == proxyAddress {
 				foundChildDevice = searchDevice
 				break
@@ -578,7 +580,7 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 		return err
 	}
 	// Get the loaded device details
-	device, err := dAgent.getDevice(ctx)
+	device, err := dAgent.getDeviceReadOnly(ctx)
 	if err != nil {
 		return err
 	}
@@ -772,7 +774,7 @@ func (dMgr *Manager) addPeerPort(ctx context.Context, deviceID string, port *vol
 	// Notify the logical device manager to setup a logical port, if needed.  If the added port is an NNI or UNI
 	// then a logical port will be added to the logical device and the device route generated.  If the port is a
 	// PON port then only the device graph will be generated.
-	device, err := dMgr.getDevice(ctx, deviceID)
+	device, err := dMgr.getDeviceReadOnly(ctx, deviceID)
 	if err != nil {
 		return err
 	}
@@ -950,10 +952,9 @@ func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID string) error 
 		// Notify the logical device manager to remove all logical ports, if needed.
 		// At this stage the device itself may gave been deleted already at a DeleteAllPorts
 		// typically is part of a device deletion phase.
-		if device, err := dMgr.getDevice(ctx, deviceID); err == nil {
+		if device, err := dMgr.getDeviceReadOnly(ctx, deviceID); err == nil {
 			go func() {
-				err = dMgr.logicalDeviceMgr.deleteAllLogicalPorts(context.Background(), device)
-				if err != nil {
+				if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(context.Background(), device); err != nil {
 					logger.Errorw(ctx, "unable-to-delete-logical-ports", log.Fields{"error": err})
 				}
 			}()
@@ -1097,7 +1098,7 @@ func (dMgr *Manager) PacketIn(ctx context.Context, deviceID string, port uint32,
 	// Get the logical device Id based on the deviceId
 	var device *voltha.Device
 	var err error
-	if device, err = dMgr.getDevice(ctx, deviceID); err != nil {
+	if device, err = dMgr.getDeviceReadOnly(ctx, deviceID); err != nil {
 		logger.Errorw(ctx, "device-not-found", log.Fields{"deviceId": deviceID})
 		return err
 	}
@@ -1166,7 +1167,7 @@ func (dMgr *Manager) getParentDevice(ctx context.Context, childDevice *voltha.De
 		// childDevice is the parent device
 		return childDevice
 	}
-	parentDevice, _ := dMgr.getDevice(ctx, childDevice.ParentId)
+	parentDevice, _ := dMgr.getDeviceReadOnly(ctx, childDevice.ParentId)
 	return parentDevice
 }
 
@@ -1174,7 +1175,7 @@ func (dMgr *Manager) getParentDevice(ctx context.Context, childDevice *voltha.De
 //cannot manage the child devices.  This will trigger the Core to disable all the child devices.
 func (dMgr *Manager) ChildDevicesLost(ctx context.Context, parentDeviceID string) error {
 	logger.Debug(ctx, "ChildDevicesLost")
-	parentDevice, err := dMgr.getDevice(ctx, parentDeviceID)
+	parentDevice, err := dMgr.getDeviceReadOnly(ctx, parentDeviceID)
 	if err != nil {
 		logger.Warnw(ctx, "failed-getting-device", log.Fields{"deviceId": parentDeviceID, "error": err})
 		return err
@@ -1295,7 +1296,7 @@ func (dMgr *Manager) GetAllChildDevices(ctx context.Context, parentDeviceID stri
 	if parentDevicePorts, err := dMgr.listDevicePorts(ctx, parentDeviceID); err == nil {
 		childDevices := make([]*voltha.Device, 0)
 		for deviceID := range dMgr.getAllChildDeviceIds(ctx, parentDevicePorts) {
-			if d, e := dMgr.getDevice(ctx, deviceID); e == nil && d != nil {
+			if d, e := dMgr.getDeviceReadOnly(ctx, deviceID); e == nil && d != nil {
 				childDevices = append(childDevices, d)
 			}
 		}
@@ -1438,11 +1439,11 @@ func (dMgr *Manager) ListImageDownloads(ctx context.Context, id *voltha.ID) (*vo
 // GetImages returns all images for a specific device entry
 func (dMgr *Manager) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
 	logger.Debugw(ctx, "GetImages", log.Fields{"device-id": id.Id})
-	device, err := dMgr.getDevice(ctx, id.Id)
+	device, err := dMgr.getDeviceReadOnly(ctx, id.Id)
 	if err != nil {
 		return nil, err
 	}
-	return device.GetImages(), nil
+	return device.Images, nil
 }
 
 func (dMgr *Manager) NotifyInvalidTransition(ctx context.Context, device *voltha.Device) error {
@@ -1471,7 +1472,7 @@ func (dMgr *Manager) UpdateDeviceAttribute(ctx context.Context, deviceID string,
 
 // GetParentDeviceID returns parent device id, either from memory or from the dB, if present
 func (dMgr *Manager) GetParentDeviceID(ctx context.Context, deviceID string) string {
-	if device, _ := dMgr.getDevice(ctx, deviceID); device != nil {
+	if device, _ := dMgr.getDeviceReadOnly(ctx, deviceID); device != nil {
 		logger.Infow(ctx, "GetParentDeviceId", log.Fields{"deviceId": device.Id, "parentId": device.ParentId})
 		return device.ParentId
 	}
@@ -1542,11 +1543,11 @@ func (dMgr *Manager) StartOmciTestAction(ctx context.Context, request *voltha.Om
 
 func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
 	log.Debugw("getExtValue", log.Fields{"onu-id": value.Id})
-	cDevice, err := dMgr.getDevice(ctx, value.Id)
+	cDevice, err := dMgr.getDeviceReadOnly(ctx, value.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
 	}
-	pDevice, err := dMgr.getDevice(ctx, cDevice.ParentId)
+	pDevice, err := dMgr.getDeviceReadOnly(ctx, cDevice.ParentId)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
 	}
