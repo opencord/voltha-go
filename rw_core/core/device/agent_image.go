@@ -84,7 +84,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	logger.Debugw(ctx, "cancelImageDownload", log.Fields{"device-id": agent.deviceID})
 
 	// Verify whether the Image is in the list of image being downloaded
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	if !isImageRegistered(img, device) {
 		agent.requestQueue.RequestComplete()
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, image-not-registered:%s", agent.deviceID, img.Name)
@@ -124,7 +124,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	logger.Debugw(ctx, "activateImage", log.Fields{"device-id": agent.deviceID})
 
 	// Verify whether the Image is in the list of image being downloaded
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	if !isImageRegistered(img, device) {
 		agent.requestQueue.RequestComplete()
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, image-not-registered:%s", agent.deviceID, img.Name)
@@ -167,7 +167,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 	logger.Debugw(ctx, "revertImage", log.Fields{"device-id": agent.deviceID})
 
 	// Verify whether the Image is in the list of image being downloaded
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	if !isImageRegistered(img, device) {
 		agent.requestQueue.RequestComplete()
 		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, image-not-registered:%s", agent.deviceID, img.Name)
@@ -205,7 +205,7 @@ func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.Imag
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	ch, err := agent.adapterProxy.GetImageDownloadStatus(ctx, device, img)
 	agent.requestQueue.RequestComplete()
 	if err != nil {
@@ -261,7 +261,7 @@ func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownl
 	defer agent.requestQueue.RequestComplete()
 	logger.Debugw(ctx, "getImageDownload", log.Fields{"device-id": agent.deviceID})
 
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	for _, image := range device.ImageDownloads {
 		if image.Id == img.Id && image.Name == img.Name {
 			return image, nil
@@ -277,5 +277,5 @@ func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*v
 	defer agent.requestQueue.RequestComplete()
 	logger.Debugw(ctx, "listImageDownloads", log.Fields{"device-id": agent.deviceID})
 
-	return &voltha.ImageDownloads{Items: agent.getDeviceReadOnly().ImageDownloads}, nil
+	return &voltha.ImageDownloads{Items: agent.getDeviceReadOnlyWithoutLock().ImageDownloads}, nil
 }

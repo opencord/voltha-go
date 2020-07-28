@@ -50,7 +50,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 		return coreutils.DoneResponse(), nil
 	}
 
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
@@ -128,7 +128,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 		logger.Debugw(ctx, "nothing-to-delete", log.Fields{"device-id": agent.deviceID})
 		return coreutils.DoneResponse(), nil
 	}
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
@@ -184,7 +184,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		return coreutils.DoneResponse(), nil
 	}
 
-	device := agent.getDeviceReadOnly()
+	device := agent.getDeviceReadOnlyWithoutLock()
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states-oper-%s-connect-%s-admin-%s", device.OperStatus, device.ConnectStatus, device.AdminState)
 	}

@@ -273,7 +273,7 @@ func (ldMgr *LogicalManager) getLogicalDeviceIDFromDeviceID(ctx context.Context,
 	// Get the device
 	var device *voltha.Device
 	var err error
-	if device, err = ldMgr.deviceMgr.getDevice(ctx, deviceID); err != nil {
+	if device, err = ldMgr.deviceMgr.getDeviceReadOnly(ctx, deviceID); err != nil {
 		return nil, err
 	}
 	return ldMgr.getLogicalDeviceID(ctx, device)

@@ -65,5 +65,5 @@ func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error
 	defer agent.requestQueue.RequestComplete()
 	logger.Debugw(ctx, "listPmConfigs", log.Fields{"device-id": agent.deviceID})
 
-	return agent.getDeviceReadOnly().PmConfigs, nil
+	return agent.getDeviceReadOnlyWithoutLock().PmConfigs, nil
 }

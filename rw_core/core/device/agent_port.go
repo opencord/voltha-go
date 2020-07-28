@@ -118,7 +118,7 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 	logger.Debugw(ctx, "deleteAllPorts", log.Fields{"deviceId": agent.deviceID})
 
-	device, err := agent.getDevice(ctx)
+	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	}
 
 	//send request to adapter
-	device, err := agent.getDevice(ctx)
+	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,7 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 	}
 
 	//send request to adapter
-	device, err := agent.getDevice(ctx)
+	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
 		return err
 	}
