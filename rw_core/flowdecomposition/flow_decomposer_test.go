@@ -20,7 +20,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/opencord/voltha-go/rw_core/mocks"
+	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/route"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -31,7 +31,7 @@ import (
 )
 
 type testDeviceManager struct {
-	mocks.DeviceManager
+	state.DeviceManager
 	devices     map[string]*voltha.Device
 	devicePorts map[string]map[uint32]*voltha.Port
 }
@@ -397,7 +397,9 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	tfd.deviceRoutes.RootPorts = make(map[uint32]uint32)
 	tfd.deviceRoutes.RootPorts[10] = 10
 
-	tfd.fd = NewFlowDecomposer(tfd.dMgr)
+	tfd.fd = NewFlowDecomposer(func(ctx context.Context, deviceID string) (*voltha.Device, error) {
+		return tfd.dMgr.GetDevice(ctx, &voltha.ID{Id: deviceID})
+	})
 
 	return &tfd
 }

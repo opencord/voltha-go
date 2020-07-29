@@ -662,15 +662,15 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	}
 	logger.Debugw(ctx, "updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
 
-	previousState := getDeviceStates(agent.device)
+	prevDevice := agent.device
 	// update the device
 	agent.device = device
 
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
 
-	if err := agent.deviceMgr.processTransition(context.Background(), device, previousState); err != nil {
-		log.Errorw("failed-process-transition", log.Fields{"deviceId": device.Id, "previousAdminState": previousState.Admin, "currentAdminState": device.AdminState})
+	if err := agent.deviceMgr.stateTransitions.ProcessTransition(context.Background(), device, prevDevice); err != nil {
+		log.Errorw("failed-process-transition", log.Fields{"deviceId": device.Id, "previousAdminState": prevDevice.AdminState, "currentAdminState": device.AdminState})
 	}
 	return nil
 }

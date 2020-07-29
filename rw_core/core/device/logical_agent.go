@@ -74,7 +74,7 @@ func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string,
 		ldProxy:         ldProxy,
 		ldeviceMgr:      ldeviceMgr,
 		deviceRoutes:    route.NewDeviceRoutes(id, deviceID, deviceMgr.listDevicePorts),
-		flowDecomposer:  fd.NewFlowDecomposer(deviceMgr),
+		flowDecomposer:  fd.NewFlowDecomposer(deviceMgr.getDeviceReadOnly),
 		defaultTimeout:  defaultTimeout,
 		requestQueue:    coreutils.NewRequestQueue(),
 
