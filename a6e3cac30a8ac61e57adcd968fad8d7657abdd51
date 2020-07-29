@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97263590_d1eaaf73",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-29T20:05:33Z",
+      "side": 1,
+      "message": "Returning a pointer to the device implies that while the caller is reading the device, elements within the device may change by another caller after it acquires the lock to change the device.  Is it safer to just return a clone?",
+      "revId": "a6e3cac30a8ac61e57adcd968fad8d7657abdd51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2110a58_e8f5e689",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-29T20:05:33Z",
+      "side": 1,
+      "message": "Since there is no guarantee that the caller would modify the device, it would be safer to clone the device here.",
+      "revId": "a6e3cac30a8ac61e57adcd968fad8d7657abdd51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
