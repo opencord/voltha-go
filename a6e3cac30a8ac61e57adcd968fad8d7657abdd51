@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f098b1bd_8b8e6a10",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-29T20:26:43Z",
+      "side": 1,
+      "message": "No, elements of the device may not be changed, even if the lock is held.  In order to modify agent.device, a clone must be performed.  Since the device itself is never modified, it is safe for the caller to keep \u0026 use the returned device indefinitely.\n\n(Note the change to the function comment.)",
+      "parentUuid": "97263590_d1eaaf73",
+      "revId": "a6e3cac30a8ac61e57adcd968fad8d7657abdd51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f2110a58_e8f5e689",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2020-07-29T20:05:33Z",
       "side": 1,
       "message": "Since there is no guarantee that the caller would modify the device, it would be safer to clone the device here.",
+      "revId": "a6e3cac30a8ac61e57adcd968fad8d7657abdd51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "979ae523_88435ab2",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-07-29T20:26:43Z",
+      "side": 1,
+      "message": "GetDevice() exists primarily to implement the gRPC interface.  It is used in very few other cases (soon to be limited to tests, with my next change)\n\nSince the gRPC interface will simply marshal \u0026 return the device, it\u0027s safe to return this without a clone.\n\n(As a bonus, it\u0027s more efficient.)  😊",
+      "parentUuid": "f2110a58_e8f5e689",
       "revId": "a6e3cac30a8ac61e57adcd968fad8d7657abdd51",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
