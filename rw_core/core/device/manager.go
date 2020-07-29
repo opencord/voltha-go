@@ -19,8 +19,6 @@ package device
 import (
 	"context"
 	"errors"
-	"reflect"
-	"runtime"
 	"sync"
 	"time"
 
@@ -29,6 +27,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
+	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -50,7 +49,7 @@ type Manager struct {
 	adapterMgr              *adapter.Manager
 	logicalDeviceMgr        *LogicalManager
 	kafkaICProxy            kafka.InterContainerProxy
-	stateTransitions        *TransitionMap
+	stateTransitions        *state.TransitionMap
 	dbPath                  *model.Path
 	dProxy                  *model.Proxy
 	coreInstanceID          string
@@ -72,7 +71,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		defaultTimeout:          defaultCoreTimeout,
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
-	deviceMgr.stateTransitions = NewTransitionMap(deviceMgr)
+	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
 	logicalDeviceMgr := &LogicalManager{
 		Manager:                        event.NewManager(),
@@ -277,7 +276,7 @@ func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*
 func (dMgr *Manager) stopManagingDevice(ctx context.Context, id string) {
 	logger.Infow(ctx, "stopManagingDevice", log.Fields{"deviceId": id})
 	if dMgr.IsDeviceInCache(id) { // Proceed only if an agent is present for this device
-		if root, _ := dMgr.IsRootDevice(id); root {
+		if device, err := dMgr.getDeviceReadOnly(ctx, id); err == nil && device.Root {
 			// stop managing the logical device
 			_ = dMgr.logicalDeviceMgr.stopManagingLogicalDeviceWithDeviceID(ctx, id)
 		}
@@ -417,16 +416,6 @@ func (dMgr *Manager) GetChildDeviceWithProxyAddress(ctx context.Context, proxyAd
 func (dMgr *Manager) IsDeviceInCache(id string) bool {
 	_, exist := dMgr.deviceAgents.Load(id)
 	return exist
-}
-
-// IsRootDevice returns true if root device is found in the map
-func (dMgr *Manager) IsRootDevice(id string) (bool, error) {
-	dMgr.lockRootDeviceMap.RLock()
-	defer dMgr.lockRootDeviceMap.RUnlock()
-	if exist := dMgr.rootDevices[id]; exist {
-		return dMgr.rootDevices[id], nil
-	}
-	return false, nil
 }
 
 // ListDevices retrieves the latest devices from the data model
@@ -1057,33 +1046,6 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 	return childDevice, nil
 }
 
-func (dMgr *Manager) processTransition(ctx context.Context, device *voltha.Device, previousState *deviceState) error {
-	// This will be triggered on every state update
-	logger.Debugw(ctx, "state-transition", log.Fields{
-		"device":           device.Id,
-		"prev-admin-state": previousState.Admin,
-		"prev-oper-state":  previousState.Operational,
-		"prev-conn-state":  previousState.Connection,
-		"curr-admin-state": device.AdminState,
-		"curr-oper-state":  device.OperStatus,
-		"curr-conn-state":  device.ConnectStatus,
-	})
-	handlers := dMgr.stateTransitions.GetTransitionHandler(ctx, device, previousState)
-	if handlers == nil {
-		logger.Debugw(ctx, "no-op-transition", log.Fields{"deviceId": device.Id})
-		return nil
-	}
-	logger.Debugw(ctx, "handler-found", log.Fields{"num-expectedHandlers": len(handlers), "isParent": device.Root, "current-data": device, "previous-state": previousState})
-	for _, handler := range handlers {
-		logger.Debugw(ctx, "running-handler", log.Fields{"handler": funcName(handler)})
-		if err := handler(ctx, device); err != nil {
-			logger.Warnw(ctx, "handler-failed", log.Fields{"handler": funcName(handler), "error": err})
-			return err
-		}
-	}
-	return nil
-}
-
 func (dMgr *Manager) packetOut(ctx context.Context, deviceID string, outPort uint32, packet *ofp.OfpPacketOut) error {
 	logger.Debugw(ctx, "packetOut", log.Fields{"deviceId": deviceID, "outPort": outPort})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
@@ -1455,12 +1417,6 @@ func (dMgr *Manager) NotifyInvalidTransition(ctx context.Context, device *voltha
 	})
 	//TODO: notify over kafka?
 	return nil
-}
-
-func funcName(f interface{}) string {
-	p := reflect.ValueOf(f).Pointer()
-	rf := runtime.FuncForPC(p)
-	return rf.Name()
 }
 
 // UpdateDeviceAttribute updates value of particular device attribute
