@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package device
+package state
 
 import (
 	"context"
-	"github.com/opencord/voltha-go/rw_core/coreif"
+	"reflect"
+	"runtime"
+
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 )
 
@@ -67,186 +70,200 @@ type deviceState struct {
 	Operational voltha.OperStatus_Types
 }
 
-// TransitionHandler function type which takes the current and previous device info as input parameter
-type TransitionHandler func(context.Context, *voltha.Device) error
+// transitionHandler function type which takes the current and previous device info as input parameter
+type transitionHandler func(context.Context, *voltha.Device) error
 
-// Transition represent transition related attributes
-type Transition struct {
+// transition represent transition related attributes
+type transition struct {
 	deviceType    deviceType
 	previousState deviceState
 	currentState  deviceState
-	handlers      []TransitionHandler
+	handlers      []transitionHandler
 }
 
 // TransitionMap represent map of transitions and device manager
 type TransitionMap struct {
-	transitions []Transition
-	dMgr        coreif.DeviceManager
+	transitions []transition
+	dMgr        DeviceManager
+}
+
+// DeviceManager represents a generic device manager
+type DeviceManager interface {
+	NotifyInvalidTransition(ctx context.Context, curr *voltha.Device) error
+	CreateLogicalDevice(ctx context.Context, curr *voltha.Device) error
+	SetupUNILogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DeleteLogicalDevice(ctx context.Context, curr *voltha.Device) error
+	DeleteLogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DeleteAllChildDevices(ctx context.Context, curr *voltha.Device) error
+	RunPostDeviceDelete(ctx context.Context, curr *voltha.Device) error
+	ChildDeviceLost(ctx context.Context, curr *voltha.Device) error
+	DeleteAllLogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DeleteAllDeviceFlows(ctx context.Context, curr *voltha.Device) error
 }
 
 // NewTransitionMap creates transition map
-func NewTransitionMap(dMgr coreif.DeviceManager) *TransitionMap {
+func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 	var transitionMap TransitionMap
 	transitionMap.dMgr = dMgr
-	transitionMap.transitions = make([]Transition, 0)
+	transitionMap.transitions = make([]transition, 0)
 	transitionMap.transitions = append(
 		transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
-			handlers:      []TransitionHandler{dMgr.CreateLogicalDevice}})
+			handlers:      []transitionHandler{dMgr.CreateLogicalDevice}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_DISCOVERED},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
-			handlers:      []TransitionHandler{}})
+			handlers:      []transitionHandler{}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_DISCOVERED},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
-			handlers:      []TransitionHandler{dMgr.SetupUNILogicalPorts}})
+			handlers:      []transitionHandler{dMgr.SetupUNILogicalPorts}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_DISCOVERED},
-			handlers:      []TransitionHandler{}})
+			handlers:      []transitionHandler{}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
-			handlers:      []TransitionHandler{dMgr.SetupUNILogicalPorts}})
+			handlers:      []transitionHandler{dMgr.SetupUNILogicalPorts}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DELETED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.RunPostDeviceDelete}})
+			handlers:      []transitionHandler{dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DELETED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.RunPostDeviceDelete}})
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE},
-			handlers:      []TransitionHandler{dMgr.CreateLogicalDevice}})
+			handlers:      []transitionHandler{dMgr.CreateLogicalDevice}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.CreateLogicalDevice}})
+			handlers:      []transitionHandler{dMgr.CreateLogicalDevice}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DELETED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
+			handlers:      []transitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DELETED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
+			handlers:      []transitionHandler{dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVATING},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		Transition{
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []TransitionHandler{dMgr.NotifyInvalidTransition}})
+			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 
 	return &transitionMap
 }
 
-func getDeviceStates(device *voltha.Device) *deviceState {
-	return &deviceState{Admin: device.AdminState, Connection: device.ConnectStatus, Operational: device.OperStatus}
+func getDeviceStates(device *voltha.Device) deviceState {
+	return deviceState{Admin: device.AdminState, Connection: device.ConnectStatus, Operational: device.OperStatus}
 }
 
 // isMatched matches a state transition.  It returns whether there is a match and if there is whether it is an exact match
-func getHandler(previous *deviceState, current *deviceState, transition *Transition) ([]TransitionHandler, *match) {
+func getHandler(previous deviceState, current deviceState, transition *transition) ([]transitionHandler, *match) {
 	m := &match{}
 	// Do we have an exact match?
-	if *previous == transition.previousState && *current == transition.currentState {
+	if previous == transition.previousState && current == transition.currentState {
 		return transition.handlers, &match{admin: currPrevStateMatch, oper: currPrevStateMatch, conn: currPrevStateMatch}
 	}
 
@@ -296,27 +313,28 @@ func getHandler(previous *deviceState, current *deviceState, transition *Transit
 	return transition.handlers, m
 }
 
-// GetTransitionHandler returns transition handler & a flag that's set if the transition is invalid
-func (tMap *TransitionMap) GetTransitionHandler(ctx context.Context, device *voltha.Device, pState *deviceState) []TransitionHandler {
+// getTransitionHandler returns transition handler & a flag that's set if the transition is invalid
+func (tMap *TransitionMap) getTransitionHandler(ctx context.Context, cDevice, pDevice *voltha.Device) []transitionHandler {
 	//1. Get the previous and current set of states
-	cState := getDeviceStates(device)
+	cState := getDeviceStates(cDevice)
+	pState := getDeviceStates(pDevice)
 
 	// Do nothing is there are no states change
-	if *pState == *cState {
+	if pState == cState {
 		return nil
 	}
 
 	//logger.Infow(ctx, "deviceType", log.Fields{"device": pDevice})
 	deviceType := parent
-	if !device.Root {
+	if !cDevice.Root {
 		logger.Info(ctx, "device is child")
 		deviceType = child
 	}
-	logger.Infof(ctx, "deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, device.Id, pState, cState)
+	logger.Infof(ctx, "deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, cDevice.Id, pState, cState)
 
 	//2. Go over transition array to get the right transition
-	var currentMatch []TransitionHandler
-	var tempHandler []TransitionHandler
+	var currentMatch []transitionHandler
+	var tempHandler []transitionHandler
 	var m *match
 	bestMatch := &match{}
 	for _, aTransition := range tMap.transitions {
@@ -335,4 +353,35 @@ func (tMap *TransitionMap) GetTransitionHandler(ctx context.Context, device *vol
 		}
 	}
 	return currentMatch
+}
+
+func (tMap *TransitionMap) ProcessTransition(ctx context.Context, device, prevDevice *voltha.Device) error {
+	// This will be triggered on every state update
+	logger.Debugw(ctx, "state-transition", log.Fields{
+		"device":           device.Id,
+		"prev-admin-state": prevDevice.AdminState,
+		"prev-oper-state":  prevDevice.OperStatus,
+		"prev-conn-state":  prevDevice.ConnectStatus,
+		"curr-admin-state": device.AdminState,
+		"curr-oper-state":  device.OperStatus,
+		"curr-conn-state":  device.ConnectStatus,
+	})
+	handlers := tMap.getTransitionHandler(ctx, device, prevDevice)
+	if handlers == nil {
+		logger.Debugw(ctx, "no-op-transition", log.Fields{"deviceId": device.Id})
+		return nil
+	}
+	logger.Debugw(ctx, "handler-found", log.Fields{"num-expectedHandlers": len(handlers), "isParent": device.Root, "current-data": device, "previous-data": prevDevice})
+	for _, handler := range handlers {
+		logger.Debugw(ctx, "running-handler", log.Fields{"handler": funcName(handler)})
+		if err := handler(ctx, device); err != nil {
+			logger.Warnw(ctx, "handler-failed", log.Fields{"handler": funcName(handler), "error": err})
+			return err
+		}
+	}
+	return nil
+}
+
+func funcName(f interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }

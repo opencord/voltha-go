@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-go/rw_core/coreif"
 	"github.com/opencord/voltha-go/rw_core/route"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -33,18 +32,26 @@ import (
 
 // FlowDecomposer represent flow decomposer attribute
 type FlowDecomposer struct {
-	deviceMgr coreif.DeviceManager
+	getDevice GetDeviceFunc
+}
+
+// DeviceManager represents a generic device manager
+type GetDeviceFunc func(context.Context, string) (*voltha.Device, error)
+
+type LogicalDeviceAgent interface {
+	GetDeviceRoutes() *route.DeviceRoutes
+	GetWildcardInputPorts(ctx context.Context, excludePort uint32) map[uint32]struct{}
+	GetRoute(ctx context.Context, ingressPortNo uint32, egressPortNo uint32) ([]route.Hop, error)
+	GetNNIPorts() map[uint32]struct{}
 }
 
 // NewFlowDecomposer creates flow decomposer instance
-func NewFlowDecomposer(deviceMgr coreif.DeviceManager) *FlowDecomposer {
-	var decomposer FlowDecomposer
-	decomposer.deviceMgr = deviceMgr
-	return &decomposer
+func NewFlowDecomposer(getDevice GetDeviceFunc) *FlowDecomposer {
+	return &FlowDecomposer{getDevice: getDevice}
 }
 
 //DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
-func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent coreif.LogicalDeviceAgent, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry) (*fu.DeviceRules, error) {
+func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent LogicalDeviceAgent, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry) (*fu.DeviceRules, error) {
 	deviceRules := *fu.NewDeviceRules()
 	devicesToUpdate := make(map[string]string)
 
@@ -63,8 +70,7 @@ func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent coreif.Logic
 }
 
 // Handles special case of any controller-bound flow for a parent device
-func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(flow *ofp.OfpFlowStats,
-	dr *fu.DeviceRules) (*fu.DeviceRules, error) {
+func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(ctx context.Context, dr *fu.DeviceRules) (*fu.DeviceRules, error) {
 	EAPOL := fu.EthType(0x888e)
 	IGMP := fu.IpProto(2)
 	UDP := fu.IpProto(17)
@@ -72,7 +78,7 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 	newDeviceRules := dr.Copy()
 	//	Check whether we are dealing with a parent device
 	for deviceID, fg := range dr.GetRules() {
-		if root, _ := fd.deviceMgr.IsRootDevice(deviceID); root {
+		if device, err := fd.getDevice(ctx, deviceID); err == nil && device.Root {
 			newDeviceRules.ClearFlows(deviceID)
 			for i := 0; i < fg.Flows.Len(); i++ {
 				f := fg.GetFlow(i)
@@ -103,7 +109,7 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 }
 
 //processControllerBoundFlow decomposes trap flows
-func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent coreif.LogicalDeviceAgent, path []route.Hop,
+func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent LogicalDeviceAgent, path []route.Hop,
 	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) (*fu.DeviceRules, error) {
 
 	logger.Debugw(ctx, "trap-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "flow": flow})
@@ -285,7 +291,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(ctx context.Cont
 }
 
 // processDownstreamFlowWithNextTable decomposes downstream flows containing next table ID instructions
-func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(ctx context.Context, agent coreif.LogicalDeviceAgent, path []route.Hop,
+func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(ctx context.Context, agent LogicalDeviceAgent, path []route.Hop,
 	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) (*fu.DeviceRules, error) {
 	logger.Debugw(ctx, "decomposing-olt-flow-in-downstream-flow-with-next-table", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
 	deviceRules := fu.NewDeviceRules()
@@ -446,7 +452,7 @@ func (fd *FlowDecomposer) processMulticastFlow(ctx context.Context, path []route
 }
 
 // decomposeFlow decomposes a flow for a logical device into flows for each physical device
-func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.LogicalDeviceAgent, flow *ofp.OfpFlowStats,
+func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDeviceAgent, flow *ofp.OfpFlowStats,
 	groupMap map[uint32]*ofp.OfpGroupEntry) (*fu.DeviceRules, error) {
 
 	inPortNo := fu.GetInPort(flow)
@@ -487,7 +493,7 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.Logica
 	} else {
 		var ingressDevice *voltha.Device
 		var err error
-		if ingressDevice, err = fd.deviceMgr.GetDevice(ctx, &voltha.ID{Id: path[0].DeviceID}); err != nil {
+		if ingressDevice, err = fd.getDevice(ctx, path[0].DeviceID); err != nil {
 			// This can happen in a race condition where a device is deleted right after we obtain a
 			// route involving the device (GetRoute() above).  Handle it as a no route event as well.
 			return deviceRules, fmt.Errorf("get-device-error :%v :%w", err, route.ErrNoRoute)
@@ -518,6 +524,6 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent coreif.Logica
 			return deviceRules, status.Errorf(codes.Aborted, "unknown downstream flow %v", *flow)
 		}
 	}
-	deviceRules, err = fd.updateOutputPortForControllerBoundFlowForParentDevide(flow, deviceRules)
+	deviceRules, err = fd.updateOutputPortForControllerBoundFlowForParentDevide(ctx, deviceRules)
 	return deviceRules, err
 }
