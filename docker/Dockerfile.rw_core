@@ -15,10 +15,12 @@
 # -------------
 # Build stage
 
-FROM golang:1.13.8-alpine3.11 AS build-env
+ARG GOLANG_IMAGE=golang:1.13.8-alpine3.11
+ARG DEPLOY_IMAGE=alpine:3.11.3
+FROM $GOLANG_IMAGE AS build-env
 
 # Install required packages
-RUN apk add --no-cache build-base=0.5-r1
+RUN if which apk; then apk add --no-cache build-base=0.5-r1; fi
 
 # Use Standard go build directory structure
 WORKDIR /go/src
@@ -43,7 +45,6 @@ ARG org_opencord_vcs_dirty=unknown
 
 # Build
 WORKDIR /go/src/rw_core
-SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 RUN go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /go/bin/rw_core \
 	-ldflags \
 	"-X github.com/opencord/voltha-lib-go/v3/pkg/version.version=$org_label_schema_version \
@@ -57,7 +58,7 @@ RUN go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /go/bin/rw_core \
 # -------------
 # Image creation stage
 
-FROM alpine:3.11.3
+FROM $DEPLOY_IMAGE
 
 # Set the working directory
 WORKDIR /app
