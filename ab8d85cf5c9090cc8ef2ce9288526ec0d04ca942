@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7419f8c_8bf8289d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1567,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-07-30T17:55:18Z",
+      "side": 1,
+      "message": "incorrect debug message?",
+      "range": {
+        "startLine": 1567,
+        "startChar": 13,
+        "endLine": 1567,
+        "endChar": 24
+      },
+      "revId": "ab8d85cf5c9090cc8ef2ce9288526ec0d04ca942",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bc7f54c_2fae2013",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-07-30T17:55:18Z",
+      "side": 1,
+      "message": "Incorrect debug message?",
+      "range": {
+        "startLine": 460,
+        "startChar": 13,
+        "endLine": 460,
+        "endChar": 24
+      },
+      "revId": "ab8d85cf5c9090cc8ef2ce9288526ec0d04ca942",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35d2848d_e9acc671",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-07-30T17:55:18Z",
+      "side": 1,
+      "message": "should this be set_ext_value?",
+      "range": {
+        "startLine": 461,
+        "startChar": 9,
+        "endLine": 461,
+        "endChar": 22
+      },
+      "revId": "ab8d85cf5c9090cc8ef2ce9288526ec0d04ca942",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
