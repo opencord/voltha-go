@@ -69,6 +69,24 @@
       "revId": "a6e3cac30a8ac61e57adcd968fad8d7657abdd51",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "258a3a78_726a59ec",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-30T01:09:05Z",
+      "side": 1,
+      "message": "If GetDevice is to be used by gRPC only then please add a comment to the function.",
+      "parentUuid": "979ae523_88435ab2",
+      "revId": "a6e3cac30a8ac61e57adcd968fad8d7657abdd51",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
