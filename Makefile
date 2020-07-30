@@ -69,8 +69,6 @@ help:
 	@echo "build                : Build the docker images."
 	@echo "                         - If this is the first time you are building, choose 'make build' option."
 	@echo "rw_core              : Build the rw_core docker image"
-	@echo "docker-build-profile : Build the rw_core_docker image with profiling enabled"
-	@echo "rw_core_profile      : Build the rw_core docker image with profiling enabled"
 	@echo "clean                : Remove files created by the build and tests"
 	@echo "distclean            : Remove sca directory and clean"
 	@echo "docker-push          : Push the docker images to an external repository"
@@ -100,18 +98,23 @@ endif
 build: docker-build
 
 docker-build: rw_core
-docker-build-profile: rw_core_profile
 
 rw_core: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -f docker/Dockerfile.rw_core .
 ifdef BUILD_PROFILED
 	docker build $(DOCKER_BUILD_ARGS) --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
 endif
+ifdef BUILD_RACE
+	docker build $(DOCKER_BUILD_ARGS) --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
+endif
 
 docker-push:
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 ifdef BUILD_PROFILED
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile
+endif
+ifdef BUILD_RACE
+	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd
 endif
 docker-kind-load:
 	@if [ "`kind get clusters | grep voltha-$(TYPE)`" = '' ]; then echo "no voltha-$(TYPE) cluster found" && exit 1; fi
