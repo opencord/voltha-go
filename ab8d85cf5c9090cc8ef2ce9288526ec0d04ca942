@@ -68,6 +68,23 @@
       "revId": "ab8d85cf5c9090cc8ef2ce9288526ec0d04ca942",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51e8c175_c64a2423",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-07-30T18:07:51Z",
+      "side": 1,
+      "message": "While you are here, you might as well put \u0027}\u0027 on the next line.",
+      "revId": "ab8d85cf5c9090cc8ef2ce9288526ec0d04ca942",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
