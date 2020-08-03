@@ -242,7 +242,7 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	if err != nil {
 		return err
 	}
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.DisablePort(ctx, device, &newPort)
 	if err != nil {
 		cancel()
@@ -278,7 +278,7 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 	if err != nil {
 		return err
 	}
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.EnablePort(ctx, device, &newPort)
 	if err != nil {
 		cancel()

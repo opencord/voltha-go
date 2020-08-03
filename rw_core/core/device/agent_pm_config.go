@@ -39,7 +39,7 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 		return err
 	}
 	// Send the request to the adapter
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.UpdatePmConfigs(subCtx, cloned, pmConfigs)
 	if err != nil {
 		cancel()

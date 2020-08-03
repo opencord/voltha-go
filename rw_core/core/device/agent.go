@@ -150,6 +150,7 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 		agent.device = device
 	}
 	startSucceeded = true
+	log.EnrichSpan(ctx, log.Fields{"device-id": agent.deviceID})
 	logger.Debugw(ctx, "device-agent-started", log.Fields{"device-id": agent.deviceID})
 
 	return agent.getDeviceReadOnly(ctx)
@@ -303,7 +304,7 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 
 	// Adopt the device if it was in pre-provision state.  In all other cases, try to re-enable it.
 	var ch chan *kafka.RpcResponse
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	if oldDevice.AdminState == voltha.AdminState_PREPROVISIONED {
 		ch, err = agent.adapterProxy.AdoptDevice(subCtx, newDevice)
 	} else {
@@ -416,7 +417,7 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 		return err
 	}
 
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.DisableDevice(subCtx, cloned)
 	if err != nil {
 		cancel()
@@ -435,7 +436,7 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	logger.Debugw(ctx, "rebootDevice", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceReadOnlyWithoutLock()
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.RebootDevice(subCtx, device)
 	if err != nil {
 		cancel()
@@ -464,7 +465,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 	// If the device was in pre-prov state (only parent device are in that state) then do not send the request to the
 	// adapter
 	if previousState != ic.AdminState_PREPROVISIONED {
-		subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 		ch, err := agent.adapterProxy.DeleteDevice(subCtx, cloned)
 		if err != nil {
 			cancel()
@@ -541,7 +542,7 @@ func (agent *Agent) packetOut(ctx context.Context, outPort uint32, packet *ofp.O
 		agent.reconcileWithKVStore(ctx)
 	}
 	//	Send packet to adapter
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.PacketOut(subCtx, agent.deviceType, agent.deviceID, outPort, packet)
 	if err != nil {
 		cancel()
@@ -636,7 +637,7 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 
 	device := agent.getDeviceReadOnlyWithoutLock()
 
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.SimulateAlarm(subCtx, device, simulateReq)
 	if err != nil {
 		cancel()
@@ -669,7 +670,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
 
-	if err := agent.deviceMgr.processTransition(context.Background(), device, previousState); err != nil {
+	if err := agent.deviceMgr.processTransition(log.WithSpanFromContext(context.Background(), ctx), device, previousState); err != nil {
 		log.Errorw("failed-process-transition", log.Fields{"deviceId": device.Id, "previousAdminState": previousState.Admin, "currentAdminState": device.AdminState})
 	}
 	return nil
@@ -710,7 +711,7 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 	}
 
 	//send request to adapter
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
 	if err != nil {
 		cancel()

@@ -139,7 +139,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 	go func() {
 		//TODO: either wait for the agent to be started before returning, or
 		//      implement locks in the agent to ensure request are not processed before start() is complete
-		err := agent.start(context.Background(), false)
+		err := agent.start(log.WithSpanFromContext(context.Background(), ctx), false)
 		if err != nil {
 			logger.Errorw(ctx, "unable-to-create-the-logical-device", log.Fields{"error": err})
 			ldMgr.deleteLogicalDeviceAgent(id)
