@@ -84,7 +84,7 @@ func (aMgr *Manager) Start(ctx context.Context) {
 func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory(ctx context.Context) error {
 	// Load the adapters
 	var adapters []*voltha.Adapter
-	if err := aMgr.adapterProxy.List(context.Background(), &adapters); err != nil {
+	if err := aMgr.adapterProxy.List(log.WithSpanFromContext(context.Background(), ctx), &adapters); err != nil {
 		logger.Errorw(ctx, "Failed-to-list-adapters-from-cluster-data-proxy", log.Fields{"error": err})
 		return err
 	}
@@ -100,7 +100,7 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory(ctx context.Context) err
 
 	// Load the device types
 	var deviceTypes []*voltha.DeviceType
-	if err := aMgr.deviceTypeProxy.List(context.Background(), &deviceTypes); err != nil {
+	if err := aMgr.deviceTypeProxy.List(log.WithSpanFromContext(context.Background(), ctx), &deviceTypes); err != nil {
 		logger.Errorw(ctx, "Failed-to-list-device-types-from-cluster-data-proxy", log.Fields{"error": err})
 		return err
 	}
@@ -136,11 +136,11 @@ func (aMgr *Manager) addAdapter(ctx context.Context, adapter *voltha.Adapter, sa
 	if _, exist := aMgr.adapterAgents[adapter.Id]; !exist {
 		if saveToDb {
 			// Save the adapter to the KV store - first check if it already exist
-			if have, err := aMgr.adapterProxy.Get(context.Background(), adapter.Id, &voltha.Adapter{}); err != nil {
+			if have, err := aMgr.adapterProxy.Get(log.WithSpanFromContext(context.Background(), ctx), adapter.Id, &voltha.Adapter{}); err != nil {
 				logger.Errorw(ctx, "failed-to-get-adapters-from-cluster-proxy", log.Fields{"error": err})
 				return err
 			} else if !have {
-				if err := aMgr.adapterProxy.Set(context.Background(), adapter.Id, adapter); err != nil {
+				if err := aMgr.adapterProxy.Set(log.WithSpanFromContext(context.Background(), ctx), adapter.Id, adapter); err != nil {
 					logger.Errorw(ctx, "failed-to-save-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
 						"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 					return err
@@ -178,13 +178,13 @@ func (aMgr *Manager) addDeviceTypes(ctx context.Context, deviceTypes *voltha.Dev
 	if saveToDb {
 		// Save the device types to the KV store
 		for _, deviceType := range deviceTypes.Items {
-			if have, err := aMgr.deviceTypeProxy.Get(context.Background(), deviceType.Id, &voltha.DeviceType{}); err != nil {
+			if have, err := aMgr.deviceTypeProxy.Get(log.WithSpanFromContext(context.Background(), ctx), deviceType.Id, &voltha.DeviceType{}); err != nil {
 				logger.Errorw(ctx, "Failed-to--device-types-from-cluster-data-proxy", log.Fields{"error": err})
 				return err
 			} else if !have {
 				//	Does not exist - save it
 				clonedDType := (proto.Clone(deviceType)).(*voltha.DeviceType)
-				if err := aMgr.deviceTypeProxy.Set(context.Background(), deviceType.Id, clonedDType); err != nil {
+				if err := aMgr.deviceTypeProxy.Set(log.WithSpanFromContext(context.Background(), ctx), deviceType.Id, clonedDType); err != nil {
 					logger.Errorw(ctx, "Failed-to-add-device-types-to-cluster-data-proxy", log.Fields{"error": err})
 					return err
 				}
@@ -234,7 +234,7 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, adapter *voltha.Adapte
 	if aMgr.getAdapter(ctx, adapter.Id) != nil {
 		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
 		go func() {
-			err := aMgr.onAdapterRestart(context.Background(), adapter)
+			err := aMgr.onAdapterRestart(log.WithSpanFromContext(context.Background(), ctx), adapter)
 			if err != nil {
 				logger.Errorw(ctx, "unable-to-restart-adapter", log.Fields{"error": err})
 			}

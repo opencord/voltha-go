@@ -303,7 +303,7 @@ func (ap *AdapterProxy) UpdateFlowsBulk(ctx context.Context, device *voltha.Devi
 		{Key: "flow_metadata", Value: flowMetadata},
 	}
 	replyToTopic := ap.getCoreTopic()
-	return ap.sendRPC(context.TODO(), rpc, toTopic, &replyToTopic, true, device.Id, args...)
+	return ap.sendRPC(log.WithSpanFromContext(context.TODO(), ctx), rpc, toTopic, &replyToTopic, true, device.Id, args...)
 }
 
 // UpdateFlowsIncremental invokes update flows incremental rpc
@@ -329,7 +329,7 @@ func (ap *AdapterProxy) UpdateFlowsIncremental(ctx context.Context, device *volt
 		{Key: "flow_metadata", Value: flowMetadata},
 	}
 	replyToTopic := ap.getCoreTopic()
-	return ap.sendRPC(context.TODO(), rpc, toTopic, &replyToTopic, true, device.Id, args...)
+	return ap.sendRPC(log.WithSpanFromContext(context.TODO(), ctx), rpc, toTopic, &replyToTopic, true, device.Id, args...)
 }
 
 // UpdatePmConfigs invokes update pm configs rpc
