@@ -58,7 +58,7 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_OLT:
 		// Rebuilt the routes on Parent PON port addition
 		go func() {
-			if err := agent.buildRoutes(context.Background()); err != nil {
+			if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
 				// Not an error - temporary state
 				logger.Infow(ctx, "failed-to-update-routes-after-adding-parent-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 			}
@@ -67,7 +67,7 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_ONU:
 		// Add the routes corresponding to that child device
 		go func() {
-			if err := agent.updateAllRoutes(context.Background(), device.Id, devicePorts); err != nil {
+			if err := agent.updateAllRoutes(log.WithSpanFromContext(context.Background(), ctx), device.Id, devicePorts); err != nil {
 				// Not an error - temporary state
 				logger.Infow(ctx, "failed-to-update-routes-after-adding-child-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 			}
@@ -215,7 +215,7 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 
 	// Reset the logical device routes
 	go func() {
-		if err := agent.buildRoutes(context.Background()); err != nil {
+		if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
 			logger.Warnw(ctx, "device-routes-not-ready", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "error": err})
 		}
 	}()
@@ -245,7 +245,7 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 
 	// Reset the logical device routes
 	go func() {
-		if err := agent.buildRoutes(context.Background()); err != nil {
+		if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
 			logger.Warnw(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
@@ -334,7 +334,7 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
 		// First setup the routes
-		if err := agent.updateRoutes(context.Background(), deviceID, devicePorts, nniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
+		if err := agent.updateRoutes(log.WithSpanFromContext(context.Background(), ctx), deviceID, devicePorts, nniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
 			logger.Infow(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": nniPort.OfpPort.PortNo, "error": err})
@@ -385,14 +385,14 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
 		// First setup the routes
-		if err := agent.updateRoutes(context.Background(), deviceID, devicePorts, uniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
+		if err := agent.updateRoutes(log.WithSpanFromContext(context.Background(), ctx), deviceID, devicePorts, uniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
 			logger.Infow(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": uniPort.OfpPort.PortNo, "error": err})
 		}
 
 		// send event, and allow any queued events to be sent as well
-		queuePosition.send(context.Background(), agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
+		queuePosition.send(ctx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
 	}()
 	return nil
 }
@@ -400,7 +400,7 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 // send is a convenience to avoid calling both assignQueuePosition and qp.send
 func (e *orderedEvents) send(ctx context.Context, agent *LogicalAgent, deviceID string, reason ofp.OfpPortReason, desc *ofp.OfpPort) {
 	qp := e.assignQueuePosition()
-	go qp.send(context.Background(), agent, deviceID, reason, desc)
+	go qp.send(log.WithSpanFromContext(context.Background(), ctx), agent, deviceID, reason, desc)
 }
 
 // TODO: shouldn't need to guarantee event ordering like this

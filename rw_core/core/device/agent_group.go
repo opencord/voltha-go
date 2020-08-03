@@ -94,7 +94,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	}
 
 	// Send update to adapters
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		updatedAllGroups := agent.listDeviceGroups()
@@ -152,7 +152,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 	}
 
 	// Send update to adapters
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
 		updatedAllGroups := agent.listDeviceGroups()
@@ -215,7 +215,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		}
 	}
 
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	response := coreutils.NewResponse()
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {
