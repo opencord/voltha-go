@@ -170,7 +170,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChannels...); res != nil {
 				logger.Infow(ctx, "failed-to-add-flows-will-attempt-deletion", log.Fields{"errors": res, "logical-device-id": agent.logicalDeviceID})
 				// Revert added flows
-				if err := agent.revertAddedFlows(context.Background(), mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
+				if err := agent.revertAddedFlows(log.WithSpanFromContext(context.Background(), ctx), mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
 					logger.Errorw(ctx, "failure-to-delete-flows-after-failed-addition", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 				}
 			}
