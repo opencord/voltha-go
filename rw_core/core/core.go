@@ -77,7 +77,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	if err != nil {
 		logger.Fatal(ctx, err)
 	}
-	defer stopKVClient(context.Background(), kvClient)
+	defer stopKVClient(log.WithSpanFromContext(context.Background(), ctx), kvClient)
 
 	// sync logging config with kv store
 	cm := conf.NewConfigManager(ctx, kvClient, cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
