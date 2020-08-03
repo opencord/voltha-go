@@ -127,7 +127,7 @@ func main() {
 	logger.Infow(ctx, "rw-core-config", log.Fields{"config": *cf})
 
 	// Create a context adding the status update channel
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(log.WithSpanFromContext(context.Background(), ctx))
 	defer cancel()
 
 	/*

@@ -56,7 +56,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	}
 
 	// Send the request to the adapter
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.DownloadImage(ctx, cloned, clonedImg)
 	if err != nil {
 		cancel()
@@ -106,7 +106,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 		if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
 			return nil, err
 		}
-		subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 		ch, err := agent.adapterProxy.CancelImageDownload(subCtx, cloned, img)
 		if err != nil {
 			cancel()
@@ -147,7 +147,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 		return nil, err
 	}
 
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.ActivateImageUpdate(subCtx, cloned, img)
 	if err != nil {
 		cancel()
@@ -188,7 +188,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 		return nil, err
 	}
 
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.RevertImageUpdate(subCtx, cloned, img)
 	if err != nil {
 		cancel()
