@@ -17,15 +17,15 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -33,6 +33,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -197,6 +198,13 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 	waitForResponse bool, key string, kvArgs ...*KVArg) chan *RpcResponse {
 
 	logger.Debugw(ctx, "InvokeAsyncRPC", log.Fields{"rpc": rpc, "key": key})
+
+	spanArg, span, ctx := kp.embedSpanAsArg(ctx, rpc, !waitForResponse)
+	if spanArg != nil {
+		kvArgs = append(kvArgs, &spanArg[0])
+	}
+	defer span.Finish()
+
 	//	If a replyToTopic is provided then we use it, otherwise just use the  default toTopic.  The replyToTopic is
 	// typically the device ID.
 	responseTopic := replyToTopic
@@ -219,6 +227,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		protoRequest, err = encodeRequest(ctx, rpc, toTopic, responseTopic, key, kvArgs...)
 		if err != nil {
 			logger.Warnw(ctx, "cannot-format-request", log.Fields{"rpc": rpc, "error": err})
+			log.MarkSpanError(ctx, errors.New("cannot-format-request"))
 			chnl <- NewResponse(RpcFormattingError, err, nil)
 			return
 		}
@@ -227,6 +236,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		var ch <-chan *ic.InterContainerMessage
 		if ch, err = kp.subscribeForResponse(ctx, *responseTopic, protoRequest.Header.Id); err != nil {
 			logger.Errorw(ctx, "failed-to-subscribe-for-response", log.Fields{"error": err, "toTopic": toTopic.Name})
+			log.MarkSpanError(ctx, errors.New("failed-to-subscribe-for-response"))
 			chnl <- NewResponse(RpcTransportError, err, nil)
 			return
 		}
@@ -260,6 +270,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 		case msg, ok := <-ch:
 			if !ok {
 				logger.Warnw(ctx, "channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
+				log.MarkSpanError(ctx, errors.New("channel-closed"))
 				chnl <- NewResponse(RpcTransportError, status.Error(codes.Aborted, "channel closed"), nil)
 			}
 			logger.Debugw(ctx, "received-response", log.Fields{"rpc": rpc, "msgHeader": msg.Header})
@@ -280,6 +291,7 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 			}
 		case <-ctx.Done():
 			logger.Errorw(ctx, "context-cancelled", log.Fields{"rpc": rpc, "ctx": ctx.Err()})
+			log.MarkSpanError(ctx, errors.New("context-cancelled"))
 			err := status.Error(codes.DeadlineExceeded, ctx.Err().Error())
 			chnl <- NewResponse(RpcTimeout, err, nil)
 		case <-kp.doneCh:
@@ -290,9 +302,71 @@ func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, t
 	return chnl
 }
 
+// Method to extract Open-tracing Span from Context and serialize it for transport over Kafka embedded as a additional argument.
+// Additional argument is injected using key as "span" and value as Span marshalled into a byte slice
+//
+// The span name is automatically constructed using the RPC name with following convention (<rpc-name> represents name of invoked method):
+// - RPC invoked in Sync manner (WaitForResponse=true) : kafka-rpc-<rpc-name>
+// - RPC invoked in Async manner (WaitForResponse=false) : kafka-async-rpc-<rpc-name>
+// - Inter Adapter RPC invoked in Sync manner (WaitForResponse=true) : kafka-inter-adapter-rpc-<rpc-name>
+// - Inter Adapter RPC invoked in Async manner (WaitForResponse=false) : kafka-inter-adapter-async-rpc-<rpc-name>
+func (kp *interContainerProxy) embedSpanAsArg(ctx context.Context, rpc string, isAsync bool) ([]KVArg, opentracing.Span, context.Context) {
+	var err error
+	var newCtx context.Context
+	var spanToInject opentracing.Span
+
+	var spanName strings.Builder
+	spanName.WriteString("kafka-")
+
+	// In case of inter adapter message, use Msg Type for constructing RPC name
+	if rpc == "process_inter_adapter_message" {
+		if msgType, ok := ctx.Value("inter-adapter-msg-type").(ic.InterAdapterMessageType_Types); ok {
+			spanName.WriteString("inter-adapter-")
+			rpc = msgType.String()
+		}
+	}
+
+	if isAsync {
+		spanName.WriteString("async-rpc-")
+	} else {
+		spanName.WriteString("rpc-")
+	}
+	spanName.WriteString(rpc)
+
+	if isAsync {
+		spanToInject, newCtx = log.CreateAsyncSpan(ctx, spanName.String())
+	} else {
+		spanToInject, newCtx = log.CreateChildSpan(ctx, spanName.String())
+	}
+
+	spanToInject.SetBaggageItem("rpc-span-name", spanName.String())
+
+	textMapCarrier := opentracing.TextMapCarrier(make(map[string]string))
+	if err = opentracing.GlobalTracer().Inject(spanToInject.Context(), opentracing.TextMap, textMapCarrier); err != nil {
+		logger.Warnw(ctx, "unable-to-serialize-span-to-textmap", log.Fields{"span": spanToInject, "error": err})
+		return nil, spanToInject, newCtx
+	}
+
+	var textMapJson []byte
+	if textMapJson, err = json.Marshal(textMapCarrier); err != nil {
+		logger.Warnw(ctx, "unable-to-marshal-textmap-to-json-string", log.Fields{"textMap": textMapCarrier, "error": err})
+		return nil, spanToInject, newCtx
+	}
+
+	spanArg := make([]KVArg, 1)
+	spanArg[0] = KVArg{Key: "span", Value: &ic.StrType{Val: string(textMapJson)}}
+	return spanArg, spanToInject, newCtx
+}
+
 // InvokeRPC is used to send a request to a given topic
 func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic,
 	waitForResponse bool, key string, kvArgs ...*KVArg) (bool, *any.Any) {
+
+	spanArg, span, ctx := kp.embedSpanAsArg(ctx, rpc, false)
+	if spanArg != nil {
+		kvArgs = append(kvArgs, &spanArg[0])
+	}
+	defer span.Finish()
 
 	//	If a replyToTopic is provided then we use it, otherwise just use the  default toTopic.  The replyToTopic is
 	// typically the device ID.
@@ -305,6 +379,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	protoRequest, err := encodeRequest(ctx, rpc, toTopic, responseTopic, key, kvArgs...)
 	if err != nil {
 		logger.Warnw(ctx, "cannot-format-request", log.Fields{"rpc": rpc, "error": err})
+		log.MarkSpanError(ctx, errors.New("cannot-format-request"))
 		return false, nil
 	}
 
@@ -324,6 +399,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	logger.Debugw(ctx, "sending-msg", log.Fields{"rpc": rpc, "toTopic": toTopic, "replyTopic": responseTopic, "key": key, "xId": protoRequest.Header.Id})
 	go func() {
 		if err := kp.kafkaClient.Send(ctx, protoRequest, toTopic, key); err != nil {
+			log.MarkSpanError(ctx, errors.New("send-failed"))
 			logger.Errorw(ctx, "send-failed", log.Fields{
 				"topic": toTopic,
 				"key":   key,
@@ -355,6 +431,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 		case msg, ok := <-ch:
 			if !ok {
 				logger.Warnw(ctx, "channel-closed", log.Fields{"rpc": rpc, "replyTopic": replyToTopic.Name})
+				log.MarkSpanError(ctx, errors.New("channel-closed"))
 				protoError := &ic.Error{Reason: "channel-closed"}
 				var marshalledArg *any.Any
 				if marshalledArg, err = ptypes.MarshalAny(protoError); err != nil {
@@ -372,6 +449,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 			return responseBody.Success, responseBody.Result
 		case <-ctx.Done():
 			logger.Debugw(ctx, "context-cancelled", log.Fields{"rpc": rpc, "ctx": ctx.Err()})
+			log.MarkSpanError(ctx, errors.New("context-cancelled"))
 			//	 pack the error as proto any type
 			protoError := &ic.Error{Reason: ctx.Err().Error(), Code: ic.ErrorCode_DEADLINE_EXCEEDED}
 
@@ -382,6 +460,7 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 			return false, marshalledArg
 		case <-childCtx.Done():
 			logger.Debugw(ctx, "context-cancelled", log.Fields{"rpc": rpc, "ctx": childCtx.Err()})
+			log.MarkSpanError(ctx, errors.New("context-cancelled"))
 			//	 pack the error as proto any type
 			protoError := &ic.Error{Reason: childCtx.Err().Error(), Code: ic.ErrorCode_DEADLINE_EXCEEDED}
 
@@ -720,6 +799,71 @@ func (kp *interContainerProxy) addFromTopic(ctx context.Context, fromTopic strin
 	return append(currentArgs, protoArg)
 }
 
+// Method to extract the Span embedded in Kafka RPC request on the receiver side. If span is found embedded in the KV args (with key as "span"),
+// it is de-serialized and injected into the Context to be carried forward by the RPC request processor thread.
+// If no span is found embedded, even then a span is created with name as "kafka-rpc-<rpc-name>" to enrich the Context for RPC calls coming
+// from components currently not sending the span (e.g. openonu adapter)
+func (kp *interContainerProxy) enrichContextWithSpan(ctx context.Context, rpcName string, args []*ic.Argument) (opentracing.Span, context.Context) {
+
+	for _, arg := range args {
+		if arg.Key == "span" {
+			var err error
+			var textMapString ic.StrType
+			if err = ptypes.UnmarshalAny(arg.Value, &textMapString); err != nil {
+				logger.Warnw(ctx, "unable-to-unmarshal-kvarg-to-textmap-string", log.Fields{"value": arg.Value})
+				break
+			}
+
+			spanTextMap := make(map[string]string)
+			if err = json.Unmarshal([]byte(textMapString.Val), &spanTextMap); err != nil {
+				logger.Warnw(ctx, "unable-to-unmarshal-textmap-from-json-string", log.Fields{"textMapString": textMapString, "error": err})
+				break
+			}
+
+			var spanContext opentracing.SpanContext
+			if spanContext, err = opentracing.GlobalTracer().Extract(opentracing.TextMap, opentracing.TextMapCarrier(spanTextMap)); err != nil {
+				logger.Warnw(ctx, "unable-to-deserialize-textmap-to-span", log.Fields{"textMap": spanTextMap, "error": err})
+				break
+			}
+
+			var receivedRpcName string
+			extractBaggage := func(k, v string) bool {
+				if k == "rpc-span-name" {
+					receivedRpcName = v
+					return false
+				}
+				return true
+			}
+
+			spanContext.ForeachBaggageItem(extractBaggage)
+
+			return opentracing.StartSpanFromContext(ctx, receivedRpcName, opentracing.FollowsFrom(spanContext))
+		}
+	}
+
+	// Create new Child Span with rpc as name if no span details were received in kafka arguments
+	var spanName strings.Builder
+	spanName.WriteString("kafka-")
+
+	// In case of inter adapter message, use Msg Type for constructing RPC name
+	if rpcName == "process_inter_adapter_message" {
+		for _, arg := range args {
+			if arg.Key == "msg" {
+				iamsg := ic.InterAdapterMessage{}
+				if err := ptypes.UnmarshalAny(arg.Value, &iamsg); err == nil {
+					spanName.WriteString("inter-adapter-")
+					rpcName = iamsg.Header.Type.String()
+				}
+			}
+		}
+	}
+
+	spanName.WriteString("rpc-")
+	spanName.WriteString(rpcName)
+
+	return opentracing.StartSpanFromContext(ctx, spanName.String())
+}
+
 func (kp *interContainerProxy) handleMessage(ctx context.Context, msg *ic.InterContainerMessage, targetInterface interface{}) {
 
 	// First extract the header to know whether this is a request - responses are handled by a different handler
@@ -732,6 +876,9 @@ func (kp *interContainerProxy) handleMessage(ctx context.Context, msg *ic.InterC
 		if err = ptypes.UnmarshalAny(msg.Body, requestBody); err != nil {
 			logger.Warnw(ctx, "cannot-unmarshal-request", log.Fields{"error": err})
 		} else {
+			span, ctx := kp.enrichContextWithSpan(ctx, requestBody.Rpc, requestBody.Args)
+			defer span.Finish()
+
 			logger.Debugw(ctx, "received-request", log.Fields{"rpc": requestBody.Rpc, "header": msg.Header})
 			// let the callee unpack the arguments as its the only one that knows the real proto type
 			// Augment the requestBody with the message Id as it will be used in scenarios where cores
