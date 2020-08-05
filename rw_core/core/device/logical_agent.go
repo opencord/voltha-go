@@ -230,7 +230,13 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(deviceRules *fu.DeviceRule
 			defer cancel()
 			start := time.Now()
 			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Errorw("flow-add-failed", log.Fields{"deviceID": deviceId, "error": err, "wait-time": time.Since(start)})
+				logger.Errorw("flow-add-failed", log.Fields{
+					"deviceID": deviceId,
+					"error": err,
+					"wait-time": time.Since(start),
+					"flows": value.ListFlows(),
+					"groups": value.ListGroups(),
+				})
 				response.Error(status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
 			}
 			response.Done()
@@ -318,10 +324,12 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(flows map[uint64]*ofp.Ofp
 }
 
 func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketOut) {
-	logger.Debugw("packet-out", log.Fields{
-		"packet": hex.EncodeToString(packet.Data),
-		"inPort": packet.GetInPort(),
-	})
+	if logger.V(log.InfoLevel) {
+		logger.Infow("packet-out", log.Fields{
+			"packet": hex.EncodeToString(packet.Data),
+			"inPort": packet.GetInPort(),
+		})
+	}
 	outPort := fu.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
@@ -331,11 +339,13 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 }
 
 func (agent *LogicalAgent) packetIn(port uint32, transactionID string, packet []byte) {
-	logger.Debugw("packet-in", log.Fields{
-		"port":          port,
-		"packet":        hex.EncodeToString(packet),
-		"transactionId": transactionID,
-	})
+	if logger.V(log.InfoLevel) {
+		logger.Infow("packet-in", log.Fields{
+			"port":          port,
+			"packet":        hex.EncodeToString(packet),
+			"transactionId": transactionID,
+		})
+	}
 	packetIn := fu.MkPacketIn(port, packet)
 	agent.ldeviceMgr.SendPacketIn(agent.logicalDeviceID, transactionID, packetIn)
 	logger.Debugw("sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
