@@ -229,7 +229,17 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 			defer cancel()
 			start := time.Now()
 			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+<<<<<<< HEAD   (def46f [VOL-3196] Enhanced gRPC interfaces to create and propagate )
 				logger.Errorw(ctx, "flow-add-failed", log.Fields{"deviceID": deviceId, "error": err, "wait-time": time.Since(start)})
+=======
+				logger.Errorw("flow-add-failed", log.Fields{
+					"deviceID":  deviceId,
+					"error":     err,
+					"wait-time": time.Since(start),
+					"flows":     value.ListFlows(),
+					"groups":    value.ListGroups(),
+				})
+>>>>>>> CHANGE (5bd2f6 Chaging some log levels for better packet tracing Adding flo)
 				response.Error(status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
 			}
 			response.Done()
@@ -317,10 +327,19 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 }
 
 func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketOut) {
+<<<<<<< HEAD   (def46f [VOL-3196] Enhanced gRPC interfaces to create and propagate )
 	logger.Debugw(ctx, "packet-out", log.Fields{
 		"packet": hex.EncodeToString(packet.Data),
 		"inPort": packet.GetInPort(),
 	})
+=======
+	if logger.V(log.InfoLevel) {
+		logger.Infow("packet-out", log.Fields{
+			"packet": hex.EncodeToString(packet.Data),
+			"inPort": packet.GetInPort(),
+		})
+	}
+>>>>>>> CHANGE (5bd2f6 Chaging some log levels for better packet tracing Adding flo)
 	outPort := fu.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
@@ -329,12 +348,23 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 	}
 }
 
+<<<<<<< HEAD   (def46f [VOL-3196] Enhanced gRPC interfaces to create and propagate )
 func (agent *LogicalAgent) packetIn(ctx context.Context, port uint32, transactionID string, packet []byte) {
 	logger.Debugw(ctx, "packet-in", log.Fields{
 		"port":          port,
 		"packet":        hex.EncodeToString(packet),
 		"transactionId": transactionID,
 	})
+=======
+func (agent *LogicalAgent) packetIn(port uint32, transactionID string, packet []byte) {
+	if logger.V(log.InfoLevel) {
+		logger.Infow("packet-in", log.Fields{
+			"port":          port,
+			"packet":        hex.EncodeToString(packet),
+			"transactionId": transactionID,
+		})
+	}
+>>>>>>> CHANGE (5bd2f6 Chaging some log levels for better packet tracing Adding flo)
 	packetIn := fu.MkPacketIn(port, packet)
 	agent.ldeviceMgr.SendPacketIn(ctx, agent.logicalDeviceID, transactionID, packetIn)
 	logger.Debugw(ctx, "sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
