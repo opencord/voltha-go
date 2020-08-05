@@ -229,7 +229,13 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 			defer cancel()
 			start := time.Now()
 			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Errorw(ctx, "flow-add-failed", log.Fields{"deviceID": deviceId, "error": err, "wait-time": time.Since(start)})
+				logger.Errorw(ctx, "flow-add-failed", log.Fields{
+					"deviceID":  deviceId,
+					"error":     err,
+					"wait-time": time.Since(start),
+					"flows":     value.ListFlows(),
+					"groups":    value.ListGroups(),
+				})
 				response.Error(status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
 			}
 			response.Done()
@@ -317,10 +323,12 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 }
 
 func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketOut) {
-	logger.Debugw(ctx, "packet-out", log.Fields{
-		"packet": hex.EncodeToString(packet.Data),
-		"inPort": packet.GetInPort(),
-	})
+	if logger.V(log.InfoLevel) {
+		logger.Infow(ctx, "packet-out", log.Fields{
+			"packet": hex.EncodeToString(packet.Data),
+			"inPort": packet.GetInPort(),
+		})
+	}
 	outPort := fu.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
@@ -330,11 +338,14 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 }
 
 func (agent *LogicalAgent) packetIn(ctx context.Context, port uint32, transactionID string, packet []byte) {
-	logger.Debugw(ctx, "packet-in", log.Fields{
-		"port":          port,
-		"packet":        hex.EncodeToString(packet),
-		"transactionId": transactionID,
-	})
+	if logger.V(log.InfoLevel) {
+		logger.Infow(ctx, "packet-in", log.Fields{
+			"port":          port,
+			"packet":        hex.EncodeToString(packet),
+			"transactionId": transactionID,
+		})
+	}
+
 	packetIn := fu.MkPacketIn(port, packet)
 	agent.ldeviceMgr.SendPacketIn(ctx, agent.logicalDeviceID, transactionID, packetIn)
 	logger.Debugw(ctx, "sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
