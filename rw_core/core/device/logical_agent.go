@@ -318,10 +318,12 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(flows map[uint64]*ofp.Ofp
 }
 
 func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketOut) {
-	logger.Debugw("packet-out", log.Fields{
-		"packet": hex.EncodeToString(packet.Data),
-		"inPort": packet.GetInPort(),
-	})
+	if logger.V(log.InfoLevel) {
+		logger.Infow("packet-out", log.Fields{
+			"packet": hex.EncodeToString(packet.Data),
+			"inPort": packet.GetInPort(),
+		})
+	}
 	outPort := fu.GetPacketOutPort(packet)
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
@@ -331,11 +333,13 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 }
 
 func (agent *LogicalAgent) packetIn(port uint32, transactionID string, packet []byte) {
-	logger.Debugw("packet-in", log.Fields{
-		"port":          port,
-		"packet":        hex.EncodeToString(packet),
-		"transactionId": transactionID,
-	})
+	if logger.V(log.InfoLevel) {
+		logger.Infow("packet-in", log.Fields{
+			"port":          port,
+			"packet":        hex.EncodeToString(packet),
+			"transactionId": transactionID,
+		})
+	}
 	packetIn := fu.MkPacketIn(port, packet)
 	agent.ldeviceMgr.SendPacketIn(agent.logicalDeviceID, transactionID, packetIn)
 	logger.Debugw("sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
