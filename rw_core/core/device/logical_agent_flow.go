@@ -168,10 +168,20 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		go func() {
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChannels...); res != nil {
-				logger.Infow("failed-to-add-flows-will-attempt-deletion", log.Fields{"errors": res, "logical-device-id": agent.logicalDeviceID})
+				logger.Infow("failed-to-add-flows-will-attempt-deletion", log.Fields{
+					"errors":            res,
+					"logical-device-id": agent.logicalDeviceID,
+					"flows":             flows,
+					"groups":            groups,
+				})
 				// Revert added flows
 				if err := agent.revertAddedFlows(context.Background(), mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
-					logger.Errorw("failure-to-delete-flows-after-failed-addition", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+					logger.Errorw("failure-to-delete-flows-after-failed-addition", log.Fields{
+						"error":             err,
+						"logical-device-id": agent.logicalDeviceID,
+						"flows":             flows,
+						"groups":            groups,
+					})
 				}
 			}
 		}()
