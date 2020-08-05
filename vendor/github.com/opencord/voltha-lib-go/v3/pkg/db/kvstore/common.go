@@ -24,7 +24,7 @@ var logger log.CLogger
 func init() {
 	// Setup this package so that it's log level can be modified at run time
 	var err error
-	logger, err = log.RegisterPackage(log.JSON, log.ErrorLevel, log.Fields{"pkg": "kvstore"})
+	logger, err = log.RegisterPackage(log.JSON, log.ErrorLevel, log.Fields{})
 	if err != nil {
 		panic(err)
 	}

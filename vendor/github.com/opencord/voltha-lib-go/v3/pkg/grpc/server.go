@@ -17,6 +17,9 @@ package grpc
 
 import (
 	"context"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -96,17 +99,27 @@ func (s *GrpcServer) Start(ctx context.Context) {
 		logger.Fatalf(ctx, "failed to listen: %v", err)
 	}
 
+	// Use Intercepters to automatically inject and publish Open Tracing Spans by this GRPC server
+	serverOptions := []grpc.ServerOption{
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_opentracing.StreamServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
+			mkServerInterceptor(s),
+		))}
+
 	if s.secure && s.GrpcSecurity != nil {
 		creds, err := credentials.NewServerTLSFromFile(s.CertFile, s.KeyFile)
 		if err != nil {
 			logger.Fatalf(ctx, "could not load TLS keys: %s", err)
 		}
-		s.gs = grpc.NewServer(grpc.Creds(creds),
-			withServerUnaryInterceptor(s))
 
+		serverOptions = append(serverOptions, grpc.Creds(creds))
+		s.gs = grpc.NewServer(serverOptions...)
 	} else {
 		logger.Info(ctx, "starting-insecure-grpc-server")
-		s.gs = grpc.NewServer(withServerUnaryInterceptor(s))
+		s.gs = grpc.NewServer(serverOptions...)
 	}
 
 	// Register all required services
@@ -117,10 +130,6 @@ func (s *GrpcServer) Start(ctx context.Context) {
 	if err := s.gs.Serve(lis); err != nil {
 		logger.Fatalf(ctx, "failed to serve: %v\n", err)
 	}
-}
-
-func withServerUnaryInterceptor(s *GrpcServer) grpc.ServerOption {
-	return grpc.UnaryInterceptor(mkServerInterceptor(s))
 }
 
 // Make a serverInterceptor for the given GrpcServer

@@ -120,6 +120,13 @@ func InitTracingAndLogCorrelation(tracePublishEnabled bool, traceAgentAddress st
 	return cfg.InitGlobalTracer(componentName, jcfg.Reporter(jReporterCfgOption), jcfg.Sampler(jSamplerCfgOption))
 }
 
+func TerminateTracing(c io.Closer) {
+	err := c.Close()
+	if err != nil {
+		defaultLogger.Error(context.Background(), "error-while-closing-jaeger-tracer", Fields{"err": err})
+	}
+}
+
 // Extracts details of Execution Context as log fields from the Tracing Span injected into the
 // context instance. Following log fields are extracted:
 // 1. Operation Name : key as 'op-name' and value as Span operation name
@@ -168,6 +175,15 @@ func ExtractContextAttributes(ctx context.Context) []interface{} {
 
 					attrMap[k] = v
 				}
+
+				processBaggageItems := func(k, v string) bool {
+					if k != "rpc-span-name" {
+						attrMap[k] = v
+					}
+					return true
+				}
+
+				jspan.SpanContext().ForeachBaggageItem(processBaggageItems)
 			}
 		}
 	}
@@ -179,9 +195,23 @@ func ExtractContextAttributes(ctx context.Context) []interface{} {
 func EnrichSpan(ctx context.Context, keyAndValues ...Fields) {
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
-		for _, field := range keyAndValues {
-			for k, v := range field {
-				span.SetTag(k, v)
+		if jspan, ok := span.(*jtracing.Span); ok {
+			// Inject as a BaggageItem when the Span is the Root Span so that it propagates
+			// across the components along with Root Span (called as Trace)
+			// Else, inject as a Tag so that it is attached to the Child Task
+			isRootSpan := false
+			if jspan.SpanContext().TraceID().String() == jspan.SpanContext().SpanID().String() {
+				isRootSpan = true
+			}
+
+			for _, field := range keyAndValues {
+				for k, v := range field {
+					if isRootSpan {
+						span.SetBaggageItem(k, v.(string))
+					} else {
+						span.SetTag(k, v)
+					}
+				}
 			}
 		}
 	}
