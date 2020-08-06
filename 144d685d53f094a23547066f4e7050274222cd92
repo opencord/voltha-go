@@ -1,0 +1,310 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9afc98d6_d13ef32f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Use log.WithSpanFromContext here",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0672735f_3784abfc",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich once and that too for externally invoked methods. This is a private method and invoked by RunPostDeviceDelete.",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f9f4c97_36d5678a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods; not private methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41182c63_08db4ccf",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods; not private methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c96111e_90ea98ea",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods; not private methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fc8c78e_7d3f3ffb",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "463c027f_58d0369b",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 815,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Avoid changing anything functional; use log.WithSpanFromContext",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f01b35bc_777bb90c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 839,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods; not private methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e68c9839_a3ca9058",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 850,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods; not private methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "872e6535_1cc0d372",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods; not private methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ae735b9_a20ee5fb",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods; not private methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e8c954e_61fd6d05",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Should put EnrichSpan call here. Device id is carried in configs.Id",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d6dbb60_bea65698",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Should put EnrichSpan call here",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bab0c2fd_58c54b59",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Should put EnrichSpan call here",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c52123e3_59264173",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7b1b0f0_3927f8e5",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b5e7448_4a5af1a1",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 938,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "393cc065_29a7da97",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-06T14:16:54Z",
+      "side": 1,
+      "message": "Only enrich for externally invoked methods",
+      "revId": "144d685d53f094a23547066f4e7050274222cd92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
