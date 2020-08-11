@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbfeb967_e2bd2d99",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-11T10:39:36Z",
+      "side": 1,
+      "message": "As this is called in a defer mode which will happen only when the core stops (as the time termination of container), this WithSpanFromContext is of no use.",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "576f4ea4_a563eff2",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-11T10:39:36Z",
+      "side": 1,
+      "message": "Use log.WithSpanFromContext here as well",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "544501b2_f98a4eae",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 800,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-11T10:39:36Z",
+      "side": 1,
+      "message": "Use log.WithSpanFromContext method here",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3e96542_3d8f4103",
+        "filename": "rw_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000526
+      },
+      "writtenOn": "2020-08-11T10:39:36Z",
+      "side": 1,
+      "message": "Remove this call to WithSpanFromContext; there is no context in the start; what are you propagating",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
