@@ -20,6 +20,7 @@ linters:
     #- gocritic
     - gofmt
     - golint
+    - gosec
     #- unparam
     #- gochecknoglobals
     #- gochecknoinits
