@@ -16,6 +16,24 @@
       "revId": "5bd2f6f28674e64286c4795ba3b3432ecab0879d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a131b350_e7c2efd3",
+        "filename": "VERSION",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-08-13T18:42:08Z",
+      "side": 1,
+      "message": "This change is in the `voltha-2.4` branch and since I\u0027m already in the process of updating the helm-charts and kind-voltha releases file I wanted to pull this one in too.",
+      "parentUuid": "1d8e17ba_6b06e69a",
+      "revId": "5bd2f6f28674e64286c4795ba3b3432ecab0879d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
