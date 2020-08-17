@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "5d12dd22_f2ba63c8",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000612
+      },
+      "writtenOn": "2020-08-17T16:42:33Z",
+      "side": 1,
+      "message": "Left as it is",
+      "parentUuid": "c21c4455_cbd1205e",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "576f4ea4_a563eff2",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 6
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "e72100a1_1ddda307",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1000612
+      },
+      "writtenOn": "2020-08-17T16:42:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c078b40a_0e00088c",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "544501b2_f98a4eae",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 6
@@ -89,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "a7a49813_c711ac56",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 800,
+      "author": {
+        "id": 1000612
+      },
+      "writtenOn": "2020-08-17T16:42:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "544501b2_f98a4eae",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3e96542_3d8f4103",
         "filename": "rw_core/main.go",
         "patchSetId": 6
@@ -103,6 +157,24 @@
       "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49fa424f_91efe884",
+        "filename": "rw_core/main.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000612
+      },
+      "writtenOn": "2020-08-17T16:42:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3e96542_3d8f4103",
+      "revId": "ebf7810cdae59c3bdbd93107342598a957aecf04",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
