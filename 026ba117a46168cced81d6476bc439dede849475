@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c97532c4_7ecf5cab",
+        "filename": "VERSION",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-08-17T14:40:45Z",
+      "side": 1,
+      "message": "Why not 2.5.3-dev?",
+      "revId": "026ba117a46168cced81d6476bc439dede849475",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
