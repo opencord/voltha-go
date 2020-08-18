@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f1a95c4_05577190",
+        "filename": "VERSION",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-08-18T13:57:26Z",
+      "side": 1,
+      "message": "Unless this is an explicit release version, should leave as `2.5.3-dev`.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 5
+      },
+      "revId": "397902d955babca9bf663c753bcd1bba9c1aa105",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
