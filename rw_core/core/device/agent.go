@@ -671,7 +671,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	agent.requestQueue.RequestComplete()
 
 	if err := agent.deviceMgr.processTransition(log.WithSpanFromContext(context.Background(), ctx), device, previousState); err != nil {
-		log.Errorw("failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": previousState.Admin, "currentAdminState": device.AdminState})
+		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": previousState.Admin, "currentAdminState": device.AdminState})
 	}
 	return nil
 }
