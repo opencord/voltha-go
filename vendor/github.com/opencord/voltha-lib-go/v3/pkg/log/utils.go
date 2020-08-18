@@ -22,24 +22,53 @@ package log
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/opentracing/opentracing-go"
 	jtracing "github.com/uber/jaeger-client-go"
 	jcfg "github.com/uber/jaeger-client-go/config"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 )
 
 const (
 	RootSpanNameKey = "op-name"
 )
 
-// Flag indicating whether to extract Log Fields from Span embedded in the received Context
-var extractLogFieldsFromContext bool = true
+// Global Settings governing the Log Correlation and Tracing features. Should only
+// be updated through the exposed public methods
+type LogFeaturesManager struct {
+	isTracePublishingEnabled bool
+	isLogCorrelationEnabled  bool
+	componentName            string // Name of component extracted from ENV variable
+	activeTraceAgentAddress  string
+	lock                     sync.Mutex
+}
 
-// Flag indicating whether to process Span related operations; to save CPU cycles when disabled
-var processSpanOperations bool = true
+var globalLFM *LogFeaturesManager = &LogFeaturesManager{}
+
+func GetGlobalLFM() *LogFeaturesManager {
+	return globalLFM
+}
+
+// A Wrapper to utilize currently Active Tracer instance. The middleware library being used for generating
+// Spans for GRPC API calls does not support dynamically setting the Active Tracer similar to the SetGlobalTracer method
+// provided by OpenTracing API
+type ActiveTracerProxy struct {
+}
+
+func (atw ActiveTracerProxy) StartSpan(operationName string, opts ...opentracing.StartSpanOption) opentracing.Span {
+	return opentracing.GlobalTracer().StartSpan(operationName, opts...)
+}
+
+func (atw ActiveTracerProxy) Inject(sm opentracing.SpanContext, format interface{}, carrier interface{}) error {
+	return opentracing.GlobalTracer().Inject(sm, format, carrier)
+}
+
+func (atw ActiveTracerProxy) Extract(format interface{}, carrier interface{}) (opentracing.SpanContext, error) {
+	return opentracing.GlobalTracer().Extract(format, carrier)
+}
 
 // Jaeger complaint Logger instance to redirect logs to Default Logger
 type traceLogger struct {
@@ -55,54 +84,189 @@ func (tl traceLogger) Infof(msg string, args ...interface{}) {
 	tl.logger.Debugf(context.Background(), msg, args...)
 }
 
-// This method will start the Tracing for a component using Component name injected from the Chart
-// The close() method on returned Closer instance should be called in defer mode to gracefully
-// terminate tracing on component shutdown
-func InitTracingAndLogCorrelation(tracePublishEnabled bool, traceAgentAddress string, logCorrelationEnabled bool) (io.Closer, error) {
-	if !tracePublishEnabled && !logCorrelationEnabled {
-		defaultLogger.Info(context.Background(), "Skipping Global Tracer initialization as both Trace publish and Log correlation are configured as disabled")
-		extractLogFieldsFromContext = false
-		processSpanOperations = false
-		return ioutil.NopCloser(strings.NewReader("")), nil
+// Wrapper to handle correct Closer call at the time of Process Termination
+type traceCloser struct {
+}
+
+func (c traceCloser) Close() error {
+	currentActiveTracer := opentracing.GlobalTracer()
+	if currentActiveTracer != nil {
+		if jTracer, ok := currentActiveTracer.(*jtracing.Tracer); ok {
+			jTracer.Close()
+		}
 	}
 
-	if !logCorrelationEnabled {
-		defaultLogger.Info(context.Background(), "Disabling Log Fields extraction from context as configured")
-		extractLogFieldsFromContext = false
-	}
+	return nil
+}
 
-	componentName := os.Getenv("COMPONENT_NAME")
-	if componentName == "" {
+// Method to Initialize Jaeger based Tracing client based on initial status of Tracing Publish and Log Correlation
+func (lfm *LogFeaturesManager) InitTracingAndLogCorrelation(tracePublishEnabled bool, traceAgentAddress string, logCorrelationEnabled bool) (io.Closer, error) {
+	lfm.componentName = os.Getenv("COMPONENT_NAME")
+	if lfm.componentName == "" {
 		return nil, errors.New("Unable to retrieve PoD Component Name from Runtime env")
 	}
 
-	// Use basic configuration to start with; will extend later to support dynamic config updates
-	cfg := jcfg.Configuration{}
+	lfm.lock.Lock()
+	defer lfm.lock.Unlock()
+
+	// Use NoopTracer when both Tracing Publishing and Log Correlation are disabled
+	if !tracePublishEnabled && !logCorrelationEnabled {
+		logger.Info(context.Background(), "Skipping Global Tracer initialization as both Trace publish and Log correlation are configured as disabled")
+		lfm.isTracePublishingEnabled = false
+		lfm.isLogCorrelationEnabled = false
+		opentracing.SetGlobalTracer(opentracing.NoopTracer{})
+		return traceCloser{}, nil
+	}
+
+	tracer, _, err := lfm.constructJaegerTracer(tracePublishEnabled, traceAgentAddress, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize variables representing Active Status
+	opentracing.SetGlobalTracer(tracer)
+	lfm.isTracePublishingEnabled = tracePublishEnabled
+	lfm.activeTraceAgentAddress = traceAgentAddress
+	lfm.isLogCorrelationEnabled = logCorrelationEnabled
+	return traceCloser{}, nil
+}
+
+// Method to replace Active Tracer along with graceful closer of previous tracer
+func (lfm *LogFeaturesManager) replaceActiveTracer(tracer opentracing.Tracer) {
+	currentActiveTracer := opentracing.GlobalTracer()
+	opentracing.SetGlobalTracer(tracer)
+
+	if currentActiveTracer != nil {
+		if jTracer, ok := currentActiveTracer.(*jtracing.Tracer); ok {
+			jTracer.Close()
+		}
+	}
+}
+
+func (lfm *LogFeaturesManager) GetLogCorrelationStatus() bool {
+	lfm.lock.Lock()
+	defer lfm.lock.Unlock()
+
+	return lfm.isLogCorrelationEnabled
+}
+
+func (lfm *LogFeaturesManager) SetLogCorrelationStatus(isEnabled bool) {
+	lfm.lock.Lock()
+	defer lfm.lock.Unlock()
+
+	if isEnabled == lfm.isLogCorrelationEnabled {
+		logger.Debugf(context.Background(), "Ignoring Log Correlation Set operation with value %t; current Status same as desired", isEnabled)
+		return
+	}
+
+	if isEnabled {
+		// Construct new Tracer instance if Log Correlation has been enabled and current active tracer is a NoopTracer instance.
+		// Continue using the earlier tracer instance in case of any error
+		if _, ok := opentracing.GlobalTracer().(opentracing.NoopTracer); ok {
+			tracer, _, err := lfm.constructJaegerTracer(lfm.isTracePublishingEnabled, lfm.activeTraceAgentAddress, false)
+			if err != nil {
+				logger.Warnf(context.Background(), "Log Correlation Enable operation failed with error: %s", err.Error())
+				return
+			}
+
+			lfm.replaceActiveTracer(tracer)
+		}
+
+		lfm.isLogCorrelationEnabled = true
+		logger.Info(context.Background(), "Log Correlation has been enabled")
+
+	} else {
+		// Switch to NoopTracer when Log Correlation has been disabled and Tracing Publish is already disabled
+		if _, ok := opentracing.GlobalTracer().(opentracing.NoopTracer); !ok && !lfm.isTracePublishingEnabled {
+			lfm.replaceActiveTracer(opentracing.NoopTracer{})
+		}
+
+		lfm.isLogCorrelationEnabled = false
+		logger.Info(context.Background(), "Log Correlation has been disabled")
+	}
+}
+
+func (lfm *LogFeaturesManager) GetTracePublishingStatus() bool {
+	lfm.lock.Lock()
+	defer lfm.lock.Unlock()
+
+	return lfm.isTracePublishingEnabled
+}
+
+func (lfm *LogFeaturesManager) SetTracePublishingStatus(isEnabled bool) {
+	lfm.lock.Lock()
+	defer lfm.lock.Unlock()
+
+	if isEnabled == lfm.isTracePublishingEnabled {
+		logger.Debugf(context.Background(), "Ignoring Trace Publishing Set operation with value %t; current Status same as desired", isEnabled)
+		return
+	}
+
+	if isEnabled {
+		// Construct new Tracer instance if Tracing Publish has been enabled (even if a Jaeger instance is already active)
+		// This is needed to ensure that a fresh lookup of Jaeger Agent address is performed again while performing
+		// Disable-Enable of Tracing
+		tracer, _, err := lfm.constructJaegerTracer(isEnabled, lfm.activeTraceAgentAddress, false)
+		if err != nil {
+			logger.Warnf(context.Background(), "Trace Publishing Enable operation failed with error: %s", err.Error())
+			return
+		}
+		lfm.replaceActiveTracer(tracer)
+
+		lfm.isTracePublishingEnabled = true
+		logger.Info(context.Background(), "Tracing Publishing has been enabled")
+	} else {
+		// Switch to NoopTracer when Tracing Publish has been disabled and Log Correlation is already disabled
+		if !lfm.isLogCorrelationEnabled {
+			lfm.replaceActiveTracer(opentracing.NoopTracer{})
+		} else {
+			// Else construct a new Jaeger Instance with publishing disabled
+			tracer, _, err := lfm.constructJaegerTracer(isEnabled, lfm.activeTraceAgentAddress, false)
+			if err != nil {
+				logger.Warnf(context.Background(), "Trace Publishing Disable operation failed with error: %s", err.Error())
+				return
+			}
+			lfm.replaceActiveTracer(tracer)
+		}
+
+		lfm.isTracePublishingEnabled = false
+		logger.Info(context.Background(), "Tracing Publishing has been disabled")
+	}
+}
+
+// Method to contruct a new Jaeger Tracer instance based on given Trace Agent address and Publish status.
+// The last attribute indicates whether to use Loopback IP for creating Jaeger Client when the DNS lookup
+// of supplied Trace Agent address has failed. It is fine to fallback during the initialization step, but
+// not later (when enabling/disabling the status dynamically)
+func (lfm *LogFeaturesManager) constructJaegerTracer(tracePublishEnabled bool, traceAgentAddress string, fallbackToLoopbackAllowed bool) (opentracing.Tracer, io.Closer, error) {
+	cfg := jcfg.Configuration{ServiceName: lfm.componentName}
 
 	var err error
 	var jReporterConfig jcfg.ReporterConfig
 	var jReporterCfgOption jtracing.Reporter
 
-	// Attempt Trace Agent Address only if Trace Publishing is enabled; else directly use Loopback IP
-	if tracePublishEnabled {
-		jReporterConfig = jcfg.ReporterConfig{LocalAgentHostPort: traceAgentAddress, LogSpans: true}
-		jReporterCfgOption, err = jReporterConfig.NewReporter(componentName, jtracing.NewNullMetrics(), traceLogger{logger: defaultLogger})
+	logger.Info(context.Background(), "Constructing new Jaeger Tracer instance")
 
-		if err != nil {
-			defaultLogger.Errorw(context.Background(), "Unable to create Reporter with given Trace Agent address",
-				Fields{"error": err, "address": traceAgentAddress})
-			// The Reporter initialization may fail due to Invalid Agent address or non-existent Agent (DNS lookup failure).
-			// It is essential for Tracer Instance to still start for correct Span propagation needed for log correlation.
-			// Thus, falback to use loopback IP for Reporter initialization before throwing back any error
-			tracePublishEnabled = false
+	// Attempt Trace Agent Address first; will fallback to Loopback IP if it fails
+	jReporterConfig = jcfg.ReporterConfig{LocalAgentHostPort: traceAgentAddress, LogSpans: true}
+	jReporterCfgOption, err = jReporterConfig.NewReporter(lfm.componentName, jtracing.NewNullMetrics(), traceLogger{logger: logger.(*clogger)})
+
+	if err != nil {
+		if !fallbackToLoopbackAllowed {
+			return nil, nil, errors.New("Reporter Creation for given Trace Agent address " + traceAgentAddress + " failed with error : " + err.Error())
 		}
-	}
 
-	if !tracePublishEnabled {
+		logger.Infow(context.Background(), "Unable to create Reporter with given Trace Agent address",
+			Fields{"error": err, "address": traceAgentAddress})
+		// The Reporter initialization may fail due to Invalid Agent address or non-existent Agent (DNS lookup failure).
+		// It is essential for Tracer Instance to still start for correct Span propagation needed for log correlation.
+		// Thus, falback to use loopback IP for Reporter initialization before throwing back any error
+		tracePublishEnabled = false
+
 		jReporterConfig.LocalAgentHostPort = "127.0.0.1:6831"
-		jReporterCfgOption, err = jReporterConfig.NewReporter(componentName, jtracing.NewNullMetrics(), traceLogger{logger: defaultLogger})
+		jReporterCfgOption, err = jReporterConfig.NewReporter(lfm.componentName, jtracing.NewNullMetrics(), traceLogger{logger: logger.(*clogger)})
 		if err != nil {
-			return nil, errors.New("Failed to initialize Jaeger Tracing due to Reporter creation error : " + err.Error())
+			return nil, nil, errors.New("Failed to initialize Jaeger Tracing due to Reporter creation error : " + err.Error())
 		}
 	}
 
@@ -112,18 +276,18 @@ func InitTracingAndLogCorrelation(tracePublishEnabled bool, traceAgentAddress st
 		samplerParam = 1
 	}
 	jSamplerConfig := jcfg.SamplerConfig{Type: "const", Param: float64(samplerParam)}
-	jSamplerCfgOption, err := jSamplerConfig.NewSampler(componentName, jtracing.NewNullMetrics())
+	jSamplerCfgOption, err := jSamplerConfig.NewSampler(lfm.componentName, jtracing.NewNullMetrics())
 	if err != nil {
-		return nil, errors.New("Unable to create Sampler : " + err.Error())
+		return nil, nil, errors.New("Unable to create Sampler : " + err.Error())
 	}
 
-	return cfg.InitGlobalTracer(componentName, jcfg.Reporter(jReporterCfgOption), jcfg.Sampler(jSamplerCfgOption))
+	return cfg.NewTracer(jcfg.Reporter(jReporterCfgOption), jcfg.Sampler(jSamplerCfgOption))
 }
 
 func TerminateTracing(c io.Closer) {
 	err := c.Close()
 	if err != nil {
-		defaultLogger.Error(context.Background(), "error-while-closing-jaeger-tracer", Fields{"err": err})
+		logger.Error(context.Background(), "error-while-closing-jaeger-tracer", Fields{"err": err})
 	}
 }
 
@@ -135,8 +299,8 @@ func TerminateTracing(c io.Closer) {
 // Additionally, any tags present in Span are also extracted to use as log fields e.g. device-id.
 //
 // If no Span is found associated with context, blank slice is returned without any log fields
-func ExtractContextAttributes(ctx context.Context) []interface{} {
-	if !extractLogFieldsFromContext {
+func (lfm *LogFeaturesManager) ExtractContextAttributes(ctx context.Context) []interface{} {
+	if !lfm.isLogCorrelationEnabled {
 		return make([]interface{}, 0)
 	}
 
@@ -146,10 +310,10 @@ func ExtractContextAttributes(ctx context.Context) []interface{} {
 		if span := opentracing.SpanFromContext(ctx); span != nil {
 			if jspan, ok := span.(*jtracing.Span); ok {
 				// Add Log fields for operation identified by Root Level Span (Trace)
-				opId := jspan.SpanContext().TraceID().String()
+				opId := fmt.Sprintf("%016x", jspan.SpanContext().TraceID().Low) // Using Sprintf to avoid removal of leading 0s
 				opName := jspan.BaggageItem(RootSpanNameKey)
 
-				taskId := jspan.SpanContext().SpanID().String()
+				taskId := fmt.Sprintf("%016x", uint64(jspan.SpanContext().SpanID())) // Using Sprintf to avoid removal of leading 0s
 				taskName := jspan.OperationName()
 
 				if opName == "" {
@@ -220,8 +384,10 @@ func EnrichSpan(ctx context.Context, keyAndValues ...Fields) {
 // Method to inject Error into the Span in event of any operation failure
 func MarkSpanError(ctx context.Context, err error) {
 	span := opentracing.SpanFromContext(ctx)
-	span.SetTag("error", true)
-	span.SetTag("err", err)
+	if span != nil {
+		span.SetTag("error", true)
+		span.SetTag("err", err)
+	}
 }
 
 // Creates a Child Span from Parent Span embedded in passed context. Should be used before starting a new major
@@ -231,7 +397,7 @@ func MarkSpanError(ctx context.Context, err error) {
 // 3. In start of a Go Routine responsible for performing a major task involving significant duration
 // 4. Any method which is suspected to be time consuming...
 func CreateChildSpan(ctx context.Context, taskName string, keyAndValues ...Fields) (opentracing.Span, context.Context) {
-	if !processSpanOperations {
+	if !GetGlobalLFM().GetLogCorrelationStatus() && !GetGlobalLFM().GetTracePublishingStatus() {
 		return opentracing.NoopTracer{}.StartSpan(taskName), ctx
 	}
 
@@ -254,7 +420,7 @@ func CreateChildSpan(ctx context.Context, taskName string, keyAndValues ...Field
 // Some situations where this method would be suitable includes Kafka Async RPC call, Propagation of Event across
 // a channel etc.
 func CreateAsyncSpan(ctx context.Context, taskName string, keyAndValues ...Fields) (opentracing.Span, context.Context) {
-	if !processSpanOperations {
+	if !GetGlobalLFM().GetLogCorrelationStatus() && !GetGlobalLFM().GetTracePublishingStatus() {
 		return opentracing.NoopTracer{}.StartSpan(taskName), ctx
 	}
 
@@ -265,7 +431,7 @@ func CreateAsyncSpan(ctx context.Context, taskName string, keyAndValues ...Field
 
 	// We should always be creating Aysnc span from a Valid parent span. If not, create a Child span instead
 	if parentSpan == nil {
-		defaultLogger.Warn(context.Background(), "Async span must be created with a Valid parent span only")
+		logger.Warn(context.Background(), "Async span must be created with a Valid parent span only")
 		asyncSpan, newCtx = opentracing.StartSpanFromContext(ctx, taskName)
 	} else {
 		// Use Background context as the base for Follows-from case; else new span is getting both Child and FollowsFrom relationship

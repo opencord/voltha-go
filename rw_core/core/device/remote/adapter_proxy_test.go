@@ -52,8 +52,9 @@ var (
 )
 
 func init() {
+	ctx := context.Background()
 	if _, err := log.SetDefaultLogger(log.JSON, 0, log.Fields{"instanceId": coreInstanceID}); err != nil {
-		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
+		logger.With(log.Fields{"error": err}).Fatal(ctx, "Cannot setup logging")
 	}
 	// Set the log level to Warning
 	log.SetAllLogLevel(log.WarnLevel)
@@ -67,8 +68,6 @@ func init() {
 	coreKafkaICProxy = kafka.NewInterContainerProxy(
 		kafka.MsgClient(kc),
 		kafka.DefaultTopic(&kafka.Topic{Name: coreName}))
-
-	ctx := context.Background()
 
 	if err = coreKafkaICProxy.Start(ctx); err != nil {
 		logger.Fatalw(ctx, "Failure-starting-core-kafka-intercontainerProxy", log.Fields{"error": err})
