@@ -82,6 +82,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	// sync logging config with kv store
 	cm := conf.NewConfigManager(ctx, kvClient, cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
 	go conf.StartLogLevelConfigProcessing(cm, ctx)
+	go conf.StartLogFeaturesConfigProcessing(cm, ctx)
 
 	backend := cm.Backend
 	backend.LivenessChannelInterval = cf.LiveProbeInterval / 2
