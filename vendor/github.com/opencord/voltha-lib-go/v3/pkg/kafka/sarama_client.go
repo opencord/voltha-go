@@ -75,10 +75,12 @@ type SaramaClient struct {
 	lockOfTopicLockMap            sync.RWMutex
 	metadataMaxRetry              int
 	alive                         bool
+	livenessMutex                 sync.Mutex
 	liveness                      chan bool
 	livenessChannelInterval       time.Duration
 	lastLivenessTime              time.Time
 	started                       bool
+	healthinessMutex              sync.Mutex
 	healthy                       bool
 	healthiness                   chan bool
 }
@@ -463,6 +465,8 @@ func (sc *SaramaClient) updateLiveness(ctx context.Context, alive bool) {
 	// so that in a live state, the core does not timeout and
 	// send a forced liveness message. Production of liveness
 	// events to the channel is rate-limited by livenessChannelInterval.
+	sc.livenessMutex.Lock()
+	defer sc.livenessMutex.Unlock()
 	if sc.liveness != nil {
 		if sc.alive != alive {
 			logger.Info(ctx, "update-liveness-channel-because-change")
@@ -485,6 +489,8 @@ func (sc *SaramaClient) updateLiveness(ctx context.Context, alive bool) {
 // Once unhealthy, we never go back
 func (sc *SaramaClient) setUnhealthy(ctx context.Context) {
 	sc.healthy = false
+	sc.healthinessMutex.Lock()
+	defer sc.healthinessMutex.Unlock()
 	if sc.healthiness != nil {
 		logger.Infow(ctx, "set-client-unhealthy", log.Fields{"healthy": sc.healthy})
 		sc.healthiness <- sc.healthy
@@ -594,6 +600,8 @@ func (sc *SaramaClient) Send(ctx context.Context, msg interface{}, topic *Topic,
 func (sc *SaramaClient) EnableLivenessChannel(ctx context.Context, enable bool) chan bool {
 	logger.Infow(ctx, "kafka-enable-liveness-channel", log.Fields{"enable": enable})
 	if enable {
+		sc.livenessMutex.Lock()
+		defer sc.livenessMutex.Unlock()
 		if sc.liveness == nil {
 			logger.Info(ctx, "kafka-create-liveness-channel")
 			// At least 1, so we can immediately post to it without blocking
@@ -618,6 +626,8 @@ func (sc *SaramaClient) EnableLivenessChannel(ctx context.Context, enable bool) 
 func (sc *SaramaClient) EnableHealthinessChannel(ctx context.Context, enable bool) chan bool {
 	logger.Infow(ctx, "kafka-enable-healthiness-channel", log.Fields{"enable": enable})
 	if enable {
+		sc.healthinessMutex.Lock()
+		defer sc.healthinessMutex.Unlock()
 		if sc.healthiness == nil {
 			logger.Info(ctx, "kafka-create-healthiness-channel")
 			// At least 1, so we can immediately post to it without blocking
