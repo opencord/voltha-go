@@ -352,7 +352,7 @@ func (dr *DeviceRoutes) Print(ctx context.Context) error {
 		if len(dr.Routes) == 0 {
 			logger.Debugw(ctx, "no-routes-found", log.Fields{"logical-device-id": dr.logicalDeviceID})
 		} else {
-			logger.Debugw(ctx, "graph_routes", log.Fields{"lDeviceId": dr.logicalDeviceID, "Routes": output})
+			logger.Debugw(ctx, "graph_routes", log.Fields{"logical-device-id": dr.logicalDeviceID, "Routes": output})
 		}
 	}
 	return nil
@@ -416,7 +416,7 @@ func (dr *DeviceRoutes) GetHalfRoute(nniAsEgress bool, ingress, egress uint32) (
 func (dr *DeviceRoutes) getDeviceWithCacheUpdate(ctx context.Context, deviceID string) (map[uint32]*voltha.Port, error) {
 	devicePorts, err := dr.listDevicePorts(ctx, deviceID)
 	if err != nil {
-		logger.Errorw(ctx, "device-not-found", log.Fields{"deviceId": deviceID, "error": err})
+		logger.Errorw(ctx, "device-not-found", log.Fields{"device-id": deviceID, "error": err})
 		return nil, err
 	}
 	dr.updateCache(deviceID, devicePorts)
@@ -500,7 +500,7 @@ func (dr *DeviceRoutes) getParentPonPort(ctx context.Context, childDeviceID stri
 
 	// Get parent device from the model
 	if _, err := dr.getDeviceWithCacheUpdate(ctx, dr.rootDeviceID); err != nil {
-		logger.Errorw(ctx, "device-not-found", log.Fields{"deviceId": dr.rootDeviceID, "error": err})
+		logger.Errorw(ctx, "device-not-found", log.Fields{"device-id": dr.rootDeviceID, "error": err})
 		return 0, err
 	}
 	// Try again

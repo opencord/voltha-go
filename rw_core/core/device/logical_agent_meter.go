@@ -55,7 +55,7 @@ func (agent *LogicalAgent) updateMeterTable(ctx context.Context, meterMod *ofp.O
 		return agent.meterModify(ctx, meterMod)
 	}
 	return status.Errorf(codes.Internal,
-		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, meterMod.GetCommand())
+		"unhandled-command: logical-device-id:%s, command:%s", agent.logicalDeviceID, meterMod.GetCommand())
 }
 
 func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterMod) error {

@@ -174,7 +174,7 @@ func (oltA *OLTAdapter) Disable_device(ctx context.Context, device *voltha.Devic
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to disable
 		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, 0, voltha.OperStatus_UNKNOWN); err != nil {
-			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 
 		//Update the device operational state
@@ -183,7 +183,7 @@ func (oltA *OLTAdapter) Disable_device(ctx context.Context, device *voltha.Devic
 
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
 			// Device may already have been deleted in the core
-			logger.Warnw(ctx, "device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
 			return
 		}
 
@@ -192,7 +192,7 @@ func (oltA *OLTAdapter) Disable_device(ctx context.Context, device *voltha.Devic
 		// Tell the Core that all child devices have been disabled (by default it's an action already taken by the Core
 		if err := oltA.coreProxy.ChildDevicesLost(context.TODO(), cloned.Id); err != nil {
 			// Device may already have been deleted in the core
-			logger.Warnw(ctx, "lost-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "lost-notif-of-child-devices-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 	}()
 	return nil
@@ -208,19 +208,19 @@ func (oltA *OLTAdapter) Reenable_device(ctx context.Context, device *voltha.Devi
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to enable
 		if err := oltA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, 0, voltha.OperStatus_ACTIVE); err != nil {
-			logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 
 		//Update the device state
 		cloned.OperStatus = voltha.OperStatus_ACTIVE
 
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
-			logger.Fatalf(ctx, "device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 
 		// Tell the Core that all child devices have been enabled
 		if err := oltA.coreProxy.ChildDevicesDetected(context.TODO(), cloned.Id); err != nil {
-			logger.Fatalf(ctx, "detection-notif-of-child-devices-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "detection-notif-of-child-devices-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 	}()
 	return nil
@@ -261,7 +261,7 @@ func (oltA *OLTAdapter) Child_device_lost(ctx context.Context, deviceID string, 
 
 // Reboot_device -
 func (oltA *OLTAdapter) Reboot_device(ctx context.Context, device *voltha.Device) error { // nolint
-	logger.Infow(ctx, "reboot-device", log.Fields{"deviceId": device.Id})
+	logger.Infow(ctx, "reboot-device", log.Fields{"device-id": device.Id})
 
 	go func() {
 		if err := oltA.coreProxy.DeviceStateUpdate(context.TODO(), device.Id, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN); err != nil {
