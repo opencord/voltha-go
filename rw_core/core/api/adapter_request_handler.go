@@ -101,12 +101,12 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(ctx context.Context, args []*ic
 			}
 		}
 	}
-	logger.Debugw(ctx, "getDevice", log.Fields{"deviceID": pID.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "getDevice", log.Fields{"device-id": pID.Id, "transactionID": transactionID.Val})
 
 	// Get the device via the device manager
 	device, err := rhp.deviceMgr.GetDevice(log.WithSpanFromContext(context.TODO(), ctx), pID)
 	if err != nil {
-		logger.Debugw(ctx, "get-device-failed", log.Fields{"deviceID": pID.Id, "error": err})
+		logger.Debugw(ctx, "get-device-failed", log.Fields{"device-id": pID.Id, "error": err})
 	}
 	return device, err
 }
@@ -135,7 +135,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(ctx context.Context, args []
 			}
 		}
 	}
-	logger.Debugw(ctx, "DeviceUpdate", log.Fields{"deviceID": device.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "DeviceUpdate", log.Fields{"device-id": device.Id, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.UpdateDeviceUsingAdapterData(log.WithSpanFromContext(context.TODO(), ctx), device); err != nil {
 		logger.Debugw(ctx, "unable-to-update-device-using-adapter-data", log.Fields{"error": err})
@@ -186,7 +186,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(ctx context.Context, args 
 			}
 		}
 	}
-	logger.Debugw(ctx, "GetChildDevice", log.Fields{"parentDeviceID": pID.Id, "args": args, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "GetChildDevice", log.Fields{"parent-device-id": pID.Id, "args": args, "transactionID": transactionID.Val})
 
 	return rhp.deviceMgr.GetChildDevice(log.WithSpanFromContext(context.TODO(), ctx), pID.Id, serialNumber.Val, onuID.Val, parentPortNo.Val)
 }
@@ -249,7 +249,7 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(ctx context.Context, args []*ic.
 			}
 		}
 	}
-	logger.Debugw(ctx, "GetPorts", log.Fields{"deviceID": deviceID.Id, "portype": pt.Val, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "GetPorts", log.Fields{"device-id": deviceID.Id, "portype": pt.Val, "transactionID": transactionID.Val})
 
 	return rhp.deviceMgr.GetPorts(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.Port_PortType(pt.Val))
 }
@@ -278,7 +278,7 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(ctx context.Context, args
 			}
 		}
 	}
-	logger.Debugw(ctx, "GetChildDevices", log.Fields{"deviceID": pID.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "GetChildDevices", log.Fields{"device-id": pID.Id, "transactionID": transactionID.Val})
 
 	return rhp.deviceMgr.GetAllChildDevices(log.WithSpanFromContext(context.TODO(), ctx), pID.Id)
 }
@@ -344,13 +344,13 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(ctx context.Context, 
 			}
 		}
 	}
-	logger.Debugw(ctx, "ChildDeviceDetected", log.Fields{"parentDeviceID": pID.Id, "parentPortNo": portNo.Val,
+	logger.Debugw(ctx, "ChildDeviceDetected", log.Fields{"parent-device-id": pID.Id, "parentPortNo": portNo.Val,
 		"deviceType": dt.Val, "channelID": chnlID.Val, "serialNumber": serialNumber.Val,
 		"vendorID": vendorID.Val, "onuID": onuID.Val, "transactionID": transactionID.Val})
 
 	device, err := rhp.deviceMgr.ChildDeviceDetected(log.WithSpanFromContext(context.TODO(), ctx), pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
 	if err != nil {
-		logger.Debugw(ctx, "child-detection-failed", log.Fields{"parentID": pID.Id, "onuID": onuID.Val, "error": err})
+		logger.Debugw(ctx, "child-detection-failed", log.Fields{"parent-device-id": pID.Id, "onuID": onuID.Val, "error": err})
 	}
 	return device, err
 }
@@ -390,7 +390,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(ctx context.Context, ar
 			}
 		}
 	}
-	logger.Debugw(ctx, "DeviceStateUpdate", log.Fields{"deviceID": deviceID.Id, "oper-status": operStatus,
+	logger.Debugw(ctx, "DeviceStateUpdate", log.Fields{"device-id": deviceID.Id, "oper-status": operStatus,
 		"conn-status": connStatus, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.UpdateDeviceStatus(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
@@ -436,7 +436,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(ctx context.Context, 
 			}
 		}
 	}
-	logger.Debugw(ctx, "ChildrenStateUpdate", log.Fields{"deviceID": deviceID.Id, "oper-status": operStatus,
+	logger.Debugw(ctx, "ChildrenStateUpdate", log.Fields{"device-id": deviceID.Id, "oper-status": operStatus,
 		"conn-status": connStatus, "transactionID": transactionID.Val})
 
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
@@ -483,7 +483,7 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(ctx context.Context, arg
 			}
 		}
 	}
-	logger.Debugw(ctx, "PortsStateUpdate", log.Fields{"deviceID": deviceID.Id, "operStatus": operStatus, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "PortsStateUpdate", log.Fields{"device-id": deviceID.Id, "operStatus": operStatus, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.UpdatePortsState(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, uint32(portTypeFilter.Val), voltha.OperStatus_Types(operStatus.Val)); err != nil {
 		logger.Debugw(ctx, "unable-to-update-ports-state", log.Fields{"error": err})
@@ -533,7 +533,7 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(ctx context.Context, args
 			}
 		}
 	}
-	logger.Debugw(ctx, "PortStateUpdate", log.Fields{"deviceID": deviceID.Id, "operStatus": operStatus,
+	logger.Debugw(ctx, "PortStateUpdate", log.Fields{"device-id": deviceID.Id, "operStatus": operStatus,
 		"portType": portType, "portNo": portNo, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.UpdatePortState(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
@@ -570,7 +570,7 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(ctx context.Context, args 
 			}
 		}
 	}
-	logger.Debugw(ctx, "DeleteAllPorts", log.Fields{"deviceID": deviceID.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "DeleteAllPorts", log.Fields{"device-id": deviceID.Id, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.DeleteAllPorts(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id); err != nil {
 		logger.Debugw(ctx, "unable-to-delete-ports", log.Fields{"error": err})
@@ -608,7 +608,7 @@ func (rhp *AdapterRequestHandlerProxy) GetDevicePort(ctx context.Context, args [
 			}
 		}
 	}
-	logger.Debugw(ctx, "GetDevicePort", log.Fields{"deviceID": deviceID.Id, "portNo": portNo.Val, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "GetDevicePort", log.Fields{"device-id": deviceID.Id, "portNo": portNo.Val, "transactionID": transactionID.Val})
 
 	return rhp.deviceMgr.GetDevicePort(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, uint32(portNo.Val))
 }
@@ -636,7 +636,7 @@ func (rhp *AdapterRequestHandlerProxy) ListDevicePorts(ctx context.Context, args
 			}
 		}
 	}
-	logger.Debugw(ctx, "ListDevicePorts", log.Fields{"deviceID": deviceID.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "ListDevicePorts", log.Fields{"device-id": deviceID.Id, "transactionID": transactionID.Val})
 
 	return rhp.deviceMgr.ListDevicePorts(log.WithSpanFromContext(context.TODO(), ctx), deviceID)
 }
@@ -665,7 +665,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(ctx context.Context, arg
 			}
 		}
 	}
-	logger.Debugw(ctx, "ChildDevicesLost", log.Fields{"deviceID": parentDeviceID.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "ChildDevicesLost", log.Fields{"device-id": parentDeviceID.Id, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.ChildDevicesLost(log.WithSpanFromContext(context.TODO(), ctx), parentDeviceID.Id); err != nil {
 		logger.Debugw(ctx, "unable-to-disable-child-devices", log.Fields{"error": err})
@@ -698,10 +698,10 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(ctx context.Context,
 			}
 		}
 	}
-	logger.Debugw(ctx, "ChildDevicesDetected", log.Fields{"deviceID": parentDeviceID.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "ChildDevicesDetected", log.Fields{"parent-device-id": parentDeviceID.Id, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.ChildDevicesDetected(log.WithSpanFromContext(context.TODO(), ctx), parentDeviceID.Id); err != nil {
-		logger.Debugw(ctx, "child-devices-detection-failed", log.Fields{"parentID": parentDeviceID.Id, "error": err})
+		logger.Debugw(ctx, "child-devices-detection-failed", log.Fields{"parent-device-id": parentDeviceID.Id, "error": err})
 		return nil, err
 	}
 	return &empty.Empty{}, nil
@@ -736,7 +736,7 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(ctx context.Context, args []*
 			}
 		}
 	}
-	logger.Debugw(ctx, "PortCreated", log.Fields{"deviceID": deviceID.Id, "port": port, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "PortCreated", log.Fields{"device-id": deviceID.Id, "port": port, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.AddPort(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, port); err != nil {
 		logger.Debugw(ctx, "unable-to-add-port", log.Fields{"error": err})
@@ -768,7 +768,7 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(ctx context.Context,
 			}
 		}
 	}
-	logger.Debugw(ctx, "DevicePMConfigUpdate", log.Fields{"deviceID": pmConfigs.Id, "configs": pmConfigs,
+	logger.Debugw(ctx, "DevicePMConfigUpdate", log.Fields{"device-id": pmConfigs.Id, "configs": pmConfigs,
 		"transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.InitPmConfigs(log.WithSpanFromContext(context.TODO(), ctx), pmConfigs.Id, pmConfigs); err != nil {
@@ -813,7 +813,7 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(ctx context.Context, args []*ic.
 			}
 		}
 	}
-	logger.Debugw(ctx, "PacketIn", log.Fields{"deviceID": deviceID.Id, "port": portNo.Val, "packet": packet,
+	logger.Debugw(ctx, "PacketIn", log.Fields{"device-id": deviceID.Id, "port": portNo.Val, "packet": packet,
 		"transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.PacketIn(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
@@ -853,7 +853,7 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(ctx context.Context, 
 			}
 		}
 	}
-	logger.Debugw(ctx, "UpdateImageDownload", log.Fields{"deviceID": deviceID.Id, "image-download": img,
+	logger.Debugw(ctx, "UpdateImageDownload", log.Fields{"device-id": deviceID.Id, "image-download": img,
 		"transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.UpdateImageDownload(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, img); err != nil {
@@ -886,7 +886,7 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(ctx context.Context
 			}
 		}
 	}
-	logger.Debugw(ctx, "ReconcileChildDevices", log.Fields{"deviceID": parentDeviceID.Id, "transactionID": transactionID.Val})
+	logger.Debugw(ctx, "ReconcileChildDevices", log.Fields{"parent-device-id": parentDeviceID.Id, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.ReconcileChildDevices(log.WithSpanFromContext(context.TODO(), ctx), parentDeviceID.Id); err != nil {
 		logger.Debugw(ctx, "unable-to-reconcile-child-devices", log.Fields{"error": err})
@@ -924,7 +924,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(ctx context.Context, a
 			}
 		}
 	}
-	logger.Debugw(ctx, "DeviceReasonUpdate", log.Fields{"deviceId": deviceID.Id, "reason": reason.Val,
+	logger.Debugw(ctx, "DeviceReasonUpdate", log.Fields{"device-id": deviceID.Id, "reason": reason.Val,
 		"transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.UpdateDeviceReason(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, reason.Val); err != nil {
