@@ -167,7 +167,7 @@ func (agent *Agent) stop(ctx context.Context) error {
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	logger.Infow(ctx, "stopping-device-agent", log.Fields{"deviceId": agent.deviceID, "parentId": agent.parentID})
+	logger.Infow(ctx, "stopping-device-agent", log.Fields{"device-id": agent.deviceID, "parentId": agent.parentID})
 
 	//	Remove the device from the KV store
 	if err := agent.dbProxy.Remove(ctx, agent.deviceID); err != nil {
@@ -401,7 +401,7 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	cloned := agent.cloneDeviceWithoutLock()
 
 	if cloned.AdminState == voltha.AdminState_DISABLED {
-		logger.Debugw(ctx, "device-already-disabled", log.Fields{"id": agent.deviceID})
+		logger.Debugw(ctx, "device-already-disabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
 		return nil
 	}
@@ -584,7 +584,7 @@ func (agent *Agent) updateDeviceStatus(ctx context.Context, operStatus voltha.Op
 		logger.Debugw(ctx, "updateDeviceStatus-oper", log.Fields{"ok": ok, "val": s})
 		cloned.OperStatus = operStatus
 	}
-	logger.Debugw(ctx, "updateDeviceStatus", log.Fields{"deviceId": cloned.Id, "operStatus": cloned.OperStatus, "connectStatus": cloned.ConnectStatus})
+	logger.Debugw(ctx, "updateDeviceStatus", log.Fields{"device-id": cloned.Id, "operStatus": cloned.OperStatus, "connectStatus": cloned.ConnectStatus})
 	// Store the device
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
@@ -620,7 +620,7 @@ func (agent *Agent) updateDeviceAttribute(ctx context.Context, name string, valu
 			}
 		}
 	}
-	logger.Debugw(ctx, "update-field-status", log.Fields{"deviceId": cloned.Id, "name": name, "updated": updated})
+	logger.Debugw(ctx, "update-field-status", log.Fields{"device-id": cloned.Id, "name": name, "updated": updated})
 	//	Save the data
 
 	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
@@ -633,7 +633,7 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
-	logger.Debugw(ctx, "simulateAlarm", log.Fields{"id": agent.deviceID})
+	logger.Debugw(ctx, "simulateAlarm", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceReadOnlyWithoutLock()
 
@@ -661,7 +661,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 		agent.requestQueue.RequestComplete()
 		return status.Errorf(codes.Internal, "failed-update-device:%s: %s", agent.deviceID, err)
 	}
-	logger.Debugw(ctx, "updated-device-in-store", log.Fields{"deviceId: ": agent.deviceID})
+	logger.Debugw(ctx, "updated-device-in-store", log.Fields{"device-id: ": agent.deviceID})
 
 	previousState := getDeviceStates(agent.device)
 	// update the device
@@ -671,7 +671,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	agent.requestQueue.RequestComplete()
 
 	if err := agent.deviceMgr.processTransition(log.WithSpanFromContext(context.Background(), ctx), device, previousState); err != nil {
-		logger.Errorw(ctx, "failed-process-transition", log.Fields{"deviceId": device.Id, "previousAdminState": previousState.Admin, "currentAdminState": device.AdminState})
+		log.Errorw("failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": previousState.Admin, "currentAdminState": device.AdminState})
 	}
 	return nil
 }
@@ -680,7 +680,7 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"deviceId": agent.deviceID, "reason": reason})
+	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"device-id": agent.deviceID, "reason": reason})
 
 	cloned := agent.cloneDeviceWithoutLock()
 	cloned.Reason = reason
@@ -688,7 +688,7 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 }
 
 func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {
-	logger.Debugw(ctx, "childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-ud": agent.deviceID})
+	logger.Debugw(ctx, "childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-id": agent.deviceID})
 
 	// Remove the associated peer ports on the parent device
 	for portID := range agent.portLoader.ListIDs() {

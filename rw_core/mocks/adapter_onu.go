@@ -137,7 +137,7 @@ func (onuA *ONUAdapter) Disable_device(ctx context.Context, device *voltha.Devic
 		// Update the all ports state on that device to disable
 		if err := onuA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, 0, voltha.OperStatus_UNKNOWN); err != nil {
 			// Device may also have been deleted in the Core
-			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"device-id": device.Id, "error": err})
 			return
 		}
 		//Update the device state
@@ -145,7 +145,7 @@ func (onuA *ONUAdapter) Disable_device(ctx context.Context, device *voltha.Devic
 		cloned.OperStatus = voltha.OperStatus_UNKNOWN
 
 		if err := onuA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
-			logger.Warnw(ctx, "device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Warnw(ctx, "device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
 			return
 		}
 		onuA.updateDevice(cloned)
@@ -163,7 +163,7 @@ func (onuA *ONUAdapter) Reenable_device(ctx context.Context, device *voltha.Devi
 		cloned := proto.Clone(device).(*voltha.Device)
 		// Update the all ports state on that device to enable
 		if err := onuA.coreProxy.PortsStateUpdate(context.TODO(), cloned.Id, 0, voltha.OperStatus_ACTIVE); err != nil {
-			logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "updating-ports-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 
 		//Update the device state
@@ -171,7 +171,7 @@ func (onuA *ONUAdapter) Reenable_device(ctx context.Context, device *voltha.Devi
 		cloned.OperStatus = voltha.OperStatus_ACTIVE
 
 		if err := onuA.coreProxy.DeviceStateUpdate(context.TODO(), cloned.Id, cloned.ConnectStatus, cloned.OperStatus); err != nil {
-			logger.Fatalf(ctx, "device-state-update-failed", log.Fields{"deviceId": device.Id, "error": err})
+			logger.Fatalf(ctx, "device-state-update-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 
 		onuA.updateDevice(cloned)
