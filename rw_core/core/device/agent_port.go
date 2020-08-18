@@ -116,7 +116,7 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 }
 
 func (agent *Agent) deleteAllPorts(ctx context.Context) error {
-	logger.Debugw(ctx, "deleteAllPorts", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw(ctx, "deleteAllPorts", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
@@ -142,7 +142,7 @@ func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 }
 
 func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
-	logger.Debugw(ctx, "addPort", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw(ctx, "addPort", log.Fields{"device-id": agent.deviceID})
 
 	port.AdminState = voltha.AdminState_ENABLED
 

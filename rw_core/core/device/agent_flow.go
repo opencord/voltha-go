@@ -293,7 +293,7 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 
 //deleteAllFlows deletes all flows in the device table
 func (agent *Agent) deleteAllFlows(ctx context.Context) error {
-	logger.Debugw(ctx, "deleteAllFlows", log.Fields{"deviceId": agent.deviceID})
+	logger.Debugw(ctx, "deleteAllFlows", log.Fields{"device-id": agent.deviceID})
 
 	for flowID := range agent.flowLoader.ListIDs() {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {

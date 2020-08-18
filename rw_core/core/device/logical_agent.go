@@ -196,7 +196,7 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 		if err := agent.ldProxy.Remove(ctx, agent.logicalDeviceID); err != nil {
 			returnErr = err
 		} else {
-			logger.Debugw(ctx, "logicaldevice-removed", log.Fields{"logicaldeviceId": agent.logicalDeviceID})
+			logger.Debugw(ctx, "logicaldevice-removed", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		}
 		// TODO: remove all entries from all loaders
 		// TODO: don't allow any more modifications to flows/groups/meters/ports or to any logical device field
@@ -218,7 +218,7 @@ func (agent *LogicalAgent) GetLogicalDeviceReadOnly(ctx context.Context) (*volth
 }
 
 func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
-	logger.Debugw(ctx, "send-add-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID, "deviceRules": deviceRules, "flowMetadata": flowMetadata})
+	logger.Debugw(ctx, "send-add-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID, "deviceRules": deviceRules, "flowMetadata": flowMetadata})
 
 	responses := make([]coreutils.Response, 0)
 	for deviceID, value := range deviceRules.GetRules() {
@@ -229,7 +229,7 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 			defer cancel()
 			start := time.Now()
 			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Errorw(ctx, "flow-add-failed", log.Fields{"deviceID": deviceId, "error": err, "wait-time": time.Since(start)})
+				logger.Errorw(ctx, "flow-add-failed", log.Fields{"device-id": deviceId, "error": err, "wait-time": time.Since(start)})
 				response.Error(status.Errorf(codes.Internal, "flow-add-failed: %s", deviceId))
 			}
 			response.Done()
@@ -240,7 +240,7 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 }
 
 func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata, mod *ofp.OfpFlowMod) []coreutils.Response {
-	logger.Debugw(ctx, "send-delete-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
+	logger.Debugw(ctx, "send-delete-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
 	for deviceID, value := range deviceRules.GetRules() {
@@ -266,7 +266,7 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 }
 
 func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
-	logger.Debugw(ctx, "send-update-flows-to-device-manager", log.Fields{"logicalDeviceID": agent.logicalDeviceID})
+	logger.Debugw(ctx, "send-update-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
 	for deviceID, value := range deviceRules.GetRules() {
@@ -276,7 +276,7 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 			defer cancel()
 			if err := agent.deviceMgr.updateFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
-				logger.Errorw(ctx, "flow-update-failed", log.Fields{"deviceID": deviceId, "error": err})
+				logger.Errorw(ctx, "flow-update-failed", log.Fields{"device-id": deviceId, "error": err})
 				response.Error(status.Errorf(codes.Internal, "flow-update-failed: %s", deviceId))
 			}
 			response.Done()
@@ -293,7 +293,7 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 		responses = append(responses, response)
 		uniPort, err := agent.getUNILogicalPortNo(flow)
 		if err != nil {
-			logger.Error(ctx, "no-uni-port-in-flow", log.Fields{"deviceID": agent.rootDeviceID, "flow": flow, "error": err})
+			logger.Error(ctx, "no-uni-port-in-flow", log.Fields{"device-id": agent.rootDeviceID, "flow": flow, "error": err})
 			response.Error(err)
 			response.Done()
 			continue
@@ -325,7 +325,7 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 	//frame := packet.GetData()
 	//TODO: Use a channel between the logical agent and the device agent
 	if err := agent.deviceMgr.packetOut(ctx, agent.rootDeviceID, outPort, packet); err != nil {
-		logger.Error(ctx, "packetout-failed", log.Fields{"logicalDeviceID": agent.rootDeviceID})
+		logger.Error(ctx, "packetout-failed", log.Fields{"logical-device-id": agent.rootDeviceID})
 	}
 }
 
