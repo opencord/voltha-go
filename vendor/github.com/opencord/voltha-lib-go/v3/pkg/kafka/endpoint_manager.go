@@ -227,7 +227,7 @@ func (ep *endpointManager) loadServices(ctx context.Context) error {
 	ep.deviceTypeServiceMap = make(map[string]string)
 
 	// Load the adapters
-	blobs, err := ep.backend.List(context.Background(), "adapters")
+	blobs, err := ep.backend.List(log.WithSpanFromContext(context.Background(), ctx), "adapters")
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (ep *endpointManager) loadServices(ctx context.Context) error {
 		}
 	}
 	// Load the device types
-	blobs, err = ep.backend.List(context.Background(), "device_types")
+	blobs, err = ep.backend.List(log.WithSpanFromContext(context.Background(), ctx), "device_types")
 	if err != nil {
 		return err
 	}

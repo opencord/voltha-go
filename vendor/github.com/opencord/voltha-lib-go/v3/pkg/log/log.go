@@ -14,29 +14,39 @@
  * limitations under the License.
  */
 
-//Package log provides a structured Logger interface implemented using zap logger. It provides the following capabilities:
-//1. Package level logging - a go package can register itself (AddPackage) and have a logger created for that package.
-//2. Dynamic log level change - for all registered packages (SetAllLogLevel)
-//3. Dynamic log level change - for a given package (SetPackageLogLevel)
-//4. Provides a default logger for unregistered packages
-//5. Allow key-value pairs to be added to a logger(UpdateLogger) or all loggers (UpdateAllLoggers) at run time
-//6. Add to the log output the location where the log was invoked (filename.functionname.linenumber)
+// Package log provides a structured Logger interface implemented using zap logger. It provides the following capabilities:
+// 1. Package level logging - a go package can register itself (AddPackage) and have a logger created for that package.
+// 2. Dynamic log level change - for all registered packages (SetAllLogLevel)
+// 3. Dynamic log level change - for a given package (SetPackageLogLevel)
+// 4. Provides a default logger for unregistered packages (however avoid its usage)
+// 5. Allow key-value pairs to be added to a logger(UpdateLogger) or all loggers (UpdateAllLoggers) at run time
+// 6. Add to the log output the location where the log was invoked (filename.functionname.linenumber)
 //
 // Using package-level logging (recommended approach).  In the examples below, log refers to this log package.
-// 1.  In the appropriate package add the following in the init section of the package.  The log level can be changed
-// and any number of default fields can be added as well. The log level specifies the lowest log level that will be
-// in the output while the fields will be automatically added to all log printouts.
 //
-//	log.AddPackage(mylog.JSON, log.WarnLevel, log.Fields{"anyFieldName": "any value"})
+// 1. In the appropriate package, add the following in the init section of the package (usually in a common.go file)
+//    The log level can be changed and any number of default fields can be added as well. The log level specifies
+//    the lowest log level that will be in the output while the fields will be automatically added to all log printouts.
+//    However, as voltha components re-initialize the log level of each registered package to default initial loglevel
+//    passed as CLI argument, the log level passed in RegisterPackage call effectively has no effect.
 //
-//2. In the calling package, just invoke any of the publicly available functions of the logger.  Here is an  example
-// to write an Info log with additional fields:
+//    var logger log.CLogger
+//    func init() {
+//              logger, err = log.RegisterPackage(log.JSON, log.ErrorLevel, log.Fields{"key1": "value1"})
+//    }
 //
-//log.Infow("An example", mylog.Fields{"myStringOutput": "output", "myIntOutput": 2})
+// 2. In the calling package, use any of the publicly available functions of local package-level logger instance created
+//    in previous step.  Here is an example to write an Info log with additional fields:
 //
-//3. To dynamically change the log level, you can use 1)SetLogLevel from inside your package or 2) SetPackageLogLevel
-// from anywhere or 3)  SetAllLogLevel from anywhere.
+//    logger.Infow("An example", mylog.Fields{"myStringOutput": "output", "myIntOutput": 2})
 //
+// 3. To dynamically change the log level, you can use
+//          a) SetLogLevel from inside your package or
+//          b) SetPackageLogLevel from anywhere or
+//          c) SetAllLogLevel from anywhere.
+//
+//    Dynamic Loglevel configuration feature also uses SetPackageLogLevel method based on triggers received due to
+//    Changes to configured loglevels
 
 package log
 
