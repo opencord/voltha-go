@@ -57,7 +57,7 @@ func (agent *LogicalAgent) updateGroupTable(ctx context.Context, groupMod *ofp.O
 	case ofp.OfpGroupModCommand_OFPGC_MODIFY:
 		return agent.groupModify(ctx, groupMod)
 	}
-	return status.Errorf(codes.Internal, "unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, groupMod.GetCommand())
+	return status.Errorf(codes.Internal, "unhandled-command: logical-device-id:%s, command:%s", agent.logicalDeviceID, groupMod.GetCommand())
 }
 
 func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupMod) error {
@@ -91,7 +91,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 	// Wait for completion
 	go func() {
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			//TODO: Revert flow changes
 		}
 	}()
@@ -125,7 +125,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 			//      an error while deleting flows can cause inconsistent state.
 			flows, err := agent.deleteFlowsHavingGroup(ctx, groupID)
 			if err != nil {
-				logger.Errorw(ctx, "cannot-update-flow-for-group-delete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "groupID": groupID})
+				logger.Errorw(ctx, "cannot-update-flow-for-group-delete", log.Fields{"logical-device-id": agent.logicalDeviceID, "groupID": groupID})
 				return err
 			}
 			for flowID, flow := range flows {
@@ -166,7 +166,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	// Wait for completion
 	go func() {
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			//TODO: Revert flow changes
 		}
 	}()
@@ -199,7 +199,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 
 	//update KV
 	if err := groupHandle.Update(ctx, groupEntry); err != nil {
-		logger.Errorw(ctx, "Cannot-update-logical-group", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+		logger.Errorw(ctx, "Cannot-update-logical-group", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		return err
 	}
 
@@ -209,7 +209,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	// Wait for completion
 	go func() {
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			//TODO: Revert flow changes
 		}
 	}()

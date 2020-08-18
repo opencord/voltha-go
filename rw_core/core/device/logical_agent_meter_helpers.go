@@ -94,7 +94,7 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 		Stats:  &newStats,
 	}
 	if err := meterHandle.Update(ctx, newMeter); err != nil {
-		logger.Debugw(ctx, "unable-to-update-meter-in-db", log.Fields{"logicalDevice": agent.logicalDeviceID, "meterID": meterID})
+		logger.Debugw(ctx, "unable-to-update-meter-in-db", log.Fields{"logical-device-id": agent.logicalDeviceID, "meterID": meterID})
 		return false
 	}
 

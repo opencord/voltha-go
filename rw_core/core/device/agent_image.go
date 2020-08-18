@@ -39,7 +39,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, expected-admin-state:%s", agent.deviceID, voltha.AdminState_ENABLED)
 	}
 	if device.AdminState != voltha.AdminState_ENABLED {
-		logger.Debugw(ctx, "device-not-enabled", log.Fields{"id": agent.deviceID})
+		logger.Debugw(ctx, "device-not-enabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
 		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, expected-admin-state:%s", agent.deviceID, voltha.AdminState_ENABLED)
 	}
