@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
@@ -40,7 +41,8 @@ type Backend struct {
 	Timeout                 time.Duration
 	Address                 string
 	PathPrefix              string
-	alive                   bool          // Is this backend connection alive?
+	alive                   bool // Is this backend connection alive?
+	livenessMutex           sync.Mutex
 	liveness                chan bool     // channel to post alive state
 	LivenessChannelInterval time.Duration // regularly push alive state beyond this interval
 	lastLivenessTime        time.Time     // Instant of last alive state push
@@ -91,8 +93,9 @@ func (b *Backend) updateLiveness(ctx context.Context, alive bool) {
 	// so that in a live state, the core does not timeout and
 	// send a forced liveness message. Push alive state if the
 	// last push to channel was beyond livenessChannelInterval
+	b.livenessMutex.Lock()
+	defer b.livenessMutex.Unlock()
 	if b.liveness != nil {
-
 		if b.alive != alive {
 			logger.Debug(ctx, "update-liveness-channel-reason-change")
 			b.liveness <- alive
@@ -128,14 +131,10 @@ func (b *Backend) PerformLivenessCheck(ctx context.Context) bool {
 // and/or take other actions.
 func (b *Backend) EnableLivenessChannel(ctx context.Context) chan bool {
 	logger.Debug(ctx, "enable-kvstore-liveness-channel")
-
+	b.livenessMutex.Lock()
+	defer b.livenessMutex.Unlock()
 	if b.liveness == nil {
-		logger.Debug(ctx, "create-kvstore-liveness-channel")
-
-		// Channel size of 10 to avoid any possibility of blocking in Load conditions
 		b.liveness = make(chan bool, 10)
-
-		// Post initial alive state
 		b.liveness <- b.alive
 		b.lastLivenessTime = time.Now()
 	}
@@ -182,6 +181,9 @@ func (b *Backend) isErrorIndicatingAliveKvstore(ctx context.Context, err error) 
 
 // List retrieves one or more items that match the specified key
 func (b *Backend) List(ctx context.Context, key string) (map[string]*kvstore.KVPair, error) {
+	span, ctx := log.CreateChildSpan(ctx, "etcd-list")
+	defer span.Finish()
+
 	formattedPath := b.makePath(ctx, key)
 	logger.Debugw(ctx, "listing-key", log.Fields{"key": key, "path": formattedPath})
 
@@ -194,6 +196,9 @@ func (b *Backend) List(ctx context.Context, key string) (map[string]*kvstore.KVP
 
 // Get retrieves an item that matches the specified key
 func (b *Backend) Get(ctx context.Context, key string) (*kvstore.KVPair, error) {
+	span, ctx := log.CreateChildSpan(ctx, "etcd-get")
+	defer span.Finish()
+
 	formattedPath := b.makePath(ctx, key)
 	logger.Debugw(ctx, "getting-key", log.Fields{"key": key, "path": formattedPath})
 
@@ -206,6 +211,9 @@ func (b *Backend) Get(ctx context.Context, key string) (*kvstore.KVPair, error) 
 
 // Put stores an item value under the specifed key
 func (b *Backend) Put(ctx context.Context, key string, value interface{}) error {
+	span, ctx := log.CreateChildSpan(ctx, "etcd-put")
+	defer span.Finish()
+
 	formattedPath := b.makePath(ctx, key)
 	logger.Debugw(ctx, "putting-key", log.Fields{"key": key, "path": formattedPath})
 
@@ -218,6 +226,9 @@ func (b *Backend) Put(ctx context.Context, key string, value interface{}) error 
 
 // Delete removes an item under the specified key
 func (b *Backend) Delete(ctx context.Context, key string) error {
+	span, ctx := log.CreateChildSpan(ctx, "etcd-delete")
+	defer span.Finish()
+
 	formattedPath := b.makePath(ctx, key)
 	logger.Debugw(ctx, "deleting-key", log.Fields{"key": key, "path": formattedPath})
 
@@ -230,6 +241,9 @@ func (b *Backend) Delete(ctx context.Context, key string) error {
 
 // CreateWatch starts watching events for the specified key
 func (b *Backend) CreateWatch(ctx context.Context, key string, withPrefix bool) chan *kvstore.Event {
+	span, ctx := log.CreateChildSpan(ctx, "etcd-create-watch")
+	defer span.Finish()
+
 	formattedPath := b.makePath(ctx, key)
 	logger.Debugw(ctx, "creating-key-watch", log.Fields{"key": key, "path": formattedPath})
 
@@ -238,6 +252,9 @@ func (b *Backend) CreateWatch(ctx context.Context, key string, withPrefix bool) 
 
 // DeleteWatch stops watching events for the specified key
 func (b *Backend) DeleteWatch(ctx context.Context, key string, ch chan *kvstore.Event) {
+	span, ctx := log.CreateChildSpan(ctx, "etcd-delete-watch")
+	defer span.Finish()
+
 	formattedPath := b.makePath(ctx, key)
 	logger.Debugw(ctx, "deleting-key-watch", log.Fields{"key": key, "path": formattedPath})
 

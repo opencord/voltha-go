@@ -19,7 +19,7 @@ import (
 	"context"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -102,10 +102,10 @@ func (s *GrpcServer) Start(ctx context.Context) {
 	// Use Intercepters to automatically inject and publish Open Tracing Spans by this GRPC server
 	serverOptions := []grpc.ServerOption{
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			grpc_opentracing.StreamServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
+			grpc_opentracing.StreamServerInterceptor(grpc_opentracing.WithTracer(log.ActiveTracerProxy{})),
 		)),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
+			grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(log.ActiveTracerProxy{})),
 			mkServerInterceptor(s),
 		))}
 
