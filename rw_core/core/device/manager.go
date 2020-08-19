@@ -1587,7 +1587,7 @@ func (dMgr *Manager) StartOmciTestAction(ctx context.Context, request *voltha.Om
 func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
 	log.EnrichSpan(ctx, log.Fields{"device-id": value.Id})
 
-	log.Debugw("getExtValue", log.Fields{"onu-id": value.Id})
+	logger.Debugw(ctx, "getExtValue", log.Fields{"onu-id": value.Id})
 	cDevice, err := dMgr.getDeviceReadOnly(ctx, value.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
@@ -1601,7 +1601,7 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifi
 		if err != nil {
 			return nil, err
 		}
-		log.Debugw("getExtValue-result", log.Fields{"result": resp})
+		logger.Debugw(ctx, "getExtValue-result", log.Fields{"result": resp})
 		return resp, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)

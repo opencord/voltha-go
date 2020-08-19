@@ -429,7 +429,7 @@ func (ap *AdapterProxy) StartOmciTest(ctx context.Context, device *voltha.Device
 }
 
 func (ap *AdapterProxy) GetExtValue(ctx context.Context, pdevice *voltha.Device, cdevice *voltha.Device, id string, valuetype voltha.ValueType_Type) (chan *kafka.RpcResponse, error) {
-	log.Debugw("GetExtValue", log.Fields{"device-id": pdevice.Id, "onuid": id})
+	logger.Debugw(ctx, "GetExtValue", log.Fields{"device-id": pdevice.Id, "onuid": id})
 	rpc := "get_ext_value"
 	toTopic, err := ap.getAdapterTopic(ctx, pdevice.Id, pdevice.Adapter)
 	if err != nil {

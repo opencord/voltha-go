@@ -148,7 +148,7 @@ func (aMgr *Manager) addAdapter(ctx context.Context, adapter *voltha.Adapter, sa
 				logger.Debugw(ctx, "adapter-saved-to-KV-Store", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
 					"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas})
 			} else {
-				log.Warnw("adding-adapter-already-in-KV-store", log.Fields{
+				logger.Warnw(ctx, "adding-adapter-already-in-KV-store", log.Fields{
 					"adapterName":    adapter.Id,
 					"adapterReplica": adapter.CurrentReplica,
 				})
@@ -223,7 +223,7 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, adapter *voltha.Adapte
 		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint, "deviceTypes": deviceTypes.Items})
 
 	if adapter.Type == "" {
-		log.Errorw("adapter-not-specifying-type", log.Fields{
+		logger.Errorw(ctx, "adapter-not-specifying-type", log.Fields{
 			"adapterId": adapter.Id,
 			"vendor":    adapter.Vendor,
 			"type":      adapter.Type,

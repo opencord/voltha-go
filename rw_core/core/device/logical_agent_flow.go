@@ -187,7 +187,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	flowHandle, have := agent.flowLoader.Lock(addedFlow.Id)
 	if !have {
 		// Not found - do nothing
-		log.Debugw("flow-not-found", log.Fields{"added-flow": addedFlow})
+		logger.Debugw(ctx, "flow-not-found", log.Fields{"added-flow": addedFlow})
 		return nil
 	}
 	defer flowHandle.Unlock()
