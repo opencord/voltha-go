@@ -145,12 +145,13 @@ lint-mod:
 lint: lint-mod lint-dockerfile
 
 sca:
-	@rm -rf ./sca-report
-	@mkdir -p ./sca-report
-	@echo "Running static code analysis..."
-	@${GOLANGCI_LINT} run --deadline=6m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
-	@echo ""
-	@echo "Static code analysis OK"
+	rm -rf ./sca-report
+	mkdir -p ./sca-report
+	echo "Running static code analysis..."
+	${GOLANGCI_LINT} run --deadline=6m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
+	cat ./sca-report/sca-report.xml
+	echo ""
+	echo "Static code analysis OK"
 
 test: local-lib-go
 	@mkdir -p ./tests/results
@@ -168,3 +169,4 @@ distclean:
 mod-update:
 	${GO} mod tidy
 	${GO} mod vendor
+
