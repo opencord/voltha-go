@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d96a53ef_0376009b",
+        "filename": "rw_core/utils/request_queue.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-08-27T15:54:54Z",
+      "side": 1,
+      "message": "Not necessarily locking a device.  RequestQueue implements as a general lock.",
+      "range": {
+        "startLine": 91,
+        "startChar": 10,
+        "endLine": 91,
+        "endChar": 19
+      },
+      "revId": "198f6fff69b5666e52b97e74647f2700a1b93fa4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
