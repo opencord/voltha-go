@@ -48,14 +48,14 @@ func (aa *agent) getAdapter(ctx context.Context) *voltha.Adapter {
 // No attempt is made to save the time to the db, so only recent times are guaranteed to be accurate.
 func (aa *agent) updateCommunicationTime(new time.Time) {
 	// only update if new time is not in the future, and either the old time is invalid or new time > old time
+	aa.lock.Lock()
+	defer aa.lock.Unlock()
 	if last, err := ptypes.Timestamp(aa.adapter.LastCommunication); !new.After(time.Now()) && (err != nil || new.After(last)) {
 		timestamp, err := ptypes.TimestampProto(new)
 		if err != nil {
 			return // if the new time cannot be encoded, just ignore it
 		}
 
-		aa.lock.Lock()
-		defer aa.lock.Unlock()
 		aa.adapter.LastCommunication = timestamp
 	}
 }

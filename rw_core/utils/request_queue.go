@@ -88,7 +88,10 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 		return ctx.Err()
 
 	case <-waitingOn:
-		// lock is acquired
+		// lock on device is acquired
+
+		rq.mutex.Lock()
+		defer rq.mutex.Unlock()
 		rq.current = r
 		return nil
 	}
