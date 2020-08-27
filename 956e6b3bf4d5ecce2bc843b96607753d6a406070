@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a78f51a_b7bff11f",
+        "filename": "rw_core/main.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-08-27T03:43:24Z",
+      "side": 1,
+      "message": "why would anyone do this",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 30
+      },
+      "revId": "956e6b3bf4d5ecce2bc843b96607753d6a406070",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
