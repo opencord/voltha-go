@@ -70,6 +70,7 @@ func printVersion() {
 }
 
 func main() {
+	fmt.Println("THIS IS A TEST 2")
 	start := time.Now()
 
 	ctx := context.Background()
