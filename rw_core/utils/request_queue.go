@@ -88,7 +88,12 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 		return ctx.Err()
 
 	case <-waitingOn:
-		// lock is acquired
+		// Previous request has signaled that it is complete.
+		// This request now can proceed as the active
+		// request
+
+		rq.mutex.Lock()
+		defer rq.mutex.Unlock()
 		rq.current = r
 		return nil
 	}
