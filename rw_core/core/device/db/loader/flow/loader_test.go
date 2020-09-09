@@ -27,14 +27,14 @@ import (
 
 // TestLoadersIdentical ensures that the group, flow, and meter loaders always have an identical implementation.
 func TestLoadersIdentical(t *testing.T) {
-	types := []string{"flow", "group", "meter", "port", "logical_port"}
+	types := []string{"device", "flow", "group", "meter", "port", "logical_port"}
 
 	identical := [][]string{
-		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`, `voltha\.Port`, `voltha\.LogicalPort`},
-		{`\.Id`, `\.Desc\.GroupId`, `\.Config\.MeterId`, `\.PortNo`, `\.OfpPort\.PortNo`},
-		{`uint64`, `uint32`, `uint32`, `uint32`, `uint32`},
-		{`Flow`, `Group`, `Meter`, `Port`, `Port`},
-		{`flow`, `group`, `meter`, `port`, `port|logical_port`},
+		{`voltha\.Device`, `ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`, `voltha\.Port`, `voltha\.LogicalPort`},
+		{`\.Id`, `\.Id`, `\.Desc\.GroupId`, `\.Config\.MeterId`, `\.PortNo`, `\.OfpPort\.PortNo`},
+		{`string`, `uint64`, `uint32`, `uint32`, `uint32`, `uint32`},
+		{`Device`, `Flow`, `Group`, `Meter`, `Port`, `Port`},
+		{`device`, `flow`, `group`, `meter`, `port`, `port|logical_port`},
 	}
 
 	regexes := make([][]*regexp.Regexp, len(identical[0]))

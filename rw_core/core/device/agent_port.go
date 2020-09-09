@@ -21,7 +21,8 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-go/rw_core/core/device/port"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/port"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -29,11 +30,11 @@ import (
 )
 
 // listDevicePorts returns device ports
-func (agent *Agent) listDevicePorts() map[uint32]*voltha.Port {
+func (agent *Agent) listDevicePorts(txn loader.Txn) map[uint32]*voltha.Port {
 	portIDs := agent.portLoader.ListIDs()
 	ports := make(map[uint32]*voltha.Port, len(portIDs))
-	for portID := range portIDs {
-		if portHandle, have := agent.portLoader.Lock(portID); have {
+	for _, portID := range portIDs {
+		if portHandle, have := agent.portLoader.Lock(txn, portID); have {
 			ports[portID] = portHandle.GetReadOnly()
 			portHandle.Unlock()
 		}
@@ -42,10 +43,10 @@ func (agent *Agent) listDevicePorts() map[uint32]*voltha.Port {
 }
 
 // getPorts retrieves the ports information of the device based on the port type.
-func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
+func (agent *Agent) getPorts(ctx context.Context, txn loader.Txn, portType voltha.Port_PortType) *voltha.Ports {
 	logger.Debugw(ctx, "getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
 	ports := &voltha.Ports{}
-	for _, port := range agent.listDevicePorts() {
+	for _, port := range agent.listDevicePorts(txn) {
 		if port.Type == portType {
 			ports.Items = append(ports.Items, port)
 		}
@@ -53,8 +54,8 @@ func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType)
 	return ports
 }
 
-func (agent *Agent) getDevicePort(portID uint32) (*voltha.Port, error) {
-	portHandle, have := agent.portLoader.Lock(portID)
+func (agent *Agent) getDevicePort(txn loader.Txn, portID uint32) (*voltha.Port, error) {
+	portHandle, have := agent.portLoader.Lock(txn, portID)
 	if !have {
 		return nil, status.Errorf(codes.NotFound, "port-%d", portID)
 	}
@@ -62,32 +63,42 @@ func (agent *Agent) getDevicePort(portID uint32) (*voltha.Port, error) {
 	return portHandle.GetReadOnly(), nil
 }
 
-func (agent *Agent) updatePortsOperState(ctx context.Context, portTypeFilter uint32, operStatus voltha.OperStatus_Types) error {
-	logger.Debugw(ctx, "updatePortsOperState", log.Fields{"device-id": agent.deviceID})
+func (agent *Agent) updatePortsState(ctx context.Context, portTypeFilter uint32, operStatus voltha.OperStatus_Types) error {
+	logger.Debugw(ctx, "updatePortsState", log.Fields{"device-id": agent.deviceID})
 
-	for portID := range agent.portLoader.ListIDs() {
-		if portHandle, have := agent.portLoader.Lock(portID); have {
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	updated := make(map[uint32]*voltha.Port)
+
+	for _, portID := range agent.portLoader.ListIDs() {
+		if portHandle, have := agent.portLoader.Lock(txn, portID); have {
 			if oldPort := portHandle.GetReadOnly(); (1<<oldPort.Type)&portTypeFilter == 0 { // only update port types not included in the mask
 				// clone top-level port struct
 				newPort := *oldPort
 				newPort.OperStatus = operStatus
-				if err := portHandle.Update(ctx, &newPort); err != nil {
-					portHandle.Unlock()
-					return err
-				}
+				portHandle.Update(&newPort)
 
-				// Notify the logical device manager to change the port state
-				// Do this for NNI and UNIs only. PON ports are not known by logical device
-				if newPort.Type == voltha.Port_ETHERNET_NNI || newPort.Type == voltha.Port_ETHERNET_UNI {
-					go func(portID uint32, ctx context.Context) {
-						if err := agent.deviceMgr.logicalDeviceMgr.updatePortState(ctx, agent.deviceID, portID, operStatus); err != nil {
-							// TODO: VOL-2707
-							logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
-						}
-					}(portID, context.Background())
-				}
+				updated[portID] = &newPort
 			}
 			portHandle.Unlock()
+		}
+	}
+
+	if err := txn.Commit(ctx); err != nil {
+		return err
+	}
+
+	for portID, port := range updated {
+		// Notify the logical device manager to change the port state
+		// Do this for NNI and UNIs only. PON ports are not known by logical device
+		if port.Type == voltha.Port_ETHERNET_NNI || port.Type == voltha.Port_ETHERNET_UNI {
+			go func(portID uint32, ctx context.Context) {
+				if err := agent.deviceMgr.logicalDeviceMgr.updatePortState(ctx, agent.deviceID, portID, operStatus); err != nil {
+					// TODO: VOL-2707
+					logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
+				}
+			}(portID, context.Background())
 		}
 	}
 	return nil
@@ -99,7 +110,10 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 		return status.Errorf(codes.InvalidArgument, "%s", portType)
 	}
 
-	portHandle, have := agent.portLoader.Lock(portNo)
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	portHandle, have := agent.portLoader.Lock(txn, portNo)
 	if !have {
 		return nil
 	}
@@ -112,7 +126,29 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 
 	newPort := *port // clone top-level port struct
 	newPort.OperStatus = operStatus
-	return portHandle.Update(ctx, &newPort)
+	portHandle.Update(&newPort)
+
+	if err := txn.Commit(ctx); err != nil {
+		return err
+	}
+
+	// Notify the logical device manager to change the port state
+	// Do this for NNI and UNIs only. PON ports are not known by logical device
+	if portType == voltha.Port_ETHERNET_NNI || portType == voltha.Port_ETHERNET_UNI {
+		go func() {
+			err := agent.deviceMgr.logicalDeviceMgr.updatePortState(context.Background(), agent.deviceID, portNo, operStatus)
+			if err != nil {
+				// While we want to handle (catch) and log when
+				// an update to a port was not able to be
+				// propagated to the logical port, we can report
+				// it as a warning and not an error because it
+				// doesn't stop or modify processing.
+				// TODO: VOL-2707
+				logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
+			}
+		}()
+	}
+	return nil
 }
 
 func (agent *Agent) deleteAllPorts(ctx context.Context) error {
@@ -129,37 +165,33 @@ func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 		return err
 	}
 
-	for portID := range agent.portLoader.ListIDs() {
-		if portHandle, have := agent.portLoader.Lock(portID); have {
-			if err := portHandle.Delete(ctx); err != nil {
-				portHandle.Unlock()
-				return err
-			}
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	for _, portID := range agent.portLoader.ListIDs() {
+		if portHandle, have := agent.portLoader.Lock(txn, portID); have {
+			portHandle.Delete()
 			portHandle.Unlock()
 		}
 	}
-	return nil
+	return txn.Commit(ctx)
 }
 
-func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
+func (agent *Agent) addPort(ctx context.Context, txn loader.Txn, port *voltha.Port) {
 	logger.Debugw(ctx, "addPort", log.Fields{"deviceId": agent.deviceID})
 
 	port.AdminState = voltha.AdminState_ENABLED
 
-	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, port)
-	if err != nil {
-		return err
+	portHandle, created := agent.portLoader.LockOrCreate(txn, port)
+	if created {
+		return
 	}
 	defer portHandle.Unlock()
-
-	if created {
-		return nil
-	}
 
 	oldPort := portHandle.GetReadOnly()
 	if oldPort.Label != "" || oldPort.Type != voltha.Port_PON_OLT {
 		logger.Debugw(ctx, "port already exists", log.Fields{"port": port})
-		return nil
+		return
 	}
 
 	// Creation of OLT PON port is being processed after a default PON port was created.  Just update it.
@@ -168,10 +200,10 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 	newPort.Label = port.Label
 	newPort.OperStatus = port.OperStatus
 
-	return portHandle.Update(ctx, &newPort)
+	portHandle.Update(&newPort)
 }
 
-func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerPort) error {
+func (agent *Agent) addPeerPort(ctx context.Context, txn loader.Txn, peerPort *voltha.Port_PeerPort) {
 	logger.Debugw(ctx, "adding-peer-peerPort", log.Fields{"device-id": agent.deviceID, "peer-peerPort": peerPort})
 
 	var portHandle *port.Handle
@@ -186,22 +218,18 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 			Peers:      []*voltha.Port_PeerPort{peerPort},
 		}
 
-		h, created, err := agent.portLoader.LockOrCreate(ctx, ponPort)
-		if err != nil {
-			return err
+		h, created := agent.portLoader.LockOrCreate(txn, ponPort)
+		if created {
+			logger.Infow(ctx, "added-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
+			return
 		}
 		defer h.Unlock()
 
-		if created {
-			logger.Infow(ctx, "added-default-pon-port", log.Fields{"device-id": agent.deviceID, "peer": peerPort, "pon-port": ponPort})
-			return nil
-		}
-
 		portHandle = h
 	} else {
-		h, have := agent.portLoader.Lock(peerPort.PortNo)
+		h, have := agent.portLoader.Lock(txn, peerPort.PortNo)
 		if !have {
-			return nil
+			return
 		}
 		defer h.Unlock()
 
@@ -213,13 +241,16 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 	newPort := proto.Clone(portHandle.GetReadOnly()).(*voltha.Port)
 	newPort.Peers = append(newPort.Peers, peerPort)
 
-	return portHandle.Update(ctx, newPort)
+	portHandle.Update(newPort)
 }
 
 func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	logger.Debugw(ctx, "disablePort", log.Fields{"device-id": agent.deviceID, "port-no": portID})
 
-	portHandle, have := agent.portLoader.Lock(portID)
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	portHandle, have := agent.portLoader.Lock(txn, portID)
 	if !have {
 		return status.Errorf(codes.InvalidArgument, "%v", portID)
 	}
@@ -233,7 +264,9 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 
 	newPort := *oldPort
 	newPort.AdminState = voltha.AdminState_DISABLED
-	if err := portHandle.Update(ctx, &newPort); err != nil {
+	portHandle.Update(&newPort)
+
+	if err := txn.Commit(ctx); err != nil {
 		return err
 	}
 
@@ -255,7 +288,10 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 	logger.Debugw(ctx, "enablePort", log.Fields{"device-id": agent.deviceID, "port-no": portID})
 
-	portHandle, have := agent.portLoader.Lock(portID)
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	portHandle, have := agent.portLoader.Lock(txn, portID)
 	if !have {
 		return status.Errorf(codes.InvalidArgument, "%v", portID)
 	}
@@ -269,7 +305,9 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 
 	newPort := *oldPort
 	newPort.AdminState = voltha.AdminState_ENABLED
-	if err := portHandle.Update(ctx, &newPort); err != nil {
+	portHandle.Update(&newPort)
+
+	if err := txn.Commit(ctx); err != nil {
 		return err
 	}
 

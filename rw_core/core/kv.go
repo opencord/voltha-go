@@ -18,7 +18,6 @@ package core
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/opencord/voltha-lib-go/v3/pkg/db"
@@ -28,17 +27,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func newKVClient(ctx context.Context, storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
-	logger.Infow(ctx, "kv-store-type", log.Fields{"store": storeType})
-	switch storeType {
-	case "consul":
-		return kvstore.NewConsulClient(ctx, address, timeout)
-	case "etcd":
-		return kvstore.NewEtcdClient(ctx, address, timeout, log.FatalLevel)
-	}
-	return nil, errors.New("unsupported-kv-store")
-}
 
 func stopKVClient(ctx context.Context, kvClient kvstore.Client) {
 	// Release all reservations

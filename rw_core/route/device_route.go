@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -49,7 +50,7 @@ type OFPortLink struct {
 }
 
 // listDevicePortsFunc returns device ports
-type listDevicePortsFunc func(ctx context.Context, id string) (map[uint32]*voltha.Port, error)
+type listDevicePortsFunc func(ctx context.Context, txn loader.Txn, id string) (map[uint32]*voltha.Port, error)
 
 // DeviceRoutes represent the set of routes between logical ports of a logical device
 type DeviceRoutes struct {
@@ -414,7 +415,10 @@ func (dr *DeviceRoutes) GetHalfRoute(nniAsEgress bool, ingress, egress uint32) (
 
 //getDeviceWithCacheUpdate returns the from the model and updates the PON ports map of that device.
 func (dr *DeviceRoutes) getDeviceWithCacheUpdate(ctx context.Context, deviceID string) (map[uint32]*voltha.Port, error) {
-	devicePorts, err := dr.listDevicePorts(ctx, deviceID)
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	devicePorts, err := dr.listDevicePorts(ctx, txn, deviceID)
 	if err != nil {
 		logger.Errorw(ctx, "device-not-found", log.Fields{"deviceId": deviceID, "error": err})
 		return nil, err

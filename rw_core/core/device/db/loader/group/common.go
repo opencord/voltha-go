@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-// Package core Common Logger initialization
-package port
+// Package group Common Logger initialization
+package group
 
 import (
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"

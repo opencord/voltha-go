@@ -140,7 +140,7 @@ func (p *Proxy) Get(ctx context.Context, id string, target proto.Message) (bool,
 func (p *Proxy) Set(ctx context.Context, id string, data proto.Message) error {
 	completePath := p.path + id
 
-	logger.Debugw(ctx, "proxy-add", log.Fields{
+	logger.Debugw(ctx, "proxy-set", log.Fields{
 		"path": completePath,
 	})
 
@@ -167,4 +167,21 @@ func (p *Proxy) Remove(ctx context.Context, id string) error {
 		return fmt.Errorf("unable to delete %s in kvStore: %s", completePath, err)
 	}
 	return nil
+}
+
+func (p *Proxy) BulkUpdate(ctx context.Context, ops map[string]proto.Message) error {
+	puts, deletes := make(map[string]string), make(map[string]struct{})
+	for key, value := range ops {
+		if value == nil {
+			deletes[key] = struct{}{}
+		} else {
+			blob, err := proto.Marshal(value)
+			if err != nil {
+				return fmt.Errorf("unable to save %s to kvStore, error marshalling: %s", key, err)
+			}
+			puts[key] = string(blob)
+		}
+	}
+
+	return p.kvStore.BulkUpdate(ctx, puts, deletes)
 }

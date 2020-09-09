@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/api"
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	conf "github.com/opencord/voltha-lib-go/v3/pkg/config"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
 	grpcserver "github.com/opencord/voltha-lib-go/v3/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
@@ -73,7 +74,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// setup kv client
 	logger.Debugw(ctx, "create-kv-client", log.Fields{"kvstore": cf.KVStoreType})
-	kvClient, err := newKVClient(ctx, cf.KVStoreType, cf.KVStoreAddress, cf.KVStoreTimeout)
+	kvClient, err := kvstore.NewEtcdClient(ctx, cf.KVStoreAddress, cf.KVStoreTimeout, log.FatalLevel)
 	if err != nil {
 		logger.Fatal(ctx, err)
 	}

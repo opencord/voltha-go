@@ -25,6 +25,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader"
 	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
@@ -217,7 +218,11 @@ func (dMgr *Manager) GetDevicePort(ctx context.Context, deviceID string, portID 
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "device-%s", deviceID)
 	}
-	return agent.getDevicePort(portID)
+
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	return agent.getDevicePort(txn, portID)
 }
 
 // ListDevicePorts returns the ports details for a specific device entry
@@ -228,7 +233,10 @@ func (dMgr *Manager) ListDevicePorts(ctx context.Context, id *voltha.ID) (*volth
 		return nil, status.Errorf(codes.NotFound, "device-%s", id.Id)
 	}
 
-	ports := agent.listDevicePorts()
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	ports := agent.listDevicePorts(txn)
 	ctr, ret := 0, make([]*voltha.Port, len(ports))
 	for _, port := range ports {
 		ret[ctr] = port
@@ -311,21 +319,21 @@ func (dMgr *Manager) getDeviceReadOnly(ctx context.Context, id string) (*voltha.
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
-func (dMgr *Manager) listDevicePorts(ctx context.Context, id string) (map[uint32]*voltha.Port, error) {
+func (dMgr *Manager) listDevicePorts(ctx context.Context, txn loader.Txn, id string) (map[uint32]*voltha.Port, error) {
 	logger.Debugw(ctx, "listDevicePorts", log.Fields{"deviceid": id})
 	agent := dMgr.getDeviceAgent(ctx, id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id)
 	}
-	return agent.listDevicePorts(), nil
+	return agent.listDevicePorts(txn), nil
 }
 
 // GetChildDevice will return a device, either from memory or from the dB, if present
-func (dMgr *Manager) GetChildDevice(ctx context.Context, parentDeviceID string, serialNumber string, onuID int64, parentPortNo int64) (*voltha.Device, error) {
+func (dMgr *Manager) GetChildDevice(ctx context.Context, txn loader.Txn, parentDeviceID string, serialNumber string, onuID int64, parentPortNo int64) (*voltha.Device, error) {
 	logger.Debugw(ctx, "GetChildDevice", log.Fields{"parentDeviceid": parentDeviceID, "serialNumber": serialNumber,
 		"parentPortNo": parentPortNo, "onuId": onuID})
 
-	parentDevicePorts, err := dMgr.listDevicePorts(ctx, parentDeviceID)
+	parentDevicePorts, err := dMgr.listDevicePorts(ctx, txn, parentDeviceID)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
 	}
@@ -383,7 +391,10 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, parentDeviceID string, 
 func (dMgr *Manager) GetChildDeviceWithProxyAddress(ctx context.Context, proxyAddress *voltha.Device_ProxyAddress) (*voltha.Device, error) {
 	logger.Debugw(ctx, "GetChildDeviceWithProxyAddress", log.Fields{"proxyAddress": proxyAddress})
 
-	parentDevicePorts, err := dMgr.listDevicePorts(ctx, proxyAddress.DeviceId)
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	parentDevicePorts, err := dMgr.listDevicePorts(ctx, txn, proxyAddress.DeviceId)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
 	}
@@ -581,7 +592,9 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 
 	// Now we face two scenarios
 	if device.Root {
-		devicePorts := dAgent.listDevicePorts()
+		txn := loader.NewTxn()
+		defer txn.Close()
+		devicePorts := dAgent.listDevicePorts(txn)
 
 		// Load all children as well as the parent of this device (logical_device)
 		if err := dMgr.loadRootDeviceParentAndChildren(ctx, device, devicePorts); err != nil {
@@ -642,6 +655,9 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 	logger.Debugw(ctx, "adapter-restarted", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
 		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint})
 
+	txn := loader.NewTxn()
+	defer txn.Close()
+
 	// Let's reconcile the device managed by this Core only
 	if len(dMgr.rootDevices) == 0 {
 		logger.Debugw(ctx, "nothing-to-reconcile", log.Fields{"adapterId": adapter.Id})
@@ -664,7 +680,7 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 					logger.Debugw(ctx, "not-reconciling-root-device", log.Fields{"rootId": rootDevice.Id, "state": rootDevice.AdminState})
 				}
 			} else { // Should we be reconciling the root's children instead?
-				rootDevicePorts, _ := dMgr.listDevicePorts(ctx, rootDeviceID)
+				rootDevicePorts, _ := dMgr.listDevicePorts(ctx, txn, rootDeviceID)
 			childManagedByAdapter:
 				for _, port := range rootDevicePorts {
 					for _, peer := range port.Peers {
@@ -760,14 +776,16 @@ func (dMgr *Manager) addPeerPort(ctx context.Context, deviceID string, port *vol
 			}
 		}
 	}
+
+	ports, err := dMgr.listDevicePorts(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+
 	// Notify the logical device manager to setup a logical port, if needed.  If the added port is an NNI or UNI
 	// then a logical port will be added to the logical device and the device route generated.  If the port is a
 	// PON port then only the device graph will be generated.
 	device, err := dMgr.getDeviceReadOnly(ctx, deviceID)
-	if err != nil {
-		return err
-	}
-	ports, err := dMgr.listDevicePorts(ctx, deviceID)
 	if err != nil {
 		return err
 	}
@@ -779,19 +797,26 @@ func (dMgr *Manager) addPeerPort(ctx context.Context, deviceID string, port *vol
 
 func (dMgr *Manager) AddPort(ctx context.Context, deviceID string, port *voltha.Port) error {
 	agent := dMgr.getDeviceAgent(ctx, deviceID)
-	if agent != nil {
-		if err := agent.addPort(ctx, port); err != nil {
-			return err
-		}
-		//	Setup peer ports in its own routine
-		go func() {
-			if err := dMgr.addPeerPort(context.Background(), deviceID, port); err != nil {
-				logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": deviceID})
-			}
-		}()
-		return nil
+	if agent == nil {
+		return status.Errorf(codes.NotFound, "%s", deviceID)
 	}
-	return status.Errorf(codes.NotFound, "%s", deviceID)
+
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	agent.addPort(ctx, txn, port)
+
+	if err := txn.Commit(ctx); err != nil {
+		return err
+	}
+
+	//	Setup peer ports in its own routine
+	go func() {
+		if err := dMgr.addPeerPort(context.Background(), deviceID, port); err != nil {
+			logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": deviceID})
+		}
+	}()
+	return nil
 }
 
 func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
@@ -871,13 +896,13 @@ func (dMgr *Manager) getSwitchCapability(ctx context.Context, deviceID string) (
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) GetPorts(ctx context.Context, deviceID string, portType voltha.Port_PortType) (*voltha.Ports, error) {
+func (dMgr *Manager) GetPorts(ctx context.Context, txn *loader.Txn, deviceID string, portType voltha.Port_PortType) (*voltha.Ports, error) {
 	logger.Debugw(ctx, "GetPorts", log.Fields{"deviceid": deviceID, "portType": portType})
 	agent := dMgr.getDeviceAgent(ctx, deviceID)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", deviceID)
 	}
-	return agent.getPorts(ctx, portType), nil
+	return agent.getPorts(ctx, txn, portType), nil
 }
 
 func (dMgr *Manager) UpdateDeviceStatus(ctx context.Context, deviceID string, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
@@ -910,22 +935,6 @@ func (dMgr *Manager) UpdatePortState(ctx context.Context, deviceID string, portT
 		if err := agent.updatePortState(ctx, portType, portNo, operStatus); err != nil {
 			logger.Errorw(ctx, "updating-port-state-failed", log.Fields{"deviceid": deviceID, "portNo": portNo, "error": err})
 			return err
-		}
-		// Notify the logical device manager to change the port state
-		// Do this for NNI and UNIs only. PON ports are not known by logical device
-		if portType == voltha.Port_ETHERNET_NNI || portType == voltha.Port_ETHERNET_UNI {
-			go func() {
-				err := dMgr.logicalDeviceMgr.updatePortState(context.Background(), deviceID, portNo, operStatus)
-				if err != nil {
-					// While we want to handle (catch) and log when
-					// an update to a port was not able to be
-					// propagated to the logical port, we can report
-					// it as a warning and not an error because it
-					// doesn't stop or modify processing.
-					// TODO: VOL-2707
-					logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
-				}
-			}()
 		}
 		return nil
 	}
@@ -966,8 +975,8 @@ func (dMgr *Manager) UpdatePortsState(ctx context.Context, deviceID string, port
 	if state != voltha.OperStatus_ACTIVE && state != voltha.OperStatus_UNKNOWN {
 		return status.Error(codes.Unimplemented, "state-change-not-implemented")
 	}
-	if err := agent.updatePortsOperState(ctx, portTypeFilter, state); err != nil {
-		logger.Warnw(ctx, "updatePortsOperState-failed", log.Fields{"deviceId": deviceID, "error": err})
+	if err := agent.updatePortsState(ctx, portTypeFilter, state); err != nil {
+		logger.Warnw(ctx, "updatePortsState-failed", log.Fields{"deviceId": deviceID, "error": err})
 		return err
 	}
 	return nil
@@ -1270,7 +1279,10 @@ func (dMgr *Manager) GetAllChildDevices(ctx context.Context, parentDeviceID stri
 // SetupUNILogicalPorts creates UNI ports on the logical device that represents a child UNI interface
 func (dMgr *Manager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info(ctx, "SetupUNILogicalPorts")
-	cDevicePorts, err := dMgr.listDevicePorts(ctx, cDevice.Id)
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	cDevicePorts, err := dMgr.listDevicePorts(ctx, txn, cDevice.Id)
 	if err != nil {
 		return err
 	}
@@ -1477,15 +1489,18 @@ func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty
 
 // ChildDeviceLost  calls parent adapter to delete child device and all its references
 func (dMgr *Manager) ChildDeviceLost(ctx context.Context, curr *voltha.Device) error {
+	txn := loader.NewTxn()
+	defer txn.Close()
+
 	logger.Debugw(ctx, "childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
 	if parentAgent := dMgr.getDeviceAgent(ctx, curr.ParentId); parentAgent != nil {
-		if err := parentAgent.ChildDeviceLost(ctx, curr); err != nil {
+		if err := parentAgent.ChildDeviceLost(ctx, txn, curr); err != nil {
 			// Just log the message and let the remaining pipeline proceed.
 			logger.Warnw(ctx, "childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId, "error": err})
 		}
 	}
 	// Do not return an error as parent device may also have been deleted.  Let the remaining pipeline proceed.
-	return nil
+	return txn.Commit()
 }
 
 func (dMgr *Manager) StartOmciTestAction(ctx context.Context, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) {

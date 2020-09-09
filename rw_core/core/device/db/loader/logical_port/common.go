@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Package core Common Logger initialization
+// Package port Common Logger initialization
 package port
 
 import (

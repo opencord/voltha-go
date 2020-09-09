@@ -19,13 +19,13 @@ package port
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/opencord/voltha-go/db/model"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"github.com/opencord/voltha-protos/v3/go/voltha"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Loader hides all low-level locking & synchronization related to port state updates
@@ -54,66 +54,75 @@ func NewLoader(dbProxy *model.Proxy) *Loader {
 
 // Load queries existing ports from the kv,
 // and should only be called once when first created.
-func (loader *Loader) Load(ctx context.Context) {
-	loader.lock.Lock()
-	defer loader.lock.Unlock()
+func (l *Loader) Load(ctx context.Context) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
 
 	var ports []*voltha.Port
-	if err := loader.dbProxy.List(ctx, &ports); err != nil {
+	if err := l.dbProxy.List(ctx, &ports); err != nil {
 		logger.Errorw(ctx, "failed-to-list-ports-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
 	for _, port := range ports {
-		loader.ports[port.PortNo] = &chunk{port: port}
+		l.ports[port.PortNo] = &chunk{port: port}
 	}
 }
 
 // LockOrCreate locks this port if it exists, or creates a new port if it does not.
 // In the case of port creation, the provided "port" must not be modified afterwards.
-func (loader *Loader) LockOrCreate(ctx context.Context, port *voltha.Port) (*Handle, bool, error) {
+func (l *Loader) LockOrCreate(txn loader.Txn, port *voltha.Port) (*Handle, bool) {
 	// try to use read lock instead of full lock if possible
-	if handle, have := loader.Lock(port.PortNo); have {
-		return handle, false, nil
+	if handle, have := l.Lock(txn, port.PortNo); have {
+		return handle, false
 	}
 
-	loader.lock.Lock()
-	entry, have := loader.ports[port.PortNo]
-	if !have {
-		entry := &chunk{port: port}
-		loader.ports[port.PortNo] = entry
-		entry.lock.Lock()
-		loader.lock.Unlock()
+retry:
+	l.lock.Lock()
+	if entry, have := l.ports[port.PortNo]; have {
+		l.lock.Unlock()
 
-		if err := loader.dbProxy.Set(ctx, fmt.Sprint(port.PortNo), port); err != nil {
+		// if the entry exists, just need to lock it
+		entry.lock.Lock()
+		if entry.deleted {
+			entry.lock.Unlock()
+			goto retry // entry was deleted, restart from the beginning
+		}
+		return &Handle{loader: l, chunk: entry}, false
+	}
+
+	// if entry is not found, create a new one
+	entry := &chunk{port: port}
+	entry.lock.Lock()
+	// and add it to the list
+	l.ports[port.PortNo] = entry
+	l.lock.Unlock()
+
+	// add the port creation to the port loader
+	txn.Set(l.dbProxy, fmt.Sprint(port.PortNo), port, func(success bool) {
+		defer entry.lock.Unlock()
+		if !success {
 			// revert the map
-			loader.lock.Lock()
-			delete(loader.ports, port.PortNo)
-			loader.lock.Unlock()
+			l.lock.Lock()
+			delete(l.ports, port.PortNo)
+			l.lock.Unlock()
 
 			entry.deleted = true
-			entry.lock.Unlock()
-			return nil, false, err
 		}
-		return &Handle{loader: loader, chunk: entry}, true, nil
-	}
-	loader.lock.Unlock()
-
-	entry.lock.Lock()
-	if entry.deleted {
-		entry.lock.Unlock()
-		return loader.LockOrCreate(ctx, port)
-	}
-	return &Handle{loader: loader, chunk: entry}, false, nil
+	})
+	return nil, true
 }
 
 // Lock acquires the lock for this port, and returns a handle which can be used to access the port until it's unlocked.
 // This handle ensures that the port cannot be accessed if the lock is not held.
 // Returns false if the port is not present.
 // TODO: consider accepting a ctx and aborting the lock attempt on cancellation
-func (loader *Loader) Lock(id uint32) (*Handle, bool) {
-	loader.lock.RLock()
-	entry, have := loader.ports[id]
-	loader.lock.RUnlock()
+func (l *Loader) Lock(txn loader.Txn, id uint32) (*Handle, bool) {
+	txn.CheckSaneLockOrder(loader.LockID{Type: loader.Port, ID: id})
+
+retry:
+	l.lock.RLock()
+	entry, have := l.ports[id]
+	l.lock.RUnlock()
 
 	if !have {
 		return nil, false
@@ -122,14 +131,15 @@ func (loader *Loader) Lock(id uint32) (*Handle, bool) {
 	entry.lock.Lock()
 	if entry.deleted {
 		entry.lock.Unlock()
-		return loader.Lock(id)
+		goto retry // entry was deleted, restart from the beginning
 	}
-	return &Handle{loader: loader, chunk: entry}, true
+	return &Handle{loader: l, chunk: entry}, true
 }
 
 // Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
 // This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
+	txn    loader.Txn
 	loader *Loader
 	chunk  *chunk
 }
@@ -141,47 +151,59 @@ func (h *Handle) GetReadOnly() *voltha.Port {
 
 // Update updates an existing port in the kv.
 // The provided "port" must not be modified afterwards.
-func (h *Handle) Update(ctx context.Context, port *voltha.Port) error {
-	if err := h.loader.dbProxy.Set(ctx, fmt.Sprint(port.PortNo), port); err != nil {
-		return status.Errorf(codes.Internal, "failed-update-port-%v: %s", port.PortNo, err)
-	}
-	h.chunk.port = port
-	return nil
+func (h *Handle) Update(port *voltha.Port) {
+	localH := h.takeHandleOwnership()
+	localH.txn.Set(localH.loader.dbProxy, fmt.Sprint(port.PortNo), port, func(success bool) {
+		defer localH.Unlock()
+		if success {
+			localH.chunk.port = port
+		}
+	})
 }
 
 // Delete removes the device from the kv
-func (h *Handle) Delete(ctx context.Context) error {
-	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.port.PortNo)); err != nil {
-		return fmt.Errorf("couldnt-delete-port-from-store-%v", h.chunk.port.PortNo)
-	}
-	h.chunk.deleted = true
+func (h *Handle) Delete() {
+	localH := h.takeHandleOwnership()
+	localH.txn.Remove(localH.loader.dbProxy, fmt.Sprint(localH.chunk.port.PortNo), func(success bool) {
+		defer localH.Unlock()
+		if success {
+			localH.chunk.deleted = true
 
-	h.loader.lock.Lock()
-	delete(h.loader.ports, h.chunk.port.PortNo)
-	h.loader.lock.Unlock()
-
-	h.Unlock()
-	return nil
+			localH.loader.lock.Lock()
+			delete(localH.loader.ports, localH.chunk.port.PortNo)
+			localH.loader.lock.Unlock()
+		}
+	})
 }
 
 // Unlock releases the lock on the port
 func (h *Handle) Unlock() {
 	if h.chunk != nil {
 		h.chunk.lock.Unlock()
-		h.chunk = nil // attempting to access the port through this handle in future will panic
+		h.chunk, h.txn = nil, nil
 	}
+}
+
+// takeHandleOwnership ensures that any further access using the old handle will panic,
+// and returns a new handle which is valid to use instead
+func (h *Handle) takeHandleOwnership() Handle {
+	newHandle := *h
+	h.chunk, h.txn = nil, nil
+	return newHandle
 }
 
 // ListIDs returns a snapshot of all the managed port IDs
 // TODO: iterating through ports safely is expensive now, since all ports are stored & locked separately
 //       should avoid this where possible
-func (loader *Loader) ListIDs() map[uint32]struct{} {
-	loader.lock.RLock()
-	defer loader.lock.RUnlock()
+func (l *Loader) ListIDs() []uint32 {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
 	// copy the IDs so caller can safely iterate
-	ret := make(map[uint32]struct{}, len(loader.ports))
-	for id := range loader.ports {
-		ret[id] = struct{}{}
+	ctr, ret := 0, make([]uint32, len(l.ports))
+	for id := range l.ports {
+		ret[ctr] = id
+		ctr++
 	}
+	sort.Slice(ret, func(i, j int) bool { return ret[i] < ret[j] })
 	return ret
 }

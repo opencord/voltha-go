@@ -27,9 +27,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
-	"github.com/opencord/voltha-go/rw_core/core/device/flow"
-	"github.com/opencord/voltha-go/rw_core/core/device/group"
-	"github.com/opencord/voltha-go/rw_core/core/device/port"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/flow"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/group"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/port"
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 
@@ -686,12 +687,12 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
-func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {
+func (agent *Agent) ChildDeviceLost(ctx context.Context,txn loader.Txn, device *voltha.Device) {
 	logger.Debugw(ctx, "childDeviceLost", log.Fields{"child-device-id": device.Id, "parent-device-ud": agent.deviceID})
 
 	// Remove the associated peer ports on the parent device
-	for portID := range agent.portLoader.ListIDs() {
-		if portHandle, have := agent.portLoader.Lock(portID); have {
+	for _, portID := range agent.portLoader.ListIDs() {
+		if portHandle, have := agent.portLoader.Lock(txn, portID); have {
 			oldPort := portHandle.GetReadOnly()
 			updatedPeers := make([]*voltha.Port_PeerPort, 0)
 			for _, peerPort := range oldPort.Peers {
@@ -701,23 +702,22 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 			}
 			newPort := *oldPort
 			newPort.Peers = updatedPeers
-			if err := portHandle.Update(ctx, &newPort); err != nil {
-				portHandle.Unlock()
-				return nil
-			}
+			portHandle.Update(&newPort)
 			portHandle.Unlock()
 		}
 	}
 
-	//send request to adapter
-	subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
-	ch, err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
-	if err != nil {
-		cancel()
-		return err
-	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "childDeviceLost", ch, agent.onSuccess, agent.onFailure)
-	return nil
+	txn.OnSuccess(func(){
+		//send request to adapter
+		subCtx, cancel := context.WithTimeout(context.Background(), agent.defaultTimeout)
+		ch, err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
+		if err != nil {
+			cancel()
+			log.Warn("failed-to-send-child-device-lost", err)
+			return
+		}
+		go agent.waitForAdapterResponse(subCtx, cancel, "childDeviceLost", ch, agent.onSuccess, agent.onFailure)
+	})
 }
 
 func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {

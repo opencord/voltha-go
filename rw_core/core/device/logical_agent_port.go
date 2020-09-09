@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"sync"
 
-	coreutils "github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader"
 	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
@@ -83,6 +83,10 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 // NNI and UNI ports which were discarded.  Now is the time to add them if needed
 func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 	logger.Infow(ctx, "setupLogicalPorts", log.Fields{"logicalDeviceId": agent.logicalDeviceID})
+
+	txn := loader.NewTxn()
+	defer txn.Close()
+
 	// First add any NNI ports which could have been missing
 	if err := agent.setupNNILogicalPorts(ctx, agent.rootDeviceID); err != nil {
 		logger.Errorw(ctx, "error-setting-up-NNI-ports", log.Fields{"error": err, "deviceId": agent.rootDeviceID})
@@ -95,31 +99,20 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 		logger.Errorw(ctx, "error-getting-child-devices", log.Fields{"error": err, "deviceId": agent.rootDeviceID})
 		return err
 	}
-	responses := make([]coreutils.Response, 0)
 	for _, child := range children.Items {
-		response := coreutils.NewResponse()
-		responses = append(responses, response)
-		go func(ctx context.Context, child *voltha.Device) {
-			defer response.Done()
+		childPorts, err := agent.deviceMgr.listDevicePorts(ctx, child.Id)
+		if err != nil {
+			logger.Error(ctx, "setting-up-UNI-ports-failed", log.Fields{"deviceID": child.Id})
+			return status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id)
+		}
 
-			childPorts, err := agent.deviceMgr.listDevicePorts(ctx, child.Id)
-			if err != nil {
-				logger.Error(ctx, "setting-up-UNI-ports-failed", log.Fields{"deviceID": child.Id})
-				response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
-				return
-			}
+		if err = agent.setupUNILogicalPorts(ctx, child, childPorts); err != nil {
+			logger.Error(ctx, "setting-up-UNI-ports-failed", log.Fields{"deviceID": child.Id})
+			return status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id)
+		}
+	}
 
-			if err = agent.setupUNILogicalPorts(ctx, child, childPorts); err != nil {
-				logger.Error(ctx, "setting-up-UNI-ports-failed", log.Fields{"deviceID": child.Id})
-				response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
-			}
-		}(context.Background(), child)
-	}
-	// Wait for completion
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
-		return status.Errorf(codes.Aborted, "errors-%s", res)
-	}
-	return nil
+	return txn.Commit(ctx)
 }
 
 // setupNNILogicalPorts creates an NNI port on the logical device that represents an NNI interface on a root device

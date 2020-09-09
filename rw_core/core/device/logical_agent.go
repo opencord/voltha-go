@@ -24,10 +24,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-go/rw_core/core/device/flow"
-	"github.com/opencord/voltha-go/rw_core/core/device/group"
-	"github.com/opencord/voltha-go/rw_core/core/device/logical_port"
-	"github.com/opencord/voltha-go/rw_core/core/device/meter"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/flow"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/group"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/logical_port"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader/meter"
 	fd "github.com/opencord/voltha-go/rw_core/flowdecomposition"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -134,6 +134,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 
 		// Setup the logicalports - internal processing, no need to propagate the client context
 		go func() {
+
 			err := agent.setupLogicalPorts(context.Background())
 			if err != nil {
 				logger.Errorw(ctx, "unable-to-setup-logical-ports", log.Fields{"error": err})

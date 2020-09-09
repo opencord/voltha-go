@@ -24,6 +24,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
+	"github.com/opencord/voltha-go/rw_core/core/device/db/loader"
 	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
@@ -251,7 +252,10 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(ctx context.Context, args []*ic.
 	}
 	logger.Debugw(ctx, "GetPorts", log.Fields{"deviceID": deviceID.Id, "portype": pt.Val, "transactionID": transactionID.Val})
 
-	return rhp.deviceMgr.GetPorts(context.TODO(), deviceID.Id, voltha.Port_PortType(pt.Val))
+	txn := loader.NewTxn()
+	defer txn.Close()
+
+	return rhp.deviceMgr.GetPorts(context.TODO(), txn, deviceID.Id, voltha.Port_PortType(pt.Val))
 }
 
 // GetChildDevices gets all the child device IDs from the device passed as parameter
