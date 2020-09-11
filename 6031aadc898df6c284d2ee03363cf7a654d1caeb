@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e62f463_01682c40",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-09-11T15:00:50Z",
+      "side": 1,
+      "message": "Would it be clearer if this interface was in its own go file?",
+      "revId": "6031aadc898df6c284d2ee03363cf7a654d1caeb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
