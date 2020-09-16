@@ -25,16 +25,18 @@ import (
 )
 
 const (
-	defaultTracingStatusKey = "trace_publish" // kvstore key containing tracing configuration status
+	defaultTracingStatusKey        = "trace_publish"   // kvstore key containing tracing configuration status
+	defaultLogCorrelationStatusKey = "log_correlation" // kvstore key containing log correlation configuration status
 )
 
 // ComponentLogFeatureController represents Configuration for Logging related features of Tracing and Log
 // Correlation of specific Voltha component.
 type ComponentLogFeaturesController struct {
-	ComponentName        string
-	componentNameConfig  *ComponentConfig
-	configManager        *ConfigManager
-	initialTracingStatus bool // Initial default tracing status set by helm chart
+	ComponentName               string
+	componentNameConfig         *ComponentConfig
+	configManager               *ConfigManager
+	initialTracingStatus        bool // Initial default tracing status set by helm chart
+	initialLogCorrelationStatus bool // Initial default log correlation status set by helm chart
 }
 
 func NewComponentLogFeaturesController(ctx context.Context, cm *ConfigManager) (*ComponentLogFeaturesController, error) {
@@ -45,12 +47,14 @@ func NewComponentLogFeaturesController(ctx context.Context, cm *ConfigManager) (
 	}
 
 	tracingStatus := log.GetGlobalLFM().GetTracePublishingStatus()
+	logCorrelationStatus := log.GetGlobalLFM().GetLogCorrelationStatus()
 
 	return &ComponentLogFeaturesController{
-		ComponentName:        componentName,
-		componentNameConfig:  nil,
-		configManager:        cm,
-		initialTracingStatus: tracingStatus,
+		ComponentName:               componentName,
+		componentNameConfig:         nil,
+		configManager:               cm,
+		initialTracingStatus:        tracingStatus,
+		initialLogCorrelationStatus: logCorrelationStatus,
 	}, nil
 
 }
@@ -87,14 +91,27 @@ func (cc *ComponentLogFeaturesController) persistInitialLogFeaturesConfigs(ctx c
 			logger.Errorw(ctx, "failed-to-persist-component-initial-tracing-status-at-startup", log.Fields{"error": err, "tracingstatus": statusString})
 		}
 	}
+
+	_, err = cc.componentNameConfig.Retrieve(ctx, defaultLogCorrelationStatusKey)
+	if err != nil {
+		statusString := "DISABLED"
+		if cc.initialLogCorrelationStatus {
+			statusString = "ENABLED"
+		}
+		err = cc.componentNameConfig.Save(ctx, defaultLogCorrelationStatusKey, statusString)
+		if err != nil {
+			logger.Errorw(ctx, "failed-to-persist-component-initial-log-correlation-status-at-startup", log.Fields{"error": err, "logcorrelationstatus": statusString})
+		}
+	}
 }
 
 // processLogFeaturesConfig will first load and apply configuration of log features. Then it will start waiting for any changes
 // made to configuration in config store (etcd) and apply the same
 func (cc *ComponentLogFeaturesController) processLogFeaturesConfig(ctx context.Context) {
 
-	// Load and apply Tracing Status for first time
+	// Load and apply Tracing Status and log correlation status for first time
 	cc.loadAndApplyTracingStatusUpdate(ctx)
+	cc.loadAndApplyLogCorrelationStatusUpdate(ctx)
 
 	componentConfigEventChan := cc.componentNameConfig.MonitorForConfigChange(ctx)
 
@@ -110,6 +127,8 @@ func (cc *ComponentLogFeaturesController) processLogFeaturesConfig(ctx context.C
 
 			if strings.HasSuffix(configEvent.ConfigAttribute, defaultTracingStatusKey) {
 				cc.loadAndApplyTracingStatusUpdate(ctx)
+			} else if strings.HasSuffix(configEvent.ConfigAttribute, defaultLogCorrelationStatusKey) {
+				cc.loadAndApplyLogCorrelationStatusUpdate(ctx)
 			}
 		}
 	}
@@ -125,11 +144,29 @@ func (cc *ComponentLogFeaturesController) loadAndApplyTracingStatusUpdate(ctx co
 	}
 
 	if desiredTracingStatus != "ENABLED" && desiredTracingStatus != "DISABLED" {
-		logger.Warnw(ctx, "unsupported-tracing-status-configured-in-config-store", log.Fields{"tracing-status": desiredTracingStatus})
+		logger.Warnw(ctx, "unsupported-tracing-status-configured-in-config-store", log.Fields{"failed-tracing-status": desiredTracingStatus, "tracing-status": log.GetGlobalLFM().GetTracePublishingStatus()})
 		return
 	}
 
 	logger.Debugw(ctx, "retrieved-tracing-status", log.Fields{"tracing-status": desiredTracingStatus})
 
 	log.GetGlobalLFM().SetTracePublishingStatus(desiredTracingStatus == "ENABLED")
+}
+
+func (cc *ComponentLogFeaturesController) loadAndApplyLogCorrelationStatusUpdate(ctx context.Context) {
+
+	desiredLogCorrelationStatus, err := cc.componentNameConfig.Retrieve(ctx, defaultLogCorrelationStatusKey)
+	if err != nil || desiredLogCorrelationStatus == "" {
+		logger.Warn(ctx, "unable-to-retrieve-log-correlation-status-from-config-store")
+		return
+	}
+
+	if desiredLogCorrelationStatus != "ENABLED" && desiredLogCorrelationStatus != "DISABLED" {
+		logger.Warnw(ctx, "unsupported-log-correlation-status-configured-in-config-store", log.Fields{"failed-log-correlation-status": desiredLogCorrelationStatus, "log-correlation-status": log.GetGlobalLFM().GetLogCorrelationStatus()})
+		return
+	}
+
+	logger.Debugw(ctx, "retrieved-log-correlation-status", log.Fields{"log-correlation-status": desiredLogCorrelationStatus})
+
+	log.GetGlobalLFM().SetLogCorrelationStatus(desiredLogCorrelationStatus == "ENABLED")
 }
