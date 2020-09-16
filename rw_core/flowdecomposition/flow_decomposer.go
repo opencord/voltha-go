@@ -144,7 +144,8 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 	} else {
 		// Trap flow for UNI port
 		logger.Debug(ctx, "trap-uni")
-
+		var setVid, setPcp uint32
+		var setVidOk, setPcpOk bool
 		//inPortNo is 0 for wildcard input case, do not include upstream port for controller bound flow in input
 		var inPorts = map[uint32]struct{}{inPortNo: {}}
 		if inPortNo == 0 {
@@ -162,8 +163,17 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 					fu.Output(egressHop.Egress),
 				},
 			}
-			// Augment the matchfields with the ofpfields from the flow
-			faParent.MatchFields = append(faParent.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
+			// Augment the parent device flow matchfields with the ofpfields from the flow
+			faParent.MatchFields = append(faParent.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.VLAN_VID, fu.VLAN_PCP)...)
+			// Augment the parent device flow matchfields with vlan vid and vlan pcp from action field.
+			// The child device is going to set the vlan and pcp and parent device has to match on them
+			if setVid, setVidOk = fu.GetSetActionField(ctx, flow, fu.VLAN_VID); setVidOk {
+				faParent.MatchFields = append(faParent.MatchFields, fu.VlanVid(setVid))
+				if setPcp, setPcpOk = fu.GetSetActionField(ctx, flow, fu.VLAN_PCP); setPcpOk {
+					faParent.MatchFields = append(faParent.MatchFields, fu.VlanPcp(setPcp))
+				}
+			}
+
 			fgParent := fu.NewFlowsAndGroups()
 			fs, err := fu.MkFlowStat(faParent)
 			if err != nil {
@@ -175,13 +185,15 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 
 			// Upstream flow on child (onu) device
 			var actions []*ofp.OfpAction
-			setvid := fu.GetVlanVid(flow)
-			if setvid != nil {
+			if setVidOk {
 				// have this child push the vlan the parent is matching/trapping on above
 				actions = []*ofp.OfpAction{
 					fu.PushVlan(0x8100),
-					fu.SetField(fu.VlanVid(*setvid)),
+					fu.SetField(fu.VlanVid(setVid)),
 					fu.Output(ingressHop.Egress),
+				}
+				if setPcpOk {
+					actions = append(actions, fu.SetField(fu.VlanPcp(setPcp)))
 				}
 			} else {
 				// otherwise just set the egress port
@@ -200,11 +212,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 			// Augment the matchfields with the ofpfields from the flow.
 			// If the parent has a match vid and the child is setting that match vid exclude the the match vlan
 			// for the child given it will be setting that vlan and the parent will be matching on it
-			if setvid != nil {
-				faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.VLAN_VID)...)
-			} else {
-				faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
-			}
+			faChild.MatchFields = append(faChild.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
 			fgChild := fu.NewFlowsAndGroups()
 			fs, err = fu.MkFlowStat(faChild)
 			if err != nil {
