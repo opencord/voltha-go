@@ -432,7 +432,7 @@ func (rhp *RequestHandlerProxy) Update_pm_config(ctx context.Context, args []*ic
 			}
 		}
 	}
-	logger.Debugw(ctx, "Update_pm_config", log.Fields{"deviceId": device.Id, "pmConfigs": pmConfigs})
+	logger.Debugw(ctx, "Update_pm_config", log.Fields{"device-id": device.Id, "pmConfigs": pmConfigs})
 	//Invoke the pm config update API of the adapter
 	if err := rhp.adapter.Update_pm_config(ctx, device, pmConfigs); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
@@ -455,7 +455,7 @@ func (rhp *RequestHandlerProxy) Receive_packet_out(ctx context.Context, args []*
 		switch arg.Key {
 		case "deviceId":
 			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
-				logger.Warnw(ctx, "cannot-unmarshal-deviceId", log.Fields{"error": err})
+				logger.Warnw(ctx, "cannot-unmarshal-device-id", log.Fields{"error": err})
 				return nil, err
 			}
 		case "outPort":
@@ -475,7 +475,7 @@ func (rhp *RequestHandlerProxy) Receive_packet_out(ctx context.Context, args []*
 			}
 		}
 	}
-	logger.Debugw(ctx, "Receive_packet_out", log.Fields{"deviceId": deviceId.Val, "outPort": egressPort, "packet": packet})
+	logger.Debugw(ctx, "Receive_packet_out", log.Fields{"device-id": deviceId.Val, "outPort": egressPort, "packet": packet})
 	//Invoke the adopt device on the adapter
 	if err := rhp.adapter.Receive_packet_out(ctx, deviceId.Val, int(egressPort.Val), packet); err != nil {
 		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
@@ -514,7 +514,7 @@ func (rhp *RequestHandlerProxy) Get_ofp_device_info(ctx context.Context, args []
 		}
 	}
 
-	logger.Debugw(ctx, "Get_ofp_device_info", log.Fields{"deviceId": device.Id})
+	logger.Debugw(ctx, "Get_ofp_device_info", log.Fields{"device-id": device.Id})
 
 	var cap *ic.SwitchCapability
 	var err error
@@ -582,7 +582,7 @@ func (rhp *RequestHandlerProxy) Enable_port(ctx context.Context, args []*ic.Argu
 	logger.Debugw(ctx, "enable_port", log.Fields{"args": args})
 	deviceId, port, err := rhp.getEnableDisableParams(ctx, args)
 	if err != nil {
-		logger.Warnw(ctx, "enable_port", log.Fields{"args": args, "deviceId": deviceId, "port": port})
+		logger.Warnw(ctx, "enable_port", log.Fields{"args": args, "device-id": deviceId, "port": port})
 		return err
 	}
 	return rhp.adapter.Enable_port(ctx, deviceId, port)
@@ -592,7 +592,7 @@ func (rhp *RequestHandlerProxy) Disable_port(ctx context.Context, args []*ic.Arg
 	logger.Debugw(ctx, "disable_port", log.Fields{"args": args})
 	deviceId, port, err := rhp.getEnableDisableParams(ctx, args)
 	if err != nil {
-		logger.Warnw(ctx, "disable_port", log.Fields{"args": args, "deviceId": deviceId, "port": port})
+		logger.Warnw(ctx, "disable_port", log.Fields{"args": args, "device-id": deviceId, "port": port})
 		return err
 	}
 	return rhp.adapter.Disable_port(ctx, deviceId, port)
@@ -717,7 +717,7 @@ func (rhp *RequestHandlerProxy) Get_ext_value(ctx context.Context, args []*ic.Ar
 			}
 		case "pDeviceId":
 			if err := ptypes.UnmarshalAny(arg.Value, pDeviceId); err != nil {
-				logger.Warnw(ctx, "cannot-unmarshal-parent-deviceId", log.Fields{"error": err})
+				logger.Warnw(ctx, "cannot-unmarshal-parent-device-id", log.Fields{"error": err})
 				return nil, err
 			}
 		case "valuetype":
