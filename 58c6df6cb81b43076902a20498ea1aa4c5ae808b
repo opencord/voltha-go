@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "831fa1cb_3e704eca",
+        "filename": "VERSION",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-09-17T20:24:44Z",
+      "side": 1,
+      "message": "Unless you\u0027re cutting a release, should leave this as -dev.",
+      "revId": "58c6df6cb81b43076902a20498ea1aa4c5ae808b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
