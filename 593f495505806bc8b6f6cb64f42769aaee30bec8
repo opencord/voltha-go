@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a1a06ff_fbd6d4b6",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-09-22T15:32:10Z",
+      "side": 1,
+      "message": "The key should be \"flow\" not \"flows\" as well.",
+      "range": {
+        "startLine": 175,
+        "startChar": 6,
+        "endLine": 175,
+        "endChar": 11
+      },
+      "revId": "593f495505806bc8b6f6cb64f42769aaee30bec8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f0a01d6_9d75dd04",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-09-22T15:32:10Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 183,
+        "startChar": 7,
+        "endLine": 183,
+        "endChar": 12
+      },
+      "revId": "593f495505806bc8b6f6cb64f42769aaee30bec8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
