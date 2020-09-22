@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -29,7 +31,6 @@ import (
 	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strconv"
 )
 
 // listLogicalDeviceFlows returns logical device flows
@@ -171,7 +172,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				logger.Infow(ctx, "failed-to-add-flows-will-attempt-deletion", log.Fields{
 					"errors":            res,
 					"logical-device-id": agent.logicalDeviceID,
-					"flows":             flows,
+					"flows":             flow,
 					"groups":            groups,
 				})
 				// Revert added flows
@@ -179,7 +180,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 					logger.Errorw(ctx, "failure-to-delete-flows-after-failed-addition", log.Fields{
 						"error":             err,
 						"logical-device-id": agent.logicalDeviceID,
-						"flows":             flows,
+						"flows":             flow,
 						"groups":            groups,
 					})
 				}
