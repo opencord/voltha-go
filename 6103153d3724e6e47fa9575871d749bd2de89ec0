@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ee54459_38a9a7b2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-22T06:57:37Z",
+      "side": 1,
+      "message": "I know it tags the jira ticket and that has description, but a phrase in the commit message to describe the fix is needed. please add",
+      "revId": "6103153d3724e6e47fa9575871d749bd2de89ec0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
