@@ -16,6 +16,24 @@
       "revId": "5304aa718697ef7aa42c2d6c8e2e82cd9e7d5e21",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09826141_8f856974",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-22T14:28:33Z",
+      "side": 1,
+      "message": "this error is installation of the decomposed set of deviceRules. I\u0027m not sure it is actually one rule only. we shoudl probably return deviceRules here",
+      "parentUuid": "8346ebca_9ad8d883",
+      "revId": "5304aa718697ef7aa42c2d6c8e2e82cd9e7d5e21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
