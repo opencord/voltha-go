@@ -34,6 +34,24 @@
       "revId": "5304aa718697ef7aa42c2d6c8e2e82cd9e7d5e21",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58d511e9_c9367d03",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-09-22T14:41:31Z",
+      "side": 1,
+      "message": "Correct, in the sense that the error is when installing the decomposed flows (could be an error from a device, an adapter or subsequent process in the Core before sending the request to an adapter).   However, from a logical device perspective, it\u0027s a logical flow that failed to be installed.  One option is to log both the logical flows and the deviceRules as well.   However, it may be hard to use in order to identify which device flow actually failed.  Here, on error, we can log the logical flow only and in the device agent log the specific device flow that failed.",
+      "parentUuid": "09826141_8f856974",
+      "revId": "5304aa718697ef7aa42c2d6c8e2e82cd9e7d5e21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
