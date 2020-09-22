@@ -1045,7 +1045,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 
 	// Create and start a device agent for that device
 	agent := newAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
-	childDevice, err := agent.start(ctx, childDevice)
+	insertedChildDevice, err := agent.start(ctx, childDevice)
 	if err != nil {
 		logger.Errorw(ctx, "error-starting-child-device", log.Fields{"parent-device-id": childDevice.ParentId, "child-device-id": agent.deviceID, "error": err})
 		return nil, err
@@ -1062,7 +1062,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 		}()
 	}
 
-	return childDevice, nil
+	return insertedChildDevice, nil
 }
 
 func (dMgr *Manager) packetOut(ctx context.Context, deviceID string, outPort uint32, packet *ofp.OfpPacketOut) error {
