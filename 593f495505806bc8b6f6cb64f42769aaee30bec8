@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "933e834d_47a6b166",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-22T15:34:21Z",
+      "side": 1,
+      "message": "+1 to this, then we can merge for me",
+      "parentUuid": "5a1a06ff_fbd6d4b6",
+      "range": {
+        "startLine": 175,
+        "startChar": 6,
+        "endLine": 175,
+        "endChar": 11
+      },
+      "revId": "593f495505806bc8b6f6cb64f42769aaee30bec8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0f0a01d6_9d75dd04",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 3
