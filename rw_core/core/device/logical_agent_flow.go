@@ -71,7 +71,11 @@ func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.OfpFlo
 
 //flowAdd adds a flow to the flow table of that logical device
 func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) error {
-	logger.Debugw(ctx, "flowAdd", log.Fields{"flow": mod})
+	logger.Infow(ctx, "flowAdd", log.Fields{
+		"flow-cookie": mod.Cookie,
+		"flow-match-type": mod.Match.Type,
+		"flow-match-fields": mod.Match.OxmFields,
+	})
 	if mod == nil {
 		return nil
 	}
@@ -99,6 +103,11 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 	changed := false
 	updated := false
 	var flowToReplace *ofp.OfpFlowStats
+	logger.Infow(ctx, "decompose-and-add-flow", log.Fields{
+		"flow-cookie": flow.Cookie,
+		"flow-match-type": flow.Match.Type,
+		"flow-match-fields": flow.Match.OxmFields,
+	})
 
 	//if flow is not found in the map, create a new entry, otherwise get the existing one.
 	flowHandle, created, err := agent.flowLoader.LockOrCreate(ctx, flow)
@@ -133,7 +142,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			changed = true
 		}
 	}
-	logger.Debugw(ctx, "flowAdd-changed", log.Fields{"changed": changed, "updated": updated})
+	logger.Infow(ctx, "flowAdd-changed", log.Fields{"changed": changed, "updated": updated})
 	if changed {
 		updatedFlows := map[uint64]*ofp.OfpFlowStats{flow.Id: flow}
 
@@ -157,7 +166,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			return changed, updated, err
 		}
 
-		logger.Debugw(ctx, "rules", log.Fields{"rules": deviceRules.String()})
+		logger.Infow(ctx, "rules", log.Fields{"rules": deviceRules.String()})
 		//	Update store and cache
 		if updated {
 			if err := flowHandle.Update(ctx, flow); err != nil {
@@ -184,6 +193,12 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 						"groups":            groups,
 					})
 				}
+			} else {
+				logger.Infow(ctx, "flow-added-successfully", log.Fields{
+					"flow-cookie": flow.Cookie,
+					"flow-match-type": flow.Match.Type,
+					"flow-match-fields": flow.Match.OxmFields,
+				})
 			}
 		}()
 	}
@@ -193,12 +208,12 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 // revertAddedFlows reverts flows after the flowAdd request has failed.  All flows corresponding to that flowAdd request
 // will be reverted, both from the logical devices and the devices.
 func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlowMod, addedFlow *ofp.OfpFlowStats, replacedFlow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules, metadata *voltha.FlowMetadata) error {
-	logger.Debugw(ctx, "revertFlowAdd", log.Fields{"added-flow": addedFlow, "replaced-flow": replacedFlow, "device-rules": deviceRules, "metadata": metadata})
+	logger.Infow(ctx, "revertFlowAdd", log.Fields{"added-flow": addedFlow, "replaced-flow": replacedFlow, "device-rules": deviceRules, "metadata": metadata})
 
 	flowHandle, have := agent.flowLoader.Lock(addedFlow.Id)
 	if !have {
 		// Not found - do nothing
-		logger.Debugw(ctx, "flow-not-found", log.Fields{"added-flow": addedFlow})
+		logger.Infow(ctx, "flow-not-found", log.Fields{"added-flow": addedFlow})
 		return nil
 	}
 	defer flowHandle.Unlock()
@@ -238,7 +253,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 
 //flowDelete deletes a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) error {
-	logger.Debug(ctx, "flowDelete")
+	logger.Infow(ctx, "flowDelete", log.Fields{"flow-mod": mod})
 	if mod == nil {
 		return nil
 	}
@@ -268,7 +283,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 
 	//Delete the matched flows
 	if len(toDelete) > 0 {
-		logger.Debugw(ctx, "flowDelete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "toDelete": len(toDelete)})
+		logger.Infow(ctx, "flowDelete", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "toDelete": len(toDelete)})
 
 		for _, flow := range toDelete {
 			if flowHandle, have := agent.flowLoader.Lock(flow.Id); have {
@@ -341,7 +356,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 
 //flowDeleteStrict deletes a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlowMod) error {
-	logger.Debugw(ctx, "flowDeleteStrict", log.Fields{"mod": mod})
+	logger.Infow(ctx, "flowDeleteStrict", log.Fields{"mod": mod})
 	if mod == nil {
 		return nil
 	}
@@ -350,10 +365,10 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 	if err != nil {
 		return err
 	}
-	logger.Debugw(ctx, "flow-id-in-flow-delete-strict", log.Fields{"flowID": flow.Id})
+	logger.Infow(ctx, "flow-id-in-flow-delete-strict", log.Fields{"flowID": flow.Id})
 	flowHandle, have := agent.flowLoader.Lock(flow.Id)
 	if !have {
-		logger.Debugw(ctx, "Skipping-flow-delete-strict-request. No-flow-found", log.Fields{"flowMod": mod})
+		logger.Infow(ctx, "Skipping-flow-delete-strict-request. No-flow-found", log.Fields{"flowMod": mod})
 		return nil
 	}
 	defer flowHandle.Unlock()
