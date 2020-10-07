@@ -45,13 +45,14 @@ func macAddressToUint32Array(mac string) []uint32 {
 
 // Adapter represents adapter attributes
 type Adapter struct {
-	coreProxy      adapterif.CoreProxy
-	flows          map[uint64]*voltha.OfpFlowStats
-	flowLock       sync.RWMutex
-	devices        map[string]*voltha.Device
-	deviceLock     sync.RWMutex
-	failFlowAdd    bool
-	failFlowDelete bool
+	coreProxy        adapterif.CoreProxy
+	flows            map[uint64]*voltha.OfpFlowStats
+	flowLock         sync.RWMutex
+	devices          map[string]*voltha.Device
+	deviceLock       sync.RWMutex
+	failFlowAdd      bool
+	failFlowDelete   bool
+	failDeleteDevice bool
 }
 
 // NewAdapter creates adapter instance
@@ -133,6 +134,9 @@ func (ta *Adapter) Self_test_device(ctx context.Context, device *voltha.Device) 
 
 // Delete_device -
 func (ta *Adapter) Delete_device(ctx context.Context, device *voltha.Device) error { // nolint
+	if ta.failDeleteDevice {
+		return fmt.Errorf("delete-device-failure")
+	}
 	return nil
 }
 
@@ -283,4 +287,9 @@ func (ta *Adapter) ClearFlows() {
 func (ta *Adapter) SetFlowAction(failFlowAdd, failFlowDelete bool) {
 	ta.failFlowAdd = failFlowAdd
 	ta.failFlowDelete = failFlowDelete
+}
+
+// SetDeleteAction sets the adapter action on delete device
+func (ta *Adapter) SetDeleteAction(failDeleteDevice bool) {
+	ta.failDeleteDevice = failDeleteDevice
 }
