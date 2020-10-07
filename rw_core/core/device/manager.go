@@ -209,13 +209,23 @@ func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 // DeleteDevice removes a device from the data model
 func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "DeleteDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
 	return &empty.Empty{}, agent.deleteDevice(ctx)
+}
+
+// ForceDeleteDevice removes a device from the data model forcefully without successfully waiting for the adapters.
+func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+	logger.Debugw(ctx, "ForceDeleteDevice", log.Fields{"device-id": id.Id})
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+	}
+	return &empty.Empty{}, agent.deleteDeviceForce(ctx)
 }
 
 // GetDevicePort returns the port details for a specific device port entry
@@ -473,10 +483,12 @@ func (dMgr *Manager) isParentDeviceExist(ctx context.Context, newDevice *voltha.
 		if !device.Root {
 			continue
 		}
-		if hostPort != "" && hostPort == device.GetHostAndPort() && device.AdminState != voltha.AdminState_DELETED {
+		if hostPort != "" && hostPort == device.GetHostAndPort() && device.AdminState != voltha.AdminState_DELETED &&
+			device.AdminState != voltha.AdminState_DELETING {
 			return true, nil
 		}
-		if newDevice.MacAddress != "" && newDevice.MacAddress == device.MacAddress && device.AdminState != voltha.AdminState_DELETED {
+		if newDevice.MacAddress != "" && newDevice.MacAddress == device.MacAddress &&
+			device.AdminState != voltha.AdminState_DELETED && device.AdminState != voltha.AdminState_DELETING {
 			return true, nil
 		}
 	}
@@ -590,7 +602,8 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 	}
 
 	// If the device is in Pre-provisioning or deleted state stop here
-	if device.AdminState == voltha.AdminState_PREPROVISIONED || device.AdminState == voltha.AdminState_DELETED {
+	if device.AdminState == voltha.AdminState_PREPROVISIONED || device.AdminState == voltha.AdminState_DELETED ||
+		device.AdminState == voltha.AdminState_DELETING {
 		return nil
 	}
 
@@ -649,7 +662,8 @@ func isOkToReconcile(device *voltha.Device) bool {
 	if device == nil {
 		return false
 	}
-	return device.AdminState != voltha.AdminState_PREPROVISIONED && device.AdminState != voltha.AdminState_DELETED
+	return device.AdminState != voltha.AdminState_PREPROVISIONED && device.AdminState != voltha.AdminState_DELETED &&
+		device.AdminState != voltha.AdminState_DELETING
 }
 
 // adapterRestarted is invoked whenever an adapter is restarted

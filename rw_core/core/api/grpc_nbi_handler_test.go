@@ -354,6 +354,35 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi *NBIHandler) {
 	assert.Nil(t, err)
 }
 
+func (nb *NBTest) testForceDeleteDevice(t *testing.T, nbi *NBIHandler) {
+	//	Create a valid device
+	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+	device, err := nbi.GetDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+	assert.NotNil(t, device)
+	assert.Equal(t, oltDevice.String(), device.String())
+
+	// Ensure we only have 1 device in the Core
+	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+	assert.Nil(t, err)
+	assert.NotNil(t, devices)
+	assert.Equal(t, 1, len(devices.Items))
+	assert.Equal(t, oltDevice.String(), devices.Items[0].String())
+
+	//Remove the device forcefully
+	_, err = nbi.ForceDeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
+	assert.Nil(t, err)
+
+	//Ensure there are no devices in the Core now - wait until condition satisfied or timeout
+	var vFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
+		return devices != nil && len(devices.Items) == 0
+	}
+	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction)
+	assert.Nil(t, err)
+}
+
 func (nb *NBTest) testEnableDevice(t *testing.T, nbi *NBIHandler) {
 	// Create a device that has no adapter registered
 	oltDeviceNoAdapter, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: "noAdapterRegistered", MacAddress: "aa:bb:cc:cc:ee:ff"})
@@ -1235,37 +1264,40 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 
 	numberOfTestRuns := 2
 	for i := 1; i <= numberOfTestRuns; i++ {
-		//3. Test create device
+		// 3. Test create device
 		nb.testCreateDevice(t, nbi)
 
-		// 4. Test Enable a device
+		// 4. Test Force Delete Device
+		nb.testForceDeleteDevice(t, nbi)
+
+		// 5. Test Enable a device
 		nb.testEnableDevice(t, nbi)
 
-		//// 5. Test disable and ReEnable a root device
+		// 6. Test disable and ReEnable a root device
 		nb.testDisableAndReEnableRootDevice(t, nbi)
 
-		// 6. Test disable and Enable pon port of OLT device
+		// 7. Test disable and Enable pon port of OLT device
 		nb.testDisableAndEnablePort(t, nbi)
 
-		// 7.Test Device unreachable when OLT is enabled
+		// 8.Test Device unreachable when OLT is enabled
 		nb.testDeviceRebootWhenOltIsEnabled(t, nbi)
 
-		// 8. Test disable and delete all devices
+		// 9. Test disable and delete all devices
 		nb.testDisableAndDeleteAllDevice(t, nbi)
 
-		// 9. Test enable and delete all devices
+		// 10. Test enable and delete all devices
 		nb.testEnableAndDeleteAllDevice(t, nbi)
 
-		// 10. Test omci test
+		// 11. Test omci test
 		nb.testStartOmciTestAction(t, nbi)
 
-		// 11. Remove all devices from tests above
+		// 12. Remove all devices from tests above
 		nb.deleteAllDevices(t, nbi)
 
-		// 11. Test flow add failure
+		// 13. Test flow add failure
 		nb.testFlowAddFailure(t, nbi)
 
-		// 12.  Clean up
+		// 14.  Clean up
 		nb.deleteAllDevices(t, nbi)
 	}
 }
