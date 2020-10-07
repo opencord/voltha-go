@@ -209,13 +209,23 @@ func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 // DeleteDevice removes a device from the data model
 func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "DeleteDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
 	return &empty.Empty{}, agent.deleteDevice(ctx)
+}
+
+// ForceDeleteDevice removes a device from the data model forcefully without successfully waiting for the adapters.
+func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+	logger.Debugw(ctx, "ForceDeleteDevice", log.Fields{"device-id": id.Id})
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+	}
+	return &empty.Empty{}, agent.deleteDeviceForce(ctx)
 }
 
 // GetDevicePort returns the port details for a specific device port entry
@@ -473,10 +483,11 @@ func (dMgr *Manager) isParentDeviceExist(ctx context.Context, newDevice *voltha.
 		if !device.Root {
 			continue
 		}
-		if hostPort != "" && hostPort == device.GetHostAndPort() && device.AdminState != voltha.AdminState_DELETED {
+
+		if hostPort != "" && hostPort == device.GetHostAndPort() {
 			return true, nil
 		}
-		if newDevice.MacAddress != "" && newDevice.MacAddress == device.MacAddress && device.AdminState != voltha.AdminState_DELETED {
+		if newDevice.MacAddress != "" && newDevice.MacAddress == device.MacAddress {
 			return true, nil
 		}
 	}
@@ -495,6 +506,7 @@ func (dMgr *Manager) getDeviceFromModel(ctx context.Context, deviceID string) (*
 
 	return device, nil
 }
+
 
 // loadDevice loads the deviceID in memory, if not present
 func (dMgr *Manager) loadDevice(ctx context.Context, deviceID string) (*Agent, error) {
@@ -589,8 +601,8 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 		return err
 	}
 
-	// If the device is in Pre-provisioning or deleted state stop here
-	if device.AdminState == voltha.AdminState_PREPROVISIONED || device.AdminState == voltha.AdminState_DELETED {
+	// If the device is in Pre-provisioning or getting deleted state stop here
+	if device.AdminState == voltha.AdminState_PREPROVISIONED || dAgent.isProcessingDeletingTransientState()  {
 		return nil
 	}
 
@@ -645,11 +657,14 @@ func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*em
 }
 
 // isOkToReconcile validates whether a device is in the correct status to be reconciled
-func isOkToReconcile(device *voltha.Device) bool {
+func (dMgr *Manager) isOkToReconcile(ctx context.Context, device *voltha.Device) bool {
 	if device == nil {
 		return false
 	}
-	return device.AdminState != voltha.AdminState_PREPROVISIONED && device.AdminState != voltha.AdminState_DELETED
+	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
+		return device.AdminState != voltha.AdminState_PREPROVISIONED && (!agent.isProcessingDeletingTransientState())
+	}
+	return false
 }
 
 // adapterRestarted is invoked whenever an adapter is restarted
@@ -672,7 +687,7 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 				continue
 			}
 			if isDeviceOwnedByService {
-				if isOkToReconcile(rootDevice) {
+				if dMgr.isOkToReconcile(ctx,rootDevice) {
 					logger.Debugw(ctx, "reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
 					responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, rootDevice))
 				} else {
@@ -689,7 +704,7 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 								logger.Warnw(ctx, "is-device-owned-by-service", log.Fields{"error": err, "child-device-id": childDevice.Id, "adapterType": adapter.Type, "replica-number": adapter.CurrentReplica})
 							}
 							if isDeviceOwnedByService {
-								if isOkToReconcile(childDevice) {
+								if dMgr.isOkToReconcile(ctx, childDevice) {
 									logger.Debugw(ctx, "reconciling-child-device", log.Fields{"child-device-id": childDevice.Id})
 									responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, childDevice))
 								} else {
@@ -1222,11 +1237,32 @@ func (dMgr *Manager) DisableAllChildDevices(ctx context.Context, parentCurrDevic
 //DeleteAllChildDevices is invoked as a callback when the parent device is deleted
 func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device) error {
 	logger.Debug(ctx, "DeleteAllChildDevices")
+	force := true
+	// Get the parent device Transient state, if its FORCE_DELETED(go for force delete for child devices)
+	// So in cases when this handler is getting called other than DELETE operation, no force option would be used.
+	agent := dMgr.getDeviceAgent(ctx, parentCurrDevice.Id)
+	if agent == nil {
+		return status.Errorf(codes.NotFound, "%s", parentCurrDevice.Id)
+	}
+	currDeviceTransientState := agent.getDeviceTransientState()
+
+	if currDeviceTransientState == voltha.DeviceTransientState_FORCE_DELETING {
+		force = true
+	}
+
 	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
 	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
-			if err := agent.deleteDevice(ctx); err != nil {
-				logger.Warnw(ctx, "failure-delete-device", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			if force {
+				if err := agent.deleteDeviceForce(ctx); err != nil {
+					logger.Warnw(ctx, "failure-delete-device-force", log.Fields{"device-id": childDeviceID,
+						"error": err.Error()})
+				}
+			} else {
+				if err := agent.deleteDevice(ctx); err != nil {
+					logger.Warnw(ctx, "failure-delete-device", log.Fields{"device-id": childDeviceID,
+						"error": err.Error()})
+				}
 			}
 			// No further action is required here.  The deleteDevice will change the device state where the resulting
 			// callback will take care of cleaning the child device agent.
