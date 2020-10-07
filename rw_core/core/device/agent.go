@@ -244,6 +244,49 @@ func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.C
 	}
 }
 
+// onDeleteSuccess is a common callback for scenarios where we receive a nil response following a delete request
+// to an adapter and the action required is to move the device state to DELETED.
+func (agent *Agent) onDeleteSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
+	logger.Debugw(ctx, "response successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
+	logger.Debugw(ctx, "Updating the device state to DELETED from DELETING state on successful response from" +
+		" adapters", log.Fields{"device-id": agent.deviceID})
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		logger.Errorw(ctx, "delete-device-failure", log.Fields{"device-id": agent.deviceID, "error": err, "args": reqArgs})
+	}
+	newDevice := agent.cloneDeviceWithoutLock()
+	newDevice.AdminState = voltha.AdminState_DELETED
+	if err := agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
+		logger.Errorw(ctx, "delete-device-failure", log.Fields{"device-id": agent.deviceID, "error": err, "args": reqArgs})
+	}
+}
+
+// onDeleteFailure is a common callback for scenarios where we receive an error response following a delete request
+//  to an adapter and the only action required is to return the error response.
+func (agent *Agent) onDeleteFailure(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
+	if res, ok := response.(error); ok {
+		logger.Errorw(ctx, "rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
+	} else {
+		logger.Errorw(ctx, "rpc-failed-invalid-error", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
+	}
+}
+
+func (agent *Agent) waitForAdapterDeleteResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
+	defer cancel()
+	select {
+	case rpcResponse, ok := <-ch:
+		if !ok {
+			onFailure(ctx, rpc, status.Errorf(codes.Aborted, "channel-closed"),reqArgs)
+		} else if rpcResponse.Err != nil {
+			onFailure(ctx, rpc, rpcResponse.Err, reqArgs)
+		} else {
+			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
+		}
+	case <-ctx.Done():
+		onFailure(ctx, rpc, ctx.Err(), reqArgs)
+	}
+}
+
 // getDeviceReadOnly returns a device which MUST NOT be modified, but is safe to keep forever.
 func (agent *Agent) getDeviceReadOnly(ctx context.Context) (*voltha.Device, error) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
@@ -278,10 +321,10 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 		agent.requestQueue.RequestComplete()
 		return status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id))
 	}
-	if oldDevice.AdminState == voltha.AdminState_DELETED {
+	if oldDevice.AdminState == voltha.AdminState_DELETED || oldDevice.AdminState == voltha.AdminState_DELETING {
 		// This is a temporary state when a device is deleted before it gets removed from the model.
 		agent.requestQueue.RequestComplete()
-		return status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-a-deleted-device: %s", oldDevice.Id))
+		return status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-a-deleted-or-deleting-device: %s", oldDevice.Id))
 	}
 
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
@@ -406,7 +449,8 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 		agent.requestQueue.RequestComplete()
 		return nil
 	}
-	if cloned.AdminState == voltha.AdminState_PREPROVISIONED || cloned.AdminState == voltha.AdminState_DELETED {
+	if cloned.AdminState == voltha.AdminState_PREPROVISIONED || cloned.AdminState == voltha.AdminState_DELETED ||
+		cloned.AdminState == voltha.AdminState_DELETING {
 		agent.requestQueue.RequestComplete()
 		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, invalid-admin-state:%s", agent.deviceID, cloned.AdminState)
 	}
@@ -437,6 +481,10 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	logger.Debugw(ctx, "rebootDevice", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceReadOnlyWithoutLock()
+	if device.AdminState == voltha.AdminState_DELETED || device.AdminState == voltha.AdminState_DELETING {
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, invalid-admin-state:%s", agent.deviceID,
+			device.AdminState)
+	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	ch, err := agent.adapterProxy.RebootDevice(subCtx, device)
 	if err != nil {
@@ -447,32 +495,66 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	return nil
 }
 
+func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
+	logger.Debugw(ctx, "deleteDeviceForce", log.Fields{"device-id": agent.deviceID})
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+	device := agent.cloneDeviceWithoutLock()
+	previousState := device.AdminState
+
+	// Changing the state to DELETE will trigger the removal of this
+	// device by the state machine in case of force delete
+	device.AdminState = voltha.AdminState_DELETED
+	if err := agent.updateDeviceAndReleaseLock(ctx, device); err != nil {
+		return err
+	}
+	if previousState != ic.AdminState_PREPROVISIONED {
+		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+		ch, err := agent.adapterProxy.DeleteDevice(subCtx, device)
+		if err != nil {
+			cancel()
+			return err
+		}
+		// Since it is a case of force delete, nothing needs to be done on adapter responses.
+		go agent.waitForAdapterResponse(subCtx, cancel, "deleteDeviceForce", ch, agent.onSuccess,
+			agent.onFailure)
+	}
+	return nil
+}
+
 func (agent *Agent) deleteDevice(ctx context.Context) error {
 	logger.Debugw(ctx, "deleteDevice", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
+	device := agent.cloneDeviceWithoutLock()
+	previousState := device.AdminState
 
-	cloned := agent.cloneDeviceWithoutLock()
-	previousState := cloned.AdminState
-
-	// No check is required when deleting a device.  Changing the state to DELETE will trigger the removal of this
-	// device by the state machine
-	cloned.AdminState = voltha.AdminState_DELETED
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+	if previousState == voltha.AdminState_DELETING {
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, invalid-admin-state:%s", agent.deviceID,
+			previousState)
+	}
+	if previousState == ic.AdminState_PREPROVISIONED {
+		device.AdminState = voltha.AdminState_DELETED
+	} else {
+		// Change the device state to DELETING state till the device is removed from adapters.
+		device.AdminState = voltha.AdminState_DELETING
+	}
+	if err := agent.updateDeviceAndReleaseLock(ctx, device); err != nil {
 		return err
 	}
-
 	// If the device was in pre-prov state (only parent device are in that state) then do not send the request to the
 	// adapter
 	if previousState != ic.AdminState_PREPROVISIONED {
 		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
-		ch, err := agent.adapterProxy.DeleteDevice(subCtx, cloned)
+		ch, err := agent.adapterProxy.DeleteDevice(subCtx, device)
 		if err != nil {
 			cancel()
 			return err
 		}
-		go agent.waitForAdapterResponse(subCtx, cancel, "deleteDevice", ch, agent.onSuccess, agent.onFailure)
+		go agent.waitForAdapterDeleteResponse(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
+			agent.onDeleteFailure)
 	}
 	return nil
 }
