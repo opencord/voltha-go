@@ -98,6 +98,7 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlowStats, mod *ofp.OfpFlowMod) (bool, bool, error) {
 	changed := false
 	updated := false
+	var err error = nil
 	var flowToReplace *ofp.OfpFlowStats
 
 	//if flow is not found in the map, create a new entry, otherwise get the existing one.
@@ -134,6 +135,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		}
 	}
 	logger.Debugw(ctx, "flowAdd-changed", log.Fields{"changed": changed, "updated": updated})
+
 	if changed {
 		updatedFlows := map[uint64]*ofp.OfpFlowStats{flow.Id: flow}
 
@@ -165,29 +167,27 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			}
 		}
 		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, toMetadata(flowMeterConfig))
-		// Create the go routines to wait
-		go func() {
-			// Wait for completion
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChannels...); res != nil {
-				logger.Infow(ctx, "failed-to-add-flow-will-attempt-deletion", log.Fields{
-					"errors":            res,
+
+		// Wait for completion
+		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChannels...); res != nil {
+			logger.Infow(ctx, "failed-to-add-flow-will-attempt-deletion", log.Fields{
+				"errors":            res,
+				"logical-device-id": agent.logicalDeviceID,
+				"flow":              flow,
+				"groups":            groups,
+			})
+			// Revert added flows
+			if err = agent.revertAddedFlows(log.WithSpanFromContext(context.Background(), ctx), mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
+				logger.Errorw(ctx, "failure-to-delete-flow-after-failed-addition", log.Fields{
+					"error":             err,
 					"logical-device-id": agent.logicalDeviceID,
 					"flow":              flow,
 					"groups":            groups,
 				})
-				// Revert added flows
-				if err := agent.revertAddedFlows(log.WithSpanFromContext(context.Background(), ctx), mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
-					logger.Errorw(ctx, "failure-to-delete-flow-after-failed-addition", log.Fields{
-						"error":             err,
-						"logical-device-id": agent.logicalDeviceID,
-						"flow":              flow,
-						"groups":            groups,
-					})
-				}
 			}
-		}()
+		}
 	}
-	return changed, updated, nil
+	return changed, updated, err
 }
 
 // revertAddedFlows reverts flows after the flowAdd request has failed.  All flows corresponding to that flowAdd request
