@@ -447,7 +447,7 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	return nil
 }
 
-func (agent *Agent) deleteDevice(ctx context.Context) error {
+func (agent *Agent) deleteDevice(ctx context.Context, force bool) error {
 	logger.Debugw(ctx, "deleteDevice", log.Fields{"device-id": agent.deviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
@@ -455,10 +455,15 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 
 	cloned := agent.cloneDeviceWithoutLock()
 	previousState := cloned.AdminState
+	if !force && previousState != ic.AdminState_PREPROVISIONED{
+		// Change the device state to DELETING state till the device is removed from adapters.
+		cloned.AdminState = voltha.AdminState_DELETING
 
-	// No check is required when deleting a device.  Changing the state to DELETE will trigger the removal of this
-	// device by the state machine
-	cloned.AdminState = voltha.AdminState_DELETED
+	} else {
+		// Changing the state to DELETE will trigger the removal of this
+		// device by the state machine in case of force delete
+		cloned.AdminState = voltha.AdminState_DELETED
+	}
 	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
 		return err
 	}

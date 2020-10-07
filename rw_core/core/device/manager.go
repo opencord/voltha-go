@@ -209,13 +209,23 @@ func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 // DeleteDevice removes a device from the data model
 func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "DeleteDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return &empty.Empty{}, agent.deleteDevice(ctx)
+	return &empty.Empty{}, agent.deleteDevice(ctx, false)
+}
+
+// ForceDeleteDevice removes a device from the data model forcefully without sucessfully waiting for the adapters.
+func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+	logger.Debugw(ctx, "DeleteDevice", log.Fields{"device-id": id.Id})
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+	}
+	return &empty.Empty{}, agent.deleteDevice(ctx, true)
 }
 
 // GetDevicePort returns the port details for a specific device port entry
@@ -1225,7 +1235,7 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
 	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
-			if err := agent.deleteDevice(ctx); err != nil {
+			if err := agent.deleteDevice(ctx,false); err != nil {
 				logger.Warnw(ctx, "failure-delete-device", log.Fields{"device-id": childDeviceID, "error": err.Error()})
 			}
 			// No further action is required here.  The deleteDevice will change the device state where the resulting
