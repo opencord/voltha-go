@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "983b8180_af1576af",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-10-08T08:08:22Z",
+      "side": 1,
+      "message": "No Need of this statement as err is being assigned later, hence no value of adding it",
+      "revId": "e0cf5e2b6f7045e40e0efe4cbfbf080ce3d68398",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5398bb4e_ed917009",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-10-08T08:08:22Z",
+      "side": 1,
+      "message": "Are we sure that we should really return the error if reverting of the added flow fails. Any JIRA issue for this?",
+      "revId": "e0cf5e2b6f7045e40e0efe4cbfbf080ce3d68398",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
