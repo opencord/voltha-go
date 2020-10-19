@@ -100,7 +100,6 @@ func newDATest(ctx context.Context) *DATest {
 		},
 		AdminState:    voltha.AdminState_PREPROVISIONED,
 		OperStatus:    voltha.OperStatus_UNKNOWN,
-		Reason:        "All good",
 		ConnectStatus: voltha.ConnectStatus_UNKNOWN,
 		Custom:        nil,
 	}
@@ -193,7 +192,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		serialNumber = com.GetRandomSerialNumber()
 		macAddress   = strings.ToUpper(com.GetRandomMacAddress())
 		vlan         = rand.Uint32()
-		reason       = "testing concurrent device update"
 		portToAdd    = &voltha.Port{PortNo: 101, Label: "uni-101", Type: voltha.Port_ETHERNET_UNI, AdminState: voltha.AdminState_ENABLED,
 			OperStatus: voltha.OperStatus_ACTIVE}
 	)
@@ -206,7 +204,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		deviceToUpdate.SerialNumber = serialNumber
 		deviceToUpdate.MacAddress = macAddress
 		deviceToUpdate.Vlan = vlan
-		deviceToUpdate.Reason = reason
 		err := da.updateDeviceUsingAdapterData(context.Background(), deviceToUpdate)
 		assert.Nil(t, err)
 		localWG.Done()
@@ -240,7 +237,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 	expectedChange.SerialNumber = serialNumber
 	expectedChange.MacAddress = macAddress
 	expectedChange.Vlan = vlan
-	expectedChange.Reason = reason
 
 	updatedDevice, _ := da.getDeviceReadOnly(context.Background())
 	updatedDevicePorts := da.listDevicePorts()
