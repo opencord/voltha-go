@@ -22,7 +22,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/metadata"
 )
 

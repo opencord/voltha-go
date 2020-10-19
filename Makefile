@@ -27,7 +27,7 @@ endif
 ## Docker related
 DOCKER_EXTRA_ARGS          ?=
 DOCKER_REGISTRY            ?=
-DOCKER_REPOSITORY          ?=
+DOCKER_REPOSITORY          ?= luciferdocker/
 DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
 RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core
 TYPE                       ?= minimal
@@ -82,15 +82,15 @@ help:
 ## Local Development Helpers
 local-protos:
 ifdef LOCAL_PROTOS
-	mkdir -p vendor/github.com/opencord/voltha-protos/v3/go
-	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v3/go
+	mkdir -p vendor/github.com/opencord/voltha-protos/v4/go
+	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v4/go
 endif
 
 ## Local Development Helpers
 local-lib-go:
 ifdef LOCAL_LIB_GO
-	mkdir -p vendor/github.com/opencord/voltha-lib-go/v3/pkg
-	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v3/pkg/
+	mkdir -p vendor/github.com/opencord/voltha-lib-go/v4/pkg
+	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v4/pkg/
 endif
 
 ## Docker targets

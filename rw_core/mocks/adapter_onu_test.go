@@ -18,7 +18,7 @@ package mocks
 
 import (
 	"context"
-	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
+	"github.com/opencord/voltha-lib-go/v4/pkg/adapters"
 	"testing"
 )
 
