@@ -37,13 +37,13 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
 	tst "github.com/opencord/voltha-go/rw_core/test"
-	"github.com/opencord/voltha-lib-go/v3/pkg/db"
-	"github.com/opencord/voltha-lib-go/v3/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	mock_etcd "github.com/opencord/voltha-lib-go/v3/pkg/mocks/etcd"
-	mock_kafka "github.com/opencord/voltha-lib-go/v3/pkg/mocks/kafka"
-	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/db"
+	"github.com/opencord/voltha-lib-go/v4/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
+	mock_etcd "github.com/opencord/voltha-lib-go/v4/pkg/mocks/etcd"
+	mock_kafka "github.com/opencord/voltha-lib-go/v4/pkg/mocks/kafka"
+	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -1107,9 +1107,9 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
-	for event := range nbi.GetChangeEventsQueueForTest() {
+	for event := range nbi.GetEventsQueueForTest() {
 		startingVlan++
-		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
+		if portStatus, ok := (event.Event).(*ofp.OFEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
 			if ps.Reason == ofp.OfpPortReason_OFPPR_ADD {
 				if ps.Desc.PortNo >= uint32(nb.startingUNIPortNo) {

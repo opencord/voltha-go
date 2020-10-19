@@ -21,8 +21,8 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 )
 
 // deviceType mentions type of device like parent, child

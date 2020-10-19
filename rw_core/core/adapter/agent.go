@@ -19,8 +19,8 @@ package adapter
 import (
 	"context"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"sync"
 	"time"
 )

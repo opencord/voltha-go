@@ -22,9 +22,9 @@ import (
 
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/route"
-	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
-	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
+	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
