@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5dcba3ca_71c0a0f2",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-10-22T18:38:04Z",
+      "side": 1,
+      "message": "mod.GetFlags() returns a bitmap so the check could fail if other options are set in the bit map. I do not think we use other options but just being over cautious here. So you might want to check the below way using bitwise \u0026.\n\nif  mod.GetFlags() \u0026 uint32(ofp.OfpFlowModFlags_OFPFF_SEND_FLOW_REM) {\n   // Do something\n}",
+      "revId": "a96ec11528c885cf9d98cb52a72c7255d953f4bd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
