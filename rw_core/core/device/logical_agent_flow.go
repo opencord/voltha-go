@@ -401,18 +401,36 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 		respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, toMetadata(flowMetadata), mod)
 	}
 
-	// Wait for completion
-	go func() {
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw(ctx, "failure-deleting-device-flows", log.Fields{
-				"flow-cookie":       mod.Cookie,
-				"logical-device-id": agent.logicalDeviceID,
-				"errors":            res,
-			})
-			//TODO: Revert flow changes
-		}
-	}()
+	waitForResponse := false
+	if mod.GetFlags() == uint32(ofp.OfpFlowModFlags_OFPFF_SEND_FLOW_REM) {
+		// if the SDN controlled is requiring a confirmation of the flow removal,
+		// then process the flow in a synchronous way
+		waitForResponse = true
+	}
 
+	// Wait for completion
+	if (!waitForResponse) {
+		go func() {
+			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+				logger.Warnw(ctx, "failure-deleting-device-flows-async", log.Fields{
+					"flow-cookie":       mod.Cookie,
+					"logical-device-id": agent.logicalDeviceID,
+					"errors":            res,
+				})
+				//TODO: Revert flow changes
+			}
+		}()
+		return nil
+	}
+
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		logger.Warnw(ctx, "failure-deleting-device-flows-sync", log.Fields{
+			"flow-cookie":       mod.Cookie,
+			"logical-device-id": agent.logicalDeviceID,
+			"errors":            res,
+		})
+		return status.Errorf(codes.Internal, "flow-delete-failed: %s %v", agent.rootDeviceID, res)
+	}
 	return nil
 }
 
