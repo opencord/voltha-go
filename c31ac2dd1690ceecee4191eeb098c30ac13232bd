@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67cf1219_db032521",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-10-23T12:53:39Z",
+      "side": 1,
+      "message": "Quoting from the OF spec: \"If OFPFF_SEND_FLOW_REM is set, the switch must send a flow removed\nmessage to the controller. Each flow removed message contains a complete description of the flow entry, the reason for removal (expiry or delete), the flow entry duration at the time of removal, and the flow statistics at the time of removal\".\n\nFrom my understanding the idea behind this flag is to notify the controller if the switch itself removes flows.  In its usage here, are we adding an additional meaning to that flag, i.e. wait for a response?\n\nMoving this flow delete processing to synchronous should be ok.  My preference would be to have a notification mechanism instead.  In this scenario, the Core will asynchronously ONOS on the state of a request.  Having a flag to determine which request requires a notification is helpful as well.\n\nWhich issue are we actually trying to solve?",
+      "revId": "c31ac2dd1690ceecee4191eeb098c30ac13232bd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
