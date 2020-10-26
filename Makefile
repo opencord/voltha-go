@@ -20,6 +20,9 @@ SHELL = bash -e -o pipefail
 # Variables
 VERSION                    ?= $(shell cat ./VERSION)
 
+# Packages
+PACKAGES                   = $(shell go list ./...)
+
 DOCKER_LABEL_VCS_DIRTY     = false
 ifneq ($(shell git ls-files --others --modified --exclude-standard 2>/dev/null | wc -l | sed -e 's/ //g'),0)
     DOCKER_LABEL_VCS_DIRTY = true
@@ -27,7 +30,7 @@ endif
 ## Docker related
 DOCKER_EXTRA_ARGS          ?=
 DOCKER_REGISTRY            ?=
-DOCKER_REPOSITORY          ?=
+DOCKER_REPOSITORY          ?= luciferdocker/
 DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
 RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core
 TYPE                       ?= minimal
@@ -168,3 +171,6 @@ distclean:
 mod-update:
 	${GO} mod tidy
 	${GO} mod vendor
+
+fmt:
+	@go fmt ${PACKAGES}
