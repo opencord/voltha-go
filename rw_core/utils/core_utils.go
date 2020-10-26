@@ -34,6 +34,9 @@ func (c contextKey) String() string {
 var (
 	// RPCContextKey for keeping rpc name as metadata
 	rpcContextKey = contextKey("rpc")
+
+	// fromTopicContextKey for keeping entity from which operation is requested as metadata
+	fromTopicContextKey = contextKey("fromTopic")
 )
 
 // ResponseCallback is the function signature for callbacks to execute after a response is received.
@@ -166,6 +169,20 @@ func WithSpanAndRPCMetadataFromContext(sourceCtx context.Context) context.Contex
 	if sourceCtx != nil {
 		targetCtx = log.WithSpanFromContext(targetCtx, sourceCtx)
 		targetCtx = WithRPCMetadataFromContext(targetCtx, sourceCtx)
+	}
+	return targetCtx
+}
+
+func WithFromTopicMetadataContext(ctx context.Context, fromTopic string) context.Context {
+	ctx = context.WithValue(ctx, fromTopicContextKey, fromTopic)
+	return ctx
+}
+
+func WithFromTopicMetadataFromContext(targetCtx, sourceCtx context.Context) context.Context {
+	if sourceCtx != nil {
+		if val, ok := sourceCtx.Value(fromTopicContextKey).(string); ok {
+			targetCtx = context.WithValue(targetCtx, fromTopicContextKey, val)
+		}
 	}
 	return targetCtx
 }
