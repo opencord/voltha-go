@@ -1078,7 +1078,15 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 	// Activate the child device
 	if agent = dMgr.getDeviceAgent(ctx, agent.deviceID); agent != nil {
 		go func() {
-			err := agent.enableDevice(log.WithSpanFromContext(context.Background(), ctx))
+			var cCtx context.Context
+			rb := ctx.Value("fromTopic")
+			if rb != nil {
+				cCtx = context.WithValue(log.WithSpanFromContext(context.Background(), ctx), "fromTopic", rb)
+			} else {
+				cCtx = log.WithSpanFromContext(context.Background(), ctx)
+			}
+
+			err := agent.enableDevice(cCtx)
 			if err != nil {
 				logger.Errorw(ctx, "unable-to-enable-device", log.Fields{"error": err})
 			}
@@ -1622,4 +1630,17 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
+}
+
+func (dMgr *Manager) GetDeviceUpdates(ctx context.Context, filter *voltha.DeviceUpdateFilter) (*voltha.DeviceUpdates, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": filter.DeviceId})
+
+	logger.Debugw(ctx, "GetDeviceUpdate", log.Fields{"device-id": filter.DeviceId})
+	agent := dMgr.getDeviceAgent(ctx, filter.DeviceId)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "device-%s", filter.DeviceId)
+	}
+
+	updates := agent.listDeviceUpdates(ctx, filter)
+	return updates, nil
 }
