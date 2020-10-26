@@ -437,7 +437,7 @@ func (qp queuePosition) send(ctx context.Context, agent *LogicalAgent, deviceID 
 	if qp.prev != nil {
 		<-qp.prev // wait for turn
 	}
-	agent.ldeviceMgr.SendChangeEvent(ctx, deviceID, reason, desc)
+	agent.ldeviceMgr.SendEvent(ctx, deviceID, reason, desc)
 	close(qp.next) // notify next
 }
 
