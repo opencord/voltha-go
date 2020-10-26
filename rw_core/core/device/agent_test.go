@@ -100,7 +100,7 @@ func newDATest(ctx context.Context) *DATest {
 		},
 		AdminState:    voltha.AdminState_PREPROVISIONED,
 		OperStatus:    voltha.OperStatus_UNKNOWN,
-		Reason:        "All good",
+		//Reason:        "All good",
 		ConnectStatus: voltha.ConnectStatus_UNKNOWN,
 		Custom:        nil,
 	}
@@ -206,7 +206,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		deviceToUpdate.SerialNumber = serialNumber
 		deviceToUpdate.MacAddress = macAddress
 		deviceToUpdate.Vlan = vlan
-		deviceToUpdate.Reason = reason
+		//deviceToUpdate.Reason = reason
 		err := da.updateDeviceUsingAdapterData(context.Background(), deviceToUpdate)
 		assert.Nil(t, err)
 		localWG.Done()
@@ -240,7 +240,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 	expectedChange.SerialNumber = serialNumber
 	expectedChange.MacAddress = macAddress
 	expectedChange.Vlan = vlan
-	expectedChange.Reason = reason
+	//expectedChange.Reason = reason
 
 	updatedDevice, _ := da.getDeviceReadOnly(context.Background())
 	updatedDevicePorts := da.listDevicePorts()
@@ -297,6 +297,25 @@ func TestFlowUpdates(t *testing.T) {
 }
 
 func TestGroupUpdates(t *testing.T) {
+	ctx := context.Background()
+	da := newDATest(ctx)
+	assert.NotNil(t, da)
+	defer da.stopAll(ctx)
+
+	// Start the Core
+	da.startCore(ctx)
+	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(ctx, t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
+	a := da.createDeviceAgent(t)
+	err1 := a.requestQueue.WaitForGreenLight(ctx)
+	assert.Nil(t, err1)
+	cloned := a.cloneDeviceWithoutLock()
+	cloned.AdminState, cloned.ConnectStatus, cloned.OperStatus = voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE
+	err2 := a.updateDeviceAndReleaseLock(ctx, cloned)
+	assert.Nil(t, err2)
+	da.testGroupAddDeletes(t, a)
+}
+
+func TestDeviceUpdates(t *testing.T) {
 	ctx := context.Background()
 	da := newDATest(ctx)
 	assert.NotNil(t, da)
