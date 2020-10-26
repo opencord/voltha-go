@@ -21,13 +21,15 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"reflect"
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device/flow"
@@ -35,15 +37,15 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-go/rw_core/core/device/transientstate"
+	"github.com/opencord/voltha-go/rw_core/core/device/update"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/extension"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Agent represents device agent attributes
@@ -67,6 +69,7 @@ type Agent struct {
 	flowLoader           *flow.Loader
 	groupLoader          *group.Loader
 	portLoader           *port.Loader
+	updateLoader         *update.Loader
 	transientStateLoader *transientstate.Loader
 }
 
@@ -93,6 +96,7 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 		flowLoader:           flow.NewLoader(dbPath.SubPath("flows").Proxy(deviceID)),
 		groupLoader:          group.NewLoader(dbPath.SubPath("groups").Proxy(deviceID)),
 		portLoader:           port.NewLoader(dbPath.SubPath("ports").Proxy(deviceID)),
+		updateLoader:         update.NewLoader(dbPath.SubPath("updates").Proxy(deviceID)),
 		transientStateLoader: transientstate.NewLoader(dbPath.SubPath("core").Proxy("transientstate"), deviceID),
 	}
 }
@@ -136,12 +140,16 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 		logger.Infow(ctx, "device-loaded-from-dB", log.Fields{"device-id": agent.deviceID})
 	} else {
 		// Create a new device
+		update := agent.newDeviceUpdate(ctx, "createDevice")
+		defer agent.deviceUpdate(ctx, update)
+
 		// Assumption is that AdminState, FlowGroups, and Flows are uninitialized since this
 		// is a new device, so populate them here before passing the device to ldProxy.Set.
 		// agent.deviceId will also have been set during newAgent().
 		device = (proto.Clone(deviceToCreate)).(*voltha.Device)
 		device.Id = agent.deviceID
 		device.AdminState = voltha.AdminState_PREPROVISIONED
+		update.StateChange.Current.AdminState = device.AdminState
 		if !deviceToCreate.GetRoot() && deviceToCreate.ProxyAddress != nil {
 			// Set the default vlan ID to the one specified by the parent adapter.  It can be
 			// overwritten by the child adapter during a device update request
@@ -150,8 +158,10 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 
 		// Add the initial device to the local model
 		if err := agent.dbProxy.Set(ctx, agent.deviceID, device); err != nil {
+			update.Description = fmt.Sprintf("failed-adding-device-%s: %s", agent.deviceID, err.Error())
 			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s: %s", agent.deviceID, err)
 		}
+		update.Status.Code = common.OperationResp_OPERATION_SUCCESS
 		agent.device = device
 	}
 	startSucceeded = true
@@ -253,6 +263,29 @@ func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.C
 	}
 }
 
+func (agent *Agent) waitForAdapterResponseAndAddUpdate(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, prevState *voltha.DeviceState, reqArgs ...interface{}) {
+	du := agent.newDeviceUpdate(ctx, rpc)
+	defer cancel()
+	defer agent.deviceUpdate(ctx, du)
+	select {
+	case rpcResponse, ok := <-ch:
+		if !ok {
+			onFailure(ctx, rpc, status.Errorf(codes.Aborted, "channel-closed"), reqArgs)
+		} else if rpcResponse.Err != nil {
+			du.Description = rpcResponse.Err.Error()
+			onFailure(ctx, rpc, rpcResponse.Err, reqArgs)
+		} else {
+			agent.updateDeviceStateChange(prevState, du)
+			du.Status.Code = common.OperationResp_OPERATION_SUCCESS
+			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
+		}
+	case <-ctx.Done():
+		du.Description = ctx.Err().Error()
+		onFailure(ctx, rpc, ctx.Err(), reqArgs)
+	}
+}
+
 // onDeleteSuccess is a common callback for scenarios where we receive a nil response following a delete request
 // to an adapter.
 func (agent *Agent) onDeleteSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
@@ -284,18 +317,24 @@ func (agent *Agent) onDeleteFailure(ctx context.Context, rpc string, response in
 }
 
 func (agent *Agent) waitForAdapterDeleteResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
-	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
+	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, prevState *voltha.DeviceState, reqArgs ...interface{}) {
+	du := agent.newDeviceUpdate(ctx, rpc)
 	defer cancel()
+	defer agent.deviceUpdate(ctx, du)
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
 			onFailure(ctx, rpc, status.Errorf(codes.Aborted, "channel-closed"), reqArgs)
 		} else if rpcResponse.Err != nil {
+			du.Description = rpcResponse.Err.Error()
 			onFailure(ctx, rpc, rpcResponse.Err, reqArgs)
 		} else {
+			agent.updateDeviceStateChange(prevState, du)
+			du.Status.Code = common.OperationResp_OPERATION_SUCCESS
 			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
 		}
 	case <-ctx.Done():
+		du.Description = ctx.Err().Error()
 		onFailure(ctx, rpc, ctx.Err(), reqArgs)
 	}
 }
@@ -323,20 +362,36 @@ func (agent *Agent) cloneDeviceWithoutLock() *voltha.Device {
 
 // enableDevice activates a preprovisioned or a disable device
 func (agent *Agent) enableDevice(ctx context.Context) error {
+	update := agent.newDeviceUpdate(ctx, "enableDevice")
+	defer agent.deviceUpdate(ctx, update)
+
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		update.Description = err.Error()
 		return err
 	}
 	logger.Debugw(ctx, "enableDevice", log.Fields{"device-id": agent.deviceID})
 
 	oldDevice := agent.getDeviceReadOnlyWithoutLock()
+
+	//To preserve and use oldDevice state as prev state in new device
+	prevDeviceState := agent.getDeviceState()
+
 	if oldDevice.AdminState == voltha.AdminState_ENABLED {
 		logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
-		return status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id))
+		update.Description = fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id)
+		return status.Error(codes.FailedPrecondition, update.Description)
 	}
 	if agent.isDeletionInProgress() {
 		agent.requestQueue.RequestComplete()
-		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device deletion is in progress.", agent.deviceID)
+
+		update.Status = &common.OperationResp{
+			Code: common.OperationResp_OPERATION_IN_PROGRESS,
+		}
+
+		update.Description = fmt.Sprintf("deviceId:%s, Device deletion is in progress.", agent.deviceID)
+		return status.Error(codes.FailedPrecondition, update.Description)
+
 	}
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
@@ -344,6 +399,7 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	adapterName, err := agent.adapterMgr.GetAdapterType(oldDevice.Type)
 	if err != nil {
 		agent.requestQueue.RequestComplete()
+		update.Description = err.Error()
 		return err
 	}
 
@@ -354,12 +410,17 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	newDevice.AdminState = voltha.AdminState_ENABLED
 	newDevice.OperStatus = voltha.OperStatus_ACTIVATING
 	if err := agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
+		update.Description = err.Error()
 		return err
 	}
 
 	// Adopt the device if it was in pre-provision state.  In all other cases, try to re-enable it.
 	var ch chan *kafka.RpcResponse
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	rb := ctx.Value("fromTopic")
+	if rb != nil {
+		subCtx = context.WithValue(subCtx, "fromTopic", rb)
+	}
 	if oldDevice.AdminState == voltha.AdminState_PREPROVISIONED {
 		ch, err = agent.adapterProxy.AdoptDevice(subCtx, newDevice)
 	} else {
@@ -367,25 +428,36 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	}
 	if err != nil {
 		cancel()
+		update.Description = err.Error()
 		return err
 	}
+	update.Status = &common.OperationResp{
+		Code:           common.OperationResp_OPERATION_IN_PROGRESS,
+		AdditionalInfo: "waitForAdapterResponse",
+	}
 	// Wait for response
-	go agent.waitForAdapterResponse(subCtx, cancel, "enableDevice", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndAddUpdate(subCtx, cancel, "enableDevice", ch, agent.onSuccess, agent.onFailure, prevDeviceState)
 	return nil
 }
 
-func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, ch chan *kafka.RpcResponse, response coreutils.Response) {
+func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse, response coreutils.Response) {
 	defer cancel()
+	update := agent.newDeviceUpdate(ctx, rpc)
+	defer agent.deviceUpdate(ctx, update)
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
+			update.Description = "Response Channel Closed"
 			response.Error(status.Errorf(codes.Aborted, "channel-closed"))
 		} else if rpcResponse.Err != nil {
+			update.Description = rpcResponse.Err.Error()
 			response.Error(rpcResponse.Err)
 		} else {
+			update.Status.Code = common.OperationResp_OPERATION_SUCCESS
 			response.Done()
 		}
 	case <-ctx.Done():
+		update.Description = ctx.Err().Error()
 		response.Error(ctx.Err())
 	}
 }
@@ -448,7 +520,13 @@ func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*of
 
 //disableDevice disable a device
 func (agent *Agent) disableDevice(ctx context.Context) error {
+	update := agent.newDeviceUpdate(ctx, "disableDevice")
+	defer agent.deviceUpdate(ctx, update)
+
+	prevDeviceState := agent.getDeviceState()
+
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		update.Description = err.Error()
 		return err
 	}
 	logger.Debugw(ctx, "disableDevice", log.Fields{"device-id": agent.deviceID})
@@ -456,12 +534,14 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	cloned := agent.cloneDeviceWithoutLock()
 
 	if cloned.AdminState == voltha.AdminState_DISABLED {
+		update.Description = "device-already-disabled"
 		logger.Debugw(ctx, "device-already-disabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
 		return nil
 	}
 	if cloned.AdminState == voltha.AdminState_PREPROVISIONED {
 		agent.requestQueue.RequestComplete()
+		update.Description = fmt.Sprintf("deviceId:%s, invalid-admin-state:%s", agent.deviceID, cloned.AdminState)
 		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, invalid-admin-state:%s", agent.deviceID, cloned.AdminState)
 	}
 	if agent.isDeletionInProgress() {
@@ -479,15 +559,27 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	ch, err := agent.adapterProxy.DisableDevice(subCtx, cloned)
 	if err != nil {
 		cancel()
+		update.Description = err.Error()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "disableDevice", ch, agent.onSuccess, agent.onFailure)
+	update.Status = &common.OperationResp{
+		Code:           common.OperationResp_OPERATION_IN_PROGRESS,
+		AdditionalInfo: "waitForAdapterResponse",
+	}
+	// Wait for response
+	go agent.waitForAdapterResponseAndAddUpdate(subCtx, cancel, "disableDevice", ch, agent.onSuccess, agent.onFailure, prevDeviceState)
 
 	return nil
 }
 
 func (agent *Agent) rebootDevice(ctx context.Context) error {
+	update := agent.newDeviceUpdate(ctx, "rebootDevice")
+	defer agent.deviceUpdate(ctx, update)
+
+	prevDeviceState := agent.getDeviceState()
+
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		update.Description = err.Error()
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
@@ -501,15 +593,26 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	ch, err := agent.adapterProxy.RebootDevice(subCtx, device)
 	if err != nil {
 		cancel()
+		update.Description = err.Error()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "rebootDevice", ch, agent.onSuccess, agent.onFailure)
+	update.Status = &common.OperationResp{
+		Code:           common.OperationResp_OPERATION_IN_PROGRESS,
+		AdditionalInfo: "waitForAdapterResponse",
+	}
+	// Wait for response
+	go agent.waitForAdapterResponseAndAddUpdate(subCtx, cancel, "rebootDevice", ch, agent.onSuccess, agent.onFailure, prevDeviceState)
 	return nil
 }
 
 func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 	logger.Debugw(ctx, "deleteDeviceForce", log.Fields{"device-id": agent.deviceID})
+
+	update := agent.newDeviceUpdate(ctx, "deleteDevice")
+
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		update.Description = err.Error()
+		agent.deviceUpdate(ctx, update)
 		return err
 	}
 	// Get the device Transient state, return err if it is DELETING
@@ -517,8 +620,10 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 
 	if agent.isStateDeleting(previousDeviceTransientState) {
 		agent.requestQueue.RequestComplete()
-		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device Deletion is in progress",
+		update.Description = fmt.Sprintf("deviceId:%s, Device Deletion is in progress",
 			agent.deviceID)
+		agent.deviceUpdate(ctx, update)
+		return status.Error(codes.FailedPrecondition, update.Description)
 	}
 	device := agent.cloneDeviceWithoutLock()
 	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, voltha.DeviceTransientState_FORCE_DELETING,
@@ -531,8 +636,15 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 		ch, err := agent.adapterProxy.DeleteDevice(subCtx, device)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
+			agent.deviceUpdate(ctx, update)
 			return err
 		}
+		// As force delete will not be dependent over the response of adapter, marking this operation as success
+		update.Status = &common.OperationResp{
+			Code: common.OperationResp_OPERATION_SUCCESS,
+		}
+		agent.deviceUpdate(ctx, update)
 		// Since it is a case of force delete, nothing needs to be done on adapter responses.
 		go agent.waitForAdapterResponse(subCtx, cancel, "deleteDeviceForce", ch, agent.onSuccess,
 			agent.onFailure)
@@ -542,7 +654,14 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 
 func (agent *Agent) deleteDevice(ctx context.Context) error {
 	logger.Debugw(ctx, "deleteDevice", log.Fields{"device-id": agent.deviceID})
+
+	update := agent.newDeviceUpdate(ctx, "deleteDevice")
+	defer agent.deviceUpdate(ctx, update)
+
+	state := agent.getDeviceState()
+
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		update.Description = err.Error()
 		return err
 	}
 	// Get the device Transient state, return err if it is DELETING
@@ -550,7 +669,8 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 
 	if agent.isStateDeleting(previousDeviceTransientState) {
 		agent.requestQueue.RequestComplete()
-		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device Deletion is in progress", agent.deviceID)
+		update.Description = fmt.Sprintf("deviceId:%s, Device Deletion is in progress", agent.deviceID)
+		return status.Error(codes.FailedPrecondition, update.Description)
 	}
 	device := agent.cloneDeviceWithoutLock()
 	previousAdminState := device.AdminState
@@ -563,6 +683,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 	}
 	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, currentDeviceTransientState,
 		previousDeviceTransientState); err != nil {
+		update.Description = err.Error()
 		return err
 	}
 	// If the device was in pre-prov state (only parent device are in that state) then do not send the request to the
@@ -576,10 +697,15 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 			if err := agent.updateTransientState(ctx, voltha.DeviceTransientState_DELETE_FAILED); err != nil {
 				logger.Errorw(ctx, "failed-to-update-transient-state-as-delete-failed", log.Fields{"device-id": agent.deviceID})
 			}
+			update.Description = err.Error()
 			return err
 		}
+		update.Status = &common.OperationResp{
+			Code:           common.OperationResp_OPERATION_IN_PROGRESS,
+			AdditionalInfo: "waitForAdapterResponse",
+		}
 		go agent.waitForAdapterDeleteResponse(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
-			agent.onDeleteFailure)
+			agent.onDeleteFailure, state)
 	}
 	return nil
 }
@@ -673,7 +799,7 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
-	cloned.Reason = device.Reason
+	//cloned.Reason = device.Reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
@@ -828,11 +954,20 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
+
+	update := agent.newDeviceUpdate(ctx, "updateDeviceReason")
+	defer agent.deviceUpdate(ctx, update)
 	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"device-id": agent.deviceID, "reason": reason})
 
 	cloned := agent.cloneDeviceWithoutLock()
-	cloned.Reason = reason
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	retErr := agent.updateDeviceAndReleaseLock(ctx, cloned)
+	if retErr != nil {
+		update.Description = retErr.Error()
+	} else {
+		update.Status.Code = common.OperationResp_OPERATION_SUCCESS
+		update.Description = reason
+	}
+	return retErr
 }
 
 func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {

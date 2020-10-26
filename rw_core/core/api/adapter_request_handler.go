@@ -19,7 +19,6 @@ package api
 import (
 	"context"
 	"errors"
-
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -300,6 +299,7 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(ctx context.Context, 
 	serialNumber := &ic.StrType{}
 	vendorID := &ic.StrType{}
 	onuID := &ic.IntType{}
+	fromTopic := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "parent_device_id":
@@ -342,13 +342,19 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(ctx context.Context, 
 				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
 				return nil, err
 			}
+		case "fromTopic":
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-fromTopic", log.Fields{"error": err})
+				return nil, err
+			}
+			//log.EnrichSpan(ctx,log.Fields{"fromTopic": fromTopic})
 		}
 	}
 	logger.Debugw(ctx, "ChildDeviceDetected", log.Fields{"parent-device-id": pID.Id, "parentPortNo": portNo.Val,
 		"deviceType": dt.Val, "channelID": chnlID.Val, "serialNumber": serialNumber.Val,
 		"vendorID": vendorID.Val, "onuID": onuID.Val, "transactionID": transactionID.Val})
 
-	device, err := rhp.deviceMgr.ChildDeviceDetected(log.WithSpanFromContext(context.TODO(), ctx), pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
+	device, err := rhp.deviceMgr.ChildDeviceDetected(context.WithValue(log.WithSpanFromContext(context.TODO(), ctx), "fromTopic", fromTopic.Val), pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
 	if err != nil {
 		logger.Debugw(ctx, "child-detection-failed", log.Fields{"parent-device-id": pID.Id, "onuID": onuID.Val, "error": err})
 	}
@@ -717,6 +723,7 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(ctx context.Context, args []*
 	deviceID := &voltha.ID{}
 	port := &voltha.Port{}
 	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
@@ -734,11 +741,21 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(ctx context.Context, args []*
 				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
 				return nil, err
 			}
+		case "fromTopic":
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-fromTopic", log.Fields{"error": err})
+				return nil, err
+			}
+			//log.EnrichSpan(ctx,log.Fields{"fromTopic": fromTopic})
 		}
 	}
 	logger.Debugw(ctx, "PortCreated", log.Fields{"device-id": deviceID.Id, "port": port, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.AddPort(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, port); err != nil {
+	/*if err := rhp.deviceMgr.AddPort(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, port); err != nil {
+		logger.Debugw(ctx, "unable-to-add-port", log.Fields{"error": err})
+		return nil, err
+	}*/
+	if err := rhp.deviceMgr.AddPort(context.WithValue(log.WithSpanFromContext(context.TODO(), ctx), "fromTopic", fromTopic.Val), deviceID.Id, port); err != nil {
 		logger.Debugw(ctx, "unable-to-add-port", log.Fields{"error": err})
 		return nil, err
 	}
@@ -905,6 +922,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(ctx context.Context, a
 	deviceID := &voltha.ID{}
 	reason := &ic.StrType{}
 	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
 		case "device_id":
@@ -922,12 +940,28 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(ctx context.Context, a
 				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
 				return nil, err
 			}
+		case "fromTopic":
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-fromTopic", log.Fields{"error": err})
+				return nil, err
+			}
+			/*logger.Warnf(ctx, "fromTopic: %v", fromTopic)
+			log.EnrichSpan(ctx,log.Fields{"fromTopic": fromTopic})
+			if span := opentracing.SpanFromContext(ctx); span != nil {
+				logger.Warnf(ctx, "Valid Span, fromTopic from Baggage: [%v]", span.BaggageItem("fromTopic"))
+				if jSpan, ok := span.(*jtracing.Span); ok {
+					logger.Warnf(ctx, "Valid Span and valid jspan, fromTopic from Tags: [%v]", jSpan.Tags()["fromTopic"])
+					for k, v := range jSpan.Tags() {
+						logger.Warnf(ctx, "tags in loop %v:%v", k, v)
+					}
+				}
+			}*/
 		}
 	}
 	logger.Debugw(ctx, "DeviceReasonUpdate", log.Fields{"device-id": deviceID.Id, "reason": reason.Val,
 		"transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.UpdateDeviceReason(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, reason.Val); err != nil {
+	if err := rhp.deviceMgr.UpdateDeviceReason(context.WithValue(log.WithSpanFromContext(context.TODO(), ctx), "fromTopic", fromTopic.Val), deviceID.Id, reason.Val); err != nil {
 		logger.Debugw(ctx, "unable-to-update-device-reason", log.Fields{"error": err})
 		return nil, err
 
