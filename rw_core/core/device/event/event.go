@@ -28,18 +28,18 @@ import (
 )
 
 type Manager struct {
-	packetInQueue        chan openflow_13.PacketIn
-	packetInQueueDone    chan bool
-	changeEventQueue     chan openflow_13.ChangeEvent
-	changeEventQueueDone chan bool
+	packetInQueue     chan openflow_13.PacketIn
+	packetInQueueDone chan bool
+	eventQueue        chan openflow_13.OFEvent
+	eventQueueDone    chan bool
 }
 
 func NewManager() *Manager {
 	return &Manager{
-		packetInQueue:        make(chan openflow_13.PacketIn, 100),
-		packetInQueueDone:    make(chan bool, 1),
-		changeEventQueue:     make(chan openflow_13.ChangeEvent, 100),
-		changeEventQueueDone: make(chan bool, 1),
+		packetInQueue:     make(chan openflow_13.PacketIn, 100),
+		packetInQueueDone: make(chan bool, 1),
+		eventQueue:        make(chan openflow_13.OFEvent, 100),
+		eventQueueDone:    make(chan bool, 1),
 	}
 }
 
@@ -80,9 +80,9 @@ func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) 
 		case openflow_13.PacketIn:
 			logger.Debug(ctx, "Enqueueing last failed packetIn")
 			q.packetInQueue <- tracker.failedPacket.(openflow_13.PacketIn)
-		case openflow_13.ChangeEvent:
-			logger.Debug(ctx, "Enqueueing last failed changeEvent")
-			q.changeEventQueue <- tracker.failedPacket.(openflow_13.ChangeEvent)
+		case openflow_13.OFEvent:
+			logger.Debug(ctx, "Enqueueing last failed event")
+			q.eventQueue <- tracker.failedPacket.(openflow_13.OFEvent)
 		}
 	}
 	return nil
@@ -126,11 +126,11 @@ loop:
 	return nil
 }
 
-func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
-	logger.Debugw(ctx, "SendChangeEvent", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
-	q.changeEventQueue <- openflow_13.ChangeEvent{
+func (q *Manager) SendEvent(ctx context.Context, deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
+	logger.Debugw(ctx, "SendEvent", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
+	q.eventQueue <- openflow_13.OFEvent{
 		Id: deviceID,
-		Event: &openflow_13.ChangeEvent_PortStatus{
+		Event: &openflow_13.OFEvent_PortStatus{
 			PortStatus: &openflow_13.OfpPortStatus{
 				Reason: reason,
 				Desc:   desc,
@@ -139,11 +139,11 @@ func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason o
 	}
 }
 
-// ReceiveChangeEvents receives change in events
-func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
+// ReceiveEvents receives change in events
+func (q *Manager) ReceiveEvents(_ *empty.Empty, events voltha.VolthaService_ReceiveEventsServer) error {
 	ctx := context.Background()
-	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveChangeEvents", q.changeEventQueueDone)
-	logger.Debugw(ctx, "ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
+	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveEvents", q.eventQueueDone)
+	logger.Debugw(ctx, "ReceiveEvents-request", log.Fields{"events": events})
 
 	err := q.flushFailedPackets(ctx, streamingTracker)
 	if err != nil {
@@ -154,9 +154,9 @@ loop:
 	for {
 		select {
 		// Dequeue a change event
-		case event := <-q.changeEventQueue:
+		case event := <-q.eventQueue:
 			logger.Debugw(ctx, "sending-change-event", log.Fields{"event": event})
-			if err := changeEvents.Send(&event); err != nil {
+			if err := events.Send(&event); err != nil {
 				logger.Errorw(ctx, "failed-to-send-change-event", log.Fields{"error": err})
 				// save last failed changeevent
 				streamingTracker.failedPacket = event
@@ -166,8 +166,8 @@ loop:
 					streamingTracker.failedPacket = nil
 				}
 			}
-		case <-q.changeEventQueueDone:
-			logger.Debug(ctx, "Another ReceiveChangeEvents already running. Bailing out ...")
+		case <-q.eventQueueDone:
+			logger.Debug(ctx, "Another ReceiveEvents already running. Bailing out ...")
 			break loop
 		}
 	}
@@ -175,6 +175,6 @@ loop:
 	return nil
 }
 
-func (q *Manager) GetChangeEventsQueueForTest() <-chan openflow_13.ChangeEvent {
-	return q.changeEventQueue
+func (q *Manager) GetEventsQueueForTest() <-chan openflow_13.OFEvent {
+	return q.eventQueue
 }
