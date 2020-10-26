@@ -1614,3 +1614,16 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
 }
+
+func (dMgr *Manager) GetDeviceUpdates(ctx context.Context, filter *voltha.DeviceUpdateFilter) (*voltha.DeviceUpdates, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": filter.DeviceId})
+
+	logger.Debugw(ctx, "GetDeviceUpdate", log.Fields{"device-id": filter.DeviceId})
+	agent := dMgr.getDeviceAgent(ctx, filter.DeviceId)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "device-%s", filter.DeviceId)
+	}
+
+	updates := agent.listDeviceUpdates(ctx, filter)
+	return updates, nil
+}
