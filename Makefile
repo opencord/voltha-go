@@ -20,6 +20,9 @@ SHELL = bash -e -o pipefail
 # Variables
 VERSION                    ?= $(shell cat ./VERSION)
 
+# Packages
+PACKAGES                   = $(shell go list ./...)
+
 DOCKER_LABEL_VCS_DIRTY     = false
 ifneq ($(shell git ls-files --others --modified --exclude-standard 2>/dev/null | wc -l | sed -e 's/ //g'),0)
     DOCKER_LABEL_VCS_DIRTY = true
@@ -82,15 +85,15 @@ help:
 ## Local Development Helpers
 local-protos:
 ifdef LOCAL_PROTOS
-	mkdir -p vendor/github.com/opencord/voltha-protos/v3/go
-	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v3/go
+	mkdir -p vendor/github.com/opencord/voltha-protos/v4/go
+	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v4/go
 endif
 
 ## Local Development Helpers
 local-lib-go:
 ifdef LOCAL_LIB_GO
-	mkdir -p vendor/github.com/opencord/voltha-lib-go/v3/pkg
-	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v3/pkg/
+	mkdir -p vendor/github.com/opencord/voltha-lib-go/v4/pkg
+	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v4/pkg/
 endif
 
 ## Docker targets
@@ -168,3 +171,6 @@ distclean:
 mod-update:
 	${GO} mod tidy
 	${GO} mod vendor
+
+fmt:
+	@go fmt ${PACKAGES}
