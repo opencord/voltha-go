@@ -18,11 +18,13 @@ package device
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/common"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -45,16 +47,28 @@ func (agent *Agent) listDeviceFlows() map[uint64]*ofp.OfpFlowStats {
 func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "add-flows-to-adapters", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
 
+	update := agent.newDeviceUpdate(ctx, "addFlowToAdapter", "NB")
+
 	if (len(newFlows)) == 0 {
 		logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": newFlows})
 		return coreutils.DoneResponse(), nil
 	}
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
+		update.Description = err.Error()
+		uErr := agent.addDeviceUpdate(ctx, update)
+		if uErr != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
+		update.Description = fmt.Sprintf("non-existent-device-type-%s", device.Type)
+		uErr := agent.addDeviceUpdate(ctx, update)
+		if uErr != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
@@ -62,6 +76,11 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 	for _, flow := range newFlows {
 		flowHandle, created, err := agent.flowLoader.LockOrCreate(ctx, flow)
 		if err != nil {
+			update.Description = err.Error()
+			uErr := agent.addDeviceUpdate(ctx, update)
+			if uErr != nil {
+				logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+			}
 			return coreutils.DoneResponse(), err
 		}
 		if created {
@@ -72,6 +91,11 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 				//Flow needs to be updated.
 				if err := flowHandle.Update(ctx, flow); err != nil {
 					flowHandle.Unlock()
+					update.Description = fmt.Sprintf("failure-updating-flow-%d-to-device-%s", flow.Id, agent.deviceID)
+					uErr := agent.addDeviceUpdate(ctx, update)
+					if uErr != nil {
+						logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+					}
 					return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-flow-%d-to-device-%s", flow.Id, agent.deviceID)
 				}
 				flowsToDelete = append(flowsToDelete, flowToReplace)
@@ -99,9 +123,14 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, updatedAllFlows, nil, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
+			uErr := agent.addDeviceUpdate(ctx, update)
+			if uErr != nil {
+				logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+			}
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "addFlowToAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: flowsToAdd},
@@ -115,9 +144,19 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
+			uErr := agent.addDeviceUpdate(ctx, update)
+			if uErr != nil {
+				logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+			}
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "addFlowToAdapter", rpcResponse, response)
+	}
+	update.Status.Code = common.OperationResp_OPERATION_IN_PROGRESS
+	uErr := agent.addDeviceUpdate(ctx, update)
+	if uErr != nil {
+		logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
 	}
 	return response, nil
 }
@@ -130,12 +169,22 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 		return coreutils.DoneResponse(), nil
 	}
 
+	update := agent.newDeviceUpdate(ctx, "deleteFlowToAdapter", "NB")
+	defer func() {
+		err := agent.addDeviceUpdate(ctx, update)
+		if err != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": err, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
+	}()
+
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
+		update.Description = err.Error()
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
+		update.Description = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 	for _, flow := range flowsToDel {
@@ -143,6 +192,7 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 			// Update the store and cache
 			if err := flowHandle.Delete(ctx); err != nil {
 				flowHandle.Unlock()
+				update.Description = err.Error()
 				return coreutils.DoneResponse(), err
 			}
 			flowHandle.Unlock()
@@ -158,9 +208,10 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, updatedAllFlows, nil, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteFlowToAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
@@ -174,15 +225,19 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteFlowToAdapter", rpcResponse, response)
 	}
+	update.Status.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	return response, nil
 }
 
 func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "updateFlowsToAdapter", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
+
+	update := agent.newDeviceUpdate(ctx, "updateFlowToAdapter", "NB")
 
 	if (len(updatedFlows)) == 0 {
 		logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
@@ -194,10 +249,20 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
+		update.Description = fmt.Sprint("invalid device states")
+		uErr := agent.addDeviceUpdate(ctx, update)
+		if uErr != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states")
 	}
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
+		update.Description = fmt.Sprintf("non-existent-device-type-%s", device.Type)
+		uErr := agent.addDeviceUpdate(ctx, update)
+		if uErr != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
@@ -208,6 +273,11 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 			// Update the store and cache
 			if err := flowHandle.Update(ctx, flow); err != nil {
 				flowHandle.Unlock()
+				update.Description = err.Error()
+				uErr := agent.addDeviceUpdate(ctx, update)
+				if uErr != nil {
+					logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+				}
 				return coreutils.DoneResponse(), err
 			}
 
@@ -225,9 +295,14 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, updatedAllFlows, nil, nil)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
+			uErr := agent.addDeviceUpdate(ctx, update)
+			if uErr != nil {
+				logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+			}
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateFlowToAdapter", rpcResponse, response)
 	} else {
 		logger.Debugw(ctx, "updating-flows-and-groups",
 			log.Fields{
@@ -254,11 +329,21 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
+			uErr := agent.addDeviceUpdate(ctx, update)
+			if uErr != nil {
+				logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+			}
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateFlowToAdapter", rpcResponse, response)
 	}
 
+	update.Status.Code = common.OperationResp_OPERATION_IN_PROGRESS
+	uErr := agent.addDeviceUpdate(ctx, update)
+	if uErr != nil {
+		logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": uErr, "device-id": agent.deviceID, "operation-id": update.OperationId})
+	}
 	return response, nil
 }
 
@@ -295,16 +380,33 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 	logger.Debugw(ctx, "deleteAllFlows", log.Fields{"device-id": agent.deviceID})
 
+	var error string
+	update := agent.newDeviceUpdate(ctx, "deleteAllFlows", "NB")
+	defer func() {
+		err := agent.addDeviceUpdate(ctx, update)
+		if err != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": err, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
+	}()
+
 	for flowID := range agent.flowLoader.ListIDs() {
 		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
 			// Update the store and cache
 			if err := flowHandle.Delete(ctx); err != nil {
 				flowHandle.Unlock()
+				error += string(flowID) + " "
 				logger.Errorw(ctx, "unable-to-delete-flow", log.Fields{"device-id": agent.deviceID, "flowID": flowID})
 				continue
 			}
 			flowHandle.Unlock()
 		}
 	}
+
+	if error != "" {
+		update.Description = fmt.Sprintf("Unable to delete flows : %s", error)
+	} else {
+		update.Status.Code = common.OperationResp_OPERATION_SUCCESS
+	}
+
 	return nil
 }
