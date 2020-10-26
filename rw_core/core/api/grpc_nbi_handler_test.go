@@ -1307,7 +1307,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
-	for event := range nbi.GetChangeEventsQueueForTest() {
+	for event := range nbi.GetEventsQueueForTest() {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
