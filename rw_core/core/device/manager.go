@@ -1079,7 +1079,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 	// Activate the child device
 	if agent = dMgr.getDeviceAgent(ctx, agent.deviceID); agent != nil {
 		go func() {
-			subCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
+			subCtx := utils.WithFromTopicMetadataFromContext(utils.WithSpanAndRPCMetadataFromContext(ctx), ctx)
 			err := agent.enableDevice(subCtx)
 			if err != nil {
 				logger.Errorw(ctx, "unable-to-enable-device", log.Fields{"error": err})
