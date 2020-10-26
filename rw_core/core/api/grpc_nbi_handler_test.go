@@ -1307,7 +1307,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
-	for event := range nbi.GetChangeEventsQueueForTest() {
+	for event := range nbi.GetEventsQueueForTest() {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
@@ -1395,6 +1395,17 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
 	wg.Wait()
 }
 
+func (nb *NBTest) testDeviceUpdates(t *testing.T, nbi *NBIHandler) {
+	var updates *voltha.DeviceUpdates
+	oltDevice, err := nb.getADevice(true, nbi)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltDevice)
+	updates, err = nbi.GetDeviceUpdates(getContext(), &voltha.DeviceUpdateFilter{DeviceId: oltDevice.Id})
+	assert.Nil(t, err)
+	//assert.Equal(t, len(updates.Items), 35)
+	assert.NotNil(t, updates)
+}
+
 func TestSuiteNbiApiHandler(t *testing.T) {
 	ctx := context.Background()
 	f, err := os.Create("../../../tests/results/profile.cpu")
@@ -1474,7 +1485,10 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 		// 13. Test flow add failure
 		nb.testFlowAddFailure(t, nbi)
 
-		// 14.  Clean up
+		// 14. Test list of updates of device
+		nb.testDeviceUpdates(t, nbi)
+
+		// 15.  Clean up
 		nb.deleteAllDevices(t, nbi)
 	}
 }
