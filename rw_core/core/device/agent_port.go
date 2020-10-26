@@ -19,6 +19,7 @@ package device
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/voltha-protos/v4/go/common"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
@@ -147,22 +148,29 @@ func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 
 func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 	logger.Debugw(ctx, "addPort", log.Fields{"device-id": agent.deviceID})
+	var desc string
+	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	defer agent.logDeviceUpdate(ctx, "addPort", nil, nil, operStatus, &desc)
 
 	port.AdminState = voltha.AdminState_ENABLED
 
 	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, port)
 	if err != nil {
+		desc = err.Error()
 		return err
 	}
 	defer portHandle.Unlock()
 
 	if created {
+		operStatus.Code = common.OperationResp_OPERATION_SUCCESS
 		return nil
 	}
 
 	oldPort := portHandle.GetReadOnly()
 	if oldPort.Label != "" || oldPort.Type != voltha.Port_PON_OLT {
 		logger.Debugw(ctx, "port-already-exists", log.Fields{"port": port})
+		desc = fmt.Sprintf("port already exists, port : %s", port)
 		return nil
 	}
 
@@ -172,7 +180,13 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 	newPort.Label = port.Label
 	newPort.OperStatus = port.OperStatus
 
-	return portHandle.Update(ctx, &newPort)
+	err = portHandle.Update(ctx, &newPort)
+	if err != nil {
+		desc = err.Error()
+		return err
+	}
+	operStatus.Code = common.OperationResp_OPERATION_SUCCESS
+	return err
 }
 
 func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerPort) error {
@@ -223,8 +237,14 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	logger.Debugw(ctx, "disable-port", log.Fields{"device-id": agent.deviceID, "port-no": portID})
 
+	var desc string
+	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	defer agent.logDeviceUpdate(ctx, "disablePort", nil, nil, operStatus, &desc)
+
 	portHandle, have := agent.portLoader.Lock(portID)
 	if !have {
+		desc = fmt.Sprintf("Invalid argument portID: %v", portID)
 		return status.Errorf(codes.InvalidArgument, "%v", portID)
 	}
 	defer portHandle.Unlock()
@@ -232,18 +252,21 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	oldPort := portHandle.GetReadOnly()
 
 	if oldPort.Type != voltha.Port_PON_OLT {
+		desc = fmt.Sprintf("Disabling of Port Type %v unimplemented", oldPort.Type)
 		return status.Errorf(codes.InvalidArgument, "Disabling of Port Type %v unimplemented", oldPort.Type)
 	}
 
 	newPort := *oldPort
 	newPort.AdminState = voltha.AdminState_DISABLED
 	if err := portHandle.Update(ctx, &newPort); err != nil {
+		desc = err.Error()
 		return err
 	}
 
 	//send request to adapter
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
+		desc = err.Error()
 		return err
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
@@ -251,18 +274,26 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 
 	ch, err := agent.adapterProxy.DisablePort(ctx, device, &newPort)
 	if err != nil {
+		desc = err.Error()
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "disablePort", ch, agent.onSuccess, agent.onFailure)
+	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+	go agent.waitForAdapterResponseAndLogDeviceUpdate(subCtx, cancel, "disablePort", ch, agent.onSuccess, agent.onFailure, nil)
 	return nil
 }
 
 func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 	logger.Debugw(ctx, "enable-port", log.Fields{"device-id": agent.deviceID, "port-no": portID})
 
+	var desc string
+	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	defer agent.logDeviceUpdate(ctx, "enablePort", nil, nil, operStatus, &desc)
+
 	portHandle, have := agent.portLoader.Lock(portID)
 	if !have {
+		desc = fmt.Sprintf("Invalid Argument portID: %v", portID)
 		return status.Errorf(codes.InvalidArgument, "%v", portID)
 	}
 	defer portHandle.Unlock()
@@ -270,18 +301,21 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 	oldPort := portHandle.GetReadOnly()
 
 	if oldPort.Type != voltha.Port_PON_OLT {
+		desc = fmt.Sprintf("Enabling of Port Type %v unimplemented", oldPort.Type)
 		return status.Errorf(codes.InvalidArgument, "Enabling of Port Type %v unimplemented", oldPort.Type)
 	}
 
 	newPort := *oldPort
 	newPort.AdminState = voltha.AdminState_ENABLED
 	if err := portHandle.Update(ctx, &newPort); err != nil {
+		desc = err.Error()
 		return err
 	}
 
 	//send request to adapter
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
+		desc = err.Error()
 		return err
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
@@ -289,9 +323,11 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 
 	ch, err := agent.adapterProxy.EnablePort(ctx, device, &newPort)
 	if err != nil {
+		desc = err.Error()
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "enablePort", ch, agent.onSuccess, agent.onFailure)
+	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+	go agent.waitForAdapterResponseAndLogDeviceUpdate(subCtx, cancel, "enablePort", ch, agent.onSuccess, agent.onFailure, nil)
 	return nil
 }
