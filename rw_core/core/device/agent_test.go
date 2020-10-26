@@ -315,6 +315,25 @@ func TestGroupUpdates(t *testing.T) {
 	da.testGroupAddDeletes(t, a)
 }
 
+func TestDeviceUpdates(t *testing.T) {
+	ctx := context.Background()
+	da := newDATest(ctx)
+	assert.NotNil(t, da)
+	defer da.stopAll(ctx)
+
+	// Start the Core
+	da.startCore(ctx)
+	da.oltAdapter, da.onuAdapter = tst.CreateAndregisterAdapters(ctx, t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
+	a := da.createDeviceAgent(t)
+	err1 := a.requestQueue.WaitForGreenLight(ctx)
+	assert.Nil(t, err1)
+	cloned := a.cloneDeviceWithoutLock()
+	cloned.AdminState, cloned.ConnectStatus, cloned.OperStatus = voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE
+	err2 := a.updateDeviceAndReleaseLock(ctx, cloned)
+	assert.Nil(t, err2)
+	da.testGroupAddDeletes(t, a)
+}
+
 func isFlowSliceEqual(a, b []*ofp.OfpFlowStats) bool {
 	if len(a) != len(b) {
 		return false
