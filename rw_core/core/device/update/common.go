@@ -15,7 +15,7 @@
  */
 
 // Package core Common Logger initialization
-package test
+package update
 
 import (
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"

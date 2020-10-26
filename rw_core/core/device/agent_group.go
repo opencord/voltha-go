@@ -18,13 +18,15 @@ package device
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/gogo/protobuf/proto"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/common"
+	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -45,17 +47,28 @@ func (agent *Agent) listDeviceGroups() map[uint32]*ofp.OfpGroupEntry {
 func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "add-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "groups": newGroups, "flow-metadata": flowMetadata})
 
+	update := agent.newDeviceUpdate(ctx, "addGroupsToAdapter", "NB")
+	defer func() {
+		err := agent.addDeviceUpdate(ctx, update)
+		if err != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": err, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
+	}()
+
 	if (len(newGroups)) == 0 {
 		logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
+		update.Description = "No new groups"
 		return coreutils.DoneResponse(), nil
 	}
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
+		update.Description = err.Error()
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
+		update.Description = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
@@ -64,6 +77,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	for _, group := range newGroups {
 		groupHandle, created, err := agent.groupLoader.LockOrCreate(ctx, group)
 		if err != nil {
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
 
@@ -75,6 +89,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 				//Group needs to be updated.
 				if err := groupHandle.Update(ctx, group); err != nil {
 					groupHandle.Unlock()
+					update.Description = fmt.Sprintf("failure-updating-group-%s-to-device-%s", strconv.Itoa(int(group.Desc.GroupId)))
 					return coreutils.DoneResponse(), status.Errorf(codes.Internal, "failure-updating-group-%s-to-device-%s", strconv.Itoa(int(group.Desc.GroupId)), agent.deviceID)
 				}
 				groupsToDelete = append(groupsToDelete, groupToChange)
@@ -90,6 +105,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	// Sanity check
 	if (len(groupsToAdd)) == 0 {
 		logger.Debugw(ctx, "no-groups-to-update", log.Fields{"device-id": agent.deviceID, "groups": newGroups})
+		update.Description = "No group to add"
 		return coreutils.DoneResponse(), nil
 	}
 
@@ -101,9 +117,10 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, nil, updatedAllGroups, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "addGroupsToAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
@@ -117,26 +134,39 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "addGroupsToAdapter", rpcResponse, response)
 	}
+	update.Status.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	return response, nil
 }
 
 func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "delete-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "groups": groupsToDel})
 
+	update := agent.newDeviceUpdate(ctx, "deleteGroupsFromAdapter", "NB")
+	defer func() {
+		err := agent.addDeviceUpdate(ctx, update)
+		if err != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": err, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
+	}()
+
 	if (len(groupsToDel)) == 0 {
 		logger.Debugw(ctx, "nothing-to-delete", log.Fields{"device-id": agent.deviceID})
+		update.Description = "No Group to delete"
 		return coreutils.DoneResponse(), nil
 	}
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
+		update.Description = err.Error()
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
+		update.Description = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
@@ -145,6 +175,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 			// Update the store and cache
 			if err := groupHandle.Delete(ctx); err != nil {
 				groupHandle.Unlock()
+				update.Description = err.Error()
 				return coreutils.DoneResponse(), err
 			}
 			groupHandle.Unlock()
@@ -159,9 +190,10 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, nil, updatedAllGroups, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteGroupsFromAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
@@ -175,30 +207,44 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteGroupsFromAdapter", rpcResponse, response)
 	}
+	update.Status.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	return response, nil
 }
 
 func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "updateGroupsToAdapter", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
 
+	update := agent.newDeviceUpdate(ctx, "updateGroupsToAdapter", "NB")
+	defer func() {
+		err := agent.addDeviceUpdate(ctx, update)
+		if err != nil {
+			logger.Errorw(ctx, "unable-to-add-device-update", log.Fields{"error": err, "device-id": agent.deviceID, "operation-id": update.OperationId})
+		}
+	}()
+
 	if (len(updatedGroups)) == 0 {
 		logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
+		update.Description = "No Group to update"
 		return coreutils.DoneResponse(), nil
 	}
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
+		update.Description = err.Error()
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
+		update.Description = fmt.Sprintf("invalid device states-oper-%s-connect-%s-admin-%s", device.OperStatus, device.ConnectStatus, device.AdminState)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states-oper-%s-connect-%s-admin-%s", device.OperStatus, device.ConnectStatus, device.AdminState)
 	}
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
+		update.Description = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 
@@ -208,6 +254,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 			// Update the store and cache
 			if err := groupHandle.Update(ctx, group); err != nil {
 				groupHandle.Unlock()
+				update.Description = err.Error()
 				return coreutils.DoneResponse(), err
 			}
 			groupsToUpdate = append(groupsToUpdate, group)
@@ -223,9 +270,10 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsBulk(subCtx, device, nil, updatedAllGroups, nil)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateGroupsToAdapter", rpcResponse, response)
 	} else {
 		logger.Debugw(ctx, "updating-groups",
 			log.Fields{
@@ -237,6 +285,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		if (len(groupsToUpdate)) == 0 {
 			logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "groups": groupsToUpdate})
 			cancel()
+			update.Description = "No Group to update"
 			return coreutils.DoneResponse(), nil
 		}
 
@@ -252,10 +301,12 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		rpcResponse, err := agent.adapterProxy.UpdateFlowsIncremental(subCtx, device, flowChanges, groupChanges, flowMetadata)
 		if err != nil {
 			cancel()
+			update.Description = err.Error()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateGroupsToAdapter", rpcResponse, response)
 	}
 
+	update.Status.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	return response, nil
 }
