@@ -22,10 +22,10 @@ import (
 	"sync"
 
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	fu "github.com/opencord/voltha-lib-go/v3/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -437,7 +437,7 @@ func (qp queuePosition) send(ctx context.Context, agent *LogicalAgent, deviceID 
 	if qp.prev != nil {
 		<-qp.prev // wait for turn
 	}
-	agent.ldeviceMgr.SendChangeEvent(ctx, deviceID, reason, desc)
+	agent.ldeviceMgr.SendEvent(ctx, deviceID, reason, desc)
 	close(qp.next) // notify next
 }
 

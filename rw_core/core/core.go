@@ -25,12 +25,12 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/api"
 	"github.com/opencord/voltha-go/rw_core/core/device"
-	conf "github.com/opencord/voltha-lib-go/v3/pkg/config"
-	grpcserver "github.com/opencord/voltha-lib-go/v3/pkg/grpc"
-	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	conf "github.com/opencord/voltha-lib-go/v4/pkg/config"
+	grpcserver "github.com/opencord/voltha-lib-go/v4/pkg/grpc"
+	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc"
 )
 

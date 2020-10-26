@@ -29,13 +29,13 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-protos/v3/go/common"
-	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
-	"github.com/opencord/voltha-protos/v3/go/openflow_13"
-	ofp "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/common"
+	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
+	"github.com/opencord/voltha-protos/v4/go/openflow_13"
+	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -1581,4 +1581,17 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
+}
+
+func (dMgr *Manager) GetDeviceUpdates(ctx context.Context, filter *voltha.DeviceUpdateFilter) (*voltha.DeviceUpdates, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": filter.DeviceId})
+
+	logger.Debugw(ctx, "GetDeviceUpdate", log.Fields{"device-id": filter.DeviceId})
+	agent := dMgr.getDeviceAgent(ctx, filter.DeviceId)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "device-%s", filter.DeviceId)
+	}
+
+	updates := agent.listDeviceUpdates(ctx, filter)
+	return updates, nil
 }

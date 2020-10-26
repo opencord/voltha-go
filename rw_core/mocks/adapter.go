@@ -23,10 +23,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
-	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
-	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/adapters/adapterif"
+	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
+	of "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 )
 
 func macAddressToUint32Array(mac string) []uint32 {

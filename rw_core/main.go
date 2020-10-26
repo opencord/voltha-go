@@ -27,9 +27,9 @@ import (
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
-	"github.com/opencord/voltha-lib-go/v3/pkg/version"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v4/pkg/version"
 )
 
 func waitForExit(ctx context.Context) int {
