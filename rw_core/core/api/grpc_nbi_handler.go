@@ -23,10 +23,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
-	"github.com/opencord/voltha-lib-go/v3/pkg/version"
-	"github.com/opencord/voltha-protos/v3/go/common"
-	"github.com/opencord/voltha-protos/v3/go/omci"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/version"
+	"github.com/opencord/voltha-protos/v4/go/common"
+	"github.com/opencord/voltha-protos/v4/go/omci"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 )
 
 // NBIHandler combines the partial API implementations in various components into a complete voltha implementation
@@ -110,5 +110,8 @@ func (handler *NBIHandler) GetMembership(context.Context, *empty.Empty) (*voltha
 	return nil, errUnimplemented
 }
 func (handler *NBIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
+	return nil, errUnimplemented
+}
+func (handler *NBIHandler) ForceDeleteDevice(ctx context.Context, id *common.ID) (*empty.Empty, error) {
 	return nil, errUnimplemented
 }

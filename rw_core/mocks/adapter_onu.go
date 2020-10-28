@@ -23,12 +23,12 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v3/pkg/adapters/adapterif"
-	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/v3/pkg/log"
-	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
-	of "github.com/opencord/voltha-protos/v3/go/openflow_13"
-	"github.com/opencord/voltha-protos/v3/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/adapters/adapterif"
+	com "github.com/opencord/voltha-lib-go/v4/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
+	of "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 )
 
 // ONUAdapter represent ONU adapter attributes
