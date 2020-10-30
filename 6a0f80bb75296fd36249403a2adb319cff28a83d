@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ace0a794_7ea63f92",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-10-30T13:38:06Z",
+      "side": 1,
+      "message": "This pattern appears often.  Is it possible to have something like:\n     update \u003d agent.newDeviceUpdate(ctx, ....)\n     defer agent.finalizeDeviceUpdate(update, \"custom error message\")\n\nor something similar to reduce repeatable code?",
+      "revId": "6a0f80bb75296fd36249403a2adb319cff28a83d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31b133d8_78b90ee8",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-10-30T13:38:06Z",
+      "side": 1,
+      "message": "Why not check on all states?  A helper function would be an easier read.",
+      "revId": "6a0f80bb75296fd36249403a2adb319cff28a83d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f1b6754_894565f7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-10-30T13:38:06Z",
+      "side": 1,
+      "message": "You could use a helper function.",
+      "revId": "6a0f80bb75296fd36249403a2adb319cff28a83d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
