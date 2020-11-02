@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "642817d6_52bb12d4",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-02T18:42:48Z",
+      "side": 1,
+      "message": "Since you are specifying the device state in the other test cases, how about  renaming this one to testForceDeletePreProvDevice?",
+      "revId": "eb346325689ed61419344f15af6b702338444aa9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4c5038f_4e8fd65d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-02T18:42:48Z",
+      "side": 1,
+      "message": "valid comment?",
+      "revId": "eb346325689ed61419344f15af6b702338444aa9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a20472d_493b7f5a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-02T18:42:48Z",
+      "side": 1,
+      "message": "With the above force delete, does the deletion happens in its own routine or is it completed before reaching here?   If the above is completed then this code may be referring to a deleted agent/device which may result in unpredictable scenario.   You may consider doing a force delete after an adapter response, irrespective of the response.",
+      "revId": "eb346325689ed61419344f15af6b702338444aa9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4981e8ac_c59a8142",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-02T18:42:48Z",
+      "side": 1,
+      "message": "This can be confusing as there are really no request sent to an adapter.",
+      "revId": "eb346325689ed61419344f15af6b702338444aa9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebbc5ff9_ab459cf8",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-02T18:42:48Z",
+      "side": 1,
+      "message": "Missing an error check?",
+      "revId": "eb346325689ed61419344f15af6b702338444aa9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c3f9d85_ed73556d",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-02T18:42:48Z",
+      "side": 1,
+      "message": "nit: you could just have return (long condition) instead of using if.  Same comment below.",
+      "revId": "eb346325689ed61419344f15af6b702338444aa9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
