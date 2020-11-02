@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "677e0fe1_51988e50",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1271,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9c275618_65f37e79",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "491d6593_342d16d1",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -71,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c2f8b5c3_90ad5967",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "491d6593_342d16d1",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eea9efbc_875e8e7f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -82,6 +118,24 @@
       "writtenOn": "2020-10-29T13:20:23Z",
       "side": 1,
       "message": "Too many log message?  Can the previous log be augmented with transient state (curr, prev)?",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58af6776_9d0e1e72",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "eea9efbc_875e8e7f",
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -105,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "1d2d31db_9ea43c43",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Would like to keep it isDeletionInProgress for now as the function is being called specifically  for checking deleting state everywhere.",
+      "parentUuid": "696a09ec_fbe57aed",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98d5bcd6_620918c7",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -122,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "75ac7c8e_29a99dcd",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "98d5bcd6_620918c7",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5727a37_bc51c7a7",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -133,6 +223,24 @@
       "writtenOn": "2020-10-29T13:20:23Z",
       "side": 1,
       "message": "Why not reuse the isDeletionInProgress because the previous state is the current state at this point?",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0d9430b_f986d2ae",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "We need to have the previousDeviceTransientState available here, so if I call isDeletionInProgress, it would again fetch the device transient state, hence wrote two functions, one if we have the state, one which fetches the state itself.",
+      "parentUuid": "d5727a37_bc51c7a7",
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -156,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "e9224385_c3e3312b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0dffee05_c7a30dcd",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b04c4d0_e4cb2ea5",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -167,6 +293,24 @@
       "writtenOn": "2020-10-29T13:20:23Z",
       "side": 1,
       "message": "If this can return an error then make it explicit",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2de51926_44188444",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "We can log error here, but cannot return this err as this is something we are reverting as a failure of update device in db.",
+      "parentUuid": "6b04c4d0_e4cb2ea5",
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -190,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "73924723_93652e0b",
+        "filename": "rw_core/core/device/agent_device_transient_state.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "447fdc37_292096db",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2c9c700_10885093",
         "filename": "rw_core/core/device/agent_device_transient_state.go",
         "patchSetId": 5
@@ -204,6 +366,24 @@
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "063abd37_f23f5197",
+        "filename": "rw_core/core/device/agent_device_transient_state.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f2c9c700_10885093",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -224,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "6aba01c6_c29e0ab3",
+        "filename": "rw_core/core/device/agent_device_transient_state.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a58f0d9b_23c3d394",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bd1d410_b3420bbc",
         "filename": "rw_core/core/device/agent_device_transient_state.go",
         "patchSetId": 5
@@ -238,6 +436,24 @@
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "712da142_29bfd593",
+        "filename": "rw_core/core/device/agent_device_transient_state.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9bd1d410_b3420bbc",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -258,6 +474,24 @@
     },
     {
       "key": {
+        "uuid": "8c5ee6cf_0bdced39",
+        "filename": "rw_core/core/device/agent_device_transient_state.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6d223808_a2b58206",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcb36336_2ad30b67",
         "filename": "rw_core/core/device/agent_device_transient_state.go",
         "patchSetId": 5
@@ -275,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "0152c3fe_9f2047d0",
+        "filename": "rw_core/core/device/agent_device_transient_state.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "dcb36336_2ad30b67",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97536bf6_0a0b84a5",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 5
@@ -286,6 +538,24 @@
       "writtenOn": "2020-10-29T13:20:23Z",
       "side": 1,
       "message": "Verify this check as deleteALLPorts may be a result of the deletion from an adapter.",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bc7e563_37f3d483",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "The check is proper as it is checking that either the admin state of the device is disabled to continue processing or device is in deleting state only then continue processing.",
+      "parentUuid": "97536bf6_0a0b84a5",
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -343,6 +613,24 @@
     },
     {
       "key": {
+        "uuid": "a33d5ea4_9cb0ad67",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Its at line 205",
+      "parentUuid": "41c6f977_f5ec5537",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aae129c7_93d50d01",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 5
@@ -354,6 +642,24 @@
       "writtenOn": "2020-10-29T13:20:23Z",
       "side": 1,
       "message": "The getHandler() was built to use UNKNOWN as a wild card.   When choosing the correct transition, we need to give priority in this order: transient state, admin state, operational state then connection state.   In all cases (other than delete), the transient state will be NONE, hence the existing sets of transitions will proceed as is.  When the transient state changes (for delete scenario) then that should take precedence on anything else, if applicable.",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "370a9393_1cf34fe5",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "The Transient State is taking more priority than admin state now also. I will move thr transient state check upwards. If we want to remove this check then we need to allow UNKNOWN as  wildcard for current admin state as well, which is not the case today. Today if transition current admin state is UNKNOWN and current Admin State is AdminState_Unknown, only then we are making it as wild card. Moreover, I did not allow it and added this check because for other existing states we can return if the admin state is noMatch and only allow such cases where transition state matches.",
+      "parentUuid": "aae129c7_93d50d01",
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -377,6 +683,24 @@
     },
     {
       "key": {
+        "uuid": "42f3279d_4f076b6a",
+        "filename": "rw_core/core/device/transientstate/common.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0e1a46cc_9666a933",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31c9156f_0e349e1a",
         "filename": "rw_core/core/device/transientstate/loader.go",
         "patchSetId": 5
@@ -394,6 +718,24 @@
     },
     {
       "key": {
+        "uuid": "68008d2d_7bd50c72",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "31c9156f_0e349e1a",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6466c0c9_36adce12",
         "filename": "rw_core/core/device/transientstate/loader.go",
         "patchSetId": 5
@@ -408,6 +750,24 @@
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cfaa9cc_5866b4ba",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-02T10:33:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6466c0c9_36adce12",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
