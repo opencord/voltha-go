@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7d0fcc72_1c2dbdec",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-11-02T09:58:01Z",
+      "side": 1,
+      "message": "a new update instance has to be created once every function and update part is already in defer to avoid repetitive code as you can see in next line. As with every return we have to add update , the only code added multiple time in particular function is to update the description if error occurs and to update state in case of success.",
+      "parentUuid": "ace0a794_7ea63f92",
+      "revId": "6a0f80bb75296fd36249403a2adb319cff28a83d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31b133d8_78b90ee8",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "bb30d709_65d7bcd3",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-11-02T09:58:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "31b133d8_78b90ee8",
+      "revId": "6a0f80bb75296fd36249403a2adb319cff28a83d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f1b6754_894565f7",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 4
@@ -50,6 +86,24 @@
       "revId": "6a0f80bb75296fd36249403a2adb319cff28a83d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38ef835a_9157bdfc",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-11-02T09:58:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f1b6754_894565f7",
+      "revId": "6a0f80bb75296fd36249403a2adb319cff28a83d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
