@@ -292,6 +292,40 @@
     },
     {
       "key": {
+        "uuid": "acfd43fc_ca8bb5dc",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1259,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-02T09:42:13Z",
+      "side": 1,
+      "message": "queue up in an error list",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9df36e63_d3a9284e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-02T09:42:13Z",
+      "side": 1,
+      "message": "this error queued up in a list and if the list is not empty at the end of the for we should return it.",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "41c6f977_f5ec5537",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 5
