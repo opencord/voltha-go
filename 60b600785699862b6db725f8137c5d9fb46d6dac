@@ -579,6 +579,24 @@
     },
     {
       "key": {
+        "uuid": "3663f584_efb3f516",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1259,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-04T06:42:23Z",
+      "side": 1,
+      "message": "This will be taken as part of error handling,",
+      "parentUuid": "acfd43fc_ca8bb5dc",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9df36e63_d3a9284e",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 5
@@ -590,6 +608,24 @@
       "writtenOn": "2020-11-02T09:42:13Z",
       "side": 1,
       "message": "this error queued up in a list and if the list is not empty at the end of the for we should return it.",
+      "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01971108_0e07f66d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-04T06:42:23Z",
+      "side": 1,
+      "message": "This will be taken as part of error handling",
+      "parentUuid": "9df36e63_d3a9284e",
       "revId": "60b600785699862b6db725f8137c5d9fb46d6dac",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
