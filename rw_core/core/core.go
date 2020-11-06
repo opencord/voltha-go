@@ -129,7 +129,8 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id,
+		cf.DefaultCoreTimeout, cf.DefaultDeviceDisconnectTimeout)
 
 	// register kafka RPC handler
 	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf.CoreTopic)

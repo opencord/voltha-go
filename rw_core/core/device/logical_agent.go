@@ -324,7 +324,7 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 
 func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketOut) {
 	if logger.V(log.InfoLevel) {
-		logger.Infow(ctx, "packet-out", log.Fields{
+		logger.Debugw(ctx, "packet-out", log.Fields{
 			"packet": hex.EncodeToString(packet.Data),
 			"inPort": packet.GetInPort(),
 		})
@@ -339,7 +339,7 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 
 func (agent *LogicalAgent) packetIn(ctx context.Context, port uint32, transactionID string, packet []byte) {
 	if logger.V(log.InfoLevel) {
-		logger.Infow(ctx, "packet-in", log.Fields{
+		logger.Debugw(ctx, "packet-in", log.Fields{
 			"port":          port,
 			"packet":        hex.EncodeToString(packet),
 			"transactionId": transactionID,

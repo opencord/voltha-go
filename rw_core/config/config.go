@@ -44,6 +44,7 @@ const (
 	defaultLongRunningRequestTimeout = 2000 * time.Millisecond
 	defaultDefaultRequestTimeout     = 1000 * time.Millisecond
 	defaultCoreTimeout               = 1000 * time.Millisecond
+	defaultDeviceDisconnectTimeout   = 5000 * time.Millisecond
 	defaultCoreBindingKey            = "voltha_backend_name"
 	defaultMaxConnectionRetries      = -1 // retries forever
 	defaultConnectionRetryInterval   = 2 * time.Second
@@ -58,65 +59,67 @@ const (
 // RWCoreFlags represents the set of configurations used by the read-write core service
 type RWCoreFlags struct {
 	// Command line parameters
-	RWCoreEndpoint            string
-	GrpcAddress               string
-	KafkaAdapterAddress       string
-	KafkaClusterAddress       string
-	KVStoreType               string
-	KVStoreTimeout            time.Duration
-	KVStoreAddress            string
-	KVTxnKeyDelTime           int
-	CoreTopic                 string
-	LogLevel                  string
-	Banner                    bool
-	DisplayVersionOnly        bool
-	RWCoreKey                 string
-	RWCoreCert                string
-	RWCoreCA                  string
-	LongRunningRequestTimeout time.Duration
-	DefaultRequestTimeout     time.Duration
-	DefaultCoreTimeout        time.Duration
-	CoreBindingKey            string
-	MaxConnectionRetries      int
-	ConnectionRetryInterval   time.Duration
-	LiveProbeInterval         time.Duration
-	NotLiveProbeInterval      time.Duration
-	ProbeAddress              string
-	TraceEnabled              bool
-	TraceAgentAddress         string
-	LogCorrelationEnabled     bool
+	RWCoreEndpoint                 string
+	GrpcAddress                    string
+	KafkaAdapterAddress            string
+	KafkaClusterAddress            string
+	KVStoreType                    string
+	KVStoreTimeout                 time.Duration
+	KVStoreAddress                 string
+	KVTxnKeyDelTime                int
+	CoreTopic                      string
+	LogLevel                       string
+	Banner                         bool
+	DisplayVersionOnly             bool
+	RWCoreKey                      string
+	RWCoreCert                     string
+	RWCoreCA                       string
+	LongRunningRequestTimeout      time.Duration
+	DefaultRequestTimeout          time.Duration
+	DefaultCoreTimeout             time.Duration
+	DefaultDeviceDisconnectTimeout time.Duration
+	CoreBindingKey                 string
+	MaxConnectionRetries           int
+	ConnectionRetryInterval        time.Duration
+	LiveProbeInterval              time.Duration
+	NotLiveProbeInterval           time.Duration
+	ProbeAddress                   string
+	TraceEnabled                   bool
+	TraceAgentAddress              string
+	LogCorrelationEnabled          bool
 }
 
 // NewRWCoreFlags returns a new RWCore config
 func NewRWCoreFlags() *RWCoreFlags {
 	var rwCoreFlag = RWCoreFlags{ // Default values
-		RWCoreEndpoint:            defaultRWCoreEndpoint,
-		GrpcAddress:               defaultGrpcAddress,
-		KafkaAdapterAddress:       defaultKafkaAdapterAddress,
-		KafkaClusterAddress:       defaultKafkaClusterAddress,
-		KVStoreType:               defaultKVStoreType,
-		KVStoreTimeout:            defaultKVStoreTimeout,
-		KVStoreAddress:            defaultKVStoreAddress,
-		KVTxnKeyDelTime:           defaultKVTxnKeyDelTime,
-		CoreTopic:                 defaultCoreTopic,
-		LogLevel:                  defaultLogLevel,
-		Banner:                    defaultBanner,
-		DisplayVersionOnly:        defaultDisplayVersionOnly,
-		RWCoreKey:                 defaultRWCoreKey,
-		RWCoreCert:                defaultRWCoreCert,
-		RWCoreCA:                  defaultRWCoreCA,
-		DefaultRequestTimeout:     defaultDefaultRequestTimeout,
-		LongRunningRequestTimeout: defaultLongRunningRequestTimeout,
-		DefaultCoreTimeout:        defaultCoreTimeout,
-		CoreBindingKey:            defaultCoreBindingKey,
-		MaxConnectionRetries:      defaultMaxConnectionRetries,
-		ConnectionRetryInterval:   defaultConnectionRetryInterval,
-		LiveProbeInterval:         defaultLiveProbeInterval,
-		NotLiveProbeInterval:      defaultNotLiveProbeInterval,
-		ProbeAddress:              defaultProbeAddress,
-		TraceEnabled:              defaultTraceEnabled,
-		TraceAgentAddress:         defaultTraceAgentAddress,
-		LogCorrelationEnabled:     defaultLogCorrelationEnabled,
+		RWCoreEndpoint:                 defaultRWCoreEndpoint,
+		GrpcAddress:                    defaultGrpcAddress,
+		KafkaAdapterAddress:            defaultKafkaAdapterAddress,
+		KafkaClusterAddress:            defaultKafkaClusterAddress,
+		KVStoreType:                    defaultKVStoreType,
+		KVStoreTimeout:                 defaultKVStoreTimeout,
+		KVStoreAddress:                 defaultKVStoreAddress,
+		KVTxnKeyDelTime:                defaultKVTxnKeyDelTime,
+		CoreTopic:                      defaultCoreTopic,
+		LogLevel:                       defaultLogLevel,
+		Banner:                         defaultBanner,
+		DisplayVersionOnly:             defaultDisplayVersionOnly,
+		RWCoreKey:                      defaultRWCoreKey,
+		RWCoreCert:                     defaultRWCoreCert,
+		RWCoreCA:                       defaultRWCoreCA,
+		DefaultRequestTimeout:          defaultDefaultRequestTimeout,
+		LongRunningRequestTimeout:      defaultLongRunningRequestTimeout,
+		DefaultCoreTimeout:             defaultCoreTimeout,
+		DefaultDeviceDisconnectTimeout: defaultDeviceDisconnectTimeout,
+		CoreBindingKey:                 defaultCoreBindingKey,
+		MaxConnectionRetries:           defaultMaxConnectionRetries,
+		ConnectionRetryInterval:        defaultConnectionRetryInterval,
+		LiveProbeInterval:              defaultLiveProbeInterval,
+		NotLiveProbeInterval:           defaultNotLiveProbeInterval,
+		ProbeAddress:                   defaultProbeAddress,
+		TraceEnabled:                   defaultTraceEnabled,
+		TraceAgentAddress:              defaultTraceAgentAddress,
+		LogCorrelationEnabled:          defaultLogCorrelationEnabled,
 	}
 	return &rwCoreFlag
 }
@@ -164,6 +167,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Default Core timeout")
 	flag.DurationVar(&(cf.DefaultCoreTimeout), "core_timeout", defaultCoreTimeout, help)
+
+	help = fmt.Sprintf("Default Device Disconnect timeout")
+	flag.DurationVar(&(cf.DefaultDeviceDisconnectTimeout), "device_timeout", defaultDeviceDisconnectTimeout, help)
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&cf.Banner, "banner", defaultBanner, help)

@@ -51,22 +51,23 @@ import (
 )
 
 type NBTest struct {
-	etcdServer        *mock_etcd.EtcdServer
-	deviceMgr         *device.Manager
-	logicalDeviceMgr  *device.LogicalManager
-	adapterMgr        *adapter.Manager
-	kmp               kafka.InterContainerProxy
-	kClient           kafka.Client
-	kvClientPort      int
-	numONUPerOLT      int
-	startingUNIPortNo int
-	oltAdapter        *cm.OLTAdapter
-	onuAdapter        *cm.ONUAdapter
-	oltAdapterName    string
-	onuAdapterName    string
-	coreInstanceID    string
-	defaultTimeout    time.Duration
-	maxTimeout        time.Duration
+	etcdServer                     *mock_etcd.EtcdServer
+	deviceMgr                      *device.Manager
+	logicalDeviceMgr               *device.LogicalManager
+	adapterMgr                     *adapter.Manager
+	kmp                            kafka.InterContainerProxy
+	kClient                        kafka.Client
+	kvClientPort                   int
+	numONUPerOLT                   int
+	startingUNIPortNo              int
+	oltAdapter                     *cm.OLTAdapter
+	onuAdapter                     *cm.ONUAdapter
+	oltAdapterName                 string
+	onuAdapterName                 string
+	coreInstanceID                 string
+	defaultTimeout                 time.Duration
+	defaultDeviceDisconnectTimeout time.Duration
+	maxTimeout                     time.Duration
 }
 
 func newNBTest(ctx context.Context) *NBTest {
@@ -84,6 +85,7 @@ func newNBTest(ctx context.Context) *NBTest {
 	test.coreInstanceID = "rw-nbi-test"
 	test.defaultTimeout = 10 * time.Second
 	test.maxTimeout = 20 * time.Second
+	test.defaultDeviceDisconnectTimeout = 5 * time.Second
 	return test
 }
 
@@ -94,6 +96,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = nb.defaultTimeout
 	cfg.DefaultCoreTimeout = nb.defaultTimeout
+	cfg.DefaultDeviceDisconnectTimeout = nb.defaultDeviceDisconnectTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(nb.kvClientPort)
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
@@ -116,7 +119,8 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
 	nb.adapterMgr = adapter.NewAdapterManager(ctx, proxy, nb.coreInstanceID, nb.kClient)
-	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CoreTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
+	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CoreTopic, nb.coreInstanceID,
+		cfg.DefaultCoreTimeout, cfg.DefaultDeviceDisconnectTimeout)
 	nb.adapterMgr.Start(ctx)
 
 	if err := nb.kmp.Start(ctx); err != nil {

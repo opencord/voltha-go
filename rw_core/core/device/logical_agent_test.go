@@ -41,21 +41,22 @@ import (
 )
 
 type LDATest struct {
-	etcdServer       *mock_etcd.EtcdServer
-	deviceMgr        *Manager
-	kmp              kafka.InterContainerProxy
-	logicalDeviceMgr *LogicalManager
-	kClient          kafka.Client
-	kvClientPort     int
-	oltAdapterName   string
-	onuAdapterName   string
-	coreInstanceID   string
-	defaultTimeout   time.Duration
-	maxTimeout       time.Duration
-	logicalDevice    *voltha.LogicalDevice
-	logicalPorts     map[uint32]*voltha.LogicalPort
-	deviceIds        []string
-	done             chan int
+	etcdServer                     *mock_etcd.EtcdServer
+	deviceMgr                      *Manager
+	kmp                            kafka.InterContainerProxy
+	logicalDeviceMgr               *LogicalManager
+	kClient                        kafka.Client
+	kvClientPort                   int
+	oltAdapterName                 string
+	onuAdapterName                 string
+	coreInstanceID                 string
+	defaultTimeout                 time.Duration
+	defaultDeviceDisconnectTimeout time.Duration
+	maxTimeout                     time.Duration
+	logicalDevice                  *voltha.LogicalDevice
+	logicalPorts                   map[uint32]*voltha.LogicalPort
+	deviceIds                      []string
+	done                           chan int
 }
 
 func newLDATest(ctx context.Context) *LDATest {
@@ -72,6 +73,7 @@ func newLDATest(ctx context.Context) *LDATest {
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-da-test"
 	test.defaultTimeout = 5 * time.Second
+	test.defaultDeviceDisconnectTimeout = 5 * time.Second
 	test.maxTimeout = 20 * time.Second
 	test.done = make(chan int)
 	test.deviceIds = []string{com.GetRandomString(10), com.GetRandomString(10), com.GetRandomString(10)}
@@ -136,6 +138,7 @@ func (lda *LDATest) startCore(ctx context.Context, inCompeteMode bool) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = lda.defaultTimeout
+	cfg.DefaultDeviceDisconnectTimeout = lda.defaultDeviceDisconnectTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(lda.kvClientPort)
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
@@ -158,7 +161,8 @@ func (lda *LDATest) startCore(ctx context.Context, inCompeteMode bool) {
 	proxy := model.NewDBPath(backend)
 	adapterMgr := adapter.NewAdapterManager(ctx, proxy, lda.coreInstanceID, lda.kClient)
 
-	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CoreTopic, lda.coreInstanceID, cfg.DefaultCoreTimeout)
+	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(proxy, adapterMgr, lda.kmp, endpointMgr, cfg.CoreTopic, lda.coreInstanceID,
+		cfg.DefaultCoreTimeout)
 	if err = lda.kmp.Start(ctx); err != nil {
 		logger.Fatal(ctx, "Cannot start InterContainerProxy")
 	}

@@ -101,12 +101,12 @@ func (rhp *AdapterRequestHandlerProxy) GetDevice(ctx context.Context, args []*ic
 			}
 		}
 	}
-	logger.Debugw(ctx, "getDevice", log.Fields{"device-id": pID.Id, "transactionID": transactionID.Val})
+	logger.Infow(ctx, "getDevice", log.Fields{"device-id": pID.Id, "transactionID": transactionID.Val})
 
 	// Get the device via the device manager
 	device, err := rhp.deviceMgr.GetDevice(log.WithSpanFromContext(context.TODO(), ctx), pID)
 	if err != nil {
-		logger.Debugw(ctx, "get-device-failed", log.Fields{"device-id": pID.Id, "error": err})
+		logger.Errorw(ctx, "get-device-failed", log.Fields{"device-id": pID.Id, "error": err})
 	}
 	return device, err
 }
@@ -390,7 +390,7 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(ctx context.Context, ar
 			}
 		}
 	}
-	logger.Debugw(ctx, "DeviceStateUpdate", log.Fields{"device-id": deviceID.Id, "oper-status": operStatus,
+	logger.Infow(ctx, "DeviceStateUpdate", log.Fields{"device-id": deviceID.Id, "oper-status": operStatus,
 		"conn-status": connStatus, "transactionID": transactionID.Val})
 
 	if err := rhp.deviceMgr.UpdateDeviceStatus(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),

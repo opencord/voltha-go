@@ -71,6 +71,7 @@ func (loader *Loader) Load(ctx context.Context) {
 // LockOrCreate locks this meter if it exists, or creates a new meter if it does not.
 // In the case of meter creation, the provided "meter" must not be modified afterwards.
 func (loader *Loader) LockOrCreate(ctx context.Context, meter *ofp.OfpMeterEntry) (*Handle, bool, error) {
+	logger.Infow(ctx, "lock-or-create-meter", log.Fields{"meter": meter})
 	// try to use read lock instead of full lock if possible
 	if handle, have := loader.Lock(meter.Config.MeterId); have {
 		return handle, false, nil
@@ -103,6 +104,7 @@ func (loader *Loader) LockOrCreate(ctx context.Context, meter *ofp.OfpMeterEntry
 		entry.lock.Unlock()
 		return loader.LockOrCreate(ctx, meter)
 	}
+	logger.Infow(ctx, "lock-or-create-meter-success", log.Fields{"meter": meter})
 	return &Handle{loader: loader, chunk: entry}, false, nil
 }
 

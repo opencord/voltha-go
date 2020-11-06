@@ -99,6 +99,7 @@ type DeviceManager interface {
 	ChildDeviceLost(ctx context.Context, curr *voltha.Device) error
 	DeleteAllLogicalPorts(ctx context.Context, curr *voltha.Device) error
 	DeleteAllDeviceFlows(ctx context.Context, curr *voltha.Device) error
+	StartDisconnectionTimeout(ctx context.Context, curr *voltha.Device) error
 }
 
 // NewTransitionMap creates transition map
@@ -154,7 +155,7 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.StartDisconnectionTimeout}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
@@ -164,6 +165,7 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
+			//TODO this transition is missing check why
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE},
 			handlers:      []transitionHandler{dMgr.CreateLogicalDevice}})

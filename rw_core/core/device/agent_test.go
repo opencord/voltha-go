@@ -46,23 +46,24 @@ import (
 )
 
 type DATest struct {
-	etcdServer       *mock_etcd.EtcdServer
-	deviceMgr        *Manager
-	logicalDeviceMgr *LogicalManager
-	adapterMgr       *adapter.Manager
-	kmp              kafka.InterContainerProxy
-	kClient          kafka.Client
-	kvClientPort     int
-	oltAdapter       *cm.OLTAdapter
-	onuAdapter       *cm.ONUAdapter
-	oltAdapterName   string
-	onuAdapterName   string
-	coreInstanceID   string
-	defaultTimeout   time.Duration
-	maxTimeout       time.Duration
-	device           *voltha.Device
-	devicePorts      map[uint32]*voltha.Port
-	done             chan int
+	etcdServer                     *mock_etcd.EtcdServer
+	deviceMgr                      *Manager
+	logicalDeviceMgr               *LogicalManager
+	adapterMgr                     *adapter.Manager
+	kmp                            kafka.InterContainerProxy
+	kClient                        kafka.Client
+	kvClientPort                   int
+	oltAdapter                     *cm.OLTAdapter
+	onuAdapter                     *cm.ONUAdapter
+	oltAdapterName                 string
+	onuAdapterName                 string
+	coreInstanceID                 string
+	defaultTimeout                 time.Duration
+	defaultDeviceDisconnectTimeout time.Duration
+	maxTimeout                     time.Duration
+	device                         *voltha.Device
+	devicePorts                    map[uint32]*voltha.Port
+	done                           chan int
 }
 
 func newDATest(ctx context.Context) *DATest {
@@ -79,6 +80,7 @@ func newDATest(ctx context.Context) *DATest {
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-da-test"
 	test.defaultTimeout = 5 * time.Second
+	test.defaultDeviceDisconnectTimeout = 5 * time.Second
 	test.maxTimeout = 20 * time.Second
 	test.done = make(chan int)
 	parentID := com.GetRandomString(10)
@@ -117,6 +119,7 @@ func (dat *DATest) startCore(ctx context.Context) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
+	cfg.DefaultDeviceDisconnectTimeout = dat.defaultTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(dat.kvClientPort)
 	grpcPort, err := freeport.GetFreePort()
 	if err != nil {
@@ -139,7 +142,8 @@ func (dat *DATest) startCore(ctx context.Context) {
 	proxy := model.NewDBPath(backend)
 	dat.adapterMgr = adapter.NewAdapterManager(ctx, proxy, dat.coreInstanceID, dat.kClient)
 
-	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID,
+		cfg.DefaultCoreTimeout, cfg.DefaultDeviceDisconnectTimeout)
 	dat.adapterMgr.Start(context.Background())
 	if err = dat.kmp.Start(ctx); err != nil {
 		logger.Fatal(ctx, "Cannot start InterContainerProxy")

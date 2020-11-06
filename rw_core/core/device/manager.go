@@ -43,33 +43,38 @@ import (
 // Manager represent device manager attributes
 type Manager struct {
 	deviceAgents            sync.Map
-	rootDevices             map[string]bool
-	lockRootDeviceMap       sync.RWMutex
-	adapterProxy            *remote.AdapterProxy
-	adapterMgr              *adapter.Manager
-	logicalDeviceMgr        *LogicalManager
-	kafkaICProxy            kafka.InterContainerProxy
-	stateTransitions        *state.TransitionMap
-	dbPath                  *model.Path
-	dProxy                  *model.Proxy
-	coreInstanceID          string
-	defaultTimeout          time.Duration
-	devicesLoadingLock      sync.RWMutex
-	deviceLoadingInProgress map[string][]chan int
+	rootDevices              map[string]bool
+	lockRootDeviceMap        sync.RWMutex
+	adapterProxy             *remote.AdapterProxy
+	adapterMgr               *adapter.Manager
+	logicalDeviceMgr         *LogicalManager
+	kafkaICProxy             kafka.InterContainerProxy
+	stateTransitions         *state.TransitionMap
+	dbPath                   *model.Path
+	dProxy                   *model.Proxy
+	coreInstanceID           string
+	defaultTimeout           time.Duration
+	devicesLoadingLock       sync.RWMutex
+	deviceLoadingInProgress  map[string][]chan int
+	deviceDisconnectTimeout  time.Duration
+	disconnectTimeoutChannel chan struct{}
 }
 
 //NewManagers creates the Manager and the Logical Manager.
-func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
+func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string,
+	defaultCoreTimeout time.Duration, disconnectTimeout time.Duration) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
-		rootDevices:             make(map[string]bool),
-		kafkaICProxy:            kmp,
-		adapterProxy:            remote.NewAdapterProxy(kmp, coreTopic, endpointMgr),
-		coreInstanceID:          coreInstanceID,
-		dbPath:                  dbPath,
-		dProxy:                  dbPath.Proxy("devices"),
-		adapterMgr:              adapterMgr,
-		defaultTimeout:          defaultCoreTimeout,
-		deviceLoadingInProgress: make(map[string][]chan int),
+		rootDevices:              make(map[string]bool),
+		kafkaICProxy:             kmp,
+		adapterProxy:             remote.NewAdapterProxy(kmp, coreTopic, endpointMgr),
+		coreInstanceID:           coreInstanceID,
+		dbPath:                   dbPath,
+		dProxy:                   dbPath.Proxy("devices"),
+		adapterMgr:               adapterMgr,
+		defaultTimeout:           defaultCoreTimeout,
+		deviceLoadingInProgress:  make(map[string][]chan int),
+		deviceDisconnectTimeout:  disconnectTimeout,
+		disconnectTimeoutChannel: make(chan struct{}, 1),
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
@@ -117,6 +122,7 @@ func (dMgr *Manager) getDeviceAgent(ctx context.Context, deviceID string) *Agent
 	if err == nil {
 		agent, ok = dMgr.deviceAgents.Load(deviceID)
 		if !ok {
+			logger.Errorw(ctx, "loading-device-failed", log.Fields{"device-id": deviceID})
 			return nil
 		}
 		return agent.(*Agent)
@@ -1108,6 +1114,7 @@ func (dMgr *Manager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.De
 	// Verify whether the logical device has already been created
 	if cDevice.ParentId != "" {
 		logger.Debugw(ctx, "Parent device already exist.", log.Fields{"device-id": cDevice.Id, "logical-device-id": cDevice.Id})
+		dMgr.disconnectTimeoutChannel <- struct{}{}
 		return nil
 	}
 	var err error
@@ -1581,4 +1588,34 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
+}
+
+func (dMgr *Manager) StartDisconnectionTimeout(ctx context.Context, curr *voltha.Device) error {
+	logger.Infow(ctx, "Starting Disconnection Timeout for", log.Fields{"device-id": curr.Id})
+	//TODO handle the case when the device comes back during deletion
+	//TODO do not delete stuff in OLT adapter unless timeout.
+	select {
+	case <-dMgr.disconnectTimeoutChannel:
+		logger.Infow(ctx, "Temporary network disconnect from OLT",
+			log.Fields{"device-id": curr.Id, "below": dMgr.deviceDisconnectTimeout})
+	case <-time.After(dMgr.deviceDisconnectTimeout):
+		logger.Infow(ctx, "Timeout after OLT disconnect, rebooting",
+			log.Fields{"device-id": curr.Id, "timeout": dMgr.deviceDisconnectTimeout})
+		if err := dMgr.DeleteAllLogicalPorts(ctx, curr); err != nil {
+			return err
+		}
+		if err := dMgr.DeleteAllChildDevices(ctx, curr); err != nil {
+			return err
+		}
+		if err := dMgr.DeleteLogicalDevice(ctx, curr); err != nil {
+			return err
+		}
+		if err := dMgr.DeleteAllDeviceFlows(ctx, curr); err != nil {
+			return err
+		}
+		if _, err := dMgr.DeleteDevice(ctx, &voltha.ID{Id: curr.Id}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
