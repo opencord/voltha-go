@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/gogo/protobuf/proto"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -30,7 +31,7 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	logger.Debugw(ctx, "updatePmConfigs", log.Fields{"device-id": pmConfigs.Id})
+	logger.Debugw(ctx, "update-pm-configs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.cloneDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
@@ -40,6 +41,8 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	}
 	// Send the request to the adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.UpdatePmConfigs(subCtx, cloned, pmConfigs)
 	if err != nil {
 		cancel()
@@ -53,7 +56,7 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	logger.Debugw(ctx, "initPmConfigs", log.Fields{"device-id": pmConfigs.Id})
+	logger.Debugw(ctx, "init-pm-configs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.cloneDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
@@ -61,7 +64,7 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 }
 
 func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error) {
-	logger.Debugw(ctx, "listPmConfigs", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "list-pm-configs", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {

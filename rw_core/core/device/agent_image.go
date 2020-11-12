@@ -22,6 +22,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -32,7 +33,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	logger.Debugw(ctx, "downloadImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "download-image", log.Fields{"device-id": agent.deviceID})
 
 	if agent.device.Root {
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, is an OLT. Image update "+
@@ -62,6 +63,8 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 
 	// Send the request to the adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.DownloadImage(subCtx, cloned, clonedImg)
 	if err != nil {
 		cancel()
@@ -87,7 +90,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	logger.Debugw(ctx, "cancelImageDownload", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "cancel-image-download", log.Fields{"device-id": agent.deviceID})
 
 	// Update image download state
 	cloned := agent.cloneDeviceWithoutLock()
@@ -108,6 +111,8 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 			return nil, err
 		}
 		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+		subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 		ch, err := agent.adapterProxy.CancelImageDownload(subCtx, cloned, img)
 		if err != nil {
 			cancel()
@@ -123,7 +128,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	logger.Debugw(ctx, "activateImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "activate-image", log.Fields{"device-id": agent.deviceID})
 
 	// Update image download state
 	cloned := agent.cloneDeviceWithoutLock()
@@ -158,6 +163,8 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	}
 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.ActivateImageUpdate(subCtx, cloned, img)
 	if err != nil {
 		cancel()
@@ -174,7 +181,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	logger.Debugw(ctx, "revertImage", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "revert-image", log.Fields{"device-id": agent.deviceID})
 
 	// Update image download state
 	cloned := agent.cloneDeviceWithoutLock()
@@ -195,6 +202,8 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 	}
 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.RevertImageUpdate(subCtx, cloned, img)
 	if err != nil {
 		cancel()
@@ -206,7 +215,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 }
 
 func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	logger.Debugw(ctx, "getImageDownloadStatus", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "get-image-download-status", log.Fields{"device-id": agent.deviceID})
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
@@ -261,7 +270,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 }
 
 func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	logger.Debugw(ctx, "getImageDownload", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "get-image-download", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
@@ -276,7 +285,7 @@ func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownl
 }
 
 func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*voltha.ImageDownloads, error) {
-	logger.Debugw(ctx, "listImageDownloads", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "list-image-downloads", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
@@ -288,7 +297,7 @@ func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*v
 // onImageFailure brings back the device to Enabled state and sets the image to image download_failed.
 func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		logger.Errorw(ctx, "can't obtain lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
+		logger.Errorw(ctx, "cannot-obtain-lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
 		return
 	}
 	if res, ok := response.(error); ok {
@@ -338,7 +347,7 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 // onImageSuccess brings back the device to Enabled state and sets the image to image download_failed.
 func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		logger.Errorw(ctx, "can't obtain lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
+		logger.Errorw(ctx, "cannot-obtain-lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
 		return
 	}
 	logger.Errorw(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
