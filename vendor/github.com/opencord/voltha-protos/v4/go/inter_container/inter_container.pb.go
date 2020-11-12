@@ -71,6 +71,8 @@ const AdminState_PREPROVISIONED = AdminState_Types(common.AdminState_PREPROVISIO
 const AdminState_ENABLED = AdminState_Types(common.AdminState_ENABLED)
 const AdminState_DISABLED = AdminState_Types(common.AdminState_DISABLED)
 const AdminState_DOWNLOADING_IMAGE = AdminState_Types(common.AdminState_DOWNLOADING_IMAGE)
+const AdminState_DELETED = AdminState_Types(common.AdminState_DELETED)
+const AdminState_DELETING = AdminState_Types(common.AdminState_DELETING)
 
 // OperStatus_Types from public import voltha_protos/common.proto
 type OperStatus_Types = common.OperStatus_Types
@@ -104,6 +106,7 @@ var OperationResp_OperationReturnCode_value = common.OperationResp_OperationRetu
 const OperationResp_OPERATION_SUCCESS = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_SUCCESS)
 const OperationResp_OPERATION_FAILURE = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_FAILURE)
 const OperationResp_OPERATION_UNSUPPORTED = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_UNSUPPORTED)
+const OperationResp_OPERATION_IN_PROGRESS = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_IN_PROGRESS)
 
 // ValueType_Type from public import voltha_protos/common.proto
 type ValueType_Type = common.ValueType_Type

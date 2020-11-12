@@ -252,6 +252,7 @@ func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.C
 	}
 }
 
+<<<<<<< HEAD
 // onDeleteSuccess is a common callback for scenarios where we receive a nil response following a delete request
 // to an adapter.
 func (agent *Agent) onDeleteSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
@@ -282,7 +283,7 @@ func (agent *Agent) onDeleteFailure(ctx context.Context, rpc string, response in
 
 }
 
-func (agent *Agent) waitForAdapterDeleteResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+func (agent *Agent) waitForAdapterDeleteResponseAndSendRPCEvent(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
 	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
 	defer cancel()
 	select {
@@ -295,6 +296,35 @@ func (agent *Agent) waitForAdapterDeleteResponse(ctx context.Context, cancel con
 			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
 		}
 	case <-ctx.Done():
+		onFailure(ctx, rpc, ctx.Err(), reqArgs)
+	}
+}
+
+func (agent *Agent) waitForAdapterResponseAndSendRPCEvent(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
+	defer cancel()
+	var rpce *voltha.RPCEvent
+	defer func() {
+		if rpce != nil {
+			fmt.Println(agent.deviceMgr.RPCEventManager)
+			agent.deviceMgr.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+	}()
+	select {
+	case rpcResponse, ok := <-ch:
+		if !ok {
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, "Response Channel Closed")
+			onFailure(ctx, rpc, status.Errorf(codes.Aborted, "channel-closed"), reqArgs)
+			//add failure
+		} else if rpcResponse.Err != nil {
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, rpcResponse.Err.Error())
+			onFailure(ctx, rpc, rpcResponse.Err, reqArgs)
+			//add failure
+		} else {
+			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
+		}
+	case <-ctx.Done():
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, ctx.Err().Error())
 		onFailure(ctx, rpc, ctx.Err(), reqArgs)
 	}
 }
@@ -369,22 +399,33 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 		return err
 	}
 	// Wait for response
-	go agent.waitForAdapterResponse(subCtx, cancel, "enableDevice", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "enableDevice", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
-func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, ch chan *kafka.RpcResponse, response coreutils.Response) {
+func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse, response coreutils.Response) {
 	defer cancel()
+	var rpce *voltha.RPCEvent
+	defer func() {
+		if rpce != nil {
+			agent.deviceMgr.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+	}()
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
+			//add failure
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, "Response Channel Closed")
 			response.Error(status.Errorf(codes.Aborted, "channel-closed"))
 		} else if rpcResponse.Err != nil {
+			//add failure
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, rpcResponse.Err.Error())
 			response.Error(rpcResponse.Err)
 		} else {
 			response.Done()
 		}
 	case <-ctx.Done():
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, ctx.Err().Error())
 		response.Error(ctx.Err())
 	}
 }
@@ -480,7 +521,7 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "disableDevice", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "disableDevice", ch, agent.onSuccess, agent.onFailure)
 
 	return nil
 }
@@ -502,7 +543,7 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "rebootDevice", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "rebootDevice", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
@@ -577,7 +618,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 			}
 			return err
 		}
-		go agent.waitForAdapterDeleteResponse(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
+		go agent.waitForAdapterDeleteResponseAndSendRPCEvent(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
 			agent.onDeleteFailure)
 	}
 	return nil
@@ -672,7 +713,6 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
-	cloned.Reason = device.Reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
@@ -750,7 +790,7 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "simulateAlarm", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "simulateAlarm", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
@@ -780,6 +820,9 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	if err := agent.deviceMgr.stateTransitions.ProcessTransition(log.WithSpanFromContext(context.Background(), ctx),
 		device, prevDevice, voltha.DeviceTransientState_NONE, voltha.DeviceTransientState_NONE); err != nil {
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": prevDevice.AdminState, "currentAdminState": device.AdminState})
+		// Sending RPC EVENT Name as empty here, because this might get called on request from adapter for device updates
+		rpce := agent.deviceMgr.NewRPCEvent(ctx, "", agent.deviceID, err.Error())
+		agent.deviceMgr.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 	}
 	return nil
 }
@@ -830,7 +873,6 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"device-id": agent.deviceID, "reason": reason})
 
 	cloned := agent.cloneDeviceWithoutLock()
-	cloned.Reason = reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 

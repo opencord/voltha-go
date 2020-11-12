@@ -249,7 +249,7 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "disablePort", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "disablePort", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
@@ -285,6 +285,6 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "enablePort", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "enablePort", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
