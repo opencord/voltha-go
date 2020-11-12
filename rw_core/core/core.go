@@ -31,6 +31,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"google.golang.org/grpc"
 )
 
@@ -109,12 +110,23 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 		kafka.LivenessChannelInterval(cf.LiveProbeInterval/2),
 	)
 	// defer kafkaClient.Stop()
+	// create kafka client for events
+	kafkaClientEvent := kafka.NewSaramaClient(
+		kafka.Address(cf.KafkaClusterAddress),
+		kafka.ProducerReturnOnErrors(true),
+		kafka.ProducerReturnOnSuccess(true),
+		kafka.ProducerMaxRetries(6),
+		kafka.ProducerRetryBackoff(time.Millisecond*30),
+		kafka.MetadatMaxRetries(15),
+	)
+	// create event proxy
+	eventProxy := events.NewEventProxy(events.MsgClient(kafkaClientEvent), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
 
 	// create kv path
 	dbPath := model.NewDBPath(backend)
 
 	// load adapters & device types while other things are starting
-	adapterMgr := adapter.NewAdapterManager(ctx, dbPath, id, kafkaClient)
+	adapterMgr := adapter.NewAdapterManager(ctx, dbPath, id, kafkaClient, eventProxy)
 	go adapterMgr.Start(ctx)
 
 	// connect to kafka, then wait until reachable and publisher/consumer created
@@ -127,9 +139,10 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	defer kmp.Stop(ctx)
 	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
 
+
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout, eventProxy)
 
 	// register kafka RPC handler
 	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf.CoreTopic)
