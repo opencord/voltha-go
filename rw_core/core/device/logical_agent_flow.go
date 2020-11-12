@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
@@ -178,8 +179,10 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 					"flow":              flow,
 					"groups":            groups,
 				})
+				subCtx := coreutils.CopyRPCMetadadaFromContext(log.WithSpanFromContext(context.Background(), ctx), ctx)
+
 				// Revert added flows
-				if err := agent.revertAddedFlows(log.WithSpanFromContext(context.Background(), ctx), mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
+				if err := agent.revertAddedFlows(subCtx, mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
 					logger.Errorw(ctx, "failure-to-delete-flow-after-failed-addition", log.Fields{
 						"error":             err,
 						"logical-device-id": agent.logicalDeviceID,
@@ -189,6 +192,13 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				}
 				// send event
 				agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
+				context := make(map[string]string)
+				context["rpc"] = coreutils.GetRPCNameFromContext(ctx)
+				context["flow-id"] = string(flow.Id)
+				context["deviceRules"] = deviceRules.String()
+				go agent.ldeviceMgr.SendRPCEvent(ctx,
+					agent.logicalDeviceID, "failed-to-add-flow", context, "RPC_ERROR_RAISE_EVENT",
+					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			}
 		}()
 	}
@@ -337,6 +347,12 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
 				logger.Errorw(ctx, "failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+				context := make(map[string]string)
+				context["rpc"] = coreutils.GetRPCNameFromContext(ctx)
+				context["deviceRules"] = deviceRules.String()
+				go agent.ldeviceMgr.SendRPCEvent(ctx,
+					agent.logicalDeviceID, "failed-to-update-device-flows", context, "RPC_ERROR_RAISE_EVENT",
+					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 				// TODO: Revert the flow deletion
 				// send event, and allow any queued events to be sent as well
 				agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
@@ -421,6 +437,14 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 			// TODO: Revert flow changes
 			// send event, and allow any queued events to be sent as well
 			agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
+			context := make(map[string]string)
+			context["rpc"] = coreutils.GetRPCNameFromContext(ctx)
+			context["flow-id"] = string(flow.Id)
+			context["deviceRules"] = deviceRules.String()
+			// Create context and send extra information as part of it.
+			go agent.ldeviceMgr.SendRPCEvent(ctx,
+				agent.logicalDeviceID, "failed-to-delete-device-flows", context, "RPC_ERROR_RAISE_EVENT",
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 		}
 	}()
 

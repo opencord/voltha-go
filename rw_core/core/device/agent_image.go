@@ -22,6 +22,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -62,6 +63,8 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 
 	// Send the request to the adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.DownloadImage(subCtx, cloned, clonedImg)
 	if err != nil {
 		cancel()
@@ -108,6 +111,8 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 			return nil, err
 		}
 		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 		ch, err := agent.adapterProxy.CancelImageDownload(subCtx, cloned, img)
 		if err != nil {
 			cancel()
@@ -158,6 +163,8 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	}
 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.ActivateImageUpdate(subCtx, cloned, img)
 	if err != nil {
 		cancel()
@@ -195,6 +202,8 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 	}
 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.RevertImageUpdate(subCtx, cloned, img)
 	if err != nil {
 		cancel()

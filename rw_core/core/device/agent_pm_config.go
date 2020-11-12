@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/gogo/protobuf/proto"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -40,6 +41,8 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	}
 	// Send the request to the adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.UpdatePmConfigs(subCtx, cloned, pmConfigs)
 	if err != nil {
 		cancel()
