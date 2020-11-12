@@ -38,6 +38,7 @@ import (
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
 	tst "github.com/opencord/voltha-go/rw_core/test"
 	"github.com/opencord/voltha-lib-go/v4/pkg/db"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	mock_etcd "github.com/opencord/voltha-lib-go/v4/pkg/mocks/etcd"
@@ -59,6 +60,7 @@ type NBTest struct {
 	adapterMgr        *adapter.Manager
 	kmp               kafka.InterContainerProxy
 	kClient           kafka.Client
+	kEventClient      kafka.Client
 	kvClientPort      int
 	numONUPerOLT      int
 	startingUNIPortNo int
@@ -81,6 +83,7 @@ func newNBTest(ctx context.Context) *NBTest {
 	}
 	// Create the kafka client
 	test.kClient = mock_kafka.NewKafkaClient()
+	test.kEventClient = mock_kafka.NewKafkaClient()
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-nbi-test"
@@ -94,6 +97,7 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	defer cancel()
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
+	cfg.EventTopic = "voltha.events"
 	cfg.DefaultRequestTimeout = nb.defaultTimeout
 	cfg.DefaultCoreTimeout = nb.defaultTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(nb.kvClientPort)
@@ -118,7 +122,8 @@ func (nb *NBTest) startCore(inCompeteMode bool) {
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
 	nb.adapterMgr = adapter.NewAdapterManager(ctx, proxy, nb.coreInstanceID, nb.kClient)
-	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CoreTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout)
+	eventProxy := events.NewEventProxy(events.MsgClient(nb.kEventClient), events.MsgTopic(kafka.Topic{Name: cfg.EventTopic}))
+	nb.deviceMgr, nb.logicalDeviceMgr = device.NewManagers(proxy, nb.adapterMgr, nb.kmp, endpointMgr, cfg.CoreTopic, nb.coreInstanceID, cfg.DefaultCoreTimeout, eventProxy)
 	nb.adapterMgr.Start(ctx)
 
 	if err := nb.kmp.Start(ctx); err != nil {
@@ -139,6 +144,9 @@ func (nb *NBTest) stopAll(ctx context.Context) {
 	}
 	if nb.etcdServer != nil {
 		tst.StopEmbeddedEtcdServer(ctx, nb.etcdServer)
+	}
+	if nb.kEventClient != nil {
+		nb.kEventClient.Stop(ctx)
 	}
 }
 
