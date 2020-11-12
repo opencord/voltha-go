@@ -103,7 +103,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "addGroupsToAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
@@ -119,7 +119,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "addGroupsToAdapter", rpcResponse, response)
 	}
 	return response, nil
 }
@@ -161,7 +161,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteGroupsFromAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
@@ -177,7 +177,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteGroupsFromAdapter", rpcResponse, response)
 	}
 	return response, nil
 }
@@ -225,7 +225,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateGroupsToAdapter", rpcResponse, response)
 	} else {
 		logger.Debugw(ctx, "updating-groups",
 			log.Fields{
@@ -254,7 +254,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateGroupsToAdapter", rpcResponse, response)
 	}
 
 	return response, nil

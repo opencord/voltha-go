@@ -51,7 +51,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	cloned.ImageDownloads = append(device.ImageDownloads, clonedImg)
 
 	cloned.AdminState = voltha.AdminState_DOWNLOADING_IMAGE
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+	if err := agent.updateDeviceAndReleaseLock(ctx, cloned, "DownloadImage"); err != nil {
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	} else {
 		// Set the device to Enabled
 		cloned.AdminState = voltha.AdminState_ENABLED
-		if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+		if err := agent.updateDeviceAndReleaseLock(ctx, cloned, "CancelImageDownload"); err != nil {
 			return nil, err
 		}
 		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
@@ -143,7 +143,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	}
 	// Set the device to downloading_image
 	cloned.AdminState = voltha.AdminState_DOWNLOADING_IMAGE
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+	if err := agent.updateDeviceAndReleaseLock(ctx, cloned,"ActivateImageUpdate"); err != nil {
 		return nil, err
 	}
 
@@ -184,7 +184,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 		}
 	}
 
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+	if err := agent.updateDeviceAndReleaseLock(ctx, cloned, "RevertImageUpdate"); err != nil {
 		return nil, err
 	}
 
@@ -251,7 +251,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 		img.ImageState != voltha.ImageDownload_IMAGE_ACTIVATING {
 		cloned.AdminState = voltha.AdminState_ENABLED
 	}
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	return agent.updateDeviceAndReleaseLock(ctx, cloned, "UpdateImageDownload")
 }
 
 func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {

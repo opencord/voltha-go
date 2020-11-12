@@ -262,7 +262,7 @@ func (agent *Agent) onDeleteSuccess(ctx context.Context, rpc string, response in
 	}
 	previousDeviceTransientState := agent.getTransientState()
 	newDevice := agent.cloneDeviceWithoutLock()
-	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, newDevice,
+	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, newDevice, "deleteDevice",
 		voltha.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE, previousDeviceTransientState); err != nil {
 		logger.Errorw(ctx, "delete-device-failure", log.Fields{"device-id": agent.deviceID, "error": err, "args": reqArgs})
 	}
@@ -283,7 +283,7 @@ func (agent *Agent) onDeleteFailure(ctx context.Context, rpc string, response in
 
 }
 
-func (agent *Agent) waitForAdapterDeleteResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+func (agent *Agent) waitForAdapterDeleteResponseAndSendRPCEvent(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
 	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
 	defer cancel()
 	select {
@@ -296,6 +296,35 @@ func (agent *Agent) waitForAdapterDeleteResponse(ctx context.Context, cancel con
 			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
 		}
 	case <-ctx.Done():
+		onFailure(ctx, rpc, ctx.Err(), reqArgs)
+	}
+}
+
+func (agent *Agent) waitForAdapterResponseAndSendRPCEvent(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
+	defer cancel()
+	var rpce *voltha.RPCEvent
+	defer func() {
+		if rpce != nil {
+			fmt.Println(agent.deviceMgr.RPCEventManager)
+			agent.deviceMgr.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+	}()
+	select {
+	case rpcResponse, ok := <-ch:
+		if !ok {
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, "Response Channel Closed")
+			onFailure(ctx, rpc, status.Errorf(codes.Aborted, "channel-closed"), reqArgs)
+			//add failure
+		} else if rpcResponse.Err != nil {
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, rpcResponse.Err.Error())
+			onFailure(ctx, rpc, rpcResponse.Err, reqArgs)
+			//add failure
+		} else {
+			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
+		}
+	case <-ctx.Done():
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, ctx.Err().Error())
 		onFailure(ctx, rpc, ctx.Err(), reqArgs)
 	}
 }
@@ -353,7 +382,7 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	// Update the Admin State and set the operational state to activating before sending the request to the Adapters
 	newDevice.AdminState = voltha.AdminState_ENABLED
 	newDevice.OperStatus = voltha.OperStatus_ACTIVATING
-	if err := agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
+	if err := agent.updateDeviceAndReleaseLock(ctx, newDevice, "enableDevice"); err != nil {
 		return err
 	}
 
@@ -370,22 +399,33 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 		return err
 	}
 	// Wait for response
-	go agent.waitForAdapterResponse(subCtx, cancel, "enableDevice", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "enableDevice", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
-func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, ch chan *kafka.RpcResponse, response coreutils.Response) {
+func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse, response coreutils.Response) {
 	defer cancel()
+	var rpce *voltha.RPCEvent
+	defer func() {
+		if rpce != nil {
+			agent.deviceMgr.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+	}()
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
+			//add failure
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, "Response Channel Closed")
 			response.Error(status.Errorf(codes.Aborted, "channel-closed"))
 		} else if rpcResponse.Err != nil {
+			//add failure
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, rpcResponse.Err.Error())
 			response.Error(rpcResponse.Err)
 		} else {
 			response.Done()
 		}
 	case <-ctx.Done():
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, ctx.Err().Error())
 		response.Error(ctx.Err())
 	}
 }
@@ -471,7 +511,7 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	// Update the Admin State and operational state before sending the request out
 	cloned.AdminState = voltha.AdminState_DISABLED
 	cloned.OperStatus = voltha.OperStatus_UNKNOWN
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+	if err := agent.updateDeviceAndReleaseLock(ctx, cloned, "disableDevice"); err != nil {
 		return err
 	}
 
@@ -481,7 +521,7 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "disableDevice", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "disableDevice", ch, agent.onSuccess, agent.onFailure)
 
 	return nil
 }
@@ -503,7 +543,7 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "rebootDevice", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "rebootDevice", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
@@ -521,8 +561,8 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 			agent.deviceID)
 	}
 	device := agent.cloneDeviceWithoutLock()
-	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, voltha.DeviceTransientState_FORCE_DELETING,
-		previousDeviceTransientState); err != nil {
+	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, "deleteDeviceForce",
+		voltha.DeviceTransientState_FORCE_DELETING, previousDeviceTransientState); err != nil {
 		return err
 	}
 	previousAdminState := device.AdminState
@@ -561,8 +601,8 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 		// Change the state to DELETING POST ADAPTER RESPONSE directly as adapters have no info of the device.
 		currentDeviceTransientState = voltha.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
 	}
-	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, currentDeviceTransientState,
-		previousDeviceTransientState); err != nil {
+	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, "deleteDevice",
+		currentDeviceTransientState, previousDeviceTransientState); err != nil {
 		return err
 	}
 	// If the device was in pre-prov state (only parent device are in that state) then do not send the request to the
@@ -578,7 +618,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 			}
 			return err
 		}
-		go agent.waitForAdapterDeleteResponse(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
+		go agent.waitForAdapterDeleteResponseAndSendRPCEvent(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
 			agent.onDeleteFailure)
 	}
 	return nil
@@ -592,7 +632,7 @@ func (agent *Agent) setParentID(ctx context.Context, device *voltha.Device, pare
 
 	cloned := agent.cloneDeviceWithoutLock()
 	cloned.ParentId = parentID
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	return agent.updateDeviceAndReleaseLock(ctx, cloned, "")
 }
 
 // getSwitchCapability retrieves the switch capability of a parent device
@@ -673,8 +713,7 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
-	cloned.Reason = device.Reason
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	return agent.updateDeviceAndReleaseLock(ctx, cloned, "updateDeviceUsingAdapterData")
 }
 
 func (agent *Agent) updateDeviceStatus(ctx context.Context, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
@@ -694,7 +733,7 @@ func (agent *Agent) updateDeviceStatus(ctx context.Context, operStatus voltha.Op
 	}
 	logger.Debugw(ctx, "updateDeviceStatus", log.Fields{"device-id": cloned.Id, "operStatus": cloned.OperStatus, "connectStatus": cloned.ConnectStatus})
 	// Store the device
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	return agent.updateDeviceAndReleaseLock(ctx, cloned, "UpdateChildrenStatus")
 }
 
 // TODO: A generic device update by attribute
@@ -731,7 +770,7 @@ func (agent *Agent) updateDeviceAttribute(ctx context.Context, name string, valu
 	logger.Debugw(ctx, "update-field-status", log.Fields{"device-id": cloned.Id, "name": name, "updated": updated})
 	//	Save the data
 
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+	if err := agent.updateDeviceAndReleaseLock(ctx, cloned, ""); err != nil {
 		logger.Warnw(ctx, "attribute-update-failed", log.Fields{"attribute": name, "value": value})
 	}
 }
@@ -751,13 +790,13 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "simulateAlarm", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "simulateAlarm", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
 // This function updates the device in the DB, releases the device lock, and runs any state transitions.
 // The calling function MUST hold the device lock.  The caller MUST NOT modify the device after this is called.
-func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *voltha.Device) error {
+func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *voltha.Device, rpc string) error {
 	// fail early if this agent is no longer valid
 	if agent.stopped {
 		agent.requestQueue.RequestComplete()
@@ -781,13 +820,19 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	if err := agent.deviceMgr.stateTransitions.ProcessTransition(log.WithSpanFromContext(context.Background(), ctx),
 		device, prevDevice, voltha.DeviceTransientState_NONE, voltha.DeviceTransientState_NONE); err != nil {
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": prevDevice.AdminState, "currentAdminState": device.AdminState})
+		// Sending RPC EVENT here if rpc name is provided.
+		if rpc != ""{
+			rpce := agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, err.Error())
+			agent.deviceMgr.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+
 	}
 	return nil
 }
 
 // This function updates the device transient in the DB through loader, releases the device lock, and runs any state transitions.
 // The calling function MUST hold the device lock.  The caller MUST NOT modify the device after this is called.
-func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Context, device *voltha.Device,
+func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Context, device *voltha.Device, rpc string,
 	transientState, prevTransientState voltha.DeviceTransientState_Types) error {
 	// fail early if this agent is no longer valid
 	if agent.stopped {
@@ -821,6 +866,11 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 	if err := agent.deviceMgr.stateTransitions.ProcessTransition(log.WithSpanFromContext(context.Background(), ctx),
 		device, prevDevice, transientState, prevTransientState); err != nil {
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": prevDevice.AdminState, "currentAdminState": device.AdminState})
+		// Sending RPC EVENT here if rpc name is provided.
+		if rpc != ""{
+			rpce := agent.deviceMgr.NewRPCEvent(ctx, rpc, agent.deviceID, err.Error())
+			agent.deviceMgr.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
 	}
 	return nil
 }
@@ -831,8 +881,7 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"device-id": agent.deviceID, "reason": reason})
 
 	cloned := agent.cloneDeviceWithoutLock()
-	cloned.Reason = reason
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	return agent.updateDeviceAndReleaseLock(ctx, cloned,"UpdateDeviceReason")
 }
 
 func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {

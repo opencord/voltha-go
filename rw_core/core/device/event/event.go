@@ -19,30 +19,49 @@ package event
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opentracing/opentracing-go"
+	jtracing "github.com/uber/jaeger-client-go"
 )
 
 type Manager struct {
-	packetInQueue        chan openflow_13.PacketIn
-	packetInQueueDone    chan bool
-	changeEventQueue     chan openflow_13.ChangeEvent
-	changeEventQueueDone chan bool
+	packetInQueue     chan openflow_13.PacketIn
+	packetInQueueDone chan bool
+	eventQueue        chan openflow_13.ChangeEvent
+	eventQueueDone    chan bool
+	RpcEventManager   *RPCEventManager
 }
 
-func NewManager() *Manager {
+type RPCEventManager struct {
+	eventProxy     *events.EventProxy
+	coreInstanceID string
+}
+
+func NewManager(proxyForRpcEvents *events.EventProxy, instanceID string) *Manager {
 	return &Manager{
-		packetInQueue:        make(chan openflow_13.PacketIn, 100),
-		packetInQueueDone:    make(chan bool, 1),
-		changeEventQueue:     make(chan openflow_13.ChangeEvent, 100),
-		changeEventQueueDone: make(chan bool, 1),
+		packetInQueue:     make(chan openflow_13.PacketIn, 100),
+		packetInQueueDone: make(chan bool, 1),
+		eventQueue:        make(chan openflow_13.ChangeEvent, 100),
+		eventQueueDone:    make(chan bool, 1),
+		RpcEventManager:   NewRPCEventManager(proxyForRpcEvents, instanceID),
 	}
 }
 
+func NewRPCEventManager(proxyForRpcEvents *events.EventProxy, instanceID string) *RPCEventManager {
+	return &RPCEventManager{
+		eventProxy:     proxyForRpcEvents,
+		coreInstanceID: instanceID,
+	}
+}
 func (q *Manager) SendPacketIn(ctx context.Context, deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
 	// TODO: Augment the OF PacketIn to include the transactionId
 	packetIn := openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
@@ -81,8 +100,8 @@ func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) 
 			logger.Debug(ctx, "Enqueueing last failed packetIn")
 			q.packetInQueue <- tracker.failedPacket.(openflow_13.PacketIn)
 		case openflow_13.ChangeEvent:
-			logger.Debug(ctx, "Enqueueing last failed changeEvent")
-			q.changeEventQueue <- tracker.failedPacket.(openflow_13.ChangeEvent)
+			logger.Debug(ctx, "Enqueueing last failed event")
+			q.eventQueue <- tracker.failedPacket.(openflow_13.ChangeEvent)
 		}
 	}
 	return nil
@@ -108,6 +127,9 @@ loop:
 			})
 			if err := packetsIn.Send(&packet); err != nil {
 				logger.Errorw(ctx, "failed-to-send-packet", log.Fields{"error": err})
+				//Keeping resource Id empty for this rpc event as there is no resource
+				rpce := q.RpcEventManager.NewRPCEvent(ctx, "ReceivePacketsIn", "", err.Error())
+				_ = q.RpcEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil,time.Now().UnixNano())
 				// save the last failed packet in
 				streamingTracker.failedPacket = packet
 			} else {
@@ -126,9 +148,9 @@ loop:
 	return nil
 }
 
-func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
-	logger.Debugw(ctx, "SendChangeEvent", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
-	q.changeEventQueue <- openflow_13.ChangeEvent{
+func (q *Manager) SendEvent(ctx context.Context, deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
+	logger.Debugw(ctx, "SendEvent", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
+	q.eventQueue <- openflow_13.ChangeEvent{
 		Id: deviceID,
 		Event: &openflow_13.ChangeEvent_PortStatus{
 			PortStatus: &openflow_13.OfpPortStatus{
@@ -140,11 +162,10 @@ func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason o
 }
 
 // ReceiveChangeEvents receives change in events
-func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
+func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, events voltha.VolthaService_ReceiveChangeEventsServer) error {
 	ctx := context.Background()
-	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveChangeEvents", q.changeEventQueueDone)
-	logger.Debugw(ctx, "ReceiveChangeEvents-request", log.Fields{"changeEvents": changeEvents})
-
+	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveChangeEvents", q.eventQueueDone)
+	logger.Debugw(ctx, "ReceiveChangeEvents-request", log.Fields{"events": events})
 	err := q.flushFailedPackets(ctx, streamingTracker)
 	if err != nil {
 		logger.Errorw(ctx, "unable-to-flush-failed-packets", log.Fields{"error": err})
@@ -154,11 +175,14 @@ loop:
 	for {
 		select {
 		// Dequeue a change event
-		case event := <-q.changeEventQueue:
+		case event := <-q.eventQueue:
 			logger.Debugw(ctx, "sending-change-event", log.Fields{"event": event})
-			if err := changeEvents.Send(&event); err != nil {
+			if err := events.Send(&event); err != nil {
 				logger.Errorw(ctx, "failed-to-send-change-event", log.Fields{"error": err})
-				// save last failed changeevent
+				//Keeping resource Id empty for this rpc event as there is no resource id as such
+				rpce := q.RpcEventManager.NewRPCEvent(ctx, "ReceiveChangeEvents", "", err.Error())
+				_ = q.RpcEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil,time.Now().UnixNano())
+				// save last failed change event
 				streamingTracker.failedPacket = event
 			} else {
 				if streamingTracker.failedPacket != nil {
@@ -166,7 +190,7 @@ loop:
 					streamingTracker.failedPacket = nil
 				}
 			}
-		case <-q.changeEventQueueDone:
+		case <-q.eventQueueDone:
 			logger.Debug(ctx, "Another ReceiveChangeEvents already running. Bailing out ...")
 			break loop
 		}
@@ -175,6 +199,31 @@ loop:
 	return nil
 }
 
-func (q *Manager) GetChangeEventsQueueForTest() <-chan openflow_13.ChangeEvent {
-	return q.changeEventQueue
+func (q *Manager) GetEventsQueueForTest() <-chan openflow_13.ChangeEvent {
+	return q.eventQueue
+}
+
+func (q *RPCEventManager) NewRPCEvent(ctx context.Context, rpc, resourceID, desc string) *voltha.RPCEvent {
+	logger.Debugw(ctx, "newRPCEvent", log.Fields{"resource-id": resourceID})
+	var opID string
+	if span := opentracing.SpanFromContext(ctx); span != nil {
+		if jSpan, ok := span.(*jtracing.Span); ok {
+			opID = fmt.Sprintf("%016x", jSpan.SpanContext().TraceID().Low) // Using Sprintf to avoid removal of leading 0s
+		}
+	}
+	rpcev := &voltha.RPCEvent{
+		Rpc:         rpc,
+		OperationId: opID,
+		ResourceId:  resourceID,
+		Service:     q.coreInstanceID,
+		Status: &common.OperationResp{
+			Code: common.OperationResp_OPERATION_FAILURE,
+		},
+		Description: desc,
+	}
+	return rpcev
+}
+
+func (q *RPCEventManager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) error {
+	return q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 }
