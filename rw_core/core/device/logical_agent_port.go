@@ -58,7 +58,10 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_OLT:
 		// Rebuilt the routes on Parent PON port addition
 		go func() {
-			if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
+			if err := agent.buildRoutes(subCtx); err != nil {
 				// Not an error - temporary state
 				logger.Infow(ctx, "failed-to-update-routes-after-adding-parent-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 			}
@@ -67,7 +70,9 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_ONU:
 		// Add the routes corresponding to that child device
 		go func() {
-			if err := agent.updateAllRoutes(log.WithSpanFromContext(context.Background(), ctx), device.Id, devicePorts); err != nil {
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+			if err := agent.updateAllRoutes(subCtx, device.Id, devicePorts); err != nil {
 				// Not an error - temporary state
 				logger.Infow(ctx, "failed-to-update-routes-after-adding-child-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 			}
@@ -99,6 +104,8 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 	for _, child := range children.Items {
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
 		go func(ctx context.Context, child *voltha.Device) {
 			defer response.Done()
 
@@ -113,7 +120,7 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 				logger.Error(ctx, "setting-up-UNI-ports-failed", log.Fields{"device-id": child.Id})
 				response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
 			}
-		}(log.WithSpanFromContext(context.Background(), ctx), child)
+		}(subCtx, child)
 	}
 	// Wait for completion
 	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
@@ -215,7 +222,9 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 
 	// Reset the logical device routes
 	go func() {
-		if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+		if err := agent.buildRoutes(subCtx); err != nil {
 			logger.Warnw(ctx, "device-routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
@@ -245,7 +254,9 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 
 	// Reset the logical device routes
 	go func() {
-		if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+		if err := agent.buildRoutes(subCtx); err != nil {
 			logger.Warnw(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
@@ -334,7 +345,9 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
 		// First setup the routes
-		if err := agent.updateRoutes(log.WithSpanFromContext(context.Background(), ctx), deviceID, devicePorts, nniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+		if err := agent.updateRoutes(subCtx, deviceID, devicePorts, nniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
 			logger.Infow(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": nniPort.OfpPort.PortNo, "error": err})
@@ -384,16 +397,17 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
-		ctx = log.WithSpanFromContext(context.Background(), ctx)
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
 		// First setup the routes
-		if err := agent.updateRoutes(ctx, deviceID, devicePorts, uniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
+		if err := agent.updateRoutes(subCtx, deviceID, devicePorts, uniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
 			logger.Infow(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": uniPort.OfpPort.PortNo, "error": err})
 		}
 
 		// send event, and allow any queued events to be sent as well
-		queuePosition.send(ctx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
+		queuePosition.send(subCtx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
 	}()
 	return nil
 }
@@ -401,7 +415,9 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 // send is a convenience to avoid calling both assignQueuePosition and qp.send
 func (e *orderedEvents) send(ctx context.Context, agent *LogicalAgent, deviceID string, reason ofp.OfpPortReason, desc *ofp.OfpPort) {
 	qp := e.assignQueuePosition()
-	go qp.send(log.WithSpanFromContext(context.Background(), ctx), agent, deviceID, reason, desc)
+	subCtx := log.WithSpanFromContext(context.Background(), ctx)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+	go qp.send(subCtx, agent, deviceID, reason, desc)
 }
 
 // TODO: shouldn't need to guarantee event ordering like this

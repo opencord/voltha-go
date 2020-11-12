@@ -29,6 +29,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/common"
@@ -42,10 +43,11 @@ import (
 
 // Manager represent device manager attributes
 type Manager struct {
-	deviceAgents            sync.Map
-	rootDevices             map[string]bool
-	lockRootDeviceMap       sync.RWMutex
-	adapterProxy            *remote.AdapterProxy
+	deviceAgents      sync.Map
+	rootDevices       map[string]bool
+	lockRootDeviceMap sync.RWMutex
+	adapterProxy      *remote.AdapterProxy
+	*event.RPCEventManager
 	adapterMgr              *adapter.Manager
 	logicalDeviceMgr        *LogicalManager
 	kafkaICProxy            kafka.InterContainerProxy
@@ -59,7 +61,7 @@ type Manager struct {
 }
 
 //NewManagers creates the Manager and the Logical Manager.
-func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
+func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration, eventProxy *events.EventProxy) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
@@ -69,12 +71,13 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		dProxy:                  dbPath.Proxy("devices"),
 		adapterMgr:              adapterMgr,
 		defaultTimeout:          defaultCoreTimeout,
+		RPCEventManager:         event.NewRPCEventManager(eventProxy, coreInstanceID),
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
 	logicalDeviceMgr := &LogicalManager{
-		Manager:                        event.NewManager(),
+		Manager:                        event.NewManager(eventProxy, coreInstanceID),
 		deviceMgr:                      deviceMgr,
 		kafkaICProxy:                   kmp,
 		dbPath:                         dbPath,
@@ -144,6 +147,7 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 		logger.Errorf(ctx, "No Device Info Present")
 		return &voltha.Device{}, errors.New("no-device-info-present; MAC or HOSTIP&PORT")
 	}
+	ctx = utils.SetRPCMetadataInContext(ctx, "CreateDevice")
 	logger.Debugw(ctx, "create-device", log.Fields{"device": *device})
 
 	deviceExist, err := dMgr.isParentDeviceExist(ctx, device)
@@ -172,8 +176,8 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 
 // EnableDevice activates a device by invoking the adopt_device API on the appropriate adapter
 func (dMgr *Manager) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "EnableDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "EnableDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
@@ -184,8 +188,8 @@ func (dMgr *Manager) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 
 // DisableDevice disables a device along with any child device it may have
 func (dMgr *Manager) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "DisableDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "DisableDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
@@ -196,8 +200,8 @@ func (dMgr *Manager) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.E
 
 //RebootDevice invoked the reboot API to the corresponding adapter
 func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "RebootDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "RebootDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
@@ -208,6 +212,7 @@ func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 
 // DeleteDevice removes a device from the data model
 func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "DeleteDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 	logger.Debugw(ctx, "DeleteDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
@@ -219,6 +224,7 @@ func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 
 // ForceDeleteDevice removes a device from the data model forcefully without successfully waiting for the adapters.
 func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ForceDeleteDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 	logger.Debugw(ctx, "ForceDeleteDevice", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
@@ -230,7 +236,7 @@ func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*emp
 
 // GetDevicePort returns the port details for a specific device port entry
 func (dMgr *Manager) GetDevicePort(ctx context.Context, deviceID string, portID uint32) (*voltha.Port, error) {
-	logger.Debugw(ctx, "ListDevicePorts", log.Fields{"device-id": deviceID})
+	logger.Debugw(ctx, "GetDevicePort", log.Fields{"device-id": deviceID})
 	agent := dMgr.getDeviceAgent(ctx, deviceID)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "device-%s", deviceID)
@@ -240,8 +246,8 @@ func (dMgr *Manager) GetDevicePort(ctx context.Context, deviceID string, portID 
 
 // ListDevicePorts returns the ports details for a specific device entry
 func (dMgr *Manager) ListDevicePorts(ctx context.Context, id *voltha.ID) (*voltha.Ports, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ListDevicePorts")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "ListDevicePorts", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
@@ -259,8 +265,8 @@ func (dMgr *Manager) ListDevicePorts(ctx context.Context, id *voltha.ID) (*volth
 
 // ListDeviceFlows returns the flow details for a specific device entry
 func (dMgr *Manager) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*ofp.Flows, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ListDeviceFlows")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "ListDeviceFlows", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
@@ -278,8 +284,8 @@ func (dMgr *Manager) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*ofp.F
 
 // ListDeviceFlowGroups returns the flow group details for a specific device entry
 func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ListDeviceFlowGroups")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "ListDeviceFlowGroups", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
@@ -323,6 +329,7 @@ func (dMgr *Manager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.De
 // GetDevice exists primarily to implement the gRPC interface.
 // Internal functions should call getDeviceReadOnly instead.
 func (dMgr *Manager) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Device, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "GetDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 	return dMgr.getDeviceReadOnly(ctx, id.Id)
 }
@@ -445,6 +452,7 @@ func (dMgr *Manager) IsDeviceInCache(id string) bool {
 
 // ListDevices retrieves the latest devices from the data model
 func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.Devices, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ListDevices")
 	logger.Debug(ctx, "ListDevices")
 	result := &voltha.Devices{}
 
@@ -626,6 +634,7 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 
 // ListDeviceIds retrieves the latest device IDs information from the data model (memory data only)
 func (dMgr *Manager) ListDeviceIds(ctx context.Context, _ *empty.Empty) (*voltha.IDs, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ListDeviceIds")
 	logger.Debug(ctx, "ListDeviceIDs")
 	// Report only device IDs that are in the device agent map
 	return dMgr.listDeviceIdsFromMap(), nil
@@ -634,6 +643,7 @@ func (dMgr *Manager) ListDeviceIds(ctx context.Context, _ *empty.Empty) (*voltha
 // ReconcileDevices is a request to a voltha core to update its list of managed devices.  This will
 // trigger loading the devices along with their children and parent in memory
 func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ReconcileDevices")
 	logger.Debugw(ctx, "ReconcileDevices", log.Fields{"numDevices": len(ids.Items)})
 	if ids != nil && len(ids.Items) != 0 {
 		toReconcile := len(ids.Items)
@@ -809,7 +819,10 @@ func (dMgr *Manager) addPeerPort(ctx context.Context, deviceID string, port *vol
 	if err != nil {
 		return err
 	}
-	if err = dMgr.logicalDeviceMgr.updateLogicalPort(log.WithSpanFromContext(context.Background(), ctx), device, ports, port); err != nil {
+	subCtx := log.WithSpanFromContext(context.Background(), ctx)
+	subCtx = utils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
+	if err = dMgr.logicalDeviceMgr.updateLogicalPort(subCtx, device, ports, port); err != nil {
 		return err
 	}
 	return nil
@@ -823,7 +836,9 @@ func (dMgr *Manager) AddPort(ctx context.Context, deviceID string, port *voltha.
 		}
 		//	Setup peer ports in its own routine
 		go func() {
-			if err := dMgr.addPeerPort(log.WithSpanFromContext(context.Background(), ctx), deviceID, port); err != nil {
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = utils.CopyRPCMetadadaFromContext(subCtx, ctx)
+			if err := dMgr.addPeerPort(subCtx, deviceID, port); err != nil {
 				logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": deviceID})
 			}
 		}()
@@ -871,8 +886,8 @@ func (dMgr *Manager) updateFlowsAndGroups(ctx context.Context, deviceID string, 
 // UpdateDevicePmConfigs updates the PM configs.  This is executed when the northbound gRPC API is invoked, typically
 // following a user action
 func (dMgr *Manager) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "UpdateDevicePmConfigs")
 	log.EnrichSpan(ctx, log.Fields{"device-id": configs.Id})
-
 	if configs.Id == "" {
 		return nil, status.Error(codes.FailedPrecondition, "invalid-device-Id")
 	}
@@ -896,8 +911,8 @@ func (dMgr *Manager) InitPmConfigs(ctx context.Context, deviceID string, pmConfi
 
 // ListDevicePmConfigs returns pm configs of device
 func (dMgr *Manager) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*voltha.PmConfigs, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ListDevicePmConfigs")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
@@ -957,7 +972,9 @@ func (dMgr *Manager) UpdatePortState(ctx context.Context, deviceID string, portT
 		// Do this for NNI and UNIs only. PON ports are not known by logical device
 		if portType == voltha.Port_ETHERNET_NNI || portType == voltha.Port_ETHERNET_UNI {
 			go func() {
-				err := dMgr.logicalDeviceMgr.updatePortState(log.WithSpanFromContext(context.Background(), ctx), deviceID, portNo, operStatus)
+				subCtx := log.WithSpanFromContext(context.Background(), ctx)
+				subCtx = utils.CopyRPCMetadadaFromContext(subCtx, ctx)
+				err := dMgr.logicalDeviceMgr.updatePortState(subCtx, deviceID, portNo, operStatus)
 				if err != nil {
 					// While we want to handle (catch) and log when
 					// an update to a port was not able to be
@@ -985,7 +1002,9 @@ func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID string) error 
 		// typically is part of a device deletion phase.
 		if device, err := dMgr.getDeviceReadOnly(ctx, deviceID); err == nil {
 			go func() {
-				if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(log.WithSpanFromContext(context.Background(), ctx), device); err != nil {
+				subCtx := log.WithSpanFromContext(context.Background(), ctx)
+				subCtx = utils.CopyRPCMetadadaFromContext(subCtx, ctx)
+				if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(subCtx, device); err != nil {
 					logger.Errorw(ctx, "unable-to-delete-logical-ports", log.Fields{"error": err})
 				}
 			}()
@@ -1078,7 +1097,9 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 	// Activate the child device
 	if agent = dMgr.getDeviceAgent(ctx, agent.deviceID); agent != nil {
 		go func() {
-			err := agent.enableDevice(log.WithSpanFromContext(context.Background(), ctx))
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = utils.CopyRPCMetadadaFromContext(subCtx, ctx)
+			err := agent.enableDevice(subCtx)
 			if err != nil {
 				logger.Errorw(ctx, "unable-to-enable-device", log.Fields{"error": err})
 			}
@@ -1125,7 +1146,8 @@ func (dMgr *Manager) setParentID(ctx context.Context, device *voltha.Device, par
 	return status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
-// CreateLogicalDevice creates logical device in core
+//
+//CreateLogicalDevice creates logical device in core
 func (dMgr *Manager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info(ctx, "CreateLogicalDevice")
 	// Verify whether the logical device has already been created
@@ -1203,13 +1225,15 @@ func (dMgr *Manager) ChildDevicesDetected(ctx context.Context, parentDeviceID st
 	allChildEnableRequestSent := true
 	for childDeviceID := range childDeviceIds {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = utils.CopyRPCMetadadaFromContext(subCtx, ctx)
 			// Run the children re-registration in its own routine
 			go func(ctx context.Context) {
 				err = agent.enableDevice(ctx)
 				if err != nil {
 					logger.Errorw(ctx, "unable-to-enable-device", log.Fields{"error": err})
 				}
-			}(log.WithSpanFromContext(context.Background(), ctx))
+			}(subCtx)
 		} else {
 			err = status.Errorf(codes.Unavailable, "no agent for child device %s", childDeviceID)
 			logger.Errorw(ctx, "no-child-device-agent", log.Fields{"parent-device-id": parentDeviceID, "childId": childDeviceID})
@@ -1346,8 +1370,8 @@ var operationFailureResp = &common.OperationResp{Code: voltha.OperationResp_OPER
 
 // DownloadImage execute an image download request
 func (dMgr *Manager) DownloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "DownloadImage")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
-
 	logger.Debugw(ctx, "DownloadImage", log.Fields{"device-id": img.Id, "imageName": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
@@ -1362,8 +1386,8 @@ func (dMgr *Manager) DownloadImage(ctx context.Context, img *voltha.ImageDownloa
 
 // CancelImageDownload cancels image download request
 func (dMgr *Manager) CancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "CancelImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
-
 	logger.Debugw(ctx, "CancelImageDownload", log.Fields{"device-id": img.Id, "imageName": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
@@ -1378,8 +1402,8 @@ func (dMgr *Manager) CancelImageDownload(ctx context.Context, img *voltha.ImageD
 
 // ActivateImageUpdate activates image update request
 func (dMgr *Manager) ActivateImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ActivateImageUpdate")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
-
 	logger.Debugw(ctx, "ActivateImageUpdate", log.Fields{"device-id": img.Id, "imageName": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
@@ -1394,8 +1418,8 @@ func (dMgr *Manager) ActivateImageUpdate(ctx context.Context, img *voltha.ImageD
 
 // RevertImageUpdate reverts image update
 func (dMgr *Manager) RevertImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "RevertImageUpdate")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
-
 	logger.Debugw(ctx, "RevertImageUpdate", log.Fields{"device-id": img.Id, "imageName": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
@@ -1413,8 +1437,8 @@ var imageDownloadFailureResp = &voltha.ImageDownload{DownloadState: voltha.Image
 
 // GetImageDownloadStatus returns status of image download
 func (dMgr *Manager) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "GetImageDownloadStatus")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
-
 	logger.Debugw(ctx, "GetImageDownloadStatus", log.Fields{"device-id": img.Id, "imageName": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
@@ -1428,8 +1452,8 @@ func (dMgr *Manager) GetImageDownloadStatus(ctx context.Context, img *voltha.Ima
 }
 
 func (dMgr *Manager) UpdateImageDownload(ctx context.Context, deviceID string, img *voltha.ImageDownload) error {
+	ctx = utils.SetRPCMetadataInContext(ctx, "UpdateImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
-
 	logger.Debugw(ctx, "UpdateImageDownload", log.Fields{"device-id": img.Id, "imageName": img.Name})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if err := agent.updateImageDownload(ctx, img); err != nil {
@@ -1444,8 +1468,8 @@ func (dMgr *Manager) UpdateImageDownload(ctx context.Context, deviceID string, i
 
 // GetImageDownload returns image download
 func (dMgr *Manager) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "GetImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
-
 	logger.Debugw(ctx, "GetImageDownload", log.Fields{"device-id": img.Id, "imageName": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
@@ -1460,8 +1484,8 @@ func (dMgr *Manager) GetImageDownload(ctx context.Context, img *voltha.ImageDown
 
 // ListImageDownloads returns image downloads
 func (dMgr *Manager) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "ListImageDownloads")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "ListImageDownloads", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
@@ -1476,8 +1500,8 @@ func (dMgr *Manager) ListImageDownloads(ctx context.Context, id *voltha.ID) (*vo
 
 // GetImages returns all images for a specific device entry
 func (dMgr *Manager) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Images, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "GetImages")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
-
 	logger.Debugw(ctx, "GetImages", log.Fields{"device-id": id.Id})
 	device, err := dMgr.getDeviceReadOnly(ctx, id.Id)
 	if err != nil {
@@ -1514,6 +1538,7 @@ func (dMgr *Manager) GetParentDeviceID(ctx context.Context, deviceID string) str
 }
 
 func (dMgr *Manager) SimulateAlarm(ctx context.Context, simulateReq *voltha.SimulateAlarmRequest) (*common.OperationResp, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "SimulateAlarm")
 	logger.Debugw(ctx, "SimulateAlarm", log.Fields{"id": simulateReq.Id, "Indicator": simulateReq.Indicator, "IntfId": simulateReq.IntfId,
 		"PortTypeName": simulateReq.PortTypeName, "OnuDeviceId": simulateReq.OnuDeviceId, "InverseBitErrorRate": simulateReq.InverseBitErrorRate,
 		"Drift": simulateReq.Drift, "NewEqd": simulateReq.NewEqd, "OnuSerialNumber": simulateReq.OnuSerialNumber, "Operation": simulateReq.Operation})
@@ -1536,8 +1561,8 @@ func (dMgr *Manager) UpdateDeviceReason(ctx context.Context, deviceID string, re
 }
 
 func (dMgr *Manager) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "EnablePort")
 	log.EnrichSpan(ctx, log.Fields{"device-id": port.DeviceId})
-
 	logger.Debugw(ctx, "EnablePort", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	agent := dMgr.getDeviceAgent(ctx, port.DeviceId)
 	if agent == nil {
@@ -1547,8 +1572,8 @@ func (dMgr *Manager) EnablePort(ctx context.Context, port *voltha.Port) (*empty.
 }
 
 func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "DisablePort")
 	log.EnrichSpan(ctx, log.Fields{"device-id": port.DeviceId})
-
 	logger.Debugw(ctx, "DisablePort", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	agent := dMgr.getDeviceAgent(ctx, port.DeviceId)
 	if agent == nil {
@@ -1571,8 +1596,8 @@ func (dMgr *Manager) ChildDeviceLost(ctx context.Context, curr *voltha.Device) e
 }
 
 func (dMgr *Manager) StartOmciTestAction(ctx context.Context, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "StartOmciTestAction")
 	log.EnrichSpan(ctx, log.Fields{"device-id": request.Id})
-
 	logger.Debugw(ctx, "StartOmciTestAction", log.Fields{"device-id": request.Id, "uuid": request.Uuid})
 	agent := dMgr.getDeviceAgent(ctx, request.Id)
 	if agent == nil {
@@ -1582,8 +1607,8 @@ func (dMgr *Manager) StartOmciTestAction(ctx context.Context, request *voltha.Om
 }
 
 func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "GetExtValue")
 	log.EnrichSpan(ctx, log.Fields{"device-id": value.Id})
-
 	logger.Debugw(ctx, "getExtValue", log.Fields{"onu-id": value.Id})
 	cDevice, err := dMgr.getDeviceReadOnly(ctx, value.Id)
 	if err != nil {
@@ -1607,6 +1632,7 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifi
 
 // SetExtValue  set some given configs or value
 func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*empty.Empty, error) {
+	ctx = utils.SetRPCMetadataInContext(ctx, "SetExtValue")
 	logger.Debugw(ctx, "setExtValue", log.Fields{"onu-id": value.Id})
 	device, err := dMgr.getDeviceReadOnly(ctx, value.Id)
 	if err != nil {
@@ -1622,4 +1648,10 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
+}
+
+func (dMgr *Manager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent,
+	category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
+	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
+	dMgr.RPCEventManager.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 }
