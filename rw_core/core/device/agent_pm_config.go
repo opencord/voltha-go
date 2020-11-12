@@ -45,7 +45,7 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 		cancel()
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "updatePmConfigs", ch, agent.onSuccess, agent.onFailure)
+	go agent.waitForAdapterResponseAndSendRPCEvent(subCtx, cancel, "updatePmConfigs", ch, agent.onSuccess, agent.onFailure)
 	return nil
 }
 
