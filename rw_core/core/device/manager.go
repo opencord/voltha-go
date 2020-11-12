@@ -29,6 +29,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/common"
@@ -42,10 +43,11 @@ import (
 
 // Manager represent device manager attributes
 type Manager struct {
-	deviceAgents            sync.Map
-	rootDevices             map[string]bool
-	lockRootDeviceMap       sync.RWMutex
-	adapterProxy            *remote.AdapterProxy
+	deviceAgents      sync.Map
+	rootDevices       map[string]bool
+	lockRootDeviceMap sync.RWMutex
+	adapterProxy      *remote.AdapterProxy
+	*event.RPCEventManager
 	adapterMgr              *adapter.Manager
 	logicalDeviceMgr        *LogicalManager
 	kafkaICProxy            kafka.InterContainerProxy
@@ -59,7 +61,7 @@ type Manager struct {
 }
 
 //NewManagers creates the Manager and the Logical Manager.
-func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
+func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration, eventProxy *events.EventProxy) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
@@ -69,12 +71,13 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		dProxy:                  dbPath.Proxy("devices"),
 		adapterMgr:              adapterMgr,
 		defaultTimeout:          defaultCoreTimeout,
+		RPCEventManager:         event.NewRPCEventManager(eventProxy, coreInstanceID),
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
 	logicalDeviceMgr := &LogicalManager{
-		Manager:                        event.NewManager(),
+		Manager:                        event.NewManager(eventProxy, coreInstanceID),
 		deviceMgr:                      deviceMgr,
 		kafkaICProxy:                   kmp,
 		dbPath:                         dbPath,
@@ -1622,4 +1625,10 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
+}
+
+func (dMgr *Manager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent,
+	category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) error {
+	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
+	return dMgr.RPCEventManager.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 }

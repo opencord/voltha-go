@@ -548,6 +548,8 @@ loop:
 
 		if err != nil {
 			logger.Errorw(ctx, "Failed to receive packet out", log.Fields{"error": err})
+			_ = ldMgr.GetAndSendRPCEvent(ctx, "StreamPacketsOut", packet.Id, err.Error(), nil,
+				"RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			continue
 		}
 
@@ -560,4 +562,10 @@ loop:
 
 	logger.Debugw(ctx, "StreamPacketsOut-request-done", log.Fields{"packets": packets})
 	return nil
+}
+
+func (ldMgr *LogicalManager) GetAndSendRPCEvent(ctx context.Context, rpc, resourceID, desc string, context map[string]string,
+	id string, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) error {
+	return ldMgr.Manager.RPCEventManager.GetAndSendRPCEvent(ctx, rpc, resourceID, desc, context, id,
+		category, subCategory, raisedTs)
 }
