@@ -32,6 +32,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
@@ -48,6 +49,7 @@ type LogicalAgent struct {
 	deviceMgr       *Manager
 	ldeviceMgr      *LogicalManager
 	ldProxy         *model.Proxy
+	eventProxy      *events.EventProxy
 	stopped         bool
 	deviceRoutes    *route.DeviceRoutes
 	flowDecomposer  *fd.FlowDecomposer
@@ -65,13 +67,14 @@ type LogicalAgent struct {
 }
 
 func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
-	deviceMgr *Manager, dbProxy *model.Path, ldProxy *model.Proxy, defaultTimeout time.Duration) *LogicalAgent {
+	deviceMgr *Manager, dbProxy *model.Path, ldProxy *model.Proxy, defaultTimeout time.Duration, eventProxy *events.EventProxy) *LogicalAgent {
 	return &LogicalAgent{
 		logicalDeviceID: id,
 		serialNumber:    sn,
 		rootDeviceID:    deviceID,
 		deviceMgr:       deviceMgr,
 		ldProxy:         ldProxy,
+		eventProxy:      eventProxy,
 		ldeviceMgr:      ldeviceMgr,
 		deviceRoutes:    route.NewDeviceRoutes(id, deviceID, deviceMgr.listDevicePorts),
 		flowDecomposer:  fd.NewFlowDecomposer(deviceMgr.getDeviceReadOnly),

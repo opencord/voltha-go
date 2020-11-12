@@ -37,6 +37,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
@@ -52,6 +53,7 @@ type Agent struct {
 	deviceType     string
 	isRootDevice   bool
 	adapterProxy   *remote.AdapterProxy
+	eventProxy     *events.EventProxy
 	adapterMgr     *adapter.Manager
 	deviceMgr      *Manager
 	dbProxy        *model.Proxy
@@ -69,7 +71,7 @@ type Agent struct {
 }
 
 //newAgent creates a new device agent. The device will be initialized when start() is called.
-func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager, dbPath *model.Path, deviceProxy *model.Proxy, timeout time.Duration) *Agent {
+func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager, dbPath *model.Path, deviceProxy *model.Proxy, timeout time.Duration, eventProxy *events.EventProxy) *Agent {
 	deviceID := device.Id
 	if deviceID == "" {
 		deviceID = coreutils.CreateDeviceID()
@@ -85,6 +87,7 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 		adapterMgr:     deviceMgr.adapterMgr,
 		exitChannel:    make(chan int, 1),
 		dbProxy:        deviceProxy,
+		eventProxy:     eventProxy,
 		defaultTimeout: timeout,
 		device:         proto.Clone(device).(*voltha.Device),
 		requestQueue:   coreutils.NewRequestQueue(),
@@ -566,7 +569,6 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
-	cloned.Reason = device.Reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
@@ -684,7 +686,6 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"device-id": agent.deviceID, "reason": reason})
 
 	cloned := agent.cloneDeviceWithoutLock()
-	cloned.Reason = reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 

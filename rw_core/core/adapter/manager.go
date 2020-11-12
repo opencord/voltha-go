@@ -27,6 +27,7 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -39,16 +40,18 @@ type Manager struct {
 	deviceTypes                 map[string]*voltha.DeviceType
 	adapterProxy                *model.Proxy
 	deviceTypeProxy             *model.Proxy
+	eventProxy                  *events.EventProxy
 	onAdapterRestart            adapterRestartedHandler
 	coreInstanceID              string
 	lockAdaptersMap             sync.RWMutex
 	lockdDeviceTypeToAdapterMap sync.RWMutex
 }
 
-func NewAdapterManager(ctx context.Context, dbPath *model.Path, coreInstanceID string, kafkaClient kafka.Client) *Manager {
+func NewAdapterManager(ctx context.Context, dbPath *model.Path, coreInstanceID string, kafkaClient kafka.Client, eventProxy *events.EventProxy) *Manager {
 	aMgr := &Manager{
 		coreInstanceID:  coreInstanceID,
 		adapterProxy:    dbPath.Proxy("adapters"),
+		eventProxy:      eventProxy,
 		deviceTypeProxy: dbPath.Proxy("device_types"),
 		deviceTypes:     make(map[string]*voltha.DeviceType),
 		adapterAgents:   make(map[string]*agent),

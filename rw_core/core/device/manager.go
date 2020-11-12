@@ -29,6 +29,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/common"
@@ -46,6 +47,7 @@ type Manager struct {
 	rootDevices             map[string]bool
 	lockRootDeviceMap       sync.RWMutex
 	adapterProxy            *remote.AdapterProxy
+	eventProxy              *events.EventProxy
 	adapterMgr              *adapter.Manager
 	logicalDeviceMgr        *LogicalManager
 	kafkaICProxy            kafka.InterContainerProxy
@@ -59,7 +61,7 @@ type Manager struct {
 }
 
 //NewManagers creates the Manager and the Logical Manager.
-func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration) (*Manager, *LogicalManager) {
+func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration, eventProxy *events.EventProxy) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
@@ -68,6 +70,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		dbPath:                  dbPath,
 		dProxy:                  dbPath.Proxy("devices"),
 		adapterMgr:              adapterMgr,
+		eventProxy:              eventProxy,
 		defaultTimeout:          defaultCoreTimeout,
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
@@ -80,6 +83,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		dbPath:                         dbPath,
 		ldProxy:                        dbPath.Proxy("logical_devices"),
 		defaultTimeout:                 defaultCoreTimeout,
+		eventProxy:                     eventProxy,
 		logicalDeviceLoadingInProgress: make(map[string][]chan int),
 	}
 	deviceMgr.logicalDeviceMgr = logicalDeviceMgr
@@ -160,7 +164,7 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 	// Ensure this device is set as root
 	device.Root = true
 	// Create and start a device agent for that device
-	agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
+	agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout, dMgr.eventProxy)
 	device, err = agent.start(ctx, device)
 	if err != nil {
 		logger.Errorw(ctx, "Fail-to-start-device", log.Fields{"device-id": agent.deviceID, "error": err})
@@ -448,7 +452,7 @@ func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.D
 		// If device is not in memory then set it up
 		if !dMgr.IsDeviceInCache(device.Id) {
 			logger.Debugw(ctx, "loading-device-from-Model", log.Fields{"device-id": device.Id})
-			agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
+			agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout, dMgr.eventProxy)
 			if _, err := agent.start(ctx, nil); err != nil {
 				logger.Warnw(ctx, "failure-starting-agent", log.Fields{"device-id": device.Id})
 			} else {
@@ -511,7 +515,7 @@ func (dMgr *Manager) loadDevice(ctx context.Context, deviceID string) (*Agent, e
 			// Proceed with the loading only if the device exist in the Model (could have been deleted)
 			if device, err = dMgr.getDeviceFromModel(ctx, deviceID); err == nil {
 				logger.Debugw(ctx, "loading-device", log.Fields{"device-id": deviceID})
-				agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
+				agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout,dMgr.eventProxy)
 				if _, err = agent.start(ctx, nil); err != nil {
 					logger.Warnw(ctx, "Failure loading device", log.Fields{"device-id": deviceID, "error": err})
 				} else {
@@ -1044,7 +1048,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 	childDevice.ProxyAddress = &voltha.Device_ProxyAddress{DeviceId: parentDeviceID, DeviceType: pAgent.deviceType, ChannelId: uint32(channelID), OnuId: uint32(onuID)}
 
 	// Create and start a device agent for that device
-	agent := newAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
+	agent := newAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout,dMgr.eventProxy)
 	insertedChildDevice, err := agent.start(ctx, childDevice)
 	if err != nil {
 		logger.Errorw(ctx, "error-starting-child-device", log.Fields{"parent-device-id": childDevice.ParentId, "child-device-id": agent.deviceID, "error": err})
@@ -1581,4 +1585,15 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
+}
+func (dMgr *Manager) GetDeviceUpdates(ctx context.Context, filter *voltha.DeviceUpdateFilter) (*voltha.DeviceUpdates, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": filter.DeviceId})
+
+	logger.Debugw(ctx, "GetDeviceUpdate", log.Fields{"device-id": filter.DeviceId})
+	agent := dMgr.getDeviceAgent(ctx, filter.DeviceId)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "device-%s", filter.DeviceId)
+	}
+
+	return nil, nil
 }
