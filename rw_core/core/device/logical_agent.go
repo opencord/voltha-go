@@ -134,7 +134,9 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 
 		// Setup the logicalports - internal processing, no need to propagate the client context
 		go func() {
-			err := agent.setupLogicalPorts(log.WithSpanFromContext(context.Background(), ctx))
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+			err := agent.setupLogicalPorts(subCtx)
 			if err != nil {
 				logger.Errorw(ctx, "unable-to-setup-logical-ports", log.Fields{"error": err})
 			}
@@ -169,7 +171,9 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
 	if loadFromDB {
 		go func() {
-			if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+			if err := agent.buildRoutes(subCtx); err != nil {
 				logger.Warn(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 			}
 		}()
@@ -226,6 +230,8 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 			defer cancel()
 			start := time.Now()
 			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
@@ -254,6 +260,8 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 			defer cancel()
 			start := time.Now()
 			if err := agent.deviceMgr.deleteFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
@@ -280,6 +288,8 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 		responses = append(responses, response)
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 			defer cancel()
 			if err := agent.deviceMgr.updateFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
 				logger.Errorw(ctx, "flow-update-failed", log.Fields{"device-id": deviceId, "error": err})
@@ -307,6 +317,8 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 		logger.Debugw(ctx, "uni-port", log.Fields{"flows": flows, "uni-port": uniPort})
 		go func(uniPort uint32, metadata *voltha.FlowMetadata) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+			subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 			defer cancel()
 			if err := agent.deviceMgr.deleteParentFlows(subCtx, agent.rootDeviceID, uniPort, metadata); err != nil {
 				logger.Error(ctx, "flow-delete-failed-from-parent-device", log.Fields{

@@ -37,6 +37,7 @@ const (
 	defaultBanner                    = false
 	defaultDisplayVersionOnly        = false
 	defaultCoreTopic                 = "rwcore"
+	defaultEventTopic                = "voltha.events"
 	defaultRWCoreEndpoint            = "rwcore"
 	defaultRWCoreKey                 = "pki/voltha.key"
 	defaultRWCoreCert                = "pki/voltha.crt"
@@ -67,6 +68,7 @@ type RWCoreFlags struct {
 	KVStoreAddress            string
 	KVTxnKeyDelTime           int
 	CoreTopic                 string
+	EventTopic                string
 	LogLevel                  string
 	Banner                    bool
 	DisplayVersionOnly        bool
@@ -99,6 +101,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		KVStoreAddress:            defaultKVStoreAddress,
 		KVTxnKeyDelTime:           defaultKVTxnKeyDelTime,
 		CoreTopic:                 defaultCoreTopic,
+		EventTopic:                defaultEventTopic,
 		LogLevel:                  defaultLogLevel,
 		Banner:                    defaultBanner,
 		DisplayVersionOnly:        defaultDisplayVersionOnly,
@@ -138,6 +141,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("RW Core topic")
 	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", defaultCoreTopic, help)
+
+	help = fmt.Sprintf("RW Core Event topic")
+	flag.StringVar(&(cf.EventTopic), "event_topic", defaultEventTopic, help)
 
 	flag.Bool("in_competing_mode", false, "deprecated")
 

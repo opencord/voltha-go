@@ -22,6 +22,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -79,12 +80,15 @@ func (agent *Agent) updatePortsOperState(ctx context.Context, portTypeFilter uin
 				// Notify the logical device manager to change the port state
 				// Do this for NNI and UNIs only. PON ports are not known by logical device
 				if newPort.Type == voltha.Port_ETHERNET_NNI || newPort.Type == voltha.Port_ETHERNET_UNI {
+					subCtx := log.WithSpanFromContext(context.Background(), ctx)
+					subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 					go func(portID uint32, ctx context.Context) {
 						if err := agent.deviceMgr.logicalDeviceMgr.updatePortState(ctx, agent.deviceID, portID, operStatus); err != nil {
 							// TODO: VOL-2707
 							logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
 						}
-					}(portID, log.WithSpanFromContext(context.Background(), ctx))
+					}(portID, subCtx)
 				}
 			}
 			portHandle.Unlock()
@@ -244,6 +248,8 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 		return err
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.DisablePort(ctx, device, &newPort)
 	if err != nil {
 		cancel()
@@ -280,6 +286,8 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 		return err
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.EnablePort(ctx, device, &newPort)
 	if err != nil {
 		cancel()
