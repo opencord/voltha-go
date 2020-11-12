@@ -22,6 +22,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
+	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -43,7 +44,7 @@ func (agent *Agent) listDevicePorts() map[uint32]*voltha.Port {
 
 // getPorts retrieves the ports information of the device based on the port type.
 func (agent *Agent) getPorts(ctx context.Context, portType voltha.Port_PortType) *voltha.Ports {
-	logger.Debugw(ctx, "getPorts", log.Fields{"device-id": agent.deviceID, "port-type": portType})
+	logger.Debugw(ctx, "get-ports", log.Fields{"device-id": agent.deviceID, "port-type": portType})
 	ports := &voltha.Ports{}
 	for _, port := range agent.listDevicePorts() {
 		if port.Type == portType {
@@ -63,7 +64,7 @@ func (agent *Agent) getDevicePort(portID uint32) (*voltha.Port, error) {
 }
 
 func (agent *Agent) updatePortsOperState(ctx context.Context, portTypeFilter uint32, operStatus voltha.OperStatus_Types) error {
-	logger.Debugw(ctx, "updatePortsOperState", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "update-ports-oper-state", log.Fields{"device-id": agent.deviceID})
 
 	for portID := range agent.portLoader.ListIDs() {
 		if portHandle, have := agent.portLoader.Lock(portID); have {
@@ -79,12 +80,15 @@ func (agent *Agent) updatePortsOperState(ctx context.Context, portTypeFilter uin
 				// Notify the logical device manager to change the port state
 				// Do this for NNI and UNIs only. PON ports are not known by logical device
 				if newPort.Type == voltha.Port_ETHERNET_NNI || newPort.Type == voltha.Port_ETHERNET_UNI {
+					subCtx := log.WithSpanFromContext(context.Background(), ctx)
+					subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 					go func(portID uint32, ctx context.Context) {
 						if err := agent.deviceMgr.logicalDeviceMgr.updatePortState(ctx, agent.deviceID, portID, operStatus); err != nil {
 							// TODO: VOL-2707
 							logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
 						}
-					}(portID, log.WithSpanFromContext(context.Background(), ctx))
+					}(portID, subCtx)
 				}
 			}
 			portHandle.Unlock()
@@ -116,7 +120,7 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 }
 
 func (agent *Agent) deleteAllPorts(ctx context.Context) error {
-	logger.Debugw(ctx, "deleteAllPorts", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "delete-all-ports", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
@@ -159,7 +163,7 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 
 	oldPort := portHandle.GetReadOnly()
 	if oldPort.Label != "" || oldPort.Type != voltha.Port_PON_OLT {
-		logger.Debugw(ctx, "port already exists", log.Fields{"port": port})
+		logger.Debugw(ctx, "port-already-exists", log.Fields{"port": port})
 		return nil
 	}
 
@@ -218,7 +222,7 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 }
 
 func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
-	logger.Debugw(ctx, "disablePort", log.Fields{"device-id": agent.deviceID, "port-no": portID})
+	logger.Debugw(ctx, "disable-port", log.Fields{"device-id": agent.deviceID, "port-no": portID})
 
 	portHandle, have := agent.portLoader.Lock(portID)
 	if !have {
@@ -244,6 +248,8 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 		return err
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.DisablePort(ctx, device, &newPort)
 	if err != nil {
 		cancel()
@@ -254,7 +260,7 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 }
 
 func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
-	logger.Debugw(ctx, "enablePort", log.Fields{"device-id": agent.deviceID, "port-no": portID})
+	logger.Debugw(ctx, "enable-port", log.Fields{"device-id": agent.deviceID, "port-no": portID})
 
 	portHandle, have := agent.portLoader.Lock(portID)
 	if !have {
@@ -280,6 +286,8 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 		return err
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.EnablePort(ctx, device, &newPort)
 	if err != nil {
 		cancel()

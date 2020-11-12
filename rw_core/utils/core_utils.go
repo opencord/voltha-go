@@ -18,11 +18,22 @@ package utils
 
 import (
 	"context"
-	"os"
-	"time"
-
+	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"os"
+	"time"
+)
+
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
+
+var (
+	// RPCContextKey for keeping rpc name as metadata
+	rpcContextKey = contextKey("rpc")
 )
 
 // ResponseCallback is the function signature for callbacks to execute after a response is received.
@@ -125,4 +136,36 @@ func WaitForNilOrErrorResponses(timeout time.Duration, responses ...Response) []
 		return errors
 	}
 	return nil
+}
+
+func WithRPCMetadataContext(ctx context.Context, rpcName string) context.Context {
+	ctx = context.WithValue(ctx, rpcContextKey, rpcName)
+	return ctx
+}
+
+func GetRPCMetadataFromContext(ctx context.Context) string {
+	if ctx != nil {
+		if val, ok := ctx.Value(rpcContextKey).(string); ok {
+			return val
+		}
+	}
+	return ""
+}
+
+func WithRPCMetadataFromContext(targetCtx, sourceCtx context.Context) context.Context {
+	if sourceCtx != nil {
+		if val, ok := sourceCtx.Value(rpcContextKey).(string); ok {
+			targetCtx = context.WithValue(targetCtx, rpcContextKey, val)
+		}
+	}
+	return targetCtx
+}
+
+func WithSpanAndRPCMetadataFromContext(sourceCtx context.Context) context.Context {
+	targetCtx := context.Background()
+	if sourceCtx != nil {
+		targetCtx = log.WithSpanFromContext(targetCtx, sourceCtx)
+		targetCtx = WithRPCMetadataFromContext(targetCtx, sourceCtx)
+	}
+	return targetCtx
 }

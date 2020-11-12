@@ -32,7 +32,7 @@ import (
 
 // listLogicalDevicePorts returns logical device ports
 func (agent *LogicalAgent) listLogicalDevicePorts(ctx context.Context) map[uint32]*voltha.LogicalPort {
-	logger.Debug(ctx, "listLogicalDevicePorts")
+	logger.Debug(ctx, "list-logical-device-ports")
 	portIDs := agent.portLoader.ListIDs()
 	ret := make(map[uint32]*voltha.LogicalPort, len(portIDs))
 	for portID := range portIDs {
@@ -45,7 +45,7 @@ func (agent *LogicalAgent) listLogicalDevicePorts(ctx context.Context) map[uint3
 }
 
 func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha.Device, devicePorts map[uint32]*voltha.Port, port *voltha.Port) error {
-	logger.Debugw(ctx, "updateLogicalPort", log.Fields{"device-id": device.Id, "port": port})
+	logger.Debugw(ctx, "update-logical-port", log.Fields{"device-id": device.Id, "port": port})
 	switch port.Type {
 	case voltha.Port_ETHERNET_NNI:
 		if err := agent.addNNILogicalPort(ctx, device.Id, devicePorts, port); err != nil {
@@ -58,7 +58,10 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_OLT:
 		// Rebuilt the routes on Parent PON port addition
 		go func() {
-			if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
+			if err := agent.buildRoutes(subCtx); err != nil {
 				// Not an error - temporary state
 				logger.Infow(ctx, "failed-to-update-routes-after-adding-parent-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 			}
@@ -67,7 +70,9 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_ONU:
 		// Add the routes corresponding to that child device
 		go func() {
-			if err := agent.updateAllRoutes(log.WithSpanFromContext(context.Background(), ctx), device.Id, devicePorts); err != nil {
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+			if err := agent.updateAllRoutes(subCtx, device.Id, devicePorts); err != nil {
 				// Not an error - temporary state
 				logger.Infow(ctx, "failed-to-update-routes-after-adding-child-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 			}
@@ -82,10 +87,10 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 // added to it.  While the logical device was being created we could have received requests to add
 // NNI and UNI ports which were discarded.  Now is the time to add them if needed
 func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
-	logger.Infow(ctx, "setupLogicalPorts", log.Fields{"logical-device-id": agent.logicalDeviceID})
+	logger.Infow(ctx, "setup-logical-ports", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	// First add any NNI ports which could have been missing
 	if err := agent.setupNNILogicalPorts(ctx, agent.rootDeviceID); err != nil {
-		logger.Errorw(ctx, "error-setting-up-NNI-ports", log.Fields{"error": err, "device-id": agent.rootDeviceID})
+		logger.Errorw(ctx, "error-setting-up-nni-ports", log.Fields{"error": err, "device-id": agent.rootDeviceID})
 		return err
 	}
 
@@ -99,21 +104,23 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 	for _, child := range children.Items {
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 		go func(ctx context.Context, child *voltha.Device) {
 			defer response.Done()
 
 			childPorts, err := agent.deviceMgr.listDevicePorts(ctx, child.Id)
 			if err != nil {
-				logger.Error(ctx, "setting-up-UNI-ports-failed", log.Fields{"device-id": child.Id})
+				logger.Error(ctx, "setting-up-uni-ports-failed", log.Fields{"device-id": child.Id})
 				response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
 				return
 			}
 
 			if err = agent.setupUNILogicalPorts(ctx, child, childPorts); err != nil {
-				logger.Error(ctx, "setting-up-UNI-ports-failed", log.Fields{"device-id": child.Id})
+				logger.Error(ctx, "setting-up-uni-ports-failed", log.Fields{"device-id": child.Id})
 				response.Error(status.Errorf(codes.Internal, "UNI-ports-setup-failed: %s", child.Id))
 			}
-		}(log.WithSpanFromContext(context.Background(), ctx), child)
+		}(subCtx, child)
 	}
 	// Wait for completion
 	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
@@ -124,7 +131,7 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 
 // setupNNILogicalPorts creates an NNI port on the logical device that represents an NNI interface on a root device
 func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID string) error {
-	logger.Infow(ctx, "setupNNILogicalPorts-start", log.Fields{"logical-device-id": agent.logicalDeviceID})
+	logger.Infow(ctx, "setup-nni-logical-ports-start", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	// Build the logical device based on information retrieved from the device adapter
 
 	devicePorts, err := agent.deviceMgr.listDevicePorts(ctx, deviceID)
@@ -137,7 +144,7 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 	for _, port := range devicePorts {
 		if port.Type == voltha.Port_ETHERNET_NNI {
 			if err = agent.addNNILogicalPort(ctx, deviceID, devicePorts, port); err != nil {
-				logger.Errorw(ctx, "error-adding-NNI-port", log.Fields{"error": err})
+				logger.Errorw(ctx, "error-adding-nni-port", log.Fields{"error": err})
 			}
 		}
 	}
@@ -146,7 +153,7 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 
 // updatePortState updates the port state of the device
 func (agent *LogicalAgent) updatePortState(ctx context.Context, portNo uint32, operStatus voltha.OperStatus_Types) error {
-	logger.Infow(ctx, "updatePortState-start", log.Fields{"logical-device-id": agent.logicalDeviceID, "portNo": portNo, "state": operStatus})
+	logger.Infow(ctx, "update-port-state-start", log.Fields{"logical-device-id": agent.logicalDeviceID, "port-no": portNo, "state": operStatus})
 
 	portHandle, have := agent.portLoader.Lock(portNo)
 	if !have {
@@ -179,14 +186,14 @@ func clonePortSetState(oldPort *voltha.LogicalPort, state voltha.OperStatus_Type
 
 // setupUNILogicalPorts creates a UNI port on the logical device that represents a child UNI interface
 func (agent *LogicalAgent) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device, childDevicePorts map[uint32]*voltha.Port) error {
-	logger.Infow(ctx, "setupUNILogicalPorts", log.Fields{"logical-device-id": agent.logicalDeviceID})
+	logger.Infow(ctx, "setup-uni-logical-ports", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	// Build the logical device based on information retrieved from the device adapter
 	var err error
 	//Get UNI port number
 	for _, port := range childDevicePorts {
 		if port.Type == voltha.Port_ETHERNET_UNI {
 			if err = agent.addUNILogicalPort(ctx, childDevice.Id, childDevice.AdminState, childDevice.OperStatus, childDevicePorts, port); err != nil {
-				logger.Errorw(ctx, "error-adding-UNI-port", log.Fields{"error": err})
+				logger.Errorw(ctx, "error-adding-uni-port", log.Fields{"error": err})
 			}
 		}
 	}
@@ -195,7 +202,7 @@ func (agent *LogicalAgent) setupUNILogicalPorts(ctx context.Context, childDevice
 
 // deleteAllLogicalPorts deletes all logical ports associated with this logical device
 func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
-	logger.Infow(ctx, "updatePortsState-start", log.Fields{"logical-device-id": agent.logicalDeviceID})
+	logger.Infow(ctx, "update-ports-state-start", log.Fields{"logical-device-id": agent.logicalDeviceID})
 
 	// for each port
 	for portID := range agent.portLoader.ListIDs() {
@@ -215,7 +222,9 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 
 	// Reset the logical device routes
 	go func() {
-		if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+		if err := agent.buildRoutes(subCtx); err != nil {
 			logger.Warnw(ctx, "device-routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
@@ -245,7 +254,9 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 
 	// Reset the logical device routes
 	go func() {
-		if err := agent.buildRoutes(log.WithSpanFromContext(context.Background(), ctx)); err != nil {
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+		if err := agent.buildRoutes(subCtx); err != nil {
 			logger.Warnw(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
@@ -301,7 +312,7 @@ func (agent *LogicalAgent) disableLogicalPort(ctx context.Context, lPortNo uint3
 // (true, nil).   If the device is not in the correct state it will return (false, nil) as this is a valid
 // scenario. This also applies to the case where the port was already added.
 func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID string, devicePorts map[uint32]*voltha.Port, port *voltha.Port) error {
-	logger.Debugw(ctx, "addNNILogicalPort", log.Fields{"logical-device-id": agent.logicalDeviceID, "nni-port": port})
+	logger.Debugw(ctx, "add-nni-logical-port", log.Fields{"logical-device-id": agent.logicalDeviceID, "nni-port": port})
 
 	label := fmt.Sprintf("nni-%d", port.PortNo)
 	ofpPort := *port.OfpPort
@@ -334,7 +345,9 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
 		// First setup the routes
-		if err := agent.updateRoutes(log.WithSpanFromContext(context.Background(), ctx), deviceID, devicePorts, nniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+		if err := agent.updateRoutes(subCtx, deviceID, devicePorts, nniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
 			logger.Infow(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": nniPort.OfpPort.PortNo, "error": err})
@@ -351,7 +364,7 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 // (true, nil).   If the device is not in the correct state it will return (false, nil) as this is a valid
 // scenario. This also applies to the case where the port was already added.
 func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID string, deviceAdminState voltha.AdminState_Types, deviceOperStatus voltha.OperStatus_Types, devicePorts map[uint32]*voltha.Port, port *voltha.Port) error {
-	logger.Debugw(ctx, "addUNILogicalPort", log.Fields{"port": port})
+	logger.Debugw(ctx, "add-uni-logical-port", log.Fields{"port": port})
 	if deviceAdminState != voltha.AdminState_ENABLED || deviceOperStatus != voltha.OperStatus_ACTIVE {
 		logger.Infow(ctx, "device-not-ready", log.Fields{"device-id": deviceID, "admin": deviceAdminState, "oper": deviceOperStatus})
 		return nil
@@ -384,16 +397,17 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 
 	// Setup the routes for this device and then send the port update event to the OF Controller
 	go func() {
-		ctx = log.WithSpanFromContext(context.Background(), ctx)
+		subCtx := log.WithSpanFromContext(context.Background(), ctx)
+		subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 		// First setup the routes
-		if err := agent.updateRoutes(ctx, deviceID, devicePorts, uniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
+		if err := agent.updateRoutes(subCtx, deviceID, devicePorts, uniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
 			logger.Infow(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": uniPort.OfpPort.PortNo, "error": err})
 		}
 
 		// send event, and allow any queued events to be sent as well
-		queuePosition.send(ctx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
+		queuePosition.send(subCtx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
 	}()
 	return nil
 }
@@ -414,7 +428,9 @@ func (e *orderedEvents) waitForAllEventsToBeSent(ctx context.Context, cancel con
 // send is a convenience to avoid calling both assignQueuePosition and qp.send
 func (e *orderedEvents) send(ctx context.Context, agent *LogicalAgent, deviceID string, reason ofp.OfpPortReason, desc *ofp.OfpPort) {
 	qp := e.assignQueuePosition()
-	go qp.send(log.WithSpanFromContext(context.Background(), ctx), agent, deviceID, reason, desc)
+	subCtx := log.WithSpanFromContext(context.Background(), ctx)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+	go qp.send(subCtx, agent, deviceID, reason, desc)
 }
 
 // sendCompletion will make sure that given channel is notified when queue is empty

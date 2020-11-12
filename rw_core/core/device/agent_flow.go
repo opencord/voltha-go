@@ -78,7 +78,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 				flowsToAdd = append(flowsToAdd, flow)
 			} else {
 				//No need to change the flow. It is already exist.
-				logger.Debugw(ctx, "No-need-to-change-already-existing-flow", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
+				logger.Debugw(ctx, "no-need-to-change-already-existing-flow", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
 			}
 		}
 		flowHandle.Unlock()
@@ -92,6 +92,8 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 
 	// Send update to adapters
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
 
@@ -151,6 +153,8 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 
 	// Send update to adapters
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	response := coreutils.NewResponse()
 	if !dType.AcceptsAddRemoveFlowUpdates {
 
@@ -182,7 +186,7 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 }
 
 func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
-	logger.Debugw(ctx, "updateFlowsToAdapter", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
+	logger.Debugw(ctx, "update-flows-to-adapter", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
 
 	if (len(updatedFlows)) == 0 {
 		logger.Debugw(ctx, "nothing-to-update", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
@@ -218,6 +222,8 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	}
 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
 	response := coreutils.NewResponse()
 	// Process bulk flow update differently than incremental update
 	if !dType.AcceptsAddRemoveFlowUpdates {
