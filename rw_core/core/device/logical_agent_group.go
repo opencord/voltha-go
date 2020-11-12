@@ -19,6 +19,7 @@ package device
 import (
 	"context"
 	"fmt"
+	"time"
 
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
@@ -92,6 +93,13 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 	go func() {
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
+			context := make(map[string]string)
+			context["rpc"] = coreutils.GetRPCNameFromContext(ctx)
+			context["group-id"] = string(groupMod.GroupId)
+			context["deviceRules"] = deviceRules.String()
+			go agent.ldeviceMgr.GetAndSendRPCEvent(ctx,
+				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			//TODO: Revert flow changes
 		}
 	}()
@@ -167,6 +175,13 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	go func() {
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
+			context := make(map[string]string)
+			context["rpc"] = coreutils.GetRPCNameFromContext(ctx)
+			context["group-id"] = string(groupMod.GroupId)
+			context["deviceRules"] = deviceRules.String()
+			go agent.ldeviceMgr.GetAndSendRPCEvent(ctx,
+				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			//TODO: Revert flow changes
 		}
 	}()
@@ -210,6 +225,13 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	go func() {
 		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
+			context := make(map[string]string)
+			context["rpc"] = coreutils.GetRPCNameFromContext(ctx)
+			context["group-id"] = string(groupMod.GroupId)
+			context["deviceRules"] = deviceRules.String()
+			go agent.ldeviceMgr.GetAndSendRPCEvent(ctx,
+				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			//TODO: Revert flow changes
 		}
 	}()

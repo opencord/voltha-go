@@ -18,11 +18,23 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
+
+var (
+	// RPCContextKey for keeping rpc name as metadata
+	rpcContextKey = contextKey("rpc")
 )
 
 // ResponseCallback is the function signature for callbacks to execute after a response is received.
@@ -125,4 +137,25 @@ func WaitForNilOrErrorResponses(timeout time.Duration, responses ...Response) []
 		return errors
 	}
 	return nil
+}
+
+func SetRPCMetadataInContext(ctx context.Context, rpcName string) context.Context {
+	ctx = context.WithValue(ctx, rpcContextKey, rpcName)
+	return ctx
+}
+
+func GetRPCNameFromContext(ctx context.Context) string {
+	fmt.Println(ctx)
+	if val, ok := ctx.Value(rpcContextKey).(string); ok {
+		return val
+	}
+	return ""
+}
+
+func CopyRPCMetadadaFromContext(targetCtx, sourceCtx context.Context) context.Context {
+	fmt.Println(sourceCtx)
+	if val, ok := sourceCtx.Value(rpcContextKey).(string); ok {
+		targetCtx = context.WithValue(targetCtx, rpcContextKey, val)
+	}
+	return targetCtx
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/api"
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	conf "github.com/opencord/voltha-lib-go/v4/pkg/config"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	grpcserver "github.com/opencord/voltha-lib-go/v4/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
@@ -111,6 +112,25 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	)
 	// defer kafkaClient.Stop()
 
+	// create kafka client for events
+	kafkaClientEvent := kafka.NewSaramaClient(
+		kafka.Address(cf.KafkaClusterAddress),
+		kafka.ProducerReturnOnErrors(true),
+		kafka.ProducerReturnOnSuccess(true),
+		kafka.ProducerMaxRetries(6),
+		kafka.ProducerRetryBackoff(time.Millisecond*30),
+		kafka.AutoCreateTopic(true),
+		kafka.MetadatMaxRetries(15),
+	)
+	// create event proxy
+	eventProxy := events.NewEventProxy(events.MsgClient(kafkaClientEvent), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
+	if err := kafkaClientEvent.Start(ctx); err != nil {
+		logger.Warn(ctx, "Failed to setup kafka connection on kafka cluster address")
+		return
+	}
+
+	defer kafkaClientEvent.Stop(ctx)
+
 	// create kv path
 	dbPath := model.NewDBPath(backend)
 
@@ -130,7 +150,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout, eventProxy)
 
 	// register kafka RPC handler
 	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf.CoreTopic)

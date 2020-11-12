@@ -236,7 +236,7 @@ func (agent *Agent) onFailure(ctx context.Context, rpc string, response interfac
 	// TODO: Post failure message onto kafka
 }
 
-func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+func (agent *Agent) waitForAdapterForceDeleteResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
 	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
 	defer cancel()
 	select {
@@ -283,19 +283,31 @@ func (agent *Agent) onDeleteFailure(ctx context.Context, rpc string, response in
 
 }
 
-func (agent *Agent) waitForAdapterDeleteResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
+func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
 	onSuccess coreutils.ResponseCallback, onFailure coreutils.ResponseCallback, reqArgs ...interface{}) {
 	defer cancel()
+	var rpce *voltha.RPCEvent
+	defer func() {
+		if rpce != nil {
+			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+	}()
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, "Response Channel Closed", nil)
 			onFailure(ctx, rpc, status.Errorf(codes.Aborted, "channel-closed"), reqArgs)
+			//add failure
 		} else if rpcResponse.Err != nil {
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, rpcResponse.Err.Error(), nil)
 			onFailure(ctx, rpc, rpcResponse.Err, reqArgs)
+			//add failure
 		} else {
 			onSuccess(ctx, rpc, rpcResponse.Reply, reqArgs)
 		}
 	case <-ctx.Done():
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, ctx.Err().Error(), nil)
 		onFailure(ctx, rpc, ctx.Err(), reqArgs)
 	}
 }
@@ -360,6 +372,8 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	// Adopt the device if it was in pre-provision state.  In all other cases, try to re-enable it.
 	var ch chan *kafka.RpcResponse
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	if oldDevice.AdminState == voltha.AdminState_PREPROVISIONED {
 		ch, err = agent.adapterProxy.AdoptDevice(subCtx, newDevice)
 	} else {
@@ -374,18 +388,30 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	return nil
 }
 
-func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, ch chan *kafka.RpcResponse, response coreutils.Response) {
+func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse, response coreutils.Response) {
 	defer cancel()
+	var rpce *voltha.RPCEvent
+	defer func() {
+		if rpce != nil {
+			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+	}()
 	select {
 	case rpcResponse, ok := <-ch:
 		if !ok {
+			//add failure
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, "Response Channel Closed", nil)
 			response.Error(status.Errorf(codes.Aborted, "channel-closed"))
 		} else if rpcResponse.Err != nil {
+			//add failure
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, rpcResponse.Err.Error(), nil)
 			response.Error(rpcResponse.Err)
 		} else {
 			response.Done()
 		}
 	case <-ctx.Done():
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, ctx.Err().Error(), nil)
 		response.Error(ctx.Err())
 	}
 }
@@ -476,6 +502,8 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	}
 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.DisableDevice(subCtx, cloned)
 	if err != nil {
 		cancel()
@@ -498,6 +526,8 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device deletion is in progress.", agent.deviceID)
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.RebootDevice(subCtx, device)
 	if err != nil {
 		cancel()
@@ -521,20 +551,22 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 			agent.deviceID)
 	}
 	device := agent.cloneDeviceWithoutLock()
-	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, voltha.DeviceTransientState_FORCE_DELETING,
-		previousDeviceTransientState); err != nil {
+	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device,
+		voltha.DeviceTransientState_FORCE_DELETING, previousDeviceTransientState); err != nil {
 		return err
 	}
 	previousAdminState := device.AdminState
 	if previousAdminState != ic.AdminState_PREPROVISIONED {
 		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 		ch, err := agent.adapterProxy.DeleteDevice(subCtx, device)
 		if err != nil {
 			cancel()
 			return err
 		}
 		// Since it is a case of force delete, nothing needs to be done on adapter responses.
-		go agent.waitForAdapterResponse(subCtx, cancel, "deleteDeviceForce", ch, agent.onSuccess,
+		go agent.waitForAdapterForceDeleteResponse(subCtx, cancel, "deleteDeviceForce", ch, agent.onSuccess,
 			agent.onFailure)
 	}
 	return nil
@@ -561,14 +593,16 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 		// Change the state to DELETING POST ADAPTER RESPONSE directly as adapters have no info of the device.
 		currentDeviceTransientState = voltha.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
 	}
-	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device, currentDeviceTransientState,
-		previousDeviceTransientState); err != nil {
+	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device,
+		currentDeviceTransientState, previousDeviceTransientState); err != nil {
 		return err
 	}
 	// If the device was in pre-prov state (only parent device are in that state) then do not send the request to the
 	// adapter
 	if previousAdminState != ic.AdminState_PREPROVISIONED {
 		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+		subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 		ch, err := agent.adapterProxy.DeleteDevice(subCtx, device)
 		if err != nil {
 			cancel()
@@ -578,7 +612,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 			}
 			return err
 		}
-		go agent.waitForAdapterDeleteResponse(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
+		go agent.waitForAdapterResponse(subCtx, cancel, "deleteDevice", ch, agent.onDeleteSuccess,
 			agent.onDeleteFailure)
 	}
 	return nil
@@ -651,6 +685,8 @@ func (agent *Agent) packetOut(ctx context.Context, outPort uint32, packet *ofp.O
 	}
 	//	Send packet to adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.PacketOut(subCtx, agent.deviceType, agent.deviceID, outPort, packet)
 	if err != nil {
 		cancel()
@@ -746,6 +782,8 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 	device := agent.getDeviceReadOnlyWithoutLock()
 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.SimulateAlarm(subCtx, device, simulateReq)
 	if err != nil {
 		cancel()
@@ -777,10 +815,17 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
+	subCtx := log.WithSpanFromContext(context.Background(), ctx)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
 
-	if err := agent.deviceMgr.stateTransitions.ProcessTransition(log.WithSpanFromContext(context.Background(), ctx),
+	if err := agent.deviceMgr.stateTransitions.ProcessTransition(subCtx,
 		device, prevDevice, voltha.DeviceTransientState_NONE, voltha.DeviceTransientState_NONE); err != nil {
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": prevDevice.AdminState, "currentAdminState": device.AdminState})
+		// Sending RPC EVENT here
+		rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
+		go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
+			nil, time.Now().UnixNano())
+
 	}
 	return nil
 }
@@ -817,10 +862,15 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
-
-	if err := agent.deviceMgr.stateTransitions.ProcessTransition(log.WithSpanFromContext(context.Background(), ctx),
+	subCtx := log.WithSpanFromContext(context.Background(), ctx)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+	if err := agent.deviceMgr.stateTransitions.ProcessTransition(subCtx,
 		device, prevDevice, transientState, prevTransientState); err != nil {
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previousAdminState": prevDevice.AdminState, "currentAdminState": device.AdminState})
+		// Sending RPC EVENT here
+		rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
+		go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
+			nil, time.Now().UnixNano())
 	}
 	return nil
 }
@@ -860,6 +910,8 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 
 	//send request to adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.CopyRPCMetadadaFromContext(subCtx, ctx)
+
 	ch, err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
 	if err != nil {
 		cancel()

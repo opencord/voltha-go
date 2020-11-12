@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package common
+package events
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/opencord/voltha-lib-go/v4/pkg/adapters/adapterif"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events/eventif"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
@@ -63,9 +63,9 @@ func (ep *EventProxy) formatId(eventName string) string {
 }
 
 func (ep *EventProxy) getEventHeader(eventName string,
-	category adapterif.EventCategory,
-	subCategory adapterif.EventSubCategory,
-	eventType adapterif.EventType,
+	category eventif.EventCategory,
+	subCategory *eventif.EventSubCategory,
+	eventType eventif.EventType,
 	raisedTs int64) (*voltha.EventHeader, error) {
 	var header voltha.EventHeader
 	if strings.Contains(eventName, "_") {
@@ -76,9 +76,11 @@ func (ep *EventProxy) getEventHeader(eventName string,
 	/* Populating event header */
 	header.Id = ep.formatId(eventName)
 	header.Category = category
-	header.SubCategory = subCategory
+	if subCategory != nil {
+		header.SubCategory = *subCategory
+	}
 	header.Type = eventType
-	header.TypeVersion = adapterif.EventTypeVersion
+	header.TypeVersion = eventif.EventTypeVersion
 
 	// raisedTs is in nanoseconds
 	timestamp, err := ptypes.TimestampProto(time.Unix(0, raisedTs))
@@ -96,8 +98,33 @@ func (ep *EventProxy) getEventHeader(eventName string,
 	return &header, nil
 }
 
+/* Send out rpc events*/
+func (ep *EventProxy) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent, category eventif.EventCategory, subCategory *eventif.EventSubCategory, raisedTs int64) error {
+	if rpcEvent == nil {
+		logger.Error(ctx, "Received empty rpc event")
+		return errors.New("rpc event nil")
+	}
+	var event voltha.Event
+	var err error
+	if event.Header, err = ep.getEventHeader(id, category, subCategory, voltha.EventType_RPC_EVENT, raisedTs); err != nil {
+		return err
+	}
+	event.EventType = &voltha.Event_RpcEvent{RpcEvent: rpcEvent}
+	if err := ep.sendEvent(ctx, &event); err != nil {
+		logger.Errorw(ctx, "Failed to send rpc event to KAFKA bus", log.Fields{"rpc-event": rpcEvent})
+		return err
+	}
+	logger.Debugw(ctx, "Successfully sent RPC event to KAFKA bus", log.Fields{"Id": event.Header.Id, "Category": event.Header.Category,
+		"SubCategory": event.Header.SubCategory, "Type": event.Header.Type, "TypeVersion": event.Header.TypeVersion,
+		"ReportedTs": event.Header.ReportedTs, "ResourceId": rpcEvent.ResourceId, "Context": rpcEvent.Context,
+		"RPCEventName": id})
+
+	return nil
+
+}
+
 /* Send out device events*/
-func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.DeviceEvent, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
+func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.DeviceEvent, category eventif.EventCategory, subCategory eventif.EventSubCategory, raisedTs int64) error {
 	if deviceEvent == nil {
 		logger.Error(ctx, "Recieved empty device event")
 		return errors.New("Device event nil")
@@ -106,7 +133,7 @@ func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.D
 	var de voltha.Event_DeviceEvent
 	var err error
 	de.DeviceEvent = deviceEvent
-	if event.Header, err = ep.getEventHeader(deviceEvent.DeviceEventName, category, subCategory, voltha.EventType_DEVICE_EVENT, raisedTs); err != nil {
+	if event.Header, err = ep.getEventHeader(deviceEvent.DeviceEventName, category, &subCategory, voltha.EventType_DEVICE_EVENT, raisedTs); err != nil {
 		return err
 	}
 	event.EventType = &de
@@ -124,7 +151,7 @@ func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.D
 }
 
 // SendKpiEvent is to send kpi events to voltha.event topic
-func (ep *EventProxy) SendKpiEvent(ctx context.Context, id string, kpiEvent *voltha.KpiEvent2, category adapterif.EventCategory, subCategory adapterif.EventSubCategory, raisedTs int64) error {
+func (ep *EventProxy) SendKpiEvent(ctx context.Context, id string, kpiEvent *voltha.KpiEvent2, category eventif.EventCategory, subCategory eventif.EventSubCategory, raisedTs int64) error {
 	if kpiEvent == nil {
 		logger.Error(ctx, "Recieved empty kpi event")
 		return errors.New("KPI event nil")
@@ -133,7 +160,7 @@ func (ep *EventProxy) SendKpiEvent(ctx context.Context, id string, kpiEvent *vol
 	var de voltha.Event_KpiEvent2
 	var err error
 	de.KpiEvent2 = kpiEvent
-	if event.Header, err = ep.getEventHeader(id, category, subCategory, voltha.EventType_KPI_EVENT2, raisedTs); err != nil {
+	if event.Header, err = ep.getEventHeader(id, category, &subCategory, voltha.EventType_KPI_EVENT2, raisedTs); err != nil {
 		return err
 	}
 	event.EventType = &de
@@ -149,9 +176,8 @@ func (ep *EventProxy) SendKpiEvent(ctx context.Context, id string, kpiEvent *vol
 
 }
 
-/* TODO: Send out KPI events*/
-
 func (ep *EventProxy) sendEvent(ctx context.Context, event *voltha.Event) error {
+	logger.Debugw(ctx, "Send event to kafka", log.Fields{"event": event})
 	if err := ep.kafkaClient.Send(ctx, event, &ep.eventTopic); err != nil {
 		return err
 	}
