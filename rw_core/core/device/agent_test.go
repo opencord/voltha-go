@@ -35,6 +35,7 @@ import (
 	tst "github.com/opencord/voltha-go/rw_core/test"
 	com "github.com/opencord/voltha-lib-go/v4/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v4/pkg/db"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	mock_etcd "github.com/opencord/voltha-lib-go/v4/pkg/mocks/etcd"
@@ -52,6 +53,7 @@ type DATest struct {
 	adapterMgr       *adapter.Manager
 	kmp              kafka.InterContainerProxy
 	kClient          kafka.Client
+	kEventClient     kafka.Client
 	kvClientPort     int
 	oltAdapter       *cm.OLTAdapter
 	onuAdapter       *cm.ONUAdapter
@@ -75,6 +77,7 @@ func newDATest(ctx context.Context) *DATest {
 	}
 	// Create the kafka client
 	test.kClient = mock_kafka.NewKafkaClient()
+	test.kEventClient = mock_kafka.NewKafkaClient()
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-da-test"
@@ -100,7 +103,6 @@ func newDATest(ctx context.Context) *DATest {
 		},
 		AdminState:    voltha.AdminState_PREPROVISIONED,
 		OperStatus:    voltha.OperStatus_UNKNOWN,
-		Reason:        "All good",
 		ConnectStatus: voltha.ConnectStatus_UNKNOWN,
 		Custom:        nil,
 	}
@@ -116,6 +118,7 @@ func newDATest(ctx context.Context) *DATest {
 func (dat *DATest) startCore(ctx context.Context) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
+	cfg.EventTopic = "voltha.events"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(dat.kvClientPort)
 	grpcPort, err := freeport.GetFreePort()
@@ -138,8 +141,8 @@ func (dat *DATest) startCore(ctx context.Context) {
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
 	dat.adapterMgr = adapter.NewAdapterManager(ctx, proxy, dat.coreInstanceID, dat.kClient)
-
-	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	eventProxy := events.NewEventProxy(events.MsgClient(dat.kEventClient), events.MsgTopic(kafka.Topic{Name: cfg.EventTopic}))
+	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout, eventProxy)
 	dat.adapterMgr.Start(context.Background())
 	if err = dat.kmp.Start(ctx); err != nil {
 		logger.Fatal(ctx, "Cannot start InterContainerProxy")
@@ -160,6 +163,9 @@ func (dat *DATest) stopAll(ctx context.Context) {
 	}
 	if dat.etcdServer != nil {
 		tst.StopEmbeddedEtcdServer(ctx, dat.etcdServer)
+	}
+	if dat.kEventClient != nil {
+		dat.kEventClient.Stop(ctx)
 	}
 }
 
@@ -193,7 +199,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		serialNumber = com.GetRandomSerialNumber()
 		macAddress   = strings.ToUpper(com.GetRandomMacAddress())
 		vlan         = rand.Uint32()
-		reason       = "testing concurrent device update"
 		portToAdd    = &voltha.Port{PortNo: 101, Label: "uni-101", Type: voltha.Port_ETHERNET_UNI, AdminState: voltha.AdminState_ENABLED,
 			OperStatus: voltha.OperStatus_ACTIVE}
 	)
@@ -206,7 +211,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		deviceToUpdate.SerialNumber = serialNumber
 		deviceToUpdate.MacAddress = macAddress
 		deviceToUpdate.Vlan = vlan
-		deviceToUpdate.Reason = reason
 		err := da.updateDeviceUsingAdapterData(context.Background(), deviceToUpdate)
 		assert.Nil(t, err)
 		localWG.Done()
@@ -240,7 +244,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 	expectedChange.SerialNumber = serialNumber
 	expectedChange.MacAddress = macAddress
 	expectedChange.Vlan = vlan
-	expectedChange.Reason = reason
 
 	updatedDevice, _ := da.getDeviceReadOnly(context.Background())
 	updatedDevicePorts := da.listDevicePorts()

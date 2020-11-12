@@ -32,6 +32,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
 	"github.com/opencord/voltha-protos/v4/go/extension"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"google.golang.org/grpc"
 )
 
@@ -111,6 +112,22 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	)
 	// defer kafkaClient.Stop()
 
+	// create kafka client for events
+	kafkaClientEvent := kafka.NewSaramaClient(
+		kafka.Address(cf.KafkaClusterAddress),
+		kafka.ProducerReturnOnErrors(true),
+		kafka.ProducerReturnOnSuccess(true),
+		kafka.ProducerMaxRetries(6),
+		kafka.ProducerRetryBackoff(time.Millisecond*30),
+		kafka.AutoCreateTopic(true),
+		kafka.MetadatMaxRetries(15),
+	)
+	// create event proxy
+	eventProxy := events.NewEventProxy(events.MsgClient(kafkaClientEvent), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
+	kafkaClientEvent.Start(ctx)
+
+	defer kafkaClientEvent.Stop(ctx)
+
 	// create kv path
 	dbPath := model.NewDBPath(backend)
 
@@ -128,9 +145,10 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	defer kmp.Stop(ctx)
 	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
 
+
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout, eventProxy)
 
 	// register kafka RPC handler
 	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf.CoreTopic)
