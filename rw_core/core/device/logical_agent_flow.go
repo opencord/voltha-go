@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
@@ -184,6 +185,12 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 						"groups":            groups,
 					})
 				}
+				context := make(map[string]string)
+				context["flow-id"] = string(flow.Id)
+				context["deviceRules"] = deviceRules.String()
+				_ = agent.ldeviceMgr.Manager.RPCEventManager.GetAndSendRPCEvent(ctx, "UpdateLogicalDeviceFlowTable",
+					agent.logicalDeviceID, "failed-to-add-flow", context, "RPC_ERROR_RAISE_EVENT",
+					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			}
 		}()
 	}
@@ -331,6 +338,11 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
 				logger.Errorw(ctx, "failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
+				context := make(map[string]string)
+				context["deviceRules"] = deviceRules.String()
+				_ = agent.ldeviceMgr.Manager.RPCEventManager.GetAndSendRPCEvent(ctx, "UpdateLogicalDeviceFlowTable",
+					agent.logicalDeviceID, "failed-to-update-device-flows", context, "RPC_ERROR_RAISE_EVENT",
+					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 				// TODO: Revert the flow deletion
 			}
 		}()
@@ -409,6 +421,13 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, mod *ofp.OfpFlo
 				"logical-device-id": agent.logicalDeviceID,
 				"errors":            res,
 			})
+			context := make(map[string]string)
+			context["flow-id"] = string(flow.Id)
+			context["deviceRules"] = deviceRules.String()
+			// Create context and send extra information as part of it.
+			_ = agent.ldeviceMgr.Manager.RPCEventManager.GetAndSendRPCEvent(ctx, "UpdateLogicalDeviceFlowTable",
+				agent.logicalDeviceID, "failed-to-delete-device-flows", context, "RPC_ERROR_RAISE_EVENT",
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			//TODO: Revert flow changes
 		}
 	}()

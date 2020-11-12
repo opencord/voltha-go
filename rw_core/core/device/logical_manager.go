@@ -548,6 +548,8 @@ loop:
 
 		if err != nil {
 			logger.Errorw(ctx, "Failed to receive packet out", log.Fields{"error": err})
+			rpce := ldMgr.Manager.RPCEventManager.NewRPCEvent(ctx, "StreamPacketsOut", packet.Id, err.Error(), nil)
+			_ = ldMgr.Manager.RPCEventManager.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			continue
 		}
 
