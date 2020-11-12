@@ -101,7 +101,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel,"addFlowsToAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: flowsToAdd},
@@ -117,7 +117,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "addFlowsToAdapter", rpcResponse, response)
 	}
 	return response, nil
 }
@@ -160,7 +160,7 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteFlowsFromAdapter", rpcResponse, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
 			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
@@ -176,7 +176,7 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "deleteFlowsFromAdapter", rpcResponse, response)
 	}
 	return response, nil
 }
@@ -227,7 +227,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateFlowsToAdapter", rpcResponse, response)
 	} else {
 		logger.Debugw(ctx, "updating-flows-and-groups",
 			log.Fields{
@@ -256,7 +256,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 			cancel()
 			return coreutils.DoneResponse(), err
 		}
-		go agent.waitForAdapterFlowResponse(subCtx, cancel, rpcResponse, response)
+		go agent.waitForAdapterFlowResponse(subCtx, cancel, "updateFlowsToAdapter", rpcResponse, response)
 	}
 
 	return response, nil
