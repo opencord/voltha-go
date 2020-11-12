@@ -35,6 +35,7 @@ import (
 	tst "github.com/opencord/voltha-go/rw_core/test"
 	com "github.com/opencord/voltha-lib-go/v4/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v4/pkg/db"
+	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	mock_etcd "github.com/opencord/voltha-lib-go/v4/pkg/mocks/etcd"
@@ -52,6 +53,7 @@ type DATest struct {
 	adapterMgr       *adapter.Manager
 	kmp              kafka.InterContainerProxy
 	kClient          kafka.Client
+	kEventClient     kafka.Client
 	kvClientPort     int
 	oltAdapter       *cm.OLTAdapter
 	onuAdapter       *cm.ONUAdapter
@@ -75,6 +77,7 @@ func newDATest(ctx context.Context) *DATest {
 	}
 	// Create the kafka client
 	test.kClient = mock_kafka.NewKafkaClient()
+	test.kEventClient = mock_kafka.NewKafkaClient()
 	test.oltAdapterName = "olt_adapter_mock"
 	test.onuAdapterName = "onu_adapter_mock"
 	test.coreInstanceID = "rw-da-test"
@@ -116,6 +119,7 @@ func newDATest(ctx context.Context) *DATest {
 func (dat *DATest) startCore(ctx context.Context) {
 	cfg := config.NewRWCoreFlags()
 	cfg.CoreTopic = "rw_core"
+	cfg.EventTopic = "voltha.events"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(dat.kvClientPort)
 	grpcPort, err := freeport.GetFreePort()
@@ -138,8 +142,8 @@ func (dat *DATest) startCore(ctx context.Context) {
 	endpointMgr := kafka.NewEndpointManager(backend)
 	proxy := model.NewDBPath(backend)
 	dat.adapterMgr = adapter.NewAdapterManager(ctx, proxy, dat.coreInstanceID, dat.kClient)
-
-	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout)
+	eventProxy := events.NewEventProxy(events.MsgClient(dat.kEventClient), events.MsgTopic(kafka.Topic{Name: cfg.EventTopic}))
+	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, dat.kmp, endpointMgr, cfg.CoreTopic, dat.coreInstanceID, cfg.DefaultCoreTimeout, eventProxy)
 	dat.adapterMgr.Start(context.Background())
 	if err = dat.kmp.Start(ctx); err != nil {
 		logger.Fatal(ctx, "Cannot start InterContainerProxy")
@@ -160,6 +164,9 @@ func (dat *DATest) stopAll(ctx context.Context) {
 	}
 	if dat.etcdServer != nil {
 		tst.StopEmbeddedEtcdServer(ctx, dat.etcdServer)
+	}
+	if dat.kEventClient != nil {
+		dat.kEventClient.Stop(ctx)
 	}
 }
 
@@ -291,7 +298,7 @@ func TestFlowUpdates(t *testing.T) {
 	assert.Nil(t, err1)
 	cloned := a.cloneDeviceWithoutLock()
 	cloned.AdminState, cloned.ConnectStatus, cloned.OperStatus = voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE
-	err2 := a.updateDeviceAndReleaseLock(ctx, cloned)
+	err2 := a.updateDeviceAndReleaseLock(ctx, cloned, "")
 	assert.Nil(t, err2)
 	da.testFlowAddDeletes(t, a)
 }
@@ -310,7 +317,7 @@ func TestGroupUpdates(t *testing.T) {
 	assert.Nil(t, err1)
 	cloned := a.cloneDeviceWithoutLock()
 	cloned.AdminState, cloned.ConnectStatus, cloned.OperStatus = voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE
-	err2 := a.updateDeviceAndReleaseLock(ctx, cloned)
+	err2 := a.updateDeviceAndReleaseLock(ctx, cloned, "")
 	assert.Nil(t, err2)
 	da.testGroupAddDeletes(t, a)
 }

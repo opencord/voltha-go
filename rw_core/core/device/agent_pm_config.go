@@ -35,7 +35,7 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	cloned := agent.cloneDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 	// Store the device
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+	if err := agent.updateDeviceAndReleaseLock(ctx, cloned, "UpdateDevicePmConfigs"); err != nil {
 		return err
 	}
 	// Send the request to the adapter
@@ -57,7 +57,7 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 
 	cloned := agent.cloneDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	return agent.updateDeviceAndReleaseLock(ctx, cloned, "InitPmConfigs")
 }
 
 func (agent *Agent) listPmConfigs(ctx context.Context) (*voltha.PmConfigs, error) {
