@@ -24,6 +24,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
+	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
@@ -136,8 +137,8 @@ func (rhp *AdapterRequestHandlerProxy) DeviceUpdate(ctx context.Context, args []
 		}
 	}
 	logger.Debugw(ctx, "DeviceUpdate", log.Fields{"device-id": device.Id, "transactionID": transactionID.Val})
-
-	if err := rhp.deviceMgr.UpdateDeviceUsingAdapterData(log.WithSpanFromContext(context.TODO(), ctx), device); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "DeviceUpdate")
+	if err := rhp.deviceMgr.UpdateDeviceUsingAdapterData(rpcCtx, device); err != nil {
 		logger.Debugw(ctx, "unable-to-update-device-using-adapter-data", log.Fields{"error": err})
 		return nil, err
 	}
@@ -187,8 +188,8 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevice(ctx context.Context, args 
 		}
 	}
 	logger.Debugw(ctx, "GetChildDevice", log.Fields{"parent-device-id": pID.Id, "args": args, "transactionID": transactionID.Val})
-
-	return rhp.deviceMgr.GetChildDevice(log.WithSpanFromContext(context.TODO(), ctx), pID.Id, serialNumber.Val, onuID.Val, parentPortNo.Val)
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "GetChildDevice")
+	return rhp.deviceMgr.GetChildDevice(rpcCtx, pID.Id, serialNumber.Val, onuID.Val, parentPortNo.Val)
 }
 
 // GetChildDeviceWithProxyAddress returns details of child device with proxy address
@@ -216,8 +217,8 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDeviceWithProxyAddress(ctx contex
 		}
 	}
 	logger.Debugw(ctx, "GetChildDeviceWithProxyAddress", log.Fields{"proxyAddress": proxyAddress, "transactionID": transactionID.Val})
-
-	return rhp.deviceMgr.GetChildDeviceWithProxyAddress(log.WithSpanFromContext(context.TODO(), ctx), proxyAddress)
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "GetChildDeviceWithProxyAddress")
+	return rhp.deviceMgr.GetChildDeviceWithProxyAddress(rpcCtx, proxyAddress)
 }
 
 // GetPorts returns the ports information of the device based on the port type.
@@ -251,7 +252,8 @@ func (rhp *AdapterRequestHandlerProxy) GetPorts(ctx context.Context, args []*ic.
 	}
 	logger.Debugw(ctx, "GetPorts", log.Fields{"device-id": deviceID.Id, "portype": pt.Val, "transactionID": transactionID.Val})
 
-	return rhp.deviceMgr.GetPorts(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.Port_PortType(pt.Val))
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "GetPorts")
+	return rhp.deviceMgr.GetPorts(rpcCtx, deviceID.Id, voltha.Port_PortType(pt.Val))
 }
 
 // GetChildDevices gets all the child device IDs from the device passed as parameter
@@ -279,8 +281,9 @@ func (rhp *AdapterRequestHandlerProxy) GetChildDevices(ctx context.Context, args
 		}
 	}
 	logger.Debugw(ctx, "GetChildDevices", log.Fields{"device-id": pID.Id, "transactionID": transactionID.Val})
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "GetChildDevices")
 
-	return rhp.deviceMgr.GetAllChildDevices(log.WithSpanFromContext(context.TODO(), ctx), pID.Id)
+	return rhp.deviceMgr.GetAllChildDevices(rpcCtx, pID.Id)
 }
 
 // ChildDeviceDetected is invoked when a child device is detected.  The following parameters are expected:
@@ -348,7 +351,8 @@ func (rhp *AdapterRequestHandlerProxy) ChildDeviceDetected(ctx context.Context, 
 		"deviceType": dt.Val, "channelID": chnlID.Val, "serialNumber": serialNumber.Val,
 		"vendorID": vendorID.Val, "onuID": onuID.Val, "transactionID": transactionID.Val})
 
-	device, err := rhp.deviceMgr.ChildDeviceDetected(log.WithSpanFromContext(context.TODO(), ctx), pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "ChildDeviceDetected")
+	device, err := rhp.deviceMgr.ChildDeviceDetected(rpcCtx, pID.Id, portNo.Val, dt.Val, chnlID.Val, vendorID.Val, serialNumber.Val, onuID.Val)
 	if err != nil {
 		logger.Debugw(ctx, "child-detection-failed", log.Fields{"parent-device-id": pID.Id, "onuID": onuID.Val, "error": err})
 	}
@@ -393,7 +397,9 @@ func (rhp *AdapterRequestHandlerProxy) DeviceStateUpdate(ctx context.Context, ar
 	logger.Debugw(ctx, "DeviceStateUpdate", log.Fields{"device-id": deviceID.Id, "oper-status": operStatus,
 		"conn-status": connStatus, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.UpdateDeviceStatus(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "DeviceStateUpdate")
+
+	if err := rhp.deviceMgr.UpdateDeviceStatus(rpcCtx, deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
 		voltha.ConnectStatus_Types(connStatus.Val)); err != nil {
 		logger.Debugw(ctx, "unable-to-update-device-status", log.Fields{"error": err})
 		return nil, err
@@ -438,9 +444,9 @@ func (rhp *AdapterRequestHandlerProxy) ChildrenStateUpdate(ctx context.Context, 
 	}
 	logger.Debugw(ctx, "ChildrenStateUpdate", log.Fields{"device-id": deviceID.Id, "oper-status": operStatus,
 		"conn-status": connStatus, "transactionID": transactionID.Val})
-
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "ChildrenStateUpdate")
 	// When the enum is not set (i.e. -1), Go still convert to the Enum type with the value being -1
-	if err := rhp.deviceMgr.UpdateChildrenStatus(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
+	if err := rhp.deviceMgr.UpdateChildrenStatus(rpcCtx, deviceID.Id, voltha.OperStatus_Types(operStatus.Val),
 		voltha.ConnectStatus_Types(connStatus.Val)); err != nil {
 		logger.Debugw(ctx, "unable-to-update-children-status", log.Fields{"error": err})
 		return nil, err
@@ -484,8 +490,8 @@ func (rhp *AdapterRequestHandlerProxy) PortsStateUpdate(ctx context.Context, arg
 		}
 	}
 	logger.Debugw(ctx, "PortsStateUpdate", log.Fields{"device-id": deviceID.Id, "operStatus": operStatus, "transactionID": transactionID.Val})
-
-	if err := rhp.deviceMgr.UpdatePortsState(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, uint32(portTypeFilter.Val), voltha.OperStatus_Types(operStatus.Val)); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "PortsStateUpdate")
+	if err := rhp.deviceMgr.UpdatePortsState(rpcCtx, deviceID.Id, uint32(portTypeFilter.Val), voltha.OperStatus_Types(operStatus.Val)); err != nil {
 		logger.Debugw(ctx, "unable-to-update-ports-state", log.Fields{"error": err})
 		return nil, err
 	}
@@ -536,7 +542,9 @@ func (rhp *AdapterRequestHandlerProxy) PortStateUpdate(ctx context.Context, args
 	logger.Debugw(ctx, "PortStateUpdate", log.Fields{"device-id": deviceID.Id, "operStatus": operStatus,
 		"portType": portType, "portNo": portNo, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.UpdatePortState(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "PortStateUpdate")
+
+	if err := rhp.deviceMgr.UpdatePortState(rpcCtx, deviceID.Id, voltha.Port_PortType(portType.Val), uint32(portNo.Val),
 		voltha.OperStatus_Types(operStatus.Val)); err != nil {
 		// If the error doesn't change behavior and is essentially ignored, it is not an error, it is a
 		// warning.
@@ -571,8 +579,8 @@ func (rhp *AdapterRequestHandlerProxy) DeleteAllPorts(ctx context.Context, args 
 		}
 	}
 	logger.Debugw(ctx, "DeleteAllPorts", log.Fields{"device-id": deviceID.Id, "transactionID": transactionID.Val})
-
-	if err := rhp.deviceMgr.DeleteAllPorts(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "DeleteAllPorts")
+	if err := rhp.deviceMgr.DeleteAllPorts(rpcCtx, deviceID.Id); err != nil {
 		logger.Debugw(ctx, "unable-to-delete-ports", log.Fields{"error": err})
 		return nil, err
 	}
@@ -609,8 +617,9 @@ func (rhp *AdapterRequestHandlerProxy) GetDevicePort(ctx context.Context, args [
 		}
 	}
 	logger.Debugw(ctx, "GetDevicePort", log.Fields{"device-id": deviceID.Id, "portNo": portNo.Val, "transactionID": transactionID.Val})
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "GetDevicePort")
 
-	return rhp.deviceMgr.GetDevicePort(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, uint32(portNo.Val))
+	return rhp.deviceMgr.GetDevicePort(rpcCtx, deviceID.Id, uint32(portNo.Val))
 }
 
 // ListDevicePorts returns all ports belonging to the device
@@ -637,8 +646,8 @@ func (rhp *AdapterRequestHandlerProxy) ListDevicePorts(ctx context.Context, args
 		}
 	}
 	logger.Debugw(ctx, "ListDevicePorts", log.Fields{"device-id": deviceID.Id, "transactionID": transactionID.Val})
-
-	return rhp.deviceMgr.ListDevicePorts(log.WithSpanFromContext(context.TODO(), ctx), deviceID)
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "ListDevicePorts")
+	return rhp.deviceMgr.ListDevicePorts(rpcCtx, deviceID)
 }
 
 // ChildDevicesLost indicates that a parent device is in a state (Disabled) where it cannot manage the child devices.
@@ -667,7 +676,9 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesLost(ctx context.Context, arg
 	}
 	logger.Debugw(ctx, "ChildDevicesLost", log.Fields{"device-id": parentDeviceID.Id, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.ChildDevicesLost(log.WithSpanFromContext(context.TODO(), ctx), parentDeviceID.Id); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "ChildDevicesLost")
+
+	if err := rhp.deviceMgr.ChildDevicesLost(rpcCtx, parentDeviceID.Id); err != nil {
 		logger.Debugw(ctx, "unable-to-disable-child-devices", log.Fields{"error": err})
 		return nil, err
 	}
@@ -699,8 +710,9 @@ func (rhp *AdapterRequestHandlerProxy) ChildDevicesDetected(ctx context.Context,
 		}
 	}
 	logger.Debugw(ctx, "ChildDevicesDetected", log.Fields{"parent-device-id": parentDeviceID.Id, "transactionID": transactionID.Val})
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "ChildDevicesDetected")
 
-	if err := rhp.deviceMgr.ChildDevicesDetected(log.WithSpanFromContext(context.TODO(), ctx), parentDeviceID.Id); err != nil {
+	if err := rhp.deviceMgr.ChildDevicesDetected(rpcCtx, parentDeviceID.Id); err != nil {
 		logger.Debugw(ctx, "child-devices-detection-failed", log.Fields{"parent-device-id": parentDeviceID.Id, "error": err})
 		return nil, err
 	}
@@ -737,8 +749,9 @@ func (rhp *AdapterRequestHandlerProxy) PortCreated(ctx context.Context, args []*
 		}
 	}
 	logger.Debugw(ctx, "PortCreated", log.Fields{"device-id": deviceID.Id, "port": port, "transactionID": transactionID.Val})
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "PortCreated")
 
-	if err := rhp.deviceMgr.AddPort(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, port); err != nil {
+	if err := rhp.deviceMgr.AddPort(rpcCtx, deviceID.Id, port); err != nil {
 		logger.Debugw(ctx, "unable-to-add-port", log.Fields{"error": err})
 		return nil, err
 	}
@@ -770,8 +783,9 @@ func (rhp *AdapterRequestHandlerProxy) DevicePMConfigUpdate(ctx context.Context,
 	}
 	logger.Debugw(ctx, "DevicePMConfigUpdate", log.Fields{"device-id": pmConfigs.Id, "configs": pmConfigs,
 		"transactionID": transactionID.Val})
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "DevicePMConfigUpdate")
 
-	if err := rhp.deviceMgr.InitPmConfigs(log.WithSpanFromContext(context.TODO(), ctx), pmConfigs.Id, pmConfigs); err != nil {
+	if err := rhp.deviceMgr.InitPmConfigs(rpcCtx, pmConfigs.Id, pmConfigs); err != nil {
 		logger.Debugw(ctx, "unable-to-initialize-pm-configs", log.Fields{"error": err})
 		return nil, err
 	}
@@ -816,7 +830,9 @@ func (rhp *AdapterRequestHandlerProxy) PacketIn(ctx context.Context, args []*ic.
 	logger.Debugw(ctx, "PacketIn", log.Fields{"device-id": deviceID.Id, "port": portNo.Val, "packet": packet,
 		"transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.PacketIn(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "PacketIn")
+
+	if err := rhp.deviceMgr.PacketIn(rpcCtx, deviceID.Id, uint32(portNo.Val), transactionID.Val, packet.Payload); err != nil {
 		logger.Debugw(ctx, "unable-to-receive-packet-from-adapter", log.Fields{"error": err})
 		return nil, err
 
@@ -856,7 +872,9 @@ func (rhp *AdapterRequestHandlerProxy) UpdateImageDownload(ctx context.Context, 
 	logger.Debugw(ctx, "UpdateImageDownload", log.Fields{"device-id": deviceID.Id, "image-download": img,
 		"transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.UpdateImageDownload(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, img); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "UpdateImageDownload")
+
+	if err := rhp.deviceMgr.UpdateImageDownload(rpcCtx, deviceID.Id, img); err != nil {
 		logger.Debugw(ctx, "unable-to-update-image-download", log.Fields{"error": err})
 		return nil, err
 	}
@@ -888,7 +906,9 @@ func (rhp *AdapterRequestHandlerProxy) ReconcileChildDevices(ctx context.Context
 	}
 	logger.Debugw(ctx, "ReconcileChildDevices", log.Fields{"parent-device-id": parentDeviceID.Id, "transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.ReconcileChildDevices(log.WithSpanFromContext(context.TODO(), ctx), parentDeviceID.Id); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "ReconcileChildDevices")
+
+	if err := rhp.deviceMgr.ReconcileChildDevices(rpcCtx, parentDeviceID.Id); err != nil {
 		logger.Debugw(ctx, "unable-to-reconcile-child-devices", log.Fields{"error": err})
 		return nil, err
 	}
@@ -927,7 +947,9 @@ func (rhp *AdapterRequestHandlerProxy) DeviceReasonUpdate(ctx context.Context, a
 	logger.Debugw(ctx, "DeviceReasonUpdate", log.Fields{"device-id": deviceID.Id, "reason": reason.Val,
 		"transactionID": transactionID.Val})
 
-	if err := rhp.deviceMgr.UpdateDeviceReason(log.WithSpanFromContext(context.TODO(), ctx), deviceID.Id, reason.Val); err != nil {
+	rpcCtx := utils.SetRPCMetadataInContext(log.WithSpanFromContext(context.TODO(), ctx), "DeviceReasonUpdate")
+
+	if err := rhp.deviceMgr.UpdateDeviceReason(rpcCtx, deviceID.Id, reason.Val); err != nil {
 		logger.Debugw(ctx, "unable-to-update-device-reason", log.Fields{"error": err})
 		return nil, err
 

@@ -109,6 +109,8 @@ github.com/opencord/voltha-lib-go/v4/pkg/adapters/common
 github.com/opencord/voltha-lib-go/v4/pkg/config
 github.com/opencord/voltha-lib-go/v4/pkg/db
 github.com/opencord/voltha-lib-go/v4/pkg/db/kvstore
+github.com/opencord/voltha-lib-go/v4/pkg/events
+github.com/opencord/voltha-lib-go/v4/pkg/events/eventif
 github.com/opencord/voltha-lib-go/v4/pkg/flows
 github.com/opencord/voltha-lib-go/v4/pkg/grpc
 github.com/opencord/voltha-lib-go/v4/pkg/kafka
