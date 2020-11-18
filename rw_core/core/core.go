@@ -31,6 +31,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-protos/v4/go/extension"
 	"google.golang.org/grpc"
 )
 
@@ -136,6 +137,10 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 	// start gRPC handler
 	grpcServer := grpcserver.NewGrpcServer(cf.GrpcAddress, nil, false, probe.GetProbeFromContext(ctx))
+
+	//Register the 'Extension' service on this gRPC server
+	addGRPCExtensionService(ctx, grpcServer, device.GetNewExtensionManager(deviceMgr))
+
 	go startGRPCService(ctx, grpcServer, api.NewNBIHandler(deviceMgr, logicalDeviceMgr, adapterMgr))
 	defer grpcServer.Stop()
 
@@ -163,3 +168,13 @@ func startGRPCService(ctx context.Context, server *grpcserver.GrpcServer, handle
 	server.Start(ctx)
 	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
 }
+
+func addGRPCExtensionService(ctx context.Context, server *grpcserver.GrpcServer, handler extension.ExtensionServer) {
+	logger.Info(ctx, "extension-grpc-server-created")
+
+	server.AddService(func(server *grpc.Server) {
+		extension.RegisterExtensionServer(server, handler)
+	})
+
+}
+

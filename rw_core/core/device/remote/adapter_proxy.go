@@ -24,6 +24,7 @@ import (
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-protos/v4/go/extension"
 )
 
 // AdapterProxy represents adapter proxy attributes
@@ -473,4 +474,48 @@ func (ap *AdapterProxy) SetExtValue(ctx context.Context, device *voltha.Device, 
 	}
 	replyToTopic := ap.getCoreTopic()
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, value.Id, args...)
+}
+
+// GetSingleValue get a value from the adapter, based on the request type
+func (ap *AdapterProxy) GetSingleValue(ctx context.Context, adapterType string, request *extension.SingleGetValueRequest) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "GetSingleValue", log.Fields{"device-id": request.TargetId})
+	rpc := "single_get_value_request"
+	toTopic, err := ap.getAdapterTopic(ctx, request.TargetId, adapterType)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := []*kafka.KVArg{
+		{
+			Key:   "request",
+			Value: request,
+		},
+	}
+
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, request.TargetId, args...)
+}
+
+// SetSingleValue set a single value on the adapter, based on the request type
+func (ap *AdapterProxy) SetSingleValue(ctx context.Context, adapterType string, request *extension.SingleSetValueRequest) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "SetSingleValue", log.Fields{"device-id": request.TargetId})
+	rpc := "single_set_value_request"
+	toTopic, err := ap.getAdapterTopic(ctx, request.TargetId, adapterType)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use a device specific topic to send the request.  The adapter handling the device creates a device
+	// specific topic
+	args := []*kafka.KVArg{
+		{
+			Key:   "request",
+			Value: request,
+		},
+	}
+
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, request.TargetId, args...)
 }
