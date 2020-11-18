@@ -117,9 +117,10 @@ github.com/opencord/voltha-lib-go/v4/pkg/mocks/etcd
 github.com/opencord/voltha-lib-go/v4/pkg/mocks/kafka
 github.com/opencord/voltha-lib-go/v4/pkg/probe
 github.com/opencord/voltha-lib-go/v4/pkg/version
-# github.com/opencord/voltha-protos/v4 v4.0.2
+# github.com/opencord/voltha-protos/v4 v4.0.4-0.20201105070934-9f6af0eab9f9
 github.com/opencord/voltha-protos/v4/go/common
 github.com/opencord/voltha-protos/v4/go/ext/config
+github.com/opencord/voltha-protos/v4/go/extension
 github.com/opencord/voltha-protos/v4/go/inter_container
 github.com/opencord/voltha-protos/v4/go/omci
 github.com/opencord/voltha-protos/v4/go/openflow_13

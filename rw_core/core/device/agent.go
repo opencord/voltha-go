@@ -38,6 +38,7 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/extension"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
@@ -819,4 +820,90 @@ func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, valu
 	// Unmarshal and return the response
 	logger.Debug(ctx, "setExtValue-Success-device-agent")
 	return &empty.Empty{}, nil
+}
+
+func (agent *Agent) getSingleValue(ctx context.Context, request *extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
+	logger.Debugw(ctx, "getSingleValue", log.Fields{"device-id": request.TargetId})
+
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return nil, err
+	}
+
+	cloned := agent.cloneDeviceWithoutLock()
+
+	if cloned.Adapter == "" {
+		adapterName, err := agent.adapterMgr.GetAdapterType(cloned.Type)
+		if err != nil {
+			agent.requestQueue.RequestComplete()
+			return nil, err
+		}
+		cloned.Adapter = adapterName
+	}
+
+	//send request to adapter
+	ch, err := agent.adapterProxy.GetSingleValue(ctx, cloned.Adapter, request)
+	agent.requestQueue.RequestComplete()
+	if err != nil {
+		return nil, err
+	}
+
+	// Wait for the adapter response
+	rpcResponse, ok := <-ch
+	if !ok {
+		return nil, status.Errorf(codes.Aborted, "channel-closed-device-id-%s", agent.deviceID)
+	}
+
+	if rpcResponse.Err != nil {
+		return nil, rpcResponse.Err
+	}
+
+	resp := &extension.SingleGetValueResponse{}
+	if err := ptypes.UnmarshalAny(rpcResponse.Reply, resp); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+	}
+
+	return resp, nil
+}
+
+func (agent *Agent) setSingleValue(ctx context.Context, request *extension.SingleSetValueRequest) (*extension.SingleSetValueResponse, error) {
+	logger.Debugw(ctx, "setSingleValue", log.Fields{"device-id": request.TargetId})
+
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return nil, err
+	}
+
+	cloned := agent.cloneDeviceWithoutLock()
+
+	if cloned.Adapter == "" {
+		adapterName, err := agent.adapterMgr.GetAdapterType(cloned.Type)
+		if err != nil {
+			agent.requestQueue.RequestComplete()
+			return nil, err
+		}
+		cloned.Adapter = adapterName
+	}
+
+	//send request to adapter
+	ch, err := agent.adapterProxy.SetSingleValue(ctx, cloned.Adapter, request)
+	agent.requestQueue.RequestComplete()
+	if err != nil {
+		return nil, err
+	}
+
+	// Wait for the adapter response
+	rpcResponse, ok := <-ch
+	if !ok {
+		return nil, status.Errorf(codes.Aborted, "channel-closed-cloned-id-%s", agent.deviceID)
+	}
+
+	if rpcResponse.Err != nil {
+		return nil, rpcResponse.Err
+	}
+
+	resp := &extension.SingleSetValueResponse{}
+	if err := ptypes.UnmarshalAny(rpcResponse.Reply, resp); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
+	}
+
+	return resp, nil
 }
