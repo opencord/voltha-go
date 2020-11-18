@@ -120,6 +120,7 @@ github.com/opencord/voltha-lib-go/v4/pkg/version
 # github.com/opencord/voltha-protos/v4 v4.0.5
 github.com/opencord/voltha-protos/v4/go/common
 github.com/opencord/voltha-protos/v4/go/ext/config
+github.com/opencord/voltha-protos/v4/go/extension
 github.com/opencord/voltha-protos/v4/go/inter_container
 github.com/opencord/voltha-protos/v4/go/omci
 github.com/opencord/voltha-protos/v4/go/openflow_13
