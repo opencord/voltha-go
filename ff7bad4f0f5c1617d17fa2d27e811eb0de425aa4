@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b6402d7_fc5ae30a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T08:51:44Z",
+      "side": 1,
+      "message": "does this block here, thus blocking all remaining incoming requests on the channel until the response comes ?",
+      "revId": "ff7bad4f0f5c1617d17fa2d27e811eb0de425aa4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "395fc7e8_136a1cea",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T08:51:44Z",
+      "side": 1,
+      "message": "same",
+      "revId": "ff7bad4f0f5c1617d17fa2d27e811eb0de425aa4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
