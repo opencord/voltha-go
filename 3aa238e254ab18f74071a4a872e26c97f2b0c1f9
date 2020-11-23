@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72b0ca4c_4bb7c788",
+        "filename": "VERSION",
+        "patchSetId": 12
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-23T22:51:38Z",
+      "side": 1,
+      "message": "2.6.2-dev, since it\u0027s not a release yet.",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee6b6bad_3062ba0c",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-23T22:51:38Z",
+      "side": 1,
+      "message": "Is the final path /service/voltha/core/transientstate/\u003cdeviceID\u003e ?",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8a840ca_c1eaf583",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-23T22:51:38Z",
+      "side": 1,
+      "message": "The onSuccess and onFailure just logs right?",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9114195b_51024305",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-23T22:51:38Z",
+      "side": 1,
+      "message": "Should the not (!) be there?",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38d7dc17_b4aa95f7",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1239,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-23T22:51:38Z",
+      "side": 1,
+      "message": "Should default be false since force is being set to true further down?",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67bd4bf3_bb576957",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-23T22:51:38Z",
+      "side": 1,
+      "message": "nit: force \u003d agent.getTransientState() \u003d\u003d voltha.DeviceTransientState_FORCE_DELETING",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "537faef9_af9d2b43",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-11-23T22:51:38Z",
+      "side": 1,
+      "message": "2020?",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
