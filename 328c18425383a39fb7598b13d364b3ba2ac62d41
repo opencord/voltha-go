@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7327b066_c38227ed",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-11-24T16:38:56Z",
+      "side": 1,
+      "message": "This loader should probably go in the same location as the other loaders.\n\nIt should also be added to the loader_test.go file (in the device loader package iirc) this makes sure that the loaders are kept in sync.",
+      "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
