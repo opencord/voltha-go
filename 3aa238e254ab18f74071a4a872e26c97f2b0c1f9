@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "86dd3691_61604a2c",
+        "filename": "VERSION",
+        "patchSetId": 12
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-24T06:04:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "72b0ca4c_4bb7c788",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee6b6bad_3062ba0c",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 12
@@ -33,6 +51,24 @@
       "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f235d8f7_7d6cbef0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-24T06:04:52Z",
+      "side": 1,
+      "message": "Yes",
+      "parentUuid": "ee6b6bad_3062ba0c",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d1ffabc1_f8da5cbc",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-24T06:04:52Z",
+      "side": 1,
+      "message": "Yes.",
+      "parentUuid": "f8a840ca_c1eaf583",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9114195b_51024305",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 12
@@ -67,6 +121,24 @@
       "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6defac3_78e83442",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-24T06:04:52Z",
+      "side": 1,
+      "message": "Yes since isDeletioninProgress will give true if Deletion is in progress, and previously we are checking that admin state is not equal to DELETED.",
+      "parentUuid": "9114195b_51024305",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "5b77a609_9de91584",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1239,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-24T06:04:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "38d7dc17_b4aa95f7",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67bd4bf3_bb576957",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 12
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "2c799ce7_a42eacac",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-24T06:04:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "67bd4bf3_bb576957",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "537faef9_af9d2b43",
         "filename": "rw_core/core/device/transientstate/loader.go",
         "patchSetId": 12
@@ -118,6 +226,24 @@
       "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29a5b5a6_73267e1f",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-24T06:04:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "537faef9_af9d2b43",
+      "revId": "3aa238e254ab18f74071a4a872e26c97f2b0c1f9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
