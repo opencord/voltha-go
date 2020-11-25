@@ -88,6 +88,24 @@
       "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c899bb76_001a5231",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-11-25T19:02:44Z",
+      "side": 1,
+      "message": "Hm... fair enough.\n\nI agree that the lack of maps is particularly differentiating.",
+      "parentUuid": "4c04a148_3c236345",
+      "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
