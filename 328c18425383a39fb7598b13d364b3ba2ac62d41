@@ -16,6 +16,24 @@
       "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8efdbe67_36f4d5a2",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-25T05:49:12Z",
+      "side": 1,
+      "message": "The location for the loader is ok as loader for each component is in a different package. Only loader_test.go is under flow package to test all loaders are in sync. This loader is different from other loaders in the way that here the key is deviceId and path for storing transient state is /service/voltha/core/transientstate/\u003cdeviceID\u003e whereas for other loaders we know deviceID and the key is say flowID or groupID. So the struct for group and flows etc contain multiple fields along with key but here there is just one field. That is why I didnot add in the loader_test. Is there any specific reason we want to keep all loaders implemented in same way???",
+      "parentUuid": "7327b066_c38227ed",
+      "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
