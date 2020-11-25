@@ -70,6 +70,24 @@
       "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c04a148_3c236345",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-25T18:54:52Z",
+      "side": 1,
+      "message": "Went through the code for loader_test.go. I am not convinced to make it exactly same like other loaders. Basically the matching criteria is too much, for example, \n1. each chunk has an entry in the map in Loader struct, but in transient case, I am not using maps as there would be only 1 entry\n2. Matching all comments as well as copyrights(year may change or words may change and ignoring such cases and adding code for them does not sound worth to me\n3. Choice of variable names, we cannot add regular expression for change in each variable name, and same variable may or may not exist in the regexp array for different loaders at the same index.\n\nBasically I don\u0027t agree that we can have exactly same loaders. And to ignore such differences just to add them in the test cases, requires changes and I dont agree we should do it.",
+      "parentUuid": "df26a6b9_b4da1219",
+      "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
