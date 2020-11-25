@@ -34,6 +34,24 @@
       "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87ecef86_338feb8d",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-11-25T14:17:33Z",
+      "side": 1,
+      "message": "Having all loaders remain identical just makes it easier to maintain.\n\nAll loaders assume a \"\u003cpath\u003e + \u003ckey\u003e\" (using model.Proxy).  I don\u0027t understand why this one is different from the others, the key type is just different (which is already accounted for in loader_test.go).\n\nThe original plan was to have devices \u0026 logicalDevices use loaders as well, but I got pulled off to work on other things, so didn\u0027t complete this.",
+      "parentUuid": "8efdbe67_36f4d5a2",
+      "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
