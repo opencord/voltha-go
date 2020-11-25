@@ -52,6 +52,24 @@
       "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df26a6b9_b4da1219",
+        "filename": "rw_core/core/device/transientstate/loader.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-11-25T14:25:14Z",
+      "side": 1,
+      "message": "Let me go through all loaders and try to keep all in sync. I might be missing something in understanding.",
+      "parentUuid": "87ecef86_338feb8d",
+      "revId": "328c18425383a39fb7598b13d364b3ba2ac62d41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
