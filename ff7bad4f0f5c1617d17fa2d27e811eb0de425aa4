@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "acf5e229_4b0747dd",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2020-11-27T13:41:50Z",
+      "side": 1,
+      "message": "Hi, \nWe will be blocked while reading from the channel, but only after releasing the lock. So if there is any new rpc call at the same time from NB, that would be entertained in parallel(each rpc in a separate goroutine) \n\nSo all other incoming requests shall be entertained as well, without being blocked.",
+      "parentUuid": "6b6402d7_fc5ae30a",
+      "revId": "ff7bad4f0f5c1617d17fa2d27e811eb0de425aa4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "395fc7e8_136a1cea",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2020-11-23T08:51:44Z",
       "side": 1,
       "message": "same",
+      "revId": "ff7bad4f0f5c1617d17fa2d27e811eb0de425aa4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5ee79cb_253ef9bf",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2020-11-27T13:41:50Z",
+      "side": 1,
+      "message": "Same as above",
+      "parentUuid": "395fc7e8_136a1cea",
       "revId": "ff7bad4f0f5c1617d17fa2d27e811eb0de425aa4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
