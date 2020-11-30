@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "801e2eb6_709d787d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 794,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-11-30T20:14:35Z",
+      "side": 1,
+      "message": "nit: dashed",
+      "range": {
+        "startLine": 794,
+        "startChar": 21,
+        "endLine": 794,
+        "endChar": 41
+      },
+      "revId": "7d673bda3879d36b29a67ad3ff5001917e145b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6f1d103_5c485bcc",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-11-30T20:14:35Z",
+      "side": 1,
+      "message": "does it make sense to separate the error states so that the caller can differentiate between an invalid state v. in progress?",
+      "range": {
+        "startLine": 127,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 101
+      },
+      "revId": "7d673bda3879d36b29a67ad3ff5001917e145b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
