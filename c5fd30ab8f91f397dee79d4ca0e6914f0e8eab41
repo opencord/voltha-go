@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ce21a071_b5d44821",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2020-11-30T16:47:40Z",
+      "side": 1,
+      "message": "yes, the functions getExtValue and setExtValue are there for backward compatibility. They should be deprecated after those functionality are moved to the new interface",
+      "parentUuid": "169fb401_2db89f62",
+      "revId": "c5fd30ab8f91f397dee79d4ca0e6914f0e8eab41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2e8d8ec_6b503cf0",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e016b161_0e807b8b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2020-11-30T16:47:40Z",
+      "side": 1,
+      "message": "yes, the functions getExtValue and setExtValue are there for backward compatibility. They should be deprecated after those functionality are moved to the new interface",
+      "parentUuid": "b2e8d8ec_6b503cf0",
+      "revId": "c5fd30ab8f91f397dee79d4ca0e6914f0e8eab41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "48026e9a_fb34772f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2020-11-30T16:16:54Z",
       "side": 1,
       "message": "This seems like a repeatable code block.  May be beneficial to have a helper method \"getAdapterName(cloned)\".",
+      "revId": "c5fd30ab8f91f397dee79d4ca0e6914f0e8eab41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a1da71e_68cfefbd",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2020-11-30T16:47:40Z",
+      "side": 1,
+      "message": "Yes, thanks. Will do the required changes.",
+      "parentUuid": "48026e9a_fb34772f",
       "revId": "c5fd30ab8f91f397dee79d4ca0e6914f0e8eab41",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
