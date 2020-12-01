@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bfb5c1c6_26d69a3c",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 794,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-01T07:26:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "801e2eb6_709d787d",
+      "range": {
+        "startLine": 794,
+        "startChar": 21,
+        "endLine": 794,
+        "endChar": 41
+      },
+      "revId": "7d673bda3879d36b29a67ad3ff5001917e145b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6f1d103_5c485bcc",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 15
@@ -45,6 +69,30 @@
       "revId": "7d673bda3879d36b29a67ad3ff5001917e145b09",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51e3d655_7cdf3d74",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-01T07:26:39Z",
+      "side": 1,
+      "message": "yes because user can never know otherwise if deletion is in progress as we are maintaining it internally. If we say simply invalid admin state and user checks admin state and that could be valid for some operations.",
+      "parentUuid": "d6f1d103_5c485bcc",
+      "range": {
+        "startLine": 127,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 101
+      },
+      "revId": "7d673bda3879d36b29a67ad3ff5001917e145b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
