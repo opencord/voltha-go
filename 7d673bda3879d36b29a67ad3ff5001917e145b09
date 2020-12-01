@@ -93,6 +93,30 @@
       "revId": "7d673bda3879d36b29a67ad3ff5001917e145b09",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f20fa2fb_a9ca937d",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-01T07:47:29Z",
+      "side": 1,
+      "message": "No actually, sorry i missed the check, always device state will be invalid if this is true, hence we can report invald device state and ignore core transient state.",
+      "parentUuid": "51e3d655_7cdf3d74",
+      "range": {
+        "startLine": 127,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 101
+      },
+      "revId": "7d673bda3879d36b29a67ad3ff5001917e145b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
