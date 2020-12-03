@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "f043e58f_9cad3f1a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2020-12-03T15:57:27Z",
+      "side": 1,
+      "message": "The openolt-adapter is using it currently, we don\u0027t know whether anyone else is using",
+      "parentUuid": "dfa7d254_19dfd5ae",
+      "revId": "c5fd30ab8f91f397dee79d4ca0e6914f0e8eab41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2e8d8ec_6b503cf0",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 3
