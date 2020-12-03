@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a410a96a_248af0e9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-03T15:18:51Z",
+      "side": 1,
+      "message": "nit:  This would be clearer with: \"if adapterName, err :\u003d agent.getAdapterName(cloned); err !\u003d nil {\"",
+      "revId": "3b5b7a4c130b6ba86801d9606da38778e5790cb6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
