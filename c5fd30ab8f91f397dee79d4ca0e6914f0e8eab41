@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "dfa7d254_19dfd5ae",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-12-03T15:40:57Z",
+      "side": 1,
+      "message": "Do we know if anyone is actually using it?",
+      "parentUuid": "ce21a071_b5d44821",
+      "revId": "c5fd30ab8f91f397dee79d4ca0e6914f0e8eab41",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2e8d8ec_6b503cf0",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 3
