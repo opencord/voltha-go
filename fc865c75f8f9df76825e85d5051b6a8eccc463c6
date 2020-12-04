@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d410144e_12299e58",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T14:29:47Z",
+      "side": 1,
+      "message": "No updates?    Previously there was a reason field in the device structure that gets overwritten with the latest reason the Core receives from the adapter.   Now, this should be part of device updates.  The description would be the reason. RPC would be \"reasonUpdate\".",
+      "revId": "fc865c75f8f9df76825e85d5051b6a8eccc463c6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb453ec6_29fd0a99",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T14:29:47Z",
+      "side": 1,
+      "message": "Is there another way of referring to the error enum directly instead of using string? I think you did it below.",
+      "revId": "fc865c75f8f9df76825e85d5051b6a8eccc463c6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97f5ca2f_88c9aab6",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T14:29:47Z",
+      "side": 1,
+      "message": "Debugging code?",
+      "revId": "fc865c75f8f9df76825e85d5051b6a8eccc463c6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "253a3668_71e455e2",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T14:29:47Z",
+      "side": 1,
+      "message": "Two things.  1) This will block the event queue for all events (including port updates), 2) ordering of events is not not needed here since the XID is used by ONOS to correlate the flow request.  So any queue reference can be removed.  The event can be sent directly.",
+      "revId": "fc865c75f8f9df76825e85d5051b6a8eccc463c6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
