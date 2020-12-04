@@ -1,0 +1,9 @@
+Verified+1: Matteo Scandolo <teo@opennetworking.org>
+Code-Review+1: Andrea Campanella <andrea@opennetworking.org>
+Code-Review+1: David Bainbridge <dbainbri@ciena.com>
+Code-Review+2: khenaidoo Nursimulu <knursimu@ciena.com>
+Submitted-by: khenaidoo Nursimulu <knursimu@ciena.com>
+Submitted-at: Fri, 04 Dec 2020 22:54:02 +0000
+Reviewed-on: https://gerrit.opencord.org/c/voltha-go/+/21139
+Project: voltha-go
+Branch: refs/heads/master
