@@ -2,6 +2,91 @@
   "comments": [
     {
       "key": {
+        "uuid": "bde66ecd_821ee153",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T15:37:50Z",
+      "side": 1,
+      "message": "would deviceUpdate be a more obvious name?",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "794ff898_e263843e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T15:37:50Z",
+      "side": 1,
+      "message": "May be create a helper function for this code?  It is called several places. Also, if you defer err before this then this function could also set the operation status to failure if err is not nil.  For nil, error then let the function decides on the proper operation status.",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b3b0a8f_42a37984",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T15:37:50Z",
+      "side": 1,
+      "message": "Since some of the device info is being populated in the update struct, then it needs to be done after this request got the green light to proceed, i.e. after WaitForGreenLight",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5f8894b_f8b05777",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T15:37:50Z",
+      "side": 1,
+      "message": "prevDeviceState would be easier to read.",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98981875_ca32ab64",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T15:37:50Z",
+      "side": 1,
+      "message": "Two things: 1) This code should be after WaitForGreenLight() as the state may be changed while waiting for the green light, 2) nit: a helper function would be helpful as this code is repeated several places.",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8f000964_0280988f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 9
@@ -13,6 +98,23 @@
       "writtenOn": "2020-12-04T14:34:12Z",
       "side": 1,
       "message": "A device update is required for reason update.",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1f65663_fbb98542",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T15:37:50Z",
+      "side": 1,
+      "message": "Every time there is an error it means the transaction has completed with failure.  The operation status should therefore be updated.",
       "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
