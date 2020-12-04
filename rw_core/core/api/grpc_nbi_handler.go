@@ -112,3 +112,9 @@ func (handler *NBIHandler) GetMembership(context.Context, *empty.Empty) (*voltha
 func (handler *NBIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return nil, errUnimplemented
 }
+func (handler *NBIHandler) GetDeviceUpdates(ctx context.Context, filter *voltha.DeviceUpdateFilter) (*voltha.DeviceUpdates, error) {
+	panic("implement me")
+}
+func (handler *NBIHandler) ForceDeleteDevice(ctx context.Context, id *common.ID) (*empty.Empty, error) {
+	return nil, errUnimplemented
+}
