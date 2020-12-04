@@ -503,6 +503,7 @@ type PacketOut = openflow_13.PacketOut
 // ChangeEvent from public import voltha_protos/openflow_13.proto
 type ChangeEvent = openflow_13.ChangeEvent
 type ChangeEvent_PortStatus = openflow_13.ChangeEvent_PortStatus
+type ChangeEvent_Error = openflow_13.ChangeEvent_Error
 
 // OfpPortNo from public import voltha_protos/openflow_13.proto
 type OfpPortNo = openflow_13.OfpPortNo

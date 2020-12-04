@@ -19,6 +19,7 @@ package event
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"sync"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -134,6 +135,26 @@ func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason o
 			PortStatus: &openflow_13.OfpPortStatus{
 				Reason: reason,
 				Desc:   desc,
+			},
+		},
+	}
+}
+
+func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res []error, xid uint32) {
+	logger.Debugw(ctx, "SendChangeEvent", log.Fields{"device-id": deviceID, "flowId": xid})
+	errorType := openflow_13.OfpErrorType_OFPET_FLOW_MOD_FAILED
+	q.changeEventQueue <- openflow_13.ChangeEvent{
+		Id: deviceID,
+		Event: &openflow_13.ChangeEvent_Error{
+			Error: &openflow_13.OfpErrorMsg{
+				Header: &openflow_13.OfpHeader{
+					Version: 0,
+					Type:    openflow_13.OfpType_OFPT_FLOW_MOD,
+					Xid:     xid,
+				},
+				Type: uint32(errorType),
+				Code: uint32(openflow_13.OfpFlowModFailedCode_OFPFMFC_UNKNOWN),
+				Data: []byte(fmt.Sprintf("%v", res[:])),
 			},
 		},
 	}
