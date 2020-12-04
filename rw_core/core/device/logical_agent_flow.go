@@ -47,30 +47,31 @@ func (agent *LogicalAgent) listLogicalDeviceFlows() map[uint64]*ofp.OfpFlowStats
 }
 
 //updateFlowTable updates the flow table of that logical device
-func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.OfpFlowMod) error {
+func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.FlowTableUpdate) error {
 	logger.Debug(ctx, "UpdateFlowTable")
 	if flow == nil {
 		return nil
 	}
 
-	switch flow.GetCommand() {
+	switch flow.FlowMod.GetCommand() {
 	case ofp.OfpFlowModCommand_OFPFC_ADD:
 		return agent.flowAdd(ctx, flow)
 	case ofp.OfpFlowModCommand_OFPFC_DELETE:
 		return agent.flowDelete(ctx, flow)
 	case ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT:
-		return agent.flowDeleteStrict(ctx, flow)
+		return agent.flowDeleteStrict(ctx, flow.FlowMod)
 	case ofp.OfpFlowModCommand_OFPFC_MODIFY:
-		return agent.flowModify(flow)
+		return agent.flowModify(flow.FlowMod)
 	case ofp.OfpFlowModCommand_OFPFC_MODIFY_STRICT:
-		return agent.flowModifyStrict(flow)
+		return agent.flowModifyStrict(flow.FlowMod)
 	}
 	return status.Errorf(codes.Internal,
-		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, flow.GetCommand())
+		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, flow.FlowMod.GetCommand())
 }
 
 //flowAdd adds a flow to the flow table of that logical device
-func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) error {
+func (agent *LogicalAgent) flowAdd(ctx context.Context, flowUpdate *ofp.FlowTableUpdate) error {
+	mod := flowUpdate.FlowMod
 	logger.Debugw(ctx, "flowAdd", log.Fields{"flow": mod})
 	if mod == nil {
 		return nil
@@ -82,7 +83,7 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 	}
 	var updated bool
 	var changed bool
-	if changed, updated, err = agent.decomposeAndAdd(ctx, flow, mod); err != nil {
+	if changed, updated, err = agent.decomposeAndAdd(ctx, flow, flowUpdate); err != nil {
 		logger.Errorw(ctx, "flow-decompose-and-add-failed ", log.Fields{"flowMod": mod, "err": err})
 		return err
 	}
@@ -95,9 +96,10 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, mod *ofp.OfpFlowMod) err
 
 }
 
-func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlowStats, mod *ofp.OfpFlowMod) (bool, bool, error) {
+func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlowStats, flowUpdate *ofp.FlowTableUpdate) (bool, bool, error) {
 	changed := false
 	updated := false
+	mod := flowUpdate.FlowMod
 	var flowToReplace *ofp.OfpFlowStats
 
 	//if flow is not found in the map, create a new entry, otherwise get the existing one.
@@ -165,6 +167,8 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			}
 		}
 		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, toMetadata(flowMeterConfig))
+		// ensure that no events will be sent until this one is
+		queuePosition := agent.orderedEvents.assignQueuePosition()
 		// Create the go routines to wait
 		go func() {
 			// Wait for completion
@@ -184,6 +188,8 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 						"groups":            groups,
 					})
 				}
+				// send event, and allow any queued events to be sent as well
+				queuePosition.sendFlowEvent(ctx, agent, agent.logicalDeviceID, res, flowUpdate.Xid)
 			}
 		}()
 	}
@@ -237,8 +243,9 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 }
 
 //flowDelete deletes a flow from the flow table of that logical device
-func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) error {
+func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowTableUpdate) error {
 	logger.Debug(ctx, "flowDelete")
+	mod := flowUpdate.FlowMod
 	if mod == nil {
 		return nil
 	}
@@ -326,12 +333,17 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, mod *ofp.OfpFlowMod) 
 			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, toMetadata(metersConfig), mod)
 		}
 
+		// ensure that no events will be sent until this one is
+		queuePosition := agent.orderedEvents.assignQueuePosition()
+
 		// Wait for the responses
 		go func() {
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
 				logger.Errorw(ctx, "failure-updating-device-flows", log.Fields{"logicalDeviceId": agent.logicalDeviceID, "errors": res})
 				// TODO: Revert the flow deletion
+				// send event, and allow any queued events to be sent as well
+				queuePosition.sendFlowEvent(ctx, agent, agent.logicalDeviceID, res, flowUpdate.Xid)
 			}
 		}()
 	}
@@ -469,4 +481,13 @@ func (agent *LogicalAgent) deleteFlowsHavingGroup(ctx context.Context, groupID u
 		}
 	}
 	return flowsRemoved, nil
+}
+
+// send waits for its turn, then sends the event, then notifies the next in line
+func (qp queuePosition) sendFlowEvent(ctx context.Context, agent *LogicalAgent, deviceID string, res []error, xid uint32) {
+	if qp.prev != nil {
+		<-qp.prev // wait for turn
+	}
+	agent.ldeviceMgr.SendFlowChangeEvent(ctx, deviceID, res, xid)
+	close(qp.next) // notify next
 }
