@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14c61403_e361a196",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T14:34:12Z",
+      "side": 1,
+      "message": "You may want to invoke device updates in the follow tests to ensure the update is actually present.  This will add unit testing to your code.",
+      "revId": "0a74ba3e6700ddfffdbd833130bac5530569bd55",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}

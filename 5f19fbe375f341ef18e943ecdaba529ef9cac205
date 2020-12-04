@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f000964_0280988f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-04T14:34:12Z",
+      "side": 1,
+      "message": "A device update is required for reason update.",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
