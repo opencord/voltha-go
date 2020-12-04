@@ -449,7 +449,7 @@ func (ldMgr *LogicalManager) UpdateLogicalDeviceFlowTable(ctx context.Context, f
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", flow.Id)
 	}
-	return &empty.Empty{}, agent.updateFlowTable(ctx, flow.FlowMod)
+	return &empty.Empty{}, agent.updateFlowTable(ctx, flow)
 }
 
 // UpdateLogicalDeviceMeterTable - This function sends meter mod request to logical device manager and waits for response

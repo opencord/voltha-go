@@ -673,7 +673,6 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
-	cloned.Reason = device.Reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
@@ -831,7 +830,6 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"device-id": agent.deviceID, "reason": reason})
 
 	cloned := agent.cloneDeviceWithoutLock()
-	cloned.Reason = reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
