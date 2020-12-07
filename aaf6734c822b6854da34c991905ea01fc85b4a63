@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44359398_ffd77092",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1488,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-07T06:54:01Z",
+      "side": 1,
+      "message": "Add it before the first deleteAllDevices, making this change would cover more cases.",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75cb96b4_6d21e9c3",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-07T06:54:01Z",
+      "side": 1,
+      "message": "Go fmt this file",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6332ea1a_eb5a670a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-07T06:54:01Z",
+      "side": 1,
+      "message": "I guess this would be quite obvious with the description, and we should not use function names and what they return in additional info. We can leave empty if there is no additional information to update.",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b63dd991_ad69fc43",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-07T06:54:01Z",
+      "side": 1,
+      "message": "Need to add device update for force delete, but be cautious to not use waitForAdapterDeleteResponse as agent would no longer be valid, we can only log error/success after receiving response from adapter.",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8b9a834_5cd3b05e",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-07T06:54:01Z",
+      "side": 1,
+      "message": "We are getting device only for the ID here, so we can use agent.deviceID instead",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ec2e5ea_6d9a787c",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-07T06:54:01Z",
+      "side": 1,
+      "message": "deleteFlowFromAdapter*",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
