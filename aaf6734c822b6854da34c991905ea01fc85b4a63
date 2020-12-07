@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fbf28e9e_8147959d",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1488,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T08:07:08Z",
+      "side": 1,
+      "message": "For now this test case just check whether the updates are returned by the specific call or not, it does not verify or map different operations with updates. May be we can write a different test case for that in future. So moving it before deleteAllDevices won\u0027t make a difference.",
+      "parentUuid": "44359398_ffd77092",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "75cb96b4_6d21e9c3",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 11
@@ -33,6 +51,24 @@
       "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47bd5d45_c900f386",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T08:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75cb96b4_6d21e9c3",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c69aec55_5808c786",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T08:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6332ea1a_eb5a670a",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b63dd991_ad69fc43",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 11
@@ -67,6 +121,24 @@
       "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca3e23fd_b0658092",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T08:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b63dd991_ad69fc43",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "c5cd25d2_29971cf4",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T08:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d8b9a834_5cd3b05e",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ec2e5ea_6d9a787c",
         "filename": "rw_core/core/device/agent_flow.go",
         "patchSetId": 11
@@ -101,6 +191,24 @@
       "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1659e282_8c89c9c0",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T08:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3ec2e5ea_6d9a787c",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
