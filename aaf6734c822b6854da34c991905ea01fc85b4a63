@@ -142,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "6fb367ad_fc5a2f81",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-07T09:14:55Z",
+      "side": 1,
+      "message": "I guess we need to discuss on this since agent would be invalid after the device is deleted, so any update before updateDeviceWithTransientStateAndReleaseLock can only be logged, which can be the error cases.",
+      "parentUuid": "ca3e23fd_b0658092",
+      "revId": "aaf6734c822b6854da34c991905ea01fc85b4a63",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8b9a834_5cd3b05e",
         "filename": "rw_core/core/device/agent_device_update.go",
         "patchSetId": 11
