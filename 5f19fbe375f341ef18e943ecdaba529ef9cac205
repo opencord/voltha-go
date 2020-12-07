@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1d1ec120_f80f823f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T06:06:43Z",
+      "side": 1,
+      "message": "It just return a new instance of deviceUpdate but not actually add a device update to KV.",
+      "parentUuid": "bde66ecd_821ee153",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "794ff898_e263843e",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "fa274b97_6fec4c36",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T06:06:43Z",
+      "side": 1,
+      "message": "A helper function created and used named deviceUpdate(). \n\nStatus is already set to failure by default in the instance returned by newDeviceUpdate so in every error case we don\u0027t need to update state. State will be explicitly set as in progress or success wherever required.",
+      "parentUuid": "794ff898_e263843e",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b3b0a8f_42a37984",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2020-12-04T15:37:50Z",
       "side": 1,
       "message": "Since some of the device info is being populated in the update struct, then it needs to be done after this request got the green light to proceed, i.e. after WaitForGreenLight",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "116d2259_e7167083",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T06:06:43Z",
+      "side": 1,
+      "message": "This is done to log any error returned by WaitForGreenLight. Should I ignore that error from device update point of perspective.",
+      "parentUuid": "0b3b0a8f_42a37984",
       "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "a4b76697_f97bd124",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T06:06:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c5f8894b_f8b05777",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98981875_ca32ab64",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 9
@@ -81,6 +153,24 @@
       "writtenOn": "2020-12-04T15:37:50Z",
       "side": 1,
       "message": "Two things: 1) This code should be after WaitForGreenLight() as the state may be changed while waiting for the green light, 2) nit: a helper function would be helpful as this code is repeated several places.",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f53c4145_5d910f21",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T06:06:43Z",
+      "side": 1,
+      "message": "1) This is done to log any error returned by WaitForGreenLight. Should I ignore that error from device update point of perspective.\n2)Helping function is created and used.",
+      "parentUuid": "98981875_ca32ab64",
       "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "ca0d6176_cf5c46d4",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T06:06:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f000964_0280988f",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1f65663_fbb98542",
         "filename": "rw_core/core/device/agent_flow.go",
         "patchSetId": 9
@@ -118,6 +226,24 @@
       "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4ec4257_0f81d007",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-07T06:06:43Z",
+      "side": 1,
+      "message": "Status is already set to failure by default in the instance returned by newDeviceUpdate so in every error case we don\u0027t need to update state. State will be explicitly set as in progress or success wherever required.",
+      "parentUuid": "b1f65663_fbb98542",
+      "revId": "5f19fbe375f341ef18e943ecdaba529ef9cac205",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
