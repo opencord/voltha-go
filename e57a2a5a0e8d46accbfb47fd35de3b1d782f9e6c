@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25a3e312_9a22672f",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-11T15:15:47Z",
+      "side": 1,
+      "message": "Is \"Metadat\" a typo?",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "763cdaf1_57eb88c9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-11T15:15:47Z",
+      "side": 1,
+      "message": "Since RPC events will be sent, then there is no need to add \"AndSendRPCEvent\" to all the methods names.",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23feba95_0d8c8987",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-11T15:15:47Z",
+      "side": 1,
+      "message": "A helper function would be beneficial at the code is repeated a few times.",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3935b4a_dc8e2f3e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-11T15:15:47Z",
+      "side": 1,
+      "message": "intentional?",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3c7b0d4_97e8f08c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-11T15:15:47Z",
+      "side": 1,
+      "message": "I did not see the NewRPCEventManager not NewManger in the events package.  Am I missing something?",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
