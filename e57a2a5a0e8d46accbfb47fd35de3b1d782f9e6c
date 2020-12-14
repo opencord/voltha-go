@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1763f591_06cb7482",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-14T12:26:32Z",
+      "side": 1,
+      "message": "No voltha lib is defined like this.",
+      "parentUuid": "25a3e312_9a22672f",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "763cdaf1_57eb88c9",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 5
@@ -33,6 +51,24 @@
       "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8059cb71_f2401c0b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-14T12:26:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "763cdaf1_57eb88c9",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "83da3e39_1fc83085",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-14T12:26:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "23feba95_0d8c8987",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3935b4a_dc8e2f3e",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 5
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "00152787_b52f3fbc",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-14T12:26:32Z",
+      "side": 1,
+      "message": "yes, as for devices we need only rpc events to be send, so we can have only rpc event manager, instead of having new manager because that will have more other components as well",
+      "parentUuid": "d3935b4a_dc8e2f3e",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3c7b0d4_97e8f08c",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 5
@@ -81,6 +153,24 @@
       "writtenOn": "2020-12-11T15:15:47Z",
       "side": 1,
       "message": "I did not see the NewRPCEventManager not NewManger in the events package.  Am I missing something?",
+      "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "534d2a6b_bf0838e3",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-14T12:26:32Z",
+      "side": 1,
+      "message": "It is there in voltha-go/rw_core/core/device/event",
+      "parentUuid": "e3c7b0d4_97e8f08c",
       "revId": "e57a2a5a0e8d46accbfb47fd35de3b1d782f9e6c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
