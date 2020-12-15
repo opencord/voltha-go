@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb3f5c67_83b81355",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-15T14:58:25Z",
+      "side": 1,
+      "message": "I would keep the name \"changeEventQueue\" as this correspond to a specific event the Core is sending to OFAgent.  \"eventQueue\" is too generic a name in this context.",
+      "revId": "e5421e6377fa0bb666352fade417982007ca8718",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bef7042_35e7f606",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-15T14:58:25Z",
+      "side": 1,
+      "message": "Since all(?) SendRPCEvents callers seem to not care about the result, then would it make sense to have this as an async call (using a queue, managed by a single routine) such that the caller does not have to wait for a response?    The queue could be implemented in the event proxy (voltha lib go).",
+      "revId": "e5421e6377fa0bb666352fade417982007ca8718",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
