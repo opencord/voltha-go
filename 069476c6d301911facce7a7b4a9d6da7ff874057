@@ -16,6 +16,24 @@
       "revId": "069476c6d301911facce7a7b4a9d6da7ff874057",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "916790e7_d1957e02",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2020-12-16T16:24:55Z",
+      "side": 1,
+      "message": "https://jira.opencord.org/browse/VOL-3719",
+      "parentUuid": "5fde06ea_9ebf3d16",
+      "revId": "069476c6d301911facce7a7b4a9d6da7ff874057",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
