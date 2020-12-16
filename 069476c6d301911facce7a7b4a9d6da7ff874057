@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fde06ea_9ebf3d16",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-16T16:01:55Z",
+      "side": 1,
+      "message": "Can you raise a Jira to track the work needed for the adapters to provide the failure code upon failure?",
+      "revId": "069476c6d301911facce7a7b4a9d6da7ff874057",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
