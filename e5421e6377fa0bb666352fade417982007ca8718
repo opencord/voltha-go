@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a3c9836e_92bd7a84",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-16T11:43:56Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fb3f5c67_83b81355",
+      "revId": "e5421e6377fa0bb666352fade417982007ca8718",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1bef7042_35e7f606",
         "filename": "rw_core/core/device/event/event.go",
         "patchSetId": 7
