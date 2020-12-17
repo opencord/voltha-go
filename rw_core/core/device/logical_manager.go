@@ -30,10 +30,17 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"github.com/opencord/voltha-go/rw_core/utils"
+<<<<<<< HEAD   (b2f526 [VOL-4301] onuimage download failure status in case of wrong)
 	"github.com/opencord/voltha-lib-go/v5/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v5/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
+=======
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/openflow_13"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
+>>>>>>> CHANGE (ad1e68 [VOL-3731] Delete etcd stale data after olt reboot)
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -418,6 +425,30 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 		}
 	}
 	logger.Debug(ctx, "deleting-logical-ports-ends")
+	return nil
+}
+
+// deleteAllLogicalMeters removes the logical meters associated with a child device
+func (ldMgr *LogicalManager) deleteAllLogicalMeters(ctx context.Context, deviceID string) error {
+	logger.Debugw(ctx, "delete-logical-meters", log.Fields{"device-id": deviceID})
+	// Get logical port
+	ldID, err := ldMgr.getLogicalDeviceIDFromDeviceID(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
+		for meterID := range agent.meterLoader.ListIDs() {
+			if meterHandle, have := agent.meterLoader.Lock(meterID); have {
+				// Update the store and cache
+				if err := meterHandle.Delete(ctx); err != nil {
+					meterHandle.Unlock()
+					logger.Errorw(ctx, "unable-to-delete-meter", log.Fields{"logical-device-id": ldID, "meterID": meterID})
+					continue
+				}
+				meterHandle.Unlock()
+			}
+		}
+	}
 	return nil
 }
 
