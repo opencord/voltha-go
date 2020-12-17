@@ -19,10 +19,11 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-go/rw_core/config"
-	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
@@ -34,11 +35,13 @@ import (
 	"github.com/opencord/voltha-lib-go/v5/pkg/events"
 	"github.com/opencord/voltha-lib-go/v5/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+
 	"github.com/opencord/voltha-protos/v4/go/common"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	"github.com/opencord/voltha-protos/v4/go/openflow_13"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -999,6 +1002,11 @@ func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID string) error 
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
+func (dMgr *Manager) DeleteParentPorts(ctx context.Context, parentDevice *voltha.Device) error {
+	logger.Debugw(ctx, "delete-parent-ports", log.Fields{"device-id": parentDevice.Id})
+	return dMgr.DeleteAllPorts(ctx, parentDevice.Id)
+}
+
 //UpdatePortsState updates all ports on the device
 func (dMgr *Manager) UpdatePortsState(ctx context.Context, deviceID string, portTypeFilter uint32, state voltha.OperStatus_Types) error {
 	logger.Debugw(ctx, "update-ports-state", log.Fields{"device-id": deviceID})
@@ -1148,6 +1156,11 @@ func (dMgr *Manager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.De
 func (dMgr *Manager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info(ctx, "delete-logical-device")
 	var err error
+
+	if err = dMgr.logicalDeviceMgr.deleteAllLogicalMeters(ctx, cDevice); err != nil {
+		logger.Warnw(ctx, "error-deleting-all-logical-device-meters", log.Fields{"device-id": cDevice.Id})
+	}
+
 	if err = dMgr.logicalDeviceMgr.deleteLogicalDevice(ctx, cDevice); err != nil {
 		logger.Warnw(ctx, "delete-logical-device-error", log.Fields{"device-id": cDevice.Id})
 		return err
@@ -1155,7 +1168,7 @@ func (dMgr *Manager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.De
 	// Remove the logical device Id from the parent device
 	logicalID := ""
 	dMgr.UpdateDeviceAttribute(ctx, cDevice.Id, "ParentId", logicalID)
-	return nil
+	return err
 }
 
 // DeleteLogicalPorts removes the logical ports associated with that deviceId
@@ -1262,6 +1275,19 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
 	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
+			var err error
+			//delete flows
+			// if err = agent.deleteAllFlows(ctx); err != nil {
+			// 	logger.Warnw(ctx, "failure-delete-device-flows", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			// }
+			// disable device to remove ports
+			if err = agent.disableDevice(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
+			//delete ports
+			if err = agent.deleteAllPorts(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
 			if force {
 				if err := agent.deleteDeviceForce(ctx); err != nil {
 					logger.Warnw(ctx, "failure-delete-device-force", log.Fields{"device-id": childDeviceID,
@@ -1566,6 +1592,13 @@ func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty
 func (dMgr *Manager) ChildDeviceLost(ctx context.Context, curr *voltha.Device) error {
 	logger.Debugw(ctx, "child-device-lost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
 	if parentAgent := dMgr.getDeviceAgent(ctx, curr.ParentId); parentAgent != nil {
+
+		// if parentDevice is unreachable, do not call Child_device_lost API of olt adapter
+		if parentAgent.device.ConnectStatus == common.ConnectStatus_UNREACHABLE {
+			logger.Warnw(ctx, "parent-device-is-unreachable-do-not-send-child-device-lost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
+			return nil
+		}
+
 		if err := parentAgent.ChildDeviceLost(ctx, curr); err != nil {
 			// Just log the message and let the remaining pipeline proceed.
 			logger.Warnw(ctx, "childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId, "error": err})

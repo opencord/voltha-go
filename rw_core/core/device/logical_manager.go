@@ -19,12 +19,13 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
 	"io"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
@@ -617,4 +618,21 @@ func (ldMgr *LogicalManager) SendRPCEvent(ctx context.Context, resourceID, desc 
 	id string, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
 	ldMgr.Manager.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
 		category, subCategory, raisedTs)
+}
+
+func (ldMgr *LogicalManager) deleteAllLogicalMeters(ctx context.Context, device *voltha.Device) error {
+	logger.Debugw(ctx, "deleteAllLogicalDeviceMeters", log.Fields{"device-id": device.Id})
+
+	var ldID *string
+	var err error
+	if ldID, err = ldMgr.getLogicalDeviceID(ctx, device); err != nil {
+		logger.Warnw(ctx, "no-logical-device-found", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
+		if err := agent.deleteALlLogicalMeters(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
