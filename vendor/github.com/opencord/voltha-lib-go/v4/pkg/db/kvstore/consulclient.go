@@ -154,6 +154,10 @@ func (c *ConsulClient) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
+func (c *ConsulClient) DeleteWithPrefix(ctx context.Context, prefixKey string) error {
+	return nil
+}
+
 func (c *ConsulClient) deleteSession(ctx context.Context) {
 	if c.sessionID != "" {
 		logger.Debug(ctx, "cleaning-up-session")

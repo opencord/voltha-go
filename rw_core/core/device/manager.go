@@ -1136,14 +1136,22 @@ func (dMgr *Manager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.De
 func (dMgr *Manager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info(ctx, "DeleteLogicalDevice")
 	var err error
+
+	if err = dMgr.logicalDeviceMgr.deleteAllLogicalFlows(ctx, cDevice); err != nil {
+		logger.Warnw(ctx, "error-deleting-all-logical-device-flows", log.Fields{"device-id": cDevice.Id})
+	}
+
+	if err = dMgr.logicalDeviceMgr.deleteAllLogicalMeters(ctx, cDevice); err != nil {
+		logger.Warnw(ctx, "error-deleting-all-logical-device-meters", log.Fields{"device-id": cDevice.Id})
+	}
+
 	if err = dMgr.logicalDeviceMgr.deleteLogicalDevice(ctx, cDevice); err != nil {
 		logger.Warnw(ctx, "deleteLogical-device-error", log.Fields{"device-id": cDevice.Id})
-		return err
 	}
 	// Remove the logical device Id from the parent device
 	logicalID := ""
 	dMgr.UpdateDeviceAttribute(ctx, cDevice.Id, "ParentId", logicalID)
-	return nil
+	return err
 }
 
 // DeleteLogicalPorts removes the logical ports associated with that deviceId
@@ -1249,6 +1257,19 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
 	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
+			var err error
+			//delete flows
+			if err = agent.deleteAllFlows(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-flows", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
+			// disable device to remove ports
+			if err = agent.disableDevice(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
+			//delete ports
+			if err = agent.deleteAllPorts(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
 			if force {
 				if err := agent.deleteDeviceForce(ctx); err != nil {
 					logger.Warnw(ctx, "failure-delete-device-force", log.Fields{"device-id": childDeviceID,
@@ -1552,6 +1573,13 @@ func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty
 func (dMgr *Manager) ChildDeviceLost(ctx context.Context, curr *voltha.Device) error {
 	logger.Debugw(ctx, "childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
 	if parentAgent := dMgr.getDeviceAgent(ctx, curr.ParentId); parentAgent != nil {
+
+		// if parentDevice is unreachable, do not call Child_device_lost API of olt adapter
+		if parentAgent.device.ConnectStatus == common.ConnectStatus_UNREACHABLE {
+			logger.Warnw(ctx, "parent-device-is-unreachable-do-not-send-child-device-lost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId})
+			return nil
+		}
+
 		if err := parentAgent.ChildDeviceLost(ctx, curr); err != nil {
 			// Just log the message and let the remaining pipeline proceed.
 			logger.Warnw(ctx, "childDeviceLost", log.Fields{"child-device-id": curr.Id, "parent-device-id": curr.ParentId, "error": err})
