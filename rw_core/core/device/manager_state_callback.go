@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/core"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -53,7 +54,7 @@ func (dMgr *Manager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.De
 	// Remove the logical device Id from the parent device
 	logicalID := ""
 	dMgr.UpdateDeviceAttribute(ctx, cDevice.Id, "ParentId", logicalID)
-	return nil
+	return err
 }
 
 // DeleteLogicalPorts removes the logical ports associated with that deviceId
@@ -113,7 +114,16 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
 	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
-			logger.Debugw(ctx, "invoking-delete-device", log.Fields{"device-id": childDeviceID, "force-delete": force})
+			logger.Debugw(ctx, "invoking-delete-device-and-ports", log.Fields{"device-id": childDeviceID, "force-delete": force})
+			var err error
+			// disable device to remove ports
+			if err = agent.disableDevice(ctx); err != nil {
+				logger.Warnw(ctx, "failure-disable-device", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
+			//delete ports
+			if err = agent.deleteAllPorts(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
 			if force {
 				if err := agent.deleteDeviceForce(ctx); err != nil {
 					logger.Warnw(ctx, "failure-delete-device-force", log.Fields{"device-id": childDeviceID,
@@ -156,4 +166,20 @@ func (dMgr *Manager) ChildDeviceLost(ctx context.Context, curr *voltha.Device) e
 	}
 	// Do not return an error as parent device may also have been deleted.  Let the remaining pipeline proceed.
 	return nil
+}
+
+func (dMgr *Manager) DeleteAllLogicalMeters(ctx context.Context, cDevice *voltha.Device) error {
+	logger.Debugw(ctx, "delete-all-logical-device-meters", log.Fields{"device-id": cDevice.Id})
+	if err := dMgr.logicalDeviceMgr.deleteAllLogicalMeters(ctx, cDevice.Id); err != nil {
+		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
+		logger.Warnw(ctx, "delete-logical-ports-error", log.Fields{"device-id": cDevice.Id, "error": err})
+	}
+	return nil
+
+}
+
+func (dMgr *Manager) DeleteParentPorts(ctx context.Context, parentDevice *voltha.Device) error {
+	logger.Debugw(ctx, "delete-parent-ports", log.Fields{"device-id": parentDevice.Id})
+	_, err := dMgr.DeleteAllPorts(ctx, &common.ID{Id: parentDevice.Id})
+	return err
 }
