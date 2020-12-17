@@ -24,6 +24,7 @@ import (
 
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/core"
 
 	"github.com/opencord/voltha-go/db/model"
@@ -583,6 +584,12 @@ func (dMgr *Manager) UpdatePortState(ctx context.Context, deviceID string, portT
 		return nil
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
+}
+
+func (dMgr *Manager) DeleteParentPorts(ctx context.Context, parentDevice *voltha.Device) error {
+	logger.Debugw(ctx, "delete-parent-ports", log.Fields{"device-id": parentDevice.Id})
+	_, err := dMgr.DeleteAllPorts(ctx, &common.ID{Id: parentDevice.Id})
+	return err
 }
 
 //UpdatePortsState updates all ports on the device
