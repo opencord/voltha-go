@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b612fbf0_6ce56fe3",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-17T18:46:05Z",
+      "side": 1,
+      "message": "The deletion of flows have so far been handled by the state transition machine.  Granted, it is missing in many delete-like transitions.   Would it make sense to invoke the deletion of logical flows and meters from here as well?  I am thinking of cases (if any) where we may want to delete the flows and meters but not the logical device.",
+      "revId": "81498d872527a661183d79c8196f542b7237db61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
