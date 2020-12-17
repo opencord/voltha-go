@@ -127,7 +127,7 @@ func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 		return err
 	}
 
-	if device.AdminState != voltha.AdminState_DISABLED && !agent.isDeletionInProgress() {
+	if !agent.isDeletionInProgress() {
 		err := status.Error(codes.FailedPrecondition, fmt.Sprintf("invalid-admin-state-%v",
 			device.AdminState))
 		logger.Warnw(ctx, "invalid-state-removing-ports", log.Fields{"state": device.AdminState, "error": err})
