@@ -18,10 +18,11 @@ package state
 
 import (
 	"context"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"reflect"
 	"runtime"
+
+	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 )
 
 // deviceType mentions type of device like parent, child
@@ -99,6 +100,7 @@ type DeviceManager interface {
 	RunPostDeviceDelete(ctx context.Context, curr *voltha.Device) error
 	ChildDeviceLost(ctx context.Context, curr *voltha.Device) error
 	DeleteAllLogicalPorts(ctx context.Context, curr *voltha.Device) error
+	DeleteAllLogicalMeters(ctx context.Context, curr *voltha.Device) error
 	DeleteAllDeviceFlows(ctx context.Context, curr *voltha.Device) error
 	ReconcilingCleanup(ctx context.Context, curr *voltha.Device) error
 }
@@ -156,13 +158,13 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_FORCE_DELETING},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.RunPostDeviceDelete}})
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllLogicalMeters, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{ //DELETE device after adapter response
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.RunPostDeviceDelete}})
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllLogicalMeters, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{ //DELETE no operation transition
 			deviceType:    parent,
@@ -174,13 +176,13 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE, Transient: voltha.DeviceTransientState_NONE},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_NONE},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllLogicalMeters, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_NONE},
 			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_NONE},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllLogicalMeters, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
