@@ -25,13 +25,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
-
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -419,6 +418,30 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 		}
 	}
 	logger.Debug(ctx, "deleting-logical-ports-ends")
+	return nil
+}
+
+// deleteAllLogicalMeters removes the logical meters associated with a child device
+func (ldMgr *LogicalManager) deleteAllLogicalMeters(ctx context.Context, deviceID string) error {
+	logger.Debugw(ctx, "delete-logical-meters", log.Fields{"device-id": deviceID})
+	// Get logical port
+	ldID, err := ldMgr.getLogicalDeviceIDFromDeviceID(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
+		for meterID := range agent.meterLoader.ListIDs() {
+			if meterHandle, have := agent.meterLoader.Lock(meterID); have {
+				// Update the store and cache
+				if err := meterHandle.Delete(ctx); err != nil {
+					meterHandle.Unlock()
+					logger.Errorw(ctx, "unable-to-delete-meter", log.Fields{"logical-device-id": ldID, "meterID": meterID})
+					continue
+				}
+				meterHandle.Unlock()
+			}
+		}
+	}
 	return nil
 }
 
