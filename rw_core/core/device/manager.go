@@ -679,7 +679,16 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 
 	responses := make([]utils.Response, 0)
 	for rootDeviceID := range dMgr.rootDevices {
-		if rootDevice, _ := dMgr.getDeviceFromModel(ctx, rootDeviceID); rootDevice != nil {
+		dAgent := dMgr.getDeviceAgent(ctx, rootDeviceID)
+		if dAgent == nil {
+			continue
+		}
+		logger.Debugw(ctx, "checking-adapter-type", log.Fields{"agentType": dAgent.deviceType, "adapterType": adapter.Type})
+		if dAgent.deviceType == adapter.Type {
+			rootDevice, _ := dAgent.getDeviceReadOnly(ctx)
+			if rootDevice == nil {
+				continue
+			}
 			isDeviceOwnedByService, err := dMgr.adapterProxy.IsDeviceOwnedByService(ctx, rootDeviceID, adapter.Type, adapter.CurrentReplica)
 			if err != nil {
 				logger.Warnw(ctx, "is-device-owned-by-service", log.Fields{"error": err, "root-device-id": rootDeviceID, "adapterType": adapter.Type, "replica-number": adapter.CurrentReplica})
