@@ -157,6 +157,17 @@ func (c *EtcdClient) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
+func (c *EtcdClient) DeleteWithPrefix(ctx context.Context, prefixKey string) error {
+
+	//delete the prefix
+	if _, err := c.ectdAPI.Delete(ctx, prefixKey, v3Client.WithPrefix()); err != nil {
+		logger.Errorw(ctx, "failed-to-delete-prefix-key", log.Fields{"key": prefixKey, "error": err})
+		return err
+	}
+	logger.Debugw(ctx, "key(s)-deleted", log.Fields{"key": prefixKey})
+	return nil
+}
+
 // Reserve is invoked to acquire a key and set it to a given value. Value can only be a string or []byte since
 // the etcd API accepts only a string.  Timeout defines how long the function will wait for a response.  TTL
 // defines how long that reservation is valid.  When TTL expires the key is unreserved by the KV store itself.

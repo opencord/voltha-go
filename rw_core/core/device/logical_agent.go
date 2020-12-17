@@ -356,3 +356,37 @@ func (agent *LogicalAgent) packetIn(ctx context.Context, port uint32, transactio
 	agent.ldeviceMgr.SendPacketIn(ctx, agent.logicalDeviceID, transactionID, packetIn)
 	logger.Debugw(ctx, "sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
 }
+
+func (agent *LogicalAgent) deleteAllLogicalFlows(ctx context.Context) error {
+	logger.Debugw(ctx, "deleteAllLogicalFlows", log.Fields{"logical-device-id": agent.logicalDeviceID})
+
+	for flowID := range agent.flowLoader.ListIDs() {
+		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
+			// Update the store and cache
+			if err := flowHandle.Delete(ctx); err != nil {
+				flowHandle.Unlock()
+				logger.Errorw(ctx, "unable-to-delete-flow", log.Fields{"logical-device-id": agent.logicalDeviceID, "flowID": flowID})
+				continue
+			}
+			flowHandle.Unlock()
+		}
+	}
+	return nil
+}
+
+func (agent *LogicalAgent) deleteALlLogicalMeters(ctx context.Context) error {
+	logger.Debugw(ctx, "deleteAllLogicalMeters", log.Fields{"logical-device-id": agent.logicalDeviceID})
+
+	for meterID := range agent.meterLoader.ListIDs() {
+		if meterHandle, have := agent.meterLoader.Lock(meterID); have {
+			// Update the store and cache
+			if err := meterHandle.Delete(ctx); err != nil {
+				meterHandle.Unlock()
+				logger.Errorw(ctx, "unable-to-delete-meter", log.Fields{"logical-device-id": agent.logicalDeviceID, "meterID": meterID})
+				continue
+			}
+			meterHandle.Unlock()
+		}
+	}
+	return nil
+}

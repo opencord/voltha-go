@@ -561,3 +561,37 @@ loop:
 	logger.Debugw(ctx, "StreamPacketsOut-request-done", log.Fields{"packets": packets})
 	return nil
 }
+
+func (ldMgr *LogicalManager) deleteAllLogicalFlows(ctx context.Context, device *voltha.Device) error {
+	logger.Debugw(ctx, "deleteAllLogicalDeviceFlows", log.Fields{"device-id": device.Id})
+
+	var ldID *string
+	var err error
+	if ldID, err = ldMgr.getLogicalDeviceID(ctx, device); err != nil {
+		logger.Warnw(ctx, "no-logical-device-found", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
+		if err := agent.deleteAllLogicalFlows(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ldMgr *LogicalManager) deleteAllLogicalMeters(ctx context.Context, device *voltha.Device) error {
+	logger.Debugw(ctx, "deleteAllLogicalDeviceMeters", log.Fields{"device-id": device.Id})
+
+	var ldID *string
+	var err error
+	if ldID, err = ldMgr.getLogicalDeviceID(ctx, device); err != nil {
+		logger.Warnw(ctx, "no-logical-device-found", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
+		if err := agent.deleteALlLogicalMeters(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
