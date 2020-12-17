@@ -50,10 +50,13 @@ func (dMgr *Manager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.De
 		logger.Warnw(ctx, "delete-logical-device-error", log.Fields{"device-id": cDevice.Id})
 		return err
 	}
+	if err = dMgr.logicalDeviceMgr.deleteAllLogicalMeters(ctx, cDevice); err != nil {
+		logger.Warnw(ctx, "error-deleting-all-logical-device-meters", log.Fields{"device-id": cDevice.Id})
+	}
 	// Remove the logical device Id from the parent device
 	logicalID := ""
 	dMgr.UpdateDeviceAttribute(ctx, cDevice.Id, "ParentId", logicalID)
-	return nil
+	return err
 }
 
 // DeleteLogicalPorts removes the logical ports associated with that deviceId
@@ -114,6 +117,15 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			logger.Debugw(ctx, "invoking-delete-device", log.Fields{"device-id": childDeviceID, "force-delete": force})
+			var err error
+			// disable device to remove ports
+			if err = agent.disableDevice(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
+			//delete ports
+			if err = agent.deleteAllPorts(ctx); err != nil {
+				logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": childDeviceID, "error": err.Error()})
+			}
 			if force {
 				if err := agent.deleteDeviceForce(ctx); err != nil {
 					logger.Warnw(ctx, "failure-delete-device-force", log.Fields{"device-id": childDeviceID,

@@ -387,3 +387,20 @@ func (agent *LogicalAgent) packetIn(ctx context.Context, port uint32, packet []b
 	agent.ldeviceMgr.SendPacketIn(ctx, agent.logicalDeviceID, packetIn)
 	logger.Debugw(ctx, "sending-packet-in", log.Fields{"packet": hex.EncodeToString(packetIn.Data)})
 }
+
+func (agent *LogicalAgent) deleteAllLogicalMeters(ctx context.Context) error {
+	logger.Debugw(ctx, "deleteAllLogicalMeters", log.Fields{"logical-device-id": agent.logicalDeviceID})
+
+	for meterID := range agent.meterLoader.ListIDs() {
+		if meterHandle, have := agent.meterLoader.Lock(meterID); have {
+			// Update the store and cache
+			if err := meterHandle.Delete(ctx); err != nil {
+				meterHandle.Unlock()
+				logger.Errorw(ctx, "unable-to-delete-meter", log.Fields{"logical-device-id": agent.logicalDeviceID, "meterID": meterID})
+				continue
+			}
+			meterHandle.Unlock()
+		}
+	}
+	return nil
+}

@@ -25,13 +25,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
-
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -618,4 +617,21 @@ func (ldMgr *LogicalManager) SendRPCEvent(ctx context.Context, resourceID, desc 
 	id string, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
 	ldMgr.Manager.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
 		category, subCategory, raisedTs)
+}
+
+func (ldMgr *LogicalManager) deleteAllLogicalMeters(ctx context.Context, device *voltha.Device) error {
+	logger.Debugw(ctx, "deleteAllLogicalDeviceMeters", log.Fields{"device-id": device.Id})
+
+	var ldID *string
+	var err error
+	if ldID, err = ldMgr.getLogicalDeviceID(ctx, device); err != nil {
+		logger.Warnw(ctx, "no-logical-device-found", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
+	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
+		if err := agent.deleteAllLogicalMeters(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
