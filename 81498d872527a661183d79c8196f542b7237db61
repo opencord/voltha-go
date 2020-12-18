@@ -16,6 +16,24 @@
       "revId": "81498d872527a661183d79c8196f542b7237db61",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea007d7b_35bacc8d",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2020-12-18T11:47:42Z",
+      "side": 1,
+      "message": "It could be added easily. However, I thought the deletion of the logical device should always trigger deletion of logical meters and flows in case if someone calls delete logical device method outside of the state machine.",
+      "parentUuid": "b612fbf0_6ce56fe3",
+      "revId": "81498d872527a661183d79c8196f542b7237db61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
