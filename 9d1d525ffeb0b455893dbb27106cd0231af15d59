@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13ece1b4_3027ab6a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-18T21:57:51Z",
+      "side": 1,
+      "message": "Why AndLog?",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89277f8f_40d99533",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-18T21:57:51Z",
+      "side": 1,
+      "message": "Can this event code be simplifies as follows?\n\n1: Add the event proxy if directly to the Manager structure, hence not creating an RPCEventManager?\n\n2) Have only a SendRPCEvent() API in the Manager implementation.  This API will do what the GetAndSendRPCEvent() is presently doing, but will be part of the Manager structure.",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91c4b678_ff09a9cd",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-18T21:57:51Z",
+      "side": 1,
+      "message": "How about encapsulating the sending of the event in the logical device manager to avoid referring to the entire calling path?  The logical device Manager can have an API like SendRPCEvent().  Also, since the group-id and deviceRules are passed via the context, can the rpc name also be a key/value in the context?",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b572fc1_ce353467",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-18T21:57:51Z",
+      "side": 1,
+      "message": "Since logical device manager only makes reference to RPCEventManager, why not refer to RPCEventManager here just like in the case of deviceMgr?",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
