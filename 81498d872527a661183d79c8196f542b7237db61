@@ -34,6 +34,24 @@
       "revId": "81498d872527a661183d79c8196f542b7237db61",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06bae8d5_1969acd4",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-12-18T16:36:47Z",
+      "side": 1,
+      "message": "Creationn and deletion of the logical device is controlled only within the Core based on the OLT activation/deletion.  This means no user should be allowed to create/delete a logical device.",
+      "parentUuid": "ea007d7b_35bacc8d",
+      "revId": "81498d872527a661183d79c8196f542b7237db61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
