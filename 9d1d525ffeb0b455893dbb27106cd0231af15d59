@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ebc9fea3_e86a05c0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-22T10:47:18Z",
+      "side": 1,
+      "message": "This is for force delete case, I will rename to waitForAdapterForceDeleteResponse. I did not want to add if else statements in the waitForAdapterResponse function just for the force delete case.",
+      "parentUuid": "13ece1b4_3027ab6a",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "89277f8f_40d99533",
         "filename": "rw_core/core/device/event/event.go",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2020-12-18T21:57:51Z",
       "side": 1,
       "message": "Can this event code be simplifies as follows?\n\n1: Add the event proxy if directly to the Manager structure, hence not creating an RPCEventManager?\n\n2) Have only a SendRPCEvent() API in the Manager implementation.  This API will do what the GetAndSendRPCEvent() is presently doing, but will be part of the Manager structure.",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afbaa222_f2a673e8",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-22T10:47:18Z",
+      "side": 1,
+      "message": "I did not want to add eventProxy to Manager directly and created rpceventmanager because we need to send rpc events not only through managers, logical manager but we need to send rpc events as part of event package also for example for receive packets rpc. In such cases we need to have eventProxy under event Manager also and define all the Send functions for the same. Thats why all functions are defined here.",
+      "parentUuid": "89277f8f_40d99533",
       "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "15c333e2_cbdba774",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-22T10:47:18Z",
+      "side": 1,
+      "message": "We can only add the helper function is manager which in turn will call the GetAndSendRpcEvent from event package only just to avoid referring long path here.",
+      "parentUuid": "91c4b678_ff09a9cd",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b572fc1_ce353467",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 10
@@ -64,6 +118,24 @@
       "writtenOn": "2020-12-18T21:57:51Z",
       "side": 1,
       "message": "Since logical device manager only makes reference to RPCEventManager, why not refer to RPCEventManager here just like in the case of deviceMgr?",
+      "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "237a5e3f_2d7ef709",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2020-12-22T10:47:18Z",
+      "side": 1,
+      "message": "logical device manager makes reference to manager as well, manager includes rpc event manager also. Thats why calling NewManager here",
+      "parentUuid": "0b572fc1_ce353467",
       "revId": "9d1d525ffeb0b455893dbb27106cd0231af15d59",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
