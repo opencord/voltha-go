@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a934d272_342b60de",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1624,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-04T09:26:11Z",
+      "side": 1,
+      "message": "this at the moment blocks if there is some issue on the Kafka bus thus hailing the operation that issued it, please at least put it in a go routine.",
+      "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
