@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "ed5e4b32_4457cb31",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-01-05T21:12:49Z",
+      "side": 1,
+      "message": "The only error type this function sends is FlowModFailed. But this is also invoked for FlowAdd failed. So, I am a bit confused. Shouldn\u0027t you pass the errorType from the calling function?",
+      "range": {
+        "startLine": 143,
+        "startChar": 18,
+        "endLine": 143,
+        "endChar": 37
+      },
+      "revId": "99b095f128416b05768ab02c074e9150e5f438b2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2817e092_bf722ad2",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 9
