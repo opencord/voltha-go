@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2817e092_bf722ad2",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-01-05T21:08:29Z",
+      "side": 1,
+      "message": "Why isn\u0027t the change required for flowModifyStrict and flowDeleteStrict function? I mean, why not pass the *ofp.FlowTableUpdate instance?",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 45
+      },
+      "revId": "99b095f128416b05768ab02c074e9150e5f438b2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
