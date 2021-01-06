@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0c69bd26_a292a9c7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-06T15:39:12Z",
+      "side": 1,
+      "message": "Don\u0027t recall if I mentioned this before, but my preference would be to add the rpc name as a metadata in the context object when a request is received, either northbound or southbound.  Since we are reporting RPC errors onto the kafka bus then it would be good to make sure we are using the right RPC whenever an error needs to be reported.  The context object is the right place for that.  \n\nWhen a new context gets created (especially for background task) then the RPC metadata can be copied to the new context.",
+      "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a934d272_342b60de",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 11
