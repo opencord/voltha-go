@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7d2c5462_02977946",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-01-06T05:09:25Z",
+      "side": 1,
+      "message": "Any type of flow changes are handle under smae error type that is OfpErrorType_OFPET_FLOW_MOD_FAILED. There is no different error type for FLOW_ADD or FLOW_DELETE.\n\nCurrently defined error types are:\n/* Values for ’type’ in ofp_error_message. These values are immutable: they\n* will not change in future versions of the protocol (although new values may\n* be added). */\nenum ofp_error_type {\nOFPET_HELLO_FAILED \u003d 0, /* Hello protocol failed. */\nOFPET_BAD_REQUEST \u003d 1, /* Request was not understood. */\nOFPET_BAD_ACTION \u003d 2, /* Error in action description. */\nOFPET_BAD_INSTRUCTION \u003d 3, /* Error in instruction list. */\nOFPET_BAD_MATCH \u003d 4, /* Error in match. */\nOFPET_FLOW_MOD_FAILED \u003d 5, /* Problem modifying flow entry. */\nOFPET_GROUP_MOD_FAILED \u003d 6, /* Problem modifying group entry. */\nOFPET_PORT_MOD_FAILED \u003d 7, /* Port mod request failed. */\nOFPET_TABLE_MOD_FAILED \u003d 8, /* Table mod request failed. */\nOFPET_QUEUE_OP_FAILED \u003d 9, /* Queue operation failed. */\nOFPET_SWITCH_CONFIG_FAILED \u003d 10, /* Switch config request failed. */\nOFPET_ROLE_REQUEST_FAILED \u003d 11, /* Controller Role request failed. */\nOFPET_METER_MOD_FAILED \u003d 12, /* Error in meter. */\nOFPET_TABLE_FEATURES_FAILED \u003d 13, /* Setting table features failed. */\nOFPET_EXPERIMENTER \u003d 0xffff /* Experimenter error messages. */\n};",
+      "parentUuid": "ed5e4b32_4457cb31",
+      "range": {
+        "startLine": 143,
+        "startChar": 18,
+        "endLine": 143,
+        "endChar": 37
+      },
+      "revId": "99b095f128416b05768ab02c074e9150e5f438b2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2817e092_bf722ad2",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "99b095f128416b05768ab02c074e9150e5f438b2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50c923c6_aa4d11ed",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-01-06T05:09:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2817e092_bf722ad2",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 45
+      },
+      "revId": "99b095f128416b05768ab02c074e9150e5f438b2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
