@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "6d208985_bbb9d39e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-07T14:30:59Z",
+      "side": 1,
+      "message": "Since this is within the realm of the core then when a request is received into the Core (northbound or southbound), the rpc name gets added as a metadata to the context object at that point (for grpc you may check whether you can extract the rpc name directly from the grpc call, if possible.  Otherwise, just using that API name at that entry point is ok).  This way the rpc name is always available wherever that context is used.  This will eliminate the risk of publishing the incorrect rpc name (currently it is \"hardcoded\" to an internal function name).",
+      "parentUuid": "64c41c65_f67e3d13",
+      "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a934d272_342b60de",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 11
