@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "4d6406c3_3a727ef9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-07T15:12:55Z",
+      "side": 1,
+      "message": "Nope, this is internal to the Core.  It would be somewhat redundant for the client to add an rpc name to the metadata when invoking that rpc.  The Core can augment the context, similarly to how context gets augmented to include operation IDs.   Remember that southbound requests are over kafka.",
+      "parentUuid": "92385937_e0dee284",
+      "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a934d272_342b60de",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 11
