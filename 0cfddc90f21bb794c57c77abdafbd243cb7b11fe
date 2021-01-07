@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "64c41c65_f67e3d13",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-07T07:33:14Z",
+      "side": 1,
+      "message": "Yes we had discussed using context metadata for rpc name, but there is a drawback for that, i.e., context metadata need to be filled by the client(voltctl, nem, or southbound) and the key name would be some hardcoded key. If the client fails to send the key with exact name, we wont have the rpc name. Also since it is only required in the core, thats why I am passing the rpc name from the respective call",
+      "parentUuid": "0c69bd26_a292a9c7",
+      "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a934d272_342b60de",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 11
@@ -33,6 +51,24 @@
       "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8d2c0be_7f143346",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1624,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-07T07:33:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a934d272_342b60de",
+      "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
