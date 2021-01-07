@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "92385937_e0dee284",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-07T14:39:08Z",
+      "side": 1,
+      "message": "Should not the metadata be added at the client side i.e. voltctl or NEM",
+      "parentUuid": "6d208985_bbb9d39e",
+      "revId": "0cfddc90f21bb794c57c77abdafbd243cb7b11fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a934d272_342b60de",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 11
