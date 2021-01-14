@@ -48,6 +48,11 @@ func FrequencyOverride(frequencyOverride bool) PmMetricsOption {
 	}
 }
 
+// UpdateFrequency will update the frequency.
+func (pm *PmMetrics) UpdateFrequency(frequency uint32) {
+	pm.frequency = frequency
+}
+
 func Metrics(pmNames []string) PmMetricsOption {
 	return func(args *PmMetrics) {
 		args.metrics = make(map[string]*voltha.PmConfig)

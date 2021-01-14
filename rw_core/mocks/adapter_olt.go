@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/opencord/voltha-protos/v4/go/extension"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -130,6 +131,13 @@ func (oltA *OLTAdapter) Adopt_device(ctx context.Context, device *voltha.Device)
 		}
 	}()
 	return nil
+}
+
+// Single_get_value_request retrieves a single value.
+func (oltA *OLTAdapter) Single_get_value_request(ctx context.Context, // nolint
+	request extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
+	logger.Fatalf(ctx, "Single_get_value_request unimplemented")
+	return nil, nil
 }
 
 // Get_ofp_device_info returns ofp device info
