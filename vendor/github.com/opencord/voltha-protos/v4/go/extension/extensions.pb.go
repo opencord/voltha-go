@@ -7,6 +7,7 @@ import (
 	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	config "github.com/opencord/voltha-protos/v4/go/ext/config"
 	grpc "google.golang.org/grpc"
 	math "math"
@@ -162,6 +163,62 @@ func (GetOnuUniInfoResponse_OperationalState) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_7ecf6e9799a9202d, []int{3, 2}
 }
 
+type GetOltPortCounters_PortType int32
+
+const (
+	GetOltPortCounters_Port_UNKNOWN      GetOltPortCounters_PortType = 0
+	GetOltPortCounters_Port_ETHERNET_NNI GetOltPortCounters_PortType = 1
+	GetOltPortCounters_Port_PON_OLT      GetOltPortCounters_PortType = 2
+)
+
+var GetOltPortCounters_PortType_name = map[int32]string{
+	0: "Port_UNKNOWN",
+	1: "Port_ETHERNET_NNI",
+	2: "Port_PON_OLT",
+}
+
+var GetOltPortCounters_PortType_value = map[string]int32{
+	"Port_UNKNOWN":      0,
+	"Port_ETHERNET_NNI": 1,
+	"Port_PON_OLT":      2,
+}
+
+func (x GetOltPortCounters_PortType) String() string {
+	return proto.EnumName(GetOltPortCounters_PortType_name, int32(x))
+}
+
+func (GetOltPortCounters_PortType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{4, 0}
+}
+
+type GetOnuEthernetBridgePortHistory_Direction int32
+
+const (
+	GetOnuEthernetBridgePortHistory_UNDEFINED  GetOnuEthernetBridgePortHistory_Direction = 0
+	GetOnuEthernetBridgePortHistory_UPSTREAM   GetOnuEthernetBridgePortHistory_Direction = 1
+	GetOnuEthernetBridgePortHistory_DOWNSTREAM GetOnuEthernetBridgePortHistory_Direction = 2
+)
+
+var GetOnuEthernetBridgePortHistory_Direction_name = map[int32]string{
+	0: "UNDEFINED",
+	1: "UPSTREAM",
+	2: "DOWNSTREAM",
+}
+
+var GetOnuEthernetBridgePortHistory_Direction_value = map[string]int32{
+	"UNDEFINED":  0,
+	"UPSTREAM":   1,
+	"DOWNSTREAM": 2,
+}
+
+func (x GetOnuEthernetBridgePortHistory_Direction) String() string {
+	return proto.EnumName(GetOnuEthernetBridgePortHistory_Direction_name, int32(x))
+}
+
+func (GetOnuEthernetBridgePortHistory_Direction) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{8, 0}
+}
+
 type GetValueResponse_Status int32
 
 const (
@@ -187,24 +244,39 @@ func (x GetValueResponse_Status) String() string {
 }
 
 func (GetValueResponse_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{5, 0}
+	return fileDescriptor_7ecf6e9799a9202d, []int{13, 0}
 }
 
 type GetValueResponse_ErrorReason int32
 
 const (
-	GetValueResponse_REASON_UNDEFINED GetValueResponse_ErrorReason = 0
-	GetValueResponse_UNSUPPORTED      GetValueResponse_ErrorReason = 1
+	GetValueResponse_REASON_UNDEFINED  GetValueResponse_ErrorReason = 0
+	GetValueResponse_UNSUPPORTED       GetValueResponse_ErrorReason = 1
+	GetValueResponse_INVALID_DEVICE_ID GetValueResponse_ErrorReason = 2
+	GetValueResponse_INVALID_PORT_TYPE GetValueResponse_ErrorReason = 3
+	GetValueResponse_TIMEOUT           GetValueResponse_ErrorReason = 4
+	GetValueResponse_INVALID_REQ_TYPE  GetValueResponse_ErrorReason = 5
+	GetValueResponse_INTERNAL_ERROR    GetValueResponse_ErrorReason = 6
 )
 
 var GetValueResponse_ErrorReason_name = map[int32]string{
 	0: "REASON_UNDEFINED",
 	1: "UNSUPPORTED",
+	2: "INVALID_DEVICE_ID",
+	3: "INVALID_PORT_TYPE",
+	4: "TIMEOUT",
+	5: "INVALID_REQ_TYPE",
+	6: "INTERNAL_ERROR",
 }
 
 var GetValueResponse_ErrorReason_value = map[string]int32{
-	"REASON_UNDEFINED": 0,
-	"UNSUPPORTED":      1,
+	"REASON_UNDEFINED":  0,
+	"UNSUPPORTED":       1,
+	"INVALID_DEVICE_ID": 2,
+	"INVALID_PORT_TYPE": 3,
+	"TIMEOUT":           4,
+	"INVALID_REQ_TYPE":  5,
+	"INTERNAL_ERROR":    6,
 }
 
 func (x GetValueResponse_ErrorReason) String() string {
@@ -212,7 +284,7 @@ func (x GetValueResponse_ErrorReason) String() string {
 }
 
 func (GetValueResponse_ErrorReason) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{5, 1}
+	return fileDescriptor_7ecf6e9799a9202d, []int{13, 1}
 }
 
 type SetValueResponse_Status int32
@@ -240,7 +312,7 @@ func (x SetValueResponse_Status) String() string {
 }
 
 func (SetValueResponse_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{7, 0}
+	return fileDescriptor_7ecf6e9799a9202d, []int{15, 0}
 }
 
 type SetValueResponse_ErrorReason int32
@@ -265,7 +337,7 @@ func (x SetValueResponse_ErrorReason) String() string {
 }
 
 func (SetValueResponse_ErrorReason) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{7, 1}
+	return fileDescriptor_7ecf6e9799a9202d, []int{15, 1}
 }
 
 type GetDistanceRequest struct {
@@ -440,10 +512,633 @@ func (m *GetOnuUniInfoResponse) GetConfigInd() GetOnuUniInfoResponse_Configurati
 	return GetOnuUniInfoResponse_UNKOWN
 }
 
+type GetOltPortCounters struct {
+	PortNo               uint32                      `protobuf:"varint,1,opt,name=portNo,proto3" json:"portNo,omitempty"`
+	PortType             GetOltPortCounters_PortType `protobuf:"varint,2,opt,name=portType,proto3,enum=extension.GetOltPortCounters_PortType" json:"portType,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
+}
+
+func (m *GetOltPortCounters) Reset()         { *m = GetOltPortCounters{} }
+func (m *GetOltPortCounters) String() string { return proto.CompactTextString(m) }
+func (*GetOltPortCounters) ProtoMessage()    {}
+func (*GetOltPortCounters) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{4}
+}
+
+func (m *GetOltPortCounters) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOltPortCounters.Unmarshal(m, b)
+}
+func (m *GetOltPortCounters) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOltPortCounters.Marshal(b, m, deterministic)
+}
+func (m *GetOltPortCounters) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOltPortCounters.Merge(m, src)
+}
+func (m *GetOltPortCounters) XXX_Size() int {
+	return xxx_messageInfo_GetOltPortCounters.Size(m)
+}
+func (m *GetOltPortCounters) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOltPortCounters.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOltPortCounters proto.InternalMessageInfo
+
+func (m *GetOltPortCounters) GetPortNo() uint32 {
+	if m != nil {
+		return m.PortNo
+	}
+	return 0
+}
+
+func (m *GetOltPortCounters) GetPortType() GetOltPortCounters_PortType {
+	if m != nil {
+		return m.PortType
+	}
+	return GetOltPortCounters_Port_UNKNOWN
+}
+
+type GetOltPortCountersResponse struct {
+	TxBytes              uint64   `protobuf:"varint,1,opt,name=txBytes,proto3" json:"txBytes,omitempty"`
+	RxBytes              uint64   `protobuf:"varint,2,opt,name=rxBytes,proto3" json:"rxBytes,omitempty"`
+	TxPackets            uint64   `protobuf:"varint,3,opt,name=txPackets,proto3" json:"txPackets,omitempty"`
+	RxPackets            uint64   `protobuf:"varint,4,opt,name=rxPackets,proto3" json:"rxPackets,omitempty"`
+	TxErrorPackets       uint64   `protobuf:"varint,5,opt,name=txErrorPackets,proto3" json:"txErrorPackets,omitempty"`
+	RxErrorPackets       uint64   `protobuf:"varint,6,opt,name=rxErrorPackets,proto3" json:"rxErrorPackets,omitempty"`
+	TxBcastPackets       uint64   `protobuf:"varint,7,opt,name=txBcastPackets,proto3" json:"txBcastPackets,omitempty"`
+	RxBcastPackets       uint64   `protobuf:"varint,8,opt,name=rxBcastPackets,proto3" json:"rxBcastPackets,omitempty"`
+	TxUcastPackets       uint64   `protobuf:"varint,9,opt,name=txUcastPackets,proto3" json:"txUcastPackets,omitempty"`
+	RxUcastPackets       uint64   `protobuf:"varint,10,opt,name=rxUcastPackets,proto3" json:"rxUcastPackets,omitempty"`
+	TxMcastPackets       uint64   `protobuf:"varint,11,opt,name=txMcastPackets,proto3" json:"txMcastPackets,omitempty"`
+	RxMcastPackets       uint64   `protobuf:"varint,12,opt,name=rxMcastPackets,proto3" json:"rxMcastPackets,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetOltPortCountersResponse) Reset()         { *m = GetOltPortCountersResponse{} }
+func (m *GetOltPortCountersResponse) String() string { return proto.CompactTextString(m) }
+func (*GetOltPortCountersResponse) ProtoMessage()    {}
+func (*GetOltPortCountersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{5}
+}
+
+func (m *GetOltPortCountersResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOltPortCountersResponse.Unmarshal(m, b)
+}
+func (m *GetOltPortCountersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOltPortCountersResponse.Marshal(b, m, deterministic)
+}
+func (m *GetOltPortCountersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOltPortCountersResponse.Merge(m, src)
+}
+func (m *GetOltPortCountersResponse) XXX_Size() int {
+	return xxx_messageInfo_GetOltPortCountersResponse.Size(m)
+}
+func (m *GetOltPortCountersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOltPortCountersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOltPortCountersResponse proto.InternalMessageInfo
+
+func (m *GetOltPortCountersResponse) GetTxBytes() uint64 {
+	if m != nil {
+		return m.TxBytes
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetRxBytes() uint64 {
+	if m != nil {
+		return m.RxBytes
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetTxPackets() uint64 {
+	if m != nil {
+		return m.TxPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetRxPackets() uint64 {
+	if m != nil {
+		return m.RxPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetTxErrorPackets() uint64 {
+	if m != nil {
+		return m.TxErrorPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetRxErrorPackets() uint64 {
+	if m != nil {
+		return m.RxErrorPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetTxBcastPackets() uint64 {
+	if m != nil {
+		return m.TxBcastPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetRxBcastPackets() uint64 {
+	if m != nil {
+		return m.RxBcastPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetTxUcastPackets() uint64 {
+	if m != nil {
+		return m.TxUcastPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetRxUcastPackets() uint64 {
+	if m != nil {
+		return m.RxUcastPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetTxMcastPackets() uint64 {
+	if m != nil {
+		return m.TxMcastPackets
+	}
+	return 0
+}
+
+func (m *GetOltPortCountersResponse) GetRxMcastPackets() uint64 {
+	if m != nil {
+		return m.RxMcastPackets
+	}
+	return 0
+}
+
+type GetOnuPonOpticalInfo struct {
+	Empty                *empty.Empty `protobuf:"bytes,1,opt,name=empty,proto3" json:"empty,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *GetOnuPonOpticalInfo) Reset()         { *m = GetOnuPonOpticalInfo{} }
+func (m *GetOnuPonOpticalInfo) String() string { return proto.CompactTextString(m) }
+func (*GetOnuPonOpticalInfo) ProtoMessage()    {}
+func (*GetOnuPonOpticalInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{6}
+}
+
+func (m *GetOnuPonOpticalInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOnuPonOpticalInfo.Unmarshal(m, b)
+}
+func (m *GetOnuPonOpticalInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOnuPonOpticalInfo.Marshal(b, m, deterministic)
+}
+func (m *GetOnuPonOpticalInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOnuPonOpticalInfo.Merge(m, src)
+}
+func (m *GetOnuPonOpticalInfo) XXX_Size() int {
+	return xxx_messageInfo_GetOnuPonOpticalInfo.Size(m)
+}
+func (m *GetOnuPonOpticalInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOnuPonOpticalInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOnuPonOpticalInfo proto.InternalMessageInfo
+
+func (m *GetOnuPonOpticalInfo) GetEmpty() *empty.Empty {
+	if m != nil {
+		return m.Empty
+	}
+	return nil
+}
+
+// The types are from Table 11.2.10-1 in G.988
+type GetOnuPonOpticalInfoResponse struct {
+	LaserBiasCurrent             int32    `protobuf:"varint,1,opt,name=laserBiasCurrent,proto3" json:"laserBiasCurrent,omitempty"`
+	LaserBiasCurrentTypeId       int32    `protobuf:"varint,2,opt,name=laserBiasCurrentTypeId,proto3" json:"laserBiasCurrentTypeId,omitempty"`
+	MeanOpticalLaunchPower       int32    `protobuf:"varint,3,opt,name=meanOpticalLaunchPower,proto3" json:"meanOpticalLaunchPower,omitempty"`
+	MeanOpticalLaunchPowerTypeId int32    `protobuf:"varint,4,opt,name=meanOpticalLaunchPowerTypeId,proto3" json:"meanOpticalLaunchPowerTypeId,omitempty"`
+	PowerFeedTypeId              int32    `protobuf:"varint,5,opt,name=powerFeedTypeId,proto3" json:"powerFeedTypeId,omitempty"`
+	PowerFeedVoltage             int32    `protobuf:"varint,6,opt,name=powerFeedVoltage,proto3" json:"powerFeedVoltage,omitempty"`
+	ReceivedOpticalPower         int32    `protobuf:"varint,7,opt,name=receivedOpticalPower,proto3" json:"receivedOpticalPower,omitempty"`
+	ReceivedOpticalPowerTypeId   int32    `protobuf:"varint,8,opt,name=receivedOpticalPowerTypeId,proto3" json:"receivedOpticalPowerTypeId,omitempty"`
+	Temperature                  int32    `protobuf:"varint,9,opt,name=temperature,proto3" json:"temperature,omitempty"`
+	TemperatureTypeId            int32    `protobuf:"varint,10,opt,name=temperatureTypeId,proto3" json:"temperatureTypeId,omitempty"`
+	XXX_NoUnkeyedLiteral         struct{} `json:"-"`
+	XXX_unrecognized             []byte   `json:"-"`
+	XXX_sizecache                int32    `json:"-"`
+}
+
+func (m *GetOnuPonOpticalInfoResponse) Reset()         { *m = GetOnuPonOpticalInfoResponse{} }
+func (m *GetOnuPonOpticalInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*GetOnuPonOpticalInfoResponse) ProtoMessage()    {}
+func (*GetOnuPonOpticalInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{7}
+}
+
+func (m *GetOnuPonOpticalInfoResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOnuPonOpticalInfoResponse.Unmarshal(m, b)
+}
+func (m *GetOnuPonOpticalInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOnuPonOpticalInfoResponse.Marshal(b, m, deterministic)
+}
+func (m *GetOnuPonOpticalInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOnuPonOpticalInfoResponse.Merge(m, src)
+}
+func (m *GetOnuPonOpticalInfoResponse) XXX_Size() int {
+	return xxx_messageInfo_GetOnuPonOpticalInfoResponse.Size(m)
+}
+func (m *GetOnuPonOpticalInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOnuPonOpticalInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOnuPonOpticalInfoResponse proto.InternalMessageInfo
+
+func (m *GetOnuPonOpticalInfoResponse) GetLaserBiasCurrent() int32 {
+	if m != nil {
+		return m.LaserBiasCurrent
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetLaserBiasCurrentTypeId() int32 {
+	if m != nil {
+		return m.LaserBiasCurrentTypeId
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetMeanOpticalLaunchPower() int32 {
+	if m != nil {
+		return m.MeanOpticalLaunchPower
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetMeanOpticalLaunchPowerTypeId() int32 {
+	if m != nil {
+		return m.MeanOpticalLaunchPowerTypeId
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetPowerFeedTypeId() int32 {
+	if m != nil {
+		return m.PowerFeedTypeId
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetPowerFeedVoltage() int32 {
+	if m != nil {
+		return m.PowerFeedVoltage
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetReceivedOpticalPower() int32 {
+	if m != nil {
+		return m.ReceivedOpticalPower
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetReceivedOpticalPowerTypeId() int32 {
+	if m != nil {
+		return m.ReceivedOpticalPowerTypeId
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetTemperature() int32 {
+	if m != nil {
+		return m.Temperature
+	}
+	return 0
+}
+
+func (m *GetOnuPonOpticalInfoResponse) GetTemperatureTypeId() int32 {
+	if m != nil {
+		return m.TemperatureTypeId
+	}
+	return 0
+}
+
+type GetOnuEthernetBridgePortHistory struct {
+	Direction            GetOnuEthernetBridgePortHistory_Direction `protobuf:"varint,1,opt,name=direction,proto3,enum=extension.GetOnuEthernetBridgePortHistory_Direction" json:"direction,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                  `json:"-"`
+	XXX_unrecognized     []byte                                    `json:"-"`
+	XXX_sizecache        int32                                     `json:"-"`
+}
+
+func (m *GetOnuEthernetBridgePortHistory) Reset()         { *m = GetOnuEthernetBridgePortHistory{} }
+func (m *GetOnuEthernetBridgePortHistory) String() string { return proto.CompactTextString(m) }
+func (*GetOnuEthernetBridgePortHistory) ProtoMessage()    {}
+func (*GetOnuEthernetBridgePortHistory) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{8}
+}
+
+func (m *GetOnuEthernetBridgePortHistory) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOnuEthernetBridgePortHistory.Unmarshal(m, b)
+}
+func (m *GetOnuEthernetBridgePortHistory) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOnuEthernetBridgePortHistory.Marshal(b, m, deterministic)
+}
+func (m *GetOnuEthernetBridgePortHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOnuEthernetBridgePortHistory.Merge(m, src)
+}
+func (m *GetOnuEthernetBridgePortHistory) XXX_Size() int {
+	return xxx_messageInfo_GetOnuEthernetBridgePortHistory.Size(m)
+}
+func (m *GetOnuEthernetBridgePortHistory) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOnuEthernetBridgePortHistory.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOnuEthernetBridgePortHistory proto.InternalMessageInfo
+
+func (m *GetOnuEthernetBridgePortHistory) GetDirection() GetOnuEthernetBridgePortHistory_Direction {
+	if m != nil {
+		return m.Direction
+	}
+	return GetOnuEthernetBridgePortHistory_UNDEFINED
+}
+
+type GetOnuEthernetBridgePortHistoryResponse struct {
+	DropEvents              uint32   `protobuf:"varint,1,opt,name=dropEvents,proto3" json:"dropEvents,omitempty"`
+	Octets                  uint32   `protobuf:"varint,2,opt,name=octets,proto3" json:"octets,omitempty"`
+	Packets                 uint32   `protobuf:"varint,3,opt,name=packets,proto3" json:"packets,omitempty"`
+	BroadcastPackets        uint32   `protobuf:"varint,4,opt,name=broadcastPackets,proto3" json:"broadcastPackets,omitempty"`
+	MulticastPackets        uint32   `protobuf:"varint,5,opt,name=multicastPackets,proto3" json:"multicastPackets,omitempty"`
+	CrcErroredPackets       uint32   `protobuf:"varint,6,opt,name=crcErroredPackets,proto3" json:"crcErroredPackets,omitempty"`
+	UndersizePackets        uint32   `protobuf:"varint,7,opt,name=undersizePackets,proto3" json:"undersizePackets,omitempty"`
+	OversizePackets         uint32   `protobuf:"varint,8,opt,name=oversizePackets,proto3" json:"oversizePackets,omitempty"`
+	Packets64Octets         uint32   `protobuf:"varint,9,opt,name=packets64octets,proto3" json:"packets64octets,omitempty"`
+	Packets65To127Octets    uint32   `protobuf:"varint,10,opt,name=packets65To127octets,proto3" json:"packets65To127octets,omitempty"`
+	Packets128To255Octets   uint32   `protobuf:"varint,11,opt,name=packets128To255Octets,proto3" json:"packets128To255Octets,omitempty"`
+	Packets256To511Octets   uint32   `protobuf:"varint,12,opt,name=packets256To511octets,proto3" json:"packets256To511octets,omitempty"`
+	Packets512To1023Octets  uint32   `protobuf:"varint,13,opt,name=packets512To1023octets,proto3" json:"packets512To1023octets,omitempty"`
+	Packets1024To1518Octets uint32   `protobuf:"varint,14,opt,name=packets1024To1518octets,proto3" json:"packets1024To1518octets,omitempty"`
+	XXX_NoUnkeyedLiteral    struct{} `json:"-"`
+	XXX_unrecognized        []byte   `json:"-"`
+	XXX_sizecache           int32    `json:"-"`
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) Reset() {
+	*m = GetOnuEthernetBridgePortHistoryResponse{}
+}
+func (m *GetOnuEthernetBridgePortHistoryResponse) String() string { return proto.CompactTextString(m) }
+func (*GetOnuEthernetBridgePortHistoryResponse) ProtoMessage()    {}
+func (*GetOnuEthernetBridgePortHistoryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{9}
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOnuEthernetBridgePortHistoryResponse.Unmarshal(m, b)
+}
+func (m *GetOnuEthernetBridgePortHistoryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOnuEthernetBridgePortHistoryResponse.Marshal(b, m, deterministic)
+}
+func (m *GetOnuEthernetBridgePortHistoryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOnuEthernetBridgePortHistoryResponse.Merge(m, src)
+}
+func (m *GetOnuEthernetBridgePortHistoryResponse) XXX_Size() int {
+	return xxx_messageInfo_GetOnuEthernetBridgePortHistoryResponse.Size(m)
+}
+func (m *GetOnuEthernetBridgePortHistoryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOnuEthernetBridgePortHistoryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOnuEthernetBridgePortHistoryResponse proto.InternalMessageInfo
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetDropEvents() uint32 {
+	if m != nil {
+		return m.DropEvents
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetOctets() uint32 {
+	if m != nil {
+		return m.Octets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetPackets() uint32 {
+	if m != nil {
+		return m.Packets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetBroadcastPackets() uint32 {
+	if m != nil {
+		return m.BroadcastPackets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetMulticastPackets() uint32 {
+	if m != nil {
+		return m.MulticastPackets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetCrcErroredPackets() uint32 {
+	if m != nil {
+		return m.CrcErroredPackets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetUndersizePackets() uint32 {
+	if m != nil {
+		return m.UndersizePackets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetOversizePackets() uint32 {
+	if m != nil {
+		return m.OversizePackets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetPackets64Octets() uint32 {
+	if m != nil {
+		return m.Packets64Octets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetPackets65To127Octets() uint32 {
+	if m != nil {
+		return m.Packets65To127Octets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetPackets128To255Octets() uint32 {
+	if m != nil {
+		return m.Packets128To255Octets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetPackets256To511Octets() uint32 {
+	if m != nil {
+		return m.Packets256To511Octets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetPackets512To1023Octets() uint32 {
+	if m != nil {
+		return m.Packets512To1023Octets
+	}
+	return 0
+}
+
+func (m *GetOnuEthernetBridgePortHistoryResponse) GetPackets1024To1518Octets() uint32 {
+	if m != nil {
+		return m.Packets1024To1518Octets
+	}
+	return 0
+}
+
+type GetOnuFecHistory struct {
+	Empty                *empty.Empty `protobuf:"bytes,1,opt,name=empty,proto3" json:"empty,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *GetOnuFecHistory) Reset()         { *m = GetOnuFecHistory{} }
+func (m *GetOnuFecHistory) String() string { return proto.CompactTextString(m) }
+func (*GetOnuFecHistory) ProtoMessage()    {}
+func (*GetOnuFecHistory) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{10}
+}
+
+func (m *GetOnuFecHistory) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOnuFecHistory.Unmarshal(m, b)
+}
+func (m *GetOnuFecHistory) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOnuFecHistory.Marshal(b, m, deterministic)
+}
+func (m *GetOnuFecHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOnuFecHistory.Merge(m, src)
+}
+func (m *GetOnuFecHistory) XXX_Size() int {
+	return xxx_messageInfo_GetOnuFecHistory.Size(m)
+}
+func (m *GetOnuFecHistory) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOnuFecHistory.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOnuFecHistory proto.InternalMessageInfo
+
+func (m *GetOnuFecHistory) GetEmpty() *empty.Empty {
+	if m != nil {
+		return m.Empty
+	}
+	return nil
+}
+
+type GetOnuFecHistoryResponse struct {
+	CorrectedBytes         uint32   `protobuf:"varint,1,opt,name=correctedBytes,proto3" json:"correctedBytes,omitempty"`
+	CorrectedCodeWords     uint32   `protobuf:"varint,2,opt,name=correctedCodeWords,proto3" json:"correctedCodeWords,omitempty"`
+	FecSeconds             uint32   `protobuf:"varint,3,opt,name=fecSeconds,proto3" json:"fecSeconds,omitempty"`
+	TotalCodeWords         uint32   `protobuf:"varint,4,opt,name=totalCodeWords,proto3" json:"totalCodeWords,omitempty"`
+	UncorrectableCodeWords uint32   `protobuf:"varint,5,opt,name=uncorrectableCodeWords,proto3" json:"uncorrectableCodeWords,omitempty"`
+	XXX_NoUnkeyedLiteral   struct{} `json:"-"`
+	XXX_unrecognized       []byte   `json:"-"`
+	XXX_sizecache          int32    `json:"-"`
+}
+
+func (m *GetOnuFecHistoryResponse) Reset()         { *m = GetOnuFecHistoryResponse{} }
+func (m *GetOnuFecHistoryResponse) String() string { return proto.CompactTextString(m) }
+func (*GetOnuFecHistoryResponse) ProtoMessage()    {}
+func (*GetOnuFecHistoryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7ecf6e9799a9202d, []int{11}
+}
+
+func (m *GetOnuFecHistoryResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetOnuFecHistoryResponse.Unmarshal(m, b)
+}
+func (m *GetOnuFecHistoryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetOnuFecHistoryResponse.Marshal(b, m, deterministic)
+}
+func (m *GetOnuFecHistoryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetOnuFecHistoryResponse.Merge(m, src)
+}
+func (m *GetOnuFecHistoryResponse) XXX_Size() int {
+	return xxx_messageInfo_GetOnuFecHistoryResponse.Size(m)
+}
+func (m *GetOnuFecHistoryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetOnuFecHistoryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetOnuFecHistoryResponse proto.InternalMessageInfo
+
+func (m *GetOnuFecHistoryResponse) GetCorrectedBytes() uint32 {
+	if m != nil {
+		return m.CorrectedBytes
+	}
+	return 0
+}
+
+func (m *GetOnuFecHistoryResponse) GetCorrectedCodeWords() uint32 {
+	if m != nil {
+		return m.CorrectedCodeWords
+	}
+	return 0
+}
+
+func (m *GetOnuFecHistoryResponse) GetFecSeconds() uint32 {
+	if m != nil {
+		return m.FecSeconds
+	}
+	return 0
+}
+
+func (m *GetOnuFecHistoryResponse) GetTotalCodeWords() uint32 {
+	if m != nil {
+		return m.TotalCodeWords
+	}
+	return 0
+}
+
+func (m *GetOnuFecHistoryResponse) GetUncorrectableCodeWords() uint32 {
+	if m != nil {
+		return m.UncorrectableCodeWords
+	}
+	return 0
+}
+
 type GetValueRequest struct {
 	// Types that are valid to be assigned to Request:
 	//	*GetValueRequest_Distance
 	//	*GetValueRequest_UniInfo
+	//	*GetValueRequest_OltPortInfo
+	//	*GetValueRequest_OnuOpticalInfo
+	//	*GetValueRequest_EthBridgePort
+	//	*GetValueRequest_FecHistory
 	Request              isGetValueRequest_Request `protobuf_oneof:"request"`
 	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
 	XXX_unrecognized     []byte                    `json:"-"`
@@ -454,7 +1149,7 @@ func (m *GetValueRequest) Reset()         { *m = GetValueRequest{} }
 func (m *GetValueRequest) String() string { return proto.CompactTextString(m) }
 func (*GetValueRequest) ProtoMessage()    {}
 func (*GetValueRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{4}
+	return fileDescriptor_7ecf6e9799a9202d, []int{12}
 }
 
 func (m *GetValueRequest) XXX_Unmarshal(b []byte) error {
@@ -487,9 +1182,33 @@ type GetValueRequest_UniInfo struct {
 	UniInfo *GetOnuUniInfoRequest `protobuf:"bytes,2,opt,name=uniInfo,proto3,oneof"`
 }
 
+type GetValueRequest_OltPortInfo struct {
+	OltPortInfo *GetOltPortCounters `protobuf:"bytes,3,opt,name=oltPortInfo,proto3,oneof"`
+}
+
+type GetValueRequest_OnuOpticalInfo struct {
+	OnuOpticalInfo *GetOnuPonOpticalInfo `protobuf:"bytes,4,opt,name=onuOpticalInfo,proto3,oneof"`
+}
+
+type GetValueRequest_EthBridgePort struct {
+	EthBridgePort *GetOnuEthernetBridgePortHistory `protobuf:"bytes,5,opt,name=ethBridgePort,proto3,oneof"`
+}
+
+type GetValueRequest_FecHistory struct {
+	FecHistory *GetOnuFecHistory `protobuf:"bytes,6,opt,name=fecHistory,proto3,oneof"`
+}
+
 func (*GetValueRequest_Distance) isGetValueRequest_Request() {}
 
 func (*GetValueRequest_UniInfo) isGetValueRequest_Request() {}
+
+func (*GetValueRequest_OltPortInfo) isGetValueRequest_Request() {}
+
+func (*GetValueRequest_OnuOpticalInfo) isGetValueRequest_Request() {}
+
+func (*GetValueRequest_EthBridgePort) isGetValueRequest_Request() {}
+
+func (*GetValueRequest_FecHistory) isGetValueRequest_Request() {}
 
 func (m *GetValueRequest) GetRequest() isGetValueRequest_Request {
 	if m != nil {
@@ -512,11 +1231,43 @@ func (m *GetValueRequest) GetUniInfo() *GetOnuUniInfoRequest {
 	return nil
 }
 
+func (m *GetValueRequest) GetOltPortInfo() *GetOltPortCounters {
+	if x, ok := m.GetRequest().(*GetValueRequest_OltPortInfo); ok {
+		return x.OltPortInfo
+	}
+	return nil
+}
+
+func (m *GetValueRequest) GetOnuOpticalInfo() *GetOnuPonOpticalInfo {
+	if x, ok := m.GetRequest().(*GetValueRequest_OnuOpticalInfo); ok {
+		return x.OnuOpticalInfo
+	}
+	return nil
+}
+
+func (m *GetValueRequest) GetEthBridgePort() *GetOnuEthernetBridgePortHistory {
+	if x, ok := m.GetRequest().(*GetValueRequest_EthBridgePort); ok {
+		return x.EthBridgePort
+	}
+	return nil
+}
+
+func (m *GetValueRequest) GetFecHistory() *GetOnuFecHistory {
+	if x, ok := m.GetRequest().(*GetValueRequest_FecHistory); ok {
+		return x.FecHistory
+	}
+	return nil
+}
+
 // XXX_OneofWrappers is for the internal use of the proto package.
 func (*GetValueRequest) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
 		(*GetValueRequest_Distance)(nil),
 		(*GetValueRequest_UniInfo)(nil),
+		(*GetValueRequest_OltPortInfo)(nil),
+		(*GetValueRequest_OnuOpticalInfo)(nil),
+		(*GetValueRequest_EthBridgePort)(nil),
+		(*GetValueRequest_FecHistory)(nil),
 	}
 }
 
@@ -526,6 +1277,10 @@ type GetValueResponse struct {
 	// Types that are valid to be assigned to Response:
 	//	*GetValueResponse_Distance
 	//	*GetValueResponse_UniInfo
+	//	*GetValueResponse_PortCoutners
+	//	*GetValueResponse_OnuOpticalInfo
+	//	*GetValueResponse_EthBridgePortInfo
+	//	*GetValueResponse_FecHistory
 	Response             isGetValueResponse_Response `protobuf_oneof:"response"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
@@ -536,7 +1291,7 @@ func (m *GetValueResponse) Reset()         { *m = GetValueResponse{} }
 func (m *GetValueResponse) String() string { return proto.CompactTextString(m) }
 func (*GetValueResponse) ProtoMessage()    {}
 func (*GetValueResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{5}
+	return fileDescriptor_7ecf6e9799a9202d, []int{13}
 }
 
 func (m *GetValueResponse) XXX_Unmarshal(b []byte) error {
@@ -583,9 +1338,33 @@ type GetValueResponse_UniInfo struct {
 	UniInfo *GetOnuUniInfoResponse `protobuf:"bytes,4,opt,name=uniInfo,proto3,oneof"`
 }
 
+type GetValueResponse_PortCoutners struct {
+	PortCoutners *GetOltPortCountersResponse `protobuf:"bytes,5,opt,name=portCoutners,proto3,oneof"`
+}
+
+type GetValueResponse_OnuOpticalInfo struct {
+	OnuOpticalInfo *GetOnuPonOpticalInfoResponse `protobuf:"bytes,6,opt,name=onuOpticalInfo,proto3,oneof"`
+}
+
+type GetValueResponse_EthBridgePortInfo struct {
+	EthBridgePortInfo *GetOnuEthernetBridgePortHistoryResponse `protobuf:"bytes,7,opt,name=ethBridgePortInfo,proto3,oneof"`
+}
+
+type GetValueResponse_FecHistory struct {
+	FecHistory *GetOnuFecHistoryResponse `protobuf:"bytes,8,opt,name=fecHistory,proto3,oneof"`
+}
+
 func (*GetValueResponse_Distance) isGetValueResponse_Response() {}
 
 func (*GetValueResponse_UniInfo) isGetValueResponse_Response() {}
+
+func (*GetValueResponse_PortCoutners) isGetValueResponse_Response() {}
+
+func (*GetValueResponse_OnuOpticalInfo) isGetValueResponse_Response() {}
+
+func (*GetValueResponse_EthBridgePortInfo) isGetValueResponse_Response() {}
+
+func (*GetValueResponse_FecHistory) isGetValueResponse_Response() {}
 
 func (m *GetValueResponse) GetResponse() isGetValueResponse_Response {
 	if m != nil {
@@ -608,11 +1387,43 @@ func (m *GetValueResponse) GetUniInfo() *GetOnuUniInfoResponse {
 	return nil
 }
 
+func (m *GetValueResponse) GetPortCoutners() *GetOltPortCountersResponse {
+	if x, ok := m.GetResponse().(*GetValueResponse_PortCoutners); ok {
+		return x.PortCoutners
+	}
+	return nil
+}
+
+func (m *GetValueResponse) GetOnuOpticalInfo() *GetOnuPonOpticalInfoResponse {
+	if x, ok := m.GetResponse().(*GetValueResponse_OnuOpticalInfo); ok {
+		return x.OnuOpticalInfo
+	}
+	return nil
+}
+
+func (m *GetValueResponse) GetEthBridgePortInfo() *GetOnuEthernetBridgePortHistoryResponse {
+	if x, ok := m.GetResponse().(*GetValueResponse_EthBridgePortInfo); ok {
+		return x.EthBridgePortInfo
+	}
+	return nil
+}
+
+func (m *GetValueResponse) GetFecHistory() *GetOnuFecHistoryResponse {
+	if x, ok := m.GetResponse().(*GetValueResponse_FecHistory); ok {
+		return x.FecHistory
+	}
+	return nil
+}
+
 // XXX_OneofWrappers is for the internal use of the proto package.
 func (*GetValueResponse) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
 		(*GetValueResponse_Distance)(nil),
 		(*GetValueResponse_UniInfo)(nil),
+		(*GetValueResponse_PortCoutners)(nil),
+		(*GetValueResponse_OnuOpticalInfo)(nil),
+		(*GetValueResponse_EthBridgePortInfo)(nil),
+		(*GetValueResponse_FecHistory)(nil),
 	}
 }
 
@@ -629,7 +1440,7 @@ func (m *SetValueRequest) Reset()         { *m = SetValueRequest{} }
 func (m *SetValueRequest) String() string { return proto.CompactTextString(m) }
 func (*SetValueRequest) ProtoMessage()    {}
 func (*SetValueRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{6}
+	return fileDescriptor_7ecf6e9799a9202d, []int{14}
 }
 
 func (m *SetValueRequest) XXX_Unmarshal(b []byte) error {
@@ -693,7 +1504,7 @@ func (m *SetValueResponse) Reset()         { *m = SetValueResponse{} }
 func (m *SetValueResponse) String() string { return proto.CompactTextString(m) }
 func (*SetValueResponse) ProtoMessage()    {}
 func (*SetValueResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{7}
+	return fileDescriptor_7ecf6e9799a9202d, []int{15}
 }
 
 func (m *SetValueResponse) XXX_Unmarshal(b []byte) error {
@@ -740,7 +1551,7 @@ func (m *SingleGetValueRequest) Reset()         { *m = SingleGetValueRequest{} }
 func (m *SingleGetValueRequest) String() string { return proto.CompactTextString(m) }
 func (*SingleGetValueRequest) ProtoMessage()    {}
 func (*SingleGetValueRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{8}
+	return fileDescriptor_7ecf6e9799a9202d, []int{16}
 }
 
 func (m *SingleGetValueRequest) XXX_Unmarshal(b []byte) error {
@@ -786,7 +1597,7 @@ func (m *SingleGetValueResponse) Reset()         { *m = SingleGetValueResponse{}
 func (m *SingleGetValueResponse) String() string { return proto.CompactTextString(m) }
 func (*SingleGetValueResponse) ProtoMessage()    {}
 func (*SingleGetValueResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{9}
+	return fileDescriptor_7ecf6e9799a9202d, []int{17}
 }
 
 func (m *SingleGetValueResponse) XXX_Unmarshal(b []byte) error {
@@ -826,7 +1637,7 @@ func (m *SingleSetValueRequest) Reset()         { *m = SingleSetValueRequest{} }
 func (m *SingleSetValueRequest) String() string { return proto.CompactTextString(m) }
 func (*SingleSetValueRequest) ProtoMessage()    {}
 func (*SingleSetValueRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{10}
+	return fileDescriptor_7ecf6e9799a9202d, []int{18}
 }
 
 func (m *SingleSetValueRequest) XXX_Unmarshal(b []byte) error {
@@ -872,7 +1683,7 @@ func (m *SingleSetValueResponse) Reset()         { *m = SingleSetValueResponse{}
 func (m *SingleSetValueResponse) String() string { return proto.CompactTextString(m) }
 func (*SingleSetValueResponse) ProtoMessage()    {}
 func (*SingleSetValueResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7ecf6e9799a9202d, []int{11}
+	return fileDescriptor_7ecf6e9799a9202d, []int{19}
 }
 
 func (m *SingleSetValueResponse) XXX_Unmarshal(b []byte) error {
@@ -904,6 +1715,8 @@ func init() {
 	proto.RegisterEnum("extension.GetOnuUniInfoResponse_ConfigurationInd", GetOnuUniInfoResponse_ConfigurationInd_name, GetOnuUniInfoResponse_ConfigurationInd_value)
 	proto.RegisterEnum("extension.GetOnuUniInfoResponse_AdministrativeState", GetOnuUniInfoResponse_AdministrativeState_name, GetOnuUniInfoResponse_AdministrativeState_value)
 	proto.RegisterEnum("extension.GetOnuUniInfoResponse_OperationalState", GetOnuUniInfoResponse_OperationalState_name, GetOnuUniInfoResponse_OperationalState_value)
+	proto.RegisterEnum("extension.GetOltPortCounters_PortType", GetOltPortCounters_PortType_name, GetOltPortCounters_PortType_value)
+	proto.RegisterEnum("extension.GetOnuEthernetBridgePortHistory_Direction", GetOnuEthernetBridgePortHistory_Direction_name, GetOnuEthernetBridgePortHistory_Direction_value)
 	proto.RegisterEnum("extension.GetValueResponse_Status", GetValueResponse_Status_name, GetValueResponse_Status_value)
 	proto.RegisterEnum("extension.GetValueResponse_ErrorReason", GetValueResponse_ErrorReason_name, GetValueResponse_ErrorReason_value)
 	proto.RegisterEnum("extension.SetValueResponse_Status", SetValueResponse_Status_name, SetValueResponse_Status_value)
@@ -912,6 +1725,14 @@ func init() {
 	proto.RegisterType((*GetDistanceResponse)(nil), "extension.GetDistanceResponse")
 	proto.RegisterType((*GetOnuUniInfoRequest)(nil), "extension.GetOnuUniInfoRequest")
 	proto.RegisterType((*GetOnuUniInfoResponse)(nil), "extension.GetOnuUniInfoResponse")
+	proto.RegisterType((*GetOltPortCounters)(nil), "extension.GetOltPortCounters")
+	proto.RegisterType((*GetOltPortCountersResponse)(nil), "extension.GetOltPortCountersResponse")
+	proto.RegisterType((*GetOnuPonOpticalInfo)(nil), "extension.GetOnuPonOpticalInfo")
+	proto.RegisterType((*GetOnuPonOpticalInfoResponse)(nil), "extension.GetOnuPonOpticalInfoResponse")
+	proto.RegisterType((*GetOnuEthernetBridgePortHistory)(nil), "extension.GetOnuEthernetBridgePortHistory")
+	proto.RegisterType((*GetOnuEthernetBridgePortHistoryResponse)(nil), "extension.GetOnuEthernetBridgePortHistoryResponse")
+	proto.RegisterType((*GetOnuFecHistory)(nil), "extension.GetOnuFecHistory")
+	proto.RegisterType((*GetOnuFecHistoryResponse)(nil), "extension.GetOnuFecHistoryResponse")
 	proto.RegisterType((*GetValueRequest)(nil), "extension.GetValueRequest")
 	proto.RegisterType((*GetValueResponse)(nil), "extension.GetValueResponse")
 	proto.RegisterType((*SetValueRequest)(nil), "extension.SetValueRequest")
@@ -925,60 +1746,124 @@ func init() {
 func init() { proto.RegisterFile("voltha_protos/extensions.proto", fileDescriptor_7ecf6e9799a9202d) }
 
 var fileDescriptor_7ecf6e9799a9202d = []byte{
-	// 844 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xd1, 0x6e, 0xdb, 0x36,
-	0x14, 0xb5, 0x9c, 0xd4, 0xb1, 0xaf, 0xba, 0x46, 0x60, 0xd2, 0x2e, 0xf0, 0xd0, 0x2e, 0xd3, 0xcb,
-	0xf6, 0x32, 0x05, 0xf1, 0x82, 0x6d, 0x58, 0xfb, 0x62, 0x57, 0x8c, 0x6d, 0xa4, 0x93, 0x3c, 0xd2,
-	0xee, 0x8a, 0xbd, 0x18, 0xaa, 0xcd, 0xba, 0x02, 0x1c, 0xd2, 0x93, 0xa8, 0x20, 0x5f, 0xb0, 0x4f,
-	0xd8, 0x8f, 0xec, 0x0f, 0xf6, 0x27, 0xfb, 0x91, 0x61, 0x90, 0x48, 0x4b, 0x96, 0xea, 0x24, 0x0d,
-	0x36, 0xec, 0xf1, 0x5e, 0xde, 0x73, 0x78, 0x79, 0xcf, 0xb9, 0xb6, 0xe0, 0xd9, 0x95, 0x58, 0xca,
-	0xf7, 0xc1, 0x74, 0x15, 0x09, 0x29, 0xe2, 0x13, 0x76, 0x2d, 0x19, 0x8f, 0x43, 0xc1, 0x63, 0x27,
-	0xcb, 0xa0, 0x56, 0x9e, 0x69, 0x7f, 0x58, 0x3a, 0x9d, 0x09, 0xfe, 0x2e, 0x5c, 0xa8, 0x52, 0xfb,
-	0x5b, 0x40, 0x7d, 0x26, 0xdd, 0x30, 0x96, 0x01, 0x9f, 0x31, 0xc2, 0x7e, 0x4d, 0x58, 0x2c, 0xd1,
-	0x31, 0x98, 0x82, 0x27, 0x2e, 0xbb, 0x0a, 0x67, 0x6c, 0x38, 0x3f, 0x32, 0x8e, 0x8d, 0xaf, 0x5a,
-	0x64, 0x33, 0x65, 0x9f, 0xc2, 0x41, 0x09, 0x17, 0xaf, 0x04, 0x8f, 0x19, 0x6a, 0x43, 0x73, 0xae,
-	0x73, 0x19, 0xea, 0x13, 0x92, 0xc7, 0x76, 0x07, 0x0e, 0xfb, 0x4c, 0xfa, 0x3c, 0x99, 0xf0, 0x70,
-	0xc8, 0xdf, 0x89, 0xf5, 0x65, 0x6d, 0x68, 0x26, 0x69, 0x66, 0xce, 0xae, 0xd7, 0x98, 0x75, 0x6c,
-	0xff, 0xb5, 0x0b, 0x8f, 0x2b, 0x20, 0x7d, 0xd3, 0x08, 0x9a, 0xc1, 0xfc, 0x92, 0xca, 0x40, 0xaa,
-	0x9b, 0x1e, 0x75, 0xce, 0x9c, 0xfc, 0xd9, 0xce, 0x56, 0x8c, 0xd3, 0x9d, 0x5f, 0x86, 0x3c, 0x8c,
-	0x65, 0x14, 0xc8, 0xf0, 0x8a, 0x65, 0x58, 0x92, 0xb3, 0x20, 0x1f, 0x5a, 0x62, 0xc5, 0x22, 0x45,
-	0x59, 0xcf, 0x28, 0x4f, 0xef, 0xa4, 0xf4, 0x57, 0x2c, 0x65, 0x13, 0x3c, 0x58, 0x2a, 0xbe, 0x82,
-	0x23, 0x25, 0x54, 0xb3, 0x1e, 0xf2, 0xf9, 0xd1, 0xce, 0x47, 0x12, 0xbe, 0xcc, 0x10, 0x89, 0x22,
-	0x1d, 0xf2, 0x39, 0x29, 0x38, 0xec, 0x3f, 0x0d, 0xb0, 0xaa, 0xe7, 0x08, 0xa0, 0x31, 0xf1, 0x2e,
-	0xfc, 0x9f, 0x3d, 0xab, 0x86, 0x10, 0x3c, 0x1a, 0x63, 0x6f, 0xda, 0xeb, 0x52, 0x3c, 0x1d, 0x4f,
-	0xcf, 0xdd, 0x37, 0x96, 0x81, 0x9e, 0x00, 0x1a, 0x4c, 0x3c, 0x97, 0x60, 0x77, 0x33, 0x5f, 0x47,
-	0x47, 0x70, 0xd8, 0x1f, 0xf6, 0xbb, 0xbd, 0xe1, 0x78, 0x8a, 0xc7, 0x03, 0x4c, 0x3c, 0xac, 0x4e,
-	0x76, 0x52, 0x44, 0xca, 0xd2, 0x2f, 0xe7, 0x77, 0x2b, 0xec, 0x03, 0xf7, 0x8d, 0xf5, 0x60, 0x0b,
-	0x7b, 0x9a, 0x6f, 0x6c, 0x65, 0x4f, 0x4f, 0xf6, 0xec, 0x3e, 0x1c, 0x6c, 0xd1, 0x21, 0x25, 0xea,
-	0xba, 0x3f, 0xd2, 0x71, 0x77, 0x8c, 0xa7, 0x13, 0xcf, 0xc5, 0xe7, 0x43, 0x0f, 0xbb, 0x56, 0x2d,
-	0x7d, 0xde, 0x2b, 0xff, 0xe5, 0x05, 0x76, 0x2d, 0x03, 0x3d, 0x84, 0xe6, 0xc4, 0xd3, 0x51, 0xdd,
-	0x3e, 0x07, 0xab, 0x3a, 0x7d, 0xf4, 0x29, 0x1c, 0xf8, 0x23, 0x4c, 0x3e, 0xa4, 0x31, 0x61, 0x0f,
-	0x7b, 0xdd, 0xde, 0xab, 0x35, 0x8f, 0x3b, 0xa4, 0x2a, 0xaa, 0xdb, 0xbf, 0x1b, 0xb0, 0xdf, 0x67,
-	0xf2, 0x75, 0xb0, 0x4c, 0xf2, 0x05, 0x78, 0x5e, 0xf1, 0xb1, 0xd9, 0x79, 0x5a, 0x56, 0xae, 0xb2,
-	0x31, 0x83, 0x5a, 0x61, 0x74, 0xf4, 0x1c, 0xf6, 0x12, 0xa5, 0x6a, 0x66, 0x23, 0xb3, 0xf3, 0xf9,
-	0xcd, 0xaa, 0xaf, 0xd1, 0x6b, 0x44, 0xaf, 0x05, 0x7b, 0x91, 0xca, 0xda, 0xbf, 0xed, 0x80, 0x55,
-	0x34, 0xa6, 0x7d, 0xff, 0x03, 0x34, 0x62, 0x19, 0xc8, 0x24, 0xd6, 0xae, 0xb7, 0xcb, 0xdc, 0xa5,
-	0x62, 0x87, 0x66, 0x95, 0x44, 0x23, 0x10, 0x86, 0x16, 0x8b, 0x22, 0xc2, 0x82, 0x58, 0x70, 0xed,
-	0xf0, 0x2f, 0x6f, 0x83, 0xe3, 0x28, 0x12, 0xba, 0x9c, 0x14, 0x48, 0xf4, 0x62, 0x63, 0x38, 0x3b,
-	0xd9, 0x03, 0x9f, 0xdd, 0x34, 0x1c, 0x45, 0x54, 0x9a, 0xce, 0x8b, 0x62, 0x3a, 0xbb, 0x19, 0xf8,
-	0xf8, 0xae, 0x9d, 0xd8, 0x18, 0x8f, 0x7d, 0x0a, 0x0d, 0xf5, 0x28, 0x74, 0x08, 0x56, 0x2a, 0xf3,
-	0x84, 0x96, 0x74, 0x6e, 0x40, 0xdd, 0xbf, 0xb0, 0x0c, 0xd4, 0x82, 0x07, 0x98, 0x10, 0x9f, 0x58,
-	0x75, 0xfb, 0x0c, 0xcc, 0x8d, 0x87, 0xa4, 0x38, 0x82, 0xbb, 0xd4, 0xf7, 0x4a, 0xb8, 0x7d, 0x30,
-	0x27, 0x1e, 0x9d, 0x8c, 0x46, 0x3e, 0x19, 0xa7, 0x1e, 0xe9, 0x01, 0x34, 0x23, 0x7d, 0xbf, 0xfd,
-	0x1a, 0xf6, 0x69, 0xc5, 0x20, 0xdf, 0xc3, 0xc3, 0x60, 0x19, 0x44, 0x97, 0xfa, 0xd7, 0x54, 0x9b,
-	0xe4, 0xc0, 0xd1, 0x3f, 0xae, 0xdd, 0xf4, 0x4c, 0xad, 0xea, 0xa0, 0x46, 0xcc, 0xa0, 0x08, 0x37,
-	0x05, 0xfe, 0xdb, 0x00, 0x8b, 0xde, 0x47, 0x60, 0xfa, 0xef, 0x04, 0xa6, 0x1f, 0x27, 0xf0, 0xff,
-	0x36, 0x64, 0x3b, 0x84, 0xc7, 0x34, 0xe4, 0x8b, 0x25, 0xab, 0xee, 0x5f, 0x1b, 0x9a, 0x32, 0x88,
-	0x16, 0x4c, 0xe6, 0xff, 0x3e, 0x79, 0x8c, 0xce, 0xf2, 0x01, 0xea, 0xf5, 0x6a, 0x6f, 0xf5, 0x70,
-	0x56, 0x41, 0xf2, 0x59, 0xff, 0x04, 0x4f, 0xaa, 0x57, 0xe9, 0x81, 0x7f, 0x57, 0x28, 0xad, 0x65,
-	0xfc, 0xec, 0x96, 0xa5, 0x20, 0x85, 0x2d, 0xf2, 0xee, 0xe9, 0x7f, 0xd5, 0x3d, 0xbd, 0xb3, 0x7b,
-	0x7a, 0xbf, 0xee, 0xe9, 0x8d, 0xdd, 0x77, 0xfe, 0x30, 0xa0, 0x85, 0xd7, 0x85, 0x88, 0x80, 0xd9,
-	0x67, 0x12, 0x5f, 0xab, 0x72, 0xb4, 0xb9, 0x93, 0x5b, 0x15, 0x6a, 0x7f, 0x71, 0x4b, 0x85, 0x6e,
-	0x8d, 0x80, 0x49, 0x6f, 0xe5, 0xa4, 0x77, 0x72, 0x56, 0xfb, 0xef, 0x11, 0x78, 0x2a, 0xa2, 0x85,
-	0x23, 0x56, 0x8c, 0xcf, 0x44, 0x34, 0x77, 0xd4, 0xe7, 0x4d, 0x81, 0xfb, 0xe5, 0x74, 0x11, 0xca,
-	0xf7, 0xc9, 0x5b, 0x67, 0x26, 0x2e, 0x4f, 0xd6, 0x55, 0x27, 0xaa, 0xea, 0x6b, 0xfd, 0x11, 0x74,
-	0x75, 0x76, 0xb2, 0x10, 0xc5, 0x57, 0xd3, 0xa8, 0xf6, 0xb6, 0x91, 0x9d, 0x7c, 0xf3, 0x4f, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xa4, 0x45, 0xe3, 0xcc, 0x59, 0x09, 0x00, 0x00,
+	// 1872 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0xdd, 0x72, 0x1a, 0xc9,
+	0x15, 0x16, 0x48, 0x20, 0x38, 0x48, 0xf2, 0xb8, 0x6d, 0x69, 0x55, 0xb2, 0xd7, 0xeb, 0x4c, 0x2a,
+	0xf6, 0xd6, 0xd6, 0x06, 0x2d, 0xac, 0xe4, 0x55, 0x65, 0x37, 0xa9, 0x80, 0x18, 0x49, 0x94, 0xa4,
+	0x01, 0xf7, 0x80, 0xbc, 0xc9, 0x0d, 0x35, 0x62, 0xda, 0x88, 0x0a, 0x9a, 0x26, 0x3d, 0x8d, 0x22,
+	0xe7, 0x35, 0x72, 0x93, 0x3c, 0x45, 0x2e, 0x72, 0xe1, 0xfb, 0x5c, 0xe7, 0x25, 0xf2, 0x0a, 0x79,
+	0x80, 0x54, 0xaa, 0x7f, 0x66, 0x98, 0x19, 0x40, 0xb2, 0x9d, 0xbd, 0xa3, 0xcf, 0xf9, 0xbe, 0xaf,
+	0x9b, 0x3e, 0x5f, 0x9f, 0x99, 0x1e, 0x78, 0x76, 0x43, 0x47, 0xfc, 0xca, 0xed, 0x8d, 0x19, 0xe5,
+	0x34, 0xd8, 0x25, 0xb7, 0x9c, 0xf8, 0xc1, 0x90, 0xfa, 0x41, 0x59, 0x46, 0x50, 0x31, 0x8a, 0xec,
+	0xcc, 0x42, 0x7b, 0x7d, 0xea, 0xbf, 0x1d, 0x0e, 0x14, 0x74, 0xe7, 0xc9, 0x80, 0xd2, 0xc1, 0x88,
+	0xec, 0xca, 0xd1, 0xe5, 0xe4, 0xed, 0x2e, 0xb9, 0x1e, 0xf3, 0x77, 0x2a, 0x69, 0xbe, 0x02, 0x74,
+	0x4c, 0x78, 0x63, 0x18, 0x70, 0xd7, 0xef, 0x13, 0x4c, 0xfe, 0x38, 0x21, 0x01, 0x47, 0xcf, 0xa1,
+	0x44, 0xfd, 0x49, 0x83, 0xdc, 0x0c, 0xfb, 0xa4, 0xe9, 0x6d, 0x67, 0x9e, 0x67, 0xbe, 0x2c, 0xe2,
+	0x78, 0xc8, 0xac, 0xc0, 0xa3, 0x04, 0x2f, 0x18, 0x53, 0x3f, 0x20, 0x68, 0x07, 0x0a, 0x9e, 0x8e,
+	0x49, 0xd6, 0x3a, 0x8e, 0xc6, 0x66, 0x15, 0x1e, 0x1f, 0x13, 0xde, 0xf2, 0x27, 0x5d, 0x7f, 0xd8,
+	0xf4, 0xdf, 0xd2, 0x70, 0xb2, 0x1d, 0x28, 0x4c, 0x44, 0xc4, 0x23, 0xb7, 0x21, 0x27, 0x1c, 0x9b,
+	0xff, 0x5e, 0x81, 0xcd, 0x14, 0x49, 0xcf, 0xd4, 0x86, 0x82, 0xeb, 0x5d, 0x3b, 0xdc, 0xe5, 0x6a,
+	0xa6, 0x8d, 0xea, 0x5e, 0x39, 0xda, 0x93, 0xf2, 0x5c, 0x4e, 0xb9, 0xe6, 0x5d, 0x0f, 0xfd, 0x61,
+	0xc0, 0x99, 0xcb, 0x87, 0x37, 0x44, 0x72, 0x71, 0xa4, 0x82, 0x5a, 0x50, 0xa4, 0x63, 0xc2, 0x94,
+	0x64, 0x56, 0x4a, 0x56, 0xee, 0x95, 0x6c, 0x8d, 0x89, 0x50, 0xa3, 0xbe, 0x3b, 0x52, 0x7a, 0x53,
+	0x0d, 0x21, 0xa8, 0x0a, 0xd1, 0xf4, 0xbd, 0xed, 0xe5, 0x0f, 0x14, 0x3c, 0x94, 0x8c, 0x89, 0x12,
+	0x6d, 0xfa, 0x1e, 0x9e, 0x6a, 0x98, 0xff, 0xcc, 0x80, 0x91, 0xce, 0x23, 0x80, 0x7c, 0xd7, 0x3e,
+	0x6d, 0xbd, 0xb1, 0x8d, 0x25, 0x84, 0x60, 0xa3, 0x63, 0xd9, 0xbd, 0x7a, 0xcd, 0xb1, 0x7a, 0x9d,
+	0xde, 0x51, 0xe3, 0x47, 0x23, 0x83, 0xb6, 0x00, 0x9d, 0x74, 0xed, 0x06, 0xb6, 0x1a, 0xf1, 0x78,
+	0x16, 0x6d, 0xc3, 0xe3, 0xe3, 0xe6, 0x71, 0xad, 0xde, 0xec, 0xf4, 0xac, 0xce, 0x89, 0x85, 0x6d,
+	0x4b, 0x65, 0x96, 0x05, 0x43, 0xa8, 0x1c, 0x27, 0xe3, 0x2b, 0x29, 0xf5, 0x93, 0xc6, 0x8f, 0x46,
+	0x6e, 0x8e, 0xba, 0x88, 0xe7, 0xe7, 0xaa, 0x8b, 0xcc, 0xaa, 0x79, 0x0c, 0x8f, 0xe6, 0xd4, 0x41,
+	0x08, 0xd5, 0x1a, 0xe7, 0x4e, 0xa7, 0xd6, 0xb1, 0x7a, 0x5d, 0xbb, 0x61, 0x1d, 0x35, 0x6d, 0xab,
+	0x61, 0x2c, 0x89, 0xbf, 0x77, 0xd6, 0x3a, 0x3c, 0xb5, 0x1a, 0x46, 0x06, 0xad, 0x41, 0xa1, 0x6b,
+	0xeb, 0x51, 0xd6, 0x3c, 0x02, 0x23, 0xbd, 0xfb, 0xe8, 0x33, 0x78, 0xd4, 0x6a, 0x5b, 0x78, 0x56,
+	0xa6, 0x04, 0xab, 0x96, 0x5d, 0xab, 0x9f, 0x85, 0x3a, 0x8d, 0xa6, 0xa3, 0x46, 0x59, 0xf3, 0x7d,
+	0x46, 0x9e, 0x81, 0xd6, 0x88, 0xb7, 0x29, 0xe3, 0x87, 0x74, 0xe2, 0x73, 0xc2, 0x02, 0xb4, 0x05,
+	0xf9, 0x31, 0x65, 0xdc, 0xa6, 0xda, 0x94, 0x7a, 0x84, 0xea, 0x50, 0x10, 0xbf, 0x3a, 0xef, 0xc6,
+	0xa1, 0x4b, 0x5e, 0xa4, 0x8a, 0x9a, 0x14, 0x2a, 0xb7, 0x35, 0x1a, 0x47, 0x3c, 0xd3, 0x82, 0x42,
+	0x18, 0x45, 0x06, 0xac, 0x89, 0xdf, 0xbd, 0xae, 0x7d, 0x6a, 0xab, 0x2a, 0x6e, 0xc2, 0x43, 0x19,
+	0x89, 0x36, 0xce, 0xb6, 0x9b, 0x46, 0x26, 0x02, 0xb6, 0x5b, 0x76, 0xaf, 0x75, 0xd6, 0x31, 0xb2,
+	0xe6, 0xbf, 0x96, 0x61, 0x67, 0x76, 0xc2, 0xe8, 0x88, 0x6c, 0xc3, 0x2a, 0xbf, 0xad, 0xbf, 0xe3,
+	0x24, 0x90, 0x7f, 0x61, 0x05, 0x87, 0x43, 0x91, 0x61, 0x3a, 0x93, 0x55, 0x19, 0x3d, 0x44, 0x4f,
+	0xa1, 0xc8, 0x6f, 0xdb, 0x6e, 0xff, 0x0f, 0x84, 0x07, 0xd2, 0xb3, 0x2b, 0x78, 0x1a, 0x10, 0x59,
+	0x16, 0x65, 0x57, 0x54, 0x36, 0x0a, 0xa0, 0x17, 0xb0, 0xc1, 0x6f, 0x2d, 0xc6, 0x28, 0x0b, 0x21,
+	0x39, 0x09, 0x49, 0x45, 0x05, 0x8e, 0x25, 0x71, 0x79, 0x85, 0x63, 0x33, 0x38, 0x7e, 0x5b, 0xef,
+	0xbb, 0x01, 0x0f, 0x71, 0xab, 0xa1, 0x5e, 0x3c, 0xaa, 0xf4, 0x12, 0xb8, 0x42, 0xa8, 0x97, 0xc6,
+	0xf1, 0xdb, 0x6e, 0x1c, 0x57, 0x0c, 0xf5, 0xba, 0x33, 0x7a, 0x09, 0x1c, 0x84, 0x7a, 0xdd, 0x19,
+	0xbd, 0xf3, 0x38, 0xae, 0x14, 0xea, 0x9d, 0xcf, 0xe8, 0x25, 0x70, 0x6b, 0xa1, 0x5e, 0x3c, 0x6a,
+	0x36, 0xc2, 0x06, 0xd9, 0xa6, 0x7e, 0x6b, 0xcc, 0x87, 0x7d, 0x77, 0x24, 0x5a, 0x03, 0xfa, 0x1a,
+	0x72, 0xb2, 0x65, 0xcb, 0x2a, 0x96, 0xaa, 0x5b, 0x65, 0xd5, 0xd0, 0xcb, 0x61, 0x43, 0x2f, 0x5b,
+	0x22, 0x8b, 0x15, 0xc8, 0xfc, 0xeb, 0x0a, 0x3c, 0x9d, 0x27, 0x13, 0xd9, 0xe2, 0x2b, 0x30, 0x46,
+	0x6e, 0x40, 0x58, 0x7d, 0xe8, 0x06, 0x87, 0x13, 0xc6, 0x88, 0xcf, 0xa5, 0x72, 0x0e, 0xcf, 0xc4,
+	0xd1, 0x2b, 0xd8, 0x4a, 0xc7, 0x84, 0x69, 0x9b, 0x9e, 0xf4, 0x4d, 0x0e, 0x2f, 0xc8, 0x0a, 0xde,
+	0x35, 0x71, 0xc3, 0xe9, 0xcf, 0xdc, 0x89, 0xdf, 0xbf, 0x6a, 0xd3, 0x3f, 0x11, 0x26, 0x3d, 0x95,
+	0xc3, 0x0b, 0xb2, 0xa8, 0x0e, 0x4f, 0xe7, 0x67, 0xf4, 0xac, 0x2b, 0x92, 0x7d, 0x27, 0x06, 0x7d,
+	0x09, 0x0f, 0xc6, 0x62, 0x78, 0x44, 0x88, 0xa7, 0x69, 0x39, 0x49, 0x4b, 0x87, 0xc5, 0x4e, 0x44,
+	0xa1, 0x0b, 0x3a, 0xe2, 0xee, 0x80, 0x48, 0x2b, 0xe6, 0xf0, 0x4c, 0x1c, 0x55, 0xe1, 0x31, 0x23,
+	0x7d, 0x32, 0xbc, 0x21, 0x9e, 0x9e, 0x59, 0xfd, 0x9f, 0x55, 0x89, 0x9f, 0x9b, 0x43, 0xbf, 0x81,
+	0x9d, 0x79, 0x71, 0xbd, 0xa8, 0x82, 0x64, 0xde, 0x81, 0x10, 0x8f, 0x61, 0x4e, 0xae, 0x65, 0x8f,
+	0x9b, 0x30, 0x22, 0xdd, 0x9a, 0xc3, 0xf1, 0x10, 0xfa, 0x1a, 0x1e, 0xc6, 0x86, 0x5a, 0x18, 0x24,
+	0x6e, 0x36, 0x61, 0xfe, 0x3d, 0x03, 0x5f, 0x28, 0x6b, 0x58, 0xfc, 0x8a, 0x30, 0x9f, 0xf0, 0x3a,
+	0x1b, 0x7a, 0x03, 0x22, 0xba, 0xc7, 0xc9, 0x30, 0xe0, 0x94, 0xbd, 0x43, 0x18, 0x8a, 0xde, 0x90,
+	0x91, 0xbe, 0xe8, 0xaa, 0x0b, 0x1f, 0xac, 0x0b, 0xe9, 0xe5, 0x46, 0xc8, 0xc5, 0x53, 0x19, 0xf3,
+	0x00, 0x8a, 0x51, 0x1c, 0xad, 0x43, 0x31, 0xde, 0x98, 0x45, 0x4f, 0x6f, 0x3b, 0x1d, 0x6c, 0xd5,
+	0xce, 0x8d, 0x0c, 0xda, 0x00, 0x68, 0xb4, 0xde, 0xd8, 0x7a, 0x9c, 0x35, 0xff, 0x92, 0x83, 0x97,
+	0xf7, 0x4c, 0x19, 0xf9, 0xfa, 0x19, 0x80, 0xc7, 0xe8, 0xd8, 0xba, 0x21, 0x3e, 0x0f, 0x74, 0xd3,
+	0x8e, 0x45, 0x44, 0x43, 0xa7, 0x7d, 0x2e, 0x8e, 0x5f, 0x56, 0x35, 0x74, 0x35, 0x12, 0xcd, 0x70,
+	0x1c, 0x6b, 0x78, 0xeb, 0x38, 0x1c, 0x0a, 0x7f, 0x5c, 0x32, 0xea, 0x7a, 0xf1, 0xa3, 0xbb, 0x22,
+	0x21, 0x33, 0x71, 0x81, 0xbd, 0x9e, 0x8c, 0x44, 0x09, 0xa7, 0xd8, 0x9c, 0xc2, 0xa6, 0xe3, 0xa2,
+	0x6a, 0x7d, 0xd6, 0x97, 0xbd, 0x8e, 0x78, 0xf1, 0x1e, 0xb8, 0x8e, 0x67, 0x13, 0x42, 0x79, 0xe2,
+	0x7b, 0x84, 0x05, 0xc3, 0x3f, 0x93, 0x78, 0x23, 0x5c, 0xc7, 0x33, 0x71, 0xe1, 0x7d, 0x7a, 0x93,
+	0x84, 0x16, 0x24, 0x34, 0x1d, 0x96, 0xa7, 0x44, 0xfd, 0x7c, 0xb5, 0xa7, 0xb7, 0xa5, 0xa8, 0x90,
+	0xa9, 0xb0, 0x70, 0x7e, 0x18, 0xda, 0xef, 0xd0, 0x4a, 0xf5, 0x3b, 0x0d, 0x07, 0x09, 0x9f, 0x9b,
+	0x43, 0x7b, 0xb0, 0xa9, 0xe3, 0x95, 0xea, 0x41, 0x87, 0x56, 0xf7, 0xf7, 0x5b, 0x8a, 0x54, 0x92,
+	0xa4, 0xf9, 0xc9, 0x18, 0xab, 0xba, 0xff, 0xaa, 0x43, 0xf7, 0x2b, 0x15, 0x3d, 0xd5, 0x5a, 0x82,
+	0x95, 0x4c, 0x8a, 0x5e, 0xa3, 0x13, 0xfb, 0x95, 0x6a, 0x87, 0x56, 0xbe, 0xa9, 0x7e, 0xab, 0x69,
+	0xeb, 0x92, 0xb6, 0x20, 0x8b, 0x0e, 0xe0, 0xb3, 0x70, 0x19, 0xdf, 0x54, 0xf7, 0x3a, 0xb4, 0xb2,
+	0x5f, 0x39, 0xd0, 0xc4, 0x0d, 0x49, 0x5c, 0x94, 0x36, 0x7f, 0x0b, 0x86, 0x32, 0xe5, 0x11, 0xe9,
+	0x87, 0xe7, 0xe6, 0xe3, 0x9a, 0xf4, 0x7f, 0x32, 0xb0, 0x9d, 0x96, 0x88, 0x8c, 0xfc, 0x02, 0x36,
+	0xfa, 0x94, 0x89, 0xf3, 0x42, 0xbc, 0xe9, 0xe3, 0x7b, 0x1d, 0xa7, 0xa2, 0xa8, 0x0c, 0x28, 0x8a,
+	0x1c, 0x52, 0x8f, 0xbc, 0xa1, 0xcc, 0x0b, 0xcd, 0x3d, 0x27, 0x23, 0x0e, 0xc8, 0x5b, 0xd2, 0x77,
+	0x48, 0x9f, 0xfa, 0x5e, 0xe8, 0xf5, 0x58, 0x44, 0x3e, 0xcf, 0x28, 0x77, 0x47, 0x53, 0x2d, 0x65,
+	0xf6, 0x54, 0x54, 0x6c, 0xf8, 0xc4, 0xd7, 0xfa, 0xee, 0xe5, 0x88, 0x4c, 0xf1, 0xca, 0xf0, 0x0b,
+	0xb2, 0xe6, 0xfb, 0x65, 0x78, 0x70, 0x4c, 0xf8, 0x85, 0x3b, 0x9a, 0x44, 0x37, 0x8d, 0xef, 0x53,
+	0x17, 0x86, 0x52, 0xf5, 0xf3, 0x64, 0xb7, 0x49, 0x5d, 0x4d, 0x4e, 0x96, 0xa6, 0x37, 0x0a, 0xf4,
+	0x3d, 0xac, 0x4e, 0xd4, 0xeb, 0xb3, 0xfc, 0xd7, 0xa5, 0xea, 0x17, 0x8b, 0x5f, 0xaf, 0x43, 0x76,
+	0xc8, 0x40, 0x35, 0x28, 0x51, 0xf5, 0xe2, 0x24, 0x05, 0x96, 0xe7, 0x4d, 0x9e, 0x7a, 0xb3, 0x3a,
+	0x59, 0xc2, 0x71, 0x0e, 0x6a, 0xc2, 0x06, 0xf5, 0x27, 0xb1, 0x67, 0xac, 0xdc, 0xb0, 0x79, 0xcb,
+	0x48, 0x3e, 0x8a, 0x4f, 0x96, 0x70, 0x8a, 0x88, 0x30, 0xac, 0x13, 0x7e, 0x35, 0x6d, 0x6e, 0x72,
+	0x2b, 0x4b, 0xd5, 0xaf, 0x3e, 0xbc, 0xf5, 0x9e, 0x2c, 0xe1, 0xa4, 0x04, 0xfa, 0xb5, 0xac, 0xb7,
+	0x4e, 0xcb, 0xfe, 0x52, 0xaa, 0x3e, 0x99, 0x11, 0x9c, 0x1a, 0xf0, 0x64, 0x09, 0xc7, 0x08, 0xf5,
+	0x22, 0xac, 0x32, 0xb5, 0x6d, 0xe6, 0xfb, 0xbc, 0x74, 0xbc, 0xae, 0x9c, 0xb6, 0xe9, 0xaf, 0x20,
+	0x1f, 0x70, 0x97, 0x4f, 0x02, 0xfd, 0x98, 0x30, 0x93, 0xd2, 0x09, 0x70, 0xd9, 0x91, 0x48, 0xac,
+	0x19, 0xc8, 0x82, 0x22, 0x61, 0x0c, 0x13, 0x37, 0xa0, 0xbe, 0x7e, 0x8b, 0x7e, 0x79, 0x17, 0x5d,
+	0xb6, 0x44, 0x05, 0xc7, 0x53, 0x26, 0xfa, 0x21, 0xe6, 0x1e, 0x55, 0xc0, 0x67, 0x8b, 0xdc, 0xa3,
+	0x84, 0x12, 0xf6, 0xf9, 0x61, 0x6a, 0x1f, 0x55, 0xb7, 0xe7, 0xf7, 0xdd, 0xce, 0xe2, 0xfe, 0x39,
+	0x85, 0xb5, 0xb1, 0xf2, 0x06, 0xf7, 0x09, 0x0b, 0x74, 0xc1, 0x7e, 0x71, 0xa7, 0x81, 0x62, 0x3a,
+	0x09, 0x32, 0x7a, 0x3d, 0xe3, 0x24, 0x55, 0xae, 0x97, 0xf7, 0x38, 0x29, 0x26, 0x98, 0x76, 0xd4,
+	0x25, 0x3c, 0x4c, 0xd8, 0x41, 0xaa, 0xae, 0x4a, 0xd5, 0xea, 0x87, 0xbb, 0x2a, 0x36, 0xc1, 0xac,
+	0x1c, 0xb2, 0x12, 0x0e, 0x2b, 0x48, 0xf1, 0x9f, 0xdf, 0xe1, 0xb0, 0x98, 0x5a, 0x8c, 0x68, 0x56,
+	0x20, 0xaf, 0xfc, 0x81, 0x1e, 0x83, 0x21, 0xee, 0x6e, 0x5d, 0x27, 0x71, 0x79, 0xcb, 0x43, 0xb6,
+	0x75, 0x6a, 0x64, 0x50, 0x11, 0x72, 0x16, 0xc6, 0x2d, 0x6c, 0x64, 0xcd, 0xbf, 0x65, 0xa0, 0x14,
+	0x33, 0x85, 0x20, 0x62, 0xab, 0xe6, 0xb4, 0xec, 0x04, 0xf1, 0x01, 0x94, 0xba, 0xb6, 0xd3, 0x6d,
+	0xb7, 0x5b, 0xb8, 0x23, 0x6f, 0x7e, 0x9b, 0xf0, 0xb0, 0x69, 0x5f, 0xd4, 0xce, 0x9a, 0x8d, 0x5e,
+	0xc3, 0xba, 0x68, 0x1e, 0x5a, 0xbd, 0x66, 0xc3, 0xc8, 0xc6, 0xc3, 0x02, 0xda, 0xeb, 0xfc, 0xae,
+	0x6d, 0x19, 0xcb, 0xe2, 0xd2, 0xd8, 0x69, 0x9e, 0x5b, 0xad, 0x6e, 0xc7, 0x58, 0x11, 0x33, 0x84,
+	0x18, 0x6c, 0xbd, 0x56, 0x90, 0x9c, 0xb8, 0x13, 0x37, 0xed, 0x8e, 0x85, 0xed, 0xda, 0x59, 0x4f,
+	0xad, 0x2d, 0x5f, 0x07, 0x28, 0x30, 0xfd, 0x47, 0xcd, 0x0b, 0x78, 0xe0, 0xa4, 0x5a, 0xde, 0x01,
+	0xac, 0xb9, 0x23, 0x97, 0x5d, 0xeb, 0xaf, 0x34, 0xba, 0xed, 0x3d, 0x2a, 0xeb, 0x8f, 0x36, 0x35,
+	0x91, 0x53, 0xb7, 0x7c, 0xd1, 0x6f, 0xdc, 0xe9, 0x30, 0x7e, 0x22, 0xff, 0x9b, 0x01, 0xc3, 0xf9,
+	0x98, 0x13, 0xe9, 0xfc, 0x7f, 0x27, 0xd2, 0xf9, 0xb0, 0x13, 0xf9, 0x29, 0xa5, 0xdc, 0xfb, 0x94,
+	0x4a, 0x9a, 0x43, 0xd8, 0x74, 0x86, 0xfe, 0x60, 0x44, 0xd2, 0x4f, 0x94, 0x1d, 0x28, 0x70, 0x97,
+	0x0d, 0x08, 0x8f, 0x3e, 0x5c, 0x45, 0x63, 0xb4, 0x17, 0x6d, 0xa0, 0x7e, 0x60, 0xec, 0xcc, 0x6d,
+	0x3a, 0x12, 0x81, 0xa3, 0xbd, 0x7e, 0x0d, 0x5b, 0xe9, 0xa9, 0xf4, 0x86, 0x7f, 0x37, 0xad, 0xb4,
+	0x2e, 0xe3, 0x93, 0x3b, 0xba, 0x18, 0x9e, 0xda, 0x22, 0x5a, 0xbd, 0xf3, 0x53, 0xad, 0xde, 0xb9,
+	0x77, 0xf5, 0xce, 0xc7, 0xad, 0xde, 0x59, 0xb8, 0xfa, 0xea, 0x3f, 0x32, 0x50, 0xb4, 0x42, 0x20,
+	0xc2, 0x50, 0x3a, 0x26, 0xdc, 0xba, 0x55, 0x70, 0x14, 0x6f, 0xa2, 0x73, 0x2b, 0xb4, 0xf3, 0xb3,
+	0x3b, 0x10, 0x7a, 0x69, 0x18, 0x4a, 0xce, 0x9d, 0x9a, 0xce, 0xbd, 0x9a, 0xe9, 0xf5, 0xd7, 0x31,
+	0x7c, 0x4e, 0xd9, 0xa0, 0x4c, 0xc7, 0x44, 0xbc, 0x9e, 0x78, 0x65, 0xf5, 0xd9, 0x74, 0xca, 0xfb,
+	0x7d, 0x65, 0x30, 0xe4, 0x57, 0x93, 0xcb, 0x72, 0x9f, 0x5e, 0xef, 0x86, 0xa8, 0x5d, 0x85, 0xfa,
+	0xa5, 0xfe, 0xb8, 0x7a, 0xb3, 0xb7, 0x3b, 0xa0, 0xd3, 0xaf, 0xb1, 0xed, 0xa5, 0xcb, 0xbc, 0xcc,
+	0x7c, 0xfb, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe7, 0x8e, 0x67, 0xd3, 0xb1, 0x15, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.

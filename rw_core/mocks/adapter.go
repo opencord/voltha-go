@@ -19,6 +19,7 @@ package mocks
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/voltha-protos/v4/go/extension"
 	"strconv"
 	"strings"
 	"sync"
@@ -264,6 +265,12 @@ func (ta *Adapter) Start_omci_test(ctx context.Context, device *voltha.Device, r
 }
 
 func (ta *Adapter) Get_ext_value(ctx context.Context, deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { //nolint
+	return nil, nil
+}
+
+// Single_get_value_request retrieves a single value.
+func (ta *Adapter) Single_get_value_request(ctx context.Context, // nolint
+	request extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
 	return nil, nil
 }
 

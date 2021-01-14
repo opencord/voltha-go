@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/opencord/voltha-protos/v4/go/extension"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -125,6 +126,13 @@ func (onuA *ONUAdapter) Adopt_device(ctx context.Context, device *voltha.Device)
 		onuA.updateDevice(d)
 	}()
 	return nil
+}
+
+// Single_get_value_request retrieves a single value.
+func (onuA *ONUAdapter) Single_get_value_request(ctx context.Context, // nolint
+	request extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
+	logger.Fatalf(ctx, "Single_get_value_request unimplemented")
+	return nil, nil
 }
 
 // Disable_device disables device
