@@ -674,6 +674,7 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
 	cloned.Reason = device.Reason
+	cloned.ImageDownloads = device.ImageDownloads
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
