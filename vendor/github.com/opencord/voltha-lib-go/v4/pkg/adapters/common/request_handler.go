@@ -1,4 +1,5 @@
 /*
+/*
  * Copyright 2018-present Open Networking Foundation
 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +26,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v4/pkg/adapters/adapterif"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-protos/v4/go/extension"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	"github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
@@ -558,24 +560,219 @@ func (rhp *RequestHandlerProxy) Process_inter_adapter_message(ctx context.Contex
 	return new(empty.Empty), nil
 }
 
-func (rhp *RequestHandlerProxy) Download_image(args []*ic.Argument) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+func (rhp *RequestHandlerProxy) Download_image(ctx context.Context, args []*ic.Argument) (*voltha.ImageDownload, error) {
+	if len(args) < 3 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+
+	device := &voltha.Device{}
+	image := &voltha.ImageDownload{}
+	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "request":
+			if err := ptypes.UnmarshalAny(arg.Value, image); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-image", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.FromTopic:
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-from-topic", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+
+	imageDownload, err := rhp.adapter.Download_image(ctx, device, image)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageDownload, nil
 }
 
-func (rhp *RequestHandlerProxy) Get_image_download_status(args []*ic.Argument) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+func (rhp *RequestHandlerProxy) Get_image_download_status(ctx context.Context, args []*ic.Argument) (*voltha.ImageDownload, error) {
+	if len(args) < 3 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+
+	device := &voltha.Device{}
+	image := &voltha.ImageDownload{}
+	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "request":
+			if err := ptypes.UnmarshalAny(arg.Value, image); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-image", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.FromTopic:
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-from-topic", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+
+	imageDownload, err := rhp.adapter.Get_image_download_status(ctx, device, image)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageDownload, nil
 }
 
-func (rhp *RequestHandlerProxy) Cancel_image_download(args []*ic.Argument) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+func (rhp *RequestHandlerProxy) Cancel_image_download(ctx context.Context, args []*ic.Argument) (*voltha.ImageDownload, error) {
+	if len(args) < 3 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+
+	device := &voltha.Device{}
+	image := &voltha.ImageDownload{}
+	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "request":
+			if err := ptypes.UnmarshalAny(arg.Value, image); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-image", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.FromTopic:
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-from-topic", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+
+	imageDownload, err := rhp.adapter.Cancel_image_download(ctx, device, image)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageDownload, nil
 }
 
-func (rhp *RequestHandlerProxy) Activate_image_update(args []*ic.Argument) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+func (rhp *RequestHandlerProxy) Activate_image_update(ctx context.Context, args []*ic.Argument) (*voltha.ImageDownload, error) {
+	if len(args) < 3 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+
+	device := &voltha.Device{}
+	image := &voltha.ImageDownload{}
+	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "request":
+			if err := ptypes.UnmarshalAny(arg.Value, image); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-image", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.FromTopic:
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-from-topic", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+
+	imageDownload, err := rhp.adapter.Activate_image_update(ctx, device, image)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageDownload, nil
 }
 
-func (rhp *RequestHandlerProxy) Revert_image_update(args []*ic.Argument) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+func (rhp *RequestHandlerProxy) Revert_image_update(ctx context.Context, args []*ic.Argument) (*voltha.ImageDownload, error) {
+	if len(args) < 3 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		err := errors.New("invalid-number-of-args")
+		return nil, err
+	}
+
+	device := &voltha.Device{}
+	image := &voltha.ImageDownload{}
+	transactionID := &ic.StrType{}
+	fromTopic := &ic.StrType{}
+	for _, arg := range args {
+		switch arg.Key {
+		case "device":
+			if err := ptypes.UnmarshalAny(arg.Value, device); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		case "request":
+			if err := ptypes.UnmarshalAny(arg.Value, image); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-image", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.TransactionKey:
+			if err := ptypes.UnmarshalAny(arg.Value, transactionID); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+				return nil, err
+			}
+		case kafka.FromTopic:
+			if err := ptypes.UnmarshalAny(arg.Value, fromTopic); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-from-topic", log.Fields{"error": err})
+				return nil, err
+			}
+		}
+	}
+
+	imageDownload, err := rhp.adapter.Revert_image_update(ctx, device, image)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageDownload, nil
 }
 
 func (rhp *RequestHandlerProxy) Enable_port(ctx context.Context, args []*ic.Argument) error {
@@ -732,4 +929,35 @@ func (rhp *RequestHandlerProxy) Get_ext_value(ctx context.Context, args []*ic.Ar
 
 	//Invoke the Get_value API on the adapter
 	return rhp.adapter.Get_ext_value(ctx, pDeviceId.Val, device, voltha.ValueType_Type(valuetype.Val))
+}
+
+func (rhp *RequestHandlerProxy) Single_get_value_request(ctx context.Context, args []*ic.Argument) (*extension.SingleGetValueResponse, error) {
+	logger.Debugw(ctx, "req handler Single_get_value_request", log.Fields{"no of args": len(args), "args": args})
+
+	if len(args) < 1 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		return nil, errors.New("invalid-number-of-args")
+	}
+	singleGetvalueReq := extension.SingleGetValueRequest{}
+	errResp := func(status extension.GetValueResponse_Status, reason extension.GetValueResponse_ErrorReason) *extension.SingleGetValueResponse {
+		return &extension.SingleGetValueResponse{
+			Response: &extension.GetValueResponse{
+				Status:    status,
+				ErrReason: reason,
+			},
+		}
+	}
+	for _, arg := range args {
+		switch arg.Key {
+		case "request":
+			if err := ptypes.UnmarshalAny(arg.Value, &singleGetvalueReq); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-singleGetvalueReq", log.Fields{"error": err})
+				return errResp(extension.GetValueResponse_ERROR, extension.GetValueResponse_REASON_UNDEFINED), nil
+			}
+		default:
+			logger.Warnw(ctx, "key-not-found", log.Fields{"arg.Key": arg.Key})
+		}
+	}
+	logger.Debugw(ctx, "invoke rhp.adapter.Single_get_value_request ", log.Fields{"singleGetvalueReq": singleGetvalueReq})
+	return rhp.adapter.Single_get_value_request(ctx, singleGetvalueReq)
 }
