@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91acba9a_f3ee0642",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-18T15:18:14Z",
+      "side": 1,
+      "message": "This is created but I do not see any routine waiting for any failure events.  Is this expected?",
+      "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "337dfa02_a7b3b2c9",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-18T15:18:14Z",
+      "side": 1,
+      "message": "The deferred above was commented out because as far as i can remember it had an issue when the container is stopped.  Do you see any error when stopping the kafkaClientEvent?   If not then uncommented the kafkaClient.Stop() line as well.",
+      "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a63d6d7a_11223c4f",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-18T15:18:14Z",
+      "side": 1,
+      "message": "Do you still need to add the \"addFlowToAdapter\" rpc when the original RPC is in the context?",
+      "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a43bb454_652430e9",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-18T15:18:14Z",
+      "side": 1,
+      "message": "Why not just \"SentRPCEvents()\"",
+      "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e06df0fe_825e97b6",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-18T15:18:14Z",
+      "side": 1,
+      "message": "Debug?",
+      "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
