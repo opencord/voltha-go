@@ -1623,3 +1623,15 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
 
 }
+
+func (dMgr *Manager) GetDeviceReasons(ctx context.Context, deviceID *voltha.ID) (*voltha.DeviceReasons, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": deviceID.Id})
+
+	logger.Debugw(ctx, "GetDeviceUpdate", log.Fields{"device-id": deviceID.Id})
+	agent := dMgr.getDeviceAgent(ctx, deviceID.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "device-%s", deviceID.Id)
+	}
+	reasons := agent.listDeviceReasons(ctx, deviceID.Id)
+	return reasons, nil
+}

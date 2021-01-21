@@ -33,6 +33,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/flow"
 	"github.com/opencord/voltha-go/rw_core/core/device/group"
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
+	"github.com/opencord/voltha-go/rw_core/core/device/reason"
 	"github.com/opencord/voltha-go/rw_core/core/device/remote"
 	"github.com/opencord/voltha-go/rw_core/core/device/transientstate"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -67,6 +68,7 @@ type Agent struct {
 	flowLoader           *flow.Loader
 	groupLoader          *group.Loader
 	portLoader           *port.Loader
+	reasonLoader         *reason.Loader
 	transientStateLoader *transientstate.Loader
 }
 
@@ -75,6 +77,13 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 	deviceID := device.Id
 	if deviceID == "" {
 		deviceID = coreutils.CreateDeviceID()
+	}
+
+	var reasonLoader *reason.Loader
+	if device.Root {
+		reasonLoader = reason.NewLoader(dbPath.SubPath("reasons").Proxy(deviceID))
+	} else {
+		reasonLoader = reason.NewLoader(dbPath.SubPath("reasons").Proxy(device.ParentId + "/" + deviceID))
 	}
 
 	return &Agent{
@@ -94,6 +103,7 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 		groupLoader:          group.NewLoader(dbPath.SubPath("groups").Proxy(deviceID)),
 		portLoader:           port.NewLoader(dbPath.SubPath("ports").Proxy(deviceID)),
 		transientStateLoader: transientstate.NewLoader(dbPath.SubPath("core").Proxy("transientstate"), deviceID),
+		reasonLoader:         reasonLoader,
 	}
 }
 
@@ -673,7 +683,6 @@ func (agent *Agent) updateDeviceUsingAdapterData(ctx context.Context, device *vo
 	cloned.SerialNumber = device.SerialNumber
 	cloned.MacAddress = device.MacAddress
 	cloned.Vlan = device.Vlan
-	cloned.Reason = device.Reason
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
@@ -831,8 +840,11 @@ func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error
 	logger.Debugw(ctx, "updateDeviceReason", log.Fields{"device-id": agent.deviceID, "reason": reason})
 
 	cloned := agent.cloneDeviceWithoutLock()
-	cloned.Reason = reason
-	return agent.updateDeviceAndReleaseLock(ctx, cloned)
+	retErr := agent.updateDeviceAndReleaseLock(ctx, cloned)
+	if retErr == nil {
+		return agent.UpdateDeviceReason(ctx, reason)
+	}
+	return retErr
 }
 
 func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) error {

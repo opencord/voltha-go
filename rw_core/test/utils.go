@@ -121,6 +121,62 @@ func CreateAndregisterAdapters(ctx context.Context, t *testing.T, kClient kafka.
 	return oltAdapter.(*cm.OLTAdapter), onuAdapter.(*cm.ONUAdapter)
 }
 
+//CreateAndregisterAdapters creates mock ONU and OLT adapters and egisters them to rw-core
+func CreateAndRegisterAdaptersWithMultipleONUs(ctx context.Context, t *testing.T, kClient kafka.Client, coreInstanceID string, oltAdapterName string, onuAdapterName string, adapterMgr *adapter.Manager) (*cm.OLTAdapter, []*cm.ONUAdapter) {
+	noOfONUs := 5
+
+	// Setup the mock OLT adapter
+	oltAdapter, err := CreateMockAdapter(ctx, OltAdapter, kClient, coreInstanceID, "rw_core", oltAdapterName)
+	assert.Nil(t, err)
+	assert.NotNil(t, oltAdapter)
+
+	//      Register the adapter
+	registrationData := &voltha.Adapter{
+		Id:             oltAdapterName,
+		Vendor:         "Voltha-olt",
+		Version:        version.VersionInfo.Version,
+		Type:           oltAdapterName,
+		CurrentReplica: 1,
+		TotalReplicas:  1,
+		Endpoint:       oltAdapterName,
+	}
+	types := []*voltha.DeviceType{{Id: oltAdapterName, Adapter: oltAdapterName, AcceptsAddRemoveFlowUpdates: true}}
+	deviceTypes := &voltha.DeviceTypes{Items: types}
+	if _, err := adapterMgr.RegisterAdapter(ctx, registrationData, deviceTypes); err != nil {
+		logger.Errorw(ctx, "failed-to-register-adapter", log.Fields{"error": err})
+		assert.NotNil(t, err)
+	}
+
+	var onuAdapters []*cm.ONUAdapter
+
+	for i := 0; i < noOfONUs; i++ {
+		// Setup the mock ONU adapter
+		onuAdapter, err := CreateMockAdapter(ctx, OnuAdapter, kClient, coreInstanceID, "rw_core", onuAdapterName)
+
+		assert.Nil(t, err)
+		assert.NotNil(t, onuAdapter)
+		//      Register the adapter
+		registrationData = &voltha.Adapter{
+			Id:             onuAdapterName,
+			Vendor:         "Voltha-onu",
+			Version:        version.VersionInfo.Version,
+			Type:           onuAdapterName,
+			CurrentReplica: 1,
+			TotalReplicas:  1,
+			Endpoint:       onuAdapterName,
+		}
+		types = []*voltha.DeviceType{{Id: onuAdapterName, Adapter: onuAdapterName, AcceptsAddRemoveFlowUpdates: true}}
+		deviceTypes = &voltha.DeviceTypes{Items: types}
+		if _, err := adapterMgr.RegisterAdapter(ctx, registrationData, deviceTypes); err != nil {
+			logger.Errorw(ctx, "failed-to-register-adapter", log.Fields{"error": err})
+			assert.NotNil(t, err)
+		}
+		onuAdapters = append(onuAdapters, onuAdapter.(*cm.ONUAdapter))
+	}
+
+	return oltAdapter.(*cm.OLTAdapter), onuAdapters
+}
+
 //StartEmbeddedEtcdServer creates and starts an Embedded etcd server locally.
 func StartEmbeddedEtcdServer(ctx context.Context, configName, storageDir, logLevel string) (*mock_etcd.EtcdServer, int, error) {
 	kvClientPort, err := freeport.GetFreePort()

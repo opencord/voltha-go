@@ -100,7 +100,6 @@ func newDATest(ctx context.Context) *DATest {
 		},
 		AdminState:    voltha.AdminState_PREPROVISIONED,
 		OperStatus:    voltha.OperStatus_UNKNOWN,
-		Reason:        "All good",
 		ConnectStatus: voltha.ConnectStatus_UNKNOWN,
 		Custom:        nil,
 	}
@@ -178,6 +177,42 @@ func (dat *DATest) createDeviceAgent(t *testing.T) *Agent {
 	return deviceAgent
 }
 
+func (dat *DATest) createOLTDeviceAgent(t *testing.T, id string) *Agent {
+	deviceMgr := dat.deviceMgr
+	oltDevice := &voltha.Device{
+		Id:           id,
+		Type:         "olt_adapter_mock",
+		Root:         true,
+		ParentId:     "xyz",
+		ParentPortNo: 1,
+		VendorId:     "olt_adapter_mock",
+		Adapter:      "olt_adapter_mock",
+		Vlan:         100,
+		ProxyAddress: &voltha.Device_ProxyAddress{
+			DeviceId:           "xyz",
+			DeviceType:         "logical_adapter",
+			ChannelId:          100,
+			ChannelGroupId:     0,
+			ChannelTermination: "",
+			OnuId:              2,
+		},
+		AdminState:    voltha.AdminState_PREPROVISIONED,
+		OperStatus:    voltha.OperStatus_UNKNOWN,
+		ConnectStatus: voltha.ConnectStatus_UNKNOWN,
+		Custom:        nil,
+	}
+	deviceAgent := newAgent(deviceMgr.adapterProxy, oltDevice, deviceMgr, deviceMgr.dbPath, deviceMgr.dProxy, deviceMgr.defaultTimeout)
+	d, err := deviceAgent.start(context.TODO(), oltDevice)
+	assert.Nil(t, err)
+	assert.NotNil(t, d)
+	for _, port := range dat.devicePorts {
+		err := deviceAgent.addPort(context.TODO(), port)
+		assert.Nil(t, err)
+	}
+	deviceMgr.addDeviceAgentToMap(deviceAgent)
+	return deviceAgent
+}
+
 func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *sync.WaitGroup) {
 	originalDevice, err := da.getDeviceReadOnly(context.Background())
 	originalDevicePorts := da.listDevicePorts()
@@ -193,7 +228,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		serialNumber = com.GetRandomSerialNumber()
 		macAddress   = strings.ToUpper(com.GetRandomMacAddress())
 		vlan         = rand.Uint32()
-		reason       = "testing concurrent device update"
 		portToAdd    = &voltha.Port{PortNo: 101, Label: "uni-101", Type: voltha.Port_ETHERNET_UNI, AdminState: voltha.AdminState_ENABLED,
 			OperStatus: voltha.OperStatus_ACTIVE}
 	)
@@ -206,7 +240,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		deviceToUpdate.SerialNumber = serialNumber
 		deviceToUpdate.MacAddress = macAddress
 		deviceToUpdate.Vlan = vlan
-		deviceToUpdate.Reason = reason
 		err := da.updateDeviceUsingAdapterData(context.Background(), deviceToUpdate)
 		assert.Nil(t, err)
 		localWG.Done()
@@ -240,7 +273,6 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 	expectedChange.SerialNumber = serialNumber
 	expectedChange.MacAddress = macAddress
 	expectedChange.Vlan = vlan
-	expectedChange.Reason = reason
 
 	updatedDevice, _ := da.getDeviceReadOnly(context.Background())
 	updatedDevicePorts := da.listDevicePorts()
@@ -313,6 +345,32 @@ func TestGroupUpdates(t *testing.T) {
 	err2 := a.updateDeviceAndReleaseLock(ctx, cloned)
 	assert.Nil(t, err2)
 	da.testGroupAddDeletes(t, a)
+}
+
+func TestReasonUpdates(t *testing.T) {
+	ctx := context.Background()
+	da := newDATest(ctx)
+	assert.NotNil(t, da)
+	defer da.stopAll(ctx)
+
+	// Start the Core
+	da.startCore(ctx)
+	oltAdapter, onuAdapters := tst.CreateAndRegisterAdaptersWithMultipleONUs(ctx, t, da.kClient, da.coreInstanceID, da.oltAdapterName, da.onuAdapterName, da.adapterMgr)
+	da.oltAdapter = oltAdapter
+	var agents []*Agent
+	for _, adapter := range onuAdapters {
+		da.onuAdapter = adapter
+		a := da.createDeviceAgent(t)
+		agents = append(agents, a)
+		err1 := a.requestQueue.WaitForGreenLight(ctx)
+		assert.Nil(t, err1)
+		cloned := a.cloneDeviceWithoutLock()
+		cloned.AdminState, cloned.ConnectStatus, cloned.OperStatus = voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE
+		err2 := a.updateDeviceAndReleaseLock(ctx, cloned)
+		assert.Nil(t, err2)
+	}
+
+	da.testReasonUpdate(t, agents)
 }
 
 func isFlowSliceEqual(a, b []*ofp.OfpFlowStats) bool {
@@ -560,4 +618,68 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 	assert.Nil(t, err)
 	daGroups = changeToGroupList(da.listDeviceGroups())
 	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups))
+}
+
+func (dat *DATest) testReasonUpdate(t *testing.T, das []*Agent) {
+	var reasons *voltha.DeviceReasons
+	testReason := []string{"Test Reason", "Test Reason Overwritten"}
+
+	//Run basic test with one olt
+	da := das[0]
+
+	//Adding and checking testReason returned
+	err := da.updateDeviceReason(context.Background(), testReason[0])
+	assert.Nil(t, err)
+	reasons = da.listDeviceReasons(context.Background(), da.deviceID)
+	assert.Nil(t, err)
+	assert.NotNil(t, reasons)
+	assert.Equal(t, len(reasons.Items), 1)
+	assert.Equal(t, reasons.Items[0].DeviceId, da.deviceID)
+	assert.Equal(t, reasons.Items[0].Reason, testReason[0])
+
+	//Updating  and checking testReason returned
+	err = da.updateDeviceReason(context.Background(), testReason[1])
+	assert.Nil(t, err)
+	reasons = da.listDeviceReasons(context.Background(), da.deviceID)
+	assert.Nil(t, err)
+	assert.Equal(t, len(reasons.Items), 1)
+	assert.Equal(t, reasons.Items[0].DeviceId, da.deviceID)
+	assert.Equal(t, reasons.Items[0].Reason, testReason[1])
+
+	//Changing status back and checking from parent device
+	err = da.updateDeviceReason(context.Background(), testReason[0])
+	assert.Nil(t, err)
+	reasons = da.listDeviceReasons(context.Background(), da.parentID)
+	assert.Nil(t, err)
+	assert.Equal(t, len(reasons.Items), 1)
+	assert.Equal(t, reasons.Items[0].DeviceId, da.deviceID)
+	assert.Equal(t, reasons.Items[0].Reason, testReason[0])
+
+	expectDeviceReasonMap := make(map[string]string)
+	//Setting Reason
+	for i, a := range das {
+		err = a.updateDeviceReason(context.Background(), testReason[i%2])
+		assert.Nil(t, err)
+		expectDeviceReasonMap[a.deviceID] = testReason[i%2]
+	}
+	//Verifying Reason
+	for i, a := range das {
+		reasons = a.listDeviceReasons(context.Background(), a.deviceID)
+		assert.Nil(t, err)
+		assert.Equal(t, len(reasons.Items), 1)
+		assert.Equal(t, reasons.Items[0].DeviceId, a.deviceID)
+		assert.Equal(t, reasons.Items[0].Reason, testReason[i%2])
+	}
+
+	//create oltAgent to run listDeviceReason
+	oltAgent := dat.createOLTDeviceAgent(t, da.parentID)
+
+	//Verifying Reason of all devices from parent device
+	reasons = oltAgent.listDeviceReasons(context.Background(), da.parentID)
+	assert.Nil(t, err)
+	assert.Equal(t, len(reasons.Items), len(das))
+	for _, r := range reasons.Items {
+		assert.Equal(t, expectDeviceReasonMap[r.DeviceId], r.Reason)
+	}
+
 }
