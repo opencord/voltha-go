@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "18a2ed47_e3505dde",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-21T15:18:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6b9c2be_5d20c8e5",
+      "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "337dfa02_a7b3b2c9",
         "filename": "rw_core/core/core.go",
         "patchSetId": 16
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "kafkaClient.Stop is commented because this statement is getting executed in the defer kmp.Stop at line no 148 below. So thats why if we uncomment kafkaClient.Stop defer statement then this will result in error while stopping the container as stop would have already executed. Whereas for kafkaClientEvent we donot have any intercontainer proxy which is taking care of start and stop so we need to call stop here itself.",
       "parentUuid": "337dfa02_a7b3b2c9",
+      "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bffa8de_635f29e3",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-21T15:18:24Z",
+      "side": 1,
+      "message": "ok, then please remove the commented code as it is confusing (I am easily confused 😕)",
+      "parentUuid": "7373093c_b133861b",
       "revId": "0cb3500b4d9598f1b3244196208de95d0f878003",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
