@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c95172c8_f30adf35",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-21T15:07:50Z",
+      "side": 1,
+      "message": "You may want to have these methods as part of the deleteLogicalDevice(..).  Reason is that there is a window where flows/meters would be deleted while the logical device is still available.  This could lead ONOS to resend flows.   It\u0027s a small window, but it will be a non-issue if all these are done as part of the logical device deletion.  In such a scenario, the logical device will be deleted first then the referred data in Etcd.",
+      "revId": "30087914220fed5423a9b80a4ce23b0ef160d363",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
