@@ -72,6 +72,7 @@ func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent LogicalDevic
 // Handles special case of any controller-bound flow for a parent device
 func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(ctx context.Context, dr *fu.DeviceRules) (*fu.DeviceRules, error) {
 	EAPOL := fu.EthType(0x888e)
+	PPPoED := fu.EthType(0x8863)
 	IGMP := fu.IpProto(2)
 	UDP := fu.IpProto(17)
 
@@ -85,6 +86,7 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(
 				UpdateOutPortNo := false
 				for _, field := range fu.GetOfbFields(f) {
 					UpdateOutPortNo = (field.String() == EAPOL.String())
+					UpdateOutPortNo = UpdateOutPortNo || (field.String() == PPPoED.String())
 					UpdateOutPortNo = UpdateOutPortNo || (field.String() == IGMP.String())
 					UpdateOutPortNo = UpdateOutPortNo || (field.String() == UDP.String())
 					if UpdateOutPortNo {

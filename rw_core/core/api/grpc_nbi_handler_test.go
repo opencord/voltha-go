@@ -1119,7 +1119,7 @@ func createMetadata(cTag int, techProfile int, port int) uint64 {
 }
 
 func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, flowAddFail bool) {
-	expectedNumFlows := numNNIPorts*3 + numNNIPorts*numUNIPorts
+	expectedNumFlows := numNNIPorts*4 + numNNIPorts*numUNIPorts
 	if flowAddFail {
 		expectedNumFlows = 0
 	}
@@ -1196,6 +1196,20 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi *NBIHandler, logicalDeviceID s
 	}
 	flowIPV6 := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDeviceID}
 	_, err = nbi.UpdateLogicalDeviceFlowTable(getContext(), &flowIPV6)
+	assert.Nil(t, err)
+
+	fa = &flows.FlowArgs{
+		KV: flows.OfpFlowModArgs{"priority": 10000, "buffer_id": maxInt32, "out_port": maxInt32, "out_group": maxInt32, "flags": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			flows.InPort(nniPort),
+			flows.EthType(34915),
+		},
+		Actions: []*ofp.OfpAction{
+			flows.Output(controllerPortMask),
+		},
+	}
+	flowPPPoEP := ofp.FlowTableUpdate{FlowMod: makeSimpleFlowMod(fa), Id: logicalDeviceID}
+	_, err = nbi.UpdateLogicalDeviceFlowTable(getContext(), &flowPPPoEP)
 	assert.Nil(t, err)
 
 	return len(nniPorts), len(uniPorts)
@@ -1330,7 +1344,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	nb.verifyLogicalDeviceFlowCount(t, nbi, numNNIPorts, numUNIPorts, flowAddFail)
 
 	// Wait until all flows have been sent to the OLT adapters (or all failed)
-	expectedFlowCount := (numNNIPorts * 3) + numNNIPorts*numUNIPorts
+	expectedFlowCount := (numNNIPorts * 4) + numNNIPorts*numUNIPorts
 	if flowAddFail {
 		expectedFlowCount = 0
 	}
