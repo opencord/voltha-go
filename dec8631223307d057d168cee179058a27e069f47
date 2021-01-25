@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1ecec7c_c41fe888",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2021-01-25T09:50:14Z",
+      "side": 1,
+      "message": "I would use a const for 4 to make code more readable",
+      "revId": "dec8631223307d057d168cee179058a27e069f47",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
