@@ -397,6 +397,30 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 	}()
 	return nil
 }
+func (e *orderedEvents) waitForAllEventsToBeSent(ctx context.Context, cancel context.CancelFunc) error {
+	defer cancel()
+	checkEventQueueIsNotEmpty := func() bool {
+		e.mutex.Lock()
+		defer e.mutex.Unlock()
+		return e.eventsBufferedInQueue != 0
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Error(ctx, "Timeout while waiting for event queue to be cleared")
+			return ctx.Err()
+		default:
+			if checkEventQueueIsNotEmpty() {
+				logger.Debug(ctx, "Event Queue for logical agent is not empty. Waiting for it to be cleared.")
+
+			} else {
+				logger.Debug(ctx, "Event Queue for logical agent is empty.")
+				return nil
+			}
+
+		}
+	}
+}
 
 // send is a convenience to avoid calling both assignQueuePosition and qp.send
 func (e *orderedEvents) send(ctx context.Context, agent *LogicalAgent, deviceID string, reason ofp.OfpPortReason, desc *ofp.OfpPort) {
@@ -415,21 +439,25 @@ func (e *orderedEvents) assignQueuePosition() queuePosition {
 	prev := e.last
 	next := make(chan struct{})
 	e.last = next
+	e.eventsBufferedInQueue++
 	return queuePosition{
-		prev: prev,
-		next: next,
+		prev:                  prev,
+		next:                  next,
+		eventsBufferedInQueue: &e.eventsBufferedInQueue,
 	}
 }
 
 // orderedEvents guarantees the order that events are sent, while allowing events to back up.
 type orderedEvents struct {
-	mutex sync.Mutex
-	last  <-chan struct{}
+	mutex                 sync.Mutex
+	last                  <-chan struct{}
+	eventsBufferedInQueue uint64
 }
 
 type queuePosition struct {
-	prev <-chan struct{}
-	next chan<- struct{}
+	prev                  <-chan struct{}
+	next                  chan<- struct{}
+	eventsBufferedInQueue *uint64
 }
 
 // send waits for its turn, then sends the event, then notifies the next in line
@@ -438,7 +466,9 @@ func (qp queuePosition) send(ctx context.Context, agent *LogicalAgent, deviceID 
 		<-qp.prev // wait for turn
 	}
 	agent.ldeviceMgr.SendChangeEvent(ctx, deviceID, reason, desc)
+	*qp.eventsBufferedInQueue--
 	close(qp.next) // notify next
+
 }
 
 // GetWildcardInputPorts filters out the logical port number from the set of logical ports on the device and
