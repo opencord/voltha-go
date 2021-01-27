@@ -289,6 +289,44 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	globalWG.Done()
 }
 
+func (lda *LDATest) stopLogicalAgentAndCheckEventQueueIsEmpty(t *testing.T, ctx context.Context, ldAgent *LogicalAgent) {
+	queueIsEmpty := false
+	ldAgent.stop(ctx)
+	qp := ldAgent.orderedEvents.assignQueuePosition()
+	if qp.prev != nil { // we will be definitely hitting this case as we pushed events on the queue before
+		// If previous channel is closed which it should be now,
+		// only then we can know that queue is empty.
+		_, ok := <-qp.prev
+		if !ok {
+			queueIsEmpty = true
+		} else {
+			queueIsEmpty = false
+		}
+	} else {
+		queueIsEmpty = true
+	}
+	close(qp.next)
+	assert.True(t, queueIsEmpty)
+}
+
+func (lda *LDATest) updateLogicalDevice(t *testing.T, ldAgent *LogicalAgent) {
+	originalLogicalPorts := ldAgent.listLogicalDevicePorts(context.Background())
+	assert.NotNil(t, originalLogicalPorts)
+
+	// Change the state of the first port to FAILED
+	err := ldAgent.updatePortState(context.Background(), 1, voltha.OperStatus_FAILED)
+	assert.Nil(t, err)
+
+	// Change the state of the second port to TESTING
+	err = ldAgent.updatePortState(context.Background(), 2, voltha.OperStatus_TESTING)
+	assert.Nil(t, err)
+
+	// Change the state of the third port to ACTIVE
+	err = ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_ACTIVE)
+	assert.Nil(t, err)
+
+}
+
 func TestConcurrentLogicalDeviceUpdate(t *testing.T) {
 	ctx := context.Background()
 	lda := newLDATest(ctx)
@@ -307,4 +345,18 @@ func TestConcurrentLogicalDeviceUpdate(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestLogicalAgentStopWithEventsInQueue(t *testing.T) {
+	ctx := context.Background()
+	lda := newLDATest(ctx)
+	assert.NotNil(t, lda)
+	defer lda.stopAll(ctx)
+
+	// Start the Core
+	lda.startCore(ctx, false)
+
+	a := lda.createLogicalDeviceAgent(t)
+	lda.updateLogicalDevice(t, a)
+	lda.stopLogicalAgentAndCheckEventQueueIsEmpty(t, ctx, a)
 }
