@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0c6785ed_12f2e408",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-27T11:01:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d6c7ef4e_a36e755c",
+      "revId": "699709968994f3599f3da2839b2eed7c1c962c64",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31cbf4c0_00c99a67",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "699709968994f3599f3da2839b2eed7c1c962c64",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d67d40f_586c6acd",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-27T11:01:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "31cbf4c0_00c99a67",
+      "revId": "699709968994f3599f3da2839b2eed7c1c962c64",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
