@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1cc3241_83ddf523",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-27T14:11:36Z",
+      "side": 1,
+      "message": "Will this be spinning while waiting for events to be cleared? i.e. will it invoke checkEventQueueIsNotEmpty continuously (nanoseconds) until no events are present? Is there a way of using a channel to wait, e.g. create a similar function as \"send\" in orderedEvents, assign a position and then invoke a different qp.send() that would inform the logical device that it is ready to be deleted?",
+      "revId": "b4473d9f426e8f0b2b4d99d8c577ed63f4551f1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
