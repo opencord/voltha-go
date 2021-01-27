@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "10cb6880_1a906479",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-01-27T15:54:34Z",
+      "side": 1,
+      "message": "while we wait for events to clear is there a mechanism in place so that new requests are accepted while we are shutting down?",
+      "range": {
+        "startLine": 196,
+        "startChar": 12,
+        "endLine": 196,
+        "endChar": 84
+      },
+      "revId": "b4473d9f426e8f0b2b4d99d8c577ed63f4551f1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a1cc3241_83ddf523",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 3
@@ -13,6 +36,24 @@
       "writtenOn": "2021-01-27T14:11:36Z",
       "side": 1,
       "message": "Will this be spinning while waiting for events to be cleared? i.e. will it invoke checkEventQueueIsNotEmpty continuously (nanoseconds) until no events are present? Is there a way of using a channel to wait, e.g. create a similar function as \"send\" in orderedEvents, assign a position and then invoke a different qp.send() that would inform the logical device that it is ready to be deleted?",
+      "revId": "b4473d9f426e8f0b2b4d99d8c577ed63f4551f1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13913493_73d0f547",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-01-27T15:54:34Z",
+      "side": 1,
+      "message": "yes, this would be spinng. if nothing else this should be a ticker so that it checks every Xms as opposed to as fast as it can. it would better to only check on an event or a channel (i.e. a  channel that is closed or has a message when the queue goes empty)",
+      "parentUuid": "a1cc3241_83ddf523",
       "revId": "b4473d9f426e8f0b2b4d99d8c577ed63f4551f1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
