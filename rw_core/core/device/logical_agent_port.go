@@ -397,11 +397,30 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 	}()
 	return nil
 }
+func (e *orderedEvents) waitForAllEventsToBeSent(ctx context.Context, cancel context.CancelFunc) error {
+	defer cancel()
+	ch := make(chan struct{})
+	e.sendCompletion(ch)
+	select {
+	case <-ctx.Done():
+		logger.Error(ctx, "Timeout while waiting for event queue to be cleared")
+		return ctx.Err()
+	case <-ch:
+		logger.Debug(ctx, "Event Queue is empty")
+		return nil
+	}
+}
 
 // send is a convenience to avoid calling both assignQueuePosition and qp.send
 func (e *orderedEvents) send(ctx context.Context, agent *LogicalAgent, deviceID string, reason ofp.OfpPortReason, desc *ofp.OfpPort) {
 	qp := e.assignQueuePosition()
 	go qp.send(log.WithSpanFromContext(context.Background(), ctx), agent, deviceID, reason, desc)
+}
+
+// sendCompletion will make sure that given channel is notified when queue is empty
+func (e *orderedEvents) sendCompletion(ch chan struct{}) {
+	qp := e.assignQueuePosition()
+	go qp.sendCompletion(ch)
 }
 
 // TODO: shouldn't need to guarantee event ordering like this
@@ -439,6 +458,16 @@ func (qp queuePosition) send(ctx context.Context, agent *LogicalAgent, deviceID 
 	}
 	agent.ldeviceMgr.SendChangeEvent(ctx, deviceID, reason, desc)
 	close(qp.next) // notify next
+
+}
+
+// sendCompletion waits for its turn, then notifies the given channel that queue is empty
+func (qp queuePosition) sendCompletion(ch chan struct{}) {
+	if qp.prev != nil {
+		<-qp.prev // wait for turn
+	}
+	close(ch)
+	close(qp.next)
 }
 
 // GetWildcardInputPorts filters out the logical port number from the set of logical ports on the device and
