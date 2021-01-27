@@ -191,7 +191,13 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 			return
 		}
 		defer agent.requestQueue.RequestComplete()
-
+		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+		// Before deletion of the logical agent, make sure all events for ldagent are sent to avoid race conditions
+		if err := agent.orderedEvents.waitForAllEventsToBeSent(subCtx, cancel); err != nil {
+			//Log the error here
+			logger.Errorw(ctx, "failed-to-send-all-events-on-the-logical-device-before-deletion",
+				log.Fields{"error": err, "logical-device-id": agent.logicalDeviceID})
+		}
 		//Remove the logical device from the model
 		if err := agent.ldProxy.Remove(ctx, agent.logicalDeviceID); err != nil {
 			returnErr = err
