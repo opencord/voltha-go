@@ -57,6 +57,24 @@
       "revId": "b4473d9f426e8f0b2b4d99d8c577ed63f4551f1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a64df1eb_fed53d99",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-28T04:56:03Z",
+      "side": 1,
+      "message": "We can make this a ticker. If I choose a channel for notifying that the queue is empty, Then a go routine who would be listening on the channel will have the information that queue is empty. But the Problem is we want to have this information available at the time of deletion of the logical device. For this again we may have to keep it available say in logical agent and at the time of deletion, keep tracking the variable as a ticker.",
+      "parentUuid": "13913493_73d0f547",
+      "revId": "b4473d9f426e8f0b2b4d99d8c577ed63f4551f1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
