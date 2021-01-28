@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b124d9d8_f371f3a8",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-28T18:22:43Z",
+      "side": 1,
+      "message": "nit:  error message are in the format \"something-somethingelse-...\"",
+      "revId": "5d64df88d588eaee87045097ba7f3267754a4b23",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
