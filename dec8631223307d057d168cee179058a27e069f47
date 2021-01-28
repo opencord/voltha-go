@@ -16,6 +16,24 @@
       "revId": "dec8631223307d057d168cee179058a27e069f47",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6813efc_e0ec82f2",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1000590
+      },
+      "writtenOn": "2021-01-28T16:49:43Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "c1ecec7c_c41fe888",
+      "revId": "dec8631223307d057d168cee179058a27e069f47",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
