@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f149566a_b6318207",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-01-28T19:13:04Z",
+      "side": 1,
+      "message": "If I understand this solution correctly you are adding a new queue position and then waiting for that queue position to get activated a which time the queue should be empty. First, cool solution. Second, as opposed to creating a new channel and a \"sendCompletion\" function that is only used in a single place, what about just waiting on qp-\u003eprev in the select loop, likely have to check for nil before entering select? More of a nit really. Just curious.",
+      "range": {
+        "startLine": 402,
+        "startChar": 1,
+        "endLine": 403,
+        "endChar": 21
+      },
+      "revId": "5d64df88d588eaee87045097ba7f3267754a4b23",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b124d9d8_f371f3a8",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 4
