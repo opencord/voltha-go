@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d03c1b6_4bf23cf3",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-01-29T17:28:28Z",
+      "side": 1,
+      "message": "In theory that could be applied to all these new \u0027download\u0027 methods (or maybe already at some higher layer)?",
+      "revId": "025667ec714b36b3c45ecd83d88eca68ef670bf6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6265ef3_baa7d624",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-01-29T17:28:28Z",
+      "side": 1,
+      "message": "\u0027Image_Inactive\u0027 seems a bit \u0027unclear\u0027 to me here. From this context I would suppose that to be \u0027inactive\u0027 stored on the ONU. But I can see there is no real fitting state in the device definitions - perhaps still \u0027unknown\u0027. Maybe something better is still missing here, something like \u0027IMAGE_ACTIVATION_FAILED\u0027 (similar to download) or later maybe different states for \u0027IMAGE_ONU_DOWNLOAD_FAILED\u0027 and \u0027IMAGE_ONU_ACTIVATION_FAILED\u0027.",
+      "revId": "025667ec714b36b3c45ecd83d88eca68ef670bf6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
