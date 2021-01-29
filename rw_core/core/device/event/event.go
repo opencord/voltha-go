@@ -18,8 +18,8 @@ package event
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"sync"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -140,21 +140,37 @@ func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason o
 	}
 }
 
-func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res []error, xid uint32) {
-	logger.Debugw(ctx, "SendChangeEvent", log.Fields{"device-id": deviceID, "flowId": xid})
+func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res []error, xid uint32, flowCookie uint64) {
+	logger.Debugw(ctx, "SendChangeEvent", log.Fields{"device-id": deviceID,
+		"flowId": xid, "flowCookie": flowCookie, "errors": res})
 	errorType := openflow_13.OfpErrorType_OFPET_FLOW_MOD_FAILED
+	//Manually creating the data payload for the flow error message
+	bs := make([]byte, 2)
+	//OF 1.3
+	bs[0] = byte(4)
+	//Flow Mod
+	bs[1] = byte(14)
+	//Length of the message
+	length := make([]byte, 2)
+	binary.BigEndian.PutUint16(length, 56)
+	bs = append(bs, length...)
+	emptyArr := []byte{0, 0, 0, 0}
+	bs = append(bs, emptyArr...)
+	//Cookie of the Flow
+	cookie := make([]byte, 52)
+	binary.BigEndian.PutUint64(cookie, flowCookie)
+	bs = append(bs, cookie...)
 	q.changeEventQueue <- openflow_13.ChangeEvent{
 		Id: deviceID,
 		Event: &openflow_13.ChangeEvent_Error{
 			Error: &openflow_13.OfpErrorMsg{
 				Header: &openflow_13.OfpHeader{
-					Version: 0,
-					Type:    openflow_13.OfpType_OFPT_FLOW_MOD,
-					Xid:     xid,
+					Type: openflow_13.OfpType_OFPT_FLOW_MOD,
+					Xid:  xid,
 				},
 				Type: uint32(errorType),
 				Code: uint32(openflow_13.OfpFlowModFailedCode_OFPFMFC_UNKNOWN),
-				Data: []byte(fmt.Sprintf("%v", res[:])),
+				Data: bs,
 			},
 		},
 	}
