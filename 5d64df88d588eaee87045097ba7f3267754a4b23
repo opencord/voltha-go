@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7eb77f93_cec31af0",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-29T08:06:36Z",
+      "side": 1,
+      "message": "We can obviously do that way also but I believe if we have these functions, it would be neat and might come useful later also if any such requirement comes. Instead of creating channel we can have as:\n\tif qp.prev !\u003d nil {\n\t\tselect {\n\t\tcase \u003c-ctx.Done():\n\t\t\treturn ctx.Err()\n\t\tcase \u003c-qp.prev:\n\t\t\tclose(qp.next)\n\t\t\treturn nil\n\t\t}\n\t} else {\n\t\tclose(qp.next)\n\t\treturn nil\n\t}\nand It works as expected",
+      "parentUuid": "f149566a_b6318207",
+      "range": {
+        "startLine": 402,
+        "startChar": 1,
+        "endLine": 403,
+        "endChar": 21
+      },
+      "revId": "5d64df88d588eaee87045097ba7f3267754a4b23",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b124d9d8_f371f3a8",
         "filename": "rw_core/core/device/logical_agent_port.go",
         "patchSetId": 4
@@ -39,6 +63,24 @@
       "revId": "5d64df88d588eaee87045097ba7f3267754a4b23",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "047069cc_17a1c849",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-29T08:06:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b124d9d8_f371f3a8",
+      "revId": "5d64df88d588eaee87045097ba7f3267754a4b23",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
