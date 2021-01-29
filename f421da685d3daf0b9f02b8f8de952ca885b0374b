@@ -34,6 +34,24 @@
       "revId": "f421da685d3daf0b9f02b8f8de952ca885b0374b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc2bb735_bea00f32",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-01-29T15:21:12Z",
+      "side": 0,
+      "message": "It\u0027s that way because the adapters do not provide the reason of the flow failures at this time.",
+      "parentUuid": "f5e6a51a_70842a5d",
+      "revId": "f421da685d3daf0b9f02b8f8de952ca885b0374b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
