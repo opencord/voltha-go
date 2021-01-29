@@ -16,6 +16,24 @@
       "revId": "f421da685d3daf0b9f02b8f8de952ca885b0374b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5e6a51a_70842a5d",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T14:56:01Z",
+      "side": 0,
+      "message": "that was part of a previous patch, I agree that we should do some paring of the `res` errors and figure out better codes, but not in this bug fix.",
+      "parentUuid": "75c30b1f_04a84dde",
+      "revId": "f421da685d3daf0b9f02b8f8de952ca885b0374b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
