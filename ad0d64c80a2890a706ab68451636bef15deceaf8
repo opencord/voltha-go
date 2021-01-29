@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "733bca3a_dc297803",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T12:27:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd0ae746_2eda633a",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 57
+      },
+      "revId": "ad0d64c80a2890a706ab68451636bef15deceaf8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3563ca1a_999d646c",
         "filename": "rw_core/core/device/agent_image.go",
         "patchSetId": 9
@@ -39,6 +63,24 @@
       "revId": "ad0d64c80a2890a706ab68451636bef15deceaf8",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fc2f867_cbb2890d",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T12:27:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3563ca1a_999d646c",
+      "revId": "ad0d64c80a2890a706ab68451636bef15deceaf8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "fc61db3f_33b202cb",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T12:27:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47d046a6_678277b7",
+      "revId": "ad0d64c80a2890a706ab68451636bef15deceaf8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c363d9d4_cdac20db",
         "filename": "rw_core/core/device/agent_image.go",
         "patchSetId": 9
@@ -70,6 +130,24 @@
       "writtenOn": "2021-01-28T19:21:41Z",
       "side": 1,
       "message": "This is more of a query than a comment.\nWe allow image download only in Enabled state - correct? And when image download is in progress we do not allow any other RPC to disable/reboot/delete the ONU device - correct?",
+      "revId": "ad0d64c80a2890a706ab68451636bef15deceaf8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "223ed815_ee9c3c02",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T12:27:47Z",
+      "side": 1,
+      "message": "yes, your understanding is correct, that is why I\u0027m going back to enabled, no other transaction is allowed.",
+      "parentUuid": "c363d9d4_cdac20db",
       "revId": "ad0d64c80a2890a706ab68451636bef15deceaf8",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
