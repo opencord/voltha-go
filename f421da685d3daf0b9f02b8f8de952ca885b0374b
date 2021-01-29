@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75c30b1f_04a84dde",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-29T14:51:03Z",
+      "side": 0,
+      "message": "Why code should be unknown always, as there are a lot of error codes available for flow mod failed?",
+      "revId": "f421da685d3daf0b9f02b8f8de952ca885b0374b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}

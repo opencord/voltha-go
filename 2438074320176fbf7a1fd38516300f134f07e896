@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e04d2d7a_a1182e56",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-01-29T14:51:03Z",
+      "side": 1,
+      "message": "As then openflow specs says to send atleast first 64 bytes of the failed request as data, can we send flowmod as data instead of creating payload manually.",
+      "revId": "2438074320176fbf7a1fd38516300f134f07e896",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
