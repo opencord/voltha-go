@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71cd0609_3ad6a8bd",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-04T14:08:08Z",
+      "side": 1,
+      "message": "Do names in current events use camel case?",
+      "revId": "edf6c4d1788fee1f6035595b621f6b31bb3c0e0f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72d8e072_17363ca3",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-04T14:08:08Z",
+      "side": 1,
+      "message": "The log format is lower case (e.g. \"enable-device\") instead of upper case. Granted, it has not been followed everywhere.   For functions that you are changing can you update the logs to lowercase?",
+      "revId": "edf6c4d1788fee1f6035595b621f6b31bb3c0e0f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd7d4414_f024d9dc",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 823,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-04T14:08:08Z",
+      "side": 1,
+      "message": "nit: This pattern seems to be common, i.e. create the log context and then add the rpc context. Having a helper like GetLogAndRpcMetadataFromContext(ctx) could be easier to read.",
+      "revId": "edf6c4d1788fee1f6035595b621f6b31bb3c0e0f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "592c716b_8c0ff836",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-04T14:08:08Z",
+      "side": 1,
+      "message": "nit: the common practice is to use name like \"WithRPCMetadataContext\".   \n\nAlso, at times some functions refers to RPCMetadata and at time RPCName. Use only one?",
+      "revId": "edf6c4d1788fee1f6035595b621f6b31bb3c0e0f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f81431eb_ab55cac9",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-04T14:08:08Z",
+      "side": 1,
+      "message": "Check for nil context?",
+      "revId": "edf6c4d1788fee1f6035595b621f6b31bb3c0e0f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d466cbf_129b6c1b",
+        "filename": "rw_core/utils/core_utils.go",
+        "patchSetId": 23
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-04T14:08:08Z",
+      "side": 1,
+      "message": "Check for nil sourceCtx?",
+      "revId": "edf6c4d1788fee1f6035595b621f6b31bb3c0e0f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
