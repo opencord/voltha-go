@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c1c5060_dd461587",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-05T15:47:34Z",
+      "side": 1,
+      "message": "nit:  A few places still have the older code.   Can you use coreutils.WithSpanAndRPCMetadataFromContext(..) here?",
+      "revId": "2c826d19b956391d6e99e4f5d22147335a5c1c2c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
