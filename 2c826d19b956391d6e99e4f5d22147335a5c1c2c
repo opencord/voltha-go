@@ -16,6 +16,24 @@
       "revId": "2c826d19b956391d6e99e4f5d22147335a5c1c2c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1764de7_3d3281ca",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-02-08T05:59:27Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9c1c5060_dd461587",
+      "revId": "2c826d19b956391d6e99e4f5d22147335a5c1c2c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
