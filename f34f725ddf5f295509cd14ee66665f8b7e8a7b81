@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1b97136_202586f9",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-08T22:53:30Z",
+      "side": 1,
+      "message": "Please remove comments if not needed",
+      "revId": "f34f725ddf5f295509cd14ee66665f8b7e8a7b81",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ca2fb2a_0db6858b",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-08T22:53:30Z",
+      "side": 1,
+      "message": "No need to keep commented out code.",
+      "revId": "f34f725ddf5f295509cd14ee66665f8b7e8a7b81",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ec59974_0110591d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-08T22:53:30Z",
+      "side": 1,
+      "message": "If \"fromTopic\" is a constant, may be it\u0027s better to define it as a constant such that the same name can be used/referred at multiple places.",
+      "revId": "f34f725ddf5f295509cd14ee66665f8b7e8a7b81",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
