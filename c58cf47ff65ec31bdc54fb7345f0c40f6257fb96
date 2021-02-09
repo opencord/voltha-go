@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bb6e3bd_8451e751",
+        "filename": "rw_core/core/api/adapter_request_handler.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-09T22:28:01Z",
+      "side": 1,
+      "message": "more comments to remove?",
+      "revId": "c58cf47ff65ec31bdc54fb7345f0c40f6257fb96",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22db0847_84e3cf54",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-09T22:28:01Z",
+      "side": 1,
+      "message": "commented code?",
+      "revId": "c58cf47ff65ec31bdc54fb7345f0c40f6257fb96",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
