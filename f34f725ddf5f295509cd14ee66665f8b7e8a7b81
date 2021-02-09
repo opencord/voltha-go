@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7a667911_5ac347b4",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-09T13:45:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e1b97136_202586f9",
+      "revId": "f34f725ddf5f295509cd14ee66665f8b7e8a7b81",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ca2fb2a_0db6858b",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 24
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "de9da6f2_c26b7428",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-09T13:45:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3ca2fb2a_0db6858b",
+      "revId": "f34f725ddf5f295509cd14ee66665f8b7e8a7b81",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ec59974_0110591d",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 24
@@ -50,6 +86,24 @@
       "revId": "f34f725ddf5f295509cd14ee66665f8b7e8a7b81",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11fcb615_5288d2d7",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-09T13:45:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4ec59974_0110591d",
+      "revId": "f34f725ddf5f295509cd14ee66665f8b7e8a7b81",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
