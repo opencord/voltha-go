@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ed484ac3_ee7d1ffa",
+        "filename": "rw_core/core/api/adapter_request_handler.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-10T05:07:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4bb6e3bd_8451e751",
+      "revId": "c58cf47ff65ec31bdc54fb7345f0c40f6257fb96",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22db0847_84e3cf54",
         "filename": "rw_core/core/device/agent_device_update.go",
         "patchSetId": 26
@@ -33,6 +51,24 @@
       "revId": "c58cf47ff65ec31bdc54fb7345f0c40f6257fb96",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd81b8bd_b7ade83e",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 26
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-10T05:07:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22db0847_84e3cf54",
+      "revId": "c58cf47ff65ec31bdc54fb7345f0c40f6257fb96",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
