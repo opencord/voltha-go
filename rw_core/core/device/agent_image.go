@@ -54,7 +54,12 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	clonedImg := proto.Clone(img).(*voltha.ImageDownload)
 	clonedImg.DownloadState = voltha.ImageDownload_DOWNLOAD_REQUESTED
 	cloned := agent.cloneDeviceWithoutLock()
-	cloned.ImageDownloads = append(device.ImageDownloads, clonedImg)
+	_, index, err := getImage(img, device)
+	if err != nil {
+		cloned.ImageDownloads = append(device.ImageDownloads, clonedImg)
+	} else {
+		cloned.ImageDownloads[index] = clonedImg
+	}
 
 	cloned.AdminState = voltha.AdminState_DOWNLOADING_IMAGE
 	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
@@ -136,11 +141,6 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	if err != nil {
 		agent.requestQueue.RequestComplete()
 		return nil, err
-	}
-
-	if err != nil {
-		agent.requestQueue.RequestComplete()
-		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, image-not-registered:%s", agent.deviceID, img.Name)
 	}
 
 	if image.DownloadState != voltha.ImageDownload_DOWNLOAD_SUCCEEDED {
@@ -296,18 +296,23 @@ func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*v
 
 // onImageFailure brings back the device to Enabled state and sets the image to image download_failed.
 func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		logger.Errorw(ctx, "cannot-obtain-lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
+	// original context has failed due to timeout , let's open a new one
+	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+
+	if err := agent.requestQueue.WaitForGreenLight(subCtx); err != nil {
+		logger.Errorw(subCtx, "can't obtain lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
+		cancel()
 		return
 	}
 	if res, ok := response.(error); ok {
-		logger.Errorw(ctx, "rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
-		device := agent.cloneDeviceWithoutLock()
+		logger.Errorw(subCtx, "rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
+		cloned := agent.cloneDeviceWithoutLock()
 		//TODO base this on IMAGE ID when created
 		var imageFailed *voltha.ImageDownload
 		var index int
-		if device.ImageDownloads != nil {
-			for pos, image := range device.ImageDownloads {
+		if cloned.ImageDownloads != nil {
+			for pos, image := range cloned.ImageDownloads {
 				if image.DownloadState == voltha.ImageDownload_DOWNLOAD_REQUESTED ||
 					image.ImageState == voltha.ImageDownload_IMAGE_ACTIVATING {
 					imageFailed = image
@@ -317,29 +322,28 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 		}
 
 		if imageFailed == nil {
-			logger.Errorw(ctx, "can't find image", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
+			logger.Errorw(subCtx, "can't find image", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
+			cancel()
 			return
 		}
 
-		updatedImages := removeImage(device.ImageDownloads, index)
-
-		// Save the image
-		clonedImg := proto.Clone(imageFailed).(*voltha.ImageDownload)
+		//update image state on failure
 		if imageFailed.DownloadState == voltha.ImageDownload_DOWNLOAD_REQUESTED {
-			clonedImg.DownloadState = voltha.ImageDownload_DOWNLOAD_FAILED
+			cloned.ImageDownloads[index].DownloadState = voltha.ImageDownload_DOWNLOAD_FAILED
 		} else if imageFailed.ImageState == voltha.ImageDownload_IMAGE_ACTIVATING {
-			clonedImg.ImageState = voltha.ImageDownload_IMAGE_INACTIVE
+			cloned.ImageDownloads[index].ImageState = voltha.ImageDownload_IMAGE_INACTIVE
 		}
-		cloned := agent.cloneDeviceWithoutLock()
-		cloned.ImageDownloads = append(updatedImages, clonedImg)
 		//Enabled is the only state we can go back to.
 		cloned.AdminState = voltha.AdminState_ENABLED
-		if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
-			logger.Errorw(ctx, "failed-enable-device-after-image-failure",
+		if err := agent.updateDeviceAndReleaseLock(subCtx, cloned); err != nil {
+			logger.Errorw(subCtx, "failed-enable-device-after-image-failure",
 				log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
 		}
+		cancel()
 	} else {
-		logger.Errorw(ctx, "rpc-failed-invalid-error", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
+		logger.Errorw(subCtx, "rpc-failed-invalid-error", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
+		cancel()
+		return
 	}
 	// TODO: Post failure message onto kafka
 }
@@ -351,12 +355,12 @@ func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response int
 		return
 	}
 	logger.Errorw(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
-	device := agent.cloneDeviceWithoutLock()
+	cloned := agent.cloneDeviceWithoutLock()
 	//TODO base this on IMAGE ID when created
 	var imageSucceeded *voltha.ImageDownload
 	var index int
-	if device.ImageDownloads != nil {
-		for pos, image := range device.ImageDownloads {
+	if cloned.ImageDownloads != nil {
+		for pos, image := range cloned.ImageDownloads {
 			if image.DownloadState == voltha.ImageDownload_DOWNLOAD_REQUESTED ||
 				image.ImageState == voltha.ImageDownload_IMAGE_ACTIVATING {
 				imageSucceeded = image
@@ -369,20 +373,12 @@ func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response int
 		logger.Errorw(ctx, "can't find image", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
 		return
 	}
-
-	updatedImages := removeImage(device.ImageDownloads, index)
-
-	// Save the image
-	clonedImg := proto.Clone(imageSucceeded).(*voltha.ImageDownload)
+	//update image state on success
 	if imageSucceeded.DownloadState == voltha.ImageDownload_DOWNLOAD_REQUESTED {
-		clonedImg.DownloadState = voltha.ImageDownload_DOWNLOAD_SUCCEEDED
+		cloned.ImageDownloads[index].DownloadState = voltha.ImageDownload_DOWNLOAD_SUCCEEDED
 	} else if imageSucceeded.ImageState == voltha.ImageDownload_IMAGE_ACTIVATING {
-		clonedImg.ImageState = voltha.ImageDownload_IMAGE_ACTIVE
-
+		cloned.ImageDownloads[index].ImageState = voltha.ImageDownload_IMAGE_ACTIVE
 	}
-	cloned := agent.cloneDeviceWithoutLock()
-	cloned.ImageDownloads = append(updatedImages, clonedImg)
-
 	//Enabled is the only state we can go back to.
 	cloned.AdminState = voltha.AdminState_ENABLED
 	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
@@ -390,10 +386,4 @@ func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response int
 			log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
 	}
 
-}
-
-func removeImage(s []*voltha.ImageDownload, i int) []*voltha.ImageDownload {
-	s[i] = s[len(s)-1]
-	// We do not need to put s[i] at the end, as it will be discarded anyway
-	return s[:len(s)-1]
 }
