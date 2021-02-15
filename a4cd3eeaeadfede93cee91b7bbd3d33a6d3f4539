@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e459adfe_f0c826e7",
+        "filename": "Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-15T09:37:16Z",
+      "side": 1,
+      "message": "it just for a local change removed",
+      "parentUuid": "4703d873_35e4fc63",
+      "revId": "a4cd3eeaeadfede93cee91b7bbd3d33a6d3f4539",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77c0993b_3efd27a8",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 32
@@ -33,6 +51,24 @@
       "revId": "a4cd3eeaeadfede93cee91b7bbd3d33a6d3f4539",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21b7160e_b03bee30",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 32
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-15T09:37:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "77c0993b_3efd27a8",
+      "revId": "a4cd3eeaeadfede93cee91b7bbd3d33a6d3f4539",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
