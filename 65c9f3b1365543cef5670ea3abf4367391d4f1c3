@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "910f5f98_6e9f2ff4",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-02-15T08:57:36Z",
+      "side": 1,
+      "message": "According to my tests I can confirm it is working. But honestly I do not understand what is going on here in the onImageFailure and onImageSuccess methods. For me it looks as some local \u0027cloned\u0027 is created and some modifications are done to it. But that should be lost after the return of the function. So all the activity seems to me for nothing. Perhaps - for interest, there is a short explanation.",
+      "revId": "65c9f3b1365543cef5670ea3abf4367391d4f1c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
