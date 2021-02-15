@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "aad011cf_1d7b78cd",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-02-15T10:24:45Z",
+      "side": 1,
+      "message": "whenever you create a subctx, copy rpc metadata from source context. This is required to keep propagating rpc name in the context as key value pair to be available. Please refer to core utils for the utility function to copy rpc metadata",
+      "revId": "65c9f3b1365543cef5670ea3abf4367391d4f1c3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "910f5f98_6e9f2ff4",
         "filename": "rw_core/core/device/agent_image.go",
         "patchSetId": 1
