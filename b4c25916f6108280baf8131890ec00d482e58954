@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "930afed5_8b1f6165",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-15T05:49:29Z",
+      "side": 1,
+      "message": "SourceContext is ctx isn\u0027t it should be subCtx ?",
+      "range": {
+        "startLine": 375,
+        "startChar": 20,
+        "endLine": 375,
+        "endChar": 46
+      },
+      "revId": "b4c25916f6108280baf8131890ec00d482e58954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
