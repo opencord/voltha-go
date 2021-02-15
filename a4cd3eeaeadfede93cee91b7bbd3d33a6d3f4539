@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4703d873_35e4fc63",
+        "filename": "Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-02-15T09:07:13Z",
+      "side": 1,
+      "message": "what is this repo for?",
+      "revId": "a4cd3eeaeadfede93cee91b7bbd3d33a6d3f4539",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
