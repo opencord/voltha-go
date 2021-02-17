@@ -95,8 +95,11 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			context := make(map[string]string)
 			context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
-			context["group-id"] = string(groupMod.GroupId)
-			context["device-rules"] = deviceRules.String()
+			context["logical-device-id"] = agent.logicalDeviceID
+			context["group-id"] = fmt.Sprintf("%v", groupMod.GroupId)
+			if deviceRules != nil {
+				context["device-rules"] = deviceRules.String()
+			}
 			go agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
@@ -177,8 +180,11 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			context := make(map[string]string)
 			context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
-			context["group-id"] = string(groupMod.GroupId)
-			context["device-rules"] = deviceRules.String()
+			context["group-id"] = fmt.Sprintf("%v", groupMod.GroupId)
+			context["logical-device-id"] = agent.logicalDeviceID
+			if deviceRules != nil {
+				context["device-rules"] = deviceRules.String()
+			}
 			go agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
@@ -227,8 +233,11 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			context := make(map[string]string)
 			context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
-			context["group-id"] = string(groupMod.GroupId)
-			context["device-rules"] = deviceRules.String()
+			context["group-id"] = fmt.Sprintf("%v", groupMod.GroupId)
+			context["logical-device-id"] = agent.logicalDeviceID
+			if deviceRules != nil {
+				context["device-rules"] = deviceRules.String()
+			}
 			go agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())

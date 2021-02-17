@@ -194,8 +194,12 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
 				context := make(map[string]string)
 				context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
-				context["flow-id"] = string(flow.Id)
-				context["device-rules"] = deviceRules.String()
+				context["flow-id"] = fmt.Sprintf("%v", flow.Id)
+				context["flow-cookie"] = fmt.Sprintf("%v", flowUpdate.FlowMod.Cookie)
+				context["logical-device-id"] = agent.logicalDeviceID
+				if deviceRules != nil {
+					context["device-rules"] = deviceRules.String()
+				}
 				go agent.ldeviceMgr.SendRPCEvent(ctx,
 					agent.logicalDeviceID, "failed-to-add-flow", context, "RPC_ERROR_RAISE_EVENT",
 					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
@@ -349,7 +353,13 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 				logger.Errorw(ctx, "failure-updating-device-flows", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 				context := make(map[string]string)
 				context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
-				context["device-rules"] = deviceRules.String()
+				context["logical-device-id"] = agent.logicalDeviceID
+				context["flow-id"] = fmt.Sprintf("%v", fs.Id)
+				context["flow-cookie"] = fmt.Sprintf("%v", flowUpdate.FlowMod.Cookie)
+				if deviceRules != nil {
+					context["device-rules"] = deviceRules.String()
+				}
+
 				go agent.ldeviceMgr.SendRPCEvent(ctx,
 					agent.logicalDeviceID, "failed-to-update-device-flows", context, "RPC_ERROR_RAISE_EVENT",
 					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
@@ -439,8 +449,12 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 			agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
 			context := make(map[string]string)
 			context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
-			context["flow-id"] = string(flow.Id)
-			context["device-rules"] = deviceRules.String()
+			context["flow-id"] = fmt.Sprintf("%v", flow.Id)
+			context["flow-cookie"] = fmt.Sprintf("%v", flowUpdate.FlowMod.Cookie)
+			context["logical-device-id"] = agent.logicalDeviceID
+			if deviceRules != nil {
+				context["device-rules"] = deviceRules.String()
+			}
 			// Create context and send extra information as part of it.
 			go agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-delete-device-flows", context, "RPC_ERROR_RAISE_EVENT",
