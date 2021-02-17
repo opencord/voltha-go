@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4665f470_d13e0a54",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-17T13:59:20Z",
+      "side": 1,
+      "message": "Where is the flow-id being used?    A flow has an ID defined by the Core.  The Xid is the transaction ID relevant to that flow change.  Is this assignment expected?",
+      "revId": "0fd53cf7182ef9f722f0020c31f4b9dee6b9ab68",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
