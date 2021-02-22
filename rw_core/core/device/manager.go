@@ -1649,3 +1649,11 @@ func (dMgr *Manager) SendRPCEvent(ctx context.Context, id string, rpcEvent *volt
 	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	dMgr.RPCEventManager.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 }
+
+func (dMgr *Manager) GetTransientState(ctx context.Context, id string) (voltha.DeviceTransientState_Types, error) {
+	agent := dMgr.getDeviceAgent(ctx, id)
+	if agent == nil {
+		return voltha.DeviceTransientState_NONE, status.Errorf(codes.NotFound, "%s", id)
+	}
+	return agent.getTransientState(), nil
+}
