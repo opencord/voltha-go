@@ -544,7 +544,8 @@ func (nb *NBTest) testDeleteDeviceFailure(t *testing.T, nbi *NBIHandler) {
 
 	//Ensure there are devices in the Core as delete was failed - wait until condition satisfied or timeout
 	var vFunction1 isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
-		return devices != nil && len(devices.Items) == (nb.numONUPerOLT+1)
+		state := nbi.GetTransientState(getContext(), oltDevice.Id)
+		return devices != nil && len(devices.Items) == (nb.numONUPerOLT+1) && state == voltha.DeviceTransientState_DELETE_FAILED
 	}
 	err = waitUntilConditionForDevices(nb.maxTimeout, nbi, vFunction1)
 	assert.Nil(t, err)
