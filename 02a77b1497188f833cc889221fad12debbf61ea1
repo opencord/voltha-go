@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c50d924a_ef82f56c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1654,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-22T14:11:29Z",
+      "side": 1,
+      "message": "Should there be a check for nil agent?",
+      "revId": "02a77b1497188f833cc889221fad12debbf61ea1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
