@@ -29,7 +29,7 @@ import (
 
 const (
 	defaultkvStoreConfigPath     = "config"
-	defaultkvStoreDataPathPrefix = "service/voltha"
+	defaultkvStoreDataPathPrefix = "service/voltha_voltha"
 	kvStorePathSeparator         = "/"
 )
 

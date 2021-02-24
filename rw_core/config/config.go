@@ -24,14 +24,13 @@ import (
 
 // RW Core service default constants
 const (
-	ConsulStoreName                  = "consul"
 	EtcdStoreName                    = "etcd"
 	defaultGrpcAddress               = ":50057"
 	defaultKafkaAdapterAddress       = "127.0.0.1:9092"
 	defaultKafkaClusterAddress       = "127.0.0.1:9094"
 	defaultKVStoreType               = EtcdStoreName
 	defaultKVStoreTimeout            = 5 * time.Second
-	defaultKVStoreAddress            = "127.0.0.1:2379" // Consul = 8500; Etcd = 2379
+	defaultKVStoreAddress            = "127.0.0.1:2379" // Etcd = 2379
 	defaultKVTxnKeyDelTime           = 60
 	defaultLogLevel                  = "WARN"
 	defaultBanner                    = false

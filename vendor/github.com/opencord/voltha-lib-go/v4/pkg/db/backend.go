@@ -75,8 +75,6 @@ func NewBackend(ctx context.Context, storeType string, address string, timeout t
 
 func (b *Backend) newClient(ctx context.Context, address string, timeout time.Duration) (kvstore.Client, error) {
 	switch b.StoreType {
-	case "consul":
-		return kvstore.NewConsulClient(ctx, address, timeout)
 	case "etcd":
 		return kvstore.NewEtcdClient(ctx, address, timeout, log.WarnLevel)
 	}
@@ -170,9 +168,6 @@ func (b *Backend) isErrorIndicatingAliveKvstore(ctx context.Context, err error) 
 			case codes.DataLoss:
 				alive = false
 			}
-
-			//} else {
-			// TODO: Implement for consul backend; would it be needed ever?
 		}
 	}
 
@@ -233,6 +228,21 @@ func (b *Backend) Delete(ctx context.Context, key string) error {
 	logger.Debugw(ctx, "deleting-key", log.Fields{"key": key, "path": formattedPath})
 
 	err := b.Client.Delete(ctx, formattedPath)
+
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
+
+	return err
+}
+
+// DeleteWithPrefix removes items having prefix key
+func (b *Backend) DeleteWithPrefix(ctx context.Context, prefixKey string) error {
+	span, ctx := log.CreateChildSpan(ctx, "etcd-delete-with-prefix")
+	defer span.Finish()
+
+	formattedPath := b.makePath(ctx, prefixKey)
+	logger.Debugw(ctx, "deleting-prefix-key", log.Fields{"key": prefixKey, "path": formattedPath})
+
+	err := b.Client.DeleteWithPrefix(ctx, formattedPath)
 
 	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
 
