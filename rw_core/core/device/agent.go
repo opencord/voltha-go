@@ -221,19 +221,57 @@ func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 // onSuccess is a common callback for scenarios where we receive a nil response following a request to an adapter
 // and the only action required is to publish a successful result on kafka
 func (agent *Agent) onSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
+	var rpce *voltha.RPCEvent
+
+	// defaults
+	desc := fmt.Sprintf("%s-success", rpc)
+	rpcID := fmt.Sprintf("RPC_SUCCESS") // there is no standard format to define this, seems like it is left to developer imagination.
+
 	logger.Debugw(ctx, "response-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
-	// TODO: Post success message onto kafka
+	// One success response for "updatePmConfigs" RPC we need to update commit the voltha.Device object to DB.
+	if rpc == "updatePmConfigs" {
+		if len(reqArgs) == 1 {
+			if device, ok := reqArgs[0].(*voltha.Device); ok {
+				// Store the device
+				if err := agent.updateDeviceAndReleaseLock(ctx, device); err != nil {
+					logger.Errorw(ctx, "error-updating-device-context-to-db", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
+					desc = "error update device pm config to db"
+					rpcID = "INTERNAL_ERROR" // there is no standard format to define this
+				}
+			} else {
+				logger.Errorw(ctx, "error-typecasting-input-argument-to-voltha-device-object", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
+				desc = "error typecasting to device"
+				rpcID = "INTERNAL_ERROR"
+			}
+		} else {
+			logger.Errorw(ctx, "invalid-number-of-arguments-in-pm-config-success-handler", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "numOfArgs": len(reqArgs)})
+			logger.Errorw(ctx, "error-updating-device-context-to-db", log.Fields{"rpc": rpc, "device-id": agent.deviceID})
+			desc = "error update device pm config to db"
+			rpcID = "INTERNAL_ERROR"
+		}
+	}
+
+	rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, desc, nil)
+	// TODO: EventCategory_COMMUNICATION seems very generic, but also choosing category based on RPC is complex
+	go agent.deviceMgr.SendRPCEvent(ctx, rpcID, rpce,
+		voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 }
 
 // onFailure is a common callback for scenarios where we receive an error response following a request to an adapter
 // and the only action required is to publish the failed result on kafka
 func (agent *Agent) onFailure(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
+	var rpce *voltha.RPCEvent
 	if res, ok := response.(error); ok {
 		logger.Errorw(ctx, "rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
 	} else {
 		logger.Errorw(ctx, "rpc-failed-invalid-error", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
 	}
-	// TODO: Post failure message onto kafka
+
+	desc := fmt.Sprintf("%s-failure", rpc)
+	rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, desc, nil)
+	// TODO: EventCategory_COMMUNICATION seems very generic, but also choosing category based on RPC is complex
+	go agent.deviceMgr.SendRPCEvent(ctx, "RPC_FAILURE", rpce,
+		voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 }
 
 func (agent *Agent) waitForAdapterForceDeleteResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
