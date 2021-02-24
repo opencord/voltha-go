@@ -18,6 +18,8 @@ package device
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -34,22 +36,54 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	logger.Debugw(ctx, "update-pm-configs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.cloneDeviceWithoutLock()
+	oldPmConfigs := proto.Clone(cloned.PmConfigs).(*voltha.PmConfigs) // back up old config
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
-	// Store the device
-	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
-		return err
-	}
+
 	// Send the request to the adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 
-	ch, err := agent.adapterProxy.UpdatePmConfigs(subCtx, cloned, pmConfigs)
-	if err != nil {
+	ch, pmErr := agent.adapterProxy.UpdatePmConfigs(subCtx, cloned, pmConfigs)
+	if pmErr != nil {
 		cancel()
+		return pmErr
+	}
+
+	defer cancel()
+	var rpce *voltha.RPCEvent
+	defer func() {
+		if rpce != nil {
+			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+		}
+	}()
+	// We need to send the response for the PM Config Updates in a synchronous manner to the caller.
+	select {
+	case rpcResponse, ok := <-ch:
+		if !ok {
+			pmErr = fmt.Errorf("response-channel-closed")
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, pmErr.Error(), nil)
+		} else if rpcResponse.Err != nil {
+			rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, rpcResponse.Err.Error(), nil)
+			pmErr = rpcResponse.Err
+		}
+	case <-ctx.Done():
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, ctx.Err().Error(), nil)
+		pmErr = ctx.Err()
+	}
+	// In case of any error in response, revert to old pm config
+	if pmErr != nil {
+		cloned.PmConfigs = oldPmConfigs
+	}
+
+	// Store back the device to DB
+	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
+		logger.Errorw(ctx, "error-updating-device-context-to-db", log.Fields{"device-id": agent.deviceID})
+		rpce = agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
 		return err
 	}
-	go agent.waitForAdapterResponse(subCtx, cancel, "updatePmConfigs", ch, agent.onSuccess, agent.onFailure)
-	return nil
+
+	return pmErr
 }
 
 func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfigs) error {
