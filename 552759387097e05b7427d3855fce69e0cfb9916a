@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5ba0d6c_a4e783cb",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-24T14:21:14Z",
+      "side": 1,
+      "message": "The pattern in the Core is whenever a specific callback is needed for a given RPC a specific onSuccess (e.g \"onPmConfigUpdateSuccess\") needs to be created. See \"onDeleteSuccess\".",
+      "revId": "552759387097e05b7427d3855fce69e0cfb9916a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
