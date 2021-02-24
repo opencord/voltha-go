@@ -30,6 +30,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
 	"github.com/opencord/voltha-lib-go/v4/pkg/version"
+	"github.com/go-redis/redis/v8"
 )
 
 func waitForExit(ctx context.Context) int {
@@ -70,6 +71,7 @@ func printVersion() {
 }
 
 func main() {
+
 	start := time.Now()
 
 	ctx := context.Background()
@@ -124,7 +126,7 @@ func main() {
 		printBanner()
 	}
 
-	logger.Infow(ctx, "rw-core-config", log.Fields{"config": *cf})
+	logger.Infow(ctx, "rw-core-config", log.Fields{"config": *cf, "redis": redis.Nil})
 
 	// Create a context adding the status update channel
 	ctx, cancel := context.WithCancel(context.Background())
