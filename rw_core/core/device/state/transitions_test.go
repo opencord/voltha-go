@@ -348,6 +348,14 @@ func TestNoOpTransitions(t *testing.T) {
 	previousDevice = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_DISCOVERED)
 	device = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVATING)
 	assertNoOpTransition(t, device, previousDevice)
+
+	previousDevice = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	device = getDevice(false, voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	assertNoOpTransition(t, device, previousDevice)
+
+	previousDevice = getDevice(false, voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	device = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	assertNoOpTransition(t, device, previousDevice)
 }
 
 func TestMatch(t *testing.T) {
