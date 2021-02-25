@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c065ac6_aa6f225a",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-02-25T16:22:42Z",
+      "side": 1,
+      "message": "is it just for logging?",
+      "range": {
+        "startLine": 233,
+        "startChar": 0,
+        "endLine": 249,
+        "endChar": 62
+      },
+      "revId": "3dcec43b822fa71600f8376d38da3e4322ef8d42",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
