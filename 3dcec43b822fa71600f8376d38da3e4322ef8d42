@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "6cb10a35_48966028",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-25T16:30:55Z",
+      "side": 1,
+      "message": "In the spirit of this state machine, every transition or non-transition is done via a callback.  In this case you can create a local \"NotifyImageDownStart()\" and \"NotifyImageDownComplete()\".  It makes the code cleaner with a simple pattern throughout.",
+      "revId": "3dcec43b822fa71600f8376d38da3e4322ef8d42",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0c065ac6_aa6f225a",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 1
