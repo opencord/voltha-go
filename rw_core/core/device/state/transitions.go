@@ -230,6 +230,24 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			handlers:      []transitionHandler{dMgr.NotifyInvalidTransition}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
+			deviceType:    child,
+			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE, Transient: voltha.DeviceTransientState_NONE},
+			currentState:  deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE, Transient: voltha.DeviceTransientState_NONE},
+			handlers:      []transitionHandler{func(ctx context.Context, device *voltha.Device) error {
+				logger.Info(ctx, "Transitioning to image dowloading")
+				return nil
+			}}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
+			deviceType:    child,
+			previousState: deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE, Transient: voltha.DeviceTransientState_NONE},
+			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE, Transient: voltha.DeviceTransientState_NONE},
+			handlers:      []transitionHandler{func(ctx context.Context, device *voltha.Device) error {
+				logger.Info(ctx, "Transitioning to enabled after image downloading")
+				return nil
+			}}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_NONE},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_NONE},
