@@ -51,6 +51,24 @@
       "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccdfaeff_8b4fae72",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-26T21:01:40Z",
+      "side": 1,
+      "message": "If there is a need for the caller to get a complete response, you can still do so while releasing the lock.  There are a few examples, e.g. getSwitchCapability(), getSingleValue() depending in the \"update after\" or \"update before\" approach.",
+      "parentUuid": "8f9610f8_67b042bd",
+      "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
