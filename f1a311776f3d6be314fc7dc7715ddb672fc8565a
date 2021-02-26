@@ -69,6 +69,24 @@
       "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2081b51e_905f8595",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-02-26T21:04:35Z",
+      "side": 1,
+      "message": "Sounds good. Let me check. Thanks Khen.",
+      "parentUuid": "ccdfaeff_8b4fae72",
+      "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
