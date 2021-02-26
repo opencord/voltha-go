@@ -33,6 +33,24 @@
       "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f9610f8_67b042bd",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-02-26T20:37:18Z",
+      "side": 1,
+      "message": "There are a few reasons I decided to make this blocking from my initial patch set which was non-blocking.\n1. The caller is not intimated about the failure (in case the update fails) of the pm update in case of async mode. It is always a success to caller, unless the caller lists the pm config to check and see whether the update has indeed happened.\n2. The pm config update is not an operation that happens a lot. It may happen a handful of times (may be once or twice) during time the ONU is provisioned. This operation is not talking to the actual device but just a config update within the adapter so it is not blocking for a long time.\n\nThe failure event is posted on kafka (in case of pm update failure), but may be returning the response on the same call is useful here, not sure.. Thoughts?",
+      "parentUuid": "ecbccd92_314d24d8",
+      "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
