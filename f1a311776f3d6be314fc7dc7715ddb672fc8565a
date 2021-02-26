@@ -16,6 +16,23 @@
       "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecbccd92_314d24d8",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-26T13:51:05Z",
+      "side": 1,
+      "message": "Why there is a need for synchronous for PMs? This code will block all requests (both northbound and southbound) on that device.\n\nIf the idea is to update PMs only after a successful adapter response then I suggest the following:\n\n1) Similar to the previous commit, create a onPMSuccess and onPMFailure functions.\n2) In the updatePmConfigs() method, you can either update the PmConfigs in the Device object right away and keep the older version or do not update the device object right away, i.e. update only on a successful response. There are pros and cons for both approaches - the \"update before sending to adapter\" works well if there are multiple pm requests and the successful responses from the adapter comes out of order, the \"update after sending to the adapter\" works better in that situation on failure responses.  If we will most likely get only 1 PM config update then either approach is ok.\n3) Release the lock relevant \"agent.requestQueue.WaitForGreenLight\".\n4) Use the \"go agent.waitForAdapterResponse(...)\" approach and pass in the onPMSuccess and onPMFailure functions along with the PM config data (depends on your choice in 2).",
+      "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
