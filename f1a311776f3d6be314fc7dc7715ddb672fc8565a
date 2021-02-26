@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb88b1c5_8c2f8f09",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-02-26T08:27:26Z",
+      "side": 1,
+      "message": "do we also want a CLEARED for this one ?",
+      "revId": "f1a311776f3d6be314fc7dc7715ddb672fc8565a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
