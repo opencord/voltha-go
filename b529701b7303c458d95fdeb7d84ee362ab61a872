@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b9855ff_ac335d3c",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-27T01:59:14Z",
+      "side": 1,
+      "message": "Since the actual device update is done after the response back from the adapter, is there a need to even grab the lock at this point?  An option is to send the pmConfig to the adapter first (no request lock is required as no change is being done), wait for the response, and if the request is successful only then grab the request lock and update the device with the pmConfig.",
+      "revId": "b529701b7303c458d95fdeb7d84ee362ab61a872",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "183b1b20_a9fcae96",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-27T01:59:14Z",
+      "side": 1,
+      "message": "nit: the defer cancel() can be done right after context.WithTimeout(...)",
+      "revId": "b529701b7303c458d95fdeb7d84ee362ab61a872",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d74ec0ad_6fef768c",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-02-27T01:59:14Z",
+      "side": 1,
+      "message": "Device config data was not changed by this function, so no need to update it again.",
+      "revId": "b529701b7303c458d95fdeb7d84ee362ab61a872",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
