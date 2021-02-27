@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c5c9c533_6781959e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a1febf4_57d454d6",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 43
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f079f185_73623f8f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 36
@@ -95,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "621abbd0_99d2d4ca",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f079f185_73623f8f",
+      "range": {
+        "startLine": 386,
+        "startChar": 0,
+        "endLine": 386,
+        "endChar": 85
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e118b475_5a48f4e1",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 36
@@ -109,6 +157,24 @@
       "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63788b89_e77a0043",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e118b475_5a48f4e1",
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -135,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "ad703527_38db65fb",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "daf42b0e_d598aac0",
+      "range": {
+        "startLine": 552,
+        "startChar": 0,
+        "endLine": 552,
+        "endChar": 85
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2991a409_da75c19a",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 36
@@ -155,6 +245,30 @@
       "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "341de535_735b18ea",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2991a409_da75c19a",
+      "range": {
+        "startLine": 606,
+        "startChar": 0,
+        "endLine": 606,
+        "endChar": 85
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -181,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "371dde38_ac224dd9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad0cd6d7_544a38ba",
+      "range": {
+        "startLine": 643,
+        "startChar": 0,
+        "endLine": 643,
+        "endChar": 85
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5df453f8_c77c7490",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 36
@@ -201,6 +339,30 @@
       "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5adc9c62_acbbcc76",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5df453f8_c77c7490",
+      "range": {
+        "startLine": 691,
+        "startChar": 0,
+        "endLine": 691,
+        "endChar": 85
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -227,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "ed06af21_82776087",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 1009,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "87233b3a_010e127b",
+      "range": {
+        "startLine": 1009,
+        "startChar": 5,
+        "endLine": 1009,
+        "endChar": 15
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d13128b_2265ce59",
         "filename": "rw_core/core/device/agent_device_update.go",
         "patchSetId": 36
@@ -247,6 +433,30 @@
       "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec67c5be_9d3e120d",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d13128b_2265ce59",
+      "range": {
+        "startLine": 2,
+        "startChar": 13,
+        "endLine": 2,
+        "endChar": 17
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -273,6 +483,30 @@
     },
     {
       "key": {
+        "uuid": "804af7fc_1be6c118",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a57a636f_48c43f03",
+      "range": {
+        "startLine": 30,
+        "startChar": 1,
+        "endLine": 32,
+        "endChar": 13
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a11e5e4_5817eb2d",
         "filename": "rw_core/core/device/agent_flow.go",
         "patchSetId": 36
@@ -296,6 +530,30 @@
     },
     {
       "key": {
+        "uuid": "c0f5b836_0f769717",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a11e5e4_5817eb2d",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 85
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1b458cb_c9856dc5",
         "filename": "rw_core/core/device/agent_group.go",
         "patchSetId": 36
@@ -310,6 +568,24 @@
       "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50cd9b34_f5fc0fe5",
+        "filename": "rw_core/core/device/agent_group.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1b458cb_c9856dc5",
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -333,6 +609,30 @@
       "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a630346_f506ccb7",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bed065d4_3fdf956a",
+      "range": {
+        "startLine": 152,
+        "startChar": 5,
+        "endLine": 152,
+        "endChar": 15
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -383,6 +683,30 @@
     },
     {
       "key": {
+        "uuid": "584ead06_2691b5b7",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Missed return statement.",
+      "parentUuid": "a2cfed29_e6f769e5",
+      "range": {
+        "startLine": 187,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 57
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9c49ff9_d7d672c5",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 36
@@ -403,6 +727,30 @@
       "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "133a69dd_f8ffa568",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 1097,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T16:34:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9c49ff9_d7d672c5",
+      "range": {
+        "startLine": 1096,
+        "startChar": 3,
+        "endLine": 1097,
+        "endChar": 3
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
