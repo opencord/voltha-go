@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "e5947a43_44acdc03",
+        "filename": "rw_core/core/api/adapter_request_handler.go",
+        "patchSetId": 36
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-02-27T17:48:21Z",
+      "side": 1,
+      "message": "empty value of fromTopic will be added in context and while logging if fromTopic has empty value it would be considered a request from Northbound",
+      "parentUuid": "4488ab17_c91f17d6",
+      "range": {
+        "startLine": 360,
+        "startChar": 64,
+        "endLine": 360,
+        "endChar": 77
+      },
+      "revId": "b5e54cb27f3e2c60cf11d6489b7f1832aafb8a83",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1a1febf4_57d454d6",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 36
