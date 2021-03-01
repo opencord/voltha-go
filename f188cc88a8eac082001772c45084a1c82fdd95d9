@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3ee0f8b_366dd161",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-03-01T15:19:27Z",
+      "side": 1,
+      "message": "given that desc and operStatus are local variables. Shouldn\u0027t this block be replaced with just\n\nreturn portHandle.Update(ctx, \u0026newPort)\n\n?\n\nIt seems that desc and operStatus are set, but never used",
+      "range": {
+        "startLine": 183,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 11
+      },
+      "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
