@@ -34,6 +34,24 @@
       "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f8251d5_f6e07b28",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-01T21:02:21Z",
+      "side": 1,
+      "message": "There are actually two potential kafka deployments, one for inter-container communication and one for events.  The one for inter-container communication had all the retries in place.  The one for events was recently referred to and that one did not have any retry mechanism.",
+      "parentUuid": "4fbdfa79_ef10fc61",
+      "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
