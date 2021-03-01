@@ -22,6 +22,30 @@
       "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "993951d5_82430a27",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-03-01T15:24:21Z",
+      "side": 1,
+      "message": "No actually both of these variables are part of the arguments passed in a function call which is deferred in the start of the function.",
+      "parentUuid": "b3ee0f8b_366dd161",
+      "range": {
+        "startLine": 183,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 11
+      },
+      "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
