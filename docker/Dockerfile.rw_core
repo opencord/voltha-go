@@ -66,11 +66,17 @@ RUN go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /go/bin/rw_core \
 # hadolint ignore=DL3006
 FROM $DEPLOY_IMAGE
 
+ENV APP_DIR /app
+ENV APP_USER voltha
+
+# Add system user with no-login
+RUN addgroup -g 1000 ${APP_USER} && adduser -S -s /bin/false -u 1000 -g ${APP_USER} ${APP_USER}
+
 # Set the working directory
-WORKDIR /app
+WORKDIR ${APP_DIR}
 
 # Copy required files
-COPY --from=build-env /go/bin/rw_core /app/
+COPY --from=build-env /go/bin/rw_core ${APP_DIR}/
 
 # Label image
 ARG org_label_schema_version=unknown
@@ -88,3 +94,9 @@ LABEL org.label-schema.schema-version=1.0 \
       org.label-schema.build-date=$org_label_schema_build_date \
       org.opencord.vcs-commit-date=$org_opencord_vcs_commit_date \
       org.opencord.vcs-dirty=$org_opencord_vcs_dirty
+
+# Copy and run hardening script (hardening script deletes itself after run)
+COPY docker/harden.sh ${APP_DIR}
+RUN chmod +x ${APP_DIR}/harden.sh && sh ${APP_DIR}/harden.sh
+
+USER ${APP_USER}
