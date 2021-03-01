@@ -70,6 +70,24 @@
       "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "242753bc_4ad293a3",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-01T22:13:55Z",
+      "side": 1,
+      "message": "If that\u0027s the preference I can move this code under a \"startKafkEventProxy\" method",
+      "parentUuid": "9a0d02ee_6a7b656a",
+      "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
