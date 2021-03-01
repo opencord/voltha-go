@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec7dd688_e4b8d98f",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-01T19:58:17Z",
+      "side": 1,
+      "message": "No need for cancel() here",
+      "revId": "993b3dd680732b3222de8d9fa9ec4fc8ad6cb6a7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
