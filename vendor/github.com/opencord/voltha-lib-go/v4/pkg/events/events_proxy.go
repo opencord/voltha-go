@@ -187,3 +187,11 @@ func (ep *EventProxy) sendEvent(ctx context.Context, event *voltha.Event) error 
 
 	return nil
 }
+
+func (ep *EventProxy) EnableLivenessChannel(ctx context.Context, enable bool) chan bool {
+	return ep.kafkaClient.EnableLivenessChannel(ctx, enable)
+}
+
+func (ep *EventProxy) SendLiveness(ctx context.Context) error {
+	return ep.kafkaClient.SendLiveness(ctx)
+}
