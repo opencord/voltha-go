@@ -46,6 +46,30 @@
       "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28c0b3dd_17381241",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-03-01T15:53:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "993951d5_82430a27",
+      "range": {
+        "startLine": 183,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 11
+      },
+      "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
