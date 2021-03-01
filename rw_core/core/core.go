@@ -42,13 +42,19 @@ type Core struct {
 	stopped  chan struct{}
 }
 
+const (
+	adapterMessageBus = "adapter-message-bus"
+	clusterMessageBus = "cluster-message-bus"
+)
+
 // NewCore creates instance of rw core
 func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
 	// If the context has a probe then fetch it and register our services
 	if p := probe.GetProbeFromContext(ctx); p != nil {
 		p.RegisterService(
 			ctx,
-			"message-bus",
+			adapterMessageBus,
+			clusterMessageBus,
 			"kv-store",
 			"adapter-manager",
 			"grpc-service",
@@ -121,12 +127,20 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 		kafka.AutoCreateTopic(true),
 		kafka.MetadatMaxRetries(15),
 	)
+
 	// create event proxy
 	eventProxy := events.NewEventProxy(events.MsgClient(kafkaClientEvent), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
-	if err := kafkaClientEvent.Start(ctx); err != nil {
-		logger.Warn(ctx, "failed-to-setup-kafka-connection-on-kafka-cluster-address")
-		return
+	for {
+		if err := kafkaClientEvent.Start(ctx); err != nil {
+			probe.UpdateStatusFromContext(ctx, clusterMessageBus, probe.ServiceStatusNotReady)
+			logger.Warnw(ctx, "failed-to-setup-kafka-connection-on-kafka-cluster-address", log.Fields{"error": err})
+			time.Sleep(cf.ConnectionRetryInterval)
+			continue
+		}
+		logger.Infow(ctx, "started-connection-on-kafka-cluster-address", log.Fields{})
+		break
 	}
+	go monitorKafkaLiveness(ctx, eventProxy, cf.LiveProbeInterval, cf.NotLiveProbeInterval, clusterMessageBus)
 
 	defer kafkaClientEvent.Stop(ctx)
 
@@ -145,7 +159,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 		return
 	}
 	defer kmp.Stop(ctx)
-	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
+	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval, adapterMessageBus)
 
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
