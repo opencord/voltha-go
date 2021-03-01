@@ -16,6 +16,24 @@
       "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fbdfa79_ef10fc61",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-03-01T20:24:17Z",
+      "side": 1,
+      "message": "This code calls startKafkaInterContainerProxy below, so now it appears we have two checks for the kafka connection. Do we attempt to reconnect to kafka after initial connection if that is broken? I thought this was the original issue",
+      "parentUuid": "30bd0054_522ef1bd",
+      "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
