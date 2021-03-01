@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "5b0a20cd_537204ba",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-01T17:07:27Z",
+      "side": 1,
+      "message": "nit:  since the device updates are logged anyway, the function name would be simpler if named waitForAdapterResponse().",
+      "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9e07db1_dfcc9f7b",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-01T17:07:27Z",
+      "side": 1,
+      "message": "Two points:\n1) Could there be a case where prevState \u003d\u003d nil but new state needs to be logged?  If prevState is being used to determined to log or not state data then the (prevState !\u003d nil) check must be done before getting an instance of the new state.\n\n2) Trying to get the latest device state here may not really correspond to the device update log, i.e. by the time the logDeviceUpdate has been invoked the device state may be different from the transition initiated by this log update.   Would it be possible to pass the actual state transition, if any, to the logDeviceUpdate() method?",
+      "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3ee0f8b_366dd161",
         "filename": "rw_core/core/device/agent_port.go",
         "patchSetId": 38
