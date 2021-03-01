@@ -52,6 +52,24 @@
       "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a0d02ee_6a7b656a",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-01T21:08:34Z",
+      "side": 1,
+      "message": "Additionally, if the two kafka deployments end up being the same then there should be only 1 kafka monitoring.",
+      "parentUuid": "8f8251d5_f6e07b28",
+      "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
