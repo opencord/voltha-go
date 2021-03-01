@@ -26,7 +26,6 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/api"
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	conf "github.com/opencord/voltha-lib-go/v4/pkg/config"
-	"github.com/opencord/voltha-lib-go/v4/pkg/events"
 	grpcserver "github.com/opencord/voltha-lib-go/v4/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
@@ -42,13 +41,19 @@ type Core struct {
 	stopped  chan struct{}
 }
 
+const (
+	adapterMessageBus = "adapter-message-bus"
+	clusterMessageBus = "cluster-message-bus"
+)
+
 // NewCore creates instance of rw core
 func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
 	// If the context has a probe then fetch it and register our services
 	if p := probe.GetProbeFromContext(ctx); p != nil {
 		p.RegisterService(
 			ctx,
-			"message-bus",
+			adapterMessageBus,
+			clusterMessageBus,
 			"kv-store",
 			"adapter-manager",
 			"grpc-service",
@@ -121,12 +126,14 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 		kafka.AutoCreateTopic(true),
 		kafka.MetadatMaxRetries(15),
 	)
+
 	// create event proxy
-	eventProxy := events.NewEventProxy(events.MsgClient(kafkaClientEvent), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
-	if err := kafkaClientEvent.Start(ctx); err != nil {
-		logger.Warn(ctx, "failed-to-setup-kafka-connection-on-kafka-cluster-address")
+	eventProxy, err := startEventProxy(ctx, kafkaClientEvent, cf.EventTopic, cf.ConnectionRetryInterval)
+	if err != nil {
+		logger.Warn(ctx, "failed-to-setup-kafka-event-proxy-connection")
 		return
 	}
+	go monitorKafkaLiveness(ctx, eventProxy, cf.LiveProbeInterval, cf.NotLiveProbeInterval, clusterMessageBus)
 
 	defer kafkaClientEvent.Stop(ctx)
 
@@ -141,11 +148,11 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	// core.kmp must be created before deviceMgr and adapterMgr
 	kmp, err := startKafkInterContainerProxy(ctx, kafkaClient, cf.KafkaAdapterAddress, cf.CoreTopic, cf.ConnectionRetryInterval)
 	if err != nil {
-		logger.Warn(ctx, "failed-to-setup-kafka-connection")
+		logger.Warn(ctx, "failed-to-setup-kafka-adapter-proxy-connection")
 		return
 	}
 	defer kmp.Stop(ctx)
-	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
+	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval, adapterMessageBus)
 
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)

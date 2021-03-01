@@ -29,6 +29,8 @@ type EventProxy interface {
 		subCategory EventSubCategory, raisedTs int64) error
 	SendRPCEvent(ctx context.Context, id string, deviceEvent *voltha.RPCEvent, category EventCategory,
 		subCategory *EventSubCategory, raisedTs int64) error
+	EnableLivenessChannel(ctx context.Context, enable bool) chan bool
+	SendLiveness(ctx context.Context) error
 }
 
 const (
