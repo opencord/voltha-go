@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30bd0054_522ef1bd",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-01T19:09:46Z",
+      "side": 1,
+      "message": "nit: Would it be beneficial to use something similar to startKafkInterContainerProxy()?  It can be done is a separate Jira.",
+      "revId": "fa21c960dabcaac8cbd344c26a4a1725043392c9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
