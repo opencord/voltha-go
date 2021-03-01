@@ -52,7 +52,7 @@ func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client,
 			// We failed to start. Delay and then try again later.
 			// Don't worry about liveness, as we can't be live until we've started.
 			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusNotReady)
-			logger.Infow(ctx, "error-starting-kafka-messaging-proxy", log.Fields{"error": err})
+			logger.Warnw(ctx, "error-starting-kafka-messaging-proxy", log.Fields{"error": err})
 			select {
 			case <-time.After(connectionRetryInterval):
 			case <-ctx.Done():

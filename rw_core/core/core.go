@@ -123,9 +123,15 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	)
 	// create event proxy
 	eventProxy := events.NewEventProxy(events.MsgClient(kafkaClientEvent), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
-	if err := kafkaClientEvent.Start(ctx); err != nil {
-		logger.Warn(ctx, "failed-to-setup-kafka-connection-on-kafka-cluster-address")
-		return
+	for {
+		if err := kafkaClientEvent.Start(ctx); err != nil {
+			probe.UpdateStatusFromContext(ctx, "message-bus", probe.ServiceStatusNotReady)
+			logger.Warnw(ctx, "failed-to-setup-kafka-connection-on-kafka-cluster-address", log.Fields{"error": err})
+			time.Sleep(cf.ConnectionRetryInterval)
+			continue
+		}
+		logger.Infow(ctx, "started-connection-on-kafka-cluster-address", log.Fields{})
+		break
 	}
 
 	defer kafkaClientEvent.Stop(ctx)
