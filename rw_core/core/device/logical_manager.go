@@ -102,10 +102,14 @@ func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Em
 	logger.Debug(ctx, "list-all-logical-devices")
 
 	var logicalDevices []*voltha.LogicalDevice
-	if err := ldMgr.ldProxy.List(ctx, &logicalDevices); err != nil {
-		logger.Errorw(ctx, "failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
-		return nil, err
-	}
+	ldMgr.logicalDeviceAgents.Range(func(key, value interface{}) bool {
+		if ld, err := value.(*LogicalAgent).GetLogicalDeviceReadOnly(ctx); err == nil {
+			logicalDevices = append(logicalDevices, ld)
+		} else {
+			logger.Errorw(ctx, "unable-to-get-logical-device", log.Fields{"err": err})
+		}
+		return true
+	})
 	return &voltha.LogicalDevices{Items: logicalDevices}, nil
 }
 
