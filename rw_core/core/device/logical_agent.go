@@ -355,7 +355,7 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 
 func (agent *LogicalAgent) packetIn(ctx context.Context, port uint32, transactionID string, packet []byte) {
 	if logger.V(log.InfoLevel) {
-		logger.Infow(ctx, "packet-in", log.Fields{
+		logger.Debugw(ctx, "packet-in", log.Fields{
 			"port":          port,
 			"packet":        hex.EncodeToString(packet),
 			"transactionId": transactionID,
