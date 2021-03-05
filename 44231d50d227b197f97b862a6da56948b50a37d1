@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "433572f1_05cefcfb",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-05T02:18:41Z",
+      "side": 1,
+      "message": "nit:  If we are using the same kafka deployment for both events and adapter communication then we will have two liveness checks for the same kafka.  Worth optimizing?",
+      "revId": "44231d50d227b197f97b862a6da56948b50a37d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c72cfb07_d8e989ad",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-05T02:18:41Z",
+      "side": 1,
+      "message": "nit: If there are no additional fields to log then can just use logger.Info(...)",
+      "revId": "44231d50d227b197f97b862a6da56948b50a37d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
