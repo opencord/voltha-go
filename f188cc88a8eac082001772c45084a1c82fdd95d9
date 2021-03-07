@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "319a0199_6a34f3d0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-03-07T13:17:54Z",
+      "side": 1,
+      "message": "Actually there are many of the operation for which original function waitForAdapterResponse is called , these are operation which are not considered to be logged as a device update like packetOut , simulateAlarm and more.",
+      "parentUuid": "5b0a20cd_537204ba",
+      "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d9e07db1_dfcc9f7b",
         "filename": "rw_core/core/device/agent_device_update.go",
         "patchSetId": 38
@@ -33,6 +51,24 @@
       "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e723277_a7d9e0ec",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 38
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-03-07T13:17:54Z",
+      "side": 1,
+      "message": "1) As per my knowledge where prev state \u003d  nil and new state need to be logged , somewhat relevant case is device creation but in that case prev state is set to be unknown.\n2) current state is passed in new patch set. Prev state and current state are passed from only those function which are actually changing state.",
+      "parentUuid": "d9e07db1_dfcc9f7b",
+      "revId": "f188cc88a8eac082001772c45084a1c82fdd95d9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
