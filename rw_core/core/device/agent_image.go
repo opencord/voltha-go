@@ -354,7 +354,7 @@ func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response int
 		logger.Errorw(ctx, "cannot-obtain-lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
 		return
 	}
-	logger.Errorw(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
+	logger.Infow(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
 	cloned := agent.cloneDeviceWithoutLock()
 	//TODO base this on IMAGE ID when created
 	var imageSucceeded *voltha.ImageDownload
