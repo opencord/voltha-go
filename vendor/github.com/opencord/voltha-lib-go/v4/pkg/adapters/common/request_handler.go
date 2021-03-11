@@ -708,30 +708,17 @@ func (rhp *RequestHandlerProxy) getEnableDisableParams(ctx context.Context, args
 }
 
 func (rhp *RequestHandlerProxy) Child_device_lost(ctx context.Context, args []*ic.Argument) error {
-	if len(args) < 4 {
+	if len(args) < 2 {
 		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
 		return errors.New("invalid-number-of-args")
 	}
-
-	pDeviceId := &ic.StrType{}
-	pPortNo := &ic.IntType{}
-	onuID := &ic.IntType{}
+	childDevice := &voltha.Device{}
 	fromTopic := &ic.StrType{}
 	for _, arg := range args {
 		switch arg.Key {
-		case "pDeviceId":
-			if err := ptypes.UnmarshalAny(arg.Value, pDeviceId); err != nil {
-				logger.Warnw(ctx, "cannot-unmarshal-parent-deviceId", log.Fields{"error": err})
-				return err
-			}
-		case "pPortNo":
-			if err := ptypes.UnmarshalAny(arg.Value, pPortNo); err != nil {
-				logger.Warnw(ctx, "cannot-unmarshal-port", log.Fields{"error": err})
-				return err
-			}
-		case "onuID":
-			if err := ptypes.UnmarshalAny(arg.Value, onuID); err != nil {
-				logger.Warnw(ctx, "cannot-unmarshal-transaction-ID", log.Fields{"error": err})
+		case "childDevice":
+			if err := ptypes.UnmarshalAny(arg.Value, childDevice); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-child-device", log.Fields{"error": err})
 				return err
 			}
 		case kafka.FromTopic:
@@ -742,9 +729,9 @@ func (rhp *RequestHandlerProxy) Child_device_lost(ctx context.Context, args []*i
 		}
 	}
 	//Update the core reference for that device
-	rhp.coreProxy.UpdateCoreReference(pDeviceId.Val, fromTopic.Val)
+	rhp.coreProxy.UpdateCoreReference(childDevice.ParentId, fromTopic.Val)
 	//Invoke the Child_device_lost API on the adapter
-	if err := rhp.adapter.Child_device_lost(ctx, pDeviceId.Val, uint32(pPortNo.Val), uint32(onuID.Val)); err != nil {
+	if err := rhp.adapter.Child_device_lost(ctx, childDevice); err != nil {
 		return status.Errorf(codes.NotFound, "%s", err.Error())
 	}
 	return nil

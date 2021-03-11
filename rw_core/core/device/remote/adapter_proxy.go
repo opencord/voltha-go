@@ -397,20 +397,20 @@ func (ap *AdapterProxy) EnablePort(ctx context.Context, device *voltha.Device, p
 }
 
 // ChildDeviceLost invokes child device_lost rpc
-func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, deviceID string, pPortNo uint32, onuID uint32) (chan *kafka.RpcResponse, error) {
-	logger.Debugw(ctx, "ChildDeviceLost", log.Fields{"device-id": deviceID, "parent-port-no": pPortNo, "onu-id": onuID})
+func (ap *AdapterProxy) ChildDeviceLost(ctx context.Context, deviceType string, childDevice *voltha.Device) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "ChildDeviceLost",
+		log.Fields{"device-id": childDevice.ParentId, "parent-port-no": childDevice.ParentPortNo,
+			"onu-id": childDevice.ProxyAddress.OnuId, "serial-number": childDevice.SerialNumber})
 	rpc := "child_device_lost"
-	toTopic, err := ap.getAdapterTopic(ctx, deviceID, deviceType)
+	toTopic, err := ap.getAdapterTopic(ctx, childDevice.ParentId, deviceType)
 	if err != nil {
 		return nil, err
 	}
 	args := []*kafka.KVArg{
-		{Key: "pDeviceId", Value: &ic.StrType{Val: deviceID}},
-		{Key: "pPortNo", Value: &ic.IntType{Val: int64(pPortNo)}},
-		{Key: "onuID", Value: &ic.IntType{Val: int64(onuID)}},
+		{Key: "childDevice", Value: childDevice},
 	}
 	replyToTopic := ap.getCoreTopic()
-	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, deviceID, args...)
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, childDevice.ParentId, args...)
 }
 
 func (ap *AdapterProxy) StartOmciTest(ctx context.Context, device *voltha.Device, omcitestrequest *voltha.OmciTestRequest) (chan *kafka.RpcResponse, error) {

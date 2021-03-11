@@ -53,7 +53,7 @@ type IAdapter interface {
 	Revert_image_update(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error)
 	Enable_port(ctx context.Context, deviceId string, port *voltha.Port) error
 	Disable_port(ctx context.Context, deviceId string, port *voltha.Port) error
-	Child_device_lost(ctx context.Context, parentDeviceId string, parentPortNo uint32, onuID uint32) error
+	Child_device_lost(ctx context.Context, childDevice *voltha.Device) error
 	Start_omci_test(ctx context.Context, device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error)
 	Get_ext_value(ctx context.Context, deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error)
 	Single_get_value_request(ctx context.Context, request extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error)
