@@ -911,7 +911,7 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 
-	ch, err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, agent.deviceID, device.ParentPortNo, device.ProxyAddress.OnuId)
+	ch, err := agent.adapterProxy.ChildDeviceLost(ctx, agent.deviceType, device)
 	if err != nil {
 		cancel()
 		return err

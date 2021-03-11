@@ -255,7 +255,7 @@ func (ta *Adapter) Disable_port(ctx context.Context, deviceId string, port *volt
 }
 
 // Child_device_lost -
-func (ta *Adapter) Child_device_lost(ctx context.Context, pDeviceID string, pPortNo uint32, onuID uint32) error { //nolint
+func (ta *Adapter) Child_device_lost(ctx context.Context, childDevice *voltha.Device) error { //nolint
 	return nil
 }
 

@@ -263,7 +263,7 @@ func (oltA *OLTAdapter) Disable_port(ctx context.Context, deviceId string, Port 
 }
 
 // Child_device_lost deletes ONU and its references
-func (oltA *OLTAdapter) Child_device_lost(ctx context.Context, deviceID string, pPortNo uint32, onuID uint32) error { // nolint
+func (oltA *OLTAdapter) Child_device_lost(ctx context.Context, childDevice *voltha.Device) error { // nolint
 	return nil
 }
 
