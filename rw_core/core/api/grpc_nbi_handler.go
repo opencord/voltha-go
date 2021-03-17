@@ -112,3 +112,27 @@ func (handler *NBIHandler) GetMembership(context.Context, *empty.Empty) (*voltha
 func (handler *NBIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return nil, errUnimplemented
 }
+
+func (handler *NBIHandler) DownloadImageToDevice(ctx context.Context, request *voltha.DeviceImageDownloadRequest) (*voltha.DeviceImageResponse, error) {
+	return nil, errUnimplemented
+}
+
+func (handler *NBIHandler) GetImageStatus(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return nil, errUnimplemented
+}
+
+func (handler *NBIHandler) AbortImageUpgradeToDevice(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return nil, errUnimplemented
+}
+
+func (handler *NBIHandler) GetOnuImages(ctx context.Context, id *common.ID) (*voltha.OnuImages, error) {
+	return nil, errUnimplemented
+}
+
+func (handler *NBIHandler) ActivateImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return nil, errUnimplemented
+}
+
+func (handler *NBIHandler) CommitImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return nil, errUnimplemented
+}
