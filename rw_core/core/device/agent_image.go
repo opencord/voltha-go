@@ -38,8 +38,14 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	logger.Debugw(ctx, "download-image", log.Fields{"device-id": agent.deviceID})
 
 	if agent.device.Root {
+		agent.requestQueue.RequestComplete()
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, is an OLT. Image update "+
 			"not supported by VOLTHA. Use Device Manager or other means", agent.deviceID)
+	}
+	if !agent.proceedWithRequest() {
+		agent.requestQueue.RequestComplete()
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+			agent.deviceID)
 	}
 
 	device := agent.cloneDeviceWithoutLock()
@@ -99,6 +105,12 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	}
 	logger.Debugw(ctx, "cancel-image-download", log.Fields{"device-id": agent.deviceID})
 
+	if !agent.proceedWithRequest() {
+		agent.requestQueue.RequestComplete()
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+			agent.deviceID)
+	}
+
 	// Update image download state
 	cloned := agent.cloneDeviceWithoutLock()
 	_, index, err := getImage(img, cloned)
@@ -136,6 +148,12 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 		return nil, err
 	}
 	logger.Debugw(ctx, "activate-image", log.Fields{"device-id": agent.deviceID})
+
+	if !agent.proceedWithRequest() {
+		agent.requestQueue.RequestComplete()
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+			agent.deviceID)
+	}
 
 	// Update image download state
 	cloned := agent.cloneDeviceWithoutLock()
@@ -250,6 +268,12 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 	}
 	logger.Debugw(ctx, "updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
 
+	if !agent.proceedWithRequest() {
+		agent.requestQueue.RequestComplete()
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+			agent.deviceID)
+	}
+
 	// Update the image as well as remove it if the download was cancelled
 	cloned := agent.cloneDeviceWithoutLock()
 	clonedImages := make([]*voltha.ImageDownload, len(cloned.ImageDownloads))
@@ -301,10 +325,14 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 	// original context has failed due to timeout , let's open a new one
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+	defer cancel()
 
 	if err := agent.requestQueue.WaitForGreenLight(subCtx); err != nil {
 		logger.Errorw(subCtx, "can't obtain lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
-		cancel()
+		return
+	}
+	if !agent.proceedWithRequest() {
+		agent.requestQueue.RequestComplete()
 		return
 	}
 	if res, ok := response.(error); ok {
@@ -325,7 +353,6 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 
 		if imageFailed == nil {
 			logger.Errorw(subCtx, "can't find image", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
-			cancel()
 			return
 		}
 
@@ -341,10 +368,8 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 			logger.Errorw(subCtx, "failed-enable-device-after-image-failure",
 				log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
 		}
-		cancel()
 	} else {
 		logger.Errorw(subCtx, "rpc-failed-invalid-error", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "args": reqArgs})
-		cancel()
 		return
 	}
 	// TODO: Post failure message onto kafka
@@ -354,6 +379,10 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		logger.Errorw(ctx, "cannot-obtain-lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
+		return
+	}
+	if !agent.proceedWithRequest() {
+		agent.requestQueue.RequestComplete()
 		return
 	}
 	logger.Infow(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
