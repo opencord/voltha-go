@@ -39,6 +39,11 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, is an OLT. Image update "+
 			"not supported by VOLTHA. Use Device Manager or other means", agent.deviceID)
 	}
+	if agent.device.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling is in progress.",
+			agent.deviceID)
+	}
 
 	device := agent.cloneDeviceWithoutLock()
 	if device.ImageDownloads != nil {
@@ -97,6 +102,12 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	}
 	logger.Debugw(ctx, "cancel-image-download", log.Fields{"device-id": agent.deviceID})
 
+	if agent.device.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling is in progress.",
+			agent.deviceID)
+	}
+
 	// Update image download state
 	cloned := agent.cloneDeviceWithoutLock()
 	_, index, err := getImage(img, cloned)
@@ -134,6 +145,12 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 		return nil, err
 	}
 	logger.Debugw(ctx, "activate-image", log.Fields{"device-id": agent.deviceID})
+
+	if agent.device.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling is in progress.",
+			agent.deviceID)
+	}
 
 	// Update image download state
 	cloned := agent.cloneDeviceWithoutLock()
@@ -248,6 +265,12 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 	}
 	logger.Debugw(ctx, "updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
 
+	if agent.device.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling is in progress.",
+			agent.deviceID)
+	}
+
 	// Update the image as well as remove it if the download was cancelled
 	cloned := agent.cloneDeviceWithoutLock()
 	clonedImages := make([]*voltha.ImageDownload, len(cloned.ImageDownloads))
@@ -305,6 +328,11 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 		cancel()
 		return
 	}
+	if agent.device.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+		cancel()
+		return
+	}
 	if res, ok := response.(error); ok {
 		logger.Errorw(subCtx, "rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": res, "args": reqArgs})
 		cloned := agent.cloneDeviceWithoutLock()
@@ -352,6 +380,10 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response interface{}, reqArgs ...interface{}) {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		logger.Errorw(ctx, "cannot-obtain-lock", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": err, "args": reqArgs})
+		return
+	}
+	if agent.device.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
 		return
 	}
 	logger.Infow(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
