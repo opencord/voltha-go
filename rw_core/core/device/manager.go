@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v3"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -657,7 +658,7 @@ func (dMgr *Manager) isOkToReconcile(ctx context.Context, device *voltha.Device)
 		return false
 	}
 	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
-		return device.AdminState != voltha.AdminState_PREPROVISIONED && (!agent.isDeletionInProgress())
+		return device.AdminState != voltha.AdminState_PREPROVISIONED && (!agent.isDeletionInProgress()) && !agent.isReconcilingInProgress(device)
 	}
 	return false
 }
@@ -742,10 +743,14 @@ func (dMgr *Manager) sendReconcileDeviceRequest(ctx context.Context, device *vol
 	// to the adapter.   We will therefore bypass the adapter adapter and send the request directly to the adapter via
 	// the adapter proxy.
 	response := utils.NewResponse()
-	ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, device)
+	agent := dMgr.getDeviceAgent(ctx, device.Id)
+	ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, agent.device)
 	if err != nil {
+		go dMgr.retryReconcilingRoutine(ctx, agent)
 		response.Error(err)
+		return response
 	}
+
 	// Wait for adapter response in its own routine
 	go func() {
 		resp, ok := <-ch
@@ -1642,4 +1647,77 @@ func (dMgr *Manager) GetTransientState(ctx context.Context, id string) (voltha.D
 		return voltha.DeviceTransientState_NONE, status.Errorf(codes.NotFound, "%s", id)
 	}
 	return agent.getTransientState(), nil
+}
+
+func (dMgr *Manager) RetryReconciling(ctx context.Context, device *voltha.Device) error {
+
+	agent := dMgr.getDeviceAgent(ctx, device.Id)
+	if agent.getTransientState() == voltha.DeviceTransientState_RECONCILE_IN_PROGRESS {
+		return nil
+	}
+
+	go dMgr.retryReconcilingRoutine(ctx, agent)
+
+	return nil
+}
+
+func (dMgr *Manager) retryReconcilingRoutine(ctx context.Context, agent *Agent) {
+	reconcilingBackoff := backoff.NewExponentialBackOff()
+	reconcilingBackoff.MaxElapsedTime = 0
+	reconcilingBackoff.MaxInterval = 1 * time.Minute
+
+	if agent.getTransientState() != voltha.DeviceTransientState_RECONCILE_IN_PROGRESS {
+		err := agent.updateTransientState(ctx, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+		if err != nil {
+			logger.Debugf(ctx, "Not able to set device transient state to Reconcile in progress."+
+				"Err: %s", err.Error())
+		}
+	}
+
+Loop:
+	for {
+		// Use an exponential back off to prevent getting into a tight loop
+		duration := reconcilingBackoff.NextBackOff()
+		//This case should never occur as max elapsed time for backoff is 0 , so it will never return stop
+		if duration == backoff.Stop {
+			// If we reach a maximum then warn and reset the backoff
+			// timer and keep attempting.
+			logger.Warnw(ctx, "maximum-reconciling-backoff-reached--resetting-backoff-timer",
+				log.Fields{"max-reconciling-backoff": reconcilingBackoff.MaxElapsedTime,
+					"device-id": agent.deviceID})
+			reconcilingBackoff.Reset()
+			duration = reconcilingBackoff.NextBackOff()
+		}
+
+		ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, agent.device)
+		if err != nil {
+			backoffTimer := time.NewTimer(duration)
+			<-backoffTimer.C
+			// backoffTimer expired continue
+			continue
+		} else {
+			backoffTimer := time.NewTimer(duration)
+
+			select {
+			case resp, ok := <-ch:
+				if !ok {
+					//channel-closed
+				} else if resp.Err != nil {
+					//error encountered
+				} else {
+					err = agent.updateTransientState(ctx, voltha.DeviceTransientState_NONE)
+					if err != nil {
+						logger.Debugf(ctx, "Not able to clear device transient state from Reconcile in progress."+
+							"Err: %s", err.Error())
+					}
+					break Loop
+				}
+				<-backoffTimer.C
+				continue
+			case <-backoffTimer.C:
+				// backoffTimer expired continue
+				continue
+			}
+		}
+	}
 }
