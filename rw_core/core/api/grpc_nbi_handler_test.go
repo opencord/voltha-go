@@ -1277,7 +1277,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 
 	// Wait until a logical device is ready
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
-		if lds == nil || len(lds.Items) != 1 {
+		if lds == nil || len(lds.Items) != 1 || lds.Items[0] == nil{
 			return false
 		}
 		// Ensure there are both NNI ports and at least one UNI port on the logical device
