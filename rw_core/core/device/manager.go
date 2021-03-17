@@ -19,6 +19,8 @@ package device
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/opencord/voltha-go/rw_core/config"
 	"sync"
 	"time"
 
@@ -58,31 +60,33 @@ type Manager struct {
 	defaultTimeout          time.Duration
 	devicesLoadingLock      sync.RWMutex
 	deviceLoadingInProgress map[string][]chan int
+	cf                      *config.RWCoreFlags
 }
 
 //NewManagers creates the Manager and the Logical Manager.
-func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration, eventProxy *events.EventProxy, stackID string) (*Manager, *LogicalManager) {
+func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, cf *config.RWCoreFlags, coreInstanceID string, eventProxy *events.EventProxy) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
-		adapterProxy:            remote.NewAdapterProxy(kmp, coreTopic, endpointMgr),
+		adapterProxy:            remote.NewAdapterProxy(kmp, cf.CoreTopic, endpointMgr),
 		coreInstanceID:          coreInstanceID,
 		dbPath:                  dbPath,
 		dProxy:                  dbPath.Proxy("devices"),
 		adapterMgr:              adapterMgr,
-		defaultTimeout:          defaultCoreTimeout,
-		RPCEventManager:         event.NewRPCEventManager(eventProxy, coreInstanceID, stackID),
+		defaultTimeout:          cf.DefaultCoreTimeout,
+		RPCEventManager:         event.NewRPCEventManager(eventProxy, coreInstanceID, cf.VolthaStackID),
 		deviceLoadingInProgress: make(map[string][]chan int),
+		cf:                      cf,
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
 	logicalDeviceMgr := &LogicalManager{
-		Manager:                        event.NewManager(eventProxy, coreInstanceID, stackID),
+		Manager:                        event.NewManager(eventProxy, coreInstanceID, cf.VolthaStackID),
 		deviceMgr:                      deviceMgr,
 		kafkaICProxy:                   kmp,
 		dbPath:                         dbPath,
 		ldProxy:                        dbPath.Proxy("logical_devices"),
-		defaultTimeout:                 defaultCoreTimeout,
+		defaultTimeout:                 cf.DefaultCoreTimeout,
 		logicalDeviceLoadingInProgress: make(map[string][]chan int),
 	}
 	deviceMgr.logicalDeviceMgr = logicalDeviceMgr
@@ -651,17 +655,6 @@ func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*em
 	return &empty.Empty{}, nil
 }
 
-// isOkToReconcile validates whether a device is in the correct status to be reconciled
-func (dMgr *Manager) isOkToReconcile(ctx context.Context, device *voltha.Device) bool {
-	if device == nil {
-		return false
-	}
-	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
-		return device.AdminState != voltha.AdminState_PREPROVISIONED && (!agent.isDeletionInProgress())
-	}
-	return false
-}
-
 // adapterRestarted is invoked whenever an adapter is restarted
 func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapter) error {
 	logger.Debugw(ctx, "adapter-restarted", log.Fields{"adapter-id": adapter.Id, "vendor": adapter.Vendor,
@@ -691,9 +684,9 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 				continue
 			}
 			if isDeviceOwnedByService {
-				if dMgr.isOkToReconcile(ctx, rootDevice) {
+				if dAgent.isOkToReconcile(rootDevice) {
 					logger.Debugw(ctx, "reconciling-root-device", log.Fields{"rootId": rootDevice.Id})
-					responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, rootDevice))
+					responses = append(responses, dAgent.sendReconcileDeviceRequest(ctx, rootDevice))
 				} else {
 					logger.Debugw(ctx, "not-reconciling-root-device", log.Fields{"rootId": rootDevice.Id, "state": rootDevice.AdminState})
 				}
@@ -708,9 +701,9 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 								logger.Warnw(ctx, "is-device-owned-by-service", log.Fields{"error": err, "child-device-id": childDevice.Id, "adapter-type": adapter.Type, "replica-number": adapter.CurrentReplica})
 							}
 							if isDeviceOwnedByService {
-								if dMgr.isOkToReconcile(ctx, childDevice) {
+								if dAgent.isOkToReconcile(childDevice) {
 									logger.Debugw(ctx, "reconciling-child-device", log.Fields{"child-device-id": childDevice.Id})
-									responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, childDevice))
+									responses = append(responses, dAgent.sendReconcileDeviceRequest(ctx, childDevice))
 								} else {
 									logger.Debugw(ctx, "not-reconciling-child-device", log.Fields{"child-device-id": childDevice.Id, "state": childDevice.AdminState})
 								}
@@ -736,36 +729,17 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 	return nil
 }
 
-func (dMgr *Manager) sendReconcileDeviceRequest(ctx context.Context, device *voltha.Device) utils.Response {
-	// Send a reconcile request to the adapter. Since this Core may not be managing this device then there is no
-	// point of creating a device agent (if the device is not being managed by this Core) before sending the request
-	// to the adapter.   We will therefore bypass the adapter adapter and send the request directly to the adapter via
-	// the adapter proxy.
-	response := utils.NewResponse()
-	ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, device)
-	if err != nil {
-		response.Error(err)
-	}
-	// Wait for adapter response in its own routine
-	go func() {
-		resp, ok := <-ch
-		if !ok {
-			response.Error(status.Errorf(codes.Aborted, "channel-closed-device: %s", device.Id))
-		} else if resp.Err != nil {
-			response.Error(resp.Err)
-		}
-		response.Done()
-	}()
-	return response
-}
-
 func (dMgr *Manager) ReconcileChildDevices(ctx context.Context, parentDeviceID string) error {
+	dAgent := dMgr.getDeviceAgent(ctx, parentDeviceID)
+	if dAgent == nil {
+		return status.Errorf(codes.NotFound, "error-unable to get agent from device")
+	}
 	if parentDevicePorts, err := dMgr.listDevicePorts(ctx, parentDeviceID); err == nil {
 		responses := make([]utils.Response, 0)
 		for _, port := range parentDevicePorts {
 			for _, peer := range port.Peers {
 				if childDevice, err := dMgr.getDeviceFromModel(ctx, peer.DeviceId); err == nil {
-					responses = append(responses, dMgr.sendReconcileDeviceRequest(ctx, childDevice))
+					responses = append(responses, dAgent.sendReconcileDeviceRequest(ctx, childDevice))
 				}
 			}
 		}
@@ -1960,4 +1934,24 @@ func (dMgr *Manager) waitForAllResponses(ctx context.Context, opName string, res
 			return nil, status.Errorf(codes.Aborted, opName+"-failed-%s", ctx.Err())
 		}
 	}
+}
+
+func (dMgr *Manager) ReconcilingCleanup(ctx context.Context, device *voltha.Device) error {
+	var desc string
+	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+	agent := dMgr.getDeviceAgent(ctx, device.Id)
+	if agent == nil {
+		logger.Errorf(ctx, "Not able to get device agent.")
+		return status.Errorf(codes.NotFound, "Not able to get device agent for device : %s", device.Id)
+	}
+	err := agent.updateTransientState(ctx, voltha.DeviceTransientState_NONE)
+	if err != nil {
+		desc = fmt.Sprintf("Not able to clear device transient state from Reconcile in progress."+
+			"Err: %s", err.Error())
+		logger.Errorf(ctx, desc)
+		agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+	}
+	operStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
+	agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+	return nil
 }
