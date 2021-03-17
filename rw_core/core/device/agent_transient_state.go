@@ -18,6 +18,7 @@ package device
 
 import (
 	"context"
+	"github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,7 +31,17 @@ func (agent *Agent) getTransientState() voltha.DeviceTransientState_Types {
 	return deviceTransientState
 }
 
+func (agent *Agent) matchTransientState(transientState voltha.DeviceTransientState_Types) bool {
+	transientStateHandle := agent.transientStateLoader.Lock()
+	defer transientStateHandle.UnLock()
+	return transientState == transientStateHandle.GetReadOnly()
+}
+
 func (agent *Agent) updateTransientState(ctx context.Context, transientState voltha.DeviceTransientState_Types) error {
+	// Already in same transientState
+	if transientState == agent.getTransientState() {
+		return nil
+	}
 	// Update device transient state
 	transientStateHandle := agent.transientStateLoader.Lock()
 	if err := transientStateHandle.Update(ctx, transientState); err != nil {
@@ -61,4 +72,10 @@ func (agent *Agent) deleteTransientState(ctx context.Context) error {
 	}
 	transientStateHandle.UnLock()
 	return nil
+}
+
+func (agent *Agent) isReconcileInProgress() bool {
+	device := agent.getDeviceReadOnlyWithoutLock()
+	return device.OperStatus == common.OperStatus_RECONCILING ||
+		agent.matchTransientState(voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
 }
