@@ -8,6 +8,9 @@ github.com/beorn7/perks/quantile
 github.com/bsm/sarama-cluster
 # github.com/buraksezer/consistent v0.0.0-20191006190839-693edf70fd72
 github.com/buraksezer/consistent
+# github.com/cenkalti/backoff/v3 v3.1.1
+## explicit
+github.com/cenkalti/backoff/v3
 # github.com/cespare/xxhash v1.1.0
 github.com/cespare/xxhash
 # github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73
@@ -386,3 +389,4 @@ gopkg.in/jcmturner/rpc.v1/ndr
 gopkg.in/yaml.v2
 # sigs.k8s.io/yaml v1.1.0
 sigs.k8s.io/yaml
+# github.com/opencord/voltha-protos/v4 => /Users/maninder/work/src/github.com/opencord/voltha-protos

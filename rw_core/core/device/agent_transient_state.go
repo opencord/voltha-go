@@ -31,6 +31,10 @@ func (agent *Agent) getTransientState() voltha.DeviceTransientState_Types {
 }
 
 func (agent *Agent) updateTransientState(ctx context.Context, transientState voltha.DeviceTransientState_Types) error {
+	// Already in same transientState
+	if transientState == agent.getTransientState() {
+		return nil
+	}
 	// Update device transient state
 	transientStateHandle := agent.transientStateLoader.Lock()
 	if err := transientStateHandle.Update(ctx, transientState); err != nil {
