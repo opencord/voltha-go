@@ -104,6 +104,7 @@ const OperStatus_ACTIVATING = OperStatus_Types(common.OperStatus_ACTIVATING)
 const OperStatus_TESTING = OperStatus_Types(common.OperStatus_TESTING)
 const OperStatus_ACTIVE = OperStatus_Types(common.OperStatus_ACTIVE)
 const OperStatus_FAILED = OperStatus_Types(common.OperStatus_FAILED)
+const OperStatus_RECONCILING = OperStatus_Types(common.OperStatus_RECONCILING)
 
 // ConnectStatus_Types from public import voltha_protos/common.proto
 type ConnectStatus_Types = common.ConnectStatus_Types

@@ -405,11 +405,15 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	if agent.isDeletionInProgress() {
 		agent.requestQueue.RequestComplete()
 
-		operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
-
 		desc = fmt.Sprintf("deviceId:%s, Device deletion is in progress.", agent.deviceID)
 		return status.Error(codes.FailedPrecondition, desc)
 
+	}
+	if oldDevice.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+
+		desc = fmt.Sprintf("deviceId:%s, Device reconciling is in progress.", agent.deviceID)
+		return status.Error(codes.FailedPrecondition, desc)
 	}
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
@@ -579,8 +583,16 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	}
 	if agent.isDeletionInProgress() {
 		agent.requestQueue.RequestComplete()
+		desc = fmt.Sprintf("deviceId:%s, Device deletion is in progress.", agent.deviceID)
 		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device deletion is in progress.", agent.deviceID)
 	}
+
+	if cloned.OperStatus == common.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+		desc = fmt.Sprintf("deviceId:%s, Device reconciling is in progress.", agent.deviceID)
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling is in progress.", agent.deviceID)
+	}
+
 	// Update the Admin State and operational state before sending the request out
 	cloned.AdminState = voltha.AdminState_DISABLED
 	cloned.OperStatus = voltha.OperStatus_UNKNOWN
@@ -623,7 +635,12 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 
 	device := agent.getDeviceReadOnlyWithoutLock()
 	if agent.isDeletionInProgress() {
+		desc = fmt.Sprintf("deviceId:%s, Device deletion is in progress.", agent.deviceID)
 		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device deletion is in progress.", agent.deviceID)
+	}
+	if device.OperStatus == common.OperStatus_RECONCILING {
+		desc = fmt.Sprintf("deviceId:%s, Device reconciling is in progress.", agent.deviceID)
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling is in progress.", agent.deviceID)
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
