@@ -236,6 +236,24 @@ func TestValidTransitions(t *testing.T) {
 	assert.Equal(t, 1, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.CreateLogicalDevice).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
+	previousDevice = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	device = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_NONE,
+		voltha.DeviceTransientState_NONE)
+	assert.Equal(t, 0, len(handlers))
+
+	previousDevice = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
+	device = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_NONE,
+		voltha.DeviceTransientState_NONE)
+	assert.Equal(t, 0, len(handlers))
+
+	previousDevice = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
+	device = getDevice(true, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_NONE,
+		voltha.DeviceTransientState_NONE)
+	assert.Equal(t, 0, len(handlers))
+
 	var deleteDeviceTest = struct {
 		previousDevices        []*voltha.Device
 		devices                []*voltha.Device

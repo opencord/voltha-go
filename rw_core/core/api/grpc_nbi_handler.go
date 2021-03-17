@@ -36,6 +36,30 @@ type NBIHandler struct {
 	adapterManager // *adapter.Manager
 }
 
+func (handler *NBIHandler) DownloadImageToDevice(ctx context.Context, request *voltha.DeviceImageDownloadRequest) (*voltha.DeviceImageResponse, error) {
+	panic("implement me")
+}
+
+func (handler *NBIHandler) GetImageStatus(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	panic("implement me")
+}
+
+func (handler *NBIHandler) AbortImageUpgradeToDevice(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	panic("implement me")
+}
+
+func (handler *NBIHandler) GetOnuImages(ctx context.Context, id *common.ID) (*voltha.OnuImages, error) {
+	panic("implement me")
+}
+
+func (handler *NBIHandler) ActivateImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	panic("implement me")
+}
+
+func (handler *NBIHandler) CommitImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	panic("implement me")
+}
+
 // avoid having multiple embedded types with the same name (`<package>.Manager`s conflict)
 type adapterManager struct{ *adapter.Manager }
 
