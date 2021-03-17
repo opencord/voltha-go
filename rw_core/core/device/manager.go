@@ -19,9 +19,11 @@ package device
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v3"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -657,7 +659,7 @@ func (dMgr *Manager) isOkToReconcile(ctx context.Context, device *voltha.Device)
 		return false
 	}
 	if agent := dMgr.getDeviceAgent(ctx, device.Id); agent != nil {
-		return device.AdminState != voltha.AdminState_PREPROVISIONED && (!agent.isDeletionInProgress())
+		return device.AdminState != voltha.AdminState_PREPROVISIONED && agent.proceedWithRequest(device)
 	}
 	return false
 }
@@ -737,22 +739,52 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 }
 
 func (dMgr *Manager) sendReconcileDeviceRequest(ctx context.Context, device *voltha.Device) utils.Response {
+	var desc string
+	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	// Send a reconcile request to the adapter. Since this Core may not be managing this device then there is no
 	// point of creating a device agent (if the device is not being managed by this Core) before sending the request
 	// to the adapter.   We will therefore bypass the adapter adapter and send the request directly to the adapter via
 	// the adapter proxy.
 	response := utils.NewResponse()
+	agent := dMgr.getDeviceAgent(ctx, device.Id)
+	if agent == nil {
+		response.Error(fmt.Errorf("not able to get device agent"))
+		return response
+	}
+
+	defer agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+
+	if agent.matchTransientState(voltha.DeviceTransientState_RECONCILE_IN_PROGRESS) {
+		desc = fmt.Sprintf("Reconcile is already in progress for device : %s", device.Id)
+		response.Error(fmt.Errorf(desc))
+		return response
+	}
+	err := agent.updateTransientState(ctx, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	if err != nil {
+		desc = "not able to set transient state to RECONCILE_IN_PROGRESS"
+		response.Error(fmt.Errorf(desc))
+		return response
+	}
+
 	ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, device)
 	if err != nil {
+		go dMgr.retryReconcilingRoutine(ctx, device)
+		desc = err.Error()
 		response.Error(err)
+		return response
 	}
+
 	// Wait for adapter response in its own routine
 	go func() {
 		resp, ok := <-ch
 		if !ok {
-			response.Error(status.Errorf(codes.Aborted, "channel-closed-device: %s", device.Id))
+			desc = fmt.Sprintf("channel-closed-device: %s", device.Id)
+			response.Error(status.Errorf(codes.Aborted, desc))
 		} else if resp.Err != nil {
+			desc = err.Error()
 			response.Error(resp.Err)
+		} else {
+			operStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_IN_PROGRESS}
 		}
 		response.Done()
 	}()
@@ -1958,6 +1990,139 @@ func (dMgr *Manager) waitForAllResponses(ctx context.Context, opName string, res
 			continue
 		case <-ctx.Done():
 			return nil, status.Errorf(codes.Aborted, opName+"-failed-%s", ctx.Err())
+		}
+	}
+}
+
+func (dMgr *Manager) ReconcilingCleanup(ctx context.Context, device *voltha.Device) error {
+	var desc string
+	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+	agent := dMgr.getDeviceAgent(ctx, device.Id)
+	if agent == nil {
+		logger.Errorf(ctx, "Not able to get device agent.")
+		return status.Errorf(codes.NotFound, "Not able to get device agent for device : %s", device.Id)
+	}
+	err := agent.updateTransientState(ctx, voltha.DeviceTransientState_NONE)
+	if err != nil {
+		desc = fmt.Sprintf("Not able to clear device transient state from Reconcile in progress."+
+			"Err: %s", err.Error())
+		logger.Errorf(ctx, desc)
+		agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+	}
+	operStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
+	agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+	return nil
+}
+
+func (dMgr *Manager) retryReconcilingRoutine(ctx context.Context, device *voltha.Device) {
+	var desc string
+	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	agent := dMgr.getDeviceAgent(ctx, device.Id)
+	if agent == nil {
+		logger.Errorf(ctx, "Not able to get device agent.")
+		return
+	}
+
+	//If transient state is reconcile in progress return as reconcile is already running
+	if agent.matchTransientState(voltha.DeviceTransientState_RECONCILE_IN_PROGRESS) {
+		desc = fmt.Sprintf("Reconcile is already in progress for device : %s", device.Id)
+		logger.Errorf(ctx, desc)
+		agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+		return
+	}
+
+	//set transient state to RECONCILE IN PROGRESS
+	err := agent.updateTransientState(ctx, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	if err != nil {
+		desc = fmt.Sprintf("Not able to set device transient state to Reconcile in progress."+
+			"Err: %s", err.Error())
+		logger.Errorf(ctx, desc)
+		agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+		return
+	}
+
+	logger.Debugw(ctx, "retrying-reconciling", log.Fields{"deviceID": device.Id})
+	reconcilingBackoff := backoff.NewExponentialBackOff()
+	reconcilingBackoff.MaxElapsedTime = 0
+	reconcilingBackoff.MaxInterval = 1 * time.Minute
+
+	//making here to keep lifecycle of this channel within the scope of retryReconcile
+	agent.mutex.Lock()
+	agent.stopReconciling = make(chan int)
+	agent.mutex.Unlock()
+
+Loop:
+	for {
+		// Use an exponential back off to prevent getting into a tight loop
+		duration := reconcilingBackoff.NextBackOff()
+		//This case should never occur in default case as max elapsed time for backoff is 0(by default) , so it will never return stop
+		if duration == backoff.Stop {
+			// If we reach a maximum then warn and reset the backoff
+			// timer and keep attempting.
+			logger.Warnw(ctx, "maximum-reconciling-backoff-reached--resetting-backoff-timer",
+				log.Fields{"max-reconciling-backoff": reconcilingBackoff.MaxElapsedTime,
+					"device-id": device.Id})
+			reconcilingBackoff.Reset()
+			duration = reconcilingBackoff.NextBackOff()
+		}
+
+		backoffTimer := time.NewTimer(duration)
+
+		//return if not able to get agent while reconciling
+		agent := dMgr.getDeviceAgent(ctx, device.Id)
+		if agent == nil {
+			logger.Errorf(ctx, "Not able to get device agent.")
+			<-backoffTimer.C
+			// backoffTimer expired continue
+			break Loop
+		}
+
+		//Retry if sending rpc returns failure
+		ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, agent.device)
+		if err != nil {
+			desc := fmt.Sprintf("Failed reconciling from adapter side. Err: %s", err.Error())
+			agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+			<-backoffTimer.C
+			// backoffTimer expired continue
+			continue
+		}
+
+		select {
+		// wait for response
+		case resp, ok := <-ch:
+			if !ok {
+				//channel-closed
+				desc := fmt.Sprintf("channel on which reconcile response is awaited is closed.")
+				logger.Errorf(ctx, desc)
+				agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+			} else if resp.Err != nil {
+				//error encountered
+				desc = "error encountered while retrying reconcile"
+				logger.Errorw(ctx, desc, log.Fields{"err": resp.Err})
+				agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+			} else {
+				//In case of success quit retrying and wait for adapter to reset operation state of device
+				operStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_IN_PROGRESS}
+				agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+				agent.stopReconciling = nil
+				break Loop
+			}
+		//if reconciling need to be stopped
+		case _, ok := <-agent.stopReconciling:
+			agent.mutex.Lock()
+			agent.stopReconciling = nil
+			agent.mutex.Unlock()
+			if !ok {
+				//channel-closed
+				desc := fmt.Sprintf("channel used to notify to stop reconcile is closed")
+				logger.Errorf(ctx, desc)
+				agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+			} else {
+				break Loop
+			}
+		//continue if timer expired
+		case <-backoffTimer.C:
 		}
 	}
 }
