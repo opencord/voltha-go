@@ -742,9 +742,17 @@ func (dMgr *Manager) sendReconcileDeviceRequest(ctx context.Context, device *vol
 	// to the adapter.   We will therefore bypass the adapter adapter and send the request directly to the adapter via
 	// the adapter proxy.
 	response := utils.NewResponse()
-	ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, device)
+	agent := dMgr.getDeviceAgent(ctx, device.Id)
+	err := agent.updateDeviceStatus(ctx, common.OperStatus_RECONCILING, device.ConnectStatus)
 	if err != nil {
 		response.Error(err)
+		return response
+	}
+	ch, err := dMgr.adapterProxy.ReconcileDevice(ctx, agent.device)
+	if err != nil {
+		//TODO: Handle operational state of device.
+		response.Error(err)
+		return response
 	}
 	// Wait for adapter response in its own routine
 	go func() {
