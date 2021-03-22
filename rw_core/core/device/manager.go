@@ -61,7 +61,7 @@ type Manager struct {
 }
 
 //NewManagers creates the Manager and the Logical Manager.
-func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration, eventProxy *events.EventProxy) (*Manager, *LogicalManager) {
+func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.InterContainerProxy, endpointMgr kafka.EndpointManager, coreTopic, coreInstanceID string, defaultCoreTimeout time.Duration, eventProxy *events.EventProxy, stackID string) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
 		kafkaICProxy:            kmp,
@@ -71,13 +71,13 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		dProxy:                  dbPath.Proxy("devices"),
 		adapterMgr:              adapterMgr,
 		defaultTimeout:          defaultCoreTimeout,
-		RPCEventManager:         event.NewRPCEventManager(eventProxy, coreInstanceID),
+		RPCEventManager:         event.NewRPCEventManager(eventProxy, coreInstanceID, stackID),
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
 	logicalDeviceMgr := &LogicalManager{
-		Manager:                        event.NewManager(eventProxy, coreInstanceID),
+		Manager:                        event.NewManager(eventProxy, coreInstanceID, stackID),
 		deviceMgr:                      deviceMgr,
 		kafkaICProxy:                   kmp,
 		dbPath:                         dbPath,
