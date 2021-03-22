@@ -53,6 +53,7 @@ const (
 	defaultTraceEnabled              = false
 	defaultTraceAgentAddress         = "127.0.0.1:6831"
 	defaultLogCorrelationEnabled     = true
+	defaultVolthaStackID             = "voltha"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -86,6 +87,7 @@ type RWCoreFlags struct {
 	TraceEnabled              bool
 	TraceAgentAddress         string
 	LogCorrelationEnabled     bool
+	VolthaStackID             string
 }
 
 // NewRWCoreFlags returns a new RWCore config
@@ -119,6 +121,7 @@ func NewRWCoreFlags() *RWCoreFlags {
 		TraceEnabled:              defaultTraceEnabled,
 		TraceAgentAddress:         defaultTraceAgentAddress,
 		LogCorrelationEnabled:     defaultLogCorrelationEnabled,
+		VolthaStackID:             defaultVolthaStackID,
 	}
 	return &rwCoreFlag
 }
@@ -202,6 +205,9 @@ func (cf *RWCoreFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("Whether to enrich log statements with fields denoting operation being executed for achieving correlation?")
 	flag.BoolVar(&(cf.LogCorrelationEnabled), "log_correlation_enabled", defaultLogCorrelationEnabled, help)
+
+	help = fmt.Sprintf("ID for the current voltha stack")
+	flag.StringVar(&cf.VolthaStackID, "stack_id", defaultVolthaStackID, help)
 
 	flag.Parse()
 }

@@ -45,22 +45,24 @@ type Manager struct {
 type RPCEventManager struct {
 	eventProxy     eventif.EventProxy
 	coreInstanceID string
+	stackID        string
 }
 
-func NewManager(proxyForRPCEvents eventif.EventProxy, instanceID string) *Manager {
+func NewManager(proxyForRPCEvents eventif.EventProxy, instanceID string, stackID string) *Manager {
 	return &Manager{
 		packetInQueue:        make(chan openflow_13.PacketIn, 100),
 		packetInQueueDone:    make(chan bool, 1),
 		changeEventQueue:     make(chan openflow_13.ChangeEvent, 100),
 		changeEventQueueDone: make(chan bool, 1),
-		RPCEventManager:      NewRPCEventManager(proxyForRPCEvents, instanceID),
+		RPCEventManager:      NewRPCEventManager(proxyForRPCEvents, instanceID, stackID),
 	}
 }
 
-func NewRPCEventManager(proxyForRPCEvents eventif.EventProxy, instanceID string) *RPCEventManager {
+func NewRPCEventManager(proxyForRPCEvents eventif.EventProxy, instanceID string, stackID string) *RPCEventManager {
 	return &RPCEventManager{
 		eventProxy:     proxyForRPCEvents,
 		coreInstanceID: instanceID,
+		stackID:        stackID,
 	}
 }
 func (q *Manager) SendPacketIn(ctx context.Context, deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
@@ -259,6 +261,7 @@ func (q *RPCEventManager) NewRPCEvent(ctx context.Context, resourceID, desc stri
 		OperationId: opID,
 		ResourceId:  resourceID,
 		Service:     q.coreInstanceID,
+		StackId:     q.stackID,
 		Status: &common.OperationResp{
 			Code: common.OperationResp_OPERATION_FAILURE,
 		},
