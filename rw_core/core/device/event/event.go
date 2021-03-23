@@ -21,6 +21,9 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/events/eventif"
@@ -30,8 +33,6 @@ import (
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"github.com/opentracing/opentracing-go"
 	jtracing "github.com/uber/jaeger-client-go"
-	"sync"
-	"time"
 )
 
 type Manager struct {
@@ -129,7 +130,7 @@ loop:
 			})
 			if err := packetsIn.Send(&packet); err != nil {
 				logger.Errorw(ctx, "failed-to-send-packet", log.Fields{"error": err})
-				go q.RPCEventManager.GetAndSendRPCEvent(ctx, packet.Id, err.Error(),
+				q.RPCEventManager.GetAndSendRPCEvent(ctx, packet.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION,
 					nil, time.Now().UnixNano())
 				// save the last failed packet in
@@ -219,7 +220,7 @@ loop:
 			logger.Debugw(ctx, "sending-change-event", log.Fields{"event": event})
 			if err := changeEvents.Send(&event); err != nil {
 				logger.Errorw(ctx, "failed-to-send-change-event", log.Fields{"error": err})
-				go q.RPCEventManager.GetAndSendRPCEvent(ctx, event.Id, err.Error(),
+				q.RPCEventManager.GetAndSendRPCEvent(ctx, event.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION, nil,
 					time.Now().UnixNano())
 				// save last failed change event
@@ -269,17 +270,19 @@ func (q *RPCEventManager) NewRPCEvent(ctx context.Context, resourceID, desc stri
 }
 
 func (q *RPCEventManager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
-	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	if rpcEvent.Rpc != "" {
-		_ = q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
+		if err := q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs); err != nil {
+			logger.Errorw(ctx, "failed-to-send-rpc-event", log.Fields{"resource-id": id})
+		}
 	}
 }
 
 func (q *RPCEventManager) GetAndSendRPCEvent(ctx context.Context, resourceID, desc string, context map[string]string,
 	id string, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
 	rpcEvent := q.NewRPCEvent(ctx, resourceID, desc, context)
-	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	if rpcEvent.Rpc != "" {
-		_ = q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
+		if err := q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs); err != nil {
+			logger.Errorw(ctx, "failed-to-send-rpc-event", log.Fields{"resource-id": id})
+		}
 	}
 }
