@@ -16,6 +16,24 @@
       "revId": "ad5e14f5274fdb04b0f5b310f0f3c83c4bfe1ddc",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1688e19a_338cce25",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1280,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-23T23:04:31Z",
+      "side": 1,
+      "message": "Good point, is there already a Jira for this? If not I\u0027ll create one.",
+      "parentUuid": "1b15f839_3d797a03",
+      "revId": "ad5e14f5274fdb04b0f5b310f0f3c83c4bfe1ddc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
