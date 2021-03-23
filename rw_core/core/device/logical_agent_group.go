@@ -100,9 +100,9 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 			if deviceRules != nil {
 				context["device-rules"] = deviceRules.String()
 			}
-			go agent.ldeviceMgr.SendRPCEvent(ctx,
+			agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
-				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			//TODO: Revert flow changes
 		}
 	}()
@@ -185,9 +185,9 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 			if deviceRules != nil {
 				context["device-rules"] = deviceRules.String()
 			}
-			go agent.ldeviceMgr.SendRPCEvent(ctx,
+			agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
-				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			//TODO: Revert flow changes
 		}
 	}()
@@ -238,9 +238,9 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 			if deviceRules != nil {
 				context["device-rules"] = deviceRules.String()
 			}
-			go agent.ldeviceMgr.SendRPCEvent(ctx,
+			agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
-				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			//TODO: Revert flow changes
 		}
 	}()

@@ -568,8 +568,8 @@ loop:
 		if err != nil {
 			logger.Errorw(ctx, "failed-to-receive-packet-out", log.Fields{"error": err})
 			// we do not have the resource Id here due to error in the packet, setting to empty
-			go ldMgr.SendRPCEvent(pktCtx, "", err.Error(), nil,
-				"RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+			ldMgr.SendRPCEvent(pktCtx, "", err.Error(), nil,
+				"RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			continue
 		}
 

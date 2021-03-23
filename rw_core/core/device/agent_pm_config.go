@@ -47,8 +47,8 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	var rpce *voltha.RPCEvent
 	defer func() {
 		if rpce != nil {
-			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
-				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
+			agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 		}
 	}()
 	// We need to send the response for the PM Config Updates in a synchronous manner to the caller.
