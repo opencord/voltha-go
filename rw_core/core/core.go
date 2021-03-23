@@ -144,7 +144,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 		go monitorKafkaLiveness(ctx, eventProxy, cf.LiveProbeInterval, cf.NotLiveProbeInterval, clusterMessageBus)
 	}
 
-	defer kafkaClientEvent.Stop(ctx)
+	defer stopEventProxy(ctx, kafkaClientEvent, eventProxy)
 
 	// create kv path
 	dbPath := model.NewDBPath(backend)

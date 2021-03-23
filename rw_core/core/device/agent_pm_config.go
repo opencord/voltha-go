@@ -47,7 +47,7 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	var rpce *voltha.RPCEvent
 	defer func() {
 		if rpce != nil {
-			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+			agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 		}
 	}()
