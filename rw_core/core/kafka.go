@@ -82,6 +82,7 @@ func startEventProxy(ctx context.Context, kafkaClient kafka.Client, eventTopic s
 				return nil, ctx.Err()
 			}
 		}
+		go ep.ReceiveAndPublishEvents()
 		logger.Info(ctx, "started-connection-on-kafka-cluster-address")
 		break
 	}
