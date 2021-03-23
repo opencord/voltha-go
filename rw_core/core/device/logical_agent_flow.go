@@ -200,7 +200,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				if deviceRules != nil {
 					context["device-rules"] = deviceRules.String()
 				}
-				go agent.ldeviceMgr.SendRPCEvent(ctx,
+				agent.ldeviceMgr.SendRPCEvent(ctx,
 					agent.logicalDeviceID, "failed-to-add-flow", context, "RPC_ERROR_RAISE_EVENT",
 					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 			}
@@ -360,7 +360,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 					context["device-rules"] = deviceRules.String()
 				}
 
-				go agent.ldeviceMgr.SendRPCEvent(ctx,
+				agent.ldeviceMgr.SendRPCEvent(ctx,
 					agent.logicalDeviceID, "failed-to-update-device-flows", context, "RPC_ERROR_RAISE_EVENT",
 					voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 				// TODO: Revert the flow deletion
@@ -456,7 +456,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 				context["device-rules"] = deviceRules.String()
 			}
 			// Create context and send extra information as part of it.
-			go agent.ldeviceMgr.SendRPCEvent(ctx,
+			agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-delete-device-flows", context, "RPC_ERROR_RAISE_EVENT",
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 		}
