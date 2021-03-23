@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b15f839_3d797a03",
+        "filename": "rw_core/core/api/grpc_nbi_handler_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1280,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-23T17:46:33Z",
+      "side": 1,
+      "message": "nit:  the issue is not truly with the unit test, although this check is useful.   If length of Ids.Items is not 0 then the contents should not be nil.  This is an issue in the Core where several device creation and deletions (as this unit tests do) causes a race condition where a list of logical device returns a logical device that just got deleted.   It\u0027s not a serious issue but will need to be dealt with.",
+      "revId": "ad5e14f5274fdb04b0f5b310f0f3c83c4bfe1ddc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
