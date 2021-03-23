@@ -300,7 +300,7 @@ func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.C
 	var rpce *voltha.RPCEvent
 	defer func() {
 		if rpce != nil {
-			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+			agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 		}
 	}()
@@ -332,7 +332,7 @@ func (agent *Agent) waitForAdapterResponseAndLogDeviceUpdate(ctx context.Context
 	var rpce *voltha.RPCEvent
 	defer func() {
 		if rpce != nil {
-			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+			agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 		}
 	}()
@@ -466,7 +466,7 @@ func (agent *Agent) waitForAdapterFlowResponse(ctx context.Context, cancel conte
 	var rpce *voltha.RPCEvent
 	defer func() {
 		if rpce != nil {
-			go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
+			agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce,
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().UnixNano())
 		}
 	}()
@@ -953,7 +953,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previous-admin-state": prevDevice.AdminState, "current-admin-state": device.AdminState})
 		// Sending RPC EVENT here
 		rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
-		go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
+		agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
 			nil, time.Now().UnixNano())
 
 	}
@@ -998,7 +998,7 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previous-admin-state": prevDevice.AdminState, "current-admin-state": device.AdminState})
 		// Sending RPC EVENT here
 		rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
-		go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
+		agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
 			nil, time.Now().UnixNano())
 	}
 	return nil

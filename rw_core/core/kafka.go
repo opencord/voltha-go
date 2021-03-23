@@ -82,10 +82,16 @@ func startEventProxy(ctx context.Context, kafkaClient kafka.Client, eventTopic s
 				return nil, ctx.Err()
 			}
 		}
+		go ep.StartEventProxy()
 		logger.Info(ctx, "started-connection-on-kafka-cluster-address")
 		break
 	}
 	return ep, nil
+}
+
+func stopEventProxy(ctx context.Context, kafkaClient kafka.Client, ep *events.EventProxy) {
+	defer kafkaClient.Stop(ctx)
+	ep.StopEventProxy()
 }
 
 // Interface that is valid for both EventProxy and InterContainerProxy
