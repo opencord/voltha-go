@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "cb2b7f6b_67a8185d",
+        "filename": "rw_core/core/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-23T23:06:29Z",
+      "side": 1,
+      "message": "It will always get a firstResponse (it\u0027s an ACK that the message made it to kafka)",
+      "parentUuid": "17a35d17_569072ab",
+      "range": {
+        "startLine": 59,
+        "startChar": 24,
+        "endLine": 59,
+        "endChar": 32
+      },
+      "revId": "929f91854c624289367bb5c98224e01e77e4365c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "540e1931_40db2860",
         "filename": "rw_core/core/adapter_proxy.go",
         "patchSetId": 1
