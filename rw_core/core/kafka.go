@@ -87,6 +87,7 @@ func startEventProxy(ctx context.Context, kafkaClient kafka.Client, eventTopic s
 				return nil, ctx.Err()
 			}
 		}
+		go ep.Start()
 		if updateProbeService {
 			probe.UpdateStatusFromContext(ctx, clusterMessageBus, probe.ServiceStatusRunning)
 		}
@@ -94,6 +95,11 @@ func startEventProxy(ctx context.Context, kafkaClient kafka.Client, eventTopic s
 		break
 	}
 	return ep, nil
+}
+
+func stopEventProxy(ctx context.Context, kafkaClient kafka.Client, ep *events.EventProxy) {
+	defer kafkaClient.Stop(ctx)
+	ep.Stop()
 }
 
 // Interface that is valid for both EventProxy and InterContainerProxy

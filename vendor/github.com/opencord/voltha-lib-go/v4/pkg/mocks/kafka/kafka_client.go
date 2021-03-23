@@ -18,12 +18,15 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes"
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
+	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -117,10 +120,35 @@ func (kc *KafkaClient) SubscribeForMetadata(ctx context.Context, _ func(fromTopi
 	logger.Debug(ctx, "SubscribeForMetadata - unimplemented")
 }
 
+func toIntercontainerMessage(event *voltha.Event) *ic.InterContainerMessage {
+	msg := &ic.InterContainerMessage{
+		Header: &ic.Header{
+			Id:        event.Header.Id,
+			Type:      ic.MessageType_REQUEST,
+			Timestamp: event.Header.RaisedTs,
+		},
+	}
+	// Marshal event
+	if eventBody, err := ptypes.MarshalAny(event); err == nil {
+		msg.Body = eventBody
+	}
+	return msg
+}
+
 func (kc *KafkaClient) Send(ctx context.Context, msg interface{}, topic *kafka.Topic, keys ...string) error {
+	// Assert message is a proto message
+	// ascertain the value interface type is a proto.Message
+	if _, ok := msg.(proto.Message); !ok {
+		logger.Warnw(ctx, "message-not-a-proto-message", log.Fields{"msg": msg})
+		return status.Error(codes.InvalidArgument, "msg-not-a-proto-msg")
+	}
 	req, ok := msg.(*ic.InterContainerMessage)
 	if !ok {
-		return status.Error(codes.InvalidArgument, "msg-not-InterContainerMessage-type")
+		event, ok := msg.(*voltha.Event) //This is required as event message will be of type voltha.Event
+		if !ok {
+			return status.Error(codes.InvalidArgument, "unexpected-message-type")
+		}
+		req = toIntercontainerMessage(event)
 	}
 	if req == nil {
 		return status.Error(codes.InvalidArgument, "msg-nil")
