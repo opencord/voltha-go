@@ -46,6 +46,30 @@
       "revId": "9d5991cabe723ef9deb5f7585164010446792838",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f4cf16c_1471634e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-03-29T20:28:27Z",
+      "side": 1,
+      "message": "If a device fails to reconcile then i suspect it is useless until it does. This hints to me that we need to set the state to something like RECONCILE_FALLBACK (sort of echos what kubectl does when it cant download an image) and then at some interval (with backoff) reattempt the reconcile.",
+      "parentUuid": "8cbbf72f_011a5e8f",
+      "range": {
+        "startLine": 752,
+        "startChar": 0,
+        "endLine": 752,
+        "endChar": 77
+      },
+      "revId": "9d5991cabe723ef9deb5f7585164010446792838",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
