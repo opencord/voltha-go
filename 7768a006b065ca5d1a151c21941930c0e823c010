@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e1eed184_96a58cdb",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 753,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-03-29T17:03:19Z",
+      "side": 1,
+      "message": "modified to update device status after successful rpc call.",
+      "parentUuid": "f538cbc3_5923f412",
+      "range": {
+        "startLine": 751,
+        "startChar": 1,
+        "endLine": 753,
+        "endChar": 2
+      },
+      "revId": "7768a006b065ca5d1a151c21941930c0e823c010",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1caa2011_259be099",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2021-03-29T15:34:27Z",
       "side": 1,
       "message": "While technically not part of this patchset, should this only be called if err !\u003d nil? As if the message can\u0027t be set the code is till waiting for a responce? @khen",
+      "range": {
+        "startLine": 755,
+        "startChar": 1,
+        "endLine": 764,
+        "endChar": 16
+      },
+      "revId": "7768a006b065ca5d1a151c21941930c0e823c010",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b13de7c_bc395152",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-03-29T17:03:19Z",
+      "side": 1,
+      "message": "Agree, added return with a response after error occur in latest patch set may be @khen can have a look.",
+      "parentUuid": "1caa2011_259be099",
       "range": {
         "startLine": 755,
         "startChar": 1,
