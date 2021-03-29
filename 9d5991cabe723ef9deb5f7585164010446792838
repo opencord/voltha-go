@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "becd1816_e1702ae8",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-03-29T17:38:28Z",
+      "side": 1,
+      "message": "i think you want to set the status to RECONCILING before calling ReconcileDevice, but then when the call to ReconcileDevice returns an error the state needs to be changed to something like \"FAILED_RECONCILIATION\". Also, if the reconciliation succeeds the state need to be changed to something as well.",
+      "range": {
+        "startLine": 752,
+        "startChar": 0,
+        "endLine": 752,
+        "endChar": 77
+      },
+      "revId": "9d5991cabe723ef9deb5f7585164010446792838",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
