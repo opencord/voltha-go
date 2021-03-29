@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f538cbc3_5923f412",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 753,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-03-29T15:34:27Z",
+      "side": 1,
+      "message": "If an error occurs here then might the state still be set to RECONCILING?",
+      "range": {
+        "startLine": 751,
+        "startChar": 1,
+        "endLine": 753,
+        "endChar": 2
+      },
+      "revId": "7768a006b065ca5d1a151c21941930c0e823c010",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1caa2011_259be099",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-03-29T15:34:27Z",
+      "side": 1,
+      "message": "While technically not part of this patchset, should this only be called if err !\u003d nil? As if the message can\u0027t be set the code is till waiting for a responce? @khen",
+      "range": {
+        "startLine": 755,
+        "startChar": 1,
+        "endLine": 764,
+        "endChar": 16
+      },
+      "revId": "7768a006b065ca5d1a151c21941930c0e823c010",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
