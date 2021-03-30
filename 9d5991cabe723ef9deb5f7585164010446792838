@@ -94,6 +94,30 @@
       "revId": "9d5991cabe723ef9deb5f7585164010446792838",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "165f5174_8aa6c022",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-03-30T07:50:52Z",
+      "side": 1,
+      "message": "I scheduled it for today before your demo Khen.",
+      "parentUuid": "51b3e0fe_f3f99336",
+      "range": {
+        "startLine": 752,
+        "startChar": 0,
+        "endLine": 752,
+        "endChar": 77
+      },
+      "revId": "9d5991cabe723ef9deb5f7585164010446792838",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
