@@ -70,6 +70,30 @@
       "revId": "9d5991cabe723ef9deb5f7585164010446792838",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51b3e0fe_f3f99336",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-03-30T01:41:09Z",
+      "side": 1,
+      "message": "I agree with David.  It may be worth to bring it to a TST meeting because reconciling may mean different things to different people.",
+      "parentUuid": "7f4cf16c_1471634e",
+      "range": {
+        "startLine": 752,
+        "startChar": 0,
+        "endLine": 752,
+        "endChar": 77
+      },
+      "revId": "9d5991cabe723ef9deb5f7585164010446792838",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
