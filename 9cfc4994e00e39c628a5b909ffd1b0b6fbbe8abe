@@ -22,6 +22,30 @@
       "revId": "9cfc4994e00e39c628a5b909ffd1b0b6fbbe8abe",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98e80644_144102dc",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-04-01T15:00:26Z",
+      "side": 1,
+      "message": "I guess we can submit this, and after discussion at TST we can modify if required.",
+      "parentUuid": "852517a2_7bbe892e",
+      "range": {
+        "startLine": 209,
+        "startChar": 1,
+        "endLine": 210,
+        "endChar": 74
+      },
+      "revId": "9cfc4994e00e39c628a5b909ffd1b0b6fbbe8abe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
