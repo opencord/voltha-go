@@ -32,6 +32,7 @@ DOCKER_EXTRA_ARGS          ?=
 DOCKER_REGISTRY            ?=
 DOCKER_REPOSITORY          ?=
 DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
+DOCKER_TARGET              ?= prod
 RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core
 TYPE                       ?= minimal
 
@@ -62,56 +63,39 @@ GOCOVER_COBERTURA = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app
 GOLANGCI_LINT     = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golangci-lint golangci-lint
 HADOLINT          = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-hadolint hadolint
 
-.PHONY: rw_core local-protos
+.PHONY: docker-build local-protos local-lib-go help
+.DEFAULT_GOAL := help
 
-# This should to be the first and default target in this Makefile
-help:
-	@echo "Usage: make [<target>]"
-	@echo "where available targets are:"
-	@echo
-	@echo "build                : Build the docker images."
-	@echo "                         - If this is the first time you are building, choose 'make build' option."
-	@echo "rw_core              : Build the rw_core docker image"
-	@echo "clean                : Remove files created by the build and tests"
-	@echo "distclean            : Remove sca directory and clean"
-	@echo "docker-push          : Push the docker images to an external repository"
-	@echo "lint-dockerfile      : Perform static analysis on Dockerfiles"
-	@echo "lint-mod             : Verify the integrity of the 'mod' files"
-	@echo "lint                 : Shorthand for lint-style & lint-sanity"
-	@echo "sca                  : Runs various SCA through golangci-lint tool"
-	@echo "test                 : Generate reports for all go tests"
-	@echo
 
 ## Local Development Helpers
-local-protos:
+local-protos: ## Copies a local version of the voltha-protos dependency into the vendor directory
 ifdef LOCAL_PROTOS
+	rm -rf vendor/github.com/opencord/voltha-protos/v4/go
 	mkdir -p vendor/github.com/opencord/voltha-protos/v4/go
 	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v4/go
 endif
 
 ## Local Development Helpers
-local-lib-go:
+local-lib-go: ## Copies a local version of the voltha-lib-go dependency into the vendor directory
 ifdef LOCAL_LIB_GO
+	rm -rf vendor/github.com/opencord/voltha-lib-go/v4/pkg
 	mkdir -p vendor/github.com/opencord/voltha-lib-go/v4/pkg
 	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v4/pkg/
 endif
 
 ## Docker targets
+build: docker-build ## Alias for 'docker-build'
 
-build: docker-build
-
-docker-build: rw_core
-
-rw_core: local-protos local-lib-go
-	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -f docker/Dockerfile.rw_core .
+docker-build: local-protos local-lib-go ## Build core docker image (set BUILD_PROFILED=true to also build the profiled image)
+	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} --target ${DOCKER_TARGET} -f docker/Dockerfile.rw_core .
 ifdef BUILD_PROFILED
-	docker build $(DOCKER_BUILD_ARGS) --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
 endif
 ifdef BUILD_RACE
-	docker build $(DOCKER_BUILD_ARGS) --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
 endif
 
-docker-push:
+docker-push: ## Push the docker images to an external repository
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 ifdef BUILD_PROFILED
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile
@@ -119,18 +103,18 @@ endif
 ifdef BUILD_RACE
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd
 endif
-docker-kind-load:
+docker-kind-load: ## Load docker images into a KinD cluster
 	@if [ "`kind get clusters | grep voltha-$(TYPE)`" = '' ]; then echo "no voltha-$(TYPE) cluster found" && exit 1; fi
 	kind load docker-image ${RWCORE_IMAGENAME}:${DOCKER_TAG} --name=voltha-$(TYPE) --nodes $(shell kubectl get nodes --template='{{range .items}}{{.metadata.name}},{{end}}' | rev | cut -c 2- | rev)
 
 ## lint and unit tests
 
-lint-dockerfile:
+lint-dockerfile: ## Perform static analysis on Dockerfile
 	@echo "Running Dockerfile lint check..."
 	@${HADOLINT} $$(find . -name "Dockerfile.*")
 	@echo "Dockerfile lint check OK"
 
-lint-mod:
+lint-mod: ## Verify the Go dependencies
 	@echo "Running dependency check..."
 	@${GO} mod verify
 	@echo "Dependency check OK. Running vendor check..."
@@ -145,9 +129,9 @@ lint-mod:
 	@echo "Vendor check OK."
 
 
-lint: lint-mod lint-dockerfile
+lint: lint-mod lint-dockerfile ## Run all lint targets
 
-sca:
+sca: ## Runs static code analysis with the golangci-lint tool
 	@rm -rf ./sca-report
 	@mkdir -p ./sca-report
 	@echo "Running static code analysis..."
@@ -155,7 +139,7 @@ sca:
 	@echo ""
 	@echo "Static code analysis OK"
 
-test: local-lib-go
+test: local-lib-go ## Run unit tests
 	@mkdir -p ./tests/results
 	@${GO} test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
 	RETURN=$$? ;\
@@ -163,14 +147,22 @@ test: local-lib-go
 	${GOCOVER_COBERTURA} < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
 	exit $$RETURN
 
-clean: distclean
+clean: distclean ## Removes any local filesystem artifacts generated by a build
 
-distclean:
+distclean: ## Removes any local filesystem artifacts generated by a build or test run
 	rm -rf ./sca-report
 
-mod-update:
+mod-update: ## Update go mod files
 	${GO} mod tidy
 	${GO} mod vendor
 
-fmt:
+fmt: ## Formats the soure code to go best practice style
 	@go fmt ${PACKAGES}
+
+# For each makefile target, add ## <description> on the target line and it will be listed by 'make help'
+help: ## Print help for each Makefile target
+	@echo "Usage: make [<target>]"
+	@echo "where available targets are:"
+	@echo
+	@grep '^[[:alpha:]_-]*:.* ##' $(MAKEFILE_LIST) \
+		| sort | awk 'BEGIN {FS=":.* ## "}; {printf "%-25s : %s\n", $$1, $$2};'
