@@ -32,6 +32,7 @@ DOCKER_EXTRA_ARGS          ?=
 DOCKER_REGISTRY            ?=
 DOCKER_REPOSITORY          ?=
 DOCKER_TAG                 ?= ${VERSION}$(shell [[ ${DOCKER_LABEL_VCS_DIRTY} == "true" ]] && echo "-dirty" || true)
+DOCKER_TARGET              ?= prod
 RWCORE_IMAGENAME           := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}voltha-rw-core
 TYPE                       ?= minimal
 
@@ -103,12 +104,12 @@ build: docker-build
 docker-build: rw_core
 
 rw_core: local-protos local-lib-go
-	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} --target ${DOCKER_TARGET} -f docker/Dockerfile.rw_core .
 ifdef BUILD_PROFILED
-	docker build $(DOCKER_BUILD_ARGS) --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
 endif
 ifdef BUILD_RACE
-	docker build $(DOCKER_BUILD_ARGS) --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
 endif
 
 docker-push:

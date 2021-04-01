@@ -15,10 +15,7 @@
 # -------------
 # Build stage
 
-ARG GOLANG_IMAGE=golang:1.13.8-alpine3.11
-ARG DEPLOY_IMAGE=alpine:3.11.3
-# hadolint ignore=DL3006
-FROM $GOLANG_IMAGE AS build-env
+FROM --platform=linux/amd64 golang:1.13.8-alpine3.11 AS dev
 
 # Install required packages
 RUN if command -v apk; then apk add --no-cache build-base=0.5-r1; fi
@@ -50,27 +47,28 @@ WORKDIR /go/src/rw_core
 # shell may be used and there is no known way to parameterize the
 # Dockerfile SHELL command as build args did not seems to work
 # hadolint ignore=DL4006
-RUN go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /go/bin/rw_core \
-	-ldflags \
-	"-X github.com/opencord/voltha-lib-go/v4/pkg/version.version=$org_label_schema_version \
-	 -X github.com/opencord/voltha-lib-go/v4/pkg/version.vcsRef=$org_label_schema_vcs_ref  \
-	 -X github.com/opencord/voltha-lib-go/v4/pkg/version.vcsDirty=$org_opencord_vcs_dirty \
-	 -X github.com/opencord/voltha-lib-go/v4/pkg/version.goVersion=$(go version 2>&1 | sed -E  's/.*go([0-9]+\.[0-9]+\.[0-9]+).*/\1/g') \
-	 -X github.com/opencord/voltha-lib-go/v4/pkg/version.os=$(go env GOHOSTOS) \
-	 -X github.com/opencord/voltha-lib-go/v4/pkg/version.arch=$(go env GOHOSTARCH) \
-	 -X github.com/opencord/voltha-lib-go/v4/pkg/version.buildTime=$org_label_schema_build_date"
+RUN \
+CGO_ENABLED=0 go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /app/rw_core \
+-ldflags \
+"-X github.com/opencord/voltha-lib-go/v4/pkg/version.version=$org_label_schema_version \
+-X github.com/opencord/voltha-lib-go/v4/pkg/version.vcsRef=$org_label_schema_vcs_ref  \
+-X github.com/opencord/voltha-lib-go/v4/pkg/version.vcsDirty=$org_opencord_vcs_dirty \
+-X github.com/opencord/voltha-lib-go/v4/pkg/version.goVersion=$(go version 2>&1 | sed -E  's/.*go([0-9]+\.[0-9]+\.[0-9]+).*/\1/g') \
+-X github.com/opencord/voltha-lib-go/v4/pkg/version.os=$(go env GOHOSTOS) \
+-X github.com/opencord/voltha-lib-go/v4/pkg/version.arch=$(go env GOHOSTARCH) \
+-X github.com/opencord/voltha-lib-go/v4/pkg/version.buildTime=$org_label_schema_build_date"
+
+WORKDIR /app
 
 # -------------
 # Image creation stage
-
-# hadolint ignore=DL3006
-FROM $DEPLOY_IMAGE
+FROM --platform=linux/amd64 gcr.io/distroless/static:nonroot as prod
 
 # Set the working directory
 WORKDIR /app
 
 # Copy required files
-COPY --from=build-env /go/bin/rw_core /app/
+COPY --from=dev /app/rw_core /app/rw_core
 
 # Label image
 ARG org_label_schema_version=unknown
@@ -80,11 +78,14 @@ ARG org_label_schema_build_date=unknown
 ARG org_opencord_vcs_commit_date=unknown
 ARG org_opencord_vcs_dirty=unknown
 
-LABEL org.label-schema.schema-version=1.0 \
-      org.label-schema.name=voltha-rw-core \
-      org.label-schema.version=$org_label_schema_version \
-      org.label-schema.vcs-url=$org_label_schema_vcs_url \
-      org.label-schema.vcs-ref=$org_label_schema_vcs_ref \
-      org.label-schema.build-date=$org_label_schema_build_date \
-      org.opencord.vcs-commit-date=$org_opencord_vcs_commit_date \
-      org.opencord.vcs-dirty=$org_opencord_vcs_dirty
+LABEL \
+org.label-schema.schema-version=1.0 \
+org.label-schema.name=voltha-rw-core \
+org.label-schema.version=$org_label_schema_version \
+org.label-schema.vcs-url=$org_label_schema_vcs_url \
+org.label-schema.vcs-ref=$org_label_schema_vcs_ref \
+org.label-schema.build-date=$org_label_schema_build_date \
+org.opencord.vcs-commit-date=$org_opencord_vcs_commit_date \
+org.opencord.vcs-dirty=$org_opencord_vcs_dirty
+
+USER nonroot:nonroot
