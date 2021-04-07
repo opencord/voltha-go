@@ -24,6 +24,7 @@ import (
 
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	v3Client "go.etcd.io/etcd/clientv3"
+
 	v3Concurrency "go.etcd.io/etcd/clientv3/concurrency"
 	v3rpcTypes "go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
 )
@@ -39,15 +40,10 @@ type EtcdClient struct {
 	lockToMutexLock     sync.Mutex
 }
 
-// NewEtcdClient returns a new client for the Etcd KV store
-func NewEtcdClient(ctx context.Context, addr string, timeout time.Duration, level log.LogLevel) (*EtcdClient, error) {
-	logconfig := log.ConstructZapConfig(log.JSON, level, log.Fields{})
-
-	c, err := v3Client.New(v3Client.Config{
-		Endpoints:   []string{addr},
-		DialTimeout: timeout,
-		LogConfig:   &logconfig,
-	})
+// NewEtcdCustomClient returns a new client for the Etcd KV store allowing
+// the called to specify etcd client configuration
+func NewEtcdCustomClient(ctx context.Context, config *v3Client.Config) (*EtcdClient, error) {
+	c, err := v3Client.New(*config)
 	if err != nil {
 		logger.Error(ctx, err)
 		return nil, err
@@ -59,6 +55,18 @@ func NewEtcdClient(ctx context.Context, addr string, timeout time.Duration, leve
 
 	return &EtcdClient{ectdAPI: c, keyReservations: reservations, lockToMutexMap: lockMutexMap,
 		lockToSessionMap: lockSessionMap}, nil
+}
+
+// NewEtcdClient returns a new client for the Etcd KV store
+func NewEtcdClient(ctx context.Context, addr string, timeout time.Duration, level log.LogLevel) (*EtcdClient, error) {
+	logconfig := log.ConstructZapConfig(log.JSON, level, log.Fields{})
+
+	return NewEtcdCustomClient(
+		ctx,
+		&v3Client.Config{
+			Endpoints:   []string{addr},
+			DialTimeout: timeout,
+			LogConfig:   &logconfig})
 }
 
 // IsConnectionUp returns whether the connection to the Etcd KV store is up.  If a timeout occurs then

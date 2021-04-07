@@ -833,6 +833,7 @@ func (sc *SaramaClient) clearTopicFromConsumerChannelMap(ctx context.Context, to
 func (sc *SaramaClient) createPublisher(ctx context.Context) error {
 	// This Creates the publisher
 	config := sarama.NewConfig()
+	config.Version = sarama.V1_0_0_0
 	config.Producer.Partitioner = sarama.NewRandomPartitioner
 	config.Producer.Flush.Frequency = time.Duration(sc.producerFlushFrequency)
 	config.Producer.Flush.Messages = sc.producerFlushMessages
@@ -856,6 +857,7 @@ func (sc *SaramaClient) createPublisher(ctx context.Context) error {
 
 func (sc *SaramaClient) createConsumer(ctx context.Context) error {
 	config := sarama.NewConfig()
+	config.Version = sarama.V1_0_0_0
 	config.Consumer.Return.Errors = true
 	config.Consumer.Fetch.Min = 1
 	config.Consumer.MaxWaitTime = time.Duration(sc.consumerMaxwait) * time.Millisecond
@@ -877,6 +879,7 @@ func (sc *SaramaClient) createConsumer(ctx context.Context) error {
 // createGroupConsumer creates a consumers group
 func (sc *SaramaClient) createGroupConsumer(ctx context.Context, topic *Topic, groupId string, initialOffset int64, retries int) (*scc.Consumer, error) {
 	config := scc.NewConfig()
+	config.Version = sarama.V1_0_0_0
 	config.ClientID = uuid.New().String()
 	config.Group.Mode = scc.ConsumerModeMultiplex
 	config.Consumer.Group.Heartbeat.Interval, _ = time.ParseDuration("1s")

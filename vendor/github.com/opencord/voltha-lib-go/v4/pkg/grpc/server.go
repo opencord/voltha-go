@@ -17,14 +17,16 @@ package grpc
 
 import (
 	"context"
+	"net"
+
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"net"
 )
 
 /*
@@ -126,6 +128,7 @@ func (s *GrpcServer) Start(ctx context.Context) {
 	for _, service := range s.services {
 		service(s.gs)
 	}
+	reflection.Register(s.gs)
 
 	if err := s.gs.Serve(lis); err != nil {
 		logger.Fatalf(ctx, "failed to serve: %v\n", err)
