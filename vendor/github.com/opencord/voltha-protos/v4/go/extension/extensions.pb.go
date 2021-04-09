@@ -10,6 +10,8 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	config "github.com/opencord/voltha-protos/v4/go/ext/config"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -1916,6 +1918,17 @@ type ExtensionServer interface {
 	GetExtValue(context.Context, *SingleGetValueRequest) (*SingleGetValueResponse, error)
 	// Set a single attribute
 	SetExtValue(context.Context, *SingleSetValueRequest) (*SingleSetValueResponse, error)
+}
+
+// UnimplementedExtensionServer can be embedded to have forward compatible implementations.
+type UnimplementedExtensionServer struct {
+}
+
+func (*UnimplementedExtensionServer) GetExtValue(ctx context.Context, req *SingleGetValueRequest) (*SingleGetValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExtValue not implemented")
+}
+func (*UnimplementedExtensionServer) SetExtValue(ctx context.Context, req *SingleSetValueRequest) (*SingleSetValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetExtValue not implemented")
 }
 
 func RegisterExtensionServer(s *grpc.Server, srv ExtensionServer) {

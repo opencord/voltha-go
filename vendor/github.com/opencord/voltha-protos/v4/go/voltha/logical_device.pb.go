@@ -313,7 +313,9 @@ func init() {
 	proto.RegisterType((*LogicalDevices)(nil), "voltha.LogicalDevices")
 }
 
-func init() { proto.RegisterFile("voltha_protos/logical_device.proto", fileDescriptor_caf139ab3abc8240) }
+func init() {
+	proto.RegisterFile("voltha_protos/logical_device.proto", fileDescriptor_caf139ab3abc8240)
+}
 
 var fileDescriptor_caf139ab3abc8240 = []byte{
 	// 456 bytes of a gzipped FileDescriptorProto

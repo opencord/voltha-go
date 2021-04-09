@@ -10,6 +10,8 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	openflow_13 "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -555,6 +557,26 @@ type PonSimServer interface {
 	GetDeviceInfo(context.Context, *empty.Empty) (*PonSimDeviceInfo, error)
 	UpdateFlowTable(context.Context, *FlowTable) (*empty.Empty, error)
 	GetStats(context.Context, *empty.Empty) (*PonSimMetrics, error)
+}
+
+// UnimplementedPonSimServer can be embedded to have forward compatible implementations.
+type UnimplementedPonSimServer struct {
+}
+
+func (*UnimplementedPonSimServer) SendFrame(ctx context.Context, req *PonSimFrame) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendFrame not implemented")
+}
+func (*UnimplementedPonSimServer) ReceiveFrames(req *empty.Empty, srv PonSim_ReceiveFramesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ReceiveFrames not implemented")
+}
+func (*UnimplementedPonSimServer) GetDeviceInfo(ctx context.Context, req *empty.Empty) (*PonSimDeviceInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceInfo not implemented")
+}
+func (*UnimplementedPonSimServer) UpdateFlowTable(ctx context.Context, req *FlowTable) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateFlowTable not implemented")
+}
+func (*UnimplementedPonSimServer) GetStats(ctx context.Context, req *empty.Empty) (*PonSimMetrics, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStats not implemented")
 }
 
 func RegisterPonSimServer(s *grpc.Server, srv PonSimServer) {
