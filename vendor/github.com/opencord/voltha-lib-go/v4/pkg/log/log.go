@@ -54,11 +54,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	zp "go.uber.org/zap"
-	zc "go.uber.org/zap/zapcore"
 	"path"
 	"runtime"
 	"strings"
+
+	zp "go.uber.org/zap"
+	zc "go.uber.org/zap/zapcore"
 )
 
 type LogLevel int8
@@ -217,7 +218,7 @@ func LogLevelToString(l LogLevel) (string, error) {
 	case FatalLevel:
 		return "FATAL", nil
 	}
-	return "", errors.New("Given LogLevel is invalid " + string(l))
+	return "", fmt.Errorf("Given LogLevel is invalid %d", l)
 }
 
 func getDefaultConfig(outputType string, level LogLevel, defaultFields Fields) zp.Config {

@@ -14,6 +14,8 @@ import (
 	openflow_13 "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -104,6 +106,7 @@ const OperStatus_ACTIVATING = OperStatus_Types(common.OperStatus_ACTIVATING)
 const OperStatus_TESTING = OperStatus_Types(common.OperStatus_TESTING)
 const OperStatus_ACTIVE = OperStatus_Types(common.OperStatus_ACTIVE)
 const OperStatus_FAILED = OperStatus_Types(common.OperStatus_FAILED)
+const OperStatus_RECONCILING = OperStatus_Types(common.OperStatus_RECONCILING)
 
 // ConnectStatus_Types from public import voltha_protos/common.proto
 type ConnectStatus_Types = common.ConnectStatus_Types
@@ -3291,6 +3294,200 @@ type VolthaServiceServer interface {
 	SetExtValue(context.Context, *ValueSet) (*empty.Empty, error)
 	// omci start and stop cli implementation
 	StartOmciTestAction(context.Context, *OmciTestRequest) (*TestResponse, error)
+}
+
+// UnimplementedVolthaServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedVolthaServiceServer struct {
+}
+
+func (*UnimplementedVolthaServiceServer) GetMembership(ctx context.Context, req *empty.Empty) (*Membership, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMembership not implemented")
+}
+func (*UnimplementedVolthaServiceServer) UpdateMembership(ctx context.Context, req *Membership) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMembership not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetVoltha(ctx context.Context, req *empty.Empty) (*Voltha, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVoltha not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListCoreInstances(ctx context.Context, req *empty.Empty) (*CoreInstances, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCoreInstances not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetCoreInstance(ctx context.Context, req *common.ID) (*CoreInstance, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCoreInstance not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListAdapters(ctx context.Context, req *empty.Empty) (*Adapters, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAdapters not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListLogicalDevices(ctx context.Context, req *empty.Empty) (*LogicalDevices, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListLogicalDevices not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetLogicalDevice(ctx context.Context, req *common.ID) (*LogicalDevice, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLogicalDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListLogicalDevicePorts(ctx context.Context, req *common.ID) (*LogicalPorts, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListLogicalDevicePorts not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetLogicalDevicePort(ctx context.Context, req *LogicalPortId) (*LogicalPort, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLogicalDevicePort not implemented")
+}
+func (*UnimplementedVolthaServiceServer) EnableLogicalDevicePort(ctx context.Context, req *LogicalPortId) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableLogicalDevicePort not implemented")
+}
+func (*UnimplementedVolthaServiceServer) DisableLogicalDevicePort(ctx context.Context, req *LogicalPortId) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableLogicalDevicePort not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListLogicalDeviceFlows(ctx context.Context, req *common.ID) (*openflow_13.Flows, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListLogicalDeviceFlows not implemented")
+}
+func (*UnimplementedVolthaServiceServer) UpdateLogicalDeviceFlowTable(ctx context.Context, req *openflow_13.FlowTableUpdate) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLogicalDeviceFlowTable not implemented")
+}
+func (*UnimplementedVolthaServiceServer) UpdateLogicalDeviceMeterTable(ctx context.Context, req *openflow_13.MeterModUpdate) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLogicalDeviceMeterTable not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListLogicalDeviceMeters(ctx context.Context, req *common.ID) (*openflow_13.Meters, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListLogicalDeviceMeters not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListLogicalDeviceFlowGroups(ctx context.Context, req *common.ID) (*openflow_13.FlowGroups, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListLogicalDeviceFlowGroups not implemented")
+}
+func (*UnimplementedVolthaServiceServer) UpdateLogicalDeviceFlowGroupTable(ctx context.Context, req *openflow_13.FlowGroupTableUpdate) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLogicalDeviceFlowGroupTable not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDevices(ctx context.Context, req *empty.Empty) (*Devices, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDevices not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDeviceIds(ctx context.Context, req *empty.Empty) (*common.IDs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeviceIds not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ReconcileDevices(ctx context.Context, req *common.IDs) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReconcileDevices not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetDevice(ctx context.Context, req *common.ID) (*Device, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) CreateDevice(ctx context.Context, req *Device) (*Device, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) EnableDevice(ctx context.Context, req *common.ID) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) DisableDevice(ctx context.Context, req *common.ID) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) RebootDevice(ctx context.Context, req *common.ID) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RebootDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) DeleteDevice(ctx context.Context, req *common.ID) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ForceDeleteDevice(ctx context.Context, req *common.ID) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ForceDeleteDevice not implemented")
+}
+func (*UnimplementedVolthaServiceServer) DownloadImage(ctx context.Context, req *ImageDownload) (*common.OperationResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DownloadImage not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetImageDownloadStatus(ctx context.Context, req *ImageDownload) (*ImageDownload, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetImageDownloadStatus not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetImageDownload(ctx context.Context, req *ImageDownload) (*ImageDownload, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetImageDownload not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListImageDownloads(ctx context.Context, req *common.ID) (*ImageDownloads, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListImageDownloads not implemented")
+}
+func (*UnimplementedVolthaServiceServer) CancelImageDownload(ctx context.Context, req *ImageDownload) (*common.OperationResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelImageDownload not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ActivateImageUpdate(ctx context.Context, req *ImageDownload) (*common.OperationResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActivateImageUpdate not implemented")
+}
+func (*UnimplementedVolthaServiceServer) RevertImageUpdate(ctx context.Context, req *ImageDownload) (*common.OperationResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevertImageUpdate not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDevicePorts(ctx context.Context, req *common.ID) (*Ports, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDevicePorts not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDevicePmConfigs(ctx context.Context, req *common.ID) (*PmConfigs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDevicePmConfigs not implemented")
+}
+func (*UnimplementedVolthaServiceServer) UpdateDevicePmConfigs(ctx context.Context, req *PmConfigs) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDevicePmConfigs not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDeviceFlows(ctx context.Context, req *common.ID) (*openflow_13.Flows, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeviceFlows not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDeviceFlowGroups(ctx context.Context, req *common.ID) (*openflow_13.FlowGroups, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeviceFlowGroups not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDeviceTypes(ctx context.Context, req *empty.Empty) (*DeviceTypes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeviceTypes not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetDeviceType(ctx context.Context, req *common.ID) (*DeviceType, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceType not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListDeviceGroups(ctx context.Context, req *empty.Empty) (*DeviceGroups, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeviceGroups not implemented")
+}
+func (*UnimplementedVolthaServiceServer) StreamPacketsOut(srv VolthaService_StreamPacketsOutServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamPacketsOut not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ReceivePacketsIn(req *empty.Empty, srv VolthaService_ReceivePacketsInServer) error {
+	return status.Errorf(codes.Unimplemented, "method ReceivePacketsIn not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ReceiveChangeEvents(req *empty.Empty, srv VolthaService_ReceiveChangeEventsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ReceiveChangeEvents not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetDeviceGroup(ctx context.Context, req *common.ID) (*DeviceGroup, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceGroup not implemented")
+}
+func (*UnimplementedVolthaServiceServer) CreateEventFilter(ctx context.Context, req *EventFilter) (*EventFilter, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateEventFilter not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetEventFilter(ctx context.Context, req *common.ID) (*EventFilters, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEventFilter not implemented")
+}
+func (*UnimplementedVolthaServiceServer) UpdateEventFilter(ctx context.Context, req *EventFilter) (*EventFilter, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEventFilter not implemented")
+}
+func (*UnimplementedVolthaServiceServer) DeleteEventFilter(ctx context.Context, req *EventFilter) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteEventFilter not implemented")
+}
+func (*UnimplementedVolthaServiceServer) ListEventFilters(ctx context.Context, req *empty.Empty) (*EventFilters, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEventFilters not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetImages(ctx context.Context, req *common.ID) (*Images, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetImages not implemented")
+}
+func (*UnimplementedVolthaServiceServer) SelfTest(ctx context.Context, req *common.ID) (*SelfTestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelfTest not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetMibDeviceData(ctx context.Context, req *common.ID) (*omci.MibDeviceData, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMibDeviceData not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetAlarmDeviceData(ctx context.Context, req *common.ID) (*omci.AlarmDeviceData, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAlarmDeviceData not implemented")
+}
+func (*UnimplementedVolthaServiceServer) SimulateAlarm(ctx context.Context, req *SimulateAlarmRequest) (*common.OperationResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimulateAlarm not implemented")
+}
+func (*UnimplementedVolthaServiceServer) Subscribe(ctx context.Context, req *OfAgentSubscriber) (*OfAgentSubscriber, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
+}
+func (*UnimplementedVolthaServiceServer) EnablePort(ctx context.Context, req *Port) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnablePort not implemented")
+}
+func (*UnimplementedVolthaServiceServer) DisablePort(ctx context.Context, req *Port) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisablePort not implemented")
+}
+func (*UnimplementedVolthaServiceServer) GetExtValue(ctx context.Context, req *common.ValueSpecifier) (*common.ReturnValues, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExtValue not implemented")
+}
+func (*UnimplementedVolthaServiceServer) SetExtValue(ctx context.Context, req *ValueSet) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetExtValue not implemented")
+}
+func (*UnimplementedVolthaServiceServer) StartOmciTestAction(ctx context.Context, req *OmciTestRequest) (*TestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartOmciTestAction not implemented")
 }
 
 func RegisterVolthaServiceServer(s *grpc.Server, srv VolthaServiceServer) {

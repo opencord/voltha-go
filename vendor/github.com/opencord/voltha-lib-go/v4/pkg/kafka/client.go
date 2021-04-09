@@ -17,8 +17,9 @@ package kafka
 
 import (
 	"context"
-	ca "github.com/opencord/voltha-protos/v4/go/inter_container"
 	"time"
+
+	ca "github.com/opencord/voltha-protos/v4/go/inter_container"
 )
 
 const (
@@ -37,9 +38,7 @@ const (
 )
 
 const (
-	DefaultKafkaHost                = "127.0.0.1"
-	DefaultKafkaPort                = 9092
-	DefaultKafkaAddress             = DefaultKafkaHost + ":" + string(DefaultKafkaPort)
+	DefaultKafkaAddress             = "127.0.0.1:9092"
 	DefaultGroupName                = "voltha"
 	DefaultSleepOnError             = 1
 	DefaultProducerFlushFrequency   = 10

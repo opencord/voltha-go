@@ -11,6 +11,8 @@ import (
 	_ "github.com/opencord/voltha-protos/v4/go/common"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -162,6 +164,14 @@ func (c *healthServiceClient) GetHealthStatus(ctx context.Context, in *empty.Emp
 type HealthServiceServer interface {
 	// Return current health status of a Voltha instance
 	GetHealthStatus(context.Context, *empty.Empty) (*HealthStatus, error)
+}
+
+// UnimplementedHealthServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedHealthServiceServer struct {
+}
+
+func (*UnimplementedHealthServiceServer) GetHealthStatus(ctx context.Context, req *empty.Empty) (*HealthStatus, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHealthStatus not implemented")
 }
 
 func RegisterHealthServiceServer(s *grpc.Server, srv HealthServiceServer) {
