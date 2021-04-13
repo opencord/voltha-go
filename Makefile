@@ -89,10 +89,10 @@ build: docker-build ## Alias for 'docker-build'
 docker-build: local-protos local-lib-go ## Build core docker image (set BUILD_PROFILED=true to also build the profiled image)
 	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} --target ${DOCKER_TARGET} -f docker/Dockerfile.rw_core .
 ifdef BUILD_PROFILED
-	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" --build-arg CGO_PARAMETER="CGO_ENABLED=1" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
 endif
 ifdef BUILD_RACE
-	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --target ${DOCKER_TARGET} --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg CGO_PARAMETER="CGO_ENABLED=1" --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
 endif
 
 docker-push: ## Push the docker images to an external repository

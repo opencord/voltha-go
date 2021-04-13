@@ -34,6 +34,8 @@ COPY go.sum ./
 
 ARG EXTRA_GO_BUILD_TAGS=""
 
+ARG CGO_PARAMETER='CGO_ENABLED=0'
+
 ARG org_label_schema_version=unknown
 ARG org_label_schema_vcs_url=unknown
 ARG org_label_schema_vcs_ref=unknown
@@ -45,7 +47,7 @@ ARG org_opencord_vcs_dirty=unknown
 WORKDIR /go/src/rw_core
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 RUN \
-CGO_ENABLED=0 go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /app/rw_core \
+export $CGO_PARAMETER && go build $EXTRA_GO_BUILD_TAGS -mod=vendor -o /app/rw_core \
 -ldflags \
 "-X github.com/opencord/voltha-lib-go/v4/pkg/version.version=$org_label_schema_version \
 -X github.com/opencord/voltha-lib-go/v4/pkg/version.vcsRef=$org_label_schema_vcs_ref  \
