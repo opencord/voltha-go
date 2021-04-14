@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9635bf8_398859d9",
+        "filename": "docker/Dockerfile.rw_core",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-04-14T13:39:18Z",
+      "side": 1,
+      "message": "was wondering if the CGO_PARAMETER should just be a 0 or a 1 as opposed to the whole value",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 33
+      },
+      "revId": "8d4f3e31b1fd095be398af593854ab14778cbc15",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a146d7e_815ffc1e",
+        "filename": "docker/Dockerfile.rw_core",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-04-14T13:39:18Z",
+      "side": 1,
+      "message": "what is the value of doing an export \u0026\u0026 as oppoed to\n\nCGO_ENABLED\u003d${CGO_PARAMETER} go build ...",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 27
+      },
+      "revId": "8d4f3e31b1fd095be398af593854ab14778cbc15",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
