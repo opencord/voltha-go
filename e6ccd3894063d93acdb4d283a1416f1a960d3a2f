@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae1ff238_d001f239",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "Would you need a rebase as these APIs are not really part of device reconciliation.",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84220710_feabf566",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1250,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "My preference would be to have a generic \"proceedWithRequest()\" (name can change), such that we can introduce other conditions transparently.  So far, \"proceedWithRequest()\" would have a check on reconciliation status and device deletion status.   Another option would be to have a field in the agent structure that indicates whether we can proceed with a request or not. In such case, this flag will be set to false when reconciliation/deletion is in progress and set back to true is reconciliation is done.",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2408e941_da1a5271",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "Is there any device update log for this transaction?",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78312344_e4479be4",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1672,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "Should this return with a failure?",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22373e9b_c19cb798",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1697,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "With \"continue\" there is no need to have an explicit \"else\" below.",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd587453_cdf7bc6f",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1706,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "No log?",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b971e4d_a0af2bb6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1710,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "Debug or Error?",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ebe4d5a_c742d64d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1716,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "not needed.",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e8fda47_62aacf0a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1719,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T14:51:08Z",
+      "side": 1,
+      "message": "not needed.",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
