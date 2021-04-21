@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0f04186a_f78a588d",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "These are here because of the changes in latest protos. May be if relevant changes in voltha-go comes in picture then I can rebase.",
+      "parentUuid": "ae1ff238_d001f239",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "84220710_feabf566",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2021-04-20T14:51:08Z",
       "side": 1,
       "message": "My preference would be to have a generic \"proceedWithRequest()\" (name can change), such that we can introduce other conditions transparently.  So far, \"proceedWithRequest()\" would have a check on reconciliation status and device deletion status.   Another option would be to have a field in the agent structure that indicates whether we can proceed with a request or not. In such case, this flag will be set to false when reconciliation/deletion is in progress and set back to true is reconciliation is done.",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54a16a5c_93f2f54e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1250,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "introduced a separate func proceedWithRequest which retur bool value on the basis of isDeletionnInProgress or isReconcileInProgress later on other conditions could be added.\n\nAnd wherever deletion condition was not checked only isReconcileInProgress is called as per in agent_image.go. But we might check for deletion to be in process too , what do you think ?",
+      "parentUuid": "84220710_feabf566",
       "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "02ff50ac_addfc50e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "No there is not device update log for this though I will add some debug logs.",
+      "parentUuid": "2408e941_da1a5271",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "78312344_e4479be4",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 18
@@ -64,6 +118,24 @@
       "writtenOn": "2021-04-20T14:51:08Z",
       "side": 1,
       "message": "Should this return with a failure?",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6deaada3_0a4944a1",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1672,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "I am not sure if this should returns a failure because it will end the reconcile retry or I can do one thing to keep this in LOOP and trigger backoff on failure of updating transient state too !\nWhat would you suggest ?",
+      "parentUuid": "78312344_e4479be4",
       "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "41560c5d_7f2b3db3",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1697,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22373e9b_c19cb798",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd587453_cdf7bc6f",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 18
@@ -101,6 +191,24 @@
       "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0e84c43_cf01c72f",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1706,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dd587453_cdf7bc6f",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "b4065015_9b1fd3f1",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1710,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "Changes to Error",
+      "parentUuid": "1b971e4d_a0af2bb6",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ebe4d5a_c742d64d",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 18
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "b8e68a59_5b700407",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1716,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "Will remove continue",
+      "parentUuid": "5ebe4d5a_c742d64d",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e8fda47_62aacf0a",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 18
@@ -152,6 +296,24 @@
       "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1491b134_e2a28cd4",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1719,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-21T10:56:35Z",
+      "side": 1,
+      "message": "I think we don\u0027t even need this case, even we can remove select and wait for response or error over channel.",
+      "parentUuid": "6e8fda47_62aacf0a",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
