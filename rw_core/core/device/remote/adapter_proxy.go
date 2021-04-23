@@ -19,6 +19,8 @@ package remote
 import (
 	"context"
 
+	"github.com/opencord/voltha-protos/v4/go/common"
+
 	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/extension"
@@ -518,4 +520,89 @@ func (ap *AdapterProxy) SetSingleValue(ctx context.Context, adapterType string, 
 
 	replyToTopic := ap.getCoreTopic()
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, request.TargetId, args...)
+}
+
+// DownloadImageToOnuDevice invokes download image rpc
+func (ap *AdapterProxy) DownloadImageToOnuDevice(ctx context.Context, device *voltha.Device, downloadRequest *voltha.DeviceImageDownloadRequest) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "DownloadImageToOnuDevice", log.Fields{"device-id": device.Id, "image": downloadRequest.Image.Name})
+	rpc := "Download_onu_image"
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
+	if err != nil {
+		return nil, err
+	}
+	args := []*kafka.KVArg{
+		{Key: "deviceImageDownloadReq", Value: downloadRequest},
+	}
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
+}
+
+func (ap *AdapterProxy) GetOnuImageStatus(ctx context.Context, device *voltha.Device, request *voltha.DeviceImageRequest) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "GetOnuImageStatus", log.Fields{"device-id": device.Id})
+	rpc := "Get_onu_image_status"
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
+	if err != nil {
+		return nil, err
+	}
+	args := []*kafka.KVArg{
+		{Key: "deviceImageReq", Value: request},
+	}
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
+}
+
+func (ap *AdapterProxy) ActivateOnuImage(ctx context.Context, device *voltha.Device, request *voltha.DeviceImageRequest) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "GetOnuImageStatus", log.Fields{"device-id": device.Id})
+	rpc := "Activate_onu_image"
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
+	if err != nil {
+		return nil, err
+	}
+	args := []*kafka.KVArg{
+		{Key: "deviceImageReq", Value: request},
+	}
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
+}
+
+func (ap *AdapterProxy) AbortImageUpgrade(ctx context.Context, device *voltha.Device, request *voltha.DeviceImageRequest) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "GetOnuImageStatus", log.Fields{"device-id": device.Id})
+	rpc := "Abort_onu_image_upgrade"
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
+	if err != nil {
+		return nil, err
+	}
+	args := []*kafka.KVArg{
+		{Key: "deviceImageReq", Value: request},
+	}
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
+}
+
+func (ap *AdapterProxy) CommitImage(ctx context.Context, device *voltha.Device, request *voltha.DeviceImageRequest) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "GetOnuImageStatus", log.Fields{"device-id": device.Id})
+	rpc := "Commit_onu_image"
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
+	if err != nil {
+		return nil, err
+	}
+	args := []*kafka.KVArg{
+		{Key: "deviceImageReq", Value: request},
+	}
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
+}
+
+func (ap *AdapterProxy) GetOnuImages(ctx context.Context, device *voltha.Device, id *common.ID) (chan *kafka.RpcResponse, error) {
+	logger.Debugw(ctx, "GetOnuImage", log.Fields{"device-id": device.Id})
+	rpc := "Get_onu_images"
+	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
+	if err != nil {
+		return nil, err
+	}
+	args := []*kafka.KVArg{
+		{Key: "deviceId", Value: id},
+	}
+	replyToTopic := ap.getCoreTopic()
+	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
 }
