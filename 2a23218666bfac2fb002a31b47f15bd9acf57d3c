@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c249e08_faa0deaf",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1695,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2021-04-23T10:40:57Z",
+      "side": 1,
+      "message": "please use correct rpc name, i think it  should not be \"GetOnuImageStatus\"",
+      "revId": "2a23218666bfac2fb002a31b47f15bd9acf57d3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01e4fa49_bc47ddfc",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1717,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2021-04-23T10:40:57Z",
+      "side": 1,
+      "message": "use appropirate rpc name",
+      "revId": "2a23218666bfac2fb002a31b47f15bd9acf57d3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66d83d8a_2e33077d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2021-04-23T10:40:57Z",
+      "side": 1,
+      "message": "same as previous comment",
+      "revId": "2a23218666bfac2fb002a31b47f15bd9acf57d3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f557d71_fc854536",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1760,
+      "author": {
+        "id": 1000635
+      },
+      "writtenOn": "2021-04-23T10:40:57Z",
+      "side": 1,
+      "message": "same as previous comment for rpc name",
+      "revId": "2a23218666bfac2fb002a31b47f15bd9acf57d3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
