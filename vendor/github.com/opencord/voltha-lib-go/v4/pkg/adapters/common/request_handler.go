@@ -835,3 +835,147 @@ func (rhp *RequestHandlerProxy) Single_get_value_request(ctx context.Context, ar
 	logger.Debugw(ctx, "invoke rhp.adapter.Single_get_value_request ", log.Fields{"singleGetvalueReq": singleGetvalueReq})
 	return rhp.adapter.Single_get_value_request(ctx, singleGetvalueReq)
 }
+
+func (rhp *RequestHandlerProxy) getDeviceDownloadImageRequest(ctx context.Context, args []*ic.Argument) (*voltha.DeviceImageDownloadRequest, error) {
+	logger.Debugw(ctx, "getDeviceDownloadImageRequest", log.Fields{"args": args})
+	if len(args) < 1 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		return nil, errors.New("invalid-number-of-args")
+	}
+
+	deviceDownloadImageReq := ic.DeviceImageDownloadRequest{}
+
+	for _, arg := range args {
+		switch arg.Key {
+		case "deviceImageDownloadReq":
+			if err := ptypes.UnmarshalAny(arg.Value, &deviceDownloadImageReq); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		default:
+			return nil, errors.New("invalid argument")
+		}
+	}
+	return &deviceDownloadImageReq, nil
+}
+
+func (rhp *RequestHandlerProxy) getDeviceImageRequest(ctx context.Context, args []*ic.Argument) (*voltha.DeviceImageRequest, error) {
+	logger.Debugw(ctx, "getDeviceImageRequest", log.Fields{"args": args})
+	if len(args) < 1 {
+		logger.Warn(ctx, "invalid-number-of-args", log.Fields{"args": args})
+		return nil, errors.New("invalid-number-of-args")
+	}
+
+	deviceImageReq := ic.DeviceImageRequest{}
+
+	for _, arg := range args {
+		switch arg.Key {
+		case "deviceImageReq":
+			if err := ptypes.UnmarshalAny(arg.Value, &deviceImageReq); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return nil, err
+			}
+		default:
+			return nil, errors.New("invalid argument")
+		}
+	}
+	return &deviceImageReq, nil
+}
+
+func (rhp *RequestHandlerProxy) getDeviceID(ctx context.Context, args []*ic.Argument) (string, error) {
+	logger.Debugw(ctx, "getDeviceID", log.Fields{"args": args})
+
+	deviceId := &ic.StrType{}
+
+	for _, arg := range args {
+		switch arg.Key {
+		case "deviceId":
+			if err := ptypes.UnmarshalAny(arg.Value, deviceId); err != nil {
+				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
+				return "", err
+			}
+		default:
+			return "", errors.New("invalid argument")
+		}
+	}
+	return deviceId.Val, nil
+}
+
+func (rhp *RequestHandlerProxy) Download_onu_image(ctx context.Context, args []*ic.Argument) (*voltha.DeviceImageResponse, error) {
+	imageDownloadReq, err := rhp.getDeviceDownloadImageRequest(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	imageDownloadRsp, err := rhp.adapter.Download_onu_image(ctx, imageDownloadReq)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageDownloadRsp, nil
+}
+
+func (rhp *RequestHandlerProxy) Get_onu_image_status(ctx context.Context, args []*ic.Argument) (*voltha.DeviceImageResponse, error) {
+	imageStatusReq, err := rhp.getDeviceImageRequest(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	imageStatus, err := rhp.adapter.Get_onu_image_status(ctx, imageStatusReq)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageStatus, nil
+}
+
+func (rhp *RequestHandlerProxy) Abort_onu_image_upgrade(ctx context.Context, args []*ic.Argument) (*voltha.DeviceImageResponse, error) {
+	imageAbortReq, err := rhp.getDeviceImageRequest(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	imageAbortRsp, err := rhp.adapter.Abort_onu_image_upgrade(ctx, imageAbortReq)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageAbortRsp, nil
+}
+
+func (rhp *RequestHandlerProxy) Activate_onu_image(ctx context.Context, args []*ic.Argument) (*voltha.DeviceImageResponse, error) {
+	imageActivateReq, err := rhp.getDeviceImageRequest(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	imageActivateRsp, err := rhp.adapter.Activate_onu_image(ctx, imageActivateReq)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return imageActivateRsp, nil
+}
+
+func (rhp *RequestHandlerProxy) Commit_onu_image(ctx context.Context, args []*ic.Argument) (*voltha.DeviceImageResponse, error) {
+	imageCommitReq, err := rhp.getDeviceImageRequest(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	imageCommitRsp, err := rhp.adapter.Commit_onu_image(ctx, imageCommitReq)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+
+	return imageCommitRsp, nil
+}
+
+func (rhp *RequestHandlerProxy) Get_onu_images(ctx context.Context, args []*ic.Argument) (*voltha.OnuImages, error) {
+	deviceID, err := rhp.getDeviceID(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	onuImages, err := rhp.adapter.Get_onu_images(ctx, deviceID)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "%s", err.Error())
+	}
+	return onuImages, nil
+}
