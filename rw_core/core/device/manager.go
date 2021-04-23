@@ -1643,3 +1643,160 @@ func (dMgr *Manager) GetTransientState(ctx context.Context, id string) (voltha.D
 	}
 	return agent.getTransientState(), nil
 }
+
+func (dMgr *Manager) DownloadImageToDevice(ctx context.Context, request *voltha.DeviceImageDownloadRequest) (*voltha.DeviceImageResponse, error) {
+	if err := dMgr.validateImageDownloadRequest(request); err != nil {
+		return nil, err
+	}
+
+	ctx = utils.WithRPCMetadataContext(ctx, "DownloadImageToDevice")
+	log.EnrichSpan(ctx, log.Fields{"device-id": request.DeviceId[0].Id})
+
+	agent := dMgr.getDeviceAgent(ctx, request.DeviceId[0].Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", request.DeviceId[0].Id)
+	}
+
+	resp, err := agent.downloadImageToDevice(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugw(ctx, "download-image-to-device-result", log.Fields{"image-state": resp.DeviceImageStates[0].ImageState})
+	return resp, nil
+}
+
+func (dMgr *Manager) GetImageStatus(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	if err := dMgr.validateImageRequest(request); err != nil {
+		return nil, err
+	}
+
+	ctx = utils.WithRPCMetadataContext(ctx, "GetImageStatus")
+	log.EnrichSpan(ctx, log.Fields{"device-id": request.DeviceId[0].Id})
+	agent := dMgr.getDeviceAgent(ctx, request.DeviceId[0].Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", request.DeviceId[0].Id)
+	}
+
+	resp, err := agent.getImageStatus(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugw(ctx, "get-image-status-result", log.Fields{"image-state": resp.DeviceImageStates[0].ImageState})
+	return resp, nil
+}
+
+func (dMgr *Manager) AbortImageUpgradeToDevice(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	if err := dMgr.validateImageRequest(request); err != nil {
+		return nil, err
+	}
+
+	ctx = utils.WithRPCMetadataContext(ctx, "GetOnuImageStatus")
+	log.EnrichSpan(ctx, log.Fields{"device-id": request.DeviceId[0].Id})
+
+	agent := dMgr.getDeviceAgent(ctx, request.DeviceId[0].Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", request.DeviceId[0].Id)
+	}
+
+	resp, err := agent.abortImageUpgradeToDevice(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugw(ctx, "abort-image-upgrade-to-device-result", log.Fields{"image-state": resp.DeviceImageStates[0].ImageState})
+	return resp, nil
+}
+
+func (dMgr *Manager) GetOnuImages(ctx context.Context, id *common.ID) (*voltha.OnuImages, error) {
+	if id == nil || id.Id == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "empty device id")
+	}
+
+	ctx = utils.WithRPCMetadataContext(ctx, "GetOnuImageStatus")
+	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+	}
+
+	resp, err := agent.getOnuImages(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugw(ctx, "get-onu-images-result", log.Fields{"pnu-image": resp.Items})
+
+	return resp, nil
+}
+
+func (dMgr *Manager) ActivateImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	if err := dMgr.validateImageRequest(request); err != nil {
+		return nil, err
+	}
+
+	ctx = utils.WithRPCMetadataContext(ctx, "GetOnuImageStatus")
+	log.EnrichSpan(ctx, log.Fields{"device-id": request.DeviceId[0].Id})
+	agent := dMgr.getDeviceAgent(ctx, request.DeviceId[0].Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", request.DeviceId[0].Id)
+	}
+
+	resp, err := agent.activateImageOnDevice(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugw(ctx, "activate-image-result", log.Fields{"image-state": resp.DeviceImageStates[0].ImageState})
+	return resp, nil
+}
+
+func (dMgr *Manager) CommitImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	if err := dMgr.validateImageRequest(request); err != nil {
+		return nil, err
+	}
+
+	ctx = utils.WithRPCMetadataContext(ctx, "GetOnuImageStatus")
+	log.EnrichSpan(ctx, log.Fields{"device-id": request.DeviceId[0].Id})
+	agent := dMgr.getDeviceAgent(ctx, request.DeviceId[0].Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", request.DeviceId[0].Id)
+	}
+
+	resp, err := agent.commitImage(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugw(ctx, "commit-image-result", log.Fields{"image-state": resp.DeviceImageStates[0].ImageState})
+	return resp, nil
+}
+
+func (dMgr *Manager) validateImageDownloadRequest(request *voltha.DeviceImageDownloadRequest) error {
+	if request == nil || request.Image == nil || len(request.DeviceId) == 0 || request.DeviceId[0] == nil {
+		return status.Errorf(codes.InvalidArgument, "invalid argument")
+	}
+
+	// Supporting request for single device at a time.
+	// TODO Have support for multiple devices
+	if len(request.DeviceId) > 1 {
+		return status.Errorf(codes.FailedPrecondition, "operation not supported for multiple devices")
+	}
+
+	return nil
+}
+
+func (dMgr *Manager) validateImageRequest(request *voltha.DeviceImageRequest) error {
+	if request == nil || len(request.DeviceId) == 0 || request.DeviceId[0] == nil {
+		return status.Errorf(codes.InvalidArgument, "invalid argument")
+	}
+
+	//supporting request for single device at a time.
+	// TODO Have support for multiple devices
+	if len(request.DeviceId) > 1 {
+		return status.Errorf(codes.FailedPrecondition, "operation not supported for multiple devices")
+	}
+
+	return nil
+}
