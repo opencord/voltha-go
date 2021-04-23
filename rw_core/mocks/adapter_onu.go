@@ -199,3 +199,35 @@ func (onuA *ONUAdapter) Get_ext_value(ctx context.Context, deviceId string, devi
 	_ = valueflag
 	return nil, errors.New("get-ext-value-not-implemented")
 }
+
+func (onuA *ONUAdapter) Download_onu_image(ctx context.Context, request *voltha.DeviceImageDownloadRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	fmt.Printf("Info Info Info Download_onu_image called")
+	logger.Infof(ctx, "Download_onu_image")
+	_ = request
+	return nil, errors.New("download-onu-image-not-implemented")
+}
+
+func (onuA *ONUAdapter) Get_onu_image_status(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	_ = in
+	return nil, errors.New("get-onu-image-not-implemented")
+}
+
+func (onuA *ONUAdapter) Abort_onu_image_upgrade(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	_ = in
+	return nil, errors.New("abort-onu-image-upgrade-not-implemented")
+}
+
+func (onuA *ONUAdapter) Get_onu_images(ctx context.Context, deviceID string) (*voltha.OnuImages, error) { //nolint
+	_ = deviceID
+	return nil, errors.New("get-onu-images-not-implemented")
+}
+
+func (onuA *ONUAdapter) Activate_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	_ = in
+	return nil, errors.New("activate-onu-image-not-implemented")
+}
+
+func (onuA *ONUAdapter) Commit_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	_ = in
+	return nil, errors.New("commit-onu-image-not-implemented")
+}
