@@ -300,3 +300,33 @@ func (ta *Adapter) SetFlowAction(failFlowAdd, failFlowDelete bool) {
 func (ta *Adapter) SetDeleteAction(failDeleteDevice bool) {
 	ta.failDeleteDevice = failDeleteDevice
 }
+
+// Download_onu_image -
+func (ta *Adapter) Download_onu_image(ctx context.Context, request *voltha.DeviceImageDownloadRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	return nil, nil
+}
+
+// Get_onu_image_status -
+func (ta *Adapter) Get_onu_image_status(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	return nil, nil
+}
+
+// Abort_onu_image_upgrade -
+func (ta *Adapter) Abort_onu_image_upgrade(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	return nil, nil
+}
+
+// Get_onu_images -
+func (ta *Adapter) Get_onu_images(ctx context.Context, deviceID string) (*voltha.OnuImages, error) { //nolint
+	return nil, nil
+}
+
+// Activate_onu_image -
+func (ta *Adapter) Activate_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	return nil, nil
+}
+
+// Commit_onu_image -
+func (ta *Adapter) Commit_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
+	return nil, nil
+}
