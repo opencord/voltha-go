@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "94a7cf9e_8f4c2e70",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1796,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-26T12:07:09Z",
+      "side": 1,
+      "message": "i do not like lurking technical debt, i\u0027d prefer this to be done in 2.8. i\u0027m ok with not doing in this patch but needs to be included in 2.8. possibly after testing with 1 request/device",
+      "parentUuid": "36d04348_340386e6",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ab5b95c6_a5fb9437",
         "filename": "rw_core/core/device/remote/adapter_proxy.go",
         "patchSetId": 5
@@ -100,6 +118,24 @@
       "side": 1,
       "message": "Not sure if there\u0027s an easy way to find all the topics that are serving the ONU adapters, maybe we should ask @Khen for ways to figure this out. But what would be the motivation behind sending the requests to all the adapters?",
       "parentUuid": "ab5b95c6_a5fb9437",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0a097ef_3fe9ca4a",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-26T12:07:09Z",
+      "side": 1,
+      "message": "the idea is that there will be actually N requests, one for each device (device.ID) connected to that adapter and each of these request will contain all the information regarding all the requesta arrived together at VOLTHA. i\u0027m wondering if there is a more efficient way.",
+      "parentUuid": "2d6cf471_f6f03038",
       "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
