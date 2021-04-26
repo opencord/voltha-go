@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a93b3ed2_e040da8d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1647,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-26T10:23:34Z",
+      "side": 1,
+      "message": "this only runs the request for the first device (DeviceId[0]), the list need to be iterated and for all devices the request to the agent/adapters needs to be made. Valid for all methods in this class.",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c94639d4_8681318e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1782,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-26T10:23:34Z",
+      "side": 1,
+      "message": "same",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9550f21d_f542115a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1796,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-26T10:23:34Z",
+      "side": 1,
+      "message": "i\u0027d like this to be done right now, should be fairly easy",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab5b95c6_a5fb9437",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-26T10:23:34Z",
+      "side": 1,
+      "message": "this sends all the requests to each adapter per each device. I\u0027m wondering if we just have a way to send all the requests to all the adapters and then the adapters will parse and operate on the devices they manage",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
