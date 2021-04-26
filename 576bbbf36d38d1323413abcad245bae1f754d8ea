@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "36d04348_340386e6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1796,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-04-26T11:58:52Z",
+      "side": 1,
+      "message": "We did look into this... and thought that it would be simpler in the first version to go with a single device per RPC. As there is a single device agent in the rw-core per device and the requests need to be sent to the adapter through the agent, in any case we will need to make x number of calls to the adapters (one per ONU in the incoming request) and then the rw-core will have to wait on all these responses from the different ONU adapter instances and then return back from the RPC call. If the preference is to have this right now, we will implement it.",
+      "parentUuid": "9550f21d_f542115a",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ab5b95c6_a5fb9437",
         "filename": "rw_core/core/device/remote/adapter_proxy.go",
         "patchSetId": 5
@@ -64,6 +82,24 @@
       "writtenOn": "2021-04-26T10:23:34Z",
       "side": 1,
       "message": "this sends all the requests to each adapter per each device. I\u0027m wondering if we just have a way to send all the requests to all the adapters and then the adapters will parse and operate on the devices they manage",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d6cf471_f6f03038",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-04-26T11:58:52Z",
+      "side": 1,
+      "message": "Not sure if there\u0027s an easy way to find all the topics that are serving the ONU adapters, maybe we should ask @Khen for ways to figure this out. But what would be the motivation behind sending the requests to all the adapters?",
+      "parentUuid": "ab5b95c6_a5fb9437",
       "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
