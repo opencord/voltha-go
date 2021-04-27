@@ -30,18 +30,16 @@ import (
 // AdapterProxy represents adapter proxy attributes
 type AdapterProxy struct {
 	kafka.EndpointManager
-	deviceTopicRegistered bool
-	coreTopic             string
-	kafkaICProxy          kafka.InterContainerProxy
+	coreTopic    string
+	kafkaICProxy kafka.InterContainerProxy
 }
 
 // NewAdapterProxy will return adapter proxy instance
 func NewAdapterProxy(kafkaProxy kafka.InterContainerProxy, coreTopic string, endpointManager kafka.EndpointManager) *AdapterProxy {
 	return &AdapterProxy{
-		EndpointManager:       endpointManager,
-		kafkaICProxy:          kafkaProxy,
-		coreTopic:             coreTopic,
-		deviceTopicRegistered: false,
+		EndpointManager: endpointManager,
+		kafkaICProxy:    kafkaProxy,
+		coreTopic:       coreTopic,
 	}
 }
 
@@ -87,7 +85,6 @@ func (ap *AdapterProxy) AdoptDevice(ctx context.Context, device *voltha.Device) 
 		{Key: "device", Value: device},
 	}
 	replyToTopic := ap.getCoreTopic()
-	ap.deviceTopicRegistered = true
 	logger.Debugw(ctx, "adoptDevice-send-request", log.Fields{"device-id": device.Id, "deviceType": device.Type, "serialNumber": device.SerialNumber})
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
 }
@@ -362,7 +359,6 @@ func (ap *AdapterProxy) SimulateAlarm(ctx context.Context, device *voltha.Device
 		{Key: "request", Value: simulateReq},
 	}
 	replyToTopic := ap.getCoreTopic()
-	ap.deviceTopicRegistered = true
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)
 }
 

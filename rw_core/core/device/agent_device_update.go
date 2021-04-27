@@ -39,9 +39,8 @@ func (agent *Agent) logDeviceUpdate(ctx context.Context, operation string, prevS
 }
 
 func (agent *Agent) stateChangeString(prevState *common.AdminState_Types, currState *common.AdminState_Types) string {
-	device := agent.getDeviceReadOnlyWithoutLock()
 	if prevState != nil && currState != nil && *prevState != *currState {
-		return fmt.Sprintf("%s->%s", *prevState, device.AdminState)
+		return fmt.Sprintf("%s->%s", *prevState, *currState)
 	}
 	return ""
 }
