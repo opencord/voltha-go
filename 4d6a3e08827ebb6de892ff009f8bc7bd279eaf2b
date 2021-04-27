@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcea66ee_3a384d2a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-27T18:30:24Z",
+      "side": 1,
+      "message": "This and the line below are expensive, especially if there are lots of deviceIds.  A better approach would be create a local request structure and copy only the data you need (a shallow copy).",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d161006_e5ff9080",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1665,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-27T18:30:24Z",
+      "side": 1,
+      "message": "Should this be Errorw instead of Errorf?",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eaad14c3_8f58cf15",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1684,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-27T18:30:24Z",
+      "side": 1,
+      "message": "A cloned is made but still the original request is passed to this routine.",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8e2c6aa_2916c028",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-27T18:30:24Z",
+      "side": 1,
+      "message": "Will the NB system be waiting that long for a response?  Presumably an image download can take a long time.",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
