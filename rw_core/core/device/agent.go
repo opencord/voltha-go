@@ -328,7 +328,13 @@ func (agent *Agent) waitForAdapterResponseAndLogDeviceUpdate(ctx context.Context
 	defer cancel()
 	var desc string
 	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
-	defer agent.logDeviceUpdate(ctx, rpc, prevState, &agent.device.AdminState, operStatus, &desc)
+	defer func() {
+		currAdminState := prevState
+		if d, _ := agent.getDeviceReadOnly(ctx); d != nil {
+			currAdminState = &d.AdminState
+		}
+		agent.logDeviceUpdate(ctx, rpc, prevState, currAdminState, operStatus, &desc)
+	}()
 	var rpce *voltha.RPCEvent
 	defer func() {
 		if rpce != nil {
@@ -383,7 +389,6 @@ func (agent *Agent) cloneDeviceWithoutLock() *voltha.Device {
 // enableDevice activates a preprovisioned or a disable device
 func (agent *Agent) enableDevice(ctx context.Context) error {
 	//To preserve and use oldDevice state as prev state in new device
-	prevDeviceState := agent.device.AdminState
 	var desc string
 	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 
@@ -393,6 +398,8 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 		return err
 	}
 	logger.Debugw(ctx, "enable-device", log.Fields{"device-id": agent.deviceID})
+
+	prevDeviceState := agent.device.AdminState
 
 	oldDevice := agent.getDeviceReadOnlyWithoutLock()
 
