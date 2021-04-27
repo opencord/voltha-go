@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "4fcea0e9_c4337e20",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1647,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-27T09:04:40Z",
+      "side": 1,
+      "message": "ok, i was not aware that even with a `repeated` keyword in front of the name of the object you need to give it a plural name. My bad. Can we change the name of the function for now and we will change the protos when the functionality is more implemented and we are sure no other changes are needed ?",
+      "parentUuid": "bf2d4247_099e5bbf",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c94639d4_8681318e",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 5
@@ -171,6 +189,24 @@
       "side": 1,
       "message": "If the same image is being sent for all devices then the NB requests should include a list of device IDs and while the device manager will update each device agent separately it will push \"batches\" of device IDs per adapter.   It\u0027s feasible.  However, is there a performance issue we are seeing? Note that flows are sent per device as well.",
       "parentUuid": "b0a097ef_3fe9ca4a",
+      "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e654b6a_a7c2ce43",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-27T09:04:40Z",
+      "side": 1,
+      "message": "what do you mean as performance issue ?",
+      "parentUuid": "3e66692f_5839fc09",
       "revId": "576bbbf36d38d1323413abcad245bae1f754d8ea",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
