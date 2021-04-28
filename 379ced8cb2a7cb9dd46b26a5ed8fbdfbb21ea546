@@ -104,6 +104,24 @@
     },
     {
       "key": {
+        "uuid": "fcd10514_54b6b0e9",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1679,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-04-28T23:05:35Z",
+      "side": 1,
+      "message": "should we reject a delete if we are in reconcile state? but accept and exit this loop as you state for a forced delete? can we tell the difference here?",
+      "parentUuid": "56bf4ac7_d169a4ba",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "20efd28d_5138c2d8",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 20
@@ -115,6 +133,24 @@
       "writtenOn": "2021-04-28T17:58:33Z",
       "side": 1,
       "message": "One of the premise of reconciling is that the adapter will update the operational state after the reconcile is completed.   Should we therefore update the transient state only after the adapter has changed the operational state to something other than reconciling?  Or, should the Core care? There is a way to do that with the state transitions but not sure if we want to add this extra complexity.",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13a84e47_796392b7",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1711,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-04-28T23:05:35Z",
+      "side": 1,
+      "message": "more to the point could this overwrite a transient state set by the adapter?",
+      "parentUuid": "20efd28d_5138c2d8",
       "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
