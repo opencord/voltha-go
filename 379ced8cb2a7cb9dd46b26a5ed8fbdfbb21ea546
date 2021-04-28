@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fea14fb1_0de20734",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "We typically return (nil, errUnimplemented) to the client.  While I see the \"panic\" usefulness, I am not in favour of a client request killing a server.",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9933f748_4cfab2ba",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "Should this check applies for isDeleteInProgress?",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "307bb9fd_0664e7e8",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "seems like a defer cancel() is more appropriate in this function",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3c22e57_f7ef44dd",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "nil check for agent in line above?",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f19b14bc_22aa33f9",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1655,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "agent nil check?",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56bf4ac7_d169a4ba",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1679,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "If we are allowing a device deletion during a reconcile process then 1) the agent may be gone during one loop and 2) we may be overwriting the transient state hence confusing the state machine.   We will need to stop this loop on a device delete - I suppose a delete would take precedence on a reconcile.",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20efd28d_5138c2d8",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1711,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "One of the premise of reconciling is that the adapter will update the operational state after the reconcile is completed.   Should we therefore update the transient state only after the adapter has changed the operational state to something other than reconciling?  Or, should the Core care? There is a way to do that with the state transitions but not sure if we want to add this extra complexity.",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a34c86e_fcdb05de",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "Seems like the idea here is to do a no-op whenever the operational state changes to RECONCILING, irrespective of the other states.  Setting the Admin state to UNKNOWN in the transition will act as a wild-card for all Admin states.",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c36bba3_e0c3065d",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-28T17:58:33Z",
+      "side": 1,
+      "message": "Can we have an operational state set to reconciling, if the transient state if not reconciling?",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
