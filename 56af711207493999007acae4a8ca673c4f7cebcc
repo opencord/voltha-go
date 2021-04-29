@@ -34,6 +34,24 @@
       "revId": "56af711207493999007acae4a8ca673c4f7cebcc",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "475303ae_ade4d631",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-29T13:57:36Z",
+      "side": 1,
+      "message": "Made a generic utility to get backoff Instance, as I am using this in reconciling too and it could later on be used from multiple operations.",
+      "parentUuid": "edb39fb5_444fb4d1",
+      "revId": "56af711207493999007acae4a8ca673c4f7cebcc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
