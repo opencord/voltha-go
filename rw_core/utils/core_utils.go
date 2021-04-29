@@ -18,12 +18,29 @@ package utils
 
 import (
 	"context"
+	"os"
+	"time"
+
+	"github.com/cenkalti/backoff/v3"
+	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"os"
-	"time"
 )
+
+var exponentialBackoff *backoff.ExponentialBackOff
+
+func ConfigureUtils(cf *config.RWCoreFlags) {
+	exponentialBackoff = &backoff.ExponentialBackOff{
+		InitialInterval:     backoff.DefaultInitialInterval,
+		RandomizationFactor: backoff.DefaultRandomizationFactor,
+		Multiplier:          backoff.DefaultMultiplier,
+		MaxInterval:         cf.RetryBackoffMaxInterval,
+		MaxElapsedTime:      cf.RetryBackoffMaxElapsedTime,
+		Clock:               backoff.SystemClock,
+	}
+	exponentialBackoff.Reset()
+}
 
 type contextKey string
 
@@ -194,4 +211,8 @@ func GetFromTopicMetadataFromContext(ctx context.Context) string {
 		}
 	}
 	return ""
+}
+
+func NewExponentialBackoff() backoff.ExponentialBackOff {
+	return *exponentialBackoff
 }

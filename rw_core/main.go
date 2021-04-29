@@ -77,6 +77,8 @@ func main() {
 	cf := config.NewRWCoreFlags()
 	cf.ParseCommandArguments()
 
+	utils.ConfigureUtils(cf)
+
 	// Set the instance ID as the hostname
 	var instanceID string
 	hostName := utils.GetHostName()
