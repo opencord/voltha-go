@@ -18,11 +18,12 @@ package utils
 
 import (
 	"context"
+	"os"
+	"time"
+
 	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"os"
-	"time"
 )
 
 type contextKey string

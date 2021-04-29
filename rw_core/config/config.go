@@ -24,104 +24,113 @@ import (
 
 // RW Core service default constants
 const (
-	EtcdStoreName                    = "etcd"
-	defaultGrpcAddress               = ":50057"
-	defaultKafkaAdapterAddress       = "127.0.0.1:9092"
-	defaultKafkaClusterAddress       = "127.0.0.1:9094"
-	defaultKVStoreType               = EtcdStoreName
-	defaultKVStoreTimeout            = 5 * time.Second
-	defaultKVStoreAddress            = "127.0.0.1:2379" // Etcd = 2379
-	defaultKVTxnKeyDelTime           = 60
-	defaultLogLevel                  = "WARN"
-	defaultBanner                    = false
-	defaultDisplayVersionOnly        = false
-	defaultCoreTopic                 = "rwcore"
-	defaultEventTopic                = "voltha.events"
-	defaultRWCoreEndpoint            = "rwcore"
-	defaultRWCoreKey                 = "pki/voltha.key"
-	defaultRWCoreCert                = "pki/voltha.crt"
-	defaultRWCoreCA                  = "pki/voltha-CA.pem"
-	defaultLongRunningRequestTimeout = 2000 * time.Millisecond
-	defaultDefaultRequestTimeout     = 1000 * time.Millisecond
-	defaultCoreTimeout               = 1000 * time.Millisecond
-	defaultCoreBindingKey            = "voltha_backend_name"
-	defaultMaxConnectionRetries      = -1 // retries forever
-	defaultConnectionRetryInterval   = 2 * time.Second
-	defaultLiveProbeInterval         = 60 * time.Second
-	defaultNotLiveProbeInterval      = 5 * time.Second // Probe more frequently when not alive
-	defaultProbeAddress              = ":8080"
-	defaultTraceEnabled              = false
-	defaultTraceAgentAddress         = "127.0.0.1:6831"
-	defaultLogCorrelationEnabled     = true
-	defaultVolthaStackID             = "voltha"
+	EtcdStoreName                     = "etcd"
+	defaultGrpcAddress                = ":50057"
+	defaultKafkaAdapterAddress        = "127.0.0.1:9092"
+	defaultKafkaClusterAddress        = "127.0.0.1:9094"
+	defaultKVStoreType                = EtcdStoreName
+	defaultKVStoreTimeout             = 5 * time.Second
+	defaultKVStoreAddress             = "127.0.0.1:2379" // Etcd = 2379
+	defaultKVTxnKeyDelTime            = 60
+	defaultLogLevel                   = "WARN"
+	defaultBanner                     = false
+	defaultDisplayVersionOnly         = false
+	defaultCoreTopic                  = "rwcore"
+	defaultEventTopic                 = "voltha.events"
+	defaultRWCoreEndpoint             = "rwcore"
+	defaultRWCoreKey                  = "pki/voltha.key"
+	defaultRWCoreCert                 = "pki/voltha.crt"
+	defaultRWCoreCA                   = "pki/voltha-CA.pem"
+	defaultLongRunningRequestTimeout  = 2000 * time.Millisecond
+	defaultDefaultRequestTimeout      = 1000 * time.Millisecond
+	defaultCoreTimeout                = 1000 * time.Millisecond
+	defaultCoreBindingKey             = "voltha_backend_name"
+	defaultMaxConnectionRetries       = -1 // retries forever
+	defaultConnectionRetryInterval    = 2 * time.Second
+	defaultLiveProbeInterval          = 60 * time.Second
+	defaultNotLiveProbeInterval       = 5 * time.Second // Probe more frequently when not alive
+	defaultProbeAddress               = ":8080"
+	defaultTraceEnabled               = false
+	defaultTraceAgentAddress          = "127.0.0.1:6831"
+	defaultLogCorrelationEnabled      = true
+	defaultVolthaStackID              = "voltha"
+	defaultRetryBackoffInitialInterval= 500 * time.Millisecond
+	defaultRetryBackoffMaxElapsedTime = 0
+	defaultRetryBackoffMaxInterval    = 1 * time.Minute
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
 type RWCoreFlags struct {
 	// Command line parameters
-	RWCoreEndpoint            string
-	GrpcAddress               string
-	KafkaAdapterAddress       string
-	KafkaClusterAddress       string
-	KVStoreType               string
-	KVStoreTimeout            time.Duration
-	KVStoreAddress            string
-	KVTxnKeyDelTime           int
-	CoreTopic                 string
-	EventTopic                string
-	LogLevel                  string
-	Banner                    bool
-	DisplayVersionOnly        bool
-	RWCoreKey                 string
-	RWCoreCert                string
-	RWCoreCA                  string
-	LongRunningRequestTimeout time.Duration
-	DefaultRequestTimeout     time.Duration
-	DefaultCoreTimeout        time.Duration
-	CoreBindingKey            string
-	MaxConnectionRetries      int
-	ConnectionRetryInterval   time.Duration
-	LiveProbeInterval         time.Duration
-	NotLiveProbeInterval      time.Duration
-	ProbeAddress              string
-	TraceEnabled              bool
-	TraceAgentAddress         string
-	LogCorrelationEnabled     bool
-	VolthaStackID             string
+	RWCoreEndpoint             string
+	GrpcAddress                string
+	KafkaAdapterAddress        string
+	KafkaClusterAddress        string
+	KVStoreType                string
+	KVStoreTimeout             time.Duration
+	KVStoreAddress             string
+	KVTxnKeyDelTime            int
+	CoreTopic                  string
+	EventTopic                 string
+	LogLevel                   string
+	Banner                     bool
+	DisplayVersionOnly         bool
+	RWCoreKey                  string
+	RWCoreCert                 string
+	RWCoreCA                   string
+	LongRunningRequestTimeout  time.Duration
+	DefaultRequestTimeout      time.Duration
+	DefaultCoreTimeout         time.Duration
+	CoreBindingKey             string
+	MaxConnectionRetries       int
+	ConnectionRetryInterval    time.Duration
+	LiveProbeInterval          time.Duration
+	NotLiveProbeInterval       time.Duration
+	ProbeAddress               string
+	TraceEnabled               bool
+	TraceAgentAddress          string
+	LogCorrelationEnabled      bool
+	VolthaStackID              string
+	RetryBackoffInitialInterval time.Duration
+	RetryBackoffMaxElapsedTime time.Duration
+	RetryBackoffMaxInterval    time.Duration
 }
 
 // NewRWCoreFlags returns a new RWCore config
 func NewRWCoreFlags() *RWCoreFlags {
 	var rwCoreFlag = RWCoreFlags{ // Default values
-		RWCoreEndpoint:            defaultRWCoreEndpoint,
-		GrpcAddress:               defaultGrpcAddress,
-		KafkaAdapterAddress:       defaultKafkaAdapterAddress,
-		KafkaClusterAddress:       defaultKafkaClusterAddress,
-		KVStoreType:               defaultKVStoreType,
-		KVStoreTimeout:            defaultKVStoreTimeout,
-		KVStoreAddress:            defaultKVStoreAddress,
-		KVTxnKeyDelTime:           defaultKVTxnKeyDelTime,
-		CoreTopic:                 defaultCoreTopic,
-		EventTopic:                defaultEventTopic,
-		LogLevel:                  defaultLogLevel,
-		Banner:                    defaultBanner,
-		DisplayVersionOnly:        defaultDisplayVersionOnly,
-		RWCoreKey:                 defaultRWCoreKey,
-		RWCoreCert:                defaultRWCoreCert,
-		RWCoreCA:                  defaultRWCoreCA,
-		DefaultRequestTimeout:     defaultDefaultRequestTimeout,
-		LongRunningRequestTimeout: defaultLongRunningRequestTimeout,
-		DefaultCoreTimeout:        defaultCoreTimeout,
-		CoreBindingKey:            defaultCoreBindingKey,
-		MaxConnectionRetries:      defaultMaxConnectionRetries,
-		ConnectionRetryInterval:   defaultConnectionRetryInterval,
-		LiveProbeInterval:         defaultLiveProbeInterval,
-		NotLiveProbeInterval:      defaultNotLiveProbeInterval,
-		ProbeAddress:              defaultProbeAddress,
-		TraceEnabled:              defaultTraceEnabled,
-		TraceAgentAddress:         defaultTraceAgentAddress,
-		LogCorrelationEnabled:     defaultLogCorrelationEnabled,
-		VolthaStackID:             defaultVolthaStackID,
+		RWCoreEndpoint:             defaultRWCoreEndpoint,
+		GrpcAddress:                defaultGrpcAddress,
+		KafkaAdapterAddress:        defaultKafkaAdapterAddress,
+		KafkaClusterAddress:        defaultKafkaClusterAddress,
+		KVStoreType:                defaultKVStoreType,
+		KVStoreTimeout:             defaultKVStoreTimeout,
+		KVStoreAddress:             defaultKVStoreAddress,
+		KVTxnKeyDelTime:            defaultKVTxnKeyDelTime,
+		CoreTopic:                  defaultCoreTopic,
+		EventTopic:                 defaultEventTopic,
+		LogLevel:                   defaultLogLevel,
+		Banner:                     defaultBanner,
+		DisplayVersionOnly:         defaultDisplayVersionOnly,
+		RWCoreKey:                  defaultRWCoreKey,
+		RWCoreCert:                 defaultRWCoreCert,
+		RWCoreCA:                   defaultRWCoreCA,
+		DefaultRequestTimeout:      defaultDefaultRequestTimeout,
+		LongRunningRequestTimeout:  defaultLongRunningRequestTimeout,
+		DefaultCoreTimeout:         defaultCoreTimeout,
+		CoreBindingKey:             defaultCoreBindingKey,
+		MaxConnectionRetries:       defaultMaxConnectionRetries,
+		ConnectionRetryInterval:    defaultConnectionRetryInterval,
+		LiveProbeInterval:          defaultLiveProbeInterval,
+		NotLiveProbeInterval:       defaultNotLiveProbeInterval,
+		ProbeAddress:               defaultProbeAddress,
+		TraceEnabled:               defaultTraceEnabled,
+		TraceAgentAddress:          defaultTraceAgentAddress,
+		LogCorrelationEnabled:      defaultLogCorrelationEnabled,
+		VolthaStackID:              defaultVolthaStackID,
+		RetryBackoffInitialInterval: defaultRetryBackoffInitialInterval,
+		RetryBackoffMaxElapsedTime: defaultRetryBackoffMaxElapsedTime,
+		RetryBackoffMaxInterval:    defaultRetryBackoffMaxInterval,
 	}
 	return &rwCoreFlag
 }
