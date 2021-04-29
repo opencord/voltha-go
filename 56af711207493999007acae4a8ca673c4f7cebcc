@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3100dc77_f0f9de8e",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-29T12:52:13Z",
+      "side": 1,
+      "message": "can we make this configurable via startup property please ?",
+      "revId": "56af711207493999007acae4a8ca673c4f7cebcc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
