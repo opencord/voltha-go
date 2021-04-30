@@ -16,6 +16,24 @@
       "revId": "378a5d2f5fc42a1a94005f9c0b4479f87eec7bbe",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78903ffa_32a02e58",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-04-30T13:32:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1f5f14b5_b7040cdb",
+      "revId": "378a5d2f5fc42a1a94005f9c0b4479f87eec7bbe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
