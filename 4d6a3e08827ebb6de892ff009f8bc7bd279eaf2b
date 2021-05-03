@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6daf7244_d21db063",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-03T20:32:42Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bcea66ee_3a384d2a",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d161006_e5ff9080",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70239c36_2d085e8b",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1665,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-03T20:32:42Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3d161006_e5ff9080",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +101,24 @@
       "side": 1,
       "message": "agreed, please fix",
       "parentUuid": "eaad14c3_8f58cf15",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3627dfbe_d4eac167",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1684,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-03T20:32:42Z",
+      "side": 1,
+      "message": "Thanks. Will fix.",
+      "parentUuid": "41007058_e219fa4f",
       "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -118,6 +172,24 @@
       "side": 1,
       "message": "In this implementation, the NB will need wait for a response (or alternatively issue this command in a different thread and run the main in a different thread).   Since there is a call to list images/status then my suggestion would be to return right after the request has been sent to kafka and then let the internal threads wait for the responses and update the images.  The is the common pattern in the Core for requests that can take a long time unless the response is needed by the NB (e.g. get ext data).",
       "parentUuid": "3cb0dc61_b97f83ee",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4cfb0b2_fea76b35",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-03T20:32:42Z",
+      "side": 1,
+      "message": "Thanks for this thoughtful comment. \nThe idea here was to wait at least for the first response (which indicates request is accepted) with image-download-state as (say) \u0027DOWNLOAD_REQUESTED\u0027. \n\nIt is assumed that the adapters will return a response immediately after accepting the download request. Hence, we only wait till adapter returns a response stating the request is accepted (and NOT waiting for the complete image download, which may take significant amount of time)",
+      "parentUuid": "64517d58_d94ebdc8",
       "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true

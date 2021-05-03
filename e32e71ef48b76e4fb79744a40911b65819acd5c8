@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "a093c6c1_70d47024",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-03T20:32:42Z",
+      "side": 1,
+      "message": "Thanks. Will update accordingly",
+      "parentUuid": "3b7e91f0_17d3a9d8",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81d0dca2_f2d2821b",
         "filename": "rw_core/core/device/manager_test.go",
         "patchSetId": 7
@@ -98,6 +116,24 @@
       "writtenOn": "2021-05-03T13:56:04Z",
       "side": 1,
       "message": "It\u0027s interesting to use MockGen to create the kafka mocks.   To test failure scenarios (e.g. mimicking a failure from an adapter) would you have to change the generated mock or that\u0027s beyond the intent of the mock?\n\nThere is also a kafka mock in voltha-lib-go (not generated from MockGen).  Can that be used for your scenarios or there are limitations that MockGen takes care of?",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "444fdaab_e7549f81",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-03T20:32:42Z",
+      "side": 1,
+      "message": "Hi Khen, \nTo test failure scenarios (e.g. mimicking a failure from an adapter), we DON\u0027T need to change the generated mock. \nWe need to have an \u0027EXPECT()\u0027 call to set the desired value. \n\nParticularly in this case, we may send erroneous response to channel to mimic failure from the adapter. \nExample: \nchnl \u003c- \u0026kafka.RpcResponse{\n\t  MType: kafka.RpcResponse,\n\t  Err:   \u003cSOME-ERROR\u003e,\n\t  Reply: \u003cERRONEOUS RESPONSE\u003e,\n       }\n\nkafka mock (MockKafkaICProxy?) in the voltha-lib-go I think is not evolved enough at present to test all the possible scenarios. \nExample: \u0027InvokeAsyncRPC\u0027 of the MockKafkaICProxy returns a channel, but there is no easy way to write response to this channel from the Unit-Test. \n\nMoreover, if the mocks are present in the same repo (voltha-go), it would be easier to change if the need arises.",
+      "parentUuid": "2a4be87c_39b08b26",
       "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
