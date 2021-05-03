@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "c6aa956f_62c84c65",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-03T13:56:04Z",
+      "side": 1,
+      "message": "Lock needs to be released. agent.requestQueue.RequestComplete()",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08c63435_f6938cf7",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-03T13:56:04Z",
+      "side": 1,
+      "message": "Cancel is already in defer call above.  Same comments below.",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "99680906_1c48f4f9",
         "filename": "rw_core/core/device/manager_test.go",
         "patchSetId": 7
@@ -47,6 +81,40 @@
       "writtenOn": "2021-05-03T07:30:51Z",
       "side": 1,
       "message": "please extract these as a constant",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a4be87c_39b08b26",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-03T13:56:04Z",
+      "side": 1,
+      "message": "It\u0027s interesting to use MockGen to create the kafka mocks.   To test failure scenarios (e.g. mimicking a failure from an adapter) would you have to change the generated mock or that\u0027s beyond the intent of the mock?\n\nThere is also a kafka mock in voltha-lib-go (not generated from MockGen).  Can that be used for your scenarios or there are limitations that MockGen takes care of?",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "446ae5b9_1842ae73",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-03T13:56:04Z",
+      "side": 1,
+      "message": "The debug messages do not reflect the function names.  Also, for messages we typically use lower case, dash separated message, e.g. activate-onu-image.  It\u0027s not done everywhere yet but at least for new code it\u0027s better to follow these formats.",
       "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true

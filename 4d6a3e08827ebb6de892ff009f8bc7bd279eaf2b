@@ -103,6 +103,24 @@
       "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64517d58_d94ebdc8",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-03T13:56:04Z",
+      "side": 1,
+      "message": "In this implementation, the NB will need wait for a response (or alternatively issue this command in a different thread and run the main in a different thread).   Since there is a call to list images/status then my suggestion would be to return right after the request has been sent to kafka and then let the internal threads wait for the responses and update the images.  The is the common pattern in the Core for requests that can take a long time unless the response is needed by the NB (e.g. get ext data).",
+      "parentUuid": "3cb0dc61_b97f83ee",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
