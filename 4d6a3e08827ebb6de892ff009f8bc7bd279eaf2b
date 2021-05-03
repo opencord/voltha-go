@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "41007058_e219fa4f",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1684,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-03T07:30:51Z",
+      "side": 1,
+      "message": "agreed, please fix",
+      "parentUuid": "eaad14c3_8f58cf15",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8e2c6aa_2916c028",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 6
@@ -64,6 +82,24 @@
       "writtenOn": "2021-04-27T18:30:24Z",
       "side": 1,
       "message": "Will the NB system be waiting that long for a response?  Presumably an image download can take a long time.",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cb0dc61_b97f83ee",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-03T07:30:51Z",
+      "side": 1,
+      "message": "we made the call synchronous so if the NB wants to wait it can do so or it can ignore the response and list all the images/status with lower calls.",
+      "parentUuid": "f8e2c6aa_2916c028",
       "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true

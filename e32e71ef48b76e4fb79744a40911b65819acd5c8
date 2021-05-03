@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99680906_1c48f4f9",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-03T07:30:51Z",
+      "side": 1,
+      "message": "please remove the Name here, as discussed we will not use this in the new implementation",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b7e91f0_17d3a9d8",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-03T07:30:51Z",
+      "side": 1,
+      "message": "same for IsActive, IsCommitted, IsValid and the CRC we shoudl be able to run a request without specifying these parameters",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81d0dca2_f2d2821b",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-03T07:30:51Z",
+      "side": 1,
+      "message": "please extract these as a constant",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b10bb0ea_be7f9721",
+        "filename": "rw_core/mocks/adapter_onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-03T07:30:51Z",
+      "side": 1,
+      "message": "please remove",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
