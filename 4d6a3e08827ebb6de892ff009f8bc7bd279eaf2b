@@ -193,6 +193,24 @@
       "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "013be08f_f498e5b0",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T14:53:59Z",
+      "side": 1,
+      "message": "ok.  I think that\u0027s ok (as long as the API usage is documented - iAdapter or somewhere else).",
+      "parentUuid": "b4cfb0b2_fea76b35",
+      "revId": "4d6a3e08827ebb6de892ff009f8bc7bd279eaf2b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }

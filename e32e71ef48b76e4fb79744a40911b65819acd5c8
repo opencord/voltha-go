@@ -158,6 +158,24 @@
     },
     {
       "key": {
+        "uuid": "94475f85_7e95e5e1",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T14:53:59Z",
+      "side": 1,
+      "message": "yes, that approach is good.",
+      "parentUuid": "a73fa7d2_1542f128",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "446ae5b9_1842ae73",
         "filename": "rw_core/core/device/remote/adapter_proxy.go",
         "patchSetId": 7
