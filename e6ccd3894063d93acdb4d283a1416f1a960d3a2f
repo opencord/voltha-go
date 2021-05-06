@@ -107,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "2b692d99_771247b4",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Added device update log",
+      "parentUuid": "02ff50ac_addfc50e",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "78312344_e4479be4",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 18
@@ -139,6 +157,24 @@
       "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "150495fc_ccd4ebde",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1672,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "All error cases are added under retry loop in case of any error control will retry as per exponential backoff.",
+      "parentUuid": "6deaada3_0a4944a1",
+      "revId": "e6ccd3894063d93acdb4d283a1416f1a960d3a2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {

@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f60bcd5e_a6e0af22",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fea14fb1_0de20734",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9933f748_4cfab2ba",
         "filename": "rw_core/core/device/agent_image.go",
         "patchSetId": 20
@@ -33,6 +51,24 @@
       "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67dfa595_1e063ff0",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Deletion in progress is also checked along with reconciling.",
+      "parentUuid": "9933f748_4cfab2ba",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7da0888d_7170976d",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Control would return on next line so I didn\u0027t use defer , would it make difference ?",
+      "parentUuid": "307bb9fd_0664e7e8",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3c22e57_f7ef44dd",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 20
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "5ae890d2_58b2d879",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3c22e57_f7ef44dd",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f19b14bc_22aa33f9",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 20
@@ -84,6 +156,24 @@
       "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da4e97b8_b85d4f0c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1655,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "check added",
+      "parentUuid": "f19b14bc_22aa33f9",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -122,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "ac50c40f_3e9a80d6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1679,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Regular deletion will not proceed if reconciling is in progress and in case of force deletion reconciling will be stopped.",
+      "parentUuid": "fcd10514_54b6b0e9",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20efd28d_5138c2d8",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 20
@@ -157,6 +265,24 @@
     },
     {
       "key": {
+        "uuid": "2314dc70_52f2e6d2",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 1711,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Transient state will be set NONE in callback function which will trigger when operation state will be changes from RECONCILING to anything else",
+      "parentUuid": "13a84e47_796392b7",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a34c86e_fcdb05de",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 20
@@ -168,6 +294,24 @@
       "writtenOn": "2021-04-28T17:58:33Z",
       "side": 1,
       "message": "Seems like the idea here is to do a no-op whenever the operational state changes to RECONCILING, irrespective of the other states.  Setting the Admin state to UNKNOWN in the transition will act as a wild-card for all Admin states.",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "662d5c0c_b60dc1f9",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T05:25:44Z",
+      "side": 1,
+      "message": "Not able to do so as it will clash with preexisting cases.",
+      "parentUuid": "3a34c86e_fcdb05de",
       "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
