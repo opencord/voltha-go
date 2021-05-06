@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18b59ac8_7cd2dfb5",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 1732,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-05-06T18:22:17Z",
+      "side": 1,
+      "message": "not 100% sure, but i think there are cases where we will create a new channel before closing the old. should this channel be created before entering the loop and then closed when the loop is exit and thus reuse a single channel instead of creating a channel on each iteration?",
+      "revId": "1c9f6f14c01933435a5c42db66dbcd264664fb03",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
