@@ -107,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "94105512_28ab8117",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-05-06T18:04:07Z",
+      "side": 1,
+      "message": "A defer can be cleaner because that you are sure that cancel is called regardless of how the function exits (returns). If you, or someone in the future, leaves out a call to cancel() on an exit path this can cause issues. using a defer prevents that.",
+      "parentUuid": "7da0888d_7170976d",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3c22e57_f7ef44dd",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 20
