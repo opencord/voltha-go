@@ -16,6 +16,24 @@
       "revId": "1c9f6f14c01933435a5c42db66dbcd264664fb03",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "684dd973_72538858",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 1732,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T18:26:05Z",
+      "side": 1,
+      "message": "oh yes , my bad . Actually I will add a check that if stopReconciling is nil then only make a new channel . as agent is extracted within the loop only !!",
+      "parentUuid": "18b59ac8_7cd2dfb5",
+      "revId": "1c9f6f14c01933435a5c42db66dbcd264664fb03",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
