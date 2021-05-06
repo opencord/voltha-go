@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45f28a6d_20b77b89",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1778,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-05-06T19:58:27Z",
+      "side": 1,
+      "message": "hate to be a pain here, but there is code in another loop i think that is also doing a nil check on agent.stopReconciling, which means this needs to either be mutex protected or re-organized so the the channel is created before either use (and then no nil check is required) and then closed when no longer required (also ensuring that the other reader aware that it may be closed out from under it).",
+      "range": {
+        "startLine": 1778,
+        "startChar": 0,
+        "endLine": 1778,
+        "endChar": 40
+      },
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
