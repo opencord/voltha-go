@@ -52,6 +52,24 @@
       "revId": "1c9f6f14c01933435a5c42db66dbcd264664fb03",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c153718_ece064e8",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 1732,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-05-06T19:16:42Z",
+      "side": 1,
+      "message": "and make sure (it may already be the case) that when the loop is exit the channel is closed and the channel set to nil. this also means you likely need to verify that the channel reader is aware that the channel they read from may have been closed out from under it.",
+      "parentUuid": "684dd973_72538858",
+      "revId": "1c9f6f14c01933435a5c42db66dbcd264664fb03",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
