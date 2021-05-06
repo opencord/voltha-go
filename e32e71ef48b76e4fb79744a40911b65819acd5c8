@@ -140,6 +140,24 @@
     },
     {
       "key": {
+        "uuid": "a73fa7d2_1542f128",
+        "filename": "rw_core/core/device/manager_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-06T09:13:32Z",
+      "side": 1,
+      "message": "Hi Khen,\nCan you please let me know if you are okay with the UT approach as discussed above? If yes, I can use the same approach for the other newly added functions as well. \n\nRegards",
+      "parentUuid": "444fdaab_e7549f81",
+      "revId": "e32e71ef48b76e4fb79744a40911b65819acd5c8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "446ae5b9_1842ae73",
         "filename": "rw_core/core/device/remote/adapter_proxy.go",
         "patchSetId": 7
