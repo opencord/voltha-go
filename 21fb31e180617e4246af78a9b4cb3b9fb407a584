@@ -2,6 +2,176 @@
   "comments": [
     {
       "key": {
+        "uuid": "7c0f3f44_10a408d4",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "Can to rebase your changes such that these updates do not appear?  They are not part of your changes.",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27405c08_2cff8781",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "Would it be more appropriate to stop the reconciling process (if running), in the agent.stop() function?  This will handle all cases of agent being gone (including a normal successful delete).\n\nAlso, agent.stopReconciling needs protection (mutex) and you could also close the channel instead of pushing a \u00270\u0027(nit)",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7a1e12e_f798c7f2",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "Missing \"agent.requestQueue.RequestComplete()\" here.   Do you mind fixing this?  Thanks.",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f64a47d0_4312bc3b",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "If agent is nil then just return and error out.   This code was there before when we had two cores working in pairs to service the same set of devices. One of the Core may have the device reference and not the other one (e.g. during creation/deletion). This no longer applies.",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8089b0b_9145b9b8",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "On this type of error, better to error out instead of potentially compounding the error.",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d7b1f98_4f4993fe",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 769,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "What\u0027s the impact to the calling function if it receives an error when invoking sendReconcileDeviceRequest() while in the background we are retrying the reconciliation?",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26ffb951_26a3945d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1677,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "Why capitalized the \u0027R\u0027? Is it invoked outside the package?",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b059ab4a_a9bbff7c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "This is a potential of endless loop.  If agent is nil, chances are the device has been deleted.  Invoking reconcile again will not accomplish much.",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1e07fda_a5125072",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1732,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "It may be simpler to clean a reconcile channel when creating the device agent and just push \"stop reconcile\" (or close the channel) when needed.  This way you want need to have mutex protection.",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e94a187a_dcbf6bbf",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1749,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "You may want to consider invoking agent.reconcileDevice() and put most of the protections there.",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "45f28a6d_20b77b89",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 28
@@ -19,6 +189,23 @@
         "endLine": 1778,
         "endChar": 40
       },
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68cd73a7_e760f9b1",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-06T22:12:03Z",
+      "side": 1,
+      "message": "We had a discussion before on simplifying the transitions.  Did you see the same issues as before?",
       "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
