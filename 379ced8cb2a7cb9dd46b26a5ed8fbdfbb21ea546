@@ -125,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "edd31e9c_fce4d04e",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 20
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-06T18:13:29Z",
+      "side": 1,
+      "message": "Oh ok Understood, added defer cancel() in beginning of function remove all other cancel() before return in this function.",
+      "parentUuid": "94105512_28ab8117",
+      "revId": "379ced8cb2a7cb9dd46b26a5ed8fbdfbb21ea546",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3c22e57_f7ef44dd",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 20
