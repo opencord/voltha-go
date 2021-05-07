@@ -172,39 +172,44 @@ func monitorKafkaLiveness(ctx context.Context, kmp KafkaProxy, liveProbeInterval
 	}
 }
 
-func registerAdapterRequestHandlers(ctx context.Context, kmp kafka.InterContainerProxy, dMgr *device.Manager, aMgr *adapter.Manager, coreTopic string, cf *config.RWCoreFlags) {
+func registerAdapterRequestHandlers(ctx context.Context, kmp kafka.InterContainerProxy, dMgr *device.Manager,
+	aMgr *adapter.Manager, coreTopic string, cf *config.RWCoreFlags, serviceName string) {
+
+	logger.Infow(ctx, "registering-request-handler", log.Fields{"topic": coreTopic})
+
 	kafkaRetryBackoff := backoff.NewExponentialBackOff()
 	kafkaRetryBackoff.InitialInterval = cf.RetryBackoffInitialInterval
 	kafkaRetryBackoff.MaxElapsedTime = cf.RetryBackoffMaxElapsedTime
 	kafkaRetryBackoff.MaxInterval = cf.RetryBackoffMaxInterval
 
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusNotReady)
 	requestProxy := api.NewAdapterRequestHandlerProxy(dMgr, aMgr)
+	backoffTimer := time.NewTimer(0)
+	for {
+		select {
+		case <-backoffTimer.C:
+			// Register the broadcast topic to handle any core-bound broadcast requests
+			err := kmp.SubscribeWithRequestHandlerInterface(ctx, kafka.Topic{Name: coreTopic}, requestProxy)
+			if err == nil {
+				logger.Infow(ctx, "request-handler-registered", log.Fields{"topic": coreTopic})
+				probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)
+				return
+			}
+			logger.Errorw(ctx, "failed-registering-broadcast-handler-retrying", log.Fields{"topic": coreTopic})
 
-	unregistered := true
-	for unregistered {
-		// Use an exponential back off to prevent getting into a tight loop
-		duration := kafkaRetryBackoff.NextBackOff()
-		//This case should never occur(by default) as max elapsed time for backoff is 0(by default) , so it will never return stop
-		if duration == backoff.Stop {
-			// If we reach a maximum then warn and reset the backoff
-			// timer and keep attempting.
-			logger.Warnw(ctx, "maximum-kafka-retry-backoff-reached--resetting-backoff-timer",
-				log.Fields{"max-kafka-retry-backoff": kafkaRetryBackoff.MaxElapsedTime})
-			kafkaRetryBackoff.Reset()
-			duration = kafkaRetryBackoff.NextBackOff()
+			duration := kafkaRetryBackoff.NextBackOff()
+			//This case should never occur(by default) as max elapsed time for backoff is 0(by default) , so it will never return stop
+			if duration == backoff.Stop {
+				// If we reach a maximum then warn and reset the backoff timer and keep attempting.
+				logger.Warnw(ctx, "maximum-kafka-retry-backoff-reached-resetting",
+					log.Fields{"max-kafka-retry-backoff": kafkaRetryBackoff.MaxElapsedTime})
+				kafkaRetryBackoff.Reset()
+				duration = kafkaRetryBackoff.NextBackOff()
+			}
+			backoffTimer = time.NewTimer(duration)
+		case <-ctx.Done():
+			logger.Infow(ctx, "context-closed", log.Fields{"topic": coreTopic})
+			return
 		}
-
-		backoffTimer := time.NewTimer(duration)
-		// Register the broadcast topic to handle any core-bound broadcast requests
-		err := kmp.SubscribeWithRequestHandlerInterface(ctx, kafka.Topic{Name: coreTopic}, requestProxy)
-		if err != nil {
-			logger.Errorw(ctx, "Failed-registering-broadcast-handler. Retrying", log.Fields{"topic": coreTopic})
-			<-backoffTimer.C
-			// backoffTimer expired continue
-			continue
-		}
-		unregistered = false
 	}
-
-	logger.Info(ctx, "request-handler-registered")
 }
