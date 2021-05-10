@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "799b3a7a_f5f8e21f",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1663,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-10T13:49:17Z",
+      "side": 1,
+      "message": "why not just assign deviceID to downloadReq.DeviceId?  Similar comments below.",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec6256dd_bbfc0a9a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1943,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-10T13:49:17Z",
+      "side": 1,
+      "message": "If the respCh is closed then can an error be returned right away instead of waiting for the context timeout, if set (or loop forever)?",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e7a7f75_d3557170",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1959,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-10T13:49:17Z",
+      "side": 1,
+      "message": "If we have 1000 devices in that request and 999 passes and 1 fail we will be sending an error back on the context timeout.  Would it be possible to provide a list of deviceIDs that have not been successful or even add an error flag in the voltha.DeviceImageResponse such that the NB caller can figure which ones have succeeded?   Does not have to be done in this commit.",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
