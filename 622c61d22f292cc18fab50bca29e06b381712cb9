@@ -50,6 +50,24 @@
       "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02800a53_33db476e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1959,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-10T13:59:43Z",
+      "side": 1,
+      "message": "this is a very good suggestion, please open a jira for this",
+      "parentUuid": "4e7a7f75_d3557170",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
