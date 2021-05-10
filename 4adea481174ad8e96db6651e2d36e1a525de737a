@@ -16,6 +16,24 @@
       "revId": "4adea481174ad8e96db6651e2d36e1a525de737a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1aebb83_16fb4a80",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-10T08:09:44Z",
+      "side": 1,
+      "message": "This was auto changed by the IDE it seems. I have reverted the change. Thanks for pointing this out.",
+      "parentUuid": "83d5a77d_3b58ecef",
+      "revId": "4adea481174ad8e96db6651e2d36e1a525de737a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
