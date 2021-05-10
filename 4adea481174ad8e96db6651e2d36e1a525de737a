@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83d5a77d_3b58ecef",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-10T07:02:59Z",
+      "side": 1,
+      "message": "why this change ? valid for all files",
+      "revId": "4adea481174ad8e96db6651e2d36e1a525de737a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
