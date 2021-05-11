@@ -21,14 +21,15 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"reflect"
-	"sync"
-	"time"
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -162,6 +163,7 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 			desc = fmt.Sprintf("failed-adding-device-%s: %s", agent.deviceID, err.Error())
 			return nil, status.Errorf(codes.Aborted, "failed-adding-device-%s: %s", agent.deviceID, err)
 		}
+		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, device.OperStatus, device.ConnectStatus, voltha.AdminState_UNKNOWN, device, time.Now().Unix())
 		operStatus.Code = common.OperationResp_OPERATION_SUCCESS
 		agent.device = device
 	}
@@ -188,11 +190,16 @@ func (agent *Agent) stop(ctx context.Context) error {
 	if err := agent.deleteTransientState(ctx); err != nil {
 		return err
 	}
+	//Send a state change event to NB to indicate the deletion of the device.
+	device := agent.device
+	prevOperStatus := device.OperStatus
+
 	//	Remove the device from the KV store
 	if err := agent.dbProxy.Remove(ctx, agent.deviceID); err != nil {
 		return err
 	}
-
+	device.OperStatus = voltha.OperStatus_FAILED
+	_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevOperStatus, device.ConnectStatus, device.AdminState, device, time.Now().Unix())
 	close(agent.exitChannel)
 
 	agent.stopped = true
@@ -857,6 +864,8 @@ func (agent *Agent) updateDeviceStatus(ctx context.Context, operStatus voltha.Op
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
+
+	logger.Debugw(ctx, "device-status-has-changed", log.Fields{"prev-con": cloned.ConnectStatus, "prev-oper": cloned.OperStatus, "new-con": connStatus, "new-oper": operStatus})
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
 	if s, ok := voltha.ConnectStatus_Types_name[int32(connStatus)]; ok {
 		logger.Debugw(ctx, "update-device-status-conn", log.Fields{"ok": ok, "val": s})
@@ -950,7 +959,10 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	prevDevice := agent.device
 	// update the device
 	agent.device = device
-
+	//If any of the states has chenged, send the change event.
+	if prevDevice.OperStatus != device.OperStatus || prevDevice.ConnectStatus != device.ConnectStatus || prevDevice.AdminState != device.AdminState {
+		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
+	}
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
 	subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
@@ -996,6 +1008,10 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 	prevDevice := agent.device
 	// update the device
 	agent.device = device
+	//If any of the states has chenged, send the change event.
+	if prevDevice.OperStatus != device.OperStatus || prevDevice.ConnectStatus != device.ConnectStatus || prevDevice.AdminState != device.AdminState {
+		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
+	}
 
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
