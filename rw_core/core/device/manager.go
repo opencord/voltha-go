@@ -47,7 +47,7 @@ type Manager struct {
 	rootDevices       map[string]bool
 	lockRootDeviceMap sync.RWMutex
 	adapterProxy      *remote.AdapterProxy
-	*event.RPCEventManager
+	*event.BusEventManager
 	adapterMgr              *adapter.Manager
 	logicalDeviceMgr        *LogicalManager
 	kafkaICProxy            kafka.InterContainerProxy
@@ -71,7 +71,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		dProxy:                  dbPath.Proxy("devices"),
 		adapterMgr:              adapterMgr,
 		defaultTimeout:          defaultCoreTimeout,
-		RPCEventManager:         event.NewRPCEventManager(eventProxy, coreInstanceID, stackID),
+		BusEventManager:         event.NewBusEventManager(eventProxy, coreInstanceID, stackID),
 		deviceLoadingInProgress: make(map[string][]chan int),
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
@@ -1633,7 +1633,7 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 func (dMgr *Manager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent,
 	category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
 	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
-	dMgr.RPCEventManager.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
+	dMgr.BusEventManager.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 }
 
 func (dMgr *Manager) GetTransientState(ctx context.Context, id string) (voltha.DeviceTransientState_Types, error) {
