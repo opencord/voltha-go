@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5fcd94a7_2c758122",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1663,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-11T18:57:49Z",
+      "side": 1,
+      "message": "Hi, \ndownloadReq.DeviceId is a golang slice (ie, []*common.ID) and not *common.ID. \nSo assigning by slicing from the request seems an easier option instead of something like:\ndownloadReq.DeviceId \u003d []*common.ID{deviceID}\n\n\nPlease let me know if you have a different opinion.",
+      "parentUuid": "799b3a7a_f5f8e21f",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec6256dd_bbfc0a9a",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2021-05-10T13:49:17Z",
       "side": 1,
       "message": "If the respCh is closed then can an error be returned right away instead of waiting for the context timeout, if set (or loop forever)?",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44b653d8_de68b24a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1943,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-11T18:57:49Z",
+      "side": 1,
+      "message": "Yes, will fix to return error right away. \nThanks",
+      "parentUuid": "ec6256dd_bbfc0a9a",
       "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -65,6 +101,24 @@
       "side": 1,
       "message": "this is a very good suggestion, please open a jira for this",
       "parentUuid": "4e7a7f75_d3557170",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2181d75_6def9a0a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1959,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-11T18:57:49Z",
+      "side": 1,
+      "message": "Meanwhile, is it better (for now) to return \u0027half-baked\u0027 response and error rather than nil and error?\nAny thought on this?",
+      "parentUuid": "02800a53_33db476e",
       "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
