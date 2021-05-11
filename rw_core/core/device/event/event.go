@@ -21,6 +21,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v4/pkg/events/eventif"
@@ -30,8 +34,34 @@ import (
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"github.com/opentracing/opentracing-go"
 	jtracing "github.com/uber/jaeger-client-go"
-	"sync"
-	"time"
+)
+
+const (
+	// ContextAdminState is for the admin state of the Device in the context of the event
+	ContextAdminState = "admin-state"
+	// ContextConnectState is for the connect state of the Device in the context of the event
+	ContextConnectState = "connect-state"
+	// ContextOperState is for the operational state of the Device in the context of the event
+	ContextOperState = "oper-state"
+	// ContextPrevdminState is for the previous admin state of the Device in the context of the event
+	ContextPrevAdminState = "prev-admin-state"
+	// ContextPrevConnectState is for the previous connect state of the Device in the context of the event
+	ContextPrevConnectState = "prev-connect-state"
+	// ContextPrevOperState is for the previous operational state of the Device in the context of the event
+	ContextPrevOperState = "prev-oper-state"
+	// ContextDeviceID is for the previous operational state of the Device in the context of the event
+	ContextDeviceID = "id"
+	// ContextParentID is for the parent id in the context of the event
+	ContextParentID = "parent-id"
+	// ContextSerialNumber is for the serial number of the Device in the context of the event
+	ContextSerialNumber = "serial-number"
+	// ContextIsRoot is for the root flag of Device in the context of the event
+	ContextIsRoot = "is-root"
+	// ContextParentPort is for the parent interface id of child in the context of the event
+	ContextParentPort = "parent-port"
+)
+const (
+	deviceStateChangeEvent = "DEVICE_STATE_CHANGE"
 )
 
 type Manager struct {
@@ -39,28 +69,28 @@ type Manager struct {
 	packetInQueueDone    chan bool
 	changeEventQueue     chan openflow_13.ChangeEvent
 	changeEventQueueDone chan bool
-	RPCEventManager      *RPCEventManager
+	BusEventManager      *BusEventManager
 }
 
-type RPCEventManager struct {
+type BusEventManager struct {
 	eventProxy     eventif.EventProxy
 	coreInstanceID string
 	stackID        string
 }
 
-func NewManager(proxyForRPCEvents eventif.EventProxy, instanceID string, stackID string) *Manager {
+func NewManager(proxyForEvents eventif.EventProxy, instanceID string, stackID string) *Manager {
 	return &Manager{
 		packetInQueue:        make(chan openflow_13.PacketIn, 100),
 		packetInQueueDone:    make(chan bool, 1),
 		changeEventQueue:     make(chan openflow_13.ChangeEvent, 100),
 		changeEventQueueDone: make(chan bool, 1),
-		RPCEventManager:      NewRPCEventManager(proxyForRPCEvents, instanceID, stackID),
+		BusEventManager:      NewBusEventManager(proxyForEvents, instanceID, stackID),
 	}
 }
 
-func NewRPCEventManager(proxyForRPCEvents eventif.EventProxy, instanceID string, stackID string) *RPCEventManager {
-	return &RPCEventManager{
-		eventProxy:     proxyForRPCEvents,
+func NewBusEventManager(proxyForEvents eventif.EventProxy, instanceID string, stackID string) *BusEventManager {
+	return &BusEventManager{
+		eventProxy:     proxyForEvents,
 		coreInstanceID: instanceID,
 		stackID:        stackID,
 	}
@@ -131,7 +161,7 @@ loop:
 			})
 			if err := packetsIn.Send(&packet); err != nil {
 				logger.Errorw(ctx, "failed-to-send-packet", log.Fields{"error": err})
-				go q.RPCEventManager.GetAndSendRPCEvent(ctx, packet.Id, err.Error(),
+				go q.BusEventManager.GetAndSendRPCEvent(ctx, packet.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION,
 					nil, time.Now().UnixNano())
 				// save the last failed packet in
@@ -221,7 +251,7 @@ loop:
 			logger.Debugw(ctx, "sending-change-event", log.Fields{"event": event})
 			if err := changeEvents.Send(&event); err != nil {
 				logger.Errorw(ctx, "failed-to-send-change-event", log.Fields{"error": err})
-				go q.RPCEventManager.GetAndSendRPCEvent(ctx, event.Id, err.Error(),
+				go q.BusEventManager.GetAndSendRPCEvent(ctx, event.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION, nil,
 					time.Now().UnixNano())
 				// save last failed change event
@@ -245,7 +275,7 @@ func (q *Manager) GetChangeEventsQueueForTest() <-chan openflow_13.ChangeEvent {
 	return q.changeEventQueue
 }
 
-func (q *RPCEventManager) NewRPCEvent(ctx context.Context, resourceID, desc string, context map[string]string) *voltha.RPCEvent {
+func (q *BusEventManager) NewRPCEvent(ctx context.Context, resourceID, desc string, context map[string]string) *voltha.RPCEvent {
 	logger.Debugw(ctx, "new-rpc-event", log.Fields{"resource-id": resourceID})
 	var opID string
 	var rpc string
@@ -271,18 +301,63 @@ func (q *RPCEventManager) NewRPCEvent(ctx context.Context, resourceID, desc stri
 	return rpcev
 }
 
-func (q *RPCEventManager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
+func (q *BusEventManager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
 	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	if rpcEvent.Rpc != "" {
 		_ = q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 	}
 }
 
-func (q *RPCEventManager) GetAndSendRPCEvent(ctx context.Context, resourceID, desc string, context map[string]string,
+func (q *BusEventManager) GetAndSendRPCEvent(ctx context.Context, resourceID, desc string, context map[string]string,
 	id string, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
 	rpcEvent := q.NewRPCEvent(ctx, resourceID, desc, context)
 	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	if rpcEvent.Rpc != "" {
 		_ = q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 	}
+}
+
+// SendDeviceStateChangeEvent sends Device State Change Event to message bus
+func (q *BusEventManager) SendDeviceStateChangeEvent(ctx context.Context,
+	prevOperStatus voltha.OperStatus_Types, prevConnStatus voltha.ConnectStatus_Types, prevAdminStatus voltha.AdminState_Types,
+	device *voltha.Device, raisedTs int64) error {
+	var de voltha.DeviceEvent
+	context := make(map[string]string)
+	/* Populating event context */
+	context[ContextSerialNumber] = device.SerialNumber
+	context[ContextDeviceID] = device.Id
+	context[ContextParentID] = device.ParentId
+	context[ContextPrevOperState] = prevOperStatus.String()
+	context[ContextPrevConnectState] = prevConnStatus.String()
+	context[ContextPrevAdminState] = prevAdminStatus.String()
+	context[ContextOperState] = device.OperStatus.String()
+	context[ContextConnectState] = device.ConnectStatus.String()
+	context[ContextAdminState] = device.AdminState.String()
+	context[ContextIsRoot] = strconv.FormatBool(device.Root)
+	context[ContextParentPort] = strconv.FormatUint(uint64(device.ParentPortNo), 10)
+	/* Populating device event body */
+	de.Context = context
+	de.ResourceId = device.Id
+	de.DeviceEventName = fmt.Sprintf("%s_%s", deviceStateChangeEvent, "RAISE_EVENT")
+	subCategory := voltha.EventSubCategory_ONU
+	if device.Root {
+		subCategory = voltha.EventSubCategory_OLT
+	}
+	/* Send event to KAFKA */
+	if err := q.eventProxy.SendDeviceEvent(ctx, &de, voltha.EventCategory_EQUIPMENT, subCategory, raisedTs); err != nil {
+		return err
+	}
+	logger.Debugw(ctx, "device-state-change-sent-to-kafka", log.Fields{
+		ContextSerialNumber:     context[ContextSerialNumber],
+		ContextDeviceID:         context[ContextDeviceID],
+		ContextParentID:         context[ContextParentID],
+		ContextPrevOperState:    context[ContextPrevOperState],
+		ContextPrevConnectState: context[ContextPrevConnectState],
+		ContextPrevAdminState:   context[ContextPrevAdminState],
+		ContextOperState:        context[ContextOperState],
+		ContextConnectState:     context[ContextConnectState],
+		ContextAdminState:       context[ContextAdminState],
+		ContextIsRoot:           context[ContextIsRoot],
+		ContextParentPort:       context[ContextParentPort]})
+	return nil
 }
