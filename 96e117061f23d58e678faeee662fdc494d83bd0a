@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "db811453_ca46da95",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-12T19:04:40Z",
+      "side": 1,
+      "message": "isn\u0027t it protected with WaitForGreenLight and RequestComplete block? Another question may be if it is better to take this out of the lock? Thought?",
+      "parentUuid": "85713d7d_7deb13e8",
+      "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cafc1e99_64b97841",
         "filename": "rw_core/core/device/event/event.go",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "c166d943_efa8f7ea",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-12T19:04:40Z",
+      "side": 1,
+      "message": "Agree for having a library for that. Problem here is it is only a common library for NBs written in golang. And another issue is the same definitions are there in olt-adapter also. Anyway I will take this to voltha-lib-go",
+      "parentUuid": "cafc1e99_64b97841",
+      "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e20c3e7_b3cc6085",
         "filename": "rw_core/core/device/event/event.go",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2021-05-12T18:18:57Z",
       "side": 1,
       "message": "Would EventManager be a better name? IMHO, BusEventManager name is not very clear.",
+      "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ceb5e788_555289f0",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-12T19:04:40Z",
+      "side": 1,
+      "message": "I will be happy to do that :). Actually I didn\u0027t like the name BusEventManager and used EventManager first. But there is a Manager type in event class so having an EventManager and Manager types in event class seemed a bit weird to me so I changed it to BusEventManager. But if EventManager makes sense here, I prefer to use it.",
+      "parentUuid": "0e20c3e7_b3cc6085",
       "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
