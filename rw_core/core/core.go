@@ -56,6 +56,7 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
 			"kv-store",
 			"adapter-manager",
 			"grpc-service",
+			"adapter-request-handler",
 		)
 
 		if cf.KafkaAdapterAddress != cf.KafkaClusterAddress {
@@ -134,7 +135,8 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	)
 
 	// create event proxy
-	eventProxy, err := startEventProxy(ctx, kafkaClientEvent, cf.EventTopic, cf.ConnectionRetryInterval)
+	updateProbeClusterService := cf.KafkaAdapterAddress != cf.KafkaClusterAddress
+	eventProxy, err := startEventProxy(ctx, kafkaClientEvent, cf.EventTopic, cf.ConnectionRetryInterval, updateProbeClusterService)
 	if err != nil {
 		logger.Warn(ctx, "failed-to-setup-kafka-event-proxy-connection")
 		return
@@ -168,7 +170,7 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf.CoreTopic, id, cf.DefaultCoreTimeout, eventProxy, cf.VolthaStackID)
 
 	// register kafka RPC handler
-	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf.CoreTopic)
+	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf, "adapter-request-handler")
 
 	// start gRPC handler
 	grpcServer := grpcserver.NewGrpcServer(cf.GrpcAddress, nil, false, probe.GetProbeFromContext(ctx))

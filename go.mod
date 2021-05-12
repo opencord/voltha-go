@@ -3,6 +3,7 @@ module github.com/opencord/voltha-go
 go 1.16
 
 require (
+	github.com/cenkalti/backoff/v3 v3.2.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.5.0
 	github.com/golang/protobuf v1.3.2

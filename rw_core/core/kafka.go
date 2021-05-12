@@ -18,7 +18,10 @@ package core
 
 import (
 	"context"
+	"github.com/cenkalti/backoff/v3"
+	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v4/pkg/events"
+
 	"time"
 
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -69,11 +72,13 @@ func startKafkInterContainerProxy(ctx context.Context, kafkaClient kafka.Client,
 	return kmp, nil
 }
 
-func startEventProxy(ctx context.Context, kafkaClient kafka.Client, eventTopic string, connectionRetryInterval time.Duration) (*events.EventProxy, error) {
+func startEventProxy(ctx context.Context, kafkaClient kafka.Client, eventTopic string, connectionRetryInterval time.Duration, updateProbeService bool) (*events.EventProxy, error) {
 	ep := events.NewEventProxy(events.MsgClient(kafkaClient), events.MsgTopic(kafka.Topic{Name: eventTopic}))
 	for {
 		if err := kafkaClient.Start(ctx); err != nil {
-			probe.UpdateStatusFromContext(ctx, clusterMessageBus, probe.ServiceStatusNotReady)
+			if updateProbeService {
+				probe.UpdateStatusFromContext(ctx, clusterMessageBus, probe.ServiceStatusNotReady)
+			}
 			logger.Warnw(ctx, "failed-to-setup-kafka-connection-on-kafka-cluster-address", log.Fields{"error": err})
 			select {
 			case <-time.After(connectionRetryInterval):
@@ -81,6 +86,9 @@ func startEventProxy(ctx context.Context, kafkaClient kafka.Client, eventTopic s
 			case <-ctx.Done():
 				return nil, ctx.Err()
 			}
+		}
+		if updateProbeService {
+			probe.UpdateStatusFromContext(ctx, clusterMessageBus, probe.ServiceStatusRunning)
 		}
 		logger.Info(ctx, "started-connection-on-kafka-cluster-address")
 		break
@@ -170,13 +178,45 @@ func monitorKafkaLiveness(ctx context.Context, kmp KafkaProxy, liveProbeInterval
 	}
 }
 
-func registerAdapterRequestHandlers(ctx context.Context, kmp kafka.InterContainerProxy, dMgr *device.Manager, aMgr *adapter.Manager, coreTopic string) {
+func registerAdapterRequestHandlers(ctx context.Context, kmp kafka.InterContainerProxy, dMgr *device.Manager,
+	aMgr *adapter.Manager, cf *config.RWCoreFlags, serviceName string) {
+	logger.Infow(ctx, "registering-request-handler", log.Fields{"topic": cf.CoreTopic})
+
+	// Set the exponential backoff params
+	kafkaRetryBackoff := backoff.NewExponentialBackOff()
+	kafkaRetryBackoff.InitialInterval = cf.BackoffRetryInitialInterval
+	kafkaRetryBackoff.MaxElapsedTime = cf.BackoffRetryMaxElapsedTime
+	kafkaRetryBackoff.MaxInterval = cf.BackoffRetryMaxInterval
+
+	//For initial request, do not wait
+	backoffTimer := time.NewTimer(0)
+
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusNotReady)
 	requestProxy := api.NewAdapterRequestHandlerProxy(dMgr, aMgr)
-
-	// Register the broadcast topic to handle any core-bound broadcast requests
-	if err := kmp.SubscribeWithRequestHandlerInterface(ctx, kafka.Topic{Name: coreTopic}, requestProxy); err != nil {
-		logger.Fatalw(ctx, "Failed-registering-broadcast-handler", log.Fields{"topic": coreTopic})
+	for {
+		select {
+		case <-backoffTimer.C:
+			// Register the broadcast topic to handle any core-bound broadcast requests
+			err := kmp.SubscribeWithRequestHandlerInterface(ctx, kafka.Topic{Name: cf.CoreTopic}, requestProxy)
+			if err == nil {
+				logger.Infow(ctx, "request-handler-registered", log.Fields{"topic": cf.CoreTopic})
+				probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)
+				return
+			}
+			logger.Errorw(ctx, "failed-registering-broadcast-handler-retrying", log.Fields{"topic": cf.CoreTopic})
+			duration := kafkaRetryBackoff.NextBackOff()
+			//This case should never occur(by default) as max elapsed time for backoff is 0(by default) , so it will never return stop
+			if duration == backoff.Stop {
+				// If we reach a maximum then warn and reset the backoff timer and keep attempting.
+				logger.Warnw(ctx, "maximum-kafka-retry-backoff-reached-resetting",
+					log.Fields{"max-kafka-retry-backoff": kafkaRetryBackoff.MaxElapsedTime})
+				kafkaRetryBackoff.Reset()
+				duration = kafkaRetryBackoff.NextBackOff()
+			}
+			backoffTimer = time.NewTimer(duration)
+		case <-ctx.Done():
+			logger.Infow(ctx, "context-closed", log.Fields{"topic": cf.CoreTopic})
+			return
+		}
 	}
-
-	logger.Info(ctx, "request-handler-registered")
 }
