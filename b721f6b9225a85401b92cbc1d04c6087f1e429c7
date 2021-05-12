@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae60225d_6160342d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-12T07:44:44Z",
+      "side": 1,
+      "message": "possibly not for this patch but I\u0027m wondering we ought to have a STOPPED state",
+      "revId": "b721f6b9225a85401b92cbc1d04c6087f1e429c7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94015d59_8f271457",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-12T07:44:44Z",
+      "side": 1,
+      "message": "why are you sending the previous here ? should it not be the current state ?",
+      "revId": "b721f6b9225a85401b92cbc1d04c6087f1e429c7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01898997_31c639c7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-12T07:44:44Z",
+      "side": 1,
+      "message": "same",
+      "revId": "b721f6b9225a85401b92cbc1d04c6087f1e429c7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
