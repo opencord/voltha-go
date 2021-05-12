@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6edead12_98b5c1c2",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "These changes are due to latest protos,voltha-go changes corresponding to this yet to be merged.",
+      "parentUuid": "7c0f3f44_10a408d4",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27405c08_2cff8781",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 28
@@ -33,6 +51,24 @@
       "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dfea2c7_9213d17a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "Normal delete have to be stopped in case reconcile is in progress.\n\nmutex is added.",
+      "parentUuid": "27405c08_2cff8781",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2e835825_53ef0924",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7a1e12e_f798c7f2",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f64a47d0_4312bc3b",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 28
@@ -67,6 +121,24 @@
       "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7570dd4_0b5553f7",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "Returned if error",
+      "parentUuid": "f64a47d0_4312bc3b",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "42ae0a81_a03939e1",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "Returned if error",
+      "parentUuid": "a8089b0b_9145b9b8",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d7b1f98_4f4993fe",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 28
@@ -101,6 +191,24 @@
       "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "641de1fc_e0d10471",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 769,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "Already discussed. If failure would occur error would be returned and will be handled by caller function as usual meanwhile retry will be in progress for that particular device.",
+      "parentUuid": "1d7b1f98_4f4993fe",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "6c434145_fd5e3918",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1677,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "called as a callback on state transition.",
+      "parentUuid": "26ffb951_26a3945d",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b059ab4a_a9bbff7c",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 28
@@ -135,6 +261,24 @@
       "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cacc6232_620505fc",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "returned if getting agent returns error.",
+      "parentUuid": "b059ab4a_a9bbff7c",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "69ccda05_858f7f73",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1732,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "mutex protection is added.",
+      "parentUuid": "d1e07fda_a5125072",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e94a187a_dcbf6bbf",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 28
@@ -169,6 +331,24 @@
       "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa24305c_e5b77a79",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1749,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "As discussed will be done in different user story.",
+      "parentUuid": "e94a187a_dcbf6bbf",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -195,6 +375,30 @@
     },
     {
       "key": {
+        "uuid": "252b62d3_71d8459d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 1778,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "mutex is added around this channel.",
+      "parentUuid": "45f28a6d_20b77b89",
+      "range": {
+        "startLine": 1778,
+        "startChar": 0,
+        "endLine": 1778,
+        "endChar": 40
+      },
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68cd73a7_e760f9b1",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 28
@@ -206,6 +410,24 @@
       "writtenOn": "2021-05-06T22:12:03Z",
       "side": 1,
       "message": "We had a discussion before on simplifying the transitions.  Did you see the same issues as before?",
+      "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3e5b9a8_f3a88c75",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-12T16:07:32Z",
+      "side": 1,
+      "message": "Wildcard based transition for reconciling are getting clashed with other transitions need to discuss.",
+      "parentUuid": "68cd73a7_e760f9b1",
       "revId": "21fb31e180617e4246af78a9b4cb3b9fb407a584",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
