@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9612f90_337a0093",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T22:14:04Z",
+      "side": 1,
+      "message": "If this mutex is used only for stop reconciling then use the stopreconciling name in it somehow for clarity.",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67bfce07_fe8c2fdf",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T22:14:04Z",
+      "side": 1,
+      "message": "where is isReconcileInProgress() defined?   Can\u0027t see it.",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a783813_05456e26",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T22:14:04Z",
+      "side": 1,
+      "message": "formatting with no variables",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02313ce0_9e6a897b",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T22:14:04Z",
+      "side": 1,
+      "message": "Can the err also be sent back - would be useful for debugging.",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d6cc5f1_8eeb75cf",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 2017,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T22:14:04Z",
+      "side": 1,
+      "message": "would reconcileWithRetries() name be clearer?",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0bd0f3e_fea29fee",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 2036,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T22:14:04Z",
+      "side": 1,
+      "message": "Because agent is invoked in the Manager and not in the device agent itself (where there is request protection) then between the previous request (agent.matchTransientState()) and this one the transient state could have changed.   You will need some form of locking mechanism on that agent/device or move some of this code into the device agent which already has the locks in place.",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c769aaef_3a81d808",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 2077,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T22:14:04Z",
+      "side": 1,
+      "message": "Why wait for the timer to expire before leaving the loop?",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
