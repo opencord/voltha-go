@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "30715269_aa5535cb",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1663,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T15:30:16Z",
+      "side": 1,
+      "message": "Then that\u0027s alright.",
+      "parentUuid": "5fcd94a7_2c758122",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec6256dd_bbfc0a9a",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 9
@@ -119,6 +137,24 @@
       "side": 1,
       "message": "Meanwhile, is it better (for now) to return \u0027half-baked\u0027 response and error rather than nil and error?\nAny thought on this?",
       "parentUuid": "02800a53_33db476e",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e311ec15_74a4c87e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1959,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T15:30:16Z",
+      "side": 1,
+      "message": "For now, just return an error and open a Jira for the improvement.",
+      "parentUuid": "c2181d75_6def9a0a",
       "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
