@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85713d7d_7deb13e8",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T18:18:57Z",
+      "side": 1,
+      "message": "Sending the device (here it\u0027s a pointer to a device) implies there is a risk of some data being changed before the event got sent.   Maybe it\u0027s better to get a clone.",
+      "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cafc1e99_64b97841",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T18:18:57Z",
+      "side": 1,
+      "message": "Would it be preferable to have this formatting in the voltha-lib go?  This way, any NB that needs to decodes the data can just import the library instead of peeking into the core code or reading the docs.",
+      "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e20c3e7_b3cc6085",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-12T18:18:57Z",
+      "side": 1,
+      "message": "Would EventManager be a better name? IMHO, BusEventManager name is not very clear.",
+      "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
