@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "604a5b65_a051ad7e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-12T17:29:19Z",
+      "side": 1,
+      "message": "Actually I wasn\u0027t sure to send an event here. But I thought it may be useful to indicate(to NB systems) that the device has been deleted and I used an already existing state. I\u0027m open to the ideas of removing this from here or adding a new state(either now or later)",
+      "parentUuid": "ae60225d_6160342d",
+      "revId": "b721f6b9225a85401b92cbc1d04c6087f1e429c7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "94015d59_8f271457",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "bc19ca02_c73fa0b9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-12T17:29:19Z",
+      "side": 1,
+      "message": "Event includes both previous states and the current(updated) states. Current states are on device object sent to function.",
+      "parentUuid": "94015d59_8f271457",
+      "revId": "b721f6b9225a85401b92cbc1d04c6087f1e429c7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "01898997_31c639c7",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2021-05-12T07:44:44Z",
       "side": 1,
       "message": "same",
+      "revId": "b721f6b9225a85401b92cbc1d04c6087f1e429c7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "776485f5_ab28b5c5",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-12T17:29:19Z",
+      "side": 1,
+      "message": "same above.",
+      "parentUuid": "01898997_31c639c7",
       "revId": "b721f6b9225a85401b92cbc1d04c6087f1e429c7",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
