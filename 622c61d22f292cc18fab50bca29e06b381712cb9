@@ -158,6 +158,24 @@
       "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1661a885_72ce2a71",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1959,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-12T15:31:54Z",
+      "side": 1,
+      "message": "just go for error for now and put a //TODO",
+      "parentUuid": "c2181d75_6def9a0a",
+      "revId": "622c61d22f292cc18fab50bca29e06b381712cb9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
