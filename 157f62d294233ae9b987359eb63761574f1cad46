@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3a883a6c_da2a5b63",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-13T06:55:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9612f90_337a0093",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67bfce07_fe8c2fdf",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 30
@@ -33,6 +51,24 @@
       "revId": "157f62d294233ae9b987359eb63761574f1cad46",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df9e3eb4_b77e78af",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-13T06:55:56Z",
+      "side": 1,
+      "message": "It is defined in agent_transient_state.go",
+      "parentUuid": "67bfce07_fe8c2fdf",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ee4e0f55_0849c280",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-13T06:55:56Z",
+      "side": 1,
+      "message": "There is no fmt.Error() though I have added device id to made this log more informative. User errors.New for next error which was without any formatting.",
+      "parentUuid": "2a783813_05456e26",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "02313ce0_9e6a897b",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 30
@@ -64,6 +118,24 @@
       "writtenOn": "2021-05-12T22:14:04Z",
       "side": 1,
       "message": "Can the err also be sent back - would be useful for debugging.",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1857c3e_d490cfb0",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-13T06:55:56Z",
+      "side": 1,
+      "message": "I didn\u0027t get this . Error will be sent back as a part of Response which will be check from caller function.",
+      "parentUuid": "02313ce0_9e6a897b",
       "revId": "157f62d294233ae9b987359eb63761574f1cad46",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -84,6 +156,24 @@
       "revId": "157f62d294233ae9b987359eb63761574f1cad46",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "397bd4ab_c76a05ea",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 2017,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-13T06:55:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7d6cc5f1_8eeb75cf",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -118,6 +208,24 @@
       "revId": "157f62d294233ae9b987359eb63761574f1cad46",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c83297d6_fac25e16",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 30
+      },
+      "lineNbr": 2077,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-13T06:55:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c769aaef_3a81d808",
+      "revId": "157f62d294233ae9b987359eb63761574f1cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
