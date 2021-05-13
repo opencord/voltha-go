@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f849df91_6bb299f0",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-13T13:26:35Z",
+      "side": 1,
+      "message": "@Andrea, Himani is correct.\n\nIn terms for the need to add the \"adapter-request-handler\", this is used as a mandatory service in the core such that the Core won\u0027t accept any NB requests if that service is not up and running.",
+      "parentUuid": "b4114340_772790f7",
+      "revId": "5e4fca388b9555b9d719954096fa3e07b21e07d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e9ea588_f8fbe53e",
         "filename": "rw_core/core/kafka.go",
         "patchSetId": 1
