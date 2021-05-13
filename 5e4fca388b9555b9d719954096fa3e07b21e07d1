@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b4114340_772790f7",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-05-13T09:49:40Z",
+      "side": 1,
+      "message": "We are using cf.CoreTopic but since we are passing cf here we can fetch the cf.CoreTopic inside the function. Also, the string here is for service name",
+      "parentUuid": "c064c6c7_963f6cd1",
+      "revId": "5e4fca388b9555b9d719954096fa3e07b21e07d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e9ea588_f8fbe53e",
         "filename": "rw_core/core/kafka.go",
         "patchSetId": 1
