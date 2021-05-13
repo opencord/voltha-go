@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c064c6c7_963f6cd1",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-13T08:42:53Z",
+      "side": 1,
+      "message": "Can you elaborate a little bit more on the need for this change ? I don\u0027t understand why we are not using the cf.CoreTopic anymore",
+      "revId": "5e4fca388b9555b9d719954096fa3e07b21e07d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e9ea588_f8fbe53e",
+        "filename": "rw_core/core/kafka.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-13T08:42:53Z",
+      "side": 1,
+      "message": "debug",
+      "revId": "5e4fca388b9555b9d719954096fa3e07b21e07d1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
