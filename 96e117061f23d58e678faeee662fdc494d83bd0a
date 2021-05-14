@@ -104,6 +104,24 @@
       "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44c72b43_b41a7932",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-14T05:05:42Z",
+      "side": 1,
+      "message": "\"make sca\" doesn\u0027t allow to the name EventManager in event package. So I changed it to Agent. I think Agent makes more sense.",
+      "parentUuid": "ceb5e788_555289f0",
+      "revId": "96e117061f23d58e678faeee662fdc494d83bd0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
