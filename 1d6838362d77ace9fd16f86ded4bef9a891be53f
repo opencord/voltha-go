@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcbfb626_f87c336f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-14T11:19:52Z",
+      "side": 1,
+      "message": "I\u0027m wondering if this will might cause, in some specific states, the device to be effectively un-recoverable. Is the adapter responsibility to make sure that is not the case ?",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f8c7be7_a770986e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1303,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-14T11:19:52Z",
+      "side": 1,
+      "message": "these are worth exposing as parameters and in the helm charts",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
