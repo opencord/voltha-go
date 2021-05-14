@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "8a1c63e3_c9d61fcb",
+        "filename": "VERSION",
+        "patchSetId": 35
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "I would leave it at a dev version, unless there is a need to release this version.",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bcbfb626_f87c336f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 35
@@ -19,6 +36,74 @@
     },
     {
       "key": {
+        "uuid": "416c3975_7d7d41fb",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "There is a potential of race condition where currDevice gets changed right before the isReconcileInProgress() check. It\u0027s better to first invoke \"agent.requestQueue.WaitForGreenLight(ctx)\" to get the requests lock and then do the isReconcileInProgress() check.  You may make it mandatory (in this case it will just be a comment to isReconcileInProgress() as it is an internal function) that the calling function holds the requests lock which means isReconcileInProgress() will grab the latest device for the check.",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de981d03_432b137f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1260,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "Since this function is invoked when a request lock is obtained (at least that should be the case) then there is no need to pass in the device.  The agent must have the latest copy).",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60839740_6da9301a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "Would just \"stopReconciling()\" be a clearer name as \"Send\" can also imply we are sending a a stop reconciling to an adapter.  Unless there is a need to do so as well.   Please check with the Adapter folks to see if there is a need to send stop reconciling on a device force delete.",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe1c124b_a53c984f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "I would move all the reconcile logic here for a given device (can be multiple functions, but this function should be the main control of the reconcile).",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3f8c7be7_a770986e",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 35
@@ -30,6 +115,58 @@
       "writtenOn": "2021-05-14T11:19:52Z",
       "side": 1,
       "message": "these are worth exposing as parameters and in the helm charts",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e039cc61_f21a0b20",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1303,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "There are set in a previous patch.  So please rebase.",
+      "parentUuid": "3f8c7be7_a770986e",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb1e62c6_47ff65cb",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "I would also move this function into the agent (or just remove it and let the reconcile() function in the agent makes the decision to reconcile or not.   In such a case, the Manager will not invoke isOkToReconcile().  It will just send the request to the agent and let the agent decides what to do.",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf84fea1_5106e514",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-14T15:35:36Z",
+      "side": 1,
+      "message": "As you are rightly moving the reconcile into the agent it makes sense to have this function executed in the agent as well.",
       "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
