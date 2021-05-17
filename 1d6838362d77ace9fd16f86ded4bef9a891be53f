@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "9917847e_e2f55c3f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "What kind of scenario are we talking about ?",
+      "parentUuid": "bcbfb626_f87c336f",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "416c3975_7d7d41fb",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 35
@@ -50,6 +68,24 @@
       "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cab1ca6_b410ce21",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "416c3975_7d7d41fb",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "10cb284c_bfa5fb90",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1260,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de981d03_432b137f",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60839740_6da9301a",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 35
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "8c0c4d40_6e256f49",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "renamed stopReconcile instead of stopReconciling as already have chan of similar name.",
+      "parentUuid": "60839740_6da9301a",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fe1c124b_a53c984f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 35
@@ -98,6 +170,24 @@
       "writtenOn": "2021-05-14T15:35:36Z",
       "side": 1,
       "message": "I would move all the reconcile logic here for a given device (can be multiple functions, but this function should be the main control of the reconcile).",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3c0971c_f6510b1a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "The main function to reconcile device normally is already in place which will return response to caller function , there will be called if reconcile rpc call return error and thsi function will retry .",
+      "parentUuid": "fe1c124b_a53c984f",
       "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -139,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "81904c0e_9f8cfcf0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 1303,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e039cc61_f21a0b20",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb1e62c6_47ff65cb",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 35
@@ -156,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "77e2597e_0f165732",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb1e62c6_47ff65cb",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf84fea1_5106e514",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 35
@@ -170,6 +296,24 @@
       "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bd893b6_cf0b6192",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 35
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-17T21:33:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf84fea1_5106e514",
+      "revId": "1d6838362d77ace9fd16f86ded4bef9a891be53f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
