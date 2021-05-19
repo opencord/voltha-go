@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1800a435_e9fdadb2",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "nit:  Just use \"config\" instead of cf",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab64c67a_23accd87",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "missing \"agent.requestQueue.RequestComplete()\"",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64cdf777_c651fa91",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "Add a comment to specify that the caller needs to hold the lock (i.e. got the green light)",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3f963e9_b3f5aacf",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1270,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "Is this duplicated code?  Looks the same as below.",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b50d0139_eb482415",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1326,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "Releasing the lock after the reconcile is successfully completed is incorrect.  Before every reconcile attempt, we should get the lock, send the reconcile to the adapter, release the lock, wait for the response.  An adapter can change some device states first before sending a successful reconcile response.  In such a case, there will be a deadlock.",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cb4ded0_6421f71a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1424,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "Is this function needed?  It invokes the proceedWithRequest() without a lock.",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff21879d_777e55cb",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "Use config",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2a78112_c9535f84",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "Let the device agent decide if it\u0027s ok to reconcile. It\u0027s simpler.",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8113775b_1227c2e3",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1947,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-19T17:52:58Z",
+      "side": 1,
+      "message": "Invoke a function in the agent to do this.  This simplifies the locking.",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
