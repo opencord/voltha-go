@@ -852,8 +852,6 @@ func (rhp *RequestHandlerProxy) getDeviceDownloadImageRequest(ctx context.Contex
 				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
 				return nil, err
 			}
-		default:
-			return nil, errors.New("invalid argument")
 		}
 	}
 	return &deviceDownloadImageReq, nil
@@ -875,8 +873,6 @@ func (rhp *RequestHandlerProxy) getDeviceImageRequest(ctx context.Context, args 
 				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
 				return nil, err
 			}
-		default:
-			return nil, errors.New("invalid argument")
 		}
 	}
 	return &deviceImageReq, nil
@@ -894,10 +890,13 @@ func (rhp *RequestHandlerProxy) getDeviceID(ctx context.Context, args []*ic.Argu
 				logger.Warnw(ctx, "cannot-unmarshal-device", log.Fields{"error": err})
 				return "", err
 			}
-		default:
-			return "", errors.New("invalid argument")
 		}
 	}
+
+	if deviceId.Val == "" {
+		return "", errors.New("invalid argument")
+	}
+
 	return deviceId.Val, nil
 }
 
