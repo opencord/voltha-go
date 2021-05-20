@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4721955d_8c7984b0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1800a435_e9fdadb2",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab64c67a_23accd87",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 37
@@ -33,6 +51,24 @@
       "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9007da18_8e1e84b6",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab64c67a_23accd87",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c0a6ad19_8a907cb7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64cdf777_c651fa91",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3f963e9_b3f5aacf",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 37
@@ -64,6 +118,24 @@
       "writtenOn": "2021-05-19T17:52:58Z",
       "side": 1,
       "message": "Is this duplicated code?  Looks the same as below.",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4671864_3a56e5f6",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1270,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "this is the function called from multiple function like adapter restart from where it would be called in loop to reconcile every device corresponding to that adapter, this function will return response. If reconciling is failed in this function a error response will be returned and reconciling retry will be triggered which the function below.\nThat is the reason they are kept separate, keeping them separate will also help us in future task on supporting reconciling failure from adapter side.",
+      "parentUuid": "b3f963e9_b3f5aacf",
       "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "c8e04f21_c3419139",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1424,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "Removed, and necessary refactoring is done.",
+      "parentUuid": "9cb4ded0_6421f71a",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff21879d_777e55cb",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 37
@@ -118,6 +208,24 @@
       "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "519d052d_750e4af5",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff21879d_777e55cb",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -138,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "ad2ab165_72dce564",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "replace the check with pre provisioned admin state check and rest will be taken care by agent.",
+      "parentUuid": "b2a78112_c9535f84",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8113775b_1227c2e3",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 37
@@ -152,6 +278,24 @@
       "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "146bc61e_1d6bd502",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1947,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-20T08:47:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8113775b_1227c2e3",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
