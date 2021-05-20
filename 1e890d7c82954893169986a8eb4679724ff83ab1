@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2e0a0bb_a4b8092e",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-05-20T16:01:21Z",
+      "side": 1,
+      "message": "What is the problem with the log",
+      "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da5c4011_ace00ef2",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-05-20T16:01:21Z",
+      "side": 1,
+      "message": "What is the problem with the log?",
+      "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
