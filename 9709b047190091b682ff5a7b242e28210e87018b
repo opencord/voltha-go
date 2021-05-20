@@ -69,6 +69,41 @@
       "revId": "9709b047190091b682ff5a7b242e28210e87018b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "640b4d87_7ee6a57b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-05-20T17:25:17Z",
+      "side": 1,
+      "message": "Ideally there is no change in the state, hence we can ignore sending the event in this case.",
+      "parentUuid": "3f20f71b_a4c4065c",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0516a12c_debaf29f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 868,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-05-20T17:25:17Z",
+      "side": 1,
+      "message": "change log.Fields as common to other places",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
