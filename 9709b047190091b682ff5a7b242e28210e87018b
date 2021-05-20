@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "3d7e6b9d_a66b77cb",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-20T19:50:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "640b4d87_7ee6a57b",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0516a12c_debaf29f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 8
@@ -104,6 +122,24 @@
       "revId": "9709b047190091b682ff5a7b242e28210e87018b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ed72763_40de09e7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 868,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-05-20T19:50:06Z",
+      "side": 1,
+      "message": "Not needed for this log line. There is already one below.Removing.",
+      "parentUuid": "0516a12c_debaf29f",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
