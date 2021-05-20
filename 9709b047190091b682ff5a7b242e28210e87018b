@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa6a0017_2f3c1828",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-20T09:57:14Z",
+      "side": 1,
+      "message": "I was expecting voltha.AdminState_PREPROVISIONED not UNKNOWN",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07a3d489_59d0123a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-20T09:57:14Z",
+      "side": 1,
+      "message": "why are you setting it to FAILED ? stopping the device agent does not mean it\u0027s failed. I would expected an UNKNOWN here or you can introduce a STOPPED state",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
