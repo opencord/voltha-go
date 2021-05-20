@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "4758dc8e_2fe6a925",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-20T17:31:53Z",
+      "side": 1,
+      "message": "device-id is already present in the context. So this seems redundant.\n\nPlease refer https://github.com/opencord/voltha-go/blob/master/rw_core/core/device/manager.go#L1792\n\nPasting here for convenience:\nlog.EnrichSpan(ctx, log.Fields{\"device-id\": id.Id})",
+      "parentUuid": "84d95904_4629331d",
+      "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da5c4011_ace00ef2",
         "filename": "rw_core/core/device/remote/adapter_proxy.go",
         "patchSetId": 1
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "same as before",
       "parentUuid": "da5c4011_ace00ef2",
+      "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c994b7a_675c2f39",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-05-20T17:31:53Z",
+      "side": 1,
+      "message": "device-id is already present in the context. So this seems redundant.",
+      "parentUuid": "92b2f4fe_6f658b9e",
       "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
