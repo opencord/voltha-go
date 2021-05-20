@@ -590,14 +590,14 @@ func (ap *AdapterProxy) CommitImage(ctx context.Context, device *voltha.Device, 
 }
 
 func (ap *AdapterProxy) GetOnuImages(ctx context.Context, device *voltha.Device, id *common.ID) (chan *kafka.RpcResponse, error) {
-	logger.Debugw(ctx, "get-onu-images", log.Fields{"device-id": device.Id})
+	logger.Debug(ctx, "get-onu-images")
 	rpc := "Get_onu_images"
 	toTopic, err := ap.getAdapterTopic(ctx, device.Id, device.Adapter)
 	if err != nil {
 		return nil, err
 	}
 	args := []*kafka.KVArg{
-		{Key: "deviceId", Value: id},
+		{Key: "deviceId", Value: &ic.StrType{Val: id.Id}},
 	}
 	replyToTopic := ap.getCoreTopic()
 	return ap.sendRPC(ctx, rpc, toTopic, &replyToTopic, true, device.Id, args...)

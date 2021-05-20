@@ -545,7 +545,7 @@ func (agent *Agent) getOnuImages(ctx context.Context, id *common.ID) (*voltha.On
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	defer cancel()
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
-	logger.Debugw(ctx, "get-onu-images", log.Fields{"device-id": agent.deviceID})
+	logger.Debug(ctx, "get-onu-images")
 
 	// Send the request to the adapter
 	ch, err := agent.adapterProxy.GetOnuImages(subCtx, cloned, id)
