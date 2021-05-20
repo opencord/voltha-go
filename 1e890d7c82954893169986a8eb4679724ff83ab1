@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "84d95904_4629331d",
+        "filename": "rw_core/core/device/agent_image.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-20T16:20:56Z",
+      "side": 1,
+      "message": "I was actually preferring the earlier version",
+      "parentUuid": "c2e0a0bb_a4b8092e",
+      "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da5c4011_ace00ef2",
         "filename": "rw_core/core/device/remote/adapter_proxy.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2021-05-20T16:01:21Z",
       "side": 1,
       "message": "What is the problem with the log?",
+      "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92b2f4fe_6f658b9e",
+        "filename": "rw_core/core/device/remote/adapter_proxy.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-20T16:20:56Z",
+      "side": 1,
+      "message": "same as before",
+      "parentUuid": "da5c4011_ace00ef2",
       "revId": "1e890d7c82954893169986a8eb4679724ff83ab1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
