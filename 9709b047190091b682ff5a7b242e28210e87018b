@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "7ffe829e_242b63ed",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-21T09:22:01Z",
+      "side": 1,
+      "message": "ah, I see your point. my misunderstanding.",
+      "parentUuid": "2d3b0cad_8946e195",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07a3d489_59d0123a",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 8
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "640b4d87_7ee6a57b",
+      "revId": "9709b047190091b682ff5a7b242e28210e87018b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30382d37_90b21185",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-21T09:22:01Z",
+      "side": 1,
+      "message": "agreed, we can skip this.",
+      "parentUuid": "3d7e6b9d_a66b77cb",
       "revId": "9709b047190091b682ff5a7b242e28210e87018b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
