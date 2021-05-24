@@ -107,6 +107,29 @@
     },
     {
       "key": {
+        "uuid": "565bb66f_9cb2df9d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-05-24T14:57:35Z",
+      "side": 1,
+      "message": "Isn\u0027t the best practice to name the function something like proceedWithRequestWithoutLock or similar to help ensure the caller is aware that there is not lock on this function, but it sort of needs one?",
+      "range": {
+        "startLine": 1258,
+        "startChar": 20,
+        "endLine": 1258,
+        "endChar": 38
+      },
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3f963e9_b3f5aacf",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 37
