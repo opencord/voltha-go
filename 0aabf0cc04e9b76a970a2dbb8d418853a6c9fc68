@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "185d6066_a09a7086",
+        "filename": "VERSION",
+        "patchSetId": 42
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-24T21:32:30Z",
+      "side": 1,
+      "message": "this needs to be 2.9.3-dev",
+      "revId": "0aabf0cc04e9b76a970a2dbb8d418853a6c9fc68",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
