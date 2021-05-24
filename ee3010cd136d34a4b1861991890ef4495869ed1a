@@ -130,6 +130,30 @@
     },
     {
       "key": {
+        "uuid": "8f02a45a_ab958937",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-24T15:57:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "565bb66f_9cb2df9d",
+      "range": {
+        "startLine": 1258,
+        "startChar": 20,
+        "endLine": 1258,
+        "endChar": 38
+      },
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3f963e9_b3f5aacf",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 37
@@ -165,6 +189,24 @@
     },
     {
       "key": {
+        "uuid": "4cb3a41f_651eb15e",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1270,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-24T15:57:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4671864_3a56e5f6",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b50d0139_eb482415",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 37
@@ -179,6 +221,24 @@
       "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "026d55df_fffb2dda",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 37
+      },
+      "lineNbr": 1326,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-05-24T15:57:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b50d0139_eb482415",
+      "revId": "ee3010cd136d34a4b1861991890ef4495869ed1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
