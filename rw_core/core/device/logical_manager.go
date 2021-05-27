@@ -267,7 +267,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 }
 
 func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
-	logger.Debugw(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
+	logger.Infow(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
 	// Sanity check
 	if !device.Root {
 		return errors.New("device-not-root")
@@ -288,8 +288,8 @@ func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *vo
 	} else {
 		logger.Warnw(ctx, "no-logical-device-agent-on-deletion", log.Fields{"device-id": logDeviceID})
 	}
-
-	logger.Debug(ctx, "deleting-logical-device-ends")
+	ldMgr.SendDeviceDeletionEvent(ctx, logDeviceID)
+	logger.Debugw(ctx, "deleting-logical-device-ends", log.Fields{"device-id": device.Id})
 	return nil
 }
 
@@ -424,7 +424,7 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 			return err
 		}
 	}
-	logger.Debug(ctx, "deleting-logical-ports-ends")
+	logger.Debugw(ctx, "deleting-logical-ports-ends", log.Fields{"device-id": deviceID})
 	return nil
 }
 
