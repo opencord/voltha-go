@@ -81,13 +81,13 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
 	logicalDeviceMgr := &LogicalManager{
-		Manager:                        event.NewManager(eventProxy, coreInstanceID, cf.VolthaStackID),
-		deviceMgr:                      deviceMgr,
-		kafkaICProxy:                   kmp,
-		dbPath:                         dbPath,
-		ldProxy:                        dbPath.Proxy("logical_devices"),
-		defaultTimeout:                 cf.DefaultCoreTimeout,
-		logicalDeviceLoadingInProgress: make(map[string][]chan int),
+		Manager:                         event.NewManager(eventProxy, coreInstanceID, cf.VolthaStackID),
+		deviceMgr:                       deviceMgr,
+		kafkaICProxy:                    kmp,
+		dbPath:                          dbPath,
+		ldProxy:                         dbPath.Proxy("logical_devices"),
+		defaultTimeout:                  cf.DefaultCoreTimeout,
+		logicalDeviceLoadingInProgress:  make(map[string][]chan int),
 	}
 	deviceMgr.logicalDeviceMgr = logicalDeviceMgr
 
