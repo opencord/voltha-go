@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "710a192d_6dede792",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-27T16:01:55Z",
+      "side": 1,
+      "message": "Need a mutex here",
+      "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5c9fbb6_29c38fdd",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-27T16:01:55Z",
+      "side": 1,
+      "message": "This won\u0027t work.  As part of the state machine the delete logical ports are invoked before the deletion of the logical device.   In the new code to delete logical ports there is a check on the portDeletionCh which won\u0027t exist at the time that code was invoked.   Hence this code here will never receive a port deletion notification - that\u0027s why it has a sleep of 1 second to keep going.",
+      "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
