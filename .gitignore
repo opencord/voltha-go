@@ -62,3 +62,4 @@ sca-report
 
 # etcd - ?
 rw_core/core/voltha.rwcore.nb.etcd/
+rw_core/core/device/voltha.rwcore.da.etcd/

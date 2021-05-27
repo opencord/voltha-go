@@ -40,14 +40,15 @@ import (
 // LogicalManager represent logical device manager attributes
 type LogicalManager struct {
 	*event.Manager
-	logicalDeviceAgents            sync.Map
-	deviceMgr                      *Manager
-	kafkaICProxy                   kafka.InterContainerProxy
-	dbPath                         *model.Path
-	ldProxy                        *model.Proxy
-	defaultTimeout                 time.Duration
-	logicalDevicesLoadingLock      sync.RWMutex
-	logicalDeviceLoadingInProgress map[string][]chan int
+	logicalDeviceAgents             sync.Map
+	deviceMgr                       *Manager
+	kafkaICProxy                    kafka.InterContainerProxy
+	dbPath                          *model.Path
+	ldProxy                         *model.Proxy
+	defaultTimeout                  time.Duration
+	logicalDevicesLoadingLock       sync.RWMutex
+	logicalDeviceLoadingInProgress  map[string][]chan int
+	logicalDeviceDeletionInProgress map[string]chan struct{}
 }
 
 func (ldMgr *LogicalManager) addLogicalDeviceAgentToMap(agent *LogicalAgent) {
@@ -240,12 +241,15 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 }
 
 func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
-	logger.Debugw(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
+	logger.Infow(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
 	// Sanity check
 	if !device.Root {
 		return errors.New("device-not-root")
 	}
 	logDeviceID := device.ParentId
+	//creating the channel to wait for the ports to be deleted
+	portDeletionCh := make(chan struct{}, 1)
+	ldMgr.logicalDeviceDeletionInProgress[logDeviceID] = portDeletionCh
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, logDeviceID); agent != nil {
 		// Stop the logical device agent
 		if err := agent.stop(ctx); err != nil {
@@ -255,7 +259,16 @@ func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *vo
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
 	}
-
+	select {
+	case <-portDeletionCh:
+		logger.Debugw(ctx, "deleted-all-ports-proceeding with-logical-device-deletion", log.Fields{"device-id": device.Id})
+		//Notifying the ofagent of the disconnection
+		ldMgr.SendDeviceDeletionEvent(ctx, logDeviceID)
+	case <-time.After(1 * time.Second):
+		//just continue
+	}
+	close(portDeletionCh)
+	delete(ldMgr.logicalDeviceDeletionInProgress, logDeviceID)
 	logger.Debug(ctx, "deleting-logical-device-ends")
 	return nil
 }
@@ -386,6 +399,14 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 		if err = agent.deleteLogicalPorts(ctx, deviceID); err != nil {
 			logger.Warnw(ctx, "delete-logical-ports-failed", log.Fields{"logical-device-id": *ldID})
 			return err
+		}
+	}
+	if ch, ok := ldMgr.logicalDeviceDeletionInProgress[*ldID]; ok {
+		select {
+		case ch <- struct{}{}:
+			logger.Debugw(ctx, "signaling-logical-ports-deletion-end", log.Fields{"logical-device-id": *ldID})
+		default:
+			logger.Debugw(ctx, "no-signaling-logical-ports-deletion-needed", log.Fields{"logical-device-id": *ldID})
 		}
 	}
 	logger.Debug(ctx, "deleting-logical-ports-ends")

@@ -203,6 +203,26 @@ func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res 
 	}
 }
 
+// SendDeviceDeletionEvent notifies the ofAgent that the logical device was removed.
+// Done via an Hello failed message, which is not the proper way, but OF does not have a connection failed
+// because that would just sever the connection, this is kept internal an properly documented on both ends
+func (q *Manager) SendDeviceDeletionEvent(ctx context.Context, logicalDeviceID string) {
+	logger.Infow(ctx, "send-change-event-for-device-deletion", log.Fields{"logical-device-id": logicalDeviceID})
+	errorType := openflow_13.OfpErrorType_OFPET_HELLO_FAILED
+	q.changeEventQueue <- openflow_13.ChangeEvent{
+		Id: logicalDeviceID,
+		Event: &openflow_13.ChangeEvent_Error{
+			Error: &openflow_13.OfpErrorMsg{
+				Header: &openflow_13.OfpHeader{
+					Type: openflow_13.OfpType_OFPT_ERROR,
+				},
+				Type: uint32(errorType),
+				Code: uint32(openflow_13.OfpHelloFailedCode_OFPHFC_INCOMPATIBLE),
+			},
+		},
+	}
+}
+
 // ReceiveChangeEvents receives change in events
 func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
 	ctx := context.Background()
