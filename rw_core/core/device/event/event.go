@@ -201,6 +201,19 @@ func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res 
 	}
 }
 
+// SendDeviceDeletionEvent notifies the ofAgent that the logical device was removed.
+func (q *Manager) SendDeviceDeletionEvent(ctx context.Context, logicalDeviceID string) {
+	logger.Infow(ctx, "send-change-event-for-device-deletion", log.Fields{"logical-device-id": logicalDeviceID})
+	q.changeEventQueue <- openflow_13.ChangeEvent{
+		Id: logicalDeviceID,
+		Event: &openflow_13.ChangeEvent_DeviceStatus{
+			DeviceStatus: &openflow_13.OfpDeviceStatus{
+				Status: openflow_13.OfpDeviceConnection_OFPDEV_DISCONNECTED,
+			},
+		},
+	}
+}
+
 // ReceiveChangeEvents receives change in events
 func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
 	ctx := context.Background()
