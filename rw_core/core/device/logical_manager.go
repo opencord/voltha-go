@@ -41,14 +41,14 @@ import (
 // LogicalManager represent logical device manager attributes
 type LogicalManager struct {
 	*event.Manager
-	logicalDeviceAgents            sync.Map
-	deviceMgr                      *Manager
-	kafkaICProxy                   kafka.InterContainerProxy
-	dbPath                         *model.Path
-	ldProxy                        *model.Proxy
-	defaultTimeout                 time.Duration
-	logicalDevicesLoadingLock      sync.RWMutex
-	logicalDeviceLoadingInProgress map[string][]chan int
+	logicalDeviceAgents             sync.Map
+	deviceMgr                       *Manager
+	kafkaICProxy                    kafka.InterContainerProxy
+	dbPath                          *model.Path
+	ldProxy                         *model.Proxy
+	defaultTimeout                  time.Duration
+	logicalDevicesLoadingLock       sync.RWMutex
+	logicalDeviceLoadingInProgress  map[string][]chan int
 }
 
 func (ldMgr *LogicalManager) Start(ctx context.Context) {
@@ -266,7 +266,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 }
 
 func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
-	logger.Debugw(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
+	logger.Infow(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
 	// Sanity check
 	if !device.Root {
 		return errors.New("device-not-root")
@@ -281,8 +281,7 @@ func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *vo
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
 	}
-
-	logger.Debug(ctx, "deleting-logical-device-ends")
+	logger.Debugw(ctx, "deleting-logical-device-ends", log.Fields{"device-id": device.Id})
 	return nil
 }
 
@@ -417,7 +416,7 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 			return err
 		}
 	}
-	logger.Debug(ctx, "deleting-logical-ports-ends")
+	logger.Debugw(ctx, "deleting-logical-ports-ends", log.Fields{"device-id": deviceID})
 	return nil
 }
 
