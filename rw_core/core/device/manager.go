@@ -87,6 +87,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 		ldProxy:                        dbPath.Proxy("logical_devices"),
 		defaultTimeout:                 cf.DefaultCoreTimeout,
 		logicalDeviceLoadingInProgress: make(map[string][]chan int),
+		logicalDeviceDeletionInProgress: make(map[string]chan struct{}),
 	}
 	deviceMgr.logicalDeviceMgr = logicalDeviceMgr
 
