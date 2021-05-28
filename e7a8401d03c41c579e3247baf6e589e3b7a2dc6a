@@ -33,6 +33,24 @@
       "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b141b8c_3d782a33",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-28T15:52:58Z",
+      "side": 1,
+      "message": "thanks for the review khen, this is not the observation I made in the code. I\u0027ve been observing that the two methods are not synchronised and no order is guaranteed. As you can see from the following logs the signaling actually happens on the device delete:\n\n{\"level\":\"info\",\"ts\":\"2021-05-28T10:34:34.588Z\",\"caller\":\"state/transitions.go:427\",\"msg\":\"deviceType:1-deviceId:4416bdd7-2f73-42d7-91cd-3d20f3ae73df-previous:{ENABLED REACHABLE ACTIVE DELETING_FROM_ADAPTER}-current:{ENABLED REACHABLE ACTIVE DELETING_POST_ADAPTER_RESPONSE}\",\"instanceId\":\"voltha1-voltha-rw-core-5d9c86cc97-g4rnt\",\"pkg\":\"state\",\"op-id\":\"1e2c64361cd7c5ac\",\"op-name\":\"/voltha.VolthaService/DeleteDevice\",\"device-id\":\"e098e66a-2052-48d8-97e3-b92ec2f2d2f6\"}\n{\"level\":\"info\",\"ts\":\"2021-05-28T10:34:34.602Z\",\"caller\":\"device/logical_manager.go:410\",\"msg\":\"signaling-logical-ports-deletion-end\",\"instanceId\":\"voltha1-voltha-rw-core-5d9c86cc97-g4rnt\",\"op-id\":\"1e2c64361cd7c5ac\",\"op-name\":\"/voltha.VolthaService/DeleteDevice\",\"device-id\":\"e098e66a-2052-48d8-97e3-b92ec2f2d2f6\",\"logical-device-id\":\"34a10d02-fca9-4b03-9e84-d0a46131c49a\"}\n{\"level\":\"info\",\"ts\":\"2021-05-28T10:34:34.602Z\",\"caller\":\"device/logical_manager.go:264\",\"msg\":\"deleted-all-ports-proceeding-with-logical-device-deletion\",\"instanceId\":\"voltha1-voltha-rw-core-5d9c86cc97-g4rnt\",\"device-id\":\"e098e66a-2052-48d8-97e3-b92ec2f2d2f6\",\"op-id\":\"1e2c64361cd7c5ac\",\"op-name\":\"/voltha.VolthaService/DeleteDevice\",\"device-id\":\"e098e66a-2052-48d8-97e3-b92ec2f2d2f6\"}\n\nunless something else is wrong in the code the channel will be present, if not present then it will reset to the 1 second.",
+      "parentUuid": "f5c9fbb6_29c38fdd",
+      "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
