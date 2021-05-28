@@ -86,6 +86,24 @@
       "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8f72b83_bf7b03bb",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-28T18:11:09Z",
+      "side": 1,
+      "message": "The DeleteAllLogicalPorts() should have sent all the logical port deletion events to ONOS before the logical device is deleted.  Are you seeing an issue where ONOS does not receive all the logical port delete events?",
+      "parentUuid": "6afa9b98_6221dffa",
+      "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
