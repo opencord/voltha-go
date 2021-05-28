@@ -51,6 +51,41 @@
       "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0901e93_70d6b658",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-28T18:05:19Z",
+      "side": 1,
+      "message": "A few pointers:  \n\n1) deleteLogicalDevice is invoked when an OLT device is deleted and is part of this sequence of APIs: {dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteLogicalDevice, dMgr.RunPostDeviceDelete}\n\n2) deleteLogicalPorts() (below) is invoked after a child device is deleted and is part of this sequence: {dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})  \n\n3) To have the logs above, imply that deleteLogicalPorts() was invoked after dMgr.DeleteAllChildDevices() when a parent device was being deleted.   \n\n4) Note that the call to dMgr.DeleteAllChildDevices happens before dMgr.DeleteLogicalDevice.  However, the call to  deleteLogicalPorts(), being part of a callback after a device is deleted, can happen at the same time as the call to dMgr.DeleteLogicalDevice.\n\n5) Therefore we can get in the case where deleteLogicalPorts() is invoked before executing dMgr.DeleteLogicalDevice.  In such a case, dMgr.DeleteLogicalDevice will wait forever (or bail out with the 1 second sleep).  If you remove the sleep, you will see the wait over multiple runs, i.e. a race condition.\n\n6) The logs above show a case when the executing the deleteLogicalPorts() happens after dMgr.DeleteLogicalDevice. But this won\u0027t always be the case.",
+      "parentUuid": "3b141b8c_3d782a33",
+      "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6afa9b98_6221dffa",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-05-28T18:05:19Z",
+      "side": 1,
+      "message": "There can be multiple devices on this OLT.  This function is invoked only when all ports off 1 child device is deleted.   If we are waiting for all logical ports off the logical device to be deleted first (I would think that\u0027s the expectation) then this change won\u0027t do the trick.",
+      "revId": "e7a8401d03c41c579e3247baf6e589e3b7a2dc6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
