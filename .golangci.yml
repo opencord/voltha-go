@@ -15,12 +15,24 @@
 run:
   modules-download-mode: vendor
 
+issues:
+  exclude-use-default: false #we should decide ourselves about false positives
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gocritic
+        - gosec
+    - linters:
+        - gocritic
+      text: "ifElseChain:" #it should be up to a developer to decide which operator to use
+
 linters:
   enable:
-    #- gocritic
-    - gofmt
-    - golint
-    - gosec
-    #- unparam
     #- gochecknoglobals
     #- gochecknoinits
+    - gocritic
+    - gofmt
+    - gosec
+    - errcheck
+    #- unparam

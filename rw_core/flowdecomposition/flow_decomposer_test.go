@@ -332,7 +332,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	fa := &fu.FlowArgs{
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 		},
 		Actions: []*ofp.OfpAction{
 			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101)),
@@ -348,7 +348,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	fa = &fu.FlowArgs{
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 		},
 		Actions: []*ofp.OfpAction{
 			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 102)),
@@ -364,7 +364,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	fa = &fu.FlowArgs{
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 		},
 		Actions: []*ofp.OfpAction{
 			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 103)),
@@ -380,7 +380,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	fa = &fu.FlowArgs{
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 		},
 		Actions: []*ofp.OfpAction{
 			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 104)),
@@ -533,7 +533,7 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 		KV: fu.OfpFlowModArgs{"priority": 1000},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 			fu.EthType(0x888e),
 		},
 		Actions: []*ofp.OfpAction{
@@ -578,7 +578,7 @@ func TestEapolReRouteRuleZeroVlanDecomposition(t *testing.T) {
 			fu.InPort(2),
 			fu.TunnelId(uint64(1)),
 			fu.EthType(0x888e),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 		},
 		Actions: []*ofp.OfpAction{
 			fu.PushVlan(0x8100),
@@ -837,7 +837,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 		KV: fu.OfpFlowModArgs{"priority": 5000, "table_id": 0},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(1),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 			fu.VlanPcp(0),
 		},
 		Actions: []*ofp.OfpAction{
@@ -892,7 +892,7 @@ func TestUnicastUpstreamRuleDecomposition(t *testing.T) {
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(2),
 			fu.TunnelId(uint64(1)),
-			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0),
+			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT)),
 			fu.VlanPcp(0),
 		},
 		Actions: []*ofp.OfpAction{
@@ -965,7 +965,7 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 			fu.VlanPcp(0),
 		},
 		Actions: []*ofp.OfpAction{
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
+			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT))),
 			fu.Output(1),
 		},
 	}
@@ -1034,7 +1034,7 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 			fu.VlanPcp(0),
 		},
 		Actions: []*ofp.OfpAction{
-			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 0)),
+			fu.SetField(fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT))),
 			fu.Output(2),
 		},
 	}

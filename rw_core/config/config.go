@@ -18,7 +18,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"time"
 )
 
@@ -138,93 +137,93 @@ func NewRWCoreFlags() *RWCoreFlags {
 // ParseCommandArguments parses the arguments when running read-write core service
 func (cf *RWCoreFlags) ParseCommandArguments() {
 
-	help := fmt.Sprintf("RW core endpoint address")
+	help := "RW core endpoint address"
 	flag.StringVar(&(cf.RWCoreEndpoint), "vcore-endpoint", defaultRWCoreEndpoint, help)
 
-	help = fmt.Sprintf("GRPC server - address")
+	help = "GRPC server - address"
 	flag.StringVar(&(cf.GrpcAddress), "grpc_address", defaultGrpcAddress, help)
 
-	help = fmt.Sprintf("Kafka - Adapter messaging address")
+	help = "Kafka - Adapter messaging address"
 	flag.StringVar(&(cf.KafkaAdapterAddress), "kafka_adapter_address", defaultKafkaAdapterAddress, help)
 
-	help = fmt.Sprintf("Kafka - Cluster messaging address")
+	help = "Kafka - Cluster messaging address"
 	flag.StringVar(&(cf.KafkaClusterAddress), "kafka_cluster_address", defaultKafkaClusterAddress, help)
 
-	help = fmt.Sprintf("RW Core topic")
+	help = "RW Core topic"
 	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", defaultCoreTopic, help)
 
-	help = fmt.Sprintf("RW Core Event topic")
+	help = "RW Core Event topic"
 	flag.StringVar(&(cf.EventTopic), "event_topic", defaultEventTopic, help)
 
 	flag.Bool("in_competing_mode", false, "deprecated")
 
-	help = fmt.Sprintf("KV store type")
+	help = "KV store type"
 	flag.StringVar(&(cf.KVStoreType), "kv_store_type", defaultKVStoreType, help)
 
-	help = fmt.Sprintf("The default timeout when making a kv store request")
+	help = "The default timeout when making a kv store request"
 	flag.DurationVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", defaultKVStoreTimeout, help)
 
-	help = fmt.Sprintf("KV store address")
+	help = "KV store address"
 	flag.StringVar(&(cf.KVStoreAddress), "kv_store_address", defaultKVStoreAddress, help)
 
-	help = fmt.Sprintf("The time to wait before deleting a completed transaction key")
+	help = "The time to wait before deleting a completed transaction key"
 	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", defaultKVTxnKeyDelTime, help)
 
-	help = fmt.Sprintf("Log level")
+	help = "Log level"
 	flag.StringVar(&(cf.LogLevel), "log_level", defaultLogLevel, help)
 
-	help = fmt.Sprintf("Timeout for long running request")
+	help = "Timeout for long running request"
 	flag.DurationVar(&(cf.LongRunningRequestTimeout), "timeout_long_request", defaultLongRunningRequestTimeout, help)
 
-	help = fmt.Sprintf("Default timeout for regular request")
+	help = "Default timeout for regular request"
 	flag.DurationVar(&(cf.DefaultRequestTimeout), "timeout_request", defaultDefaultRequestTimeout, help)
 
-	help = fmt.Sprintf("Default Core timeout")
+	help = "Default Core timeout"
 	flag.DurationVar(&(cf.DefaultCoreTimeout), "core_timeout", defaultCoreTimeout, help)
 
-	help = fmt.Sprintf("Show startup banner log lines")
+	help = "Show startup banner log lines"
 	flag.BoolVar(&cf.Banner, "banner", defaultBanner, help)
 
-	help = fmt.Sprintf("Show version information and exit")
+	help = "Show version information and exit"
 	flag.BoolVar(&cf.DisplayVersionOnly, "version", defaultDisplayVersionOnly, help)
 
-	help = fmt.Sprintf("The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
+	help = "The name of the meta-key whose value is the rw-core group to which the ofagent is bound"
 	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", defaultCoreBindingKey, help)
 
-	help = fmt.Sprintf("The number of retries to connect to a dependent component")
+	help = "The number of retries to connect to a dependent component"
 	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", defaultMaxConnectionRetries, help)
 
-	help = fmt.Sprintf("The number of seconds between each connection retry attempt")
+	help = "The number of seconds between each connection retry attempt"
 	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", defaultConnectionRetryInterval, help)
 
-	help = fmt.Sprintf("The number of seconds between liveness probes while in a live state")
+	help = "The number of seconds between liveness probes while in a live state"
 	flag.DurationVar(&(cf.LiveProbeInterval), "live_probe_interval", defaultLiveProbeInterval, help)
 
-	help = fmt.Sprintf("The number of seconds between liveness probes while in a not live state")
+	help = "The number of seconds between liveness probes while in a not live state"
 	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", defaultNotLiveProbeInterval, help)
 
-	help = fmt.Sprintf("The address on which to listen to answer liveness and readiness probe queries over HTTP.")
+	help = "The address on which to listen to answer liveness and readiness probe queries over HTTP."
 	flag.StringVar(&(cf.ProbeAddress), "probe_address", defaultProbeAddress, help)
 
-	help = fmt.Sprintf("Whether to send logs to tracing agent?")
+	help = "Whether to send logs to tracing agent?"
 	flag.BoolVar(&(cf.TraceEnabled), "trace_enabled", defaultTraceEnabled, help)
 
-	help = fmt.Sprintf("The address of tracing agent to which span info should be sent.")
+	help = "The address of tracing agent to which span info should be sent."
 	flag.StringVar(&(cf.TraceAgentAddress), "trace_agent_address", defaultTraceAgentAddress, help)
 
-	help = fmt.Sprintf("Whether to enrich log statements with fields denoting operation being executed for achieving correlation?")
+	help = "Whether to enrich log statements with fields denoting operation being executed for achieving correlation?"
 	flag.BoolVar(&(cf.LogCorrelationEnabled), "log_correlation_enabled", defaultLogCorrelationEnabled, help)
 
-	help = fmt.Sprintf("ID for the current voltha stack")
+	help = "ID for the current voltha stack"
 	flag.StringVar(&cf.VolthaStackID, "stack_id", defaultVolthaStackID, help)
 
-	help = fmt.Sprintf("The initial number of milliseconds an exponential backoff will wait before a retry")
+	help = "The initial number of milliseconds an exponential backoff will wait before a retry"
 	flag.DurationVar(&(cf.BackoffRetryInitialInterval), "backoff_retry_initial_interval", defaultBackoffRetryInitialInterval, help)
 
-	help = fmt.Sprintf("The maximum number of milliseconds an exponential backoff can elasped")
+	help = "The maximum number of milliseconds an exponential backoff can elasped"
 	flag.DurationVar(&(cf.BackoffRetryMaxElapsedTime), "backoff_retry_max_elapsed_time", defaultBackoffRetryMaxElapsedTime, help)
 
-	help = fmt.Sprintf("The maximum number of milliseconds of an exponential backoff interval")
+	help = "The maximum number of milliseconds of an exponential backoff interval"
 	flag.DurationVar(&(cf.BackoffRetryMaxInterval), "backoff_retry_max_interval", defaultBackoffRetryMaxInterval, help)
 
 	flag.Parse()

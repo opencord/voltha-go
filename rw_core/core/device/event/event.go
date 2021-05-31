@@ -100,13 +100,13 @@ func (q *Manager) getStreamingTracker(ctx context.Context, method string, done c
 
 func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) error {
 	if tracker.failedPacket != nil {
-		switch tracker.failedPacket.(type) {
+		switch failedPacket := tracker.failedPacket.(type) {
 		case openflow_13.PacketIn:
 			logger.Debug(ctx, "enqueueing-last-failed-packet-in")
-			q.packetInQueue <- tracker.failedPacket.(openflow_13.PacketIn)
+			q.packetInQueue <- failedPacket
 		case openflow_13.ChangeEvent:
 			logger.Debug(ctx, "enqueueing-last-failed-change-event")
-			q.changeEventQueue <- tracker.failedPacket.(openflow_13.ChangeEvent)
+			q.changeEventQueue <- failedPacket
 		}
 	}
 	return nil
@@ -138,11 +138,9 @@ loop:
 					nil, time.Now().Unix())
 				// save the last failed packet in
 				streamingTracker.failedPacket = packet
-			} else {
-				if streamingTracker.failedPacket != nil {
-					// reset last failed packet saved to avoid flush
-					streamingTracker.failedPacket = nil
-				}
+			} else if streamingTracker.failedPacket != nil {
+				// reset last failed packet saved to avoid flush
+				streamingTracker.failedPacket = nil
 			}
 		case <-q.packetInQueueDone:
 			logger.Debug(ctx, "another-receive-packets-in-running-bailing-out")
@@ -228,11 +226,9 @@ loop:
 					time.Now().Unix())
 				// save last failed change event
 				streamingTracker.failedPacket = event
-			} else {
-				if streamingTracker.failedPacket != nil {
-					// reset last failed event saved on success to avoid flushing
-					streamingTracker.failedPacket = nil
-				}
+			} else if streamingTracker.failedPacket != nil {
+				// reset last failed event saved on success to avoid flushing
+				streamingTracker.failedPacket = nil
 			}
 		case <-q.changeEventQueueDone:
 			logger.Debug(ctx, "another-receive-change-events-already-running-bailing-out")
