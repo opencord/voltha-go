@@ -261,8 +261,8 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 	numUniPerOnu := 4
 	done := make(chan struct{})
 
-	fmt.Println(fmt.Sprintf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d",
-		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
+	fmt.Printf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d\n",
+		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
 
 	// Create all the devices and logical device before computing the routes in one go
 	ld := &voltha.LogicalDevice{Id: logicalDeviceID}
@@ -297,7 +297,12 @@ func TestDeviceRoutes_ComputeRoutes(t *testing.T) {
 	for _, port := range ldMgr.ports {
 		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(port.OfpPort.PortNo))
 	}
-	fmt.Println(fmt.Sprintf("Total Time:%dms, Total Routes:%d NumGetDeviceInvoked:%d", time.Since(start)/time.Millisecond, len(ldMgr.deviceRoutes.Routes), onuMgr.numGetDeviceInvoked))
+	fmt.Printf(
+		"Total Time:%dms, Total Routes:%d NumGetDeviceInvoked:%d\n",
+		time.Since(start)/time.Millisecond,
+		len(ldMgr.deviceRoutes.Routes),
+		onuMgr.numGetDeviceInvoked,
+	)
 }
 
 func TestDeviceRoutes_AddPort(t *testing.T) {
@@ -307,8 +312,8 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	numUniPerOnu := 4
 	done := make(chan struct{})
 
-	fmt.Println(fmt.Sprintf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d",
-		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
+	fmt.Printf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d\n",
+		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
 
 	start := time.Now()
 	// Create all the devices and logical device before computing the routes in one go
@@ -330,7 +335,8 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 	close(oltMgrChnl)
 	close(ldMgrChnl)
 
-	ldMgr.deviceRoutes.Print(ctx)
+	err := ldMgr.deviceRoutes.Print(ctx)
+	assert.NoError(t, err)
 
 	// Validate the routes are up to date
 	assert.True(t, ldMgr.deviceRoutes.isUpToDate(ldMgr.ports))
@@ -343,7 +349,12 @@ func TestDeviceRoutes_AddPort(t *testing.T) {
 		assert.Equal(t, port.RootPort, ldMgr.deviceRoutes.IsRootPort(port.OfpPort.PortNo))
 	}
 
-	fmt.Println(fmt.Sprintf("Total Time:%dms, Total Routes:%d NumGetDeviceInvoked:%d", time.Since(start)/time.Millisecond, len(ldMgr.deviceRoutes.Routes), onuMgr.numGetDeviceInvoked))
+	fmt.Printf(
+		"Total Time:%dms, Total Routes:%d NumGetDeviceInvoked:%d\n",
+		time.Since(start)/time.Millisecond,
+		len(ldMgr.deviceRoutes.Routes),
+		onuMgr.numGetDeviceInvoked,
+	)
 }
 
 func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
@@ -353,8 +364,8 @@ func TestDeviceRoutes_compareRoutesGeneration(t *testing.T) {
 	numUniPerOnu := 4
 	done := make(chan struct{})
 
-	fmt.Println(fmt.Sprintf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d",
-		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu))
+	fmt.Printf("Test: Computing all routes. LogicalPorts:%d,  NNI:%d, Pon/OLT:%d, ONU/Pon:%d, Uni/Onu:%d\n",
+		numNNIPort*numPonPortOnOlt*numOnuPerOltPonPort*numUniPerOnu, numNNIPort, numPonPortOnOlt, numOnuPerOltPonPort, numUniPerOnu)
 
 	// Create all the devices and logical device before computing the routes in one go
 	ld1 := &voltha.LogicalDevice{Id: logicalDeviceID}
@@ -472,7 +483,7 @@ func TestDeviceRoutes_reverseRoute(t *testing.T) {
 		assert.Equal(t, ingressNos[j], reverseRoute[i].Egress)
 	}
 
-	fmt.Println(fmt.Sprintf("Reverse of %d hops successful.", numRoutes))
+	fmt.Printf("Reverse of %d hops successful.\n", numRoutes)
 
 	reverseOfReverse := getReverseRoute(reverseRoute)
 	assert.Equal(t, route, reverseOfReverse)

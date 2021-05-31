@@ -231,7 +231,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
-		desc = fmt.Sprint("invalid device states")
+		desc = "invalid device states"
 		agent.logDeviceUpdate(ctx, "updateFlowsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states")
 	}

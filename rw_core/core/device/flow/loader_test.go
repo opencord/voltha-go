@@ -18,8 +18,10 @@ package flow
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"testing"
@@ -59,17 +61,27 @@ func TestLoadersIdentical(t *testing.T) {
 }
 
 func compare(regexesA, regexesB []*regexp.Regexp, fileNameA, fileNameB string) error {
-	fileA, err := os.Open(fileNameA)
+	fileA, err := os.Open(filepath.Clean(fileNameA))
 	if err != nil {
 		return err
 	}
-	defer fileA.Close()
+	defer func() {
+		err := fileA.Close()
+		if err != nil {
+			logger.Errorf(context.Background(), "failed to close file: %v", err)
+		}
+	}()
 
-	fileB, err := os.Open(fileNameB)
+	fileB, err := os.Open(filepath.Clean(fileNameB))
 	if err != nil {
 		return err
 	}
-	defer fileB.Close()
+	defer func() {
+		err := fileB.Close()
+		if err != nil {
+			logger.Errorf(context.Background(), "failed to close file: %v", err)
+		}
+	}()
 
 	scannerA, scannerB := bufio.NewScanner(fileA), bufio.NewScanner(fileB)
 

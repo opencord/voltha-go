@@ -612,12 +612,11 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 			return err
 		}
 		logger.Debugw(ctx, "successfully-loaded-parent-and-children", log.Fields{"device-id": deviceID})
-	} else {
+	} else if device.ParentId != "" {
 		//	Scenario B - use the parentId of that device (root device) to trigger the loading
-		if device.ParentId != "" {
-			return dMgr.load(ctx, device.ParentId)
-		}
+		return dMgr.load(ctx, device.ParentId)
 	}
+
 	return nil
 }
 
@@ -633,7 +632,13 @@ func (dMgr *Manager) ListDeviceIds(ctx context.Context, _ *empty.Empty) (*voltha
 // trigger loading the devices along with their children and parent in memory
 func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ReconcileDevices")
-	logger.Debugw(ctx, "reconcile-devices", log.Fields{"num-devices": len(ids.Items)})
+
+	numDevices := 0
+	if ids != nil {
+		numDevices = len(ids.Items)
+	}
+
+	logger.Debugw(ctx, "reconcile-devices", log.Fields{"num-devices": numDevices})
 	if ids != nil && len(ids.Items) != 0 {
 		toReconcile := len(ids.Items)
 		reconciled := 0

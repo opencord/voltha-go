@@ -400,13 +400,11 @@ func (dr *DeviceRoutes) GetHalfRoute(nniAsEgress bool, ingress, egress uint32) (
 				routes = append(routes, path[1])
 				return routes, nil
 			}
-		} else {
+		} else if ingress != 0 && routeLink.Ingress == ingress {
 			// Here we use the first route whose ingress port matches the ingress input parameter
-			if ingress != 0 && routeLink.Ingress == ingress {
-				routes = append(routes, path[0])
-				routes = append(routes, Hop{})
-				return routes, nil
-			}
+			routes = append(routes, path[0])
+			routes = append(routes, Hop{})
+			return routes, nil
 		}
 	}
 	return routes, fmt.Errorf("no half route found for ingress port %d, egress port %d and nni as egress %t", ingress, egress, nniAsEgress)
