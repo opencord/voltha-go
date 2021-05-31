@@ -171,7 +171,9 @@ func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
 	}
 
 	d := &voltha.Device{}
-	if have, err := TestProxyRootDevice.Get(context.Background(), TestProxyDeviceID, d); err != nil {
+
+	have, err := TestProxyRootDevice.Get(context.Background(), TestProxyDeviceID, d)
+	if err != nil {
 		BenchmarkProxyLogger.Errorf(ctx, "Failed get device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
 	} else if !have {
@@ -390,10 +392,8 @@ func TestProxy_2_1_2_Add_ExistingLogicalDevice(t *testing.T) {
 		assert.NotNil(t, err)
 	} else if !have {
 		t.Error("Failed to find added logical device")
-	} else {
-		if device.String() != TestProxyLogicalDevice.String() {
-			t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxyLogicalDevice, device)
-		}
+	} else if device.String() != TestProxyLogicalDevice.String() {
+		t.Errorf("Logical devices don't match - existing: %+v returned: %+v", TestProxyLogicalDevice, device)
 	}
 }
 

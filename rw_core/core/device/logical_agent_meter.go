@@ -59,10 +59,11 @@ func (agent *LogicalAgent) updateMeterTable(ctx context.Context, meterMod *ofp.O
 }
 
 func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
-	logger.Debugw(ctx, "meterAdd", log.Fields{"metermod": *meterMod})
 	if meterMod == nil {
+		logger.Debug(ctx, "meterAdd")
 		return nil
 	}
+	logger.Debugw(ctx, "meterAdd", log.Fields{"metermod": *meterMod})
 
 	meterEntry := fu.MeterEntryFromMeterMod(ctx, meterMod)
 
@@ -81,10 +82,11 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 }
 
 func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMeterMod) error {
-	logger.Debug(ctx, "meterDelete", log.Fields{"meterMod": *meterMod})
 	if meterMod == nil {
+		logger.Debug(ctx, "meterDelete")
 		return nil
 	}
+	logger.Debug(ctx, "meterDelete", log.Fields{"meterMod": *meterMod})
 
 	meterHandle, have := agent.meterLoader.Lock(meterMod.MeterId)
 	if !have {
