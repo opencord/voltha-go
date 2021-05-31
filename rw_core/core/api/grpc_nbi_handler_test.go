@@ -1140,8 +1140,12 @@ func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, nu
 	}
 	// Wait for logical device to have the flows (or none
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
-		flows, _ := nbi.ListLogicalDeviceFlows(getContext(), &voltha.ID{Id: lds.Items[0].Id})
-		return lds != nil && len(lds.Items) == 1 && len(flows.Items) == expectedNumFlows
+		id := ""
+		if lds != nil {
+			id = lds.Items[0].Id
+		}
+		flws, _ := nbi.ListLogicalDeviceFlows(getContext(), &voltha.ID{Id: id})
+		return lds != nil && len(lds.Items) == 1 && len(flws.Items) == expectedNumFlows
 	}
 	// No timeout implies a success
 	err := waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
@@ -1430,7 +1434,12 @@ func TestSuiteNbiApiHandler(t *testing.T) {
 	if err != nil {
 		logger.Fatalf(ctx, "could not create CPU profile: %v\n ", err)
 	}
-	defer f.Close()
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			logger.Errorf(ctx, "failed to close file: %v\n", err)
+		}
+	}()
 	runtime.SetBlockProfileRate(1)
 	runtime.SetMutexProfileFraction(-1)
 	if err := pprof.StartCPUProfile(f); err != nil {

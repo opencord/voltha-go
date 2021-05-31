@@ -145,7 +145,12 @@ func main() {
 	if err != nil {
 		logger.Warnw(ctx, "unable-to-initialize-tracing-and-log-correlation-module", log.Fields{"error": err})
 	} else {
-		defer closer.Close()
+		defer func() {
+			err = closer.Close()
+			if err != nil {
+				logger.Errorw(ctx, "failed-to-close-trace-closer", log.Fields{"error": err})
+			}
+		}()
 	}
 
 	// create and start the core
