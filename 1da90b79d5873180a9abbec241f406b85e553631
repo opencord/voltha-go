@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac477dd2_284964c5",
+        "filename": "db/model/proxy_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2021-05-31T18:48:13Z",
+      "side": 1,
+      "message": "just to make it more readable",
+      "revId": "1da90b79d5873180a9abbec241f406b85e553631",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
