@@ -64,7 +64,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	cloned := agent.cloneDeviceWithoutLock()
 	_, index, err := getImage(img, device)
 	if err != nil {
-		cloned.ImageDownloads = append(device.ImageDownloads, clonedImg)
+		cloned.ImageDownloads = append(cloned.ImageDownloads, clonedImg)
 	} else {
 		cloned.ImageDownloads[index] = clonedImg
 	}
