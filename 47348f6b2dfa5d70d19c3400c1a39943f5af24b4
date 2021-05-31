@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33523f78_78611d49",
+        "filename": "rw_core/utils/id.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2021-05-31T18:51:32Z",
+      "side": 0,
+      "message": "usage of math/rand is reported as insecure by gosec and it\u0027s recommended to use crypto/rand instead",
+      "revId": "47348f6b2dfa5d70d19c3400c1a39943f5af24b4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
