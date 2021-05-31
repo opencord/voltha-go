@@ -17,9 +17,10 @@
 package utils
 
 import (
+	cryptoRand "crypto/rand"
+	"encoding/binary"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -36,9 +37,13 @@ func CreateLogicalDeviceID() string {
 }
 
 // CreateLogicalPortID produces a random port ID for a logical device.
-func CreateLogicalPortID() uint32 {
-	//	A logical port is a uint32
-	return rand.Uint32()
+func CreateLogicalPortID() (v uint64, err error) {
+	err = binary.Read(cryptoRand.Reader, binary.BigEndian, &v)
+	if err != nil {
+		return v, err
+	}
+
+	return v, nil
 }
 
 // CreateDataPathID creates uint64 pathid from string pathid

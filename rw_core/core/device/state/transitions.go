@@ -431,14 +431,14 @@ func (tMap *TransitionMap) getTransitionHandler(ctx context.Context, cDevice, pD
 	var tempHandler []transitionHandler
 	var m *match
 	bestMatch := &match{}
-	for _, aTransition := range tMap.transitions {
+	for i := range tMap.transitions {
 		// consider transition only if it matches deviceType or is a wild card - any
-		if aTransition.deviceType != deviceType && aTransition.deviceType != any {
+		if tMap.transitions[i].deviceType != deviceType && tMap.transitions[i].deviceType != any {
 			continue
 		}
-		tempHandler, m = getHandler(pState, cState, &aTransition)
+		tempHandler, m = getHandler(pState, cState, &tMap.transitions[i])
 		if tempHandler != nil {
-			if m.isExactMatch() && aTransition.deviceType == deviceType {
+			if m.isExactMatch() && tMap.transitions[i].deviceType == deviceType {
 				return tempHandler
 			} else if m.isExactMatch() || m.isBetterMatch(bestMatch) {
 				currentMatch = tempHandler

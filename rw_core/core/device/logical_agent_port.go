@@ -172,10 +172,10 @@ func clonePortSetState(oldPort *voltha.LogicalPort, state voltha.OperStatus_Type
 	newPort.OfpPort = &newOfpPort
 
 	if state == voltha.OperStatus_ACTIVE {
-		newOfpPort.Config = newOfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+		newOfpPort.Config &= ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		newOfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
 	} else {
-		newOfpPort.Config = newOfpPort.Config | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+		newOfpPort.Config |= uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		newOfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
 	}
 	return &newPort
@@ -272,7 +272,7 @@ func (agent *LogicalAgent) enableLogicalPort(ctx context.Context, lPortNo uint32
 	newOfpPort := *oldPort.OfpPort
 	newPort.OfpPort = &newOfpPort
 
-	newOfpPort.Config = newOfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+	newOfpPort.Config &= ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 	if err := portHandle.Update(ctx, &newPort); err != nil {
 		return err
 	}
