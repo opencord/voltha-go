@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e528d80_d19d0de6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-01T16:18:56Z",
+      "side": 1,
+      "message": "This should be done on Core restart, not every time there is list device.  Also, on core restart we need to wait for the core to load all the devices + logical devices before setting it to ready.",
+      "revId": "d65fdc7639dd1553ca21d265b98388d5f5795d82",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
