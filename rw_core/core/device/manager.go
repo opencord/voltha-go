@@ -458,12 +458,33 @@ func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.D
 	ctx = utils.WithRPCMetadataContext(ctx, "ListDevices")
 	logger.Debug(ctx, "list-devices")
 	result := &voltha.Devices{}
-
+	//fetch from memory
 	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
 		result.Items = append(result.Items, value.(*Agent).device)
 		return true
 	})
+	if len(result.Items) < 1 {
+		//no data is found in memory, it may be a core restart case; thus, go and get them from kv store
+		var devices []*voltha.Device
+		if err := dMgr.dProxy.List(ctx, &devices); err != nil {
+			logger.Errorw(ctx, "failed-to-list-devices-from-cluster-proxy", log.Fields{"error": err})
+			return nil, err
+		}
 
+		for _, device := range devices {
+			// If device is not in memory then set it up
+			if !dMgr.IsDeviceInCache(device.Id) {
+				logger.Debugw(ctx, "loading-device-from-Model", log.Fields{"device-id": device.Id})
+				agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
+				if _, err := agent.start(ctx, nil); err != nil {
+					logger.Warnw(ctx, "failure-starting-agent", log.Fields{"device-id": device.Id})
+				} else {
+					dMgr.addDeviceAgentToMap(agent)
+				}
+			}
+			result.Items = append(result.Items, device)
+		}
+	}
 	logger.Debugw(ctx, "list-devices-end", log.Fields{"len": len(result.Items)})
 	return result, nil
 }

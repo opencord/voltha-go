@@ -110,6 +110,14 @@ func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Em
 		}
 		return true
 	})
+	if len(logicalDevices) < 1 {
+		// there is no logical device in memory. This may be a restart case; thus, go and get them from kv store
+		logger.Debug(ctx, "empty-logical-device-list--fetching-it-from-db")
+		if err := ldMgr.ldProxy.List(ctx, &logicalDevices); err != nil {
+			logger.Errorw(ctx, "failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
+			return nil, err
+		}
+	}
 	return &voltha.LogicalDevices{Items: logicalDevices}, nil
 }
 
