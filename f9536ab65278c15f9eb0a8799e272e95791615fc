@@ -213,6 +213,24 @@
     },
     {
       "key": {
+        "uuid": "e88c29ba_49cd859c",
+        "filename": "rw_core/core/device/logical_agent_meter.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-06-03T10:04:33Z",
+      "side": 1,
+      "message": "I\u0027m just expecting a log like: \nlogger.Errorw(ctx, \"failed-meterAdd-meterMod-is-nil\")",
+      "parentUuid": "4a2663ca_16f60822",
+      "revId": "f9536ab65278c15f9eb0a8799e272e95791615fc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9ce824d_b21ab4e7",
         "filename": "rw_core/core/device/logical_agent_meter.go",
         "patchSetId": 4
