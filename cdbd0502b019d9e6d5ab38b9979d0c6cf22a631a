@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c276aba0_f59ab7f4",
+        "filename": ".golangci.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-04T14:25:35Z",
+      "side": 1,
+      "message": "Any reason to disable these linters on the test files?  Too many errors?",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87f94299_7525215b",
+        "filename": ".golangci.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-04T14:25:35Z",
+      "side": 1,
+      "message": "Are the errors you found all due to gocritic?   Are there any specific settings of gocritic that would be useful to tune (as compared to used the defaults)?",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b1328c8_14e1c92c",
+        "filename": "rw_core/core/device/logical_agent_meter.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-04T14:25:35Z",
+      "side": 1,
+      "message": "While you are changing this code, please add the logical device id to the logger (both in the error and non-error case) to facilitate debugging.",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99a12e41_8787b774",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-04T14:25:35Z",
+      "side": 1,
+      "message": "Curious why sca would complain about this since this is a very common practice. Is referring each element (i.e. tMap.transitions[i]) more efficient?",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
