@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "21bad100_e9214527",
+        "filename": ".golangci.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2021-06-05T05:54:24Z",
+      "side": 1,
+      "message": "gosec and gocritic failures in tests don\u0027t matter much as it\u0027s not expected to be secure, for errcheck we also sometimes ignore errors because of test reasons so why should we take care about it in tests",
+      "parentUuid": "c276aba0_f59ab7f4",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87f94299_7525215b",
         "filename": ".golangci.yml",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2021-06-04T14:25:35Z",
       "side": 1,
       "message": "Are the errors you found all due to gocritic?   Are there any specific settings of gocritic that would be useful to tune (as compared to used the defaults)?",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "302bda66_1206c348",
+        "filename": ".golangci.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2021-06-05T05:54:24Z",
+      "side": 1,
+      "message": "no, but having this sca enabled is makes the code less critic, isn\u0027t it?",
+      "parentUuid": "87f94299_7525215b",
       "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "bedacb5f_2bdafb49",
+        "filename": "rw_core/core/device/logical_agent_meter.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2021-06-05T05:54:24Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "8b1328c8_14e1c92c",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "99a12e41_8787b774",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 9
@@ -64,6 +118,24 @@
       "writtenOn": "2021-06-04T14:25:35Z",
       "side": 1,
       "message": "Curious why sca would complain about this since this is a very common practice. Is referring each element (i.e. tMap.transitions[i]) more efficient?",
+      "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40afb58d_6436fc48",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1000569
+      },
+      "writtenOn": "2021-06-05T05:54:24Z",
+      "side": 1,
+      "message": "the main problem is \u0026aTransition pointer creation in a loop which would create a reference to a non predictable element of the slice e.g. read https://www.evanjones.ca/go-gotcha-loop-variables.html",
+      "parentUuid": "99a12e41_8787b774",
       "revId": "cdbd0502b019d9e6d5ab38b9979d0c6cf22a631a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
