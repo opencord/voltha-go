@@ -1619,13 +1619,14 @@ func (dMgr *Manager) DownloadImageToDevice(ctx context.Context, request *voltha.
 	ctx = utils.WithRPCMetadataContext(ctx, "DownloadImageToDevice")
 	respCh := make(chan []*voltha.DeviceImageState, len(request.GetDeviceId()))
 
-	downloadReq := &voltha.DeviceImageDownloadRequest{
-		Image:             request.Image,
-		ActivateOnSuccess: request.ActivateOnSuccess,
-		CommitOnSuccess:   request.CommitOnSuccess,
-	}
-
 	for index, deviceID := range request.DeviceId {
+		// Create download request per device
+		downloadReq := &voltha.DeviceImageDownloadRequest{
+			Image:             request.Image,
+			ActivateOnSuccess: request.ActivateOnSuccess,
+			CommitOnSuccess:   request.CommitOnSuccess,
+		}
+
 		//slice-out only single deviceID from the request
 		downloadReq.DeviceId = request.DeviceId[index : index+1]
 
@@ -1665,13 +1666,14 @@ func (dMgr *Manager) GetImageStatus(ctx context.Context, request *voltha.DeviceI
 
 	ctx = utils.WithRPCMetadataContext(ctx, "GetImageStatus")
 
-	imageStatusReq := &voltha.DeviceImageRequest{
-		Version:         request.Version,
-		CommitOnSuccess: request.CommitOnSuccess,
-	}
-
 	respCh := make(chan []*voltha.DeviceImageState, len(request.GetDeviceId()))
 	for index, deviceID := range request.DeviceId {
+		// Create status request per device
+		imageStatusReq := &voltha.DeviceImageRequest{
+			Version:         request.Version,
+			CommitOnSuccess: request.CommitOnSuccess,
+		}
+
 		//slice-out only single deviceID from the request
 		imageStatusReq.DeviceId = request.DeviceId[index : index+1]
 
@@ -1712,12 +1714,13 @@ func (dMgr *Manager) AbortImageUpgradeToDevice(ctx context.Context, request *vol
 	ctx = utils.WithRPCMetadataContext(ctx, "AbortImageUpgradeToDevice")
 	respCh := make(chan []*voltha.DeviceImageState, len(request.GetDeviceId()))
 
-	abortImageReq := &voltha.DeviceImageRequest{
-		Version:         request.Version,
-		CommitOnSuccess: request.CommitOnSuccess,
-	}
-
 	for index, deviceID := range request.DeviceId {
+		// Create abort request per device
+		abortImageReq := &voltha.DeviceImageRequest{
+			Version:         request.Version,
+			CommitOnSuccess: request.CommitOnSuccess,
+		}
+
 		//slice-out only single deviceID from the request
 		abortImageReq.DeviceId = request.DeviceId[index : index+1]
 
@@ -1780,12 +1783,13 @@ func (dMgr *Manager) ActivateImage(ctx context.Context, request *voltha.DeviceIm
 	ctx = utils.WithRPCMetadataContext(ctx, "ActivateImage")
 	respCh := make(chan []*voltha.DeviceImageState, len(request.GetDeviceId()))
 
-	activateImageReq := &voltha.DeviceImageRequest{
-		Version:         request.Version,
-		CommitOnSuccess: request.CommitOnSuccess,
-	}
-
 	for index, deviceID := range request.DeviceId {
+		// Create activate request per device
+		activateImageReq := &voltha.DeviceImageRequest{
+			Version:         request.Version,
+			CommitOnSuccess: request.CommitOnSuccess,
+		}
+
 		//slice-out only single deviceID from the request
 		activateImageReq.DeviceId = request.DeviceId[index : index+1]
 
@@ -1827,12 +1831,12 @@ func (dMgr *Manager) CommitImage(ctx context.Context, request *voltha.DeviceImag
 	ctx = utils.WithRPCMetadataContext(ctx, "CommitImage")
 	respCh := make(chan []*voltha.DeviceImageState, len(request.GetDeviceId()))
 
-	commitImageReq := &voltha.DeviceImageRequest{
-		Version:         request.Version,
-		CommitOnSuccess: request.CommitOnSuccess,
-	}
-
 	for index, deviceID := range request.DeviceId {
+		// Create commit request per device
+		commitImageReq := &voltha.DeviceImageRequest{
+			Version:         request.Version,
+			CommitOnSuccess: request.CommitOnSuccess,
+		}
 		//slice-out only single deviceID from the request
 		commitImageReq.DeviceId = request.DeviceId[index : index+1]
 
