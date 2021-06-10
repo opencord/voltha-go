@@ -33,10 +33,10 @@ import (
 
 // listDeviceFlows returns device flows
 func (agent *Agent) listDeviceFlows() map[uint64]*ofp.OfpFlowStats {
-	flowIDs := agent.flowLoader.ListIDs()
+	flowIDs := agent.flowCache.ListIDs()
 	flows := make(map[uint64]*ofp.OfpFlowStats, len(flowIDs))
 	for flowID := range flowIDs {
-		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
+		if flowHandle, have := agent.flowCache.Lock(flowID); have {
 			flows[flowID] = flowHandle.GetReadOnly()
 			flowHandle.Unlock()
 		}
@@ -69,7 +69,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	for _, flow := range newFlows {
-		flowHandle, created, err := agent.flowLoader.LockOrCreate(ctx, flow)
+		flowHandle, created, err := agent.flowCache.LockOrCreate(ctx, flow)
 		if err != nil {
 			desc = err.Error()
 			agent.logDeviceUpdate(ctx, "addFlowsToAdapter", nil, nil, operStatus, &desc)
@@ -167,7 +167,7 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
 	for _, flow := range flowsToDel {
-		if flowHandle, have := agent.flowLoader.Lock(flow.Id); have {
+		if flowHandle, have := agent.flowCache.Lock(flow.Id); have {
 			// Update the store and cache
 			if err := flowHandle.Delete(ctx); err != nil {
 				flowHandle.Unlock()
@@ -245,7 +245,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
 	for _, flow := range updatedFlows {
-		if flowHandle, have := agent.flowLoader.Lock(flow.Id); have {
+		if flowHandle, have := agent.flowCache.Lock(flow.Id); have {
 			flowToDelete := flowHandle.GetReadOnly()
 			// Update the store and cache
 			if err := flowHandle.Update(ctx, flow); err != nil {
@@ -318,8 +318,8 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMetadata *voltha.FlowMetadata) error {
 	var flowsToDelete []*ofp.OfpFlowStats
 	// If an existing flow has the uniPort as an InPort or OutPort or as a Tunnel ID then it needs to be removed
-	for flowID := range agent.flowLoader.ListIDs() {
-		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
+	for flowID := range agent.flowCache.ListIDs() {
+		if flowHandle, have := agent.flowCache.Lock(flowID); have {
 			flow := flowHandle.GetReadOnly()
 			if flow != nil && (fu.GetInPort(flow) == uniPort || fu.GetOutPort(flow) == uniPort || fu.GetTunnelId(flow) == uint64(uniPort)) {
 				flowsToDelete = append(flowsToDelete, flow)
@@ -353,8 +353,8 @@ func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 
 	defer agent.logDeviceUpdate(ctx, "deleteAllFlows", nil, nil, operStatus, &desc)
 
-	for flowID := range agent.flowLoader.ListIDs() {
-		if flowHandle, have := agent.flowLoader.Lock(flowID); have {
+	for flowID := range agent.flowCache.ListIDs() {
+		if flowHandle, have := agent.flowCache.Lock(flowID); have {
 			// Update the store and cache
 			if err := flowHandle.Delete(ctx); err != nil {
 				flowHandle.Unlock()

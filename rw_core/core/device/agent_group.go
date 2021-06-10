@@ -33,10 +33,10 @@ import (
 
 // listDeviceGroups returns logical device flow groups
 func (agent *Agent) listDeviceGroups() map[uint32]*ofp.OfpGroupEntry {
-	groupIDs := agent.groupLoader.ListIDs()
+	groupIDs := agent.groupCache.ListIDs()
 	groups := make(map[uint32]*ofp.OfpGroupEntry, len(groupIDs))
 	for groupID := range groupIDs {
-		if groupHandle, have := agent.groupLoader.Lock(groupID); have {
+		if groupHandle, have := agent.groupCache.Lock(groupID); have {
 			groups[groupID] = groupHandle.GetReadOnly()
 			groupHandle.Unlock()
 		}
@@ -71,7 +71,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	groupsToAdd := make([]*ofp.OfpGroupEntry, 0)
 	groupsToDelete := make([]*ofp.OfpGroupEntry, 0)
 	for _, group := range newGroups {
-		groupHandle, created, err := agent.groupLoader.LockOrCreate(ctx, group)
+		groupHandle, created, err := agent.groupCache.LockOrCreate(ctx, group)
 		if err != nil {
 			desc = err.Error()
 			agent.logDeviceUpdate(ctx, "addGroupsToAdapter", nil, nil, operStatus, &desc)
@@ -170,7 +170,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 	}
 
 	for _, group := range groupsToDel {
-		if groupHandle, have := agent.groupLoader.Lock(group.Desc.GroupId); have {
+		if groupHandle, have := agent.groupCache.Lock(group.Desc.GroupId); have {
 			// Update the store and cache
 			if err := groupHandle.Delete(ctx); err != nil {
 				groupHandle.Unlock()
@@ -248,7 +248,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 
 	groupsToUpdate := make([]*ofp.OfpGroupEntry, 0)
 	for _, group := range updatedGroups {
-		if groupHandle, have := agent.groupLoader.Lock(group.Desc.GroupId); have {
+		if groupHandle, have := agent.groupCache.Lock(group.Desc.GroupId); have {
 			// Update the store and cache
 			if err := groupHandle.Update(ctx, group); err != nil {
 				groupHandle.Unlock()

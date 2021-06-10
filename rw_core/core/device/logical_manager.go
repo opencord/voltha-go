@@ -19,6 +19,7 @@ package device
 import (
 	"context"
 	"errors"
+	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
 	"io"
 	"strconv"
 	"strings"
@@ -48,6 +49,29 @@ type LogicalManager struct {
 	defaultTimeout                 time.Duration
 	logicalDevicesLoadingLock      sync.RWMutex
 	logicalDeviceLoadingInProgress map[string][]chan int
+}
+
+func (ldMgr *LogicalManager) Start(ctx context.Context) {
+	logger.Info(ctx, "starting-logical-device-manager")
+	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusPreparing)
+
+	// Load all the logical devices from the dB
+	var logicalDevices []*voltha.LogicalDevice
+	if err := ldMgr.ldProxy.List(ctx, &logicalDevices); err != nil {
+		logger.Fatalw(ctx, "failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
+	}
+	for _, lDevice := range logicalDevices {
+		// Create an agent for each device
+		agent := newLogicalAgent(ctx, lDevice.Id, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.defaultTimeout)
+		if err := agent.start(ctx, true, lDevice); err != nil {
+			logger.Warnw(ctx, "failure-starting-logical-agent", log.Fields{"logical-device-id": lDevice.Id})
+		} else {
+			ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceID, agent)
+		}
+	}
+
+	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusRunning)
+	logger.Info(ctx, "logical-device-manager-started")
 }
 
 func (ldMgr *LogicalManager) addLogicalDeviceAgentToMap(agent *LogicalAgent) {
@@ -110,6 +134,8 @@ func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Em
 		}
 		return true
 	})
+	logger.Debugw(ctx, "list-all-logical-devices", log.Fields{"num-logical-devices": len(logicalDevices)})
+
 	return &voltha.LogicalDevices{Items: logicalDevices}, nil
 }
 
@@ -146,7 +172,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 		//TODO: either wait for the agent to be started before returning, or
 		//      implement locks in the agent to ensure request are not processed before start() is complete
 		ldCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
-		err := agent.start(ldCtx, false)
+		err := agent.start(ldCtx, false, nil)
 		if err != nil {
 			logger.Errorw(ctx, "unable-to-create-the-logical-device", log.Fields{"error": err})
 			ldMgr.deleteLogicalDeviceAgent(id)
@@ -207,7 +233,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 			if _, err := ldMgr.getLogicalDeviceFromModel(ctx, lDeviceID); err == nil {
 				logger.Debugw(ctx, "loading-logical-device", log.Fields{"lDeviceId": lDeviceID})
 				agent := newLogicalAgent(ctx, lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.defaultTimeout)
-				if err := agent.start(ctx, true); err != nil {
+				if err := agent.start(ctx, true, nil); err != nil {
 					return err
 				}
 				ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceID, agent)
@@ -301,6 +327,7 @@ func (ldMgr *LogicalManager) ListLogicalDeviceFlows(ctx context.Context, id *vol
 		ret[ctr] = flow
 		ctr++
 	}
+	logger.Debugw(ctx, "list-logical-device-flows", log.Fields{"logical-device-id": id.Id, "num-flows": len(flows)})
 	return &openflow_13.Flows{Items: ret}, nil
 }
 
@@ -319,6 +346,7 @@ func (ldMgr *LogicalManager) ListLogicalDeviceFlowGroups(ctx context.Context, id
 		ret[ctr] = group
 		ctr++
 	}
+	logger.Debugw(ctx, "list-logical-device-flow-groups", log.Fields{"logical-device-id": id.Id, "num-groups": len(groups)})
 	return &openflow_13.FlowGroups{Items: ret}, nil
 }
 
@@ -337,6 +365,7 @@ func (ldMgr *LogicalManager) ListLogicalDevicePorts(ctx context.Context, id *vol
 		ret[ctr] = port
 		ctr++
 	}
+	logger.Debugw(ctx, "list-logical-device-ports", log.Fields{"logical-device-id": id.Id, "num-ports": len(ports)})
 	return &voltha.LogicalPorts{Items: ret}, nil
 }
 

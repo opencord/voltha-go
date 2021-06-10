@@ -174,7 +174,7 @@ func (dat *DATest) createDeviceAgent(t *testing.T) *Agent {
 	deviceMgr := dat.deviceMgr
 	clonedDevice := proto.Clone(dat.device).(*voltha.Device)
 	deviceAgent := newAgent(deviceMgr.adapterProxy, clonedDevice, deviceMgr, deviceMgr.dbPath, deviceMgr.dProxy, deviceMgr.defaultTimeout)
-	d, err := deviceAgent.start(context.TODO(), clonedDevice)
+	d, err := deviceAgent.start(context.TODO(), false, clonedDevice)
 	assert.Nil(t, err)
 	assert.NotNil(t, d)
 	for _, port := range dat.devicePorts {

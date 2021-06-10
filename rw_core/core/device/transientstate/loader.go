@@ -58,11 +58,16 @@ func (loader *Loader) Load(ctx context.Context) {
 	defer loader.lock.Unlock()
 
 	var deviceTransientState voltha.DeviceTransientState
-	if have, err := loader.dbProxy.Get(ctx, loader.deviceTransientState.deviceID, &deviceTransientState); err != nil || !have {
+	have, err := loader.dbProxy.Get(ctx, loader.deviceTransientState.deviceID, &deviceTransientState)
+	if err != nil {
 		logger.Errorw(ctx, "failed-to-get-device-transient-state-from-cluster-data-proxy", log.Fields{"error": err})
 		return
 	}
-	loader.deviceTransientState.transientState = deviceTransientState.TransientState
+	if have {
+		loader.deviceTransientState.transientState = deviceTransientState.TransientState
+		return
+	}
+	loader.deviceTransientState.transientState = voltha.DeviceTransientState_NONE
 }
 
 // Lock acquires the lock for deviceTransientStateLoader, and returns a handle

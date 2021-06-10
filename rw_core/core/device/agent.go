@@ -71,8 +71,8 @@ type Agent struct {
 	stopReconcilingMutex sync.RWMutex
 	config               *config.RWCoreFlags
 
-	flowLoader           *flow.Loader
-	groupLoader          *group.Loader
+	flowCache            *flow.Cache
+	groupCache           *group.Cache
 	portLoader           *port.Loader
 	transientStateLoader *transientstate.Loader
 }
@@ -98,8 +98,8 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 		device:               proto.Clone(device).(*voltha.Device),
 		requestQueue:         coreutils.NewRequestQueue(),
 		config:               deviceMgr.config,
-		flowLoader:           flow.NewLoader(dbPath.SubPath("flows").Proxy(deviceID)),
-		groupLoader:          group.NewLoader(dbPath.SubPath("groups").Proxy(deviceID)),
+		flowCache:            flow.NewCache(),
+		groupCache:           group.NewCache(),
 		portLoader:           port.NewLoader(dbPath.SubPath("ports").Proxy(deviceID)),
 		transientStateLoader: transientstate.NewLoader(dbPath.SubPath("core").Proxy("transientstate"), deviceID),
 	}
@@ -108,7 +108,7 @@ func newAgent(ap *remote.AdapterProxy, device *voltha.Device, deviceMgr *Manager
 // start() saves the device to the data model and registers for callbacks on that device if deviceToCreate!=nil.
 // Otherwise, it will load the data from the dB and setup the necessary callbacks and proxies. Returns the device that
 // was started.
-func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*voltha.Device, error) {
+func (agent *Agent) start(ctx context.Context, deviceExist bool, deviceToCreate *voltha.Device) (*voltha.Device, error) {
 	needToStart := false
 	if agent.startOnce.Do(func() { needToStart = true }); !needToStart {
 		return agent.getDeviceReadOnly(ctx)
@@ -121,23 +121,21 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 			}
 		}
 	}()
-
-	var device *voltha.Device
-	if deviceToCreate == nil {
-		// Load the existing device
-		device := &voltha.Device{}
-		have, err := agent.dbProxy.Get(ctx, agent.deviceID, device)
-		if err != nil {
-			return nil, err
-		} else if !have {
-			return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
+	if deviceExist {
+		device := deviceToCreate
+		if device == nil {
+			// Load from dB
+			device = &voltha.Device{}
+			have, err := agent.dbProxy.Get(ctx, agent.deviceID, device)
+			if err != nil {
+				return nil, err
+			} else if !have {
+				return nil, status.Errorf(codes.NotFound, "device-%s", agent.deviceID)
+			}
 		}
-
 		agent.deviceType = device.Adapter
 		agent.device = proto.Clone(device).(*voltha.Device)
-		// load the flows and groups from KV to cache
-		agent.flowLoader.Load(ctx)
-		agent.groupLoader.Load(ctx)
+		// load the ports from KV to cache
 		agent.portLoader.Load(ctx)
 		agent.transientStateLoader.Load(ctx)
 
@@ -154,7 +152,7 @@ func (agent *Agent) start(ctx context.Context, deviceToCreate *voltha.Device) (*
 		// Assumption is that AdminState, FlowGroups, and Flows are uninitialized since this
 		// is a new device, so populate them here before passing the device to ldProxy.Set.
 		// agent.deviceId will also have been set during newAgent().
-		device = (proto.Clone(deviceToCreate)).(*voltha.Device)
+		device := (proto.Clone(deviceToCreate)).(*voltha.Device)
 		device.Id = agent.deviceID
 		device.AdminState = voltha.AdminState_PREPROVISIONED
 		currState = device.AdminState
@@ -229,8 +227,6 @@ func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 
 	agent.deviceType = device.Adapter
 	agent.device = device
-	agent.flowLoader.Load(ctx)
-	agent.groupLoader.Load(ctx)
 	agent.portLoader.Load(ctx)
 	agent.transientStateLoader.Load(ctx)
 

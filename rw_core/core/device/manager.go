@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
 	"sync"
 	"time"
 
@@ -95,6 +96,33 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, kmp kafka.Inte
 	return deviceMgr, logicalDeviceMgr
 }
 
+func (dMgr *Manager) Start(ctx context.Context) {
+	logger.Info(ctx, "starting-device-manager")
+	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusPreparing)
+
+	// Load all the devices from the dB
+	var devices []*voltha.Device
+	if err := dMgr.dProxy.List(ctx, &devices); err != nil {
+		// Any error from the dB means if we proceed we may end up with corrupted data
+		logger.Fatalw(ctx, "failed-to-list-devices-from-KV", log.Fields{"error": err})
+	}
+
+	for _, device := range devices {
+		// Create an agent for each device
+		agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
+		if _, err := agent.start(ctx, true, device); err != nil {
+			logger.Warnw(ctx, "failure-starting-agent", log.Fields{"device-id": device.Id})
+		} else {
+			dMgr.addDeviceAgentToMap(agent)
+		}
+	}
+
+	// TODO: Need to trigger a reconcile at this point
+
+	probe.UpdateStatusFromContext(ctx, "device-manager", probe.ServiceStatusRunning)
+	logger.Info(ctx, "device-manager-started")
+}
+
 func (dMgr *Manager) addDeviceAgentToMap(agent *Agent) {
 	if _, exist := dMgr.deviceAgents.Load(agent.deviceID); !exist {
 		dMgr.deviceAgents.Store(agent.deviceID, agent)
@@ -168,7 +196,7 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 	device.Root = true
 	// Create and start a device agent for that device
 	agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
-	device, err = agent.start(ctx, device)
+	device, err = agent.start(ctx, false, device)
 	if err != nil {
 		logger.Errorw(ctx, "fail-to-start-device", log.Fields{"device-id": agent.deviceID, "error": err})
 		return nil, err
@@ -520,7 +548,7 @@ func (dMgr *Manager) loadDevice(ctx context.Context, deviceID string) (*Agent, e
 			if device, err = dMgr.getDeviceFromModel(ctx, deviceID); err == nil {
 				logger.Debugw(ctx, "loading-device", log.Fields{"device-id": deviceID})
 				agent := newAgent(dMgr.adapterProxy, device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
-				if _, err = agent.start(ctx, nil); err != nil {
+				if _, err = agent.start(ctx, true, device); err != nil {
 					logger.Warnw(ctx, "failure-loading-device", log.Fields{"device-id": deviceID, "error": err})
 				} else {
 					dMgr.addDeviceAgentToMap(agent)
@@ -1041,7 +1069,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, parentDeviceID str
 
 	// Create and start a device agent for that device
 	agent := newAgent(dMgr.adapterProxy, childDevice, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.defaultTimeout)
-	insertedChildDevice, err := agent.start(ctx, childDevice)
+	insertedChildDevice, err := agent.start(ctx, false, childDevice)
 	if err != nil {
 		logger.Errorw(ctx, "error-starting-child-device", log.Fields{"parent-device-id": childDevice.ParentId, "child-device-id": agent.deviceID, "error": err})
 		return nil, err

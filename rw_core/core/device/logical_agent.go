@@ -58,10 +58,10 @@ type LogicalAgent struct {
 	startOnce       sync.Once
 	stopOnce        sync.Once
 
-	flowLoader  *flow.Loader
-	meterLoader *meter.Loader
-	groupLoader *group.Loader
-	portLoader  *port.Loader
+	flowCache  *flow.Cache
+	meterCache *meter.Cache
+	groupCache *group.Cache
+	portLoader *port.Loader
 }
 
 func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
@@ -78,21 +78,21 @@ func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string,
 		defaultTimeout:  defaultTimeout,
 		requestQueue:    coreutils.NewRequestQueue(),
 
-		flowLoader:  flow.NewLoader(dbProxy.SubPath("logical_flows").Proxy(id)),
-		groupLoader: group.NewLoader(dbProxy.SubPath("logical_groups").Proxy(id)),
-		meterLoader: meter.NewLoader(dbProxy.SubPath("logical_meters").Proxy(id)),
-		portLoader:  port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
+		flowCache:  flow.NewCache(),
+		groupCache: group.NewCache(),
+		meterCache: meter.NewCache(),
+		portLoader: port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
 	}
 }
 
 // start creates the logical device and add it to the data model
-func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
+func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, logicalDevice *voltha.LogicalDevice) error {
 	needToStart := false
 	if agent.startOnce.Do(func() { needToStart = true }); !needToStart {
 		return nil
 	}
 
-	logger.Infow(ctx, "starting-logical-device-agent", log.Fields{"logical-device-id": agent.logicalDeviceID, "load-from-db": loadFromDB})
+	logger.Infow(ctx, "starting-logical-device-agent", log.Fields{"logical-device-id": agent.logicalDeviceID, "load-from-db": logicalDeviceExist})
 
 	var startSucceeded bool
 	defer func() {
@@ -104,7 +104,7 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 	}()
 
 	var ld *voltha.LogicalDevice
-	if !loadFromDB {
+	if !logicalDeviceExist {
 		//Build the logical device based on information retrieved from the device adapter
 		var switchCap *ic.SwitchCapability
 		var err error
@@ -141,14 +141,17 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 			}
 		}()
 	} else {
-		//	load from dB - the logical may not exist at this time.  On error, just return and the calling function
-		// will destroy this agent.
-		ld := &voltha.LogicalDevice{}
-		have, err := agent.ldProxy.Get(ctx, agent.logicalDeviceID, ld)
-		if err != nil {
-			return err
-		} else if !have {
-			return status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
+		// Check to see if we need to load from dB
+		ld = logicalDevice
+		if logicalDevice == nil {
+			//	load from dB
+			ld = &voltha.LogicalDevice{}
+			have, err := agent.ldProxy.Get(ctx, agent.logicalDeviceID, ld)
+			if err != nil {
+				return err
+			} else if !have {
+				return status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
+			}
 		}
 
 		// Update the root device Id
@@ -160,15 +163,12 @@ func (agent *LogicalAgent) start(ctx context.Context, loadFromDB bool) error {
 		// now that the root device is known, create DeviceRoutes with it
 		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.rootDeviceID, agent.deviceMgr.listDevicePorts)
 
-		// load the flows, meters and groups from KV to cache
-		agent.flowLoader.Load(ctx)
-		agent.meterLoader.Load(ctx)
-		agent.groupLoader.Load(ctx)
+		// load the logical ports from KV to cache
 		agent.portLoader.Load(ctx)
 	}
 
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
-	if loadFromDB {
+	if logicalDeviceExist {
 		go func() {
 			subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 			if err := agent.buildRoutes(subCtx); err != nil {

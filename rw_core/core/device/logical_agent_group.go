@@ -32,10 +32,10 @@ import (
 
 // listLogicalDeviceGroups returns logical device flow groups
 func (agent *LogicalAgent) listLogicalDeviceGroups() map[uint32]*ofp.OfpGroupEntry {
-	groupIDs := agent.groupLoader.ListIDs()
+	groupIDs := agent.groupCache.ListIDs()
 	groups := make(map[uint32]*ofp.OfpGroupEntry, len(groupIDs))
 	for groupID := range groupIDs {
-		if groupHandle, have := agent.groupLoader.Lock(groupID); have {
+		if groupHandle, have := agent.groupCache.Lock(groupID); have {
 			groups[groupID] = groupHandle.GetReadOnly()
 			groupHandle.Unlock()
 		}
@@ -69,7 +69,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 
 	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
 
-	groupHandle, created, err := agent.groupLoader.LockOrCreate(ctx, groupEntry)
+	groupHandle, created, err := agent.groupCache.LockOrCreate(ctx, groupEntry)
 	if err != nil {
 		return err
 	}
@@ -120,11 +120,11 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 
 	toDelete := map[uint32]struct{}{groupMod.GroupId: {}}
 	if groupMod.GroupId == uint32(ofp.OfpGroup_OFPG_ALL) {
-		toDelete = agent.groupLoader.ListIDs()
+		toDelete = agent.groupCache.ListIDs()
 	}
 
 	for groupID := range toDelete {
-		if groupHandle, have := agent.groupLoader.Lock(groupID); have {
+		if groupHandle, have := agent.groupCache.Lock(groupID); have {
 			affectedGroups[groupID] = groupHandle.GetReadOnly()
 			if err := groupHandle.Delete(ctx); err != nil {
 				return err
@@ -202,7 +202,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 
 	groupID := groupMod.GroupId
 
-	groupHandle, have := agent.groupLoader.Lock(groupID)
+	groupHandle, have := agent.groupCache.Lock(groupID)
 	if !have {
 		return fmt.Errorf("group-absent:%d", groupID)
 	}

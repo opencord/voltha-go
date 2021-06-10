@@ -29,14 +29,14 @@ import (
 
 // TestLoadersIdentical ensures that the group, flow, and meter loaders always have an identical implementation.
 func TestLoadersIdentical(t *testing.T) {
-	types := []string{"flow", "group", "meter", "port", "logical_port"}
+	types := []string{"flow", "group", "meter"}
 
 	identical := [][]string{
-		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`, `voltha\.Port`, `voltha\.LogicalPort`},
-		{`\.Id`, `\.Desc\.GroupId`, `\.Config\.MeterId`, `\.PortNo`, `\.OfpPort\.PortNo`},
-		{`uint64`, `uint32`, `uint32`, `uint32`, `uint32`},
-		{`Flow`, `Group`, `Meter`, `Port`, `Port`},
-		{`flow`, `group`, `meter`, `port`, `port|logical_port`},
+		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`},
+		{`\.Id`, `\.Desc\.GroupId`, `\.Config\.MeterId`},
+		{`uint64`, `uint32`, `uint32`},
+		{`Flow`, `Group`, `Meter`},
+		{`flow`, `group`, `meter`},
 	}
 
 	regexes := make([][]*regexp.Regexp, len(identical[0]))
@@ -52,8 +52,8 @@ func TestLoadersIdentical(t *testing.T) {
 
 	for i := 1; i < len(types); i++ {
 		if err := compare(regexes[0], regexes[i],
-			"../"+types[0]+"/loader.go",
-			"../"+types[i]+"/loader.go"); err != nil {
+			"../"+types[0]+"/cache.go",
+			"../"+types[i]+"/cache.go"); err != nil {
 			t.Error(err)
 			return
 		}
