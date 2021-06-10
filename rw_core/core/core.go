@@ -55,6 +55,8 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
 			adapterMessageBus,
 			"kv-store",
 			"adapter-manager",
+			"device-manager",
+			"logical-device-manager",
 			"grpc-service",
 			"adapter-request-handler",
 		)
@@ -168,6 +170,13 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	// create the core of the system, the device managers
 	endpointMgr := kafka.NewEndpointManager(backend)
 	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf, id, eventProxy)
+
+	// Start the device manager to load the devices. Wait until it is completed to prevent multiple loading happening
+	// triggered by logicalDeviceMgr.Start(Ctx)
+	deviceMgr.Start(ctx)
+
+	// Start the logical device manager to load the logical devices.
+	logicalDeviceMgr.Start(ctx)
 
 	// register kafka RPC handler
 	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf, "adapter-request-handler")

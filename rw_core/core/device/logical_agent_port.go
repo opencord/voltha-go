@@ -32,8 +32,8 @@ import (
 
 // listLogicalDevicePorts returns logical device ports
 func (agent *LogicalAgent) listLogicalDevicePorts(ctx context.Context) map[uint32]*voltha.LogicalPort {
-	logger.Debug(ctx, "list-logical-device-ports")
 	portIDs := agent.portLoader.ListIDs()
+	logger.Debugw(ctx, "list-logical-device-ports", log.Fields{"num-ports": len(portIDs)})
 	ret := make(map[uint32]*voltha.LogicalPort, len(portIDs))
 	for portID := range portIDs {
 		if portHandle, have := agent.portLoader.Lock(portID); have {

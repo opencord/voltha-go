@@ -18,19 +18,13 @@ package group
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
-	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-lib-go/v4/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-// Loader hides all low-level locking & synchronization related to group state updates
-type Loader struct {
-	dbProxy *model.Proxy
+// Cache hides all low-level locking & synchronization related to group state updates
+type Cache struct {
 	// this lock protects the groups map, it does not protect individual groups
 	lock   sync.RWMutex
 	groups map[uint32]*chunk
@@ -45,75 +39,48 @@ type chunk struct {
 	group *ofp.OfpGroupEntry
 }
 
-func NewLoader(dbProxy *model.Proxy) *Loader {
-	return &Loader{
-		dbProxy: dbProxy,
-		groups:  make(map[uint32]*chunk),
-	}
-}
-
-// Load queries existing groups from the kv,
-// and should only be called once when first created.
-func (loader *Loader) Load(ctx context.Context) {
-	loader.lock.Lock()
-	defer loader.lock.Unlock()
-
-	var groups []*ofp.OfpGroupEntry
-	if err := loader.dbProxy.List(ctx, &groups); err != nil {
-		logger.Errorw(ctx, "failed-to-list-groups-from-cluster-data-proxy", log.Fields{"error": err})
-		return
-	}
-	for _, group := range groups {
-		loader.groups[group.Desc.GroupId] = &chunk{group: group}
+func NewCache() *Cache {
+	return &Cache{
+		groups: make(map[uint32]*chunk),
 	}
 }
 
 // LockOrCreate locks this group if it exists, or creates a new group if it does not.
 // In the case of group creation, the provided "group" must not be modified afterwards.
-func (loader *Loader) LockOrCreate(ctx context.Context, group *ofp.OfpGroupEntry) (*Handle, bool, error) {
+func (cache *Cache) LockOrCreate(ctx context.Context, group *ofp.OfpGroupEntry) (*Handle, bool, error) {
 	// try to use read lock instead of full lock if possible
-	if handle, have := loader.Lock(group.Desc.GroupId); have {
+	if handle, have := cache.Lock(group.Desc.GroupId); have {
 		return handle, false, nil
 	}
 
-	loader.lock.Lock()
-	entry, have := loader.groups[group.Desc.GroupId]
+	cache.lock.Lock()
+	entry, have := cache.groups[group.Desc.GroupId]
 	if !have {
 		entry := &chunk{group: group}
-		loader.groups[group.Desc.GroupId] = entry
+		cache.groups[group.Desc.GroupId] = entry
 		entry.lock.Lock()
-		loader.lock.Unlock()
+		cache.lock.Unlock()
 
-		if err := loader.dbProxy.Set(ctx, fmt.Sprint(group.Desc.GroupId), group); err != nil {
-			// revert the map
-			loader.lock.Lock()
-			delete(loader.groups, group.Desc.GroupId)
-			loader.lock.Unlock()
-
-			entry.deleted = true
-			entry.lock.Unlock()
-			return nil, false, err
-		}
-		return &Handle{loader: loader, chunk: entry}, true, nil
+		return &Handle{loader: cache, chunk: entry}, true, nil
 	}
-	loader.lock.Unlock()
+	cache.lock.Unlock()
 
 	entry.lock.Lock()
 	if entry.deleted {
 		entry.lock.Unlock()
-		return loader.LockOrCreate(ctx, group)
+		return cache.LockOrCreate(ctx, group)
 	}
-	return &Handle{loader: loader, chunk: entry}, false, nil
+	return &Handle{loader: cache, chunk: entry}, false, nil
 }
 
 // Lock acquires the lock for this group, and returns a handle which can be used to access the group until it's unlocked.
 // This handle ensures that the group cannot be accessed if the lock is not held.
 // Returns false if the group is not present.
 // TODO: consider accepting a ctx and aborting the lock attempt on cancellation
-func (loader *Loader) Lock(id uint32) (*Handle, bool) {
-	loader.lock.RLock()
-	entry, have := loader.groups[id]
-	loader.lock.RUnlock()
+func (cache *Cache) Lock(id uint32) (*Handle, bool) {
+	cache.lock.RLock()
+	entry, have := cache.groups[id]
+	cache.lock.RUnlock()
 
 	if !have {
 		return nil, false
@@ -122,15 +89,15 @@ func (loader *Loader) Lock(id uint32) (*Handle, bool) {
 	entry.lock.Lock()
 	if entry.deleted {
 		entry.lock.Unlock()
-		return loader.Lock(id)
+		return cache.Lock(id)
 	}
-	return &Handle{loader: loader, chunk: entry}, true
+	return &Handle{loader: cache, chunk: entry}, true
 }
 
 // Handle is allocated for each Lock() call, all modifications are made using it, and it is invalidated by Unlock()
 // This enforces correct Lock()-Usage()-Unlock() ordering.
 type Handle struct {
-	loader *Loader
+	loader *Cache
 	chunk  *chunk
 }
 
@@ -139,21 +106,15 @@ func (h *Handle) GetReadOnly() *ofp.OfpGroupEntry {
 	return h.chunk.group
 }
 
-// Update updates an existing group in the kv.
+// Update updates an existing group in cache.
 // The provided "group" must not be modified afterwards.
 func (h *Handle) Update(ctx context.Context, group *ofp.OfpGroupEntry) error {
-	if err := h.loader.dbProxy.Set(ctx, fmt.Sprint(group.Desc.GroupId), group); err != nil {
-		return status.Errorf(codes.Internal, "failed-update-group-%v: %s", group.Desc.GroupId, err)
-	}
 	h.chunk.group = group
 	return nil
 }
 
-// Delete removes the device from the kv
+// Delete removes the group from the cache
 func (h *Handle) Delete(ctx context.Context) error {
-	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.group.Desc.GroupId)); err != nil {
-		return fmt.Errorf("couldnt-delete-group-from-store-%v", h.chunk.group.Desc.GroupId)
-	}
 	h.chunk.deleted = true
 
 	h.loader.lock.Lock()
@@ -175,12 +136,12 @@ func (h *Handle) Unlock() {
 // ListIDs returns a snapshot of all the managed group IDs
 // TODO: iterating through groups safely is expensive now, since all groups are stored & locked separately
 //       should avoid this where possible
-func (loader *Loader) ListIDs() map[uint32]struct{} {
-	loader.lock.RLock()
-	defer loader.lock.RUnlock()
+func (cache *Cache) ListIDs() map[uint32]struct{} {
+	cache.lock.RLock()
+	defer cache.lock.RUnlock()
 	// copy the IDs so caller can safely iterate
-	ret := make(map[uint32]struct{}, len(loader.groups))
-	for id := range loader.groups {
+	ret := make(map[uint32]struct{}, len(cache.groups))
+	for id := range cache.groups {
 		ret[id] = struct{}{}
 	}
 	return ret
