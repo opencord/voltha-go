@@ -22,7 +22,7 @@ import (
 
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
 	"github.com/opencord/voltha-go/rw_core/route"
-	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
+	fu "github.com/opencord/voltha-lib-go/v5/pkg/flows"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"github.com/stretchr/testify/assert"

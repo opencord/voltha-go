@@ -20,16 +20,16 @@ import (
 	"context"
 	"github.com/cenkalti/backoff/v3"
 	"github.com/opencord/voltha-go/rw_core/config"
-	"github.com/opencord/voltha-lib-go/v4/pkg/events"
+	"github.com/opencord/voltha-lib-go/v5/pkg/events"
 
 	"time"
 
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/api"
 	"github.com/opencord/voltha-go/rw_core/core/device"
-	"github.com/opencord/voltha-lib-go/v4/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v4/pkg/log"
-	"github.com/opencord/voltha-lib-go/v4/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v5/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
 )
 
 // startKafkInterContainerProxy is responsible for starting the Kafka Interadapter Proxy

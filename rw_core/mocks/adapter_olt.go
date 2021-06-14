@@ -24,10 +24,10 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/opencord/voltha-lib-go/v4/pkg/adapters"
-	"github.com/opencord/voltha-lib-go/v4/pkg/adapters/adapterif"
-	com "github.com/opencord/voltha-lib-go/v4/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	"github.com/opencord/voltha-lib-go/v5/pkg/adapters"
+	"github.com/opencord/voltha-lib-go/v5/pkg/adapters/adapterif"
+	com "github.com/opencord/voltha-lib-go/v5/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v5/pkg/log"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	of "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
@@ -324,4 +324,9 @@ func (oltA *OLTAdapter) Activate_onu_image(ctx context.Context, in *voltha.Devic
 func (oltA *OLTAdapter) Commit_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
 	_ = in
 	return nil, errors.New("commit-onu-image-not-implemented")
+}
+
+func (oltA *OLTAdapter) Process_tech_profile_instance_request(ctx context.Context, in *ic.InterAdapterTechProfileInstanceRequestMessage) *ic.InterAdapterTechProfileDownloadMessage { //nolint
+	_ = in
+	return nil
 }

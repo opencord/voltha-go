@@ -24,7 +24,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/opencord/voltha-lib-go/v4/pkg/adapters/adapterif"
+	"github.com/opencord/voltha-lib-go/v5/pkg/adapters/adapterif"
 	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
 	of "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
@@ -329,4 +329,9 @@ func (ta *Adapter) Activate_onu_image(ctx context.Context, in *voltha.DeviceImag
 // Commit_onu_image -
 func (ta *Adapter) Commit_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
 	return nil, nil
+}
+
+// Process_tech_profile_instance_request -
+func (ta *Adapter) Process_tech_profile_instance_request(ctx context.Context, msg *ic.InterAdapterTechProfileInstanceRequestMessage) *ic.InterAdapterTechProfileDownloadMessage { //nolint
+	return nil
 }

@@ -22,8 +22,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
-	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	fu "github.com/opencord/voltha-lib-go/v5/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v5/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -155,8 +155,15 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 		}
 		for inputPort := range inPorts {
 			// Upstream flow on parent (olt) device
+			// Olt meters for upstream trap flows are carried on writeMetadata for Multi UNI
+			oltMeterId := fu.GetMeterIdFromWriteMetadata(ctx, flow)
+			if oltMeterId == 0 {
+				oltMeterId = meterID
+			} else {
+				fu.SetMeterIdToFlow(flow, oltMeterId)
+			}
 			faParent := &fu.FlowArgs{
-				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
+				KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(oltMeterId), "write_metadata": metadataFromwriteMetadata},
 				MatchFields: []*ofp.OfpOxmOfbField{
 					fu.InPort(egressHop.Ingress),
 					fu.TunnelId(uint64(inputPort)),
