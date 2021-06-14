@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	fu "github.com/opencord/voltha-lib-go/v4/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v4/pkg/log"
+	fu "github.com/opencord/voltha-lib-go/v5/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v5/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 )
 
