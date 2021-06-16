@@ -74,8 +74,8 @@ func (agent *Agent) deleteTransientState(ctx context.Context) error {
 	return nil
 }
 
-func (agent *Agent) isReconcileInProgress() bool {
+func (agent *Agent) isInReconcileState() bool {
 	device := agent.getDeviceReadOnlyWithoutLock()
-	return device.OperStatus == common.OperStatus_RECONCILING ||
+	return device.OperStatus == common.OperStatus_RECONCILING || device.OperStatus == common.OperStatus_RECONCILING_FAILED ||
 		agent.matchTransientState(voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
 }

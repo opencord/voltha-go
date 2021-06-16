@@ -44,7 +44,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	}
 	if !agent.proceedWithRequestNoLock() {
 		agent.requestQueue.RequestComplete()
-		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.",
 			agent.deviceID)
 	}
 
@@ -107,7 +107,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 
 	if !agent.proceedWithRequestNoLock() {
 		agent.requestQueue.RequestComplete()
-		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.",
 			agent.deviceID)
 	}
 
@@ -151,7 +151,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 
 	if !agent.proceedWithRequestNoLock() {
 		agent.requestQueue.RequestComplete()
-		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+		return nil, status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.",
 			agent.deviceID)
 	}
 
@@ -270,7 +270,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 
 	if !agent.proceedWithRequestNoLock() {
 		agent.requestQueue.RequestComplete()
-		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Device reconciling or deletion is in progress.",
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.",
 			agent.deviceID)
 	}
 
@@ -333,6 +333,8 @@ func (agent *Agent) onImageFailure(ctx context.Context, rpc string, response int
 	}
 	if !agent.proceedWithRequestNoLock() {
 		agent.requestQueue.RequestComplete()
+		logger.Errorw(subCtx, "Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.",
+			log.Fields{"rpc": rpc, "device-id": agent.deviceID})
 		return
 	}
 	if res, ok := response.(error); ok {
@@ -383,6 +385,8 @@ func (agent *Agent) onImageSuccess(ctx context.Context, rpc string, response int
 	}
 	if !agent.proceedWithRequestNoLock() {
 		agent.requestQueue.RequestComplete()
+		logger.Errorw(ctx, "Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.",
+			log.Fields{"rpc": rpc, "device-id": agent.deviceID})
 		return
 	}
 	logger.Infow(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response, "args": reqArgs})
