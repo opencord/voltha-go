@@ -325,6 +325,24 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			previousState: deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_RECONCILING, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			handlers:      []transitionHandler{dMgr.ReconcilingCleanup}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
+			deviceType:    any,
+			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_RECONCILING, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_RECONCILING_FAILED, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			handlers:      []transitionHandler{dMgr.ReconcilingCleanup}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
+			deviceType:    any,
+			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_RECONCILING, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_RECONCILING_FAILED, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			handlers:      []transitionHandler{dMgr.ReconcilingCleanup}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
+			deviceType:    any,
+			previousState: deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_RECONCILING, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			currentState:  deviceState{Admin: voltha.AdminState_DOWNLOADING_IMAGE, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_RECONCILING_FAILED, Transient: voltha.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			handlers:      []transitionHandler{dMgr.ReconcilingCleanup}})
 
 	return &transitionMap
 }
