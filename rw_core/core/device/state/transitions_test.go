@@ -271,6 +271,41 @@ func TestValidTransitions(t *testing.T) {
 	assert.Equal(t, 1, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
+	previousDevice = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING)
+	device = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING_FAILED)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS,
+		voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+
+	previousDevice = getDevice(false, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING)
+	device = getDevice(false, voltha.AdminState_DISABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING_FAILED)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS,
+		voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+
+	previousDevice = getDevice(false, voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING)
+	device = getDevice(false, voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING_FAILED)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS,
+		voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+
+	previousDevice = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
+	device = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING_FAILED)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS,
+		voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+
+	previousDevice = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
+	device = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_RECONCILING_FAILED)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, voltha.DeviceTransientState_RECONCILE_IN_PROGRESS,
+		voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+
 	var deleteDeviceTest = struct {
 		previousDevices        []*voltha.Device
 		devices                []*voltha.Device
