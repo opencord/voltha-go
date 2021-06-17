@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9216bb3b_e598e4c3",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-17T15:31:57Z",
+      "side": 1,
+      "message": "nit: maybe having a name similar to \"isInReconcileState()\" would be simpler.",
+      "revId": "71dc8d1793d02bcd36ae0112e71aa82141448cdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1ad960f8_d87d37b3",
         "filename": "rw_core/core/device/agent_transient_state.go",
         "patchSetId": 4
@@ -31,6 +48,24 @@
       "side": 1,
       "message": "No on the updation of operation state from RECONCILING to RECONCILE_FAILED a callback for reconcile cleanup is called which will reset the transient state to none as any other transition.",
       "parentUuid": "1ad960f8_d87d37b3",
+      "revId": "71dc8d1793d02bcd36ae0112e71aa82141448cdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c6d01ae_9f90857e",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-17T15:31:57Z",
+      "side": 1,
+      "message": "Is there a need for device.OperStatus \u003d\u003d common.OperStatus_RECONCILING?   I would think we would either be in a failure scenario of the transient state would be reconcile in progress.",
+      "parentUuid": "3554f7b4_d6b28ba1",
       "revId": "71dc8d1793d02bcd36ae0112e71aa82141448cdd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
