@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7c6f93d_fc336688",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-06-17T17:54:58Z",
+      "side": 1,
+      "message": "As isInReconcileState returns true is the state is reconciling or failed the log that this is \"in progress\" is not really accurate. Why this is important is if \"in progress\" there is an implicit assumption that in the near future i can try again and things should work. when in failed state that is not the assumption.",
+      "range": {
+        "startLine": 722,
+        "startChar": 0,
+        "endLine": 727,
+        "endChar": 0
+      },
+      "revId": "fce88c89d202cf35746207c384b4d0fe0a0392b7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
