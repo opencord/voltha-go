@@ -16,6 +16,24 @@
       "revId": "71dc8d1793d02bcd36ae0112e71aa82141448cdd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3554f7b4_d6b28ba1",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-17T08:46:45Z",
+      "side": 1,
+      "message": "No on the updation of operation state from RECONCILING to RECONCILE_FAILED a callback for reconcile cleanup is called which will reset the transient state to none as any other transition.",
+      "parentUuid": "1ad960f8_d87d37b3",
+      "revId": "71dc8d1793d02bcd36ae0112e71aa82141448cdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
