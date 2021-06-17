@@ -105,6 +105,24 @@
       "revId": "71dc8d1793d02bcd36ae0112e71aa82141448cdd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5088214b_93250061",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-17T17:22:17Z",
+      "side": 1,
+      "message": "As discussed will take care of this along with state transition optimisation.",
+      "parentUuid": "d55da645_a7ba6bf1",
+      "revId": "71dc8d1793d02bcd36ae0112e71aa82141448cdd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
