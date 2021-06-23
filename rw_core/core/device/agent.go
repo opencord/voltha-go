@@ -719,7 +719,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 		return err
 	}
 
-	if agent.isInReconcileState() {
+	if agent.isInReconcileStateNoLock() {
 		agent.requestQueue.RequestComplete()
 		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", agent.deviceID)
 		return status.Error(codes.FailedPrecondition, desc)
@@ -1264,7 +1264,7 @@ func (agent *Agent) setSingleValue(ctx context.Context, request *extension.Singl
 
 // The device lock MUST be held by the caller.
 func (agent *Agent) proceedWithRequestNoLock() bool {
-	return !agent.isDeletionInProgress() && !agent.isInReconcileState()
+	return !agent.isDeletionInProgress() && !agent.isInReconcileStateNoLock()
 }
 
 func (agent *Agent) stopReconcile() {
