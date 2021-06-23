@@ -60,12 +60,20 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 		agent.logDeviceUpdate(ctx, "addFlowsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
+
+	if !agent.proceedWithRequest(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", agent.deviceID)
+		agent.logDeviceUpdate(ctx, "addFlowsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
+
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		agent.logDeviceUpdate(ctx, "addFlowsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	for _, flow := range newFlows {
@@ -161,11 +169,19 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 		desc = err.Error()
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
+
+	if !agent.proceedWithRequest(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", device.Id)
+		agent.logDeviceUpdate(ctx, "deleteFlowsFromAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
+
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+
 	for _, flow := range flowsToDel {
 		if flowHandle, have := agent.flowCache.Lock(flow.Id); have {
 			// Update the store and cache
@@ -230,11 +246,19 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	if err != nil {
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
+
+	if !agent.proceedWithRequest(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", device.Id)
+		agent.logDeviceUpdate(ctx, "updateFlowsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
+
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
 		desc = "invalid device states"
 		agent.logDeviceUpdate(ctx, "updateFlowsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states")
 	}
+
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
@@ -242,6 +266,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
 	for _, flow := range updatedFlows {

@@ -407,18 +407,20 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 
 	oldDevice := agent.getDeviceReadOnlyWithoutLock()
 
+	if !agent.proceedWithRequest(oldDevice) {
+		agent.requestQueue.RequestComplete()
+
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconcile is in progress/failed.", agent.deviceID)
+		return status.Error(codes.FailedPrecondition, desc)
+	}
+
 	if oldDevice.AdminState == voltha.AdminState_ENABLED {
 		logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
 		desc = fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id)
 		return status.Error(codes.FailedPrecondition, desc)
 	}
-	if !agent.proceedWithRequestNoLock() {
-		agent.requestQueue.RequestComplete()
 
-		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.", agent.deviceID)
-		return status.Error(codes.FailedPrecondition, desc)
-	}
 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
 	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
 	// with the adapter then we need to know the adapter that will handle this request
@@ -574,6 +576,12 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 
 	cloned := agent.cloneDeviceWithoutLock()
 
+	if !agent.proceedWithRequest(cloned) {
+		agent.requestQueue.RequestComplete()
+		desc = fmt.Sprintf("deviceId:%s,Cannot complete operation as device deletion is in progress or reconciling is in progress/failed.", agent.deviceID)
+		return status.Errorf(codes.FailedPrecondition, desc)
+	}
+
 	if cloned.AdminState == voltha.AdminState_DISABLED {
 		desc = "device-already-disabled"
 		logger.Debugw(ctx, "device-already-disabled", log.Fields{"device-id": agent.deviceID})
@@ -584,12 +592,6 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 		agent.requestQueue.RequestComplete()
 		desc = fmt.Sprintf("deviceId:%s, invalid-admin-state:%s", agent.deviceID, cloned.AdminState)
 		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, invalid-admin-state:%s", agent.deviceID, cloned.AdminState)
-	}
-
-	if !agent.proceedWithRequestNoLock() {
-		agent.requestQueue.RequestComplete()
-		desc = fmt.Sprintf("deviceId:%s,Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.", agent.deviceID)
-		return status.Errorf(codes.FailedPrecondition, desc)
 	}
 
 	// Update the Admin State and operational state before sending the request out
@@ -633,8 +635,9 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	logger.Debugw(ctx, "reboot-device", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceReadOnlyWithoutLock()
-	if !agent.proceedWithRequestNoLock() {
-		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed.", agent.deviceID)
+
+	if !agent.proceedWithRequest(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed.", agent.deviceID)
 		return status.Errorf(codes.FailedPrecondition, desc)
 	}
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
@@ -719,21 +722,17 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 		return err
 	}
 
-	if agent.isInReconcileState() {
+	device := agent.cloneDeviceWithoutLock()
+
+	if !agent.proceedWithRequest(device) {
 		agent.requestQueue.RequestComplete()
-		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", agent.deviceID)
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", agent.deviceID)
 		return status.Error(codes.FailedPrecondition, desc)
 	}
 
 	// Get the device Transient state, return err if it is DELETING
 	previousDeviceTransientState := agent.getTransientState()
 
-	if agent.isStateDeleting(previousDeviceTransientState) {
-		agent.requestQueue.RequestComplete()
-		desc = fmt.Sprintf("deviceId:%s, Device Deletion is in progress", agent.deviceID)
-		return status.Error(codes.FailedPrecondition, desc)
-	}
-	device := agent.cloneDeviceWithoutLock()
 	previousAdminState := device.AdminState
 	// Change the device transient state to DELETING_FROM_ADAPTER  state till the device is removed from adapters.
 	currentDeviceTransientState := voltha.DeviceTransientState_DELETING_FROM_ADAPTER
@@ -1262,9 +1261,8 @@ func (agent *Agent) setSingleValue(ctx context.Context, request *extension.Singl
 	return resp, nil
 }
 
-// The device lock MUST be held by the caller.
-func (agent *Agent) proceedWithRequestNoLock() bool {
-	return !agent.isDeletionInProgress() && !agent.isInReconcileState()
+func (agent *Agent) proceedWithRequest(device *voltha.Device) bool {
+	return !agent.isDeletionInProgress() && !agent.isInReconcileState(device)
 }
 
 func (agent *Agent) stopReconcile() {
@@ -1285,9 +1283,9 @@ func (agent *Agent) ReconcileDevice(ctx context.Context, device *voltha.Device) 
 		return
 	}
 
-	if !agent.proceedWithRequestNoLock() {
+	if !agent.proceedWithRequest(device) {
 		agent.requestQueue.RequestComplete()
-		desc = fmt.Sprintf("Cannot complete operation as Device deletion/reconciling is in progress or reconcile failed for device : %s", device.Id)
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", device.Id)
 		logger.Errorf(ctx, desc)
 		agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
 		return

@@ -61,6 +61,13 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 		agent.logDeviceUpdate(ctx, "addGroupsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
+
+	if !agent.proceedWithRequest(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", device.Id)
+		agent.logDeviceUpdate(ctx, "addGroupsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
+
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
@@ -163,6 +170,13 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 		desc = err.Error()
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
+
+	if !agent.proceedWithRequest(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", device.Id)
+		agent.logDeviceUpdate(ctx, "deleteGroupsFromAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
+
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
@@ -234,11 +248,19 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		agent.logDeviceUpdate(ctx, "updateGroupsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.Aborted, "%s", err)
 	}
+
+	if !agent.proceedWithRequest(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as device deletion is in progress or Reconciling is in progress/failed", device.Id)
+		agent.logDeviceUpdate(ctx, "updateGroupsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
+
 	if device.OperStatus != voltha.OperStatus_ACTIVE || device.ConnectStatus != voltha.ConnectStatus_REACHABLE || device.AdminState != voltha.AdminState_ENABLED {
 		desc = fmt.Sprintf("invalid device states-oper-%s-connect-%s-admin-%s", device.OperStatus, device.ConnectStatus, device.AdminState)
 		agent.logDeviceUpdate(ctx, "updateGroupsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "invalid device states-oper-%s-connect-%s-admin-%s", device.OperStatus, device.ConnectStatus, device.AdminState)
 	}
+
 	dType, err := agent.adapterMgr.GetDeviceType(ctx, &voltha.ID{Id: device.Type})
 	if err != nil {
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)

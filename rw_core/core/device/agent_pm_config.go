@@ -32,6 +32,11 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	logger.Debugw(ctx, "update-pm-configs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.cloneDeviceWithoutLock()
+
+	if !agent.proceedWithRequest(cloned) {
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", cloned.Id)
+	}
+
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 
 	// Send the request to the adapter
@@ -95,6 +100,10 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 	logger.Debugw(ctx, "init-pm-configs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.cloneDeviceWithoutLock()
+
+	if !agent.proceedWithRequest(cloned) {
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", cloned.Id)
+	}
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
