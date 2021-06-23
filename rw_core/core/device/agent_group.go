@@ -67,6 +67,11 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 		agent.logDeviceUpdate(ctx, "addGroupsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+	if agent.isInReconcileState(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", device.Id)
+		agent.logDeviceUpdate(ctx, "addGroupsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
 
 	groupsToAdd := make([]*ofp.OfpGroupEntry, 0)
 	groupsToDelete := make([]*ofp.OfpGroupEntry, 0)
@@ -168,6 +173,11 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+	if agent.isInReconcileState(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", device.Id)
+		agent.logDeviceUpdate(ctx, "deleteGroupsFromAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
 
 	for _, group := range groupsToDel {
 		if groupHandle, have := agent.groupCache.Lock(group.Desc.GroupId); have {
@@ -244,6 +254,11 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		agent.logDeviceUpdate(ctx, "updateGroupsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+	}
+	if agent.isInReconcileState(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", device.Id)
+		agent.logDeviceUpdate(ctx, "updateGroupsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
 	}
 
 	groupsToUpdate := make([]*ofp.OfpGroupEntry, 0)
