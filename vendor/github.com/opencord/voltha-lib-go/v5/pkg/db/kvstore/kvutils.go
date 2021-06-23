@@ -16,7 +16,6 @@
 package kvstore
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"math"
@@ -55,17 +54,6 @@ func ToByte(value interface{}) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("unexpected-type-%T", t)
 	}
-}
-
-// Helper function to verify mostly whether the content of two interface types are the same.  Focus is []byte and
-// string types
-func isEqual(val1 interface{}, val2 interface{}) bool {
-	b1, err := ToByte(val1)
-	b2, er := ToByte(val2)
-	if err == nil && er == nil {
-		return bytes.Equal(b1, b2)
-	}
-	return val1 == val2
 }
 
 // backoff waits an amount of time that is proportional to the attempt value.  The wait time in a range of

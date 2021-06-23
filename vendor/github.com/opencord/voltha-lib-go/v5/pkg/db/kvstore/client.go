@@ -79,14 +79,17 @@ type Client interface {
 	Put(ctx context.Context, key string, value interface{}) error
 	Delete(ctx context.Context, key string) error
 	DeleteWithPrefix(ctx context.Context, prefixKey string) error
+	Watch(ctx context.Context, key string, withPrefix bool) chan *Event
+	IsConnectionUp(ctx context.Context) bool // timeout in second
+	CloseWatch(ctx context.Context, key string, ch chan *Event)
+	Close(ctx context.Context)
+
+	// These APIs are not used.  They will be cleaned up in release Voltha 2.9.
+	// It's not cleaned now to limit changes in all components
 	Reserve(ctx context.Context, key string, value interface{}, ttl time.Duration) (interface{}, error)
 	ReleaseReservation(ctx context.Context, key string) error
 	ReleaseAllReservations(ctx context.Context) error
 	RenewReservation(ctx context.Context, key string) error
-	Watch(ctx context.Context, key string, withPrefix bool) chan *Event
 	AcquireLock(ctx context.Context, lockName string, timeout time.Duration) error
 	ReleaseLock(lockName string) error
-	IsConnectionUp(ctx context.Context) bool // timeout in second
-	CloseWatch(ctx context.Context, key string, ch chan *Event)
-	Close(ctx context.Context)
 }
