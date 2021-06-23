@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2deb2322_d515e68c",
+        "filename": "vendor/github.com/opencord/voltha-lib-go/v5/pkg/db/kvstore/etcdpool.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-06-23T17:14:32Z",
+      "side": 1,
+      "message": "So one change i recently made was not to return the interface, but make the struct RoundRobin public  (which implements the interface) and return a reference. i think this is more in line with go best practices.",
+      "range": {
+        "startLine": 36,
+        "startChar": 126,
+        "endLine": 36,
+        "endChar": 145
+      },
+      "revId": "ff4a7bbcef63a10decdca14bbb9af20d5c05311e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
