@@ -66,6 +66,12 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 		agent.logDeviceUpdate(ctx, "addFlowsToAdapter", nil, nil, operStatus, &desc)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+	if agent.isInReconcileState(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", agent.deviceID)
+		agent.logDeviceUpdate(ctx, "addFlowsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
+
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0)
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0)
 	for _, flow := range newFlows {
@@ -166,6 +172,11 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 		desc = fmt.Sprintf("non-existent-device-type-%s", device.Type)
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
 	}
+	if agent.isInReconcileState(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", device.Id)
+		agent.logDeviceUpdate(ctx, "deleteFlowsFromAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
+	}
 	for _, flow := range flowsToDel {
 		if flowHandle, have := agent.flowCache.Lock(flow.Id); have {
 			// Update the store and cache
@@ -241,6 +252,11 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 		agent.logDeviceUpdate(ctx, "updateFlowsToAdapter", nil, nil, operStatus, &desc)
 
 		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "non-existent-device-type-%s", device.Type)
+	}
+	if agent.isInReconcileState(device) {
+		desc = fmt.Sprintf("deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", device.Id)
+		agent.logDeviceUpdate(ctx, "updateFlowsToAdapter", nil, nil, operStatus, &desc)
+		return coreutils.DoneResponse(), status.Errorf(codes.FailedPrecondition, "%s", desc)
 	}
 	flowsToAdd := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
 	flowsToDelete := make([]*ofp.OfpFlowStats, 0, len(updatedFlows))
