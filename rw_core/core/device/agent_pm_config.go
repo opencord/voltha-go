@@ -34,6 +34,10 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 	cloned := agent.cloneDeviceWithoutLock()
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 
+	if agent.isInReconcileState(cloned) {
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", cloned.Id)
+	}
+
 	// Send the request to the adapter
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 	defer cancel()
@@ -95,6 +99,9 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 	logger.Debugw(ctx, "init-pm-configs", log.Fields{"device-id": pmConfigs.Id})
 
 	cloned := agent.cloneDeviceWithoutLock()
+	if agent.isInReconcileState(cloned) {
+		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as Reconciling is in progress or failed", cloned.Id)
+	}
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
