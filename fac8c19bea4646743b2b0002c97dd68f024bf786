@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0551a70c_3c1c4561",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1000405
+      },
+      "writtenOn": "2021-06-28T16:41:10Z",
+      "side": 1,
+      "message": "I don\u0027t think so. \n\nfunc (r Response) Error(err error) {\n\t// if this is called twice, it will panic; this is intentional\n\tr.err \u003d err\n\tr.done \u003d true\n\tclose(r.ch)\n}\n\nfunc (r Response) Done() {\n\tif !r.done {\n\t\tclose(r.ch)\n\t}\n}\n\nresponse.Error(...) makes r.done\u003dtrue and closes the channel. If I call response.Done(), it will just return because of the !r.done control. -- Moreover, I think we can add else statement to lines 257 and 292. (same issue)",
+      "parentUuid": "ab461e32_62b9ad59",
+      "revId": "fac8c19bea4646743b2b0002c97dd68f024bf786",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3a11d32f_c39dbcd3",
         "filename": "rw_core/core/device/logical_agent.go",
         "patchSetId": 2
