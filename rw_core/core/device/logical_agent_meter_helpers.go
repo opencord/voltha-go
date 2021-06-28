@@ -26,7 +26,7 @@ import (
 )
 
 // GetMeterConfig returns meters which which are used by the given flows
-func (agent *LogicalAgent) GetMeterConfig(ctx context.Context, flows map[uint64]*ofp.OfpFlowStats) (map[uint32]*ofp.OfpMeterConfig, error) {
+func (agent *LogicalAgent) GetMeterConfig(ctx context.Context, flows []*ofp.OfpFlowStats) (map[uint32]*ofp.OfpMeterConfig, error) {
 	metersConfig := make(map[uint32]*ofp.OfpMeterConfig)
 	for _, flow := range flows {
 		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 {

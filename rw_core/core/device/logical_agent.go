@@ -225,8 +225,8 @@ func (agent *LogicalAgent) GetLogicalDeviceReadOnly(ctx context.Context) (*volth
 	return agent.logicalDevice, nil
 }
 
-func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
-	logger.Debugw(ctx, "send-add-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-rules": deviceRules, "flow-metadata": flowMetadata})
+func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, deviceRules *fu.DeviceRules) []coreutils.Response {
+	logger.Debugw(ctx, "send-add-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-rules": deviceRules})
 
 	responses := make([]coreutils.Response, 0)
 	for deviceID, value := range deviceRules.GetRules() {
@@ -235,10 +235,16 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 			subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
-
 			defer cancel()
+
+			flowMeterConfig, err := agent.GetMeterConfig(ctx, value.ListFlows())
+			if err != nil {
+				logger.Error(ctx, "meter-referred-in-flow-not-present")
+				response.Error(status.Errorf(codes.NotFound, "meter-referred-in-flow-not-present"))
+				return
+			}
 			start := time.Now()
-			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), toMetadata(flowMeterConfig)); err != nil {
 				logger.Errorw(ctx, "flow-add-failed", log.Fields{
 					"device-id": deviceId,
 					"error":     err,
@@ -255,7 +261,7 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 	return responses
 }
 
-func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata, mod *ofp.OfpFlowMod) []coreutils.Response {
+func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, deviceRules *fu.DeviceRules, mod *ofp.OfpFlowMod) []coreutils.Response {
 	logger.Debugw(ctx, "send-delete-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
@@ -265,10 +271,16 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 		go func(deviceId string, value *fu.FlowsAndGroups) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
 			subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
-
 			defer cancel()
+
+			flowMeterConfig, err := agent.GetMeterConfig(ctx, value.ListFlows())
+			if err != nil {
+				logger.Error(ctx, "meter-referred-in-flow-not-present")
+				response.Error(status.Errorf(codes.NotFound, "meter-referred-in-flow-not-present"))
+				return
+			}
 			start := time.Now()
-			if err := agent.deviceMgr.deleteFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), flowMetadata); err != nil {
+			if err := agent.deviceMgr.deleteFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), toMetadata(flowMeterConfig)); err != nil {
 				logger.Errorw(ctx, "flows-and-groups-delete-failed", log.Fields{
 					"device-id":   deviceId,
 					"error":       err,
@@ -305,12 +317,19 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 	return responses
 }
 
-func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flows map[uint64]*ofp.OfpFlowStats, metadata *voltha.FlowMetadata, mod *ofp.OfpFlowMod) []coreutils.Response {
+func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flows map[uint64]*ofp.OfpFlowStats, mod *ofp.OfpFlowMod) []coreutils.Response {
 	logger.Debugw(ctx, "deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "flows": flows})
 	responses := make([]coreutils.Response, 0)
 	for _, flow := range flows {
 		response := coreutils.NewResponse()
 		responses = append(responses, response)
+
+		flowMeterConfig, err := agent.GetMeterConfig(ctx, []*ofp.OfpFlowStats{flow})
+		if err != nil {
+			logger.Error(ctx, "meter-referred-in-flow-not-present")
+			response.Error(status.Errorf(codes.NotFound, "meter-referred-in-flow-not-present"))
+			return responses
+		}
 		uniPort, err := agent.getUNILogicalPortNo(flow)
 		if err != nil {
 			logger.Error(ctx, "no-uni-port-in-flow", log.Fields{"device-id": agent.rootDeviceID, "flow": flow, "error": err})
@@ -333,7 +352,7 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 				response.Error(status.Errorf(codes.Internal, "flow-delete-failed: %s %v", agent.rootDeviceID, err))
 			}
 			response.Done()
-		}(uniPort, metadata)
+		}(uniPort, toMetadata(flowMeterConfig))
 	}
 	return responses
 }

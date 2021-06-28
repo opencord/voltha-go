@@ -87,7 +87,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 	logger.Debugw(ctx, "rules", log.Fields{"rules-for-group-add": deviceRules.String()})
 
 	// Update the devices
-	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, &voltha.FlowMetadata{})
+	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules)
 
 	// Wait for completion
 	go func() {
@@ -172,7 +172,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	logger.Debugw(ctx, "rules", log.Fields{"rules": deviceRules.String()})
 
 	// delete groups and related flows, if any
-	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &voltha.FlowMetadata{}, &ofp.OfpFlowMod{})
+	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &ofp.OfpFlowMod{})
 
 	// Wait for completion
 	go func() {

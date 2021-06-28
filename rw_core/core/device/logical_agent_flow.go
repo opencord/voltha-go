@@ -140,12 +140,6 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 	if changed {
 		updatedFlows := map[uint64]*ofp.OfpFlowStats{flow.Id: flow}
 
-		flowMeterConfig, err := agent.GetMeterConfig(ctx, updatedFlows)
-		if err != nil {
-			logger.Error(ctx, "meter-referred-in-flow-not-present")
-			return changed, updated, err
-		}
-
 		groupIDs := agent.groupCache.ListIDs()
 		groups := make(map[uint32]*ofp.OfpGroupEntry, len(groupIDs))
 		for groupID := range groupIDs {
@@ -167,7 +161,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				return changed, updated, err
 			}
 		}
-		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, toMetadata(flowMeterConfig))
+		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules)
 
 		// Create the go routines to wait
 		go func() {
@@ -182,7 +176,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 
 				// Revert added flows
-				if err := agent.revertAddedFlows(subCtx, mod, flow, flowToReplace, deviceRules, toMetadata(flowMeterConfig)); err != nil {
+				if err := agent.revertAddedFlows(subCtx, mod, flow, flowToReplace, deviceRules); err != nil {
 					logger.Errorw(ctx, "failure-to-delete-flow-after-failed-addition", log.Fields{
 						"error":             err,
 						"logical-device-id": agent.logicalDeviceID,
@@ -211,8 +205,8 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 
 // revertAddedFlows reverts flows after the flowAdd request has failed.  All flows corresponding to that flowAdd request
 // will be reverted, both from the logical devices and the devices.
-func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlowMod, addedFlow *ofp.OfpFlowStats, replacedFlow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules, metadata *voltha.FlowMetadata) error {
-	logger.Debugw(ctx, "revert-flow-add", log.Fields{"added-flow": addedFlow, "replaced-flow": replacedFlow, "device-rules": deviceRules, "metadata": metadata})
+func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlowMod, addedFlow *ofp.OfpFlowStats, replacedFlow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules) error {
+	logger.Debugw(ctx, "revert-flow-add", log.Fields{"added-flow": addedFlow, "replaced-flow": replacedFlow, "device-rules": deviceRules})
 
 	flowHandle, have := agent.flowCache.Lock(addedFlow.Id)
 	if !have {
@@ -238,7 +232,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	}
 
 	// Update the devices
-	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, metadata, mod)
+	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
 
 	// Wait for the responses
 	go func() {
@@ -311,12 +305,6 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 			}
 		}
 
-		metersConfig, err := agent.GetMeterConfig(ctx, toDelete)
-		if err != nil { // This should never happen
-			logger.Error(ctx, "meter-referred-in-flows-not-present")
-			return err
-		}
-
 		groups := make(map[uint32]*ofp.OfpGroupEntry)
 		for groupID := range agent.groupCache.ListIDs() {
 			if groupHandle, have := agent.groupCache.Lock(groupID); have {
@@ -341,9 +329,9 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 
 		// Update the devices
 		if partialRoute {
-			respChnls = agent.deleteFlowsFromParentDevice(ctx, toDelete, toMetadata(metersConfig), mod)
+			respChnls = agent.deleteFlowsFromParentDevice(ctx, toDelete, mod)
 		} else {
-			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, toMetadata(metersConfig), mod)
+			respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
 		}
 
 		// Wait for the responses
@@ -407,11 +395,6 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 
 	flowsToDelete := map[uint64]*ofp.OfpFlowStats{flow.Id: flowHandle.GetReadOnly()}
 
-	flowMetadata, err := agent.GetMeterConfig(ctx, flowsToDelete)
-	if err != nil {
-		logger.Error(ctx, "meter-referred-in-flows-not-present")
-		return err
-	}
 	var respChnls []coreutils.Response
 	var partialRoute bool
 	deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, flowsToDelete, groups)
@@ -431,9 +414,9 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	}
 	// Update the devices
 	if partialRoute {
-		respChnls = agent.deleteFlowsFromParentDevice(ctx, flowsToDelete, toMetadata(flowMetadata), mod)
+		respChnls = agent.deleteFlowsFromParentDevice(ctx, flowsToDelete, mod)
 	} else {
-		respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, toMetadata(flowMetadata), mod)
+		respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
 	}
 
 	// Wait for completion
