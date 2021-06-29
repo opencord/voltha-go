@@ -345,7 +345,6 @@ func (dMgr *Manager) stopManagingDevice(ctx context.Context, id string) {
 			if err := agent.stop(ctx); err != nil {
 				logger.Warnw(ctx, "unable-to-stop-device-agent", log.Fields{"device-id": agent.deviceID, "error": err})
 			}
-			dMgr.deleteDeviceAgentFromMap(agent)
 		}
 	}
 }

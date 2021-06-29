@@ -281,6 +281,7 @@ func (agent *Agent) onDeleteSuccess(ctx context.Context, rpc string, response in
 		voltha.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE, previousDeviceTransientState); err != nil {
 		logger.Errorw(ctx, "delete-device-failure", log.Fields{"device-id": agent.deviceID, "error": err, "args": reqArgs})
 	}
+	agent.deviceMgr.deleteDeviceAgentFromMap(agent)
 }
 
 // onDeleteFailure is a common callback for scenarios where we receive an error response following a delete request
@@ -295,7 +296,7 @@ func (agent *Agent) onDeleteFailure(ctx context.Context, rpc string, response in
 	if err := agent.updateTransientState(ctx, voltha.DeviceTransientState_DELETE_FAILED); err != nil {
 		logger.Errorw(ctx, "failed-to-update-transient-state-as-delete-failed", log.Fields{"device-id": agent.deviceID})
 	}
-
+	agent.deviceMgr.deleteDeviceAgentFromMap(agent)
 }
 
 func (agent *Agent) waitForAdapterResponse(ctx context.Context, cancel context.CancelFunc, rpc string, ch chan *kafka.RpcResponse,
