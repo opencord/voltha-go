@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f30f86c0_e2dafa6d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-29T15:09:12Z",
+      "side": 1,
+      "message": "So with default values, the backoff time is 500ms, 1s, 1.5s,.... 1min, 2min, 3 min, ....?",
+      "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3ec0cf1_5a4336af",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1383,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-29T15:09:12Z",
+      "side": 1,
+      "message": "Do you need to include deviceID in the error msg or will it be included by the callee?",
+      "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
