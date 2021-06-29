@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "09c70236_3c84d963",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-29T16:41:08Z",
+      "side": 1,
+      "message": "ok. The default values are quite low but that\u0027s ok as these are configurable.",
+      "parentUuid": "37ae883d_29d2a57a",
+      "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3ec0cf1_5a4336af",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 2
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "We can always map device id from previous log from caller function and we don\u0027t have device in the function at the moment.\nOr are you suggesting to pass device id to function and include it in log ?",
       "parentUuid": "e3ec0cf1_5a4336af",
+      "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "257dd4b8_ce6efed9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1383,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-29T16:41:08Z",
+      "side": 1,
+      "message": "the agent already contains the deviceID, no need to pass it across.",
+      "parentUuid": "f076e1fe_b90d4c21",
       "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
