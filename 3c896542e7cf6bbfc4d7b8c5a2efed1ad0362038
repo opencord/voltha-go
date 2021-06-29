@@ -22,6 +22,30 @@
       "revId": "3c896542e7cf6bbfc4d7b8c5a2efed1ad0362038",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e914d27a_9dd7feae",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-29T17:10:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6d056b6_da045af9",
+      "range": {
+        "startLine": 1365,
+        "startChar": 0,
+        "endLine": 1365,
+        "endChar": 13
+      },
+      "revId": "3c896542e7cf6bbfc4d7b8c5a2efed1ad0362038",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
