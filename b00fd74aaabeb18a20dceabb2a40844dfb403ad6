@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "37ae883d_29d2a57a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-29T15:18:31Z",
+      "side": 1,
+      "message": "It would stop at 1 min as retrymaxinterval is set to 1 min for now.",
+      "parentUuid": "f30f86c0_e2dafa6d",
+      "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3ec0cf1_5a4336af",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2021-06-29T15:09:12Z",
       "side": 1,
       "message": "Do you need to include deviceID in the error msg or will it be included by the callee?",
+      "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f076e1fe_b90d4c21",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1383,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-29T15:18:31Z",
+      "side": 1,
+      "message": "We can always map device id from previous log from caller function and we don\u0027t have device in the function at the moment.\nOr are you suggesting to pass device id to function and include it in log ?",
+      "parentUuid": "e3ec0cf1_5a4336af",
       "revId": "b00fd74aaabeb18a20dceabb2a40844dfb403ad6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true

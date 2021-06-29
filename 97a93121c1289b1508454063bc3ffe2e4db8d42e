@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "9bc1b10f_27feb128",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-29T15:18:31Z",
+      "side": 1,
+      "message": "No actually as it will break the loop anyway in the else block and exit the function.",
+      "parentUuid": "b8c24914_db431e39",
+      "range": {
+        "startLine": 1359,
+        "startChar": 0,
+        "endLine": 1359,
+        "endChar": 10
+      },
+      "revId": "97a93121c1289b1508454063bc3ffe2e4db8d42e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "673c00a2_f20aa72f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 1
@@ -71,6 +95,24 @@
       "writtenOn": "2021-06-29T15:06:41Z",
       "side": 1,
       "message": "and a backoffTimer.Stop() here?",
+      "revId": "97a93121c1289b1508454063bc3ffe2e4db8d42e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d25ebe19_b635eedc",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-29T15:18:31Z",
+      "side": 1,
+      "message": "No as it will reiterate the loop after getting green light, and backoff duration will be already exhausted in if block and in case of no error control will never come to this point.",
+      "parentUuid": "673c00a2_f20aa72f",
       "revId": "97a93121c1289b1508454063bc3ffe2e4db8d42e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
