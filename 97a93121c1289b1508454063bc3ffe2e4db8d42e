@@ -108,6 +108,30 @@
     },
     {
       "key": {
+        "uuid": "376fa253_b6722ae6",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-29T15:30:28Z",
+      "side": 1,
+      "message": "I can stop that but timer is the local entity. It will vanish as soon as we exit.\nDo you want me to stop it before breaking the loop.",
+      "parentUuid": "ae1dc36e_ee0269fd",
+      "range": {
+        "startLine": 1359,
+        "startChar": 0,
+        "endLine": 1359,
+        "endChar": 10
+      },
+      "revId": "97a93121c1289b1508454063bc3ffe2e4db8d42e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "673c00a2_f20aa72f",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 1
