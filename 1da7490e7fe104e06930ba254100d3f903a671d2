@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ae8086c_5422f614",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-29T23:13:25Z",
+      "side": 1,
+      "message": "This is not desirable.  A device agent can be an OLT or ONU device.  A delete follows a different path for both.  Hence it\u0027s better to let the state machine handle the agent removal.  The error message you were seeing (no device present) is expected (maybe not desirable) in some scenarios and does not affect the overall processing.  If there is a scenario where this is service impacting let me know the scenario and i can provide more insight.",
+      "revId": "1da7490e7fe104e06930ba254100d3f903a671d2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
