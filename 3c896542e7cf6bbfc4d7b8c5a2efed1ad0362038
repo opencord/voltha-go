@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6d056b6_da045af9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-06-29T17:03:54Z",
+      "side": 1,
+      "message": "could this be a return here, and then remove the \"Loop\" label?",
+      "range": {
+        "startLine": 1365,
+        "startChar": 0,
+        "endLine": 1365,
+        "endChar": 13
+      },
+      "revId": "3c896542e7cf6bbfc4d7b8c5a2efed1ad0362038",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
