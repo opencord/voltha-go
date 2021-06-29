@@ -16,6 +16,24 @@
       "revId": "97a93121c1289b1508454063bc3ffe2e4db8d42e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2682d9ac_29cc0312",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-06-29T15:02:32Z",
+      "side": 1,
+      "message": "These are three config parameters along with there default values for backoff time\n\ndefaultBackoffRetryInitialInterval \u003d 500 * time.Millisecond\ndefaultBackoffRetryMaxElapsedTime  \u003d 0\ndefaultBackoffRetryMaxInterval     \u003d 1 * time.Minute\n\nSo Initial interval would be min time after that if will keep on increasing.",
+      "parentUuid": "a6656f6f_1e8c6023",
+      "revId": "97a93121c1289b1508454063bc3ffe2e4db8d42e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
