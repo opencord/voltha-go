@@ -1355,6 +1355,7 @@ Loop:
 			desc = err.Error()
 			logger.Errorf(ctx, desc)
 			agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+			<-backoffTimer.C
 		} else {
 			operStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_IN_PROGRESS}
 			agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
