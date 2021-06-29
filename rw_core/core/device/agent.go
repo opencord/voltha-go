@@ -1304,7 +1304,6 @@ func (agent *Agent) ReconcileDevice(ctx context.Context, device *voltha.Device) 
 		return
 	}
 
-	logger.Debugw(ctx, "retrying-reconciling", log.Fields{"deviceID": device.Id})
 	reconcilingBackoff := backoff.NewExponentialBackOff()
 	reconcilingBackoff.InitialInterval = agent.config.BackoffRetryInitialInterval
 	reconcilingBackoff.MaxElapsedTime = agent.config.BackoffRetryMaxElapsedTime
@@ -1332,6 +1331,7 @@ Loop:
 
 		backoffTimer := time.NewTimer(duration)
 
+		logger.Debugw(ctx, "retrying-reconciling", log.Fields{"deviceID": device.Id})
 		// Send a reconcile request to the adapter.
 		ch, err := agent.adapterProxy.ReconcileDevice(ctx, agent.device)
 		//release lock before moving further
@@ -1355,9 +1355,11 @@ Loop:
 			desc = err.Error()
 			logger.Errorf(ctx, desc)
 			agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+			<-backoffTimer.C
 		} else {
 			operStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_IN_PROGRESS}
 			agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
+			backoffTimer.Stop()
 			break Loop
 		}
 
@@ -1379,7 +1381,7 @@ func (agent *Agent) waitForReconcileResponse(backoffTimer *time.Timer, ch chan *
 			return errors.New("channel on which reconcile response is awaited is closed")
 		} else if resp.Err != nil {
 			//error encountered
-			return errors.New("error encountered while retrying reconcile")
+			return fmt.Errorf("error encountered while retrying reconcile. Err: %s", resp.Err.Error())
 		}
 
 		//In case of success quit retrying and wait for adapter to reset operation state of device
