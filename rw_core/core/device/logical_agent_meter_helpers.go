@@ -32,7 +32,7 @@ func (agent *LogicalAgent) GetMeterConfig(ctx context.Context, flows []*ofp.OfpF
 		if flowMeterID := fu.GetMeterIdFromFlow(flow); flowMeterID != 0 {
 			if _, have := metersConfig[flowMeterID]; !have {
 				// Meter is present in the flow, Get from logical device
-				meterHandle, have := agent.meterCache.Lock(flowMeterID)
+				meterHandle, have := agent.meterLoader.Lock(flowMeterID)
 				if !have {
 					logger.Errorw(ctx, "Meter-referred-by-flow-is-not-found-in-logicaldevice",
 						log.Fields{"meterID": flowMeterID, "Available-meters": metersConfig, "flow": *flow})
@@ -65,7 +65,7 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 		return true
 	}
 
-	meterHandle, have := agent.meterCache.Lock(meterID)
+	meterHandle, have := agent.meterLoader.Lock(meterID)
 	if !have {
 		logger.Debugw(ctx, "Meter-is-not-present-in-logical-device", log.Fields{"meterID": meterID})
 		return true
