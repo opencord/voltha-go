@@ -16,6 +16,24 @@
       "revId": "1da7490e7fe104e06930ba254100d3f903a671d2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dcc7bed_1bf4fef5",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-06-30T08:50:57Z",
+      "side": 1,
+      "message": "I see, it\u0027s interesting that the state machine shoudl complete. the Issue I see and I pointed out is that the OnDeleteSuccess method is never executed because of the state machine removing the agent too early in it\u0027s processing. \nI uploaded a set of traces here: https://drive.google.com/file/d/1MplGwhCFGaq08jxrOjoezIKE5WzcNTy-/view?usp\u003dsharing \nthe interesting trace starts at 19:19:00 (give or take)",
+      "parentUuid": "1ae8086c_5422f614",
+      "revId": "1da7490e7fe104e06930ba254100d3f903a671d2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
