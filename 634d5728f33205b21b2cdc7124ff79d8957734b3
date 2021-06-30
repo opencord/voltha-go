@@ -70,6 +70,24 @@
       "revId": "634d5728f33205b21b2cdc7124ff79d8957734b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51bcda86_8c467193",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1399,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-06-30T20:06:40Z",
+      "side": 1,
+      "message": "that is my understanding as well. i did some testing yesterday around this and that is how it seemed to work and that also seems in line with documentation.",
+      "parentUuid": "35b2cffa_e6d65ae2",
+      "revId": "634d5728f33205b21b2cdc7124ff79d8957734b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
