@@ -1314,7 +1314,21 @@ func (agent *Agent) ReconcileDevice(ctx context.Context, device *voltha.Device) 
 	agent.stopReconciling = make(chan int)
 	agent.stopReconcilingMutex.Unlock()
 
+	// defined outside the retry loop so it can be cleaned
+	// up when the loop breaks
+	var backoffTimer *time.Timer
+
+retry:
 	for {
+		// If the operations state of the device is RECONCILING_FAILED then we do not
+		// want to continue to attempt reconciliation.
+		deviceRef := agent.getDeviceReadOnlyWithoutLock()
+		if deviceRef.OperStatus == common.OperStatus_RECONCILING_FAILED {
+			logger.Warnw(ctx, "reconciling-failed-halting-retries",
+				log.Fields{"device-id": device.Id})
+			break retry
+		}
+
 		// Use an exponential back off to prevent getting into a tight loop
 		duration := reconcilingBackoff.NextBackOff()
 		//This case should never occur in default case as max elapsed time for backoff is 0(by default) , so it will never return stop
@@ -1328,7 +1342,7 @@ func (agent *Agent) ReconcileDevice(ctx context.Context, device *voltha.Device) 
 			duration = reconcilingBackoff.NextBackOff()
 		}
 
-		backoffTimer := time.NewTimer(duration)
+		backoffTimer = time.NewTimer(duration)
 
 		logger.Debugw(ctx, "retrying-reconciling", log.Fields{"deviceID": device.Id})
 		// Send a reconcile request to the adapter.
@@ -1344,7 +1358,7 @@ func (agent *Agent) ReconcileDevice(ctx context.Context, device *voltha.Device) 
 			if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 				desc = err.Error()
 				agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
-				return
+				break retry
 			}
 			continue
 		}
@@ -1358,17 +1372,31 @@ func (agent *Agent) ReconcileDevice(ctx context.Context, device *voltha.Device) 
 		} else {
 			operStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_IN_PROGRESS}
 			agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
-			if !backoffTimer.Stop() {
-				<-backoffTimer.C
-			}
-			return
+			break retry
 		}
 
 		// Take lock back before retrying
 		if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 			desc = err.Error()
 			agent.logDeviceUpdate(ctx, "Reconciling", nil, nil, operStatus, &desc)
-			return
+			break retry
+		}
+	}
+
+	// Retry loop is broken, so stop any timers and drain the channel
+	if backoffTimer != nil && !backoffTimer.Stop() {
+
+		// As per documentation and stack overflow when a timer is stopped its
+		// channel should be drained. The issue is that Stop returns false
+		// either if the timer has already been fired "OR" if the timer can be
+		// stopped before being fired. This means that in some cases the
+		// channel has already be emptied so attempting to read from it means
+		// a blocked thread. To get around this use a select so if the
+		// channel is already empty the default case hits and we are not
+		// blocked.
+		select {
+		case <-backoffTimer.C:
+		default:
 		}
 	}
 }
