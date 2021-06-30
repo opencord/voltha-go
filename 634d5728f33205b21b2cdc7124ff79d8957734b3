@@ -16,6 +16,24 @@
       "revId": "634d5728f33205b21b2cdc7124ff79d8957734b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62fd53ac_e9c0bde4",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1399,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-06-30T19:59:24Z",
+      "side": 1,
+      "message": "in theory, if there is something on the channel that case will be executed. if there is not something on the channel then the default case will be executed.",
+      "parentUuid": "1792d796_16508fa8",
+      "revId": "634d5728f33205b21b2cdc7124ff79d8957734b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
