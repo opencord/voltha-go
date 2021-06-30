@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33bbfa3e_c2300e4b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-06-30T20:32:04Z",
+      "side": 1,
+      "message": "Need a agent.requestQueue.RequestComplete() as the request lock is held.",
+      "revId": "d2232b1263a1814c18f6ee7e88f50790f1a4e49d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
