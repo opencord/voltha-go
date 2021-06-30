@@ -512,7 +512,7 @@ func (ldMgr *LogicalManager) ListLogicalDeviceMeters(ctx context.Context, id *vo
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	meters := agent.listLogicalDeviceMeters()
+	meters := agent.listLogicalDeviceMeters(ctx)
 	ctr, ret := 0, make([]*openflow_13.OfpMeterEntry, len(meters))
 	for _, meter := range meters {
 		ret[ctr] = meter

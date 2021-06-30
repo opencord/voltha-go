@@ -58,10 +58,10 @@ type LogicalAgent struct {
 	startOnce       sync.Once
 	stopOnce        sync.Once
 
-	flowCache  *flow.Cache
-	meterCache *meter.Cache
-	groupCache *group.Cache
-	portLoader *port.Loader
+	flowCache   *flow.Cache
+	meterLoader *meter.Loader
+	groupCache  *group.Cache
+	portLoader  *port.Loader
 }
 
 func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
@@ -78,10 +78,10 @@ func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string,
 		defaultTimeout:  defaultTimeout,
 		requestQueue:    coreutils.NewRequestQueue(),
 
-		flowCache:  flow.NewCache(),
-		groupCache: group.NewCache(),
-		meterCache: meter.NewCache(),
-		portLoader: port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
+		flowCache:   flow.NewCache(),
+		groupCache:  group.NewCache(),
+		meterLoader: meter.NewLoader(dbProxy.SubPath("logical_meters").Proxy(id)),
+		portLoader:  port.NewLoader(dbProxy.SubPath("logical_ports").Proxy(id)),
 	}
 }
 
@@ -162,6 +162,9 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 
 		// now that the root device is known, create DeviceRoutes with it
 		agent.deviceRoutes = route.NewDeviceRoutes(agent.logicalDeviceID, agent.rootDeviceID, agent.deviceMgr.listDevicePorts)
+
+		// load the meters from KV to cache
+		agent.meterLoader.Load(ctx)
 
 		// load the logical ports from KV to cache
 		agent.portLoader.Load(ctx)

@@ -28,15 +28,16 @@ import (
 )
 
 // listLogicalDeviceMeters returns logical device meters
-func (agent *LogicalAgent) listLogicalDeviceMeters() map[uint32]*ofp.OfpMeterEntry {
-	meterIDs := agent.meterCache.ListIDs()
+func (agent *LogicalAgent) listLogicalDeviceMeters(ctx context.Context) map[uint32]*ofp.OfpMeterEntry {
+	meterIDs := agent.meterLoader.ListIDs()
 	meters := make(map[uint32]*ofp.OfpMeterEntry, len(meterIDs))
 	for meterID := range meterIDs {
-		if meterHandle, have := agent.meterCache.Lock(meterID); have {
+		if meterHandle, have := agent.meterLoader.Lock(meterID); have {
 			meters[meterID] = meterHandle.GetReadOnly()
 			meterHandle.Unlock()
 		}
 	}
+	logger.Debugw(ctx, "list-logical-device-meters", log.Fields{"logical-device-id": agent.logicalDeviceID, "num-meters": len(meters)})
 	return meters
 }
 
@@ -67,7 +68,7 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 
 	meterEntry := fu.MeterEntryFromMeterMod(ctx, meterMod)
 
-	meterHandle, created, err := agent.meterCache.LockOrCreate(ctx, meterEntry)
+	meterHandle, created, err := agent.meterLoader.LockOrCreate(ctx, meterEntry)
 	if err != nil {
 		return err
 	}
@@ -88,7 +89,7 @@ func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMet
 	}
 	logger.Debug(ctx, "meterDelete", log.Fields{"meterMod": *meterMod, "logical-device-id": agent.logicalDeviceID})
 
-	meterHandle, have := agent.meterCache.Lock(meterMod.MeterId)
+	meterHandle, have := agent.meterLoader.Lock(meterMod.MeterId)
 	if !have {
 		logger.Warnw(ctx, "meter-not-found", log.Fields{"meterID": meterMod.MeterId, "logical-device-id": agent.logicalDeviceID})
 		return nil
@@ -116,7 +117,7 @@ func (agent *LogicalAgent) meterModify(ctx context.Context, meterMod *ofp.OfpMet
 		return nil
 	}
 
-	meterHandle, have := agent.meterCache.Lock(meterMod.MeterId)
+	meterHandle, have := agent.meterLoader.Lock(meterMod.MeterId)
 	if !have {
 		return fmt.Errorf("no-meter-to-modify: %d, logical-device-id: %s", meterMod.MeterId, agent.logicalDeviceID)
 	}

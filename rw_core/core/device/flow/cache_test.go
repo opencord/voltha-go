@@ -29,14 +29,14 @@ import (
 
 // TestLoadersIdentical ensures that the group, flow, and meter loaders always have an identical implementation.
 func TestLoadersIdentical(t *testing.T) {
-	types := []string{"flow", "group", "meter"}
+	types := []string{"flow", "group"}
 
 	identical := [][]string{
-		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`, `ofp\.OfpMeterEntry`},
-		{`\.Id`, `\.Desc\.GroupId`, `\.Config\.MeterId`},
-		{`uint64`, `uint32`, `uint32`},
-		{`Flow`, `Group`, `Meter`},
-		{`flow`, `group`, `meter`},
+		{`ofp\.OfpFlowStats`, `ofp\.OfpGroupEntry`},
+		{`\.Id`, `\.Desc\.GroupId`},
+		{`uint64`, `uint32`},
+		{`Flow`, `Group`},
+		{`flow`, `group`},
 	}
 
 	regexes := make([][]*regexp.Regexp, len(identical[0]))

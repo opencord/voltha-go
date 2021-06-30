@@ -264,7 +264,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	localWG.Wait()
 	meterEntry := fu.MeterEntryFromMeterMod(ctx, meterMod)
 
-	meterHandle, have := ldAgent.meterCache.Lock(meterMod.MeterId)
+	meterHandle, have := ldAgent.meterLoader.Lock(meterMod.MeterId)
 	assert.Equal(t, have, true)
 	if have {
 		assert.True(t, proto.Equal(meterEntry, meterHandle.GetReadOnly()))
