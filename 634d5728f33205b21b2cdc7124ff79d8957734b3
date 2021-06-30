@@ -34,6 +34,24 @@
       "revId": "634d5728f33205b21b2cdc7124ff79d8957734b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "560f9a0b_d059bb88",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1399,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-06-30T20:01:30Z",
+      "side": 1,
+      "message": "to add to that, once Stop is called, then only if the timer has already fired might something be on the channel.",
+      "parentUuid": "62fd53ac_e9c0bde4",
+      "revId": "634d5728f33205b21b2cdc7124ff79d8957734b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
