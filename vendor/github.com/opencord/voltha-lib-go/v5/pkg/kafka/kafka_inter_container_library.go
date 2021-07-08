@@ -20,12 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -197,13 +198,14 @@ func (kp *interContainerProxy) GetDefaultTopic() *Topic {
 func (kp *interContainerProxy) InvokeAsyncRPC(ctx context.Context, rpc string, toTopic *Topic, replyToTopic *Topic,
 	waitForResponse bool, key string, kvArgs ...*KVArg) chan *RpcResponse {
 
-	logger.Debugw(ctx, "InvokeAsyncRPC", log.Fields{"rpc": rpc, "key": key})
-
 	spanArg, span, ctx := kp.embedSpanAsArg(ctx, rpc, !waitForResponse)
 	if spanArg != nil {
 		kvArgs = append(kvArgs, &spanArg[0])
 	}
+
 	defer span.Finish()
+
+	logger.Debugw(ctx, "InvokeAsyncRPC", log.Fields{"rpc": rpc, "key": key, "kvArgs": kvArgs})
 
 	//	If a replyToTopic is provided then we use it, otherwise just use the  default toTopic.  The replyToTopic is
 	// typically the device ID.
@@ -315,6 +317,13 @@ func (kp *interContainerProxy) embedSpanAsArg(ctx context.Context, rpc string, i
 	var newCtx context.Context
 	var spanToInject opentracing.Span
 
+	if !log.GetGlobalLFM().GetLogCorrelationStatus() && !log.GetGlobalLFM().GetTracePublishingStatus() {
+		// if both log correlation and trace publishing is disable do not generate the span
+		logger.Debugw(ctx, "not-embedding-span-in-KVArg-", log.Fields{"rpc": rpc,
+			"log-correlation-status": log.GetGlobalLFM().GetLogCorrelationStatus(), "trace-publishing-status": log.GetGlobalLFM().GetTracePublishingStatus()})
+		return nil, opentracing.SpanFromContext(ctx), ctx
+	}
+
 	var spanName strings.Builder
 	spanName.WriteString("kafka-")
 
@@ -366,7 +375,10 @@ func (kp *interContainerProxy) InvokeRPC(ctx context.Context, rpc string, toTopi
 	if spanArg != nil {
 		kvArgs = append(kvArgs, &spanArg[0])
 	}
+
 	defer span.Finish()
+
+	logger.Debugw(ctx, "InvokeRPC", log.Fields{"rpc": rpc, "key": key, "kvArgs": kvArgs})
 
 	//	If a replyToTopic is provided then we use it, otherwise just use the  default toTopic.  The replyToTopic is
 	// typically the device ID.
@@ -810,19 +822,19 @@ func (kp *interContainerProxy) enrichContextWithSpan(ctx context.Context, rpcNam
 			var err error
 			var textMapString ic.StrType
 			if err = ptypes.UnmarshalAny(arg.Value, &textMapString); err != nil {
-				logger.Warnw(ctx, "unable-to-unmarshal-kvarg-to-textmap-string", log.Fields{"value": arg.Value})
+				logger.Debug(ctx, "unable-to-unmarshal-kvarg-to-textmap-string", log.Fields{"value": arg.Value})
 				break
 			}
 
 			spanTextMap := make(map[string]string)
 			if err = json.Unmarshal([]byte(textMapString.Val), &spanTextMap); err != nil {
-				logger.Warnw(ctx, "unable-to-unmarshal-textmap-from-json-string", log.Fields{"textMapString": textMapString, "error": err})
+				logger.Debug(ctx, "unable-to-unmarshal-textmap-from-json-string", log.Fields{"textMapString": textMapString, "error": err})
 				break
 			}
 
 			var spanContext opentracing.SpanContext
 			if spanContext, err = opentracing.GlobalTracer().Extract(opentracing.TextMap, opentracing.TextMapCarrier(spanTextMap)); err != nil {
-				logger.Warnw(ctx, "unable-to-deserialize-textmap-to-span", log.Fields{"textMap": spanTextMap, "error": err})
+				logger.Debug(ctx, "unable-to-deserialize-textmap-to-span", log.Fields{"textMap": spanTextMap, "error": err})
 				break
 			}
 
@@ -876,10 +888,10 @@ func (kp *interContainerProxy) handleMessage(ctx context.Context, msg *ic.InterC
 		if err = ptypes.UnmarshalAny(msg.Body, requestBody); err != nil {
 			logger.Warnw(ctx, "cannot-unmarshal-request", log.Fields{"error": err})
 		} else {
+			logger.Debugw(ctx, "received-request", log.Fields{"rpc": requestBody.Rpc, "header": msg.Header, "args": requestBody.Args})
 			span, ctx := kp.enrichContextWithSpan(ctx, requestBody.Rpc, requestBody.Args)
 			defer span.Finish()
 
-			logger.Debugw(ctx, "received-request", log.Fields{"rpc": requestBody.Rpc, "header": msg.Header})
 			// let the callee unpack the arguments as its the only one that knows the real proto type
 			// Augment the requestBody with the message Id as it will be used in scenarios where cores
 			// are set in pairs and competing
