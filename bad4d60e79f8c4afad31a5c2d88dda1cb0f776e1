@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a09ef3b2_d3ade574",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-07-15T13:46:00Z",
+      "side": 1,
+      "message": "While not invoke proceedWithRequestNoLock()?",
+      "revId": "bad4d60e79f8c4afad31a5c2d88dda1cb0f776e1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2725634d_80164c6b",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-07-15T13:46:00Z",
+      "side": 1,
+      "message": "Why not invoke proceedWithRequestNoLock?",
+      "revId": "bad4d60e79f8c4afad31a5c2d88dda1cb0f776e1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bae049e_d63e453e",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-07-15T13:46:00Z",
+      "side": 1,
+      "message": "Since this block of code returns if the device is in reconciling state then it should be right after the device information is retrieved (line 57).  No need to invoke \"agent.adapterMgr.GetDeviceType\" before this block.   Similar comments elsewhere.",
+      "revId": "bad4d60e79f8c4afad31a5c2d88dda1cb0f776e1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d096f280_2b461e69",
+        "filename": "rw_core/core/device/agent_pm_config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-07-15T13:46:00Z",
+      "side": 1,
+      "message": "Can be placed before the \"cloned.PmConfigs \u003d proto.Clone(pmConfigs).(*voltha.PmConfigs)\", just like you did below.",
+      "revId": "bad4d60e79f8c4afad31a5c2d88dda1cb0f776e1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea77056e_36b569b3",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-07-15T13:46:00Z",
+      "side": 1,
+      "message": "The common name in the code base is \"withoutlock\", so the name would be \"isInReconcileStateWithoutLock\".",
+      "revId": "bad4d60e79f8c4afad31a5c2d88dda1cb0f776e1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65e8ba37_9c0efa44",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-07-15T13:46:00Z",
+      "side": 1,
+      "message": "Could just return isInReconcileState(device)",
+      "revId": "bad4d60e79f8c4afad31a5c2d88dda1cb0f776e1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
