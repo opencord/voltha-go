@@ -46,6 +46,30 @@
       "revId": "d0509a88429198b95ac2e6342dea928968bf9f1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "724517fd_90b48109",
+        "filename": "rw_core/core/device/agent_group.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-07-21T15:45:56Z",
+      "side": 1,
+      "message": "i agree it won\u0027t make much of a difference in terms of eventual outcome, but except for two places in the code the \"isInReconcileState\" check is the first check after the device is retrieved. And so these two places are anomalies that don\u0027t follow the pattern. Code is more maintainable when patterns are maintained throughout the code, imo. it also means errors/logs are consistent when a device is in a given state, i.e. if a device is in reconciled state the cannot complete because of reconciled will always be the first log messages, as opposed to this case (and the one other) where invalid device state may be returned.\n\nAgain, not critical, but a consistency issue.",
+      "parentUuid": "be2f88d6_9d0e4f93",
+      "range": {
+        "startLine": 256,
+        "startChar": 0,
+        "endLine": 263,
+        "endChar": 0
+      },
+      "revId": "d0509a88429198b95ac2e6342dea928968bf9f1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
