@@ -22,6 +22,30 @@
       "revId": "d0509a88429198b95ac2e6342dea928968bf9f1a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be2f88d6_9d0e4f93",
+        "filename": "rw_core/core/device/agent_group.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000729
+      },
+      "writtenOn": "2021-07-21T14:45:37Z",
+      "side": 1,
+      "message": "I don\u0027t think that would make much of a difference as from within isInReconcileState it is also kind of a device State check.",
+      "parentUuid": "8ed5a17e_503c663e",
+      "range": {
+        "startLine": 256,
+        "startChar": 0,
+        "endLine": 263,
+        "endChar": 0
+      },
+      "revId": "d0509a88429198b95ac2e6342dea928968bf9f1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
