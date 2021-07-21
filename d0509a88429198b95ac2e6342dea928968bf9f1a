@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1acbe42f_b37d945a",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-07-21T15:46:33Z",
+      "side": 1,
+      "message": "the other place where the pattern is not followed.",
+      "range": {
+        "startLine": 255,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 0
+      },
+      "revId": "d0509a88429198b95ac2e6342dea928968bf9f1a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8ed5a17e_503c663e",
         "filename": "rw_core/core/device/agent_group.go",
         "patchSetId": 5
