@@ -95,7 +95,8 @@ func newNBTest(ctx context.Context) *NBTest {
 func (nb *NBTest) startCore(inCompeteMode bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	cfg := config.NewRWCoreFlags()
+	cfg := &config.RWCoreFlags{}
+	cfg.ParseCommandArguments([]string{}) // sets defaults
 	cfg.CoreTopic = "rw_core"
 	cfg.EventTopic = "voltha.events"
 	cfg.DefaultRequestTimeout = nb.defaultTimeout

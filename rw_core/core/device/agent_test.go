@@ -117,7 +117,8 @@ func newDATest(ctx context.Context) *DATest {
 }
 
 func (dat *DATest) startCore(ctx context.Context) {
-	cfg := config.NewRWCoreFlags()
+	cfg := &config.RWCoreFlags{}
+	cfg.ParseCommandArguments([]string{})
 	cfg.CoreTopic = "rw_core"
 	cfg.EventTopic = "voltha.events"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout

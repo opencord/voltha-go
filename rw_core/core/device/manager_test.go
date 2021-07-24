@@ -79,7 +79,8 @@ func initialiseTest(ctx context.Context, t *testing.T) (*DATest, *MockInterConta
 }
 
 func (dat *DATest) startCoreWithCustomICProxy(ctx context.Context, kmp kafka.InterContainerProxy) {
-	cfg := config.NewRWCoreFlags()
+	cfg := &config.RWCoreFlags{}
+	cfg.ParseCommandArguments([]string{})
 	cfg.CoreTopic = "rw_core"
 	cfg.EventTopic = "voltha.events"
 	cfg.DefaultRequestTimeout = dat.defaultTimeout

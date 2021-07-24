@@ -136,7 +136,8 @@ func newLDATest(ctx context.Context) *LDATest {
 }
 
 func (lda *LDATest) startCore(ctx context.Context, inCompeteMode bool) {
-	cfg := config.NewRWCoreFlags()
+	cfg := &config.RWCoreFlags{}
+	cfg.ParseCommandArguments([]string{})
 	cfg.CoreTopic = "rw_core"
 	cfg.EventTopic = "voltha.events"
 	cfg.DefaultRequestTimeout = lda.defaultTimeout

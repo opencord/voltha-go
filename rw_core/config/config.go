@@ -18,44 +18,13 @@ package config
 
 import (
 	"flag"
+	"os"
 	"time"
 )
 
 // RW Core service default constants
 const (
-	EtcdStoreName                      = "etcd"
-	defaultGrpcAddress                 = ":50057"
-	defaultKafkaAdapterAddress         = "127.0.0.1:9092"
-	defaultKafkaClusterAddress         = "127.0.0.1:9094"
-	defaultKVStoreType                 = EtcdStoreName
-	defaultKVStoreTimeout              = 5 * time.Second
-	defaultKVStoreAddress              = "127.0.0.1:2379" // Etcd = 2379
-	defaultKVTxnKeyDelTime             = 60
-	defaultLogLevel                    = "WARN"
-	defaultBanner                      = false
-	defaultDisplayVersionOnly          = false
-	defaultCoreTopic                   = "rwcore"
-	defaultEventTopic                  = "voltha.events"
-	defaultRWCoreEndpoint              = "rwcore"
-	defaultRWCoreKey                   = "pki/voltha.key"
-	defaultRWCoreCert                  = "pki/voltha.crt"
-	defaultRWCoreCA                    = "pki/voltha-CA.pem"
-	defaultLongRunningRequestTimeout   = 2000 * time.Millisecond
-	defaultDefaultRequestTimeout       = 1000 * time.Millisecond
-	defaultCoreTimeout                 = 1000 * time.Millisecond
-	defaultCoreBindingKey              = "voltha_backend_name"
-	defaultMaxConnectionRetries        = -1 // retries forever
-	defaultConnectionRetryInterval     = 2 * time.Second
-	defaultLiveProbeInterval           = 60 * time.Second
-	defaultNotLiveProbeInterval        = 5 * time.Second // Probe more frequently when not alive
-	defaultProbeAddress                = ":8080"
-	defaultTraceEnabled                = false
-	defaultTraceAgentAddress           = "127.0.0.1:6831"
-	defaultLogCorrelationEnabled       = true
-	defaultVolthaStackID               = "voltha"
-	defaultBackoffRetryInitialInterval = 500 * time.Millisecond
-	defaultBackoffRetryMaxElapsedTime  = 0
-	defaultBackoffRetryMaxInterval     = 1 * time.Minute
+	EtcdStoreName = "etcd"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -95,107 +64,99 @@ type RWCoreFlags struct {
 	BackoffRetryMaxInterval     time.Duration
 }
 
-// NewRWCoreFlags returns a new RWCore config
-func NewRWCoreFlags() *RWCoreFlags {
-	var rwCoreFlag = RWCoreFlags{ // Default values
-		RWCoreEndpoint:              defaultRWCoreEndpoint,
-		GrpcAddress:                 defaultGrpcAddress,
-		KafkaAdapterAddress:         defaultKafkaAdapterAddress,
-		KafkaClusterAddress:         defaultKafkaClusterAddress,
-		KVStoreType:                 defaultKVStoreType,
-		KVStoreTimeout:              defaultKVStoreTimeout,
-		KVStoreAddress:              defaultKVStoreAddress,
-		KVTxnKeyDelTime:             defaultKVTxnKeyDelTime,
-		CoreTopic:                   defaultCoreTopic,
-		EventTopic:                  defaultEventTopic,
-		LogLevel:                    defaultLogLevel,
-		Banner:                      defaultBanner,
-		DisplayVersionOnly:          defaultDisplayVersionOnly,
-		RWCoreKey:                   defaultRWCoreKey,
-		RWCoreCert:                  defaultRWCoreCert,
-		RWCoreCA:                    defaultRWCoreCA,
-		DefaultRequestTimeout:       defaultDefaultRequestTimeout,
-		LongRunningRequestTimeout:   defaultLongRunningRequestTimeout,
-		DefaultCoreTimeout:          defaultCoreTimeout,
-		CoreBindingKey:              defaultCoreBindingKey,
-		MaxConnectionRetries:        defaultMaxConnectionRetries,
-		ConnectionRetryInterval:     defaultConnectionRetryInterval,
-		LiveProbeInterval:           defaultLiveProbeInterval,
-		NotLiveProbeInterval:        defaultNotLiveProbeInterval,
-		ProbeAddress:                defaultProbeAddress,
-		TraceEnabled:                defaultTraceEnabled,
-		TraceAgentAddress:           defaultTraceAgentAddress,
-		LogCorrelationEnabled:       defaultLogCorrelationEnabled,
-		VolthaStackID:               defaultVolthaStackID,
-		BackoffRetryInitialInterval: defaultBackoffRetryInitialInterval,
-		BackoffRetryMaxElapsedTime:  defaultBackoffRetryMaxElapsedTime,
-		BackoffRetryMaxInterval:     defaultBackoffRetryMaxInterval,
-	}
-	return &rwCoreFlag
-}
-
 // ParseCommandArguments parses the arguments when running read-write core service
-func (cf *RWCoreFlags) ParseCommandArguments() {
+func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 
-	flag.StringVar(&(cf.RWCoreEndpoint), "vcore-endpoint", defaultRWCoreEndpoint, "RW core endpoint address")
+	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	flag.StringVar(&(cf.GrpcAddress), "grpc_address", defaultGrpcAddress, "GRPC server - address")
+	fs.StringVar(&cf.RWCoreEndpoint, "vcore-endpoint",
+		"rwcore", "RW core endpoint address")
 
-	flag.StringVar(&(cf.KafkaAdapterAddress), "kafka_adapter_address", defaultKafkaAdapterAddress, "Kafka - Adapter messaging address")
+	fs.StringVar(&cf.GrpcAddress, "grpc_address",
+		":50057", "GRPC server - address")
 
-	flag.StringVar(&(cf.KafkaClusterAddress), "kafka_cluster_address", defaultKafkaClusterAddress, "Kafka - Cluster messaging address")
+	fs.StringVar(&cf.KafkaAdapterAddress, "kafka_adapter_address",
+		"127.0.0.1:9092", "Kafka - Adapter messaging address")
 
-	flag.StringVar(&(cf.CoreTopic), "rw_core_topic", defaultCoreTopic, "RW Core topic")
+	fs.StringVar(&cf.KafkaClusterAddress, "kafka_cluster_address",
+		"127.0.0.1:9094", "Kafka - Cluster messaging address")
 
-	flag.StringVar(&(cf.EventTopic), "event_topic", defaultEventTopic, "RW Core Event topic")
+	fs.StringVar(&cf.CoreTopic, "rw_core_topic",
+		"rwcore", "RW Core topic")
 
-	flag.Bool("in_competing_mode", false, "deprecated")
+	fs.StringVar(&cf.EventTopic, "event_topic",
+		"voltha.events", "RW Core Event topic")
 
-	flag.StringVar(&(cf.KVStoreType), "kv_store_type", defaultKVStoreType, "KV store type")
+	fs.StringVar(&cf.KVStoreType, "kv_store_type",
+		EtcdStoreName, "KV store type")
 
-	flag.DurationVar(&(cf.KVStoreTimeout), "kv_store_request_timeout", defaultKVStoreTimeout, "The default timeout when making a kv store request")
+	fs.DurationVar(&cf.KVStoreTimeout, "kv_store_request_timeout",
+		5*time.Second, "The default timeout when making a kv store request")
 
-	flag.StringVar(&(cf.KVStoreAddress), "kv_store_address", defaultKVStoreAddress, "KV store address")
+	fs.StringVar(&cf.KVStoreAddress, "kv_store_address",
+		"127.0.0.1:2379", "KV store address")
 
-	flag.IntVar(&(cf.KVTxnKeyDelTime), "kv_txn_delete_time", defaultKVTxnKeyDelTime, "The time to wait before deleting a completed transaction key")
+	fs.IntVar(&cf.KVTxnKeyDelTime, "kv_txn_delete_time",
+		60, "The time to wait before deleting a completed transaction key")
 
-	flag.StringVar(&(cf.LogLevel), "log_level", defaultLogLevel, "Log level")
+	fs.StringVar(&cf.LogLevel, "log_level",
+		"warn", "Log level")
 
-	flag.DurationVar(&(cf.LongRunningRequestTimeout), "timeout_long_request", defaultLongRunningRequestTimeout, "Timeout for long running request")
+	fs.DurationVar(&cf.LongRunningRequestTimeout, "timeout_long_request",
+		2000*time.Millisecond, "Timeout for long running request")
 
-	flag.DurationVar(&(cf.DefaultRequestTimeout), "timeout_request", defaultDefaultRequestTimeout, "Default timeout for regular request")
+	fs.DurationVar(&cf.DefaultRequestTimeout, "timeout_request",
+		1000*time.Millisecond, "Default timeout for regular request")
 
-	flag.DurationVar(&(cf.DefaultCoreTimeout), "core_timeout", defaultCoreTimeout, "Default Core timeout")
+	fs.DurationVar(&cf.DefaultCoreTimeout, "core_timeout",
+		1000*time.Millisecond, "Default Core timeout")
 
-	flag.BoolVar(&cf.Banner, "banner", defaultBanner, "Show startup banner log lines")
+	fs.BoolVar(&cf.Banner, "banner",
+		false, "Show startup banner log lines")
 
-	flag.BoolVar(&cf.DisplayVersionOnly, "version", defaultDisplayVersionOnly, "Show version information and exit")
+	fs.BoolVar(&cf.DisplayVersionOnly, "version",
+		false, "Show version information and exit")
 
-	flag.StringVar(&(cf.CoreBindingKey), "core_binding_key", defaultCoreBindingKey, "The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
+	fs.StringVar(&cf.CoreBindingKey, "core_binding_key",
+		"voltha_backend_name", "The name of the meta-key whose value is the rw-core group to which the ofagent is bound")
 
-	flag.IntVar(&(cf.MaxConnectionRetries), "max_connection_retries", defaultMaxConnectionRetries, "The number of retries to connect to a dependent component")
+	fs.IntVar(&cf.MaxConnectionRetries, "max_connection_retries",
+		-1, "The number of retries to connect to a dependent component")
 
-	flag.DurationVar(&(cf.ConnectionRetryInterval), "connection_retry_interval", defaultConnectionRetryInterval, "The number of seconds between each connection retry attempt")
+	fs.DurationVar(&cf.ConnectionRetryInterval, "connection_retry_interval",
+		2*time.Second, "The number of seconds between each connection retry attempt")
 
-	flag.DurationVar(&(cf.LiveProbeInterval), "live_probe_interval", defaultLiveProbeInterval, "The number of seconds between liveness probes while in a live state")
+	fs.DurationVar(&cf.LiveProbeInterval, "live_probe_interval",
+		60*time.Second, "The number of seconds between liveness probes while in a live state")
 
-	flag.DurationVar(&(cf.NotLiveProbeInterval), "not_live_probe_interval", defaultNotLiveProbeInterval, "The number of seconds between liveness probes while in a not live state")
+	fs.DurationVar(&cf.NotLiveProbeInterval, "not_live_probe_interval",
+		5*time.Second, "The number of seconds between liveness probes while in a not live state")
 
-	flag.StringVar(&(cf.ProbeAddress), "probe_address", defaultProbeAddress, "The address on which to listen to answer liveness and readiness probe queries over HTTP")
+	fs.StringVar(&cf.ProbeAddress, "probe_address",
+		":8080", "The address on which to listen to answer liveness and readiness probe queries over HTTP")
 
-	flag.BoolVar(&(cf.TraceEnabled), "trace_enabled", defaultTraceEnabled, "Whether to send logs to tracing agent?")
+	fs.BoolVar(&(cf.TraceEnabled), "trace_enabled",
+		false, "Whether to send logs to tracing agent?")
 
-	flag.StringVar(&(cf.TraceAgentAddress), "trace_agent_address", defaultTraceAgentAddress, "The address of tracing agent to which span info should be sent")
+	fs.StringVar(&cf.TraceAgentAddress, "trace_agent_address",
+		"127.0.0.1:6831", "The address of tracing agent to which span info should be sent")
 
-	flag.BoolVar(&(cf.LogCorrelationEnabled), "log_correlation_enabled", defaultLogCorrelationEnabled, "Whether to enrich log statements with fields denoting operation being executed for achieving correlation?")
+	fs.BoolVar(&cf.LogCorrelationEnabled, "log_correlation_enabled",
+		true, "Whether to enrich log statements with fields denoting operation being executed for achieving correlation?")
 
-	flag.StringVar(&cf.VolthaStackID, "stack_id", defaultVolthaStackID, "ID for the current voltha stack")
+	fs.StringVar(&cf.VolthaStackID, "stack_id",
+		"voltha", "ID for the current voltha stack")
 
-	flag.DurationVar(&(cf.BackoffRetryInitialInterval), "backoff_retry_initial_interval", defaultBackoffRetryInitialInterval, "The initial number of milliseconds an exponential backoff will wait before a retry")
+	fs.DurationVar(&cf.BackoffRetryInitialInterval,
+		"backoff_retry_initial_interval", 500*time.Millisecond,
+		"The initial number of milliseconds an exponential backoff will wait before a retry")
 
-	flag.DurationVar(&(cf.BackoffRetryMaxElapsedTime), "backoff_retry_max_elapsed_time", defaultBackoffRetryMaxElapsedTime, "The maximum number of milliseconds an exponential backoff can elasped")
+	fs.DurationVar(&cf.BackoffRetryMaxElapsedTime,
+		"backoff_retry_max_elapsed_time", 0*time.Second,
+		"The maximum number of milliseconds an exponential backoff can elasped")
 
-	flag.DurationVar(&(cf.BackoffRetryMaxInterval), "backoff_retry_max_interval", defaultBackoffRetryMaxInterval, "The maximum number of milliseconds of an exponential backoff interval")
+	fs.DurationVar(&cf.BackoffRetryMaxInterval, "backoff_retry_max_interval",
+		1*time.Minute, "The maximum number of milliseconds of an exponential backoff interval")
 
-	flag.Parse()
+	_ = fs.Parse(args)
 }
