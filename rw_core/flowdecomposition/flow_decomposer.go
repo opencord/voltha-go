@@ -279,7 +279,26 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(ctx context.Cont
 		}
 		fg.AddFlow(fs)
 		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
-	} else if flow.TableId == 1 && outPortNo != 0 {
+	} else if flow.GetTableId() == 1 && fu.HasNextTable(flow) {
+		logger.Debugw(ctx, "decomposing-olt-flow-in-upstream-has-next-table", log.Fields{"table_id": flow.TableId})
+		fa := &fu.FlowArgs{
+			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
+			MatchFields: []*ofp.OfpOxmOfbField{
+				fu.InPort(egressHop.Ingress),
+				fu.TunnelId(uint64(inPortNo)),
+			},
+			// Output Action is anyways not expected in this flow. Do we need to exclude explicitly?
+			Actions: fu.GetActions(flow),
+		}
+
+		fg := fu.NewFlowsAndGroups()
+		fs, err := fu.MkFlowStat(fa)
+		if err != nil {
+			return nil, err
+		}
+		fg.AddFlow(fs)
+		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
+	} else if flow.GetTableId() == 1 && outPortNo != 0 { // TODO check if this block is still needed
 		logger.Debugw(ctx, "decomposing-olt-flow-in-upstream-has-next-table", log.Fields{"table_id": flow.TableId})
 		fa := &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
@@ -303,7 +322,69 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(ctx context.Cont
 		}
 		fg.AddFlow(fs)
 		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
+	} else if flow.GetTableId() == 2 && outPortNo != 0 { // mpls upstream flows
+		logger.Debugw(ctx, "decomposing-mpls-flow-in-upstream", log.Fields{"table_id": flow.TableId})
+		fa := &fu.FlowArgs{
+			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "write_metadata": metadataFromwriteMetadata},
+			MatchFields: []*ofp.OfpOxmOfbField{
+				fu.InPort(egressHop.Ingress),
+				fu.TunnelId(uint64(inPortNo)),
+			},
+			// Output is excluded as this we get from egressHop
+			Actions: fu.GetActions(flow, fu.OUTPUT),
+		}
+		fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
+		fa.Actions = append(fa.Actions, fu.Output(egressHop.Egress))
+
+		fg := fu.NewFlowsAndGroups()
+		fs, err := fu.MkFlowStat(fa)
+		if err != nil {
+			return nil, err
+		}
+		fg.AddFlow(fs)
+		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
 	}
+	return deviceRules, nil
+}
+
+func (fd *FlowDecomposer) processDownstreamMplsFlowsWithNextTable(ctx context.Context, agent LogicalDeviceAgent, path []route.Hop,
+	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) (*fu.DeviceRules, error) {
+	logger.Debugw(ctx, "decomposing-olt-mpls-flow-in-downstream", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
+	deviceRules := fu.NewDeviceRules()
+
+	if outPortNo != 0 {
+		logger.Warnw(ctx, "outPort-should-not-be-specified", log.Fields{"outPortNo": outPortNo})
+		return deviceRules, nil
+	}
+
+	if flow.TableId != 0 {
+		logger.Warnw(ctx, "This is not olt pipeline table, so skipping", log.Fields{"tableId": flow.TableId})
+		return deviceRules, nil
+	}
+
+	ingressHop := path[0]
+
+	fa := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(ingressHop.Ingress),
+			fu.TunnelId(uint64(inPortNo)),
+		},
+		Actions: fu.GetActions(flow),
+	}
+
+	// Augment the matchfields with the ofpfields from the flow
+	fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
+	// Augment the Actions
+	fa.Actions = append(fa.Actions, fu.Output(ingressHop.Egress))
+
+	fg := fu.NewFlowsAndGroups()
+	fs, err := fu.MkFlowStat(fa)
+	if err != nil {
+		return nil, err
+	}
+	fg.AddFlow(fs)
+	deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 	return deviceRules, nil
 }
 
@@ -496,7 +577,7 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 	case 0:
 		return deviceRules, fmt.Errorf("no route from:%d to:%d :%w", inPortNo, outPortNo, route.ErrNoRoute)
 	case 2:
-		logger.Debugw(ctx, "route-found", log.Fields{"ingressHop": path[0], "egressHop": path[1]})
+		logger.Debugw(ctx, "route-found", log.Fields{"ingressHop": path[0], "egressHop": path[1], "in-port": inPortNo, "out-port": outPortNo})
 	default:
 		return deviceRules, fmt.Errorf("invalid route length %d :%w", len(path), route.ErrNoRoute)
 	}
@@ -517,19 +598,25 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 		}
 		isUpstream := !ingressDevice.Root
 		if isUpstream { // Unicast OLT and ONU UL
-			logger.Debug(ctx, "process-olt-nd-onu-upstream-noncontrollerbound-unicast-flows", log.Fields{"flows": flow})
+			logger.Debug(ctx, "process-olt-and-onu-upstream-non-controller-bound-uni-cast-flows", log.Fields{"flows": flow})
 			deviceRules, err = fd.processUpstreamNonControllerBoundFlow(ctx, path, inPortNo, outPortNo, flow)
 			if err != nil {
 				return nil, err
 			}
-		} else if fu.HasNextTable(flow) && flow.TableId == 0 { // Unicast OLT flow DL
-			logger.Debugw(ctx, "process-olt-downstream-noncontrollerbound-flow-with-nexttable", log.Fields{"flows": flow})
+		} else if fu.HasNextTable(flow) && flow.TableId == 0 { // MPLS OLT flow DL
+			logger.Debugw(ctx, "process-olt-downstream-mpls-flow-with-next-table", log.Fields{"flows": flow})
+			deviceRules, err = fd.processDownstreamMplsFlowsWithNextTable(ctx, agent, path, inPortNo, outPortNo, flow)
+			if err != nil {
+				return nil, err
+			}
+		} else if fu.HasNextTable(flow) && flow.TableId == 1 { // Unicast VLAN OLT Flow
+			logger.Debugw(ctx, "process-olt-downstream-non-controller-bound-flow-with-next-table", log.Fields{"flows": flow})
 			deviceRules, err = fd.processDownstreamFlowWithNextTable(ctx, agent, path, inPortNo, outPortNo, flow)
 			if err != nil {
 				return nil, err
 			}
-		} else if flow.TableId == 1 && outPortNo != 0 { // Unicast ONU flow DL
-			logger.Debugw(ctx, "process-onu-downstream-unicast-flow", log.Fields{"flows": flow})
+		} else if flow.TableId == 2 && outPortNo != 0 { // Unicast ONU flow DL
+			logger.Debugw(ctx, "process-onu-downstream-uni-cast-flow", log.Fields{"flows": flow})
 			deviceRules, err = fd.processUnicastFlow(ctx, path, inPortNo, outPortNo, flow)
 			if err != nil {
 				return nil, err
