@@ -167,7 +167,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		go func() {
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChannels...); res != nil {
-				logger.Infow(ctx, "failed-to-add-flow-will-attempt-deletion", log.Fields{
+				logger.Errorw(ctx, "failed-to-add-flow-will-attempt-deletion", log.Fields{
 					"errors":            res,
 					"logical-device-id": agent.logicalDeviceID,
 					"flow":              flow,
