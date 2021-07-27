@@ -60,5 +60,6 @@ sca-report
 # CPU profile
 **/profile.cpu
 
-# etcd - ?
+# etcd - locally generated during test
 rw_core/core/voltha.rwcore.nb.etcd/
+rw_core/core/device/voltha.rwcore.da.etcd/

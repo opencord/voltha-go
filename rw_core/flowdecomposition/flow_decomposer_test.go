@@ -957,8 +957,9 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 		},
 	}
 
+	// If table-id is provided in the flow-args, the same is also used as go-to-next table
 	fa2 := &fu.FlowArgs{
-		KV: fu.OfpFlowModArgs{"priority": 500, "table_id": 1},
+		KV: fu.OfpFlowModArgs{"priority": 500 /*"table_id": 1*/},
 		MatchFields: []*ofp.OfpOxmOfbField{
 			fu.InPort(10),
 			fu.VlanVid(uint32(ofp.OfpVlanId_OFPVID_PRESENT) | 101),
@@ -974,6 +975,9 @@ func TestUnicastDownstreamRuleDecomposition(t *testing.T) {
 	assert.Nil(t, err)
 	fs2, err := fu.MkFlowStat(fa2)
 	assert.Nil(t, err)
+	// Table-1, without next table
+	fs2.TableId = 1
+
 	fs1.Instructions = []*ofp.OfpInstruction{{
 		Type: uint32(ofp.OfpInstructionType_OFPIT_GOTO_TABLE),
 		Data: &ofp.OfpInstruction_GotoTable{
@@ -1099,4 +1103,326 @@ func TestMulticastDownstreamRuleDecomposition(t *testing.T) {
 	assert.Nil(t, err)
 	derivedFlow := oltFlowAndGroup.GetFlow(0)
 	assert.Equal(t, expectedOltFlow.String(), derivedFlow.String())
+}
+
+func TestMplsUpstreamFlowDecomposition(t *testing.T) {
+	// Note: 	Olt-Nni=10
+	// 			Onu1-Uni=1
+
+	/*
+		ADDED, bytes=0, packets=0, table=0, priority=1000, selector=[IN_PORT:UNI, VLAN_VID:ANY], treatment=[immediate=[],
+		transition=TABLE:1, meter=METER:1, metadata=METADATA:4100010000/0]
+	*/
+
+	// Here, 'table_id=1' is present to add go-to-table action
+	faOnu := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "table_id": 1, "meter_id": 1, "write_metadata": 4100100000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(1), // Onu Uni
+			fu.VlanVid(4096),
+		},
+		Actions: []*ofp.OfpAction{},
+	}
+	fsOnu, err := fu.MkFlowStat(faOnu)
+	assert.NoError(t, err)
+	assert.NotNil(t, fsOnu)
+	// Update table-id
+	fsOnu.TableId = 0
+
+	/*
+		ADDED, bytes=0, packets=0, table=1, priority=1000, selector=[IN_PORT:32, VLAN_VID:ANY], treatment=[immediate=[VLAN_PUSH:vlan,
+		VLAN_ID:2, MPLS_PUSH:mpls_unicast, MPLS_LABEL:YYY,MPLS_BOS:true, MPLS_PUSH:mpls_unicast ,MPLS_LABEL:XXX, MPLS_BOS:false,
+		EXTENSION:of:0000000000000227/VolthaPushL2Header{​​​​​​​}​​​​​​​, ETH_SRC:OLT_MAC, ETH_DST:LEAF_MAC,  TTL:64, OUTPUT:65536],
+		meter=METER:1, metadata=METADATA:4100000000/0]
+	*/
+	faOlt := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "meter_id": 1, "write_metadata": 4100000000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(1), // Onu-Uni
+			fu.VlanVid(4096),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.PushVlan(0x8100),
+			fu.SetField(fu.VlanVid(2)),
+			fu.SetField(fu.EthSrc(1111)),
+			fu.SetField(fu.EthDst(2222)),
+			fu.PushVlan(0x8847),
+			fu.SetField(fu.MplsLabel(100)),
+			fu.SetField(fu.MplsBos(1)),
+			fu.PushVlan(0x8847),
+			fu.SetField(fu.MplsLabel(200)),
+			fu.MplsTtl(64),
+			fu.Output(10), // Olt-Nni
+		},
+	}
+
+	fsOlt, err := fu.MkFlowStat(faOlt)
+	assert.NoError(t, err)
+	assert.NotNil(t, fsOlt)
+	// Update table-id
+	// table-id is skipped in flow-args above as that would also add the go-to-table action
+	fsOlt.TableId = 1
+
+	flows := map[uint64]*ofp.OfpFlowStats{fsOnu.Id: fsOnu, fsOlt.Id: fsOlt}
+
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
+
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
+	assert.Nil(t, err)
+	onuFlowAndGroup := deviceRules.Rules["onu1"]
+	oltFlowAndGroup := deviceRules.Rules["olt"]
+	assert.NotNil(t, onuFlowAndGroup)
+	assert.NotNil(t, onuFlowAndGroup.Flows)
+	assert.Equal(t, 1, onuFlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, onuFlowAndGroup.Groups.Len())
+	assert.Equal(t, 1, oltFlowAndGroup.Flows.Len())
+	assert.Equal(t, 0, oltFlowAndGroup.Groups.Len())
+
+	// Form expected ONU flow args
+	expectedOnufa := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "meter_id": 1, "write_metadata": 4100100000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(2), // Onu Uni
+			fu.TunnelId(uint64(1)),
+			fu.VlanVid(4096),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.Output(1),
+		},
+	}
+
+	// Form the expected ONU flow
+	expectedOnuFlow, err := fu.MkFlowStat(expectedOnufa)
+	assert.Nil(t, err)
+	assert.NotNil(t, expectedOnuFlow)
+	expectedOnuFlow.TableId = 0
+
+	derivedOnuFlow := onuFlowAndGroup.GetFlow(0)
+	expectedOnuFlow.Id = derivedOnuFlow.Id //  Assign same flow ID as derived flowID to match completely
+	assert.Equal(t, expectedOnuFlow.String(), derivedOnuFlow.String())
+
+	expectedOltfa := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "meter_id": 1, "write_metadata": 4100000000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(1), // Onu-Uni
+			fu.TunnelId(uint64(1)),
+			fu.VlanVid(4096),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.PushVlan(0x8100),
+			fu.SetField(fu.VlanVid(2)),
+			fu.SetField(fu.EthSrc(1111)),
+			fu.SetField(fu.EthDst(2222)),
+			fu.PushVlan(0x8847),
+			fu.SetField(fu.MplsLabel(100)),
+			fu.SetField(fu.MplsBos(1)),
+			fu.PushVlan(0x8847),
+			fu.SetField(fu.MplsLabel(200)),
+			fu.MplsTtl(64),
+			fu.Output(2), // Olt-Nni
+		},
+	}
+
+	expectedOltFlow, err := fu.MkFlowStat(expectedOltfa)
+	assert.NoError(t, err)
+	assert.NotNil(t, expectedOltFlow)
+
+	derivedOltFlow := oltFlowAndGroup.GetFlow(0)
+	expectedOltFlow.Id = derivedOltFlow.Id
+	assert.Equal(t, expectedOltFlow.String(), derivedOltFlow.String())
+}
+
+func TestMplsDownstreamFlowDecomposition(t *testing.T) {
+	faOltSingleMplsLable := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "table_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(10),
+			fu.Metadata_ofp((1000 << 32) | 1),
+			fu.EthType(0x8847),
+			fu.MplsBos(1),
+			fu.EthSrc(2222),
+		},
+		Actions: []*ofp.OfpAction{
+			{Type: ofp.OfpActionType_OFPAT_DEC_MPLS_TTL, Action: &ofp.OfpAction_MplsTtl{MplsTtl: &ofp.OfpActionMplsTtl{MplsTtl: 62}}},
+			fu.PopMpls(0x8847),
+		},
+	}
+	fsOltSingleMplsLabel, err := fu.MkFlowStat(faOltSingleMplsLable)
+	assert.NoError(t, err)
+	assert.NotNil(t, fsOltSingleMplsLabel)
+	fsOltSingleMplsLabel.TableId = 0
+
+	flows := map[uint64]*ofp.OfpFlowStats{fsOltSingleMplsLabel.Id: fsOltSingleMplsLabel}
+
+	tfd := newTestFlowDecomposer(t, newTestDeviceManager())
+
+	deviceRules, err := tfd.fd.DecomposeRules(context.Background(), tfd, flows, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, deviceRules)
+	oltFlowAndGroup := deviceRules.Rules["olt"]
+	assert.NotNil(t, oltFlowAndGroup)
+
+	derivedFlow := oltFlowAndGroup.GetFlow(0)
+	assert.NotNil(t, derivedFlow)
+
+	// Formulate expected
+	expectedFa := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(2),
+			fu.TunnelId(10),
+			fu.Metadata_ofp((1000 << 32) | 1),
+			fu.EthType(0x8847),
+			fu.MplsBos(1),
+			fu.EthSrc(2222),
+		},
+		Actions: []*ofp.OfpAction{
+			{Type: ofp.OfpActionType_OFPAT_DEC_MPLS_TTL, Action: &ofp.OfpAction_MplsTtl{MplsTtl: &ofp.OfpActionMplsTtl{MplsTtl: 62}}},
+			fu.PopMpls(0x8847),
+			fu.Output(1),
+		},
+	}
+	expectedFs, err := fu.MkFlowStat(expectedFa)
+	assert.NoError(t, err)
+	expectedFs.Id = derivedFlow.Id
+
+	assert.Equal(t, expectedFs.String(), derivedFlow.String())
+
+	// Formulate Mpls double label
+	faOltDoubleMplsLabel := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "table_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(10),
+			fu.EthType(0x8847),
+			fu.EthSrc(2222),
+		},
+		Actions: []*ofp.OfpAction{
+			{Type: ofp.OfpActionType_OFPAT_DEC_MPLS_TTL, Action: &ofp.OfpAction_MplsTtl{MplsTtl: &ofp.OfpActionMplsTtl{MplsTtl: 62}}},
+			fu.PopMpls(0x8847),
+			fu.PopMpls(0x8847),
+		},
+	}
+	fsOltDoubleMplsLabel, err := fu.MkFlowStat(faOltDoubleMplsLabel)
+	assert.NoError(t, err)
+	assert.NotNil(t, fsOltDoubleMplsLabel)
+
+	flows2 := map[uint64]*ofp.OfpFlowStats{fsOltDoubleMplsLabel.Id: fsOltDoubleMplsLabel}
+	assert.NotNil(t, flows2)
+
+	deviceRules, err = tfd.fd.DecomposeRules(context.Background(), tfd, flows2, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, deviceRules)
+	oltFlowAndGroup = deviceRules.Rules["olt"]
+	assert.NotNil(t, oltFlowAndGroup)
+	derivedFlow = oltFlowAndGroup.GetFlow(0)
+	assert.NotNil(t, derivedFlow)
+
+	expectedFa = &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(2),
+			fu.TunnelId(10),
+			fu.EthType(0x8847),
+			fu.EthSrc(2222),
+		},
+		Actions: []*ofp.OfpAction{
+			{Type: ofp.OfpActionType_OFPAT_DEC_MPLS_TTL, Action: &ofp.OfpAction_MplsTtl{MplsTtl: &ofp.OfpActionMplsTtl{MplsTtl: 62}}},
+			fu.PopMpls(0x8847),
+			fu.PopMpls(0x8847),
+			fu.Output(1),
+		},
+	}
+	expectedFs, err = fu.MkFlowStat(expectedFa)
+	assert.NoError(t, err)
+	assert.NotNil(t, expectedFs)
+	expectedFs.Id = derivedFlow.Id
+	assert.Equal(t, expectedFs.String(), derivedFlow.String())
+
+	//olt downstream flows (table-id=1)
+	faOlt := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "table_id": 2, "meter_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(10),
+			fu.VlanVid(2),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.PopVlan(),
+		},
+	}
+	fsOlt, err := fu.MkFlowStat(faOlt)
+	assert.NoError(t, err)
+	assert.NotNil(t, fsOlt)
+	fsOlt.TableId = 1
+
+	flows3 := map[uint64]*ofp.OfpFlowStats{fsOlt.Id: fsOlt}
+	assert.NotNil(t, flows3)
+	deviceRules, err = tfd.fd.DecomposeRules(context.Background(), tfd, flows3, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, deviceRules)
+	oltFlowAndGroup = deviceRules.Rules["olt"]
+	assert.NotNil(t, oltFlowAndGroup)
+	derivedFlow = oltFlowAndGroup.GetFlow(0)
+	assert.NotNil(t, derivedFlow)
+
+	faOltExpected := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "meter_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(2),
+			fu.TunnelId(10),
+			fu.VlanVid(2),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.PopVlan(),
+			fu.Output(1),
+		},
+	}
+	fsOltExpected, err := fu.MkFlowStat(faOltExpected)
+	assert.NoError(t, err)
+	assert.NotNil(t, fsOltExpected)
+	fsOltExpected.Id = derivedFlow.Id
+	assert.Equal(t, fsOltExpected.String(), derivedFlow.String())
+
+	// Onu Downstream
+	faOnu := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "meter_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(10),
+			fu.Metadata_ofp((1000 << 32) | 1),
+			fu.VlanVid(4096),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.Output(1),
+		},
+	}
+	fsOnu, err := fu.MkFlowStat(faOnu)
+	assert.NoError(t, err)
+	fsOnu.TableId = 2
+
+	flows4 := map[uint64]*ofp.OfpFlowStats{fsOnu.Id: fsOnu}
+	assert.NotNil(t, flows4)
+	deviceRules, err = tfd.fd.DecomposeRules(context.Background(), tfd, flows4, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, deviceRules)
+	onuFlowAndGroup := deviceRules.Rules["onu1"]
+	assert.NotNil(t, onuFlowAndGroup)
+	derivedFlow = onuFlowAndGroup.GetFlow(0)
+	assert.NotNil(t, derivedFlow)
+
+	faExpected := &fu.FlowArgs{
+		KV: fu.OfpFlowModArgs{"priority": 1000, "meter_id": 1},
+		MatchFields: []*ofp.OfpOxmOfbField{
+			fu.InPort(1),
+			fu.Metadata_ofp((1000 << 32) | 1),
+			fu.VlanVid(4096),
+		},
+		Actions: []*ofp.OfpAction{
+			fu.Output(2),
+		},
+	}
+	fsExpected, err := fu.MkFlowStat(faExpected)
+	assert.NoError(t, err)
+	assert.NotNil(t, fsExpected)
+	fsExpected.Id = derivedFlow.Id
+
+	assert.Equal(t, fsExpected.String(), derivedFlow.String())
 }
