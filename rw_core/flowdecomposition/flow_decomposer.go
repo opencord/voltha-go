@@ -279,8 +279,8 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(ctx context.Cont
 		}
 		fg.AddFlow(fs)
 		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
-	} else if flow.TableId == 1 && outPortNo != 0 {
-		logger.Debugw(ctx, "decomposing-olt-flow-in-upstream-has-next-table", log.Fields{"table_id": flow.TableId})
+	} else if flow.GetTableId() == 1 && outPortNo != 0 {
+		logger.Debugw(ctx, "decomposing-olt-flow-in-upstream", log.Fields{"table_id": flow.TableId})
 		fa := &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 			MatchFields: []*ofp.OfpOxmOfbField{
@@ -320,7 +320,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(ctx context.Context
 		return deviceRules, nil
 	}
 
-	if flow.TableId != 0 {
+	if (flow.TableId != 0) && (flow.TableId != 1) {
 		logger.Warnw(ctx, "This is not olt pipeline table, so skipping", log.Fields{"tableId": flow.TableId})
 		return deviceRules, nil
 	}
@@ -496,7 +496,7 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 	case 0:
 		return deviceRules, fmt.Errorf("no route from:%d to:%d :%w", inPortNo, outPortNo, route.ErrNoRoute)
 	case 2:
-		logger.Debugw(ctx, "route-found", log.Fields{"ingressHop": path[0], "egressHop": path[1]})
+		logger.Debugw(ctx, "route-found", log.Fields{"ingressHop": path[0], "egressHop": path[1], "in-port": inPortNo, "out-port": outPortNo})
 	default:
 		return deviceRules, fmt.Errorf("invalid route length %d :%w", len(path), route.ErrNoRoute)
 	}
@@ -517,19 +517,19 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 		}
 		isUpstream := !ingressDevice.Root
 		if isUpstream { // Unicast OLT and ONU UL
-			logger.Debug(ctx, "process-olt-nd-onu-upstream-noncontrollerbound-unicast-flows", log.Fields{"flows": flow})
+			logger.Debug(ctx, "process-olt-and-onu-upstream-non-controller-bound-uni-cast-flows", log.Fields{"flows": flow})
 			deviceRules, err = fd.processUpstreamNonControllerBoundFlow(ctx, path, inPortNo, outPortNo, flow)
 			if err != nil {
 				return nil, err
 			}
-		} else if fu.HasNextTable(flow) && flow.TableId == 0 { // Unicast OLT flow DL
-			logger.Debugw(ctx, "process-olt-downstream-noncontrollerbound-flow-with-nexttable", log.Fields{"flows": flow})
+		} else if fu.HasNextTable(flow) && (flow.GetTableId() == 0 || flow.GetTableId() == 1) { // Unicast OLT Flow
+			logger.Debugw(ctx, "process-olt-downstream-non-controller-bound-flow-with-next-table", log.Fields{"flows": flow})
 			deviceRules, err = fd.processDownstreamFlowWithNextTable(ctx, agent, path, inPortNo, outPortNo, flow)
 			if err != nil {
 				return nil, err
 			}
-		} else if flow.TableId == 1 && outPortNo != 0 { // Unicast ONU flow DL
-			logger.Debugw(ctx, "process-onu-downstream-unicast-flow", log.Fields{"flows": flow})
+		} else if (flow.GetTableId() == 1 || flow.GetTableId() == 2) && outPortNo != 0 { // Unicast ONU flow DL
+			logger.Debugw(ctx, "process-onu-downstream-uni-cast-flow", log.Fields{"flows": flow})
 			deviceRules, err = fd.processUnicastFlow(ctx, path, inPortNo, outPortNo, flow)
 			if err != nil {
 				return nil, err
