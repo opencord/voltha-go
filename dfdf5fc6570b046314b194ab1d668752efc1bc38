@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3f3cf3d_56ad2bb5",
+        "filename": "rw_core/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-10T14:35:37Z",
+      "side": 1,
+      "message": "do we need to add the parameter type here?",
+      "range": {
+        "startLine": 68,
+        "startChar": 23,
+        "endLine": 68,
+        "endChar": 26
+      },
+      "revId": "dfdf5fc6570b046314b194ab1d668752efc1bc38",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
