@@ -22,8 +22,8 @@ import (
 	"sync"
 
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	fu "github.com/opencord/voltha-lib-go/v5/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	fu "github.com/opencord/voltha-lib-go/v6/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -93,7 +93,7 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 	}
 
 	// Now, set up the UNI ports if needed.
-	children, err := agent.deviceMgr.GetAllChildDevices(ctx, agent.rootDeviceID)
+	children, err := agent.deviceMgr.getAllChildDevices(ctx, agent.rootDeviceID)
 	if err != nil {
 		logger.Errorw(ctx, "error-getting-child-devices", log.Fields{"error": err, "device-id": agent.rootDeviceID})
 		return err
@@ -120,7 +120,7 @@ func (agent *LogicalAgent) setupLogicalPorts(ctx context.Context) error {
 		}(subCtx, child)
 	}
 	// Wait for completion
-	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, responses...); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, responses...); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
@@ -220,8 +220,8 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 	// Reset the logical device routes
 	go func() {
 		subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-		if err := agent.buildRoutes(subCtx); err != nil {
-			logger.Warnw(ctx, "device-routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+		if err := agent.removeRoutes(subCtx); err != nil {
+			logger.Warnw(ctx, "error-removing-routes", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 	}()
 	return nil
@@ -513,16 +513,16 @@ func (agent *LogicalAgent) GetNNIPorts() map[uint32]struct{} {
 
 // getUNILogicalPortNo returns the UNI logical port number specified in the flow
 func (agent *LogicalAgent) getUNILogicalPortNo(flow *ofp.OfpFlowStats) (uint32, error) {
-	var uniPort uint32
 	inPortNo := fu.GetInPort(flow)
 	outPortNo := fu.GetOutPort(flow)
-	if agent.isNNIPort(inPortNo) {
-		uniPort = outPortNo
-	} else if agent.isNNIPort(outPortNo) {
-		uniPort = inPortNo
+	if inPortNo == 0 && outPortNo == 0 {
+		return 0, status.Errorf(codes.NotFound, "no-uni-port: %v", flow)
 	}
-	if uniPort != 0 {
-		return uniPort, nil
+	if inPortNo != 0 && !agent.isNNIPort(inPortNo) {
+		return inPortNo, nil
+	}
+	if outPortNo != 0 && !agent.isNNIPort(outPortNo) {
+		return outPortNo, nil
 	}
 	return 0, status.Errorf(codes.NotFound, "no-uni-port: %v", flow)
 }
