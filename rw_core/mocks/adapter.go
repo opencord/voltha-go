@@ -19,15 +19,29 @@ package mocks
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/voltha-protos/v4/go/extension"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/opencord/voltha-lib-go/v5/pkg/adapters/adapterif"
-	ic "github.com/opencord/voltha-protos/v4/go/inter_container"
-	of "github.com/opencord/voltha-protos/v4/go/openflow_13"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/golang/protobuf/ptypes/empty"
+	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/adapter_services"
+	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/core"
+	"google.golang.org/grpc"
+
+	"github.com/opencord/voltha-protos/v5/go/extension"
+	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	"github.com/opencord/voltha-protos/v5/go/openflow_13"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
+)
+
+const (
+	numONUPerOLT      = 4
+	startingUNIPortNo = 100
 )
 
 func macAddressToUint32Array(mac string) []uint32 {
@@ -44,25 +58,53 @@ func macAddressToUint32Array(mac string) []uint32 {
 	return result
 }
 
+// GetNumONUPerOLT returns number of ONUs per OLT
+func GetNumONUPerOLT() int {
+	return numONUPerOLT
+}
+
+// Returns the starting UNI port number
+func GetStartingUNIPortNo() int {
+	return startingUNIPortNo
+}
+
 // Adapter represents adapter attributes
 type Adapter struct {
-	coreProxy        adapterif.CoreProxy
-	flows            map[uint64]*voltha.OfpFlowStats
-	flowLock         sync.RWMutex
-	devices          map[string]*voltha.Device
-	deviceLock       sync.RWMutex
-	failFlowAdd      bool
-	failFlowDelete   bool
-	failDeleteDevice bool
+	flows                map[string]map[uint64]*openflow_13.OfpFlowStats
+	flowLock             sync.RWMutex
+	devices              map[string]*voltha.Device
+	deviceLock           sync.RWMutex
+	failFlowAdd          map[string]bool
+	failFlowAddLock      sync.RWMutex
+	failFlowDelete       map[string]bool
+	failFlowDeleteLock   sync.RWMutex
+	failDeleteDevice     map[string]bool
+	failDeleteDeviceLock sync.RWMutex
+	coreEnpoint          string
+	coreClient           *vgrpc.Client
+	serviceEndpoint      string
+	DeviceType           string
+	vendor               string
+	Probe                *probe.Probe
 }
 
 // NewAdapter creates adapter instance
-func NewAdapter(cp adapterif.CoreProxy) *Adapter {
+func NewAdapter(serviceEndpoint, coreEndpoint, deviceType, vendor string) *Adapter {
 	return &Adapter{
-		flows:     map[uint64]*voltha.OfpFlowStats{},
-		devices:   map[string]*voltha.Device{},
-		coreProxy: cp,
+		flows:            map[string]map[uint64]*openflow_13.OfpFlowStats{},
+		devices:          map[string]*voltha.Device{},
+		failFlowAdd:      map[string]bool{},
+		failFlowDelete:   map[string]bool{},
+		failDeleteDevice: map[string]bool{},
+		coreEnpoint:      coreEndpoint,
+		serviceEndpoint:  serviceEndpoint,
+		DeviceType:       deviceType,
+		vendor:           vendor,
 	}
+}
+
+func (ta *Adapter) IsReady() bool {
+	return ta.Probe.IsReady()
 }
 
 func (ta *Adapter) storeDevice(d *voltha.Device) {
@@ -83,255 +125,287 @@ func (ta *Adapter) updateDevice(d *voltha.Device) {
 	ta.storeDevice(d)
 }
 
-// Adapter_descriptor -
-func (ta *Adapter) Adapter_descriptor(ctx context.Context) error { // nolint
-	return nil
+func (ta *Adapter) GetEndPoint() string {
+	return ta.serviceEndpoint
 }
 
-// Device_types -
-func (ta *Adapter) Device_types(ctx context.Context) (*voltha.DeviceTypes, error) { // nolint
-	return nil, nil
-}
-
-// Health -
-func (ta *Adapter) Health(ctx context.Context) (*voltha.HealthStatus, error) {
-	return nil, nil
-}
-
-// Adopt_device -
-func (ta *Adapter) Adopt_device(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
-}
-
-// Reconcile_device -
-func (ta *Adapter) Reconcile_device(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
-}
-
-// Abandon_device -
-func (ta *Adapter) Abandon_device(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
-}
-
-// Disable_device -
-func (ta *Adapter) Disable_device(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
-}
-
-// Reenable_device -
-func (ta *Adapter) Reenable_device(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
-}
-
-// Reboot_device -
-func (ta *Adapter) Reboot_device(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
-}
-
-// Self_test_device -
-func (ta *Adapter) Self_test_device(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
-}
-
-// Delete_device -
-func (ta *Adapter) Delete_device(ctx context.Context, device *voltha.Device) error { // nolint
-	if ta.failDeleteDevice {
-		return fmt.Errorf("delete-device-failure")
+func (ta *Adapter) GetCoreClient() (core.CoreServiceClient, error) {
+	// Wait until the Core is up and running
+	for {
+		if ta.coreClient != nil {
+			client, err := ta.coreClient.GetClient()
+			if err != nil {
+				logger.Infow(context.Background(), "got-error-core-client", log.Fields{"error": err})
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			c, ok := client.(core.CoreServiceClient)
+			if ok {
+				logger.Debug(context.Background(), "got-valid-client")
+				return c, nil
+			}
+		}
+		logger.Info(context.Background(), "waiting-for-grpc-core-client")
+		time.Sleep(1 * time.Second)
 	}
-	return nil
 }
 
-// Get_device_details -
-func (ta *Adapter) Get_device_details(ctx context.Context, device *voltha.Device) error { // nolint
-	return nil
+// Helper methods
+// startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server
+func (ta *Adapter) startGRPCService(ctx context.Context, server *vgrpc.GrpcServer, handler adapter_services.AdapterServiceServer, serviceName string) {
+	logger.Infow(ctx, "service-created", log.Fields{"service": serviceName})
+
+	server.AddService(func(gs *grpc.Server) { adapter_services.RegisterAdapterServiceServer(gs, handler) })
+	logger.Infow(ctx, "service-added", log.Fields{"service": serviceName})
+
+	ta.Probe.UpdateStatus(ctx, serviceName, probe.ServiceStatusRunning)
+	logger.Infow(ctx, "service-started", log.Fields{"service": serviceName})
+
+	// Note that there is a small window here in which the core could return its status as ready,
+	// when it really isn't.  This is unlikely to cause issues, as the delay is incredibly short.
+	server.Start(ctx)
+	ta.Probe.UpdateStatus(ctx, serviceName, probe.ServiceStatusStopped)
 }
 
-// Update_flows_bulk -
-func (ta *Adapter) Update_flows_bulk(ctx context.Context, device *voltha.Device, flows *voltha.Flows, groups *voltha.FlowGroups, flowMetadata *voltha.FlowMetadata) error { // nolint
-	return nil
+func setAndTestCoreServiceHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
+	svc := core.NewCoreServiceClient(conn)
+	if h, err := svc.GetHealthStatus(ctx, &empty.Empty{}); err != nil || h.State != voltha.HealthStatus_HEALTHY {
+		return nil
+	}
+	return svc
 }
 
-// Update_flows_incrementally mocks the incremental flow update
-func (ta *Adapter) Update_flows_incrementally(ctx context.Context, device *voltha.Device, flows *of.FlowChanges, groups *of.FlowGroupChanges, flowMetadata *voltha.FlowMetadata) error { // nolint
+// gRPC service
+func (ta *Adapter) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*voltha.HealthStatus, error) {
+	return &voltha.HealthStatus{State: voltha.HealthStatus_HEALTHY}, nil
+}
+
+// Device
+
+func (ta *Adapter) AdoptDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) ReconcileDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) DeleteDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	ta.failDeleteDeviceLock.RLock()
+	haveToFail, ok := ta.failDeleteDevice[device.Id]
+	if ok && haveToFail {
+		ta.failDeleteDeviceLock.RUnlock()
+		return nil, fmt.Errorf("delete-device-failure")
+	}
+	ta.failDeleteDeviceLock.RUnlock()
+	if ok {
+		ta.RemoveDevice(device.Id)
+	}
+	logger.Debugw(ctx, "device-deleted-in-adapter", log.Fields{"device-id": device.Id})
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) DisableDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) ReEnableDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) RebootDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) SelfTestDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) ChildDeviceLost(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) {
+	return nil, nil
+}
+
+// Ports
+
+func (ta *Adapter) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+// Flows
+func (ta *Adapter) UpdateFlowsBulk(ctx context.Context, flows *ic.BulkFlows) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ic.IncrementalFlows) (*empty.Empty, error) {
 	ta.flowLock.Lock()
 	defer ta.flowLock.Unlock()
 
-	if flows.ToAdd != nil && len(flows.ToAdd.Items) > 0 {
-		if ta.failFlowAdd {
-			return fmt.Errorf("flow-add-error")
+	if _, ok := ta.flows[incrFlows.Device.Id]; !ok {
+		ta.flows[incrFlows.Device.Id] = map[uint64]*openflow_13.OfpFlowStats{}
+	}
+
+	if incrFlows.Flows.ToAdd != nil && len(incrFlows.Flows.ToAdd.Items) > 0 {
+		ta.failFlowAddLock.RLock()
+		if haveToFail, ok := ta.failFlowAdd[incrFlows.Device.Id]; ok && haveToFail {
+			ta.failFlowAddLock.RUnlock()
+			return nil, fmt.Errorf("flow-add-error")
 		}
-		for _, f := range flows.ToAdd.Items {
-			ta.flows[f.Id] = f
+		ta.failFlowAddLock.RUnlock()
+		for _, f := range incrFlows.Flows.ToAdd.Items {
+			ta.flows[incrFlows.Device.Id][f.Id] = f
 		}
 	}
-	if flows.ToRemove != nil && len(flows.ToRemove.Items) > 0 {
-		if ta.failFlowDelete {
-			return fmt.Errorf("flow-delete-error")
+	if incrFlows.Flows.ToRemove != nil && len(incrFlows.Flows.ToRemove.Items) > 0 {
+		ta.failFlowDeleteLock.RLock()
+		if haveToFail, ok := ta.failFlowDelete[incrFlows.Device.Id]; ok && haveToFail {
+			ta.failFlowDeleteLock.RUnlock()
+			return nil, fmt.Errorf("flow-delete-error")
 		}
-		for _, f := range flows.ToRemove.Items {
-			delete(ta.flows, f.Id)
+		ta.failFlowDeleteLock.RUnlock()
+		for _, f := range incrFlows.Flows.ToRemove.Items {
+			delete(ta.flows[incrFlows.Device.Id], f.Id)
 		}
 	}
-	return nil
+	return &empty.Empty{}, nil
 }
 
-// Update_pm_config -
-func (ta *Adapter) Update_pm_config(ctx context.Context, device *voltha.Device, pmConfigs *voltha.PmConfigs) error { // nolint
-	return nil
+//Packets
+func (ta *Adapter) SendPacketOut(ctx context.Context, packet *ic.PacketOut) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
 }
 
-// Receive_packet_out -
-func (ta *Adapter) Receive_packet_out(ctx context.Context, deviceID string, egressPortNo int, msg *of.OfpPacketOut) error { // nolint
-	return nil
+// PM
+func (ta *Adapter) UpdatePmConfig(ctx context.Context, configs *ic.PmConfigsInfo) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
 }
 
-// Suppress_event -
-func (ta *Adapter) Suppress_event(ctx context.Context, filter *voltha.EventFilter) error { // nolint
-	return nil
+// Image
+func (ta *Adapter) DownloadOnuImage(ctx context.Context, request *voltha.DeviceImageDownloadRequest) (*voltha.DeviceImageResponse, error) {
+	return &voltha.DeviceImageResponse{}, nil
 }
 
-// Unsuppress_event -
-func (ta *Adapter) Unsuppress_event(ctx context.Context, filter *voltha.EventFilter) error { // nolint
-	return nil
+func (ta *Adapter) GetOnuImageStatus(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return &voltha.DeviceImageResponse{}, nil
 }
 
-// Get_ofp_device_info -
-func (ta *Adapter) Get_ofp_device_info(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) { // nolint
-	return &ic.SwitchCapability{
-		Desc: &of.OfpDesc{
-			HwDesc:    "adapter_mock",
-			SwDesc:    "adapter_mock",
-			SerialNum: "000000000",
-		},
-		SwitchFeatures: &of.OfpSwitchFeatures{
-			NBuffers: 256,
-			NTables:  2,
-			Capabilities: uint32(of.OfpCapabilities_OFPC_FLOW_STATS |
-				of.OfpCapabilities_OFPC_TABLE_STATS |
-				of.OfpCapabilities_OFPC_PORT_STATS |
-				of.OfpCapabilities_OFPC_GROUP_STATS),
-		},
-	}, nil
+func (ta *Adapter) AbortOnuImageUpgrade(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return &voltha.DeviceImageResponse{}, nil
 }
 
-// Process_inter_adapter_message -
-func (ta *Adapter) Process_inter_adapter_message(ctx context.Context, msg *ic.InterAdapterMessage) error { // nolint
-	return nil
+func (ta *Adapter) GetOnuImages(ctx context.Context, id *common.ID) (*voltha.OnuImages, error) {
+	return &voltha.OnuImages{}, nil
 }
 
-// Download_image -
-func (ta *Adapter) Download_image(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
+func (ta *Adapter) ActivateOnuImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return &voltha.DeviceImageResponse{}, nil
+}
+
+func (ta *Adapter) CommitOnuImage(ctx context.Context, request *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) {
+	return &voltha.DeviceImageResponse{}, nil
+}
+
+// Deprecated image APIs
+func (ta *Adapter) DownloadImage(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
+}
+
+func (ta *Adapter) GetImageDownloadStatus(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
+}
+
+func (ta *Adapter) CancelImageDownload(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
+}
+
+func (ta *Adapter) ActivateImageUpdate(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
+}
+
+func (ta *Adapter) RevertImageUpdate(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+	return &voltha.ImageDownload{}, nil
+}
+
+// OMCI test
+func (ta *Adapter) StartOmciTest(ctx context.Context, test *ic.OMCITest) (*voltha.TestResponse, error) {
 	return nil, nil
 }
 
-// Get_image_download_status -
-func (ta *Adapter) Get_image_download_status(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
-	return nil, nil
+// Events
+func (ta *Adapter) SuppressEvent(ctx context.Context, filter *voltha.EventFilter) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
 }
 
-// Cancel_image_download -
-func (ta *Adapter) Cancel_image_download(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
-	return nil, nil
+func (ta *Adapter) UnSuppressEvent(ctx context.Context, filter *voltha.EventFilter) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
 }
 
-// Activate_image_update -
-func (ta *Adapter) Activate_image_update(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
-	return nil, nil
+func (ta *Adapter) SimulateAlarm(context.Context, *ic.SimulateAlarmMessage) (*common.OperationResp, error) {
+	return &common.OperationResp{}, nil
 }
 
-// Revert_image_update -
-func (ta *Adapter) Revert_image_update(ctx context.Context, device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) { // nolint
-	return nil, nil
+func (ta *Adapter) GetExtValue(context.Context, *ic.GetExtValueMessage) (*common.ReturnValues, error) {
+	return &common.ReturnValues{}, nil
 }
 
-// Enable_port -
-func (ta *Adapter) Enable_port(ctx context.Context, deviceId string, port *voltha.Port) error { //nolint
-	return nil
+func (ta *Adapter) SetExtValue(context.Context, *ic.SetExtValueMessage) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
 }
 
-// Disable_port -
-func (ta *Adapter) Disable_port(ctx context.Context, deviceId string, port *voltha.Port) error { //nolint
-	return nil
+func (ta *Adapter) GetSingleValue(context.Context, *extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
+	return &extension.SingleGetValueResponse{}, nil
 }
 
-// Child_device_lost -
-func (ta *Adapter) Child_device_lost(ctx context.Context, childDevice *voltha.Device) error { //nolint
-	return nil
+func (ta *Adapter) SetSingleValue(context.Context, *extension.SingleSetValueRequest) (*extension.SingleSetValueResponse, error) {
+	return &extension.SingleSetValueResponse{}, nil
 }
 
-// Start_omci_test
-func (ta *Adapter) Start_omci_test(ctx context.Context, device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) { //nolint
-	return nil, nil
-}
-
-func (ta *Adapter) Get_ext_value(ctx context.Context, deviceId string, device *voltha.Device, valueflag voltha.ValueType_Type) (*voltha.ReturnValues, error) { //nolint
-	return nil, nil
-}
-
-// Single_get_value_request retrieves a single value.
-func (ta *Adapter) Single_get_value_request(ctx context.Context, // nolint
-	request extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
-	return nil, nil
-}
-
+// APIs for test ONLY
 // GetFlowCount returns the total number of flows presently under this adapter
-func (ta *Adapter) GetFlowCount() int {
+func (ta *Adapter) GetFlowCount(deviceID string) int {
 	ta.flowLock.RLock()
 	defer ta.flowLock.RUnlock()
 
-	return len(ta.flows)
+	if _, ok := ta.flows[deviceID]; ok {
+		return len(ta.flows[deviceID])
+	}
+	return 0
 }
 
-// ClearFlows removes all flows in this adapter
-func (ta *Adapter) ClearFlows() {
+// RemoveDevice removes all flows in this adapter
+func (ta *Adapter) RemoveDevice(deviceID string) {
 	ta.flowLock.Lock()
 	defer ta.flowLock.Unlock()
+	ta.failFlowAddLock.Lock()
+	defer ta.failFlowAddLock.Unlock()
+	ta.failFlowDeleteLock.Lock()
+	defer ta.failFlowDeleteLock.Unlock()
 
-	ta.flows = map[uint64]*voltha.OfpFlowStats{}
+	delete(ta.flows, deviceID)
+	delete(ta.failFlowAdd, deviceID)
+	delete(ta.failFlowDelete, deviceID)
 }
 
 // SetFlowAction sets the adapter action on addition and deletion of flows
-func (ta *Adapter) SetFlowAction(failFlowAdd, failFlowDelete bool) {
-	ta.failFlowAdd = failFlowAdd
-	ta.failFlowDelete = failFlowDelete
+func (ta *Adapter) SetFlowAction(deviceID string, failFlowAdd, failFlowDelete bool) {
+	ta.failFlowAddLock.Lock()
+	defer ta.failFlowAddLock.Unlock()
+	ta.failFlowDeleteLock.Lock()
+	defer ta.failFlowDeleteLock.Unlock()
+	ta.failFlowAdd[deviceID] = failFlowAdd
+	ta.failFlowDelete[deviceID] = failFlowDelete
 }
 
 // SetDeleteAction sets the adapter action on delete device
-func (ta *Adapter) SetDeleteAction(failDeleteDevice bool) {
-	ta.failDeleteDevice = failDeleteDevice
-}
-
-// Download_onu_image -
-func (ta *Adapter) Download_onu_image(ctx context.Context, request *voltha.DeviceImageDownloadRequest) (*voltha.DeviceImageResponse, error) { //nolint
-	return nil, nil
-}
-
-// Get_onu_image_status -
-func (ta *Adapter) Get_onu_image_status(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
-	return nil, nil
-}
-
-// Abort_onu_image_upgrade -
-func (ta *Adapter) Abort_onu_image_upgrade(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
-	return nil, nil
-}
-
-// Get_onu_images -
-func (ta *Adapter) Get_onu_images(ctx context.Context, deviceID string) (*voltha.OnuImages, error) { //nolint
-	return nil, nil
-}
-
-// Activate_onu_image -
-func (ta *Adapter) Activate_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
-	return nil, nil
-}
-
-// Commit_onu_image -
-func (ta *Adapter) Commit_onu_image(ctx context.Context, in *voltha.DeviceImageRequest) (*voltha.DeviceImageResponse, error) { //nolint
-	return nil, nil
-}
-
-// Process_tech_profile_instance_request -
-func (ta *Adapter) Process_tech_profile_instance_request(ctx context.Context, msg *ic.InterAdapterTechProfileInstanceRequestMessage) *ic.InterAdapterTechProfileDownloadMessage { //nolint
-	return nil
+func (ta *Adapter) SetDeleteAction(deviceID string, failDeleteDevice bool) {
+	ta.failDeleteDeviceLock.Lock()
+	defer ta.failDeleteDeviceLock.Unlock()
+	ta.failDeleteDevice[deviceID] = failDeleteDevice
 }

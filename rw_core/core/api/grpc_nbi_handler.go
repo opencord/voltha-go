@@ -20,17 +20,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
-	"github.com/opencord/voltha-lib-go/v5/pkg/version"
-	"github.com/opencord/voltha-protos/v4/go/common"
-	"github.com/opencord/voltha-protos/v4/go/omci"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-lib-go/v7/pkg/version"
+	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/omci"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
 
-// NBIHandler combines the partial API implementations in various components into a complete voltha implementation
-type NBIHandler struct {
+// APIHandler combines the partial API implementations in various components into a complete voltha implementation
+type APIHandler struct {
 	*device.Manager
 	*device.LogicalManager
 	adapterManager // *adapter.Manager
@@ -39,17 +40,21 @@ type NBIHandler struct {
 // avoid having multiple embedded types with the same name (`<package>.Manager`s conflict)
 type adapterManager struct{ *adapter.Manager }
 
-// NewNBIHandler creates API handler instance
-func NewNBIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalManager, adapterMgr *adapter.Manager) *NBIHandler {
-	return &NBIHandler{
+// NewAPIHandler creates API handler instance
+func NewAPIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalManager, adapterMgr *adapter.Manager) *APIHandler {
+	return &APIHandler{
 		Manager:        deviceMgr,
 		LogicalManager: logicalDeviceMgr,
 		adapterManager: adapterManager{adapterMgr},
 	}
 }
 
+func (handler *APIHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*voltha.HealthStatus, error) {
+	return &voltha.HealthStatus{State: voltha.HealthStatus_HEALTHY}, nil
+}
+
 // GetVoltha currently just returns version information
-func (handler *NBIHandler) GetVoltha(ctx context.Context, _ *empty.Empty) (*voltha.Voltha, error) {
+func (handler *APIHandler) GetVoltha(ctx context.Context, _ *empty.Empty) (*voltha.Voltha, error) {
 	logger.Debug(ctx, "GetVoltha")
 	/*
 	 * For now, encode all the version information into a JSON object and
@@ -67,48 +72,48 @@ func (handler *NBIHandler) GetVoltha(ctx context.Context, _ *empty.Empty) (*volt
 
 var errUnimplemented = errors.New("unimplemented")
 
-func (handler *NBIHandler) ListCoreInstances(context.Context, *empty.Empty) (*voltha.CoreInstances, error) {
+func (handler *APIHandler) ListCoreInstances(context.Context, *empty.Empty) (*voltha.CoreInstances, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) GetCoreInstance(context.Context, *voltha.ID) (*voltha.CoreInstance, error) {
+func (handler *APIHandler) GetCoreInstance(context.Context, *voltha.ID) (*voltha.CoreInstance, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) ListDeviceGroups(context.Context, *empty.Empty) (*voltha.DeviceGroups, error) {
+func (handler *APIHandler) ListDeviceGroups(context.Context, *empty.Empty) (*voltha.DeviceGroups, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) GetDeviceGroup(context.Context, *voltha.ID) (*voltha.DeviceGroup, error) {
+func (handler *APIHandler) GetDeviceGroup(context.Context, *voltha.ID) (*voltha.DeviceGroup, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) CreateEventFilter(context.Context, *voltha.EventFilter) (*voltha.EventFilter, error) {
+func (handler *APIHandler) CreateEventFilter(context.Context, *voltha.EventFilter) (*voltha.EventFilter, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) UpdateEventFilter(context.Context, *voltha.EventFilter) (*voltha.EventFilter, error) {
+func (handler *APIHandler) UpdateEventFilter(context.Context, *voltha.EventFilter) (*voltha.EventFilter, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) DeleteEventFilter(context.Context, *voltha.EventFilter) (*empty.Empty, error) {
+func (handler *APIHandler) DeleteEventFilter(context.Context, *voltha.EventFilter) (*empty.Empty, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) GetEventFilter(context.Context, *voltha.ID) (*voltha.EventFilters, error) {
+func (handler *APIHandler) GetEventFilter(context.Context, *voltha.ID) (*voltha.EventFilters, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) ListEventFilters(context.Context, *empty.Empty) (*voltha.EventFilters, error) {
+func (handler *APIHandler) ListEventFilters(context.Context, *empty.Empty) (*voltha.EventFilters, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) SelfTest(context.Context, *voltha.ID) (*voltha.SelfTestResponse, error) {
+func (handler *APIHandler) SelfTest(context.Context, *voltha.ID) (*voltha.SelfTestResponse, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) Subscribe(context.Context, *voltha.OfAgentSubscriber) (*voltha.OfAgentSubscriber, error) {
+func (handler *APIHandler) Subscribe(context.Context, *voltha.OfAgentSubscriber) (*voltha.OfAgentSubscriber, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) GetAlarmDeviceData(context.Context, *common.ID) (*omci.AlarmDeviceData, error) {
+func (handler *APIHandler) GetAlarmDeviceData(context.Context, *common.ID) (*omci.AlarmDeviceData, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) GetMibDeviceData(context.Context, *common.ID) (*omci.MibDeviceData, error) {
+func (handler *APIHandler) GetMibDeviceData(context.Context, *common.ID) (*omci.MibDeviceData, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) GetMembership(context.Context, *empty.Empty) (*voltha.Membership, error) {
+func (handler *APIHandler) GetMembership(context.Context, *empty.Empty) (*voltha.Membership, error) {
 	return nil, errUnimplemented
 }
-func (handler *NBIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
+func (handler *APIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return nil, errUnimplemented
 }
