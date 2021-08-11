@@ -18,11 +18,15 @@ package utils
 
 import (
 	"context"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
+
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 )
 
 type contextKey string
@@ -35,8 +39,8 @@ var (
 	// RPCContextKey for keeping rpc name as metadata
 	rpcContextKey = contextKey("rpc")
 
-	// fromTopicContextKey for keeping entity from which operation is requested as metadata
-	fromTopicContextKey = contextKey("fromTopic")
+	// endpointKey for keeping the client endpoint making an RPC request
+	endpointKey = contextKey("endpoint")
 )
 
 // ResponseCallback is the function signature for callbacks to execute after a response is received.
@@ -146,6 +150,11 @@ func WithRPCMetadataContext(ctx context.Context, rpcName string) context.Context
 	return ctx
 }
 
+func WithCoreEndpointContext(ctx context.Context) context.Context {
+	ctx = context.WithValue(ctx, endpointKey, "CORE")
+	return ctx
+}
+
 func GetRPCMetadataFromContext(ctx context.Context) string {
 	if ctx != nil {
 		if val, ok := ctx.Value(rpcContextKey).(string); ok {
@@ -173,25 +182,74 @@ func WithSpanAndRPCMetadataFromContext(sourceCtx context.Context) context.Contex
 	return targetCtx
 }
 
-func WithFromTopicMetadataContext(ctx context.Context, fromTopic string) context.Context {
-	ctx = context.WithValue(ctx, fromTopicContextKey, fromTopic)
-	return ctx
+func WithRPCMetadataAndEndpointFromContext(targetCtx, sourceCtx context.Context) context.Context {
+	if sourceCtx != nil {
+		targetCtx = WithRPCMetadataFromContext(targetCtx, sourceCtx)
+		targetCtx = WithCoreEndpointContext(targetCtx)
+	}
+	return targetCtx
 }
 
-func WithFromTopicMetadataFromContext(targetCtx, sourceCtx context.Context) context.Context {
+func WithAllMetadataFromContext(sourceCtx context.Context) context.Context {
+	targetCtx := context.Background()
 	if sourceCtx != nil {
-		if val, ok := sourceCtx.Value(fromTopicContextKey).(string); ok {
-			targetCtx = context.WithValue(targetCtx, fromTopicContextKey, val)
+		targetCtx = log.WithSpanFromContext(targetCtx, sourceCtx)
+		targetCtx = WithRPCMetadataFromContext(targetCtx, sourceCtx)
+		targetCtx = WithCoreEndpointContext(targetCtx)
+	}
+	return targetCtx
+}
+
+func WithEndpointMetadataFromContext(targetCtx, sourceCtx context.Context) context.Context {
+	if sourceCtx != nil {
+		if val, ok := sourceCtx.Value(endpointKey).(string); ok {
+			targetCtx = context.WithValue(targetCtx, endpointKey, val)
 		}
 	}
 	return targetCtx
 }
 
-func GetFromTopicMetadataFromContext(ctx context.Context) string {
+func WithNewSpanAndRPCMetadataContext(sourceCtx context.Context, rpcName string) context.Context {
+	targetCtx := context.Background()
+	if sourceCtx != nil {
+		sourceEndpoint := ""
+		if p, ok := peer.FromContext(sourceCtx); ok {
+			sourceEndpoint = p.Addr.String()
+		}
+		targetCtx = log.WithSpanFromContext(targetCtx, sourceCtx)
+		targetCtx = context.WithValue(targetCtx, rpcContextKey, rpcName)
+		targetCtx = context.WithValue(targetCtx, endpointKey, sourceEndpoint)
+	}
+	return targetCtx
+}
+
+func GetEndpointMetadataFromContext(ctx context.Context) string {
 	if ctx != nil {
-		if val, ok := ctx.Value(fromTopicContextKey).(string); ok {
+		if val, ok := ctx.Value(endpointKey).(string); ok {
 			return val
 		}
 	}
 	return ""
+}
+
+func WaitForExit(ctx context.Context) int {
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	s := <-signalChannel
+	switch s {
+	case syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT:
+		logger.Infow(ctx, "closing-signal-received", log.Fields{"signal": s})
+		return 0
+	default:
+		logger.Infow(ctx, "unexpected-signal-received", log.Fields{"signal": s})
+		return 1
+	}
 }

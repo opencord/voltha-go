@@ -15,12 +15,13 @@ package meter
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"sync"
 )
 
 // Loader hides all low-level locking & synchronization related to meter state updates
