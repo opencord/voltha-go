@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -118,6 +118,10 @@ func (dr *DeviceRoutes) GetRoute(ctx context.Context, ingress, egress uint32) ([
 
 	return dr.Routes[PathID{Ingress: ingress, Egress: egress}], nil
 
+}
+
+func (dr *DeviceRoutes) RemoveRoutes() {
+	dr.reset()
 }
 
 //ComputeRoutes calculates all the routes between the logical ports.  This will clear up any existing route

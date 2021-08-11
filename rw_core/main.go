@@ -20,39 +20,15 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
-	"github.com/opencord/voltha-lib-go/v5/pkg/version"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v7/pkg/version"
 )
-
-func waitForExit(ctx context.Context) int {
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
-
-	s := <-signalChannel
-	switch s {
-	case syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT:
-		logger.Infow(ctx, "closing-signal-received", log.Fields{"signal": s})
-		return 0
-	default:
-		logger.Infow(ctx, "unexpected-signal-received", log.Fields{"signal": s})
-		return 1
-	}
-}
 
 func printBanner() {
 	fmt.Println(`                                    `)
@@ -154,9 +130,10 @@ func main() {
 	}
 
 	// create and start the core
-	core := c.NewCore(probeCtx, instanceID, cf)
+	core, shutdownCtx := c.NewCore(probeCtx, instanceID, cf)
+	go core.Start(shutdownCtx, instanceID, cf)
 
-	code := waitForExit(ctx)
+	code := utils.WaitForExit(ctx)
 	logger.Infow(ctx, "received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving

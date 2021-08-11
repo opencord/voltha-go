@@ -20,7 +20,7 @@ import (
 	"context"
 	"sync"
 
-	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 )
 
 // Cache hides all low-level locking & synchronization related to flow state updates

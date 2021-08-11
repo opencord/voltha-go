@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 
-	fu "github.com/opencord/voltha-lib-go/v5/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
+	fu "github.com/opencord/voltha-lib-go/v7/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 )
 
 // GetMeterConfig returns meters which which are used by the given flows

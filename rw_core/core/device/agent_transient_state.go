@@ -18,26 +18,28 @@ package device
 
 import (
 	"context"
-	"github.com/opencord/voltha-protos/v4/go/common"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
+
+	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (agent *Agent) getTransientState() voltha.DeviceTransientState_Types {
+func (agent *Agent) getTransientState() core.DeviceTransientState_Types {
 	transientStateHandle := agent.transientStateLoader.Lock()
 	deviceTransientState := transientStateHandle.GetReadOnly()
 	transientStateHandle.UnLock()
 	return deviceTransientState
 }
 
-func (agent *Agent) matchTransientState(transientState voltha.DeviceTransientState_Types) bool {
+func (agent *Agent) matchTransientState(transientState core.DeviceTransientState_Types) bool {
 	transientStateHandle := agent.transientStateLoader.Lock()
 	defer transientStateHandle.UnLock()
 	return transientState == transientStateHandle.GetReadOnly()
 }
 
-func (agent *Agent) updateTransientState(ctx context.Context, transientState voltha.DeviceTransientState_Types) error {
+func (agent *Agent) updateTransientState(ctx context.Context, transientState core.DeviceTransientState_Types) error {
 	// Already in same transientState
 	if transientState == agent.getTransientState() {
 		return nil
@@ -54,16 +56,17 @@ func (agent *Agent) updateTransientState(ctx context.Context, transientState vol
 
 func (agent *Agent) isDeletionInProgress() bool {
 	deviceTransientState := agent.getTransientState()
-	return deviceTransientState == voltha.DeviceTransientState_FORCE_DELETING ||
-		deviceTransientState == voltha.DeviceTransientState_DELETING_FROM_ADAPTER ||
-		deviceTransientState == voltha.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
+	return deviceTransientState == core.DeviceTransientState_FORCE_DELETING ||
+		deviceTransientState == core.DeviceTransientState_DELETING_FROM_ADAPTER ||
+		deviceTransientState == core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
 }
 
-func (agent *Agent) isStateDeleting(deviceTransientState voltha.DeviceTransientState_Types) bool {
-	return deviceTransientState == voltha.DeviceTransientState_FORCE_DELETING ||
-		deviceTransientState == voltha.DeviceTransientState_DELETING_FROM_ADAPTER ||
-		deviceTransientState == voltha.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
+func (agent *Agent) isForceDeletingAllowed(deviceTransientState core.DeviceTransientState_Types, device *voltha.Device) bool {
+	return deviceTransientState != core.DeviceTransientState_FORCE_DELETING &&
+		(device.OperStatus != common.OperStatus_RECONCILING ||
+			!agent.matchTransientState(core.DeviceTransientState_RECONCILE_IN_PROGRESS))
 }
+
 func (agent *Agent) deleteTransientState(ctx context.Context) error {
 	transientStateHandle := agent.transientStateLoader.Lock()
 	if err := transientStateHandle.Delete(ctx); err != nil {
@@ -76,5 +79,5 @@ func (agent *Agent) deleteTransientState(ctx context.Context) error {
 
 func (agent *Agent) isInReconcileState(device *voltha.Device) bool {
 	return device.OperStatus == common.OperStatus_RECONCILING || device.OperStatus == common.OperStatus_RECONCILING_FAILED ||
-		agent.matchTransientState(voltha.DeviceTransientState_RECONCILE_IN_PROGRESS)
+		agent.matchTransientState(core.DeviceTransientState_RECONCILE_IN_PROGRESS)
 }
