@@ -24,10 +24,11 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/opencord/voltha-go/rw_core/core/device/flow"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	fu "github.com/opencord/voltha-lib-go/v5/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	fu "github.com/opencord/voltha-lib-go/v6/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -154,6 +155,17 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			return changed, updated, err
 		}
 
+		// Verify whether the flow request can proceed, usually to multiple adapters
+		// This is an optimization to address the case where a decomposed set of flows need to
+		// be sent to multiple adapters.  One or more adapters may not be ready at this time.
+		// If one adapter is not ready this will result in flows being reverted from the
+		// other adapters, at times continuously as the OF controller will keep sending the
+		// flows until they are successfully added.
+		if err := agent.deviceMgr.canMultipleAdapterRequestProceed(ctx, deviceRules.Keys()); err != nil {
+			logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow-id": flow.Id, "error": err})
+			return false, false, err
+		}
+
 		logger.Debugw(ctx, "rules", log.Fields{"rules": deviceRules.String()})
 		//	Update store and cache
 		if updated {
@@ -166,7 +178,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		// Create the go routines to wait
 		go func() {
 			// Wait for completion
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChannels...); res != nil {
+			if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChannels...); res != nil {
 				logger.Errorw(ctx, "failed-to-add-flow-will-attempt-deletion", log.Fields{
 					"errors":            res,
 					"logical-device-id": agent.logicalDeviceID,
@@ -237,7 +249,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	// Wait for the responses
 	go func() {
 		// Since this action is taken following an add failure, we may also receive a failure for the revert
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-reverting-added-flows", log.Fields{
 				"logical-device-id": agent.logicalDeviceID,
 				"flow-cookie":       mod.Cookie,
@@ -337,7 +349,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 		// Wait for the responses
 		go func() {
 			// Wait for completion
-			if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+			if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 				logger.Errorw(ctx, "failure-updating-device-flows", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 				context := make(map[string]string)
 				context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
@@ -363,6 +375,9 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 
 //flowDeleteStrict deletes a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp.FlowTableUpdate) error {
+	var flowHandle *flow.Handle
+	var have bool
+
 	mod := flowUpdate.FlowMod
 	logger.Debugw(ctx, "flow-delete-strict", log.Fields{"mod": mod})
 	if mod == nil {
@@ -373,13 +388,18 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		if flowHandle != nil {
+			flowHandle.Unlock()
+		}
+	}()
+
 	logger.Debugw(ctx, "flow-id-in-flow-delete-strict", log.Fields{"flow-id": flow.Id})
-	flowHandle, have := agent.flowCache.Lock(flow.Id)
+	flowHandle, have = agent.flowCache.Lock(flow.Id)
 	if !have {
-		logger.Debugw(ctx, "skipping-flow-delete-strict-request-no-flow-found", log.Fields{"flow-mod": mod})
-		return nil
+		logger.Debugw(ctx, "flow-delete-strict-request-no-flow-found-continuing", log.Fields{"flow-mod": mod})
 	}
-	defer flowHandle.Unlock()
 
 	groups := make(map[uint32]*ofp.OfpGroupEntry)
 	for groupID := range agent.groupCache.ListIDs() {
@@ -390,10 +410,13 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	}
 
 	if changedMeter := agent.updateFlowCountOfMeterStats(ctx, mod, flow, false); !changedMeter {
-		return fmt.Errorf("Cannot delete flow - %s. Meter update failed", flow)
+		return fmt.Errorf("cannot delete flow - %s. Meter update failed", flow)
 	}
 
-	flowsToDelete := map[uint64]*ofp.OfpFlowStats{flow.Id: flowHandle.GetReadOnly()}
+	flowsToDelete := map[uint64]*ofp.OfpFlowStats{flow.Id: flow}
+	if flowHandle != nil {
+		flowsToDelete = map[uint64]*ofp.OfpFlowStats{flow.Id: flowHandle.GetReadOnly()}
+	}
 
 	var respChnls []coreutils.Response
 	var partialRoute bool
@@ -409,9 +432,12 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	}
 
 	// Update the model
-	if err := flowHandle.Delete(ctx); err != nil {
-		return err
+	if flowHandle != nil {
+		if err := flowHandle.Delete(ctx); err != nil {
+			return err
+		}
 	}
+
 	// Update the devices
 	if partialRoute {
 		respChnls = agent.deleteFlowsFromParentDevice(ctx, flowsToDelete, mod)
@@ -421,7 +447,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 
 	// Wait for completion
 	go func() {
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-deleting-device-flows", log.Fields{
 				"flow-cookie":       mod.Cookie,
 				"logical-device-id": agent.logicalDeviceID,
@@ -447,6 +473,96 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 
 	return nil
 }
+
+// //flowDeleteStrict deletes a flow from the flow table of that logical device
+// func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp.FlowTableUpdate) error {
+// 	mod := flowUpdate.FlowMod
+// 	logger.Debugw(ctx, "flow-delete-strict", log.Fields{"mod": mod})
+// 	if mod == nil {
+// 		return nil
+// 	}
+
+// 	flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	logger.Debugw(ctx, "flow-id-in-flow-delete-strict", log.Fields{"flow-id": flow.Id})
+// 	flowHandle, have := agent.flowCache.Lock(flow.Id)
+// 	if have {
+
+// 	}
+// 	if !have {
+// 		logger.Debugw(ctx, "skipping-flow-delete-strict-request-no-flow-found", log.Fields{"flow-mod": mod})
+// 		return nil
+// 	}
+// 	defer flowHandle.Unlock()
+
+// 	groups := make(map[uint32]*ofp.OfpGroupEntry)
+// 	for groupID := range agent.groupCache.ListIDs() {
+// 		if groupHandle, have := agent.groupCache.Lock(groupID); have {
+// 			groups[groupID] = groupHandle.GetReadOnly()
+// 			groupHandle.Unlock()
+// 		}
+// 	}
+
+// 	if changedMeter := agent.updateFlowCountOfMeterStats(ctx, mod, flow, false); !changedMeter {
+// 		return fmt.Errorf("Cannot delete flow - %s. Meter update failed", flow)
+// 	}
+
+// 	flowsToDelete := map[uint64]*ofp.OfpFlowStats{flow.Id: flowHandle.GetReadOnly()}
+
+// 	var respChnls []coreutils.Response
+// 	var partialRoute bool
+// 	deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, flowsToDelete, groups)
+// 	if err != nil {
+// 		// A no route error means no route exists between the ports specified in the flow. This can happen when the
+// 		// child device is deleted and a request to delete flows from the parent device is received
+// 		if !errors.Is(err, route.ErrNoRoute) {
+// 			logger.Errorw(ctx, "unexpected-error-received", log.Fields{"flows-to-delete": flowsToDelete, "error": err})
+// 			return err
+// 		}
+// 		partialRoute = true
+// 	}
+
+// 	// Update the model
+// 	if err := flowHandle.Delete(ctx); err != nil {
+// 		return err
+// 	}
+// 	// Update the devices
+// 	if partialRoute {
+// 		respChnls = agent.deleteFlowsFromParentDevice(ctx, flowsToDelete, mod)
+// 	} else {
+// 		respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
+// 	}
+
+// 	// Wait for completion
+// 	go func() {
+// 		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
+// 			logger.Warnw(ctx, "failure-deleting-device-flows", log.Fields{
+// 				"flow-cookie":       mod.Cookie,
+// 				"logical-device-id": agent.logicalDeviceID,
+// 				"errors":            res,
+// 			})
+// 			// TODO: Revert flow changes
+// 			// send event, and allow any queued events to be sent as well
+// 			agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
+// 			context := make(map[string]string)
+// 			context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
+// 			context["flow-id"] = fmt.Sprintf("%v", flow.Id)
+// 			context["flow-cookie"] = fmt.Sprintf("%v", flowUpdate.FlowMod.Cookie)
+// 			context["logical-device-id"] = agent.logicalDeviceID
+// 			if deviceRules != nil {
+// 				context["device-rules"] = deviceRules.String()
+// 			}
+// 			// Create context and send extra information as part of it.
+// 			agent.ldeviceMgr.SendRPCEvent(ctx,
+// 				agent.logicalDeviceID, "failed-to-delete-device-flows", context, "RPC_ERROR_RAISE_EVENT",
+// 				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
+// 		}
+// 	}()
+
+// 	return nil
+// }
 
 //flowModify modifies a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowModify(flowUpdate *ofp.FlowTableUpdate) error {

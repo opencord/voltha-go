@@ -29,6 +29,7 @@ import (
 )
 
 const (
+	defaultRemoteSamplingTimeout   = 10 * time.Second
 	defaultSamplingRefreshInterval = time.Minute
 )
 
@@ -64,7 +65,7 @@ type RemotelyControlledSampler struct {
 	// Cf. https://github.com/uber/jaeger-client-go/issues/155, https://goo.gl/zW7dgq
 	closed int64 // 0 - not closed, 1 - closed
 
-	sync.RWMutex
+	sync.RWMutex // used to serialize access to samplerOptions.sampler
 	samplerOptions
 
 	serviceName string
@@ -95,21 +96,29 @@ func (s *RemotelyControlledSampler) IsSampled(id TraceID, operation string) (boo
 
 // OnCreateSpan implements OnCreateSpan of SamplerV2.
 func (s *RemotelyControlledSampler) OnCreateSpan(span *Span) SamplingDecision {
+	s.RLock()
+	defer s.RUnlock()
 	return s.sampler.OnCreateSpan(span)
 }
 
 // OnSetOperationName implements OnSetOperationName of SamplerV2.
 func (s *RemotelyControlledSampler) OnSetOperationName(span *Span, operationName string) SamplingDecision {
+	s.RLock()
+	defer s.RUnlock()
 	return s.sampler.OnSetOperationName(span, operationName)
 }
 
 // OnSetTag implements OnSetTag of SamplerV2.
 func (s *RemotelyControlledSampler) OnSetTag(span *Span, key string, value interface{}) SamplingDecision {
+	s.RLock()
+	defer s.RUnlock()
 	return s.sampler.OnSetTag(span, key, value)
 }
 
 // OnFinishSpan implements OnFinishSpan of SamplerV2.
 func (s *RemotelyControlledSampler) OnFinishSpan(span *Span) SamplingDecision {
+	s.RLock()
+	defer s.RUnlock()
 	return s.sampler.OnFinishSpan(span)
 }
 
@@ -153,11 +162,10 @@ func (s *RemotelyControlledSampler) pollControllerWithTicker(ticker *time.Ticker
 
 // Sampler returns the currently active sampler.
 func (s *RemotelyControlledSampler) Sampler() SamplerV2 {
-	s.Lock()
-	defer s.Unlock()
+	s.RLock()
+	defer s.RUnlock()
 	return s.sampler
 }
-
 func (s *RemotelyControlledSampler) setSampler(sampler SamplerV2) {
 	s.Lock()
 	defer s.Unlock()
@@ -291,8 +299,22 @@ func (u *AdaptiveSamplerUpdater) Update(sampler SamplerV2, strategy interface{})
 // -----------------------
 
 type httpSamplingStrategyFetcher struct {
-	serverURL string
-	logger    log.DebugLogger
+	serverURL  string
+	logger     log.DebugLogger
+	httpClient http.Client
+}
+
+func newHTTPSamplingStrategyFetcher(serverURL string, logger log.DebugLogger) *httpSamplingStrategyFetcher {
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.ResponseHeaderTimeout = defaultRemoteSamplingTimeout
+
+	return &httpSamplingStrategyFetcher{
+		serverURL: serverURL,
+		logger:    logger,
+		httpClient: http.Client{
+			Transport: customTransport,
+		},
+	}
 }
 
 func (f *httpSamplingStrategyFetcher) Fetch(serviceName string) ([]byte, error) {
@@ -300,8 +322,7 @@ func (f *httpSamplingStrategyFetcher) Fetch(serviceName string) ([]byte, error) 
 	v.Set("service", serviceName)
 	uri := f.serverURL + "?" + v.Encode()
 
-	// TODO create and reuse http.Client with proper timeout settings, etc.
-	resp, err := http.Get(uri)
+	resp, err := f.httpClient.Get(uri)
 	if err != nil {
 		return nil, err
 	}
