@@ -70,17 +70,17 @@ HADOLINT          = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app
 ## Local Development Helpers
 local-protos: ## Copies a local version of the voltha-protos dependency into the vendor directory
 ifdef LOCAL_PROTOS
-	rm -rf vendor/github.com/opencord/voltha-protos/v4/go
-	mkdir -p vendor/github.com/opencord/voltha-protos/v4/go
-	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v4/go
+	rm -rf vendor/github.com/opencord/voltha-protos/v5/go
+	mkdir -p vendor/github.com/opencord/voltha-protos/v5/go
+	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v5/go
 endif
 
 ## Local Development Helpers
 local-lib-go: ## Copies a local version of the voltha-lib-go dependency into the vendor directory
 ifdef LOCAL_LIB_GO
-	rm -rf vendor/github.com/opencord/voltha-lib-go/v5/pkg
-	mkdir -p vendor/github.com/opencord/voltha-lib-go/v5/pkg
-	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v5/pkg/
+	rm -rf vendor/github.com/opencord/voltha-lib-go/v7/pkg
+	mkdir -p vendor/github.com/opencord/voltha-lib-go/v7/pkg
+	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v7/pkg/
 endif
 
 ## Docker targets

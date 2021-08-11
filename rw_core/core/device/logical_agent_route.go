@@ -21,9 +21,9 @@ import (
 	"fmt"
 
 	"github.com/opencord/voltha-go/rw_core/route"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
 
 // GetRoute returns a route
@@ -104,6 +104,17 @@ func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 	if err := agent.deviceRoutes.Print(ctx); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (agent *LogicalAgent) removeRoutes(ctx context.Context) error {
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+	defer agent.requestQueue.RequestComplete()
+
+	agent.deviceRoutes.RemoveRoutes()
+
 	return nil
 }
 
