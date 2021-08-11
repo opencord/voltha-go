@@ -26,6 +26,9 @@ issues:
     - linters:
         - gocritic
       text: "ifElseChain:" #it should be up to a developer to decide which operator to use
+  exclude:
+    - "Package github.com/golang/protobuf/proto is deprecated"
+    - "Package github.com/golang/protobuf/jsonpb is deprecated"
 
 linters:
   enable:
