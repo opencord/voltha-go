@@ -25,11 +25,13 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/api"
 	"github.com/opencord/voltha-go/rw_core/core/device"
-	conf "github.com/opencord/voltha-lib-go/v5/pkg/config"
-	grpcserver "github.com/opencord/voltha-lib-go/v5/pkg/grpc"
-	"github.com/opencord/voltha-lib-go/v5/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
+	conf "github.com/opencord/voltha-lib-go/v6/pkg/config"
+	"github.com/opencord/voltha-lib-go/v6/pkg/events"
+	grpcserver "github.com/opencord/voltha-lib-go/v6/pkg/grpc"
+	"github.com/opencord/voltha-lib-go/v6/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
+	"github.com/opencord/voltha-lib-go/v6/pkg/probe"
+	"github.com/opencord/voltha-protos/v4/go/core"
 	"github.com/opencord/voltha-protos/v4/go/extension"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc"
@@ -37,53 +39,60 @@ import (
 
 // Core represent read,write core attributes
 type Core struct {
-	shutdown context.CancelFunc
-	stopped  chan struct{}
+	Shutdown    context.CancelFunc
+	Stopped     chan struct{}
+	KafkaClient kafka.Client
 }
 
 const (
-	adapterMessageBus = "adapter-message-bus"
-	clusterMessageBus = "cluster-message-bus"
+	clusterMessagingService = "cluster-message-service"
+	grpcService             = "grpc-service"
+	adapterService          = "adapter-service"
+	kvService               = "kv-service"
+	deviceService           = "device-service"
+	logicalDeviceService    = "logical-device-service"
 )
 
 // NewCore creates instance of rw core
-func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) *Core {
+func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) (*Core, context.Context) {
 	// If the context has a probe then fetch it and register our services
 	if p := probe.GetProbeFromContext(ctx); p != nil {
 		p.RegisterService(
 			ctx,
-			adapterMessageBus,
-			"kv-store",
-			"adapter-manager",
-			"device-manager",
-			"logical-device-manager",
-			"grpc-service",
-			"adapter-request-handler",
+			kvService,
+			adapterService,
+			grpcService,
+			clusterMessagingService,
+			deviceService,
+			logicalDeviceService,
 		)
-
-		if cf.KafkaAdapterAddress != cf.KafkaClusterAddress {
-			p.RegisterService(
-				ctx,
-				clusterMessageBus,
-			)
-		}
 	}
+
+	// create kafka client for events
+	KafkaClient := kafka.NewSaramaClient(
+		kafka.Address(cf.KafkaClusterAddress),
+		kafka.ProducerReturnOnErrors(true),
+		kafka.ProducerReturnOnSuccess(true),
+		kafka.ProducerMaxRetries(6),
+		kafka.ProducerRetryBackoff(time.Millisecond*30),
+		kafka.AutoCreateTopic(true),
+		kafka.MetadatMaxRetries(15),
+	)
 
 	// new threads will be given a new cancelable context, so that they can be aborted later when Stop() is called
 	shutdownCtx, cancelCtx := context.WithCancel(ctx)
 
-	core := &Core{shutdown: cancelCtx, stopped: make(chan struct{})}
-	go core.start(shutdownCtx, id, cf)
-	return core
+	rwCore := &Core{Shutdown: cancelCtx, Stopped: make(chan struct{}), KafkaClient: KafkaClient}
+	return rwCore, shutdownCtx
 }
 
-func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) {
+func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) {
 	logger.Info(ctx, "starting-core-services", log.Fields{"coreId": id})
 
 	// deferred functions are used to run cleanup
 	// failing partway will stop anything that's been started
-	defer close(core.stopped)
-	defer core.shutdown()
+	defer close(core.Stopped)
+	defer core.Shutdown()
 
 	logger.Info(ctx, "starting-rw-core-components")
 
@@ -104,82 +113,43 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	backend.LivenessChannelInterval = cf.LiveProbeInterval / 2
 
 	// wait until connection to KV Store is up
-	if err := waitUntilKVStoreReachableOrMaxTries(ctx, kvClient, cf.MaxConnectionRetries, cf.ConnectionRetryInterval); err != nil {
+	if err := waitUntilKVStoreReachableOrMaxTries(ctx, kvClient, cf.MaxConnectionRetries, cf.ConnectionRetryInterval, kvService); err != nil {
 		logger.Fatal(ctx, "unable-to-connect-to-kv-store")
 	}
-	go monitorKVStoreLiveness(ctx, backend, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
+	go monitorKVStoreLiveness(ctx, backend, kvService, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
 
-	// create kafka client
-	kafkaClient := kafka.NewSaramaClient(
-		kafka.Address(cf.KafkaAdapterAddress),
-		kafka.ConsumerType(kafka.GroupCustomer),
-		kafka.ProducerReturnOnErrors(true),
-		kafka.ProducerReturnOnSuccess(true),
-		kafka.ProducerMaxRetries(6),
-		kafka.NumPartitions(3),
-		kafka.ConsumerGroupName(id),
-		kafka.ConsumerGroupPrefix(id),
-		kafka.AutoCreateTopic(true),
-		kafka.ProducerFlushFrequency(5),
-		kafka.ProducerRetryBackoff(time.Millisecond*30),
-		kafka.LivenessChannelInterval(cf.LiveProbeInterval/2),
-	)
-
-	// create kafka client for events
-	kafkaClientEvent := kafka.NewSaramaClient(
-		kafka.Address(cf.KafkaClusterAddress),
-		kafka.ProducerReturnOnErrors(true),
-		kafka.ProducerReturnOnSuccess(true),
-		kafka.ProducerMaxRetries(6),
-		kafka.ProducerRetryBackoff(time.Millisecond*30),
-		kafka.AutoCreateTopic(true),
-		kafka.MetadatMaxRetries(15),
-	)
-
-	// create event proxy
-	updateProbeClusterService := cf.KafkaAdapterAddress != cf.KafkaClusterAddress
-	eventProxy, err := startEventProxy(ctx, kafkaClientEvent, cf.EventTopic, cf.ConnectionRetryInterval, updateProbeClusterService)
-	if err != nil {
-		logger.Warn(ctx, "failed-to-setup-kafka-event-proxy-connection")
-		return
+	// Start kafka communications and artefacts
+	if err := kafka.StartAndWaitUntilKafkaConnectionIsUp(ctx, core.KafkaClient, cf.ConnectionRetryInterval, clusterMessagingService); err != nil {
+		logger.Fatal(ctx, "unable-to-connect-to-kafka")
 	}
-	if cf.KafkaAdapterAddress != cf.KafkaClusterAddress {
-		// if we're using a single kafka cluster we don't need two liveliness probes on the same cluster
-		go monitorKafkaLiveness(ctx, eventProxy, cf.LiveProbeInterval, cf.NotLiveProbeInterval, clusterMessageBus)
-	}
+	defer core.KafkaClient.Stop(ctx)
 
-	defer stopEventProxy(ctx, kafkaClientEvent, eventProxy)
+	// Create the event proxy to post events to KAFKA
+	eventProxy := events.NewEventProxy(events.MsgClient(core.KafkaClient), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
+	go eventProxy.Start()
+	defer eventProxy.Stop()
+
+	go kafka.MonitorKafkaReadiness(ctx, core.KafkaClient, cf.LiveProbeInterval, cf.NotLiveProbeInterval, clusterMessagingService)
 
 	// create kv path
 	dbPath := model.NewDBPath(backend)
 
 	// load adapters & device types while other things are starting
-	adapterMgr := adapter.NewAdapterManager(ctx, dbPath, id, kafkaClient)
-	go adapterMgr.Start(ctx)
-
-	// connect to kafka, then wait until reachable and publisher/consumer created
-	// core.kmp must be created before deviceMgr and adapterMgr
-	kmp, err := startKafkInterContainerProxy(ctx, kafkaClient, cf.KafkaAdapterAddress, cf.CoreTopic, cf.ConnectionRetryInterval)
-	if err != nil {
-		logger.Warn(ctx, "failed-to-setup-kafka-adapter-proxy-connection")
-		return
-	}
-	defer kmp.Stop(ctx)
-	go monitorKafkaLiveness(ctx, kmp, cf.LiveProbeInterval, cf.NotLiveProbeInterval, adapterMessageBus)
+	adapterMgr := adapter.NewAdapterManager(dbPath, id, backend, cf.LiveProbeInterval)
+	go adapterMgr.Start(ctx, adapterService)
 
 	// create the core of the system, the device managers
-	endpointMgr := kafka.NewEndpointManager(backend)
-	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, kmp, endpointMgr, cf, id, eventProxy)
+	deviceMgr, logicalDeviceMgr := device.NewManagers(dbPath, adapterMgr, cf, id, eventProxy)
 
 	// Start the device manager to load the devices. Wait until it is completed to prevent multiple loading happening
 	// triggered by logicalDeviceMgr.Start(Ctx)
-	deviceMgr.Start(ctx)
+	err = deviceMgr.Start(ctx, deviceService)
+	if err != nil {
+		logger.Fatalw(ctx, "failure-starting-device-manager", log.Fields{"error": err})
+	}
 
 	// Start the logical device manager to load the logical devices.
-	logicalDeviceMgr.Start(ctx)
-
-	// register kafka RPC handler
-	registerAdapterRequestHandlers(ctx, kmp, deviceMgr, adapterMgr, cf, "adapter-request-handler")
+	logicalDeviceMgr.Start(ctx, logicalDeviceService)
 
 	// start gRPC handler
 	grpcServer := grpcserver.NewGrpcServer(cf.GrpcAddress, nil, false, probe.GetProbeFromContext(ctx))
@@ -187,7 +157,10 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	//Register the 'Extension' service on this gRPC server
 	addGRPCExtensionService(ctx, grpcServer, device.GetNewExtensionManager(deviceMgr))
 
-	go startGRPCService(ctx, grpcServer, api.NewNBIHandler(deviceMgr, logicalDeviceMgr, adapterMgr))
+	//Register the 'core' service
+	addCoreService(ctx, grpcServer, api.NewNBIHandler(deviceMgr, nil, adapterMgr))
+
+	go startGRPCService(ctx, grpcServer, grpcService, api.NewNBIHandler(deviceMgr, logicalDeviceMgr, adapterMgr))
 	defer grpcServer.Stop()
 
 	// wait for core to be stopped, via Stop() or context cancellation, before running deferred functions
@@ -196,23 +169,23 @@ func (core *Core) start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 
 // Stop brings down core services
 func (core *Core) Stop() {
-	core.shutdown()
-	<-core.stopped
+	core.Shutdown()
+	<-core.Stopped
 }
 
 // startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server
-func startGRPCService(ctx context.Context, server *grpcserver.GrpcServer, handler voltha.VolthaServiceServer) {
+func startGRPCService(ctx context.Context, server *grpcserver.GrpcServer, serviceName string, handler voltha.VolthaServiceServer) {
 	logger.Info(ctx, "grpc-server-created")
 
 	server.AddService(func(gs *grpc.Server) { voltha.RegisterVolthaServiceServer(gs, handler) })
 	logger.Info(ctx, "grpc-service-added")
 
-	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusRunning)
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)
 	logger.Info(ctx, "grpc-server-started")
 	// Note that there is a small window here in which the core could return its status as ready,
 	// when it really isn't.  This is unlikely to cause issues, as the delay is incredibly short.
 	server.Start(ctx)
-	probe.UpdateStatusFromContext(ctx, "grpc-service", probe.ServiceStatusStopped)
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusStopped)
 }
 
 func addGRPCExtensionService(ctx context.Context, server *grpcserver.GrpcServer, handler extension.ExtensionServer) {
@@ -222,4 +195,12 @@ func addGRPCExtensionService(ctx context.Context, server *grpcserver.GrpcServer,
 		extension.RegisterExtensionServer(server, handler)
 	})
 
+}
+
+func addCoreService(ctx context.Context, server *grpcserver.GrpcServer, handler core.CoreServiceServer) {
+	logger.Info(ctx, "core-grpc-server-created")
+
+	server.AddService(func(server *grpc.Server) {
+		core.RegisterCoreServiceServer(server, handler)
+	})
 }

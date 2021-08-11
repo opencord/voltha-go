@@ -2,6 +2,9 @@
 .idea
 exportToHTML
 
+# vscode
+.vscode
+
 # Python
 *.pyc
 
