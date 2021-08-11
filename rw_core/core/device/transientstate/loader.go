@@ -19,11 +19,11 @@ package transientstate
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/voltha-protos/v4/go/core"
 	"sync"
 
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -37,7 +37,7 @@ type Loader struct {
 }
 
 type data struct {
-	transientState voltha.DeviceTransientState_Types
+	transientState core.DeviceTransientState_Types
 	deviceID       string
 }
 
@@ -45,7 +45,7 @@ func NewLoader(dbProxy *model.Proxy, deviceID string) *Loader {
 	return &Loader{
 		dbProxy: dbProxy,
 		deviceTransientState: &data{
-			transientState: voltha.DeviceTransientState_NONE,
+			transientState: core.DeviceTransientState_NONE,
 			deviceID:       deviceID,
 		},
 	}
@@ -57,7 +57,7 @@ func (loader *Loader) Load(ctx context.Context) {
 	loader.lock.Lock()
 	defer loader.lock.Unlock()
 
-	var deviceTransientState voltha.DeviceTransientState
+	var deviceTransientState core.DeviceTransientState
 	have, err := loader.dbProxy.Get(ctx, loader.deviceTransientState.deviceID, &deviceTransientState)
 	if err != nil {
 		logger.Errorw(ctx, "failed-to-get-device-transient-state-from-cluster-data-proxy", log.Fields{"error": err})
@@ -67,7 +67,7 @@ func (loader *Loader) Load(ctx context.Context) {
 		loader.deviceTransientState.transientState = deviceTransientState.TransientState
 		return
 	}
-	loader.deviceTransientState.transientState = voltha.DeviceTransientState_NONE
+	loader.deviceTransientState.transientState = core.DeviceTransientState_NONE
 }
 
 // Lock acquires the lock for deviceTransientStateLoader, and returns a handle
@@ -88,14 +88,14 @@ type Handle struct {
 }
 
 // GetReadOnly returns device transient which MUST NOT be modified externally, but which is safe to keep indefinitely
-func (h *Handle) GetReadOnly() voltha.DeviceTransientState_Types {
+func (h *Handle) GetReadOnly() core.DeviceTransientState_Types {
 	return h.data.transientState
 }
 
 // Update updates device transient state in KV store
 // The provided device transient state must not be modified afterwards.
-func (h *Handle) Update(ctx context.Context, state voltha.DeviceTransientState_Types) error {
-	var tState voltha.DeviceTransientState
+func (h *Handle) Update(ctx context.Context, state core.DeviceTransientState_Types) error {
+	var tState core.DeviceTransientState
 	tState.TransientState = state
 	if err := h.loader.dbProxy.Set(ctx, fmt.Sprint(h.data.deviceID), &tState); err != nil {
 		return status.Errorf(codes.Internal, "failed-to-update-device-%v-transient-state: %s", h.data.deviceID, err)
