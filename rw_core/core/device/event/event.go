@@ -26,12 +26,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	ev "github.com/opencord/voltha-lib-go/v5/pkg/events"
-	"github.com/opencord/voltha-lib-go/v5/pkg/events/eventif"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-protos/v4/go/common"
-	"github.com/opencord/voltha-protos/v4/go/openflow_13"
-	"github.com/opencord/voltha-protos/v4/go/voltha"
+	ev "github.com/opencord/voltha-lib-go/v7/pkg/events"
+	"github.com/opencord/voltha-lib-go/v7/pkg/events/eventif"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/openflow_13"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"github.com/opentracing/opentracing-go"
 	jtracing "github.com/uber/jaeger-client-go"
 )
@@ -67,7 +67,7 @@ func NewAgent(proxyForEvents eventif.EventProxy, instanceID string, stackID stri
 		stackID:        stackID,
 	}
 }
-func (q *Manager) SendPacketIn(ctx context.Context, deviceID string, transationID string, packet *openflow_13.OfpPacketIn) {
+func (q *Manager) SendPacketIn(ctx context.Context, deviceID string, packet *openflow_13.OfpPacketIn) {
 	// TODO: Augment the OF PacketIn to include the transactionId
 	packetIn := openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
 	logger.Debugw(ctx, "send-packet-in", log.Fields{"packet-in": packetIn})
@@ -273,7 +273,7 @@ func (q *Agent) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RP
 	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	if rpcEvent.Rpc != "" {
 		if err := q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs); err != nil {
-			logger.Errorw(ctx, "failed-to-send-rpc-event", log.Fields{"resource-id": id})
+			logger.Errorw(ctx, "failed-to-send-rpc-event", log.Fields{"resource-id": id, "error": err})
 		}
 	}
 }
@@ -283,7 +283,7 @@ func (q *Agent) GetAndSendRPCEvent(ctx context.Context, resourceID, desc string,
 	rpcEvent := q.NewRPCEvent(ctx, resourceID, desc, context)
 	if rpcEvent.Rpc != "" {
 		if err := q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs); err != nil {
-			logger.Errorw(ctx, "failed-to-send-rpc-event", log.Fields{"resource-id": id})
+			logger.Errorw(ctx, "failed-to-send-rpc-event", log.Fields{"resource-id": id, "error": err})
 		}
 	}
 }

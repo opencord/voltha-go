@@ -18,8 +18,9 @@ package device
 
 import (
 	"context"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-protos/v4/go/extension"
+
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-protos/v5/go/extension"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
