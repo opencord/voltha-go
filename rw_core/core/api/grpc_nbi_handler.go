@@ -23,7 +23,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
-	"github.com/opencord/voltha-lib-go/v5/pkg/version"
+	"github.com/opencord/voltha-lib-go/v6/pkg/version"
 	"github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/omci"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
@@ -46,6 +46,10 @@ func NewNBIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalMa
 		LogicalManager: logicalDeviceMgr,
 		adapterManager: adapterManager{adapterMgr},
 	}
+}
+
+func (handler *NBIHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*voltha.HealthStatus, error) {
+	return &voltha.HealthStatus{State: voltha.HealthStatus_HEALTHY}, nil
 }
 
 // GetVoltha currently just returns version information
