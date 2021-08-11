@@ -2,6 +2,12 @@
 .idea
 exportToHTML
 
+# vscode
+.vscode
+
+# profiling 
+*.cpu
+ 
 # Python
 *.pyc
 

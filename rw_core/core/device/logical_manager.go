@@ -19,7 +19,7 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v6/pkg/probe"
 	"io"
 	"strconv"
 	"strings"
@@ -30,8 +30,7 @@ import (
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v5/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -43,26 +42,25 @@ type LogicalManager struct {
 	*event.Manager
 	logicalDeviceAgents            sync.Map
 	deviceMgr                      *Manager
-	kafkaICProxy                   kafka.InterContainerProxy
 	dbPath                         *model.Path
 	ldProxy                        *model.Proxy
-	defaultTimeout                 time.Duration
+	internalTimeout                time.Duration
 	logicalDevicesLoadingLock      sync.RWMutex
 	logicalDeviceLoadingInProgress map[string][]chan int
 }
 
-func (ldMgr *LogicalManager) Start(ctx context.Context) {
+func (ldMgr *LogicalManager) Start(ctx context.Context, serviceName string) {
 	logger.Info(ctx, "starting-logical-device-manager")
-	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusPreparing)
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusPreparing)
 
 	// Load all the logical devices from the dB
 	var logicalDevices []*voltha.LogicalDevice
 	if err := ldMgr.ldProxy.List(ctx, &logicalDevices); err != nil {
-		logger.Fatalw(ctx, "failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err})
+		logger.Fatalw(ctx, "failed-to-list-logical-devices-from-cluster-proxy", log.Fields{"error": err, "service-name": serviceName})
 	}
 	for _, lDevice := range logicalDevices {
 		// Create an agent for each device
-		agent := newLogicalAgent(ctx, lDevice.Id, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.defaultTimeout)
+		agent := newLogicalAgent(ctx, lDevice.Id, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
 		if err := agent.start(ctx, true, lDevice); err != nil {
 			logger.Warnw(ctx, "failure-starting-logical-agent", log.Fields{"logical-device-id": lDevice.Id})
 		} else {
@@ -70,7 +68,7 @@ func (ldMgr *LogicalManager) Start(ctx context.Context) {
 		}
 	}
 
-	probe.UpdateStatusFromContext(ctx, "logical-device-manager", probe.ServiceStatusRunning)
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)
 	logger.Info(ctx, "logical-device-manager-started")
 }
 
@@ -128,7 +126,9 @@ func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Em
 	var logicalDevices []*voltha.LogicalDevice
 	ldMgr.logicalDeviceAgents.Range(func(key, value interface{}) bool {
 		if ld, err := value.(*LogicalAgent).GetLogicalDeviceReadOnly(ctx); err == nil {
-			logicalDevices = append(logicalDevices, ld)
+			if ld != nil {
+				logicalDevices = append(logicalDevices, ld)
+			}
 		} else {
 			logger.Errorw(ctx, "unable-to-get-logical-device", log.Fields{"err": err})
 		}
@@ -159,7 +159,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 
 	logger.Debugw(ctx, "logical-device-id", log.Fields{"logical-device-id": id})
 
-	agent := newLogicalAgent(ctx, id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.defaultTimeout)
+	agent := newLogicalAgent(ctx, id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
 	ldMgr.addLogicalDeviceAgentToMap(agent)
 
 	// Update the root device with the logical device Id reference
@@ -232,7 +232,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 			ldMgr.logicalDevicesLoadingLock.Unlock()
 			if _, err := ldMgr.getLogicalDeviceFromModel(ctx, lDeviceID); err == nil {
 				logger.Debugw(ctx, "loading-logical-device", log.Fields{"lDeviceId": lDeviceID})
-				agent := newLogicalAgent(ctx, lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.defaultTimeout)
+				agent := newLogicalAgent(ctx, lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
 				if err := agent.start(ctx, true, nil); err != nil {
 					return err
 				}
@@ -562,10 +562,10 @@ func (ldMgr *LogicalManager) DisableLogicalDevicePort(ctx context.Context, id *v
 	return &empty.Empty{}, agent.disableLogicalPort(ctx, uint32(portNo))
 }
 
-func (ldMgr *LogicalManager) packetIn(ctx context.Context, logicalDeviceID string, port uint32, transactionID string, packet []byte) error {
+func (ldMgr *LogicalManager) packetIn(ctx context.Context, logicalDeviceID string, port uint32, packet []byte) error {
 	logger.Debugw(ctx, "packet-in", log.Fields{"logical-device-id": logicalDeviceID, "port": port})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, logicalDeviceID); agent != nil {
-		agent.packetIn(ctx, port, transactionID, packet)
+		agent.packetIn(ctx, port, packet)
 	} else {
 		logger.Error(ctx, "logical-device-not-exist", log.Fields{"logical-device-id": logicalDeviceID})
 	}
