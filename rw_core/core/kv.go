@@ -21,10 +21,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/opencord/voltha-lib-go/v5/pkg/db"
-	"github.com/opencord/voltha-lib-go/v5/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
-	"github.com/opencord/voltha-lib-go/v5/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v6/pkg/db"
+	"github.com/opencord/voltha-lib-go/v6/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
+	"github.com/opencord/voltha-lib-go/v6/pkg/probe"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -47,7 +47,7 @@ func stopKVClient(ctx context.Context, kvClient kvstore.Client) {
 }
 
 // waitUntilKVStoreReachableOrMaxTries will wait until it can connect to a KV store or until maxtries has been reached
-func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.Client, maxRetries int, retryInterval time.Duration) error {
+func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.Client, maxRetries int, retryInterval time.Duration, serviceName string) error {
 	logger.Infow(ctx, "verifying-KV-store-connectivity", log.Fields{"retries": maxRetries, "retryInterval": retryInterval})
 	count := 0
 	for {
@@ -72,7 +72,7 @@ func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.C
 			break
 		}
 	}
-	probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusRunning)
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)
 	logger.Info(ctx, "KV-store-reachable")
 	return nil
 }
@@ -91,13 +91,13 @@ func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.C
  * The gRPC server in turn monitors the state of the readiness probe and will
  * start issuing UNAVAILABLE response while the probe is not ready.
  */
-func monitorKVStoreLiveness(ctx context.Context, backend *db.Backend, liveProbeInterval, notLiveProbeInterval time.Duration) {
+func monitorKVStoreLiveness(ctx context.Context, backend *db.Backend, serviceName string, liveProbeInterval, notLiveProbeInterval time.Duration) {
 	logger.Info(ctx, "start-monitoring-kvstore-liveness")
 
 	// Instruct backend to create Liveness channel for transporting state updates
 	livenessChannel := backend.EnableLivenessChannel(ctx)
 
-	logger.Debug(ctx, "enabled-kvstore-liveness-channel")
+	logger.Infow(ctx, "enabled-liveness-channel", log.Fields{"service-name": serviceName})
 
 	// Default state for kvstore is alive for rw_core
 	timeout := liveProbeInterval
@@ -107,17 +107,17 @@ loop:
 		select {
 
 		case liveness := <-livenessChannel:
-			logger.Debugw(ctx, "received-liveness-change-notification", log.Fields{"liveness": liveness})
+			logger.Debugw(ctx, "received-liveness-change-notification", log.Fields{"liveness": liveness, "service-name": serviceName})
 
 			if !liveness {
-				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusNotReady)
-				logger.Info(ctx, "kvstore-set-server-notready")
+				probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusNotReady)
+				logger.Infow(ctx, "service-not-ready", log.Fields{"service-name": serviceName})
 
 				timeout = notLiveProbeInterval
 
 			} else {
-				probe.UpdateStatusFromContext(ctx, "kv-store", probe.ServiceStatusRunning)
-				logger.Info(ctx, "kvstore-set-server-ready")
+				probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)
+				logger.Infow(ctx, "service-ready", log.Fields{"service-name": serviceName})
 
 				timeout = liveProbeInterval
 			}
@@ -130,7 +130,7 @@ loop:
 			break loop
 
 		case <-timeoutTimer.C:
-			logger.Info(ctx, "kvstore-perform-liveness-check-on-timeout")
+			logger.Infow(ctx, "perform-liveness-check-on-timeout", log.Fields{"service-name": serviceName})
 
 			// Trigger Liveness check if no liveness update received within the timeout period.
 			// The Liveness check will push Live state to same channel which this routine is
