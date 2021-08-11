@@ -1,8 +1,7 @@
 package sarama
 
-//ApiVersionsRequest ...
-type ApiVersionsRequest struct {
-}
+// ApiVersionsRequest ...
+type ApiVersionsRequest struct{}
 
 func (a *ApiVersionsRequest) encode(pe packetEncoder) error {
 	return nil
@@ -18,6 +17,10 @@ func (a *ApiVersionsRequest) key() int16 {
 
 func (a *ApiVersionsRequest) version() int16 {
 	return 0
+}
+
+func (a *ApiVersionsRequest) headerVersion() int16 {
+	return 1
 }
 
 func (a *ApiVersionsRequest) requiredVersion() KafkaVersion {
