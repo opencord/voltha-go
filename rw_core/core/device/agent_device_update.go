@@ -19,23 +19,31 @@ package device
 import (
 	"context"
 	"fmt"
+
 	"github.com/opencord/voltha-go/rw_core/utils"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/common"
 )
 
-func (agent *Agent) logDeviceUpdate(ctx context.Context, operation string, prevState *common.AdminState_Types, currState *common.AdminState_Types, status *common.OperationResp, desc *string) {
-	logger.Debugw(ctx, "addDeviceUpdate", log.Fields{"device-id": agent.deviceID})
-
-	requestedBy := utils.GetFromTopicMetadataFromContext(ctx)
+func (agent *Agent) logDeviceUpdate(ctx context.Context, prevState, currState *common.AdminState_Types, status *common.OperationResp, err error, desc string) {
+	requestedBy := utils.GetEndpointMetadataFromContext(ctx)
 
 	if requestedBy == "" {
 		requestedBy = "NB"
 	}
 
-	logger.Infow(ctx, "logDeviceUpdate", log.Fields{"device-update": operation, "device-update-id": agent.deviceID,
+	rpc := utils.GetRPCMetadataFromContext(ctx)
+
+	fields := log.Fields{"rpc": rpc, "device-id": agent.deviceID,
 		"requested-by": requestedBy, "state-change": agent.stateChangeString(prevState, currState),
-		"status": status.GetCode().String(), "description": desc})
+		"status": status.GetCode().String(), "description": desc, "error": err}
+
+	if err != nil {
+		logger.Errorw(ctx, "logDeviceUpdate", fields)
+		return
+	}
+
+	logger.Infow(ctx, "logDeviceUpdate", fields)
 }
 
 func (agent *Agent) stateChangeString(prevState *common.AdminState_Types, currState *common.AdminState_Types) string {
