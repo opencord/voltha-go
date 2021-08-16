@@ -66,6 +66,30 @@
     },
     {
       "key": {
+        "uuid": "1b337359_59a41f89",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-08-16T19:03:27Z",
+      "side": 1,
+      "message": "OK. Got it. Thanks.\nDo you mind putting in some comments here, like what you explained. This was not quite obvious.",
+      "parentUuid": "73b1be8f_1a7307a4",
+      "range": {
+        "startLine": 520,
+        "startChar": 38,
+        "endLine": 520,
+        "endChar": 87
+      },
+      "revId": "5798b3fce467b092c4bac00b748f5eaec5effb6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4254b0e9_fd3ce963",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 6
@@ -101,6 +125,30 @@
       "side": 1,
       "message": "Yes sir, but as per my understanding, if this is an MPLS OLT flow (table-id:1, tranition-to-table:2), the condition above (line 520) will already be hit. \nSo if we are reaching this point (line 526), the flow shall always belong to ONU",
       "parentUuid": "4254b0e9_fd3ce963",
+      "range": {
+        "startLine": 526,
+        "startChar": 13,
+        "endLine": 526,
+        "endChar": 61
+      },
+      "revId": "5798b3fce467b092c4bac00b748f5eaec5effb6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca290221_a5c0ac82",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-08-16T19:03:27Z",
+      "side": 1,
+      "message": "OK. I see. Thanks.\nDo you mind putting in similar comments here.",
+      "parentUuid": "a5cfeeb7_e0e8fd6e",
       "range": {
         "startLine": 526,
         "startChar": 13,
