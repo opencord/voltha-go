@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "73b1be8f_1a7307a4",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-08-16T04:08:37Z",
+      "side": 1,
+      "message": "Hi sir, \nFor non-mpls flows, this check will only be true for table-id 0. (HasNextTable)\nFor mpls flows, this check will be true for table-id 0 and table-id 1. \n\nSo this shall always be OLT flow.",
+      "parentUuid": "2f2abbcc_ed23ac5a",
+      "range": {
+        "startLine": 520,
+        "startChar": 38,
+        "endLine": 520,
+        "endChar": 87
+      },
+      "revId": "5798b3fce467b092c4bac00b748f5eaec5effb6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4254b0e9_fd3ce963",
         "filename": "rw_core/flowdecomposition/flow_decomposer.go",
         "patchSetId": 6
@@ -53,6 +77,30 @@
       "writtenOn": "2021-08-13T23:02:22Z",
       "side": 1,
       "message": "If the flow is a mpls based flow, the table-id 1 could still belong to the OLT",
+      "range": {
+        "startLine": 526,
+        "startChar": 13,
+        "endLine": 526,
+        "endChar": 61
+      },
+      "revId": "5798b3fce467b092c4bac00b748f5eaec5effb6a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5cfeeb7_e0e8fd6e",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-08-16T04:08:37Z",
+      "side": 1,
+      "message": "Yes sir, but as per my understanding, if this is an MPLS OLT flow (table-id:1, tranition-to-table:2), the condition above (line 520) will already be hit. \nSo if we are reaching this point (line 526), the flow shall always belong to ONU",
+      "parentUuid": "4254b0e9_fd3ce963",
       "range": {
         "startLine": 526,
         "startChar": 13,
