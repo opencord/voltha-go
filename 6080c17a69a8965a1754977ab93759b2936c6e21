@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb057767_9ea5a5d7",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-08-24T08:33:28Z",
+      "side": 0,
+      "message": "do we want to extend this check rather then removing it ?",
+      "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
