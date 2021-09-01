@@ -173,17 +173,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 					"flow":              flow,
 					"groups":            groups,
 				})
-				subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 
-				// Revert added flows
-				if err := agent.revertAddedFlows(subCtx, mod, flow, flowToReplace, deviceRules); err != nil {
-					logger.Errorw(ctx, "failure-to-delete-flow-after-failed-addition", log.Fields{
-						"error":             err,
-						"logical-device-id": agent.logicalDeviceID,
-						"flow":              flow,
-						"groups":            groups,
-					})
-				}
 				// send event
 				agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
 				context := make(map[string]string)
