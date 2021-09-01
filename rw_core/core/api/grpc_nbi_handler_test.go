@@ -1134,12 +1134,11 @@ func createMetadata(cTag int, techProfile int, port int) uint64 {
 	return uint64(md | (port & 0xFFFFFFFF))
 }
 
-func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int, flowAddFail bool) {
+func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi *NBIHandler, numNNIPorts int, numUNIPorts int) {
 	expectedNumFlows := numNNIPorts*numTrapOnNNIFlows + numNNIPorts*numUNIPorts
-	if flowAddFail {
-		expectedNumFlows = 0
-	}
-	// Wait for logical device to have the flows (or none
+
+	// Wait for logical device to have the flows
+	// the logical device will have the flows even if they fail installation in the adapter
 	var vlFunction isLogicalDevicesConditionSatisfied = func(lds *voltha.LogicalDevices) bool {
 		id := ""
 		if lds != nil {
@@ -1341,6 +1340,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
+	// for each port that comes up, send the eapol trap flow
 	for event := range nbi.GetChangeEventsQueueForTest() {
 		startingVlan++
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
@@ -1361,7 +1361,7 @@ func (nb *NBTest) monitorLogicalDevice(t *testing.T, nbi *NBIHandler, numNNIPort
 		}
 	}
 	//Verify the flow count on the logical device
-	nb.verifyLogicalDeviceFlowCount(t, nbi, numNNIPorts, numUNIPorts, flowAddFail)
+	nb.verifyLogicalDeviceFlowCount(t, nbi, numNNIPorts, numUNIPorts)
 
 	// Wait until all flows have been sent to the OLT adapters (or all failed)
 	expectedFlowCount := (numNNIPorts * numTrapOnNNIFlows) + numNNIPorts*numUNIPorts
@@ -1391,7 +1391,7 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi *NBIHandler) {
 	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg, true, false)
+	go nb.monitorLogicalDevice(t, nbi, 1, nb.numONUPerOLT, &wg, true, true)
 
 	//	Create the device with valid data
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: nb.oltAdapterName, MacAddress: "aa:bb:cc:cc:ee:ee"})

@@ -173,17 +173,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 					"flow":              flow,
 					"groups":            groups,
 				})
-				subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 
-				// Revert added flows
-				if err := agent.revertAddedFlows(subCtx, mod, flow, flowToReplace, deviceRules); err != nil {
-					logger.Errorw(ctx, "failure-to-delete-flow-after-failed-addition", log.Fields{
-						"error":             err,
-						"logical-device-id": agent.logicalDeviceID,
-						"flow":              flow,
-						"groups":            groups,
-					})
-				}
 				// send event
 				agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
 				context := make(map[string]string)
@@ -201,52 +191,6 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		}()
 	}
 	return changed, updated, nil
-}
-
-// revertAddedFlows reverts flows after the flowAdd request has failed.  All flows corresponding to that flowAdd request
-// will be reverted, both from the logical devices and the devices.
-func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlowMod, addedFlow *ofp.OfpFlowStats, replacedFlow *ofp.OfpFlowStats, deviceRules *fu.DeviceRules) error {
-	logger.Debugw(ctx, "revert-flow-add", log.Fields{"added-flow": addedFlow, "replaced-flow": replacedFlow, "device-rules": deviceRules})
-
-	flowHandle, have := agent.flowCache.Lock(addedFlow.Id)
-	if !have {
-		// Not found - do nothing
-		logger.Debugw(ctx, "flow-not-found", log.Fields{"added-flow": addedFlow})
-		return nil
-	}
-	defer flowHandle.Unlock()
-
-	if replacedFlow != nil {
-		if err := flowHandle.Update(ctx, replacedFlow); err != nil {
-			return err
-		}
-	} else {
-		if err := flowHandle.Delete(ctx); err != nil {
-			return err
-		}
-	}
-
-	// Revert meters
-	if changedMeterStats := agent.updateFlowCountOfMeterStats(ctx, mod, addedFlow, true); !changedMeterStats {
-		return fmt.Errorf("Unable-to-revert-meterstats-for-flow-%s", strconv.FormatUint(addedFlow.Id, 10))
-	}
-
-	// Update the devices
-	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
-
-	// Wait for the responses
-	go func() {
-		// Since this action is taken following an add failure, we may also receive a failure for the revert
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw(ctx, "failure-reverting-added-flows", log.Fields{
-				"logical-device-id": agent.logicalDeviceID,
-				"flow-cookie":       mod.Cookie,
-				"errors":            res,
-			})
-		}
-	}()
-
-	return nil
 }
 
 //flowDelete deletes a flow from the flow table of that logical device
@@ -419,31 +363,30 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 		respChnls = agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
 	}
 
-	// Wait for completion
-	go func() {
-		if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
-			logger.Warnw(ctx, "failure-deleting-device-flows", log.Fields{
-				"flow-cookie":       mod.Cookie,
-				"logical-device-id": agent.logicalDeviceID,
-				"errors":            res,
-			})
-			// TODO: Revert flow changes
-			// send event, and allow any queued events to be sent as well
-			agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
-			context := make(map[string]string)
-			context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
-			context["flow-id"] = fmt.Sprintf("%v", flow.Id)
-			context["flow-cookie"] = fmt.Sprintf("%v", flowUpdate.FlowMod.Cookie)
-			context["logical-device-id"] = agent.logicalDeviceID
-			if deviceRules != nil {
-				context["device-rules"] = deviceRules.String()
-			}
-			// Create context and send extra information as part of it.
-			agent.ldeviceMgr.SendRPCEvent(ctx,
-				agent.logicalDeviceID, "failed-to-delete-device-flows", context, "RPC_ERROR_RAISE_EVENT",
-				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
+	// Flow delete strict is a synchronous event. the OF controller may require a response for this message.
+	// We need to make sure the request is processed in the adapters before returning so that the Barrier Request/Reply
+	// order is maintained.
+	if res := coreutils.WaitForNilOrErrorResponses(agent.defaultTimeout, respChnls...); res != nil {
+		logger.Warnw(ctx, "failure-deleting-device-flows", log.Fields{
+			"flow-cookie":       mod.Cookie,
+			"logical-device-id": agent.logicalDeviceID,
+			"errors":            res,
+		})
+
+		context := make(map[string]string)
+		context["rpc"] = coreutils.GetRPCMetadataFromContext(ctx)
+		context["flow-id"] = fmt.Sprintf("%v", flow.Id)
+		context["flow-cookie"] = fmt.Sprintf("%v", flowUpdate.FlowMod.Cookie)
+		context["logical-device-id"] = agent.logicalDeviceID
+		if deviceRules != nil {
+			context["device-rules"] = deviceRules.String()
 		}
-	}()
+		// Create context and send extra information as part of it.
+		agent.ldeviceMgr.SendRPCEvent(ctx,
+			agent.logicalDeviceID, "failed-to-delete-device-flows", context, "RPC_ERROR_RAISE_EVENT",
+			voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
+		return err
+	}
 
 	return nil
 }
