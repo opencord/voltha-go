@@ -26,9 +26,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
-	ev "github.com/opencord/voltha-lib-go/v5/pkg/events"
-	"github.com/opencord/voltha-lib-go/v5/pkg/events/eventif"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	ev "github.com/opencord/voltha-lib-go/v6/pkg/events"
+	"github.com/opencord/voltha-lib-go/v6/pkg/events/eventif"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
 	"github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
