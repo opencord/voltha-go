@@ -26,8 +26,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
-	fu "github.com/opencord/voltha-lib-go/v5/pkg/flows"
-	"github.com/opencord/voltha-lib-go/v5/pkg/log"
+	fu "github.com/opencord/voltha-lib-go/v6/pkg/flows"
+	"github.com/opencord/voltha-lib-go/v6/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v4/go/openflow_13"
 	"github.com/opencord/voltha-protos/v4/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -49,7 +49,7 @@ func (agent *LogicalAgent) listLogicalDeviceFlows() map[uint64]*ofp.OfpFlowStats
 
 //updateFlowTable updates the flow table of that logical device
 func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.FlowTableUpdate) error {
-	logger.Debug(ctx, "update-flow-table")
+	logger.Debugw(ctx, "update-flow-table", log.Fields{"flowTableUpdate": flow})
 	if flow == nil {
 		return nil
 	}
@@ -82,6 +82,7 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, flowUpdate *ofp.FlowTabl
 		logger.Errorw(ctx, "flow-add-failed", log.Fields{"flow-mod": mod, "err": err})
 		return err
 	}
+	logger.Debugw(ctx, "flow-id-in-flow-add", log.Fields{"flow-id": flow.Id})
 	var updated bool
 	var changed bool
 	if changed, updated, err = agent.decomposeAndAdd(ctx, flow, flowUpdate); err != nil {
