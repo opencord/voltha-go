@@ -22,6 +22,30 @@
       },
       "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "77e14f13_a7369a65",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-09-14T05:38:53Z",
+      "side": 0,
+      "message": "I think we need to clean the flow from rw-core and let the failed adapter to clean itself. So I\u0027m also leaning towards B. But an exception for this may be the flows that are decomposed to two different flows and sent to two different adapters. In this case when the flow is failed in an adapter, we may revert the flow of the other adapter.",
+      "parentUuid": "4d89737a_c2a18bb1",
+      "range": {
+        "startLine": 178,
+        "startChar": 4,
+        "endLine": 186,
+        "endChar": 5
+      },
+      "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }

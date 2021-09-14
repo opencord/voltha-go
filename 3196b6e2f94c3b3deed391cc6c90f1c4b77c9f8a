@@ -16,6 +16,29 @@
       "message": "Can you guys take a look at this patch and let me know what you think about it?\nWe can discuss it during the TST if needed.\n\nThanks",
       "revId": "3196b6e2f94c3b3deed391cc6c90f1c4b77c9f8a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "830a9851_8e6e9f39",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-09-14T05:38:53Z",
+      "side": 1,
+      "message": "Isn\u0027t that valid for flowAdd too?",
+      "range": {
+        "startLine": 366,
+        "startChar": 1,
+        "endLine": 368,
+        "endChar": 24
+      },
+      "revId": "3196b6e2f94c3b3deed391cc6c90f1c4b77c9f8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
