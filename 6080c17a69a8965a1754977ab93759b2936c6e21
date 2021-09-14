@@ -70,6 +70,30 @@
       },
       "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "507af14e_b3d709fa",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-09-14T14:24:29Z",
+      "side": 0,
+      "message": "I think that if we leave the flow in the adapter but not in the core we leave the door open for inconsistencies, eg:\n- a flow is sent to the core\n- it installs correctly in the openolt but fails in the openonu\n- it is then removed from the core\n- someone removes it from ONOS\n- it is not found in the core so it is never removed from the openolt adapter (it wasn\u0027t in the openonu to begin with)",
+      "parentUuid": "63d8e7fa_91ccfa23",
+      "range": {
+        "startLine": 178,
+        "startChar": 4,
+        "endLine": 186,
+        "endChar": 5
+      },
+      "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
