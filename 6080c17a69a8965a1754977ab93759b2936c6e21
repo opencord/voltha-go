@@ -46,6 +46,30 @@
       },
       "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "63d8e7fa_91ccfa23",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-14T07:51:43Z",
+      "side": 0,
+      "message": "I would agree B is best. Mahir I don\u0027t think we need the delete on a successful installation in case of 2 flows resulting from decomposition. Given the adapter are idempotent and that ONOS will keep pushing the flow what will happen IMHO is that the one that had the successful installation will simply be left alone. if it continues to fail the operator will then eventually remove the subscriber from ONOS and that will result in removing both the flows.",
+      "parentUuid": "77e14f13_a7369a65",
+      "range": {
+        "startLine": 178,
+        "startChar": 4,
+        "endLine": 186,
+        "endChar": 5
+      },
+      "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
