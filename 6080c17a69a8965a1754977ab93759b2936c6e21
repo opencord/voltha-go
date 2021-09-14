@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4d89737a_c2a18bb1",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-09-14T00:06:52Z",
+      "side": 0,
+      "message": "I\u0027m split on what the right behavior is:\na) keep the flow in the logical agent\nb) remove it from the logical agent, but do not remove it from the adapter\n\nIn case A ONOS will believe the flow was successfully installed, thus it won\u0027t push it again. This case will only work at scale if the failures are because of a timeout.\n\nIn case B ONOS will keep pushing the flow till it\u0027s reported via FlowStats. This will increase the traffic but will guarantee that flows that failed for some different reason are retried.\n\nI am leaning toward solution B (not implemented in this patch) but would like to get some opinions from others.",
+      "range": {
+        "startLine": 178,
+        "startChar": 4,
+        "endLine": 186,
+        "endChar": 5
+      },
+      "revId": "6080c17a69a8965a1754977ab93759b2936c6e21",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
