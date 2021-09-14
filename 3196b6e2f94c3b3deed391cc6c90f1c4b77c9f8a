@@ -37,6 +37,40 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "78816481_cf0a22bf",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-14T16:42:41Z",
+      "side": 1,
+      "message": "As mentioned in the TST meeting today, it would be good to remove the flow from the adapter that had successfully added the flow.   This is simpler to do in the device agent (i.e. anytime a flow add fails then revert it at the device agent level).  Then in the logical agent we just remove the logical flow from the Core and send an OF error to ONOS.",
+      "revId": "3196b6e2f94c3b3deed391cc6c90f1c4b77c9f8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8710dc0c_227afd77",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-14T16:42:41Z",
+      "side": 1,
+      "message": "By synchronizing the delete flow, it\u0027s better to perform the delete in core after the adapter response.",
+      "revId": "3196b6e2f94c3b3deed391cc6c90f1c4b77c9f8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "830a9851_8e6e9f39",
         "filename": "rw_core/core/device/logical_agent_flow.go",
         "patchSetId": 2
