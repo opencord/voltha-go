@@ -37,6 +37,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "d01780b6_f903760a",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "d20dbe1f_c77aee11",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "84b65e24_d4d7fb42",
         "filename": "rw_core/core/adapter/manager.go",
         "patchSetId": 12
@@ -48,6 +66,24 @@
       "writtenOn": "2021-09-23T14:51:45Z",
       "side": 1,
       "message": "same here for the deviceTypes",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "900f093e_b83d179c",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "84b65e24_d4d7fb42",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -71,6 +107,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "5c56eac3_4c75d82d",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "There are already logs above those lines for that.",
+      "parentUuid": "88048448_c19b7444",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "418ff2d2_2b996c03",
         "filename": "rw_core/core/core.go",
         "patchSetId": 12
@@ -82,6 +136,24 @@
       "writtenOn": "2021-09-23T14:51:45Z",
       "side": 1,
       "message": "being that kafka is only now for external events I\u0027m wondering if a fatal is really needed, maybe we can be content with an exponential backoff retry mechanism and a warn ?",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1660cef6_b6236cde",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "We implicitly need kafka bus services to send rpc errors.   For now I will keep it as is and if we decide reduce kafka\u0027s importance we can deal with it in a separate jira.",
+      "parentUuid": "418ff2d2_2b996c03",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -105,6 +177,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "3bfbcd56_3cb662b0",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "Any error is a fatal one and logged from the server code.",
+      "parentUuid": "efb7af32_168a395d",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "c1067389_fa28df40",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 12
@@ -122,6 +212,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "abc442d7_2860ae30",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "c1067389_fa28df40",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "650b679a_e79e9880",
         "filename": "rw_core/core/device/agent_group.go",
         "patchSetId": 12
@@ -133,6 +241,24 @@
       "writtenOn": "2021-09-23T14:51:45Z",
       "side": 1,
       "message": "retaining the debug log is porbably soemthing good",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cd0863da_1246622f",
+        "filename": "rw_core/core/device/agent_group.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "There is a deferred logging in that function.",
+      "parentUuid": "650b679a_e79e9880",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -162,6 +288,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "5b9ca382_a1eda134",
+        "filename": "rw_core/core/device/agent_group.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "Maybe ... not much to gain though. Will address in another update if I change code around this.",
+      "parentUuid": "d3c217c3_8f4940d7",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 186,
+        "endChar": 108
+      },
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "92bdee74_88fbe262",
         "filename": "rw_core/core/device/agent_transient_state.go",
         "patchSetId": 12
@@ -179,6 +329,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "216e0154_4d73eee1",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "Force delete means get rid of the device by force unless we are already doing so or we are reconciling the device. Checking too many transient states may get to a scenario where the device does not get force deleted (e.g. in cases where those transient states get stuck either because of errored callbacks or no adapter response.",
+      "parentUuid": "92bdee74_88fbe262",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "3ce95260_84903d64",
         "filename": "rw_core/core/device/manager_nbi.go",
         "patchSetId": 12
@@ -190,6 +358,24 @@
       "writtenOn": "2021-09-23T14:51:45Z",
       "side": 1,
       "message": "should this be a || instead of an \u0026\u0026",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3a54aa8a_32f49a07",
+        "filename": "rw_core/core/device/manager_nbi.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-09-27T21:42:19Z",
+      "side": 1,
+      "message": "No, AND is the correct operator.",
+      "parentUuid": "3ce95260_84903d64",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
