@@ -53,6 +53,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "82304836_a66c0bbd",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d01780b6_f903760a",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "84b65e24_d4d7fb42",
@@ -84,6 +102,24 @@
       "side": 1,
       "message": "ok",
       "parentUuid": "84b65e24_d4d7fb42",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "81ff0935_a50cf518",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "900f093e_b83d179c",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -123,6 +159,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d2a5eca1_d5b64812",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5c56eac3_4c75d82d",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "418ff2d2_2b996c03",
@@ -154,6 +208,24 @@
       "side": 1,
       "message": "We implicitly need kafka bus services to send rpc errors.   For now I will keep it as is and if we decide reduce kafka\u0027s importance we can deal with it in a separate jira.",
       "parentUuid": "418ff2d2_2b996c03",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d2c16ead_7340b522",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1660cef6_b6236cde",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -193,6 +265,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "2cd98ac6_15974e1b",
+        "filename": "rw_core/core/core.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3bfbcd56_3cb662b0",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c1067389_fa28df40",
@@ -228,6 +318,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "56108898_6753f37f",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "abc442d7_2860ae30",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "650b679a_e79e9880",
@@ -259,6 +367,24 @@
       "side": 1,
       "message": "There is a deferred logging in that function.",
       "parentUuid": "650b679a_e79e9880",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8de15ef5_10385848",
+        "filename": "rw_core/core/device/agent_group.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cd0863da_1246622f",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -310,6 +436,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "bff63ba4_d57c6739",
+        "filename": "rw_core/core/device/agent_group.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5b9ca382_a1eda134",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 186,
+        "endChar": 108
+      },
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "92bdee74_88fbe262",
@@ -345,6 +495,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "17e2ad93_3fa4d0ec",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "216e0154_4d73eee1",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "3ce95260_84903d64",
@@ -376,6 +544,24 @@
       "side": 1,
       "message": "No, AND is the correct operator.",
       "parentUuid": "3ce95260_84903d64",
+      "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4afe5e69_26fd348c",
+        "filename": "rw_core/core/device/manager_nbi.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-09-29T14:09:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3a54aa8a_32f49a07",
       "revId": "d826d6a4e37f3eeefe6bae1a45d9c39cf7fd2df1",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
