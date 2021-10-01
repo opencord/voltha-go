@@ -1,0 +1,556 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d424ba7e_941ba15b",
+        "filename": "rw_core/core/adapter/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "looking at the implementation of \"getClient\" if err is nil it\u0027s guaranteed we have a client, do we need to check for it?",
+      "range": {
+        "startLine": 124,
+        "startChar": 9,
+        "endLine": 124,
+        "endChar": 18
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "419a9a1c_260b37d2",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "should we move this to info level? It probably won\u0027t create much clutter but seems an important information to have",
+      "range": {
+        "startLine": 283,
+        "startChar": 8,
+        "endLine": 283,
+        "endChar": 14
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bfa2dc8f_f37721cf",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "is this really a Warning if it\u0027s expected to happen?",
+      "range": {
+        "startLine": 434,
+        "startChar": 8,
+        "endLine": 434,
+        "endChar": 13
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ed866085_a6f5ad0c",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "is the core always HEALTHY? or should we check things like the connection with the kv-store before saying we\u0027re healthy?",
+      "range": {
+        "startLine": 53,
+        "startChar": 43,
+        "endLine": 53,
+        "endChar": 63
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d050a209_49ee32c6",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "Is this still needed? I think this is only used if an OMCI test is started when the device is pre-provisioned, but looking at the new implementation of ChildDeviceDetected I don\u0027t think it\u0027s possible to have a device without a type and an endpoint.\n\nIf this is still needed I would add a check to only update the type/endpoint if they\u0027re not set, as I don\u0027t think we support changing them yet.",
+      "range": {
+        "startLine": 329,
+        "startChar": 20,
+        "endLine": 329,
+        "endChar": 47
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "790689d5_b43e9c03",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "since it\u0027s a static string we can use \"status.Error\" or better we should add the deviceId to the error\nIt would be good to differentiate between deletion and reconciling (minor)",
+      "range": {
+        "startLine": 382,
+        "startChar": 15,
+        "endLine": 382,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7de9c869_4ff9cd23",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "this is slightly confusing as it refer to the gRPC status and not the device status, can we pick a different name?",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 514,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "71786d32_b0d1df23",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "same as above, use status.Error or add the deviceId",
+      "range": {
+        "startLine": 526,
+        "startChar": 8,
+        "endLine": 526,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f6474a85_ec6dc4ed",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "same as other messages",
+      "range": {
+        "startLine": 595,
+        "startChar": 8,
+        "endLine": 595,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "85332055_4538fc03",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "operStatus is confusing as it\u0027s the grpc operation status and not the device.operstatus",
+      "range": {
+        "startLine": 629,
+        "startChar": 1,
+        "endLine": 629,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7879c585_fd3637d5",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "\"force deletion is already in progress or device is reconciling\"",
+      "range": {
+        "startLine": 640,
+        "startChar": 73,
+        "endLine": 640,
+        "endChar": 96
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "dc320d8f_ffed5331",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "operStatus is confusing as it\u0027s the grpc operation status and not the device.operstatus",
+      "range": {
+        "startLine": 685,
+        "startChar": 1,
+        "endLine": 685,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "984758d3_da6d0ff1",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "add deviceId or use \"status.Error\"",
+      "range": {
+        "startLine": 697,
+        "startChar": 15,
+        "endLine": 697,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "efd62a66_a2bef6b3",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1073,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "operStatus is confusing as it\u0027s the grpc operation status and not the device.operstatus",
+      "range": {
+        "startLine": 1073,
+        "startChar": 1,
+        "endLine": 1073,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "684caf44_3df1a7fe",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1125,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "operStatus is confusing as it\u0027s the grpc operation status and not the device.operstatus",
+      "range": {
+        "startLine": 1125,
+        "startChar": 1,
+        "endLine": 1125,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2236b52b_a9a48d1d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1143,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "Is this case still a possibility? see comment in \"updateDeviceTypeAndEndpoint\"",
+      "range": {
+        "startLine": 1135,
+        "startChar": 1,
+        "endLine": 1143,
+        "endChar": 2
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bb6dcdcd_be877bd6",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1373,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "device-in-preprovisioning-state-reconcile-not-needed",
+      "range": {
+        "startLine": 1373,
+        "startChar": 22,
+        "endLine": 1373,
+        "endChar": 53
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "43b11b14_0032d36e",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "logDeviceUpdate-failed",
+      "range": {
+        "startLine": 42,
+        "startChar": 22,
+        "endLine": 42,
+        "endChar": 37
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b2ab8edc_9ef15d5a",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "logDeviceUpdate-success",
+      "range": {
+        "startLine": 46,
+        "startChar": 20,
+        "endLine": 46,
+        "endChar": 35
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fc1c6ade_34617793",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "this looks a situation similar to the LogicalDeviceFlow, if the installation fails, for any reason, should we remove the flowHandle from the cache?",
+      "range": {
+        "startLine": 79,
+        "startChar": 30,
+        "endLine": 79,
+        "endChar": 58
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8febc9d1_f835aab1",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "looks to me that we\u0027re passing the \"response\" object to the flow handler for it to populate it, but we\u0027re not waiting for it and returning immediately, is that intentional?",
+      "range": {
+        "startLine": 112,
+        "startChar": 1,
+        "endLine": 132,
+        "endChar": 98
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "af62de69_930c185f",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "shouldn\u0027t we remove the flow once we receive confirmation from the adapter that the operation was successful?",
+      "range": {
+        "startLine": 253,
+        "startChar": 3,
+        "endLine": 253,
+        "endChar": 35
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "370b7b24_599c0e77",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "same as above, shouldn\u0027t we wait for the adapter to complete the request before updating the flow in the local cache?",
+      "range": {
+        "startLine": 329,
+        "startChar": 23,
+        "endLine": 329,
+        "endChar": 29
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "171e9ed7_5b170ea3",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-10-01T22:07:55Z",
+      "side": 1,
+      "message": "should we check if we can find the adapter by \"ChildDeviceType\" using \"GetAdapterType\" before raising an error?",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 2
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
