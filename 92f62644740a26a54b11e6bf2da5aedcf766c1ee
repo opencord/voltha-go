@@ -24,6 +24,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "2b7b6ede_e68421a7",
+        "filename": "rw_core/core/adapter/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "No need to check for both. One is sufficient.  Will update",
+      "parentUuid": "d424ba7e_941ba15b",
+      "range": {
+        "startLine": 124,
+        "startChar": 9,
+        "endLine": 124,
+        "endChar": 18
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "419a9a1c_260b37d2",
@@ -37,6 +61,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "should we move this to info level? It probably won\u0027t create much clutter but seems an important information to have",
+      "range": {
+        "startLine": 283,
+        "startChar": 8,
+        "endLine": 283,
+        "endChar": 14
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "19d44101_8bb29297",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Make sense to move to info level",
+      "parentUuid": "419a9a1c_260b37d2",
       "range": {
         "startLine": 283,
         "startChar": 8,
@@ -70,6 +118,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "ae7a869a_9fca8887",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Made it an info log",
+      "parentUuid": "bfa2dc8f_f37721cf",
+      "range": {
+        "startLine": 434,
+        "startChar": 8,
+        "endLine": 434,
+        "endChar": 13
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "ed866085_a6f5ad0c",
@@ -83,6 +155,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "is the core always HEALTHY? or should we check things like the connection with the kv-store before saying we\u0027re healthy?",
+      "range": {
+        "startLine": 53,
+        "startChar": 43,
+        "endLine": 53,
+        "endChar": 63
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "44af1e2d_017c2158",
+        "filename": "rw_core/core/api/grpc_nbi_handler.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "If an a container can invoke the Core grpc server (like here by invoking GetHealthStatus) then the Core is in ready state already. to be in ready state the Core needs first to connect successfully to a number of services, including kv-store.",
+      "parentUuid": "ed866085_a6f5ad0c",
       "range": {
         "startLine": 53,
         "startChar": 43,
@@ -116,6 +212,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "efee5c94_ade810e8",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "The StartOmciTestAction NBI still uses this and there is a check whether the value is checked before invoking this function.",
+      "parentUuid": "d050a209_49ee32c6",
+      "range": {
+        "startLine": 329,
+        "startChar": 20,
+        "endLine": 329,
+        "endChar": 47
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "790689d5_b43e9c03",
@@ -129,6 +249,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "since it\u0027s a static string we can use \"status.Error\" or better we should add the deviceId to the error\nIt would be good to differentiate between deletion and reconciling (minor)",
+      "range": {
+        "startLine": 382,
+        "startChar": 15,
+        "endLine": 382,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5a8f15c1_45bc1f92",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Changed string.  proceedWithRequest returns false either for device deletion or reconciliation.   Having separate string would be good.  Will handle in a separate jira given that proceedWithRequest is used everywhere",
+      "parentUuid": "790689d5_b43e9c03",
       "range": {
         "startLine": 382,
         "startChar": 15,
@@ -162,6 +306,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d727fae0_0294fe87",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "changed to requestStatus",
+      "parentUuid": "7de9c869_4ff9cd23",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 514,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "71786d32_b0d1df23",
@@ -175,6 +343,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "same as above, use status.Error or add the deviceId",
+      "range": {
+        "startLine": 526,
+        "startChar": 8,
+        "endLine": 526,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e320f9c1_489af8d9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71786d32_b0d1df23",
       "range": {
         "startLine": 526,
         "startChar": 8,
@@ -208,6 +400,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d86c99b4_9599e838",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6474a85_ec6dc4ed",
+      "range": {
+        "startLine": 595,
+        "startChar": 8,
+        "endLine": 595,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "85332055_4538fc03",
@@ -221,6 +437,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "operStatus is confusing as it\u0027s the grpc operation status and not the device.operstatus",
+      "range": {
+        "startLine": 629,
+        "startChar": 1,
+        "endLine": 629,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0c0fef40_1fab7dea",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "85332055_4538fc03",
       "range": {
         "startLine": 629,
         "startChar": 1,
@@ -254,6 +494,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "5273da79_a4847beb",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7879c585_fd3637d5",
+      "range": {
+        "startLine": 640,
+        "startChar": 73,
+        "endLine": 640,
+        "endChar": 96
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "dc320d8f_ffed5331",
@@ -267,6 +531,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "operStatus is confusing as it\u0027s the grpc operation status and not the device.operstatus",
+      "range": {
+        "startLine": 685,
+        "startChar": 1,
+        "endLine": 685,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "48efcb8e_2981ac37",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc320d8f_ffed5331",
       "range": {
         "startLine": 685,
         "startChar": 1,
@@ -300,6 +588,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "315aeeb7_e71f8ec3",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "984758d3_da6d0ff1",
+      "range": {
+        "startLine": 697,
+        "startChar": 15,
+        "endLine": 697,
+        "endChar": 21
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "efd62a66_a2bef6b3",
@@ -313,6 +625,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "operStatus is confusing as it\u0027s the grpc operation status and not the device.operstatus",
+      "range": {
+        "startLine": 1073,
+        "startChar": 1,
+        "endLine": 1073,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "63243b8c_a12b2103",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1073,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "efd62a66_a2bef6b3",
       "range": {
         "startLine": 1073,
         "startChar": 1,
@@ -346,6 +682,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1d770d38_7411d19d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1125,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "684caf44_3df1a7fe",
+      "range": {
+        "startLine": 1125,
+        "startChar": 1,
+        "endLine": 1125,
+        "endChar": 11
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "2236b52b_a9a48d1d",
@@ -359,6 +719,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "Is this case still a possibility? see comment in \"updateDeviceTypeAndEndpoint\"",
+      "range": {
+        "startLine": 1135,
+        "startChar": 1,
+        "endLine": 1143,
+        "endChar": 2
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "92db1677_d16409a6",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1143,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "2236b52b_a9a48d1d",
       "range": {
         "startLine": 1135,
         "startChar": 1,
@@ -392,6 +776,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "baad942d_e5e27b24",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 1373,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb6dcdcd_be877bd6",
+      "range": {
+        "startLine": 1373,
+        "startChar": 22,
+        "endLine": 1373,
+        "endChar": 53
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "43b11b14_0032d36e",
@@ -405,6 +813,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "logDeviceUpdate-failed",
+      "range": {
+        "startLine": 42,
+        "startChar": 22,
+        "endLine": 42,
+        "endChar": 37
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b4628209_d68137e1",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "43b11b14_0032d36e",
       "range": {
         "startLine": 42,
         "startChar": 22,
@@ -438,6 +870,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d0694bfc_c31ad1b9",
+        "filename": "rw_core/core/device/agent_device_update.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b2ab8edc_9ef15d5a",
+      "range": {
+        "startLine": 46,
+        "startChar": 20,
+        "endLine": 46,
+        "endChar": 35
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "fc1c6ade_34617793",
@@ -451,6 +907,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "this looks a situation similar to the LogicalDeviceFlow, if the installation fails, for any reason, should we remove the flowHandle from the cache?",
+      "range": {
+        "startLine": 79,
+        "startChar": 30,
+        "endLine": 79,
+        "endChar": 58
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9db79b3a_e8665ea7",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "The logic in the logical device takes care of reverting added flows on failure. Reverting would then occur in the device agent as well as in the adapters.  Therefore, no need to add it here.",
+      "parentUuid": "fc1c6ade_34617793",
       "range": {
         "startLine": 79,
         "startChar": 30,
@@ -484,6 +964,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "f2dfa221_7b7a4299",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "The response object is returned to the calling function which then waits using that response object",
+      "parentUuid": "8febc9d1_f835aab1",
+      "range": {
+        "startLine": 112,
+        "startChar": 1,
+        "endLine": 132,
+        "endChar": 98
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "af62de69_930c185f",
@@ -497,6 +1001,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "shouldn\u0027t we remove the flow once we receive confirmation from the adapter that the operation was successful?",
+      "range": {
+        "startLine": 253,
+        "startChar": 3,
+        "endLine": 253,
+        "endChar": 35
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1e3506e8_8e3afa4e",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "Yes that would be better given what we know now.  I did not change the flow logic for the grpc changes.  This can be handled in a separate jira.",
+      "parentUuid": "af62de69_930c185f",
       "range": {
         "startLine": 253,
         "startChar": 3,
@@ -530,6 +1058,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c78e9f45_f5339e0e",
+        "filename": "rw_core/core/device/agent_flow.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "This can be done in a separate Jira as this logic has not changed from before.  Waiting for the adapter response also means we need to hold to the flow lock during that time.  Need to experiment with it to see if there is any adverse impact.",
+      "parentUuid": "370b7b24_599c0e77",
+      "range": {
+        "startLine": 329,
+        "startChar": 23,
+        "endLine": 329,
+        "endChar": 29
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "171e9ed7_5b170ea3",
@@ -543,6 +1095,30 @@
       "writtenOn": "2021-10-01T22:07:55Z",
       "side": 1,
       "message": "should we check if we can find the adapter by \"ChildDeviceType\" using \"GetAdapterType\" before raising an error?",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 2
+      },
+      "revId": "92f62644740a26a54b11e6bf2da5aedcf766c1ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b6e161ad_74ed8ac1",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 18
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-04T21:51:06Z",
+      "side": 1,
+      "message": "In this check the ChildDeviceType is empty, meaning we won\u0027t be able to get the adaptertype.",
+      "parentUuid": "171e9ed7_5b170ea3",
       "range": {
         "startLine": 77,
         "startChar": 0,
