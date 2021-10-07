@@ -1704,7 +1704,6 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi voltha.VolthaServiceClien
 }
 
 func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-
 	//	Create and enable device with valid data
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
@@ -1727,9 +1726,18 @@ func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceCl
 	nb.verifyLogicalDevices(t, oltDevice, nbi)
 
 	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
-	assert.NoError(t, err)
+	assert.Nil(t, err)
+	assert.NotNil(t, logicalDevices)
+	var logicalDevice *voltha.LogicalDevice
+	for _, ld := range logicalDevices.Items {
+		if ld.RootDeviceId == oltDevice.Id {
+			logicalDevice = ld
+			break
+		}
+	}
+	assert.NotNil(t, logicalDevice)
 
-	testLogger.Infow(getContext(), "list-logical-devices", log.Fields{"logical-device": logicalDevices.GetItems()[0]})
+	testLogger.Infow(getContext(), "list-logical-devices", log.Fields{"logical-device": logicalDevice})
 	// Add a meter to the logical device, which the flow can refer to
 	meterMod := &ofp.OfpMeterMod{
 		Command: ofp.OfpMeterModCommand_OFPMC_ADD,
@@ -1749,14 +1757,14 @@ func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceCl
 	})
 	assert.NoError(t, err)
 
-	meters, err := nbi.ListLogicalDeviceMeters(getContext(), &voltha.ID{Id: logicalDevices.GetItems()[0].GetId()})
+	meters, err := nbi.ListLogicalDeviceMeters(getContext(), &voltha.ID{Id: logicalDevice.Id})
 	assert.NoError(t, err)
 
 	for _, item := range meters.GetItems() {
 		testLogger.Infow(getContext(), "list-logical-device-meters", log.Fields{"meter-config": item.GetConfig()})
 	}
 
-	logicalPorts, err := nbi.ListLogicalDevicePorts(context.Background(), &voltha.ID{Id: logicalDevices.GetItems()[0].GetId()})
+	logicalPorts, err := nbi.ListLogicalDevicePorts(context.Background(), &voltha.ID{Id: logicalDevice.Id})
 	assert.NoError(t, err)
 	m := jsonpb.Marshaler{}
 	logicalPortsJson, err := m.MarshalToString(logicalPorts)
@@ -1768,7 +1776,7 @@ func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceCl
 		getOLTDownstreamMplsDoubleTagRules, getOLTDownstreamRules, getOnuDownstreamRules}
 
 	for _, callable := range callables {
-		_, err = nbi.UpdateLogicalDeviceFlowTable(getContext(), &ofp.FlowTableUpdate{Id: logicalDevices.GetItems()[0].GetId(), FlowMod: callable()})
+		_, err = nbi.UpdateLogicalDeviceFlowTable(getContext(), &ofp.FlowTableUpdate{Id: logicalDevice.Id, FlowMod: callable()})
 		assert.NoError(t, err)
 	}
 
@@ -2031,8 +2039,8 @@ func setupAdapters(ctx context.Context, t *testing.T, nb *NBTest, coreAPIEndpoin
 	// Wait for adapters to be fully running
 	var areAdaptersRunning isConditionSatisfied = func() bool {
 		ready := true
-		nb.oltAdaptersLock.RLock()
-		defer nb.oltAdaptersLock.RUnlock()
+		nb.onuAdaptersLock.RLock()
+		defer nb.onuAdaptersLock.RUnlock()
 		for _, adapters := range nb.onuAdapters {
 			for _, a := range adapters {
 				ready = ready && a.IsReady()
@@ -2041,8 +2049,8 @@ func setupAdapters(ctx context.Context, t *testing.T, nb *NBTest, coreAPIEndpoin
 				}
 			}
 		}
-		nb.onuAdaptersLock.RLock()
-		defer nb.onuAdaptersLock.RUnlock()
+		nb.oltAdaptersLock.RLock()
+		defer nb.oltAdaptersLock.RUnlock()
 		for _, adapters := range nb.oltAdapters {
 			for _, a := range adapters {
 				ready = ready && a.IsReady()
@@ -2056,6 +2064,39 @@ func setupAdapters(ctx context.Context, t *testing.T, nb *NBTest, coreAPIEndpoin
 	err := waitUntilCondition(nb.internalTimeout, areAdaptersRunning)
 	assert.Nil(t, err)
 	logger.Infow(ctx, "adapters-are-ready", log.Fields{"time-taken": time.Since(start)})
+
+	// Test adapter registration
+	nb.testAdapterRegistration(t, nbi)
+}
+
+func WaitForCoreConnectionToAdapters(ctx context.Context, t *testing.T, nb *NBTest, nbi voltha.VolthaServiceClient) {
+	// Create/register the adapters
+	start := time.Now()
+	numAdapters := 0
+	nb.oltAdaptersLock.RLock()
+	numAdapters += len(nb.onuAdapters)
+	nb.oltAdaptersLock.RUnlock()
+	nb.onuAdaptersLock.RLock()
+	numAdapters += len(nb.oltAdapters)
+	nb.onuAdaptersLock.RUnlock()
+
+	// Wait for adapters to be fully running
+	var isCoreConnectedToAdapters isConditionSatisfied = func() bool {
+		adpts, err := nbi.ListAdapters(getContext(), &empty.Empty{})
+		if err != nil || len(adpts.Items) < numAdapters {
+			return false
+		}
+		// Now check the last communication time
+		for _, adpt := range adpts.Items {
+			if time.Since(time.Unix(adpt.LastCommunication, 0)) > 5*time.Second {
+				return false
+			}
+		}
+		return true
+	}
+	err := waitUntilCondition(nb.internalTimeout, isCoreConnectedToAdapters)
+	assert.Nil(t, err)
+	logger.Infow(ctx, "core-connection-to-adapters-is-ready", log.Fields{"time-taken": time.Since(start)})
 
 	// Test adapter registration
 	nb.testAdapterRegistration(t, nbi)
@@ -2133,6 +2174,9 @@ func TestSuite(t *testing.T) {
 
 	// Setup the adapters
 	setupAdapters(ctx, t, nb, coreAPIEndpoint, nbi)
+
+	// Wait until the Core can connect to the adapters
+	WaitForCoreConnectionToAdapters(ctx, t, nb, nbi)
 
 	// Start the change events listener and dispatcher to receive all change events from the Core
 	nb.changeEventLister = NewChangedEventListener(len(nb.oltAdapters))
