@@ -358,10 +358,10 @@ func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.Imag
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-	defer agent.requestQueue.RequestComplete()
 
 	device := agent.getDeviceReadOnlyWithoutLock()
 	if !agent.proceedWithRequest(device) {
+		agent.requestQueue.RequestComplete()
 		return nil, status.Errorf(codes.FailedPrecondition, "%s", "cannot complete operation as device deletion is in progress or reconciling is in progress/failed")
 	}
 
@@ -375,8 +375,10 @@ func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.Imag
 				"device-type":      agent.deviceType,
 				"adapter-endpoint": device.AdapterEndpoint,
 			})
+		agent.requestQueue.RequestComplete()
 		return nil, err
 	}
+	agent.requestQueue.RequestComplete()
 	return client.GetImageDownloadStatus(ctx, &ic.ImageDownloadMessage{
 		Device: device,
 		Image:  img,
@@ -644,6 +646,7 @@ func (agent *Agent) getImageStatus(ctx context.Context, request *voltha.DeviceIm
 	defer cancel()
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 
+	agent.requestQueue.RequestComplete()
 	return client.GetOnuImageStatus(subCtx, request)
 }
 
@@ -715,7 +718,6 @@ func (agent *Agent) abortImageUpgradeToDevice(ctx context.Context, request *volt
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 
 	agent.requestQueue.RequestComplete()
-
 	return client.AbortOnuImageUpgrade(subCtx, request)
 }
 
@@ -750,6 +752,7 @@ func (agent *Agent) commitImage(ctx context.Context, request *voltha.DeviceImage
 	defer cancel()
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 
+	agent.requestQueue.RequestComplete()
 	return client.CommitOnuImage(subCtx, request)
 }
 
