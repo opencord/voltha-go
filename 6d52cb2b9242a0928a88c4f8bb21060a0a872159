@@ -37,6 +37,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "1d297156_67d47eae",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-11T15:08:25Z",
+      "side": 1,
+      "message": "Thanks for bringing this up. This would simplify the implementation it seems.",
+      "parentUuid": "26908ede_74a9659e",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "482f23ba_f955823e",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 2
@@ -48,6 +66,24 @@
       "writtenOn": "2021-10-11T13:07:21Z",
       "side": 1,
       "message": "As I\u0027m not aware of the complete code: Would this check here detect, that the request is not wrongly set to some OLT device?",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "702ce89a_83830d89",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-11T15:08:25Z",
+      "side": 1,
+      "message": "No, this check only ensures that there is an agent registered(present) for this device. \n\nThe check you are stating is present here:\nhttps://gerrit.opencord.org/plugins/gitiles/voltha-go/+/refs/heads/voltha-2.8/rw_core/core/device/agent_image.go#432",
+      "parentUuid": "482f23ba_f955823e",
       "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
