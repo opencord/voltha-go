@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b888a825_fe5de252",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-10-11T12:00:36Z",
+      "side": 1,
+      "message": "kind of the same comment for all of these, you use the voltha.ImageState_UNKNOWN_ERROR and voltha.ImageState_IMAGE_UNKNOWN everywhere, but this is not the case. in case of image dowloaded but not activated you have to give DOWNLOAD_SUCCESS and then a reason from https://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/device.proto#L251 and state DOWLOADED. Similar for ACTIVATE and COMMIT.",
+      "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b45eeeeb_66c74baa",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-10-11T12:00:36Z",
+      "side": 1,
+      "message": "is there a way from the error or the rest to understand that for example the URL was wrong and use INVALID_URL ? https://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/device.proto#L253 or one of https://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/device.proto#L254-L255\nor even https://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/device.proto#L260",
+      "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
