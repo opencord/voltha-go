@@ -1666,22 +1666,46 @@ func (dMgr *Manager) DownloadImageToDevice(ctx context.Context, request *voltha.
 		go func(deviceID string, req *voltha.DeviceImageDownloadRequest, ch chan []*voltha.DeviceImageState) {
 			agent := dMgr.getDeviceAgent(ctx, deviceID)
 			if agent == nil {
-				logger.Errorw(ctx, "Not-found", log.Fields{"device-id": deviceID})
-				ch <- nil
+				logger.Errorw(ctx, "Device-agent-not-found", log.Fields{"device-id": deviceID})
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       req.GetImage().GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_FAILED,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 
 			resp, err := agent.downloadImageToDevice(ctx, req)
 			if err != nil {
 				logger.Errorw(ctx, "download-image-to-device-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       req.GetImage().GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_FAILED,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 
 			err = dMgr.validateDeviceImageResponse(resp)
 			if err != nil {
 				logger.Errorw(ctx, "download-image-to-device-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       req.GetImage().GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_FAILED,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 			ch <- resp.GetDeviceImageStates()
@@ -1713,22 +1737,46 @@ func (dMgr *Manager) GetImageStatus(ctx context.Context, request *voltha.DeviceI
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {
 			agent := dMgr.getDeviceAgent(ctx, deviceID)
 			if agent == nil {
-				logger.Errorw(ctx, "Not-found", log.Fields{"device-id": deviceID})
-				ch <- nil
+				logger.Errorw(ctx, "Device-agent-not-found", log.Fields{"device-id": deviceID})
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 
 			resp, err := agent.getImageStatus(ctx, req)
 			if err != nil {
 				logger.Errorw(ctx, "get-image-status-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 
 			err = dMgr.validateDeviceImageResponse(resp)
 			if err != nil {
 				logger.Errorw(ctx, "get-image-status-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 			ch <- resp.GetDeviceImageStates()
@@ -1760,22 +1808,46 @@ func (dMgr *Manager) AbortImageUpgradeToDevice(ctx context.Context, request *vol
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {
 			agent := dMgr.getDeviceAgent(ctx, deviceID)
 			if agent == nil {
-				logger.Errorw(ctx, "Not-found", log.Fields{"device-id": deviceID})
-				ch <- nil
+				logger.Errorw(ctx, "Device-agent-not-found", log.Fields{"device-id": deviceID})
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 
 			resp, err := agent.abortImageUpgradeToDevice(ctx, req)
 			if err != nil {
 				logger.Errorw(ctx, "abort-image-upgrade-to-device-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 
 			err = dMgr.validateDeviceImageResponse(resp)
 			if err != nil {
 				logger.Errorw(ctx, "abort-image-upgrade-to-device-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 			ch <- resp.GetDeviceImageStates()
@@ -1829,22 +1901,46 @@ func (dMgr *Manager) ActivateImage(ctx context.Context, request *voltha.DeviceIm
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {
 			agent := dMgr.getDeviceAgent(ctx, deviceID)
 			if agent == nil {
-				logger.Errorw(ctx, "Not-found", log.Fields{"device-id": deviceID})
-				ch <- nil
+				logger.Errorw(ctx, "Device-agent-not-found", log.Fields{"device-id": deviceID})
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_ACTIVATION_ABORTED,
+					},
+				}}
 				return
 			}
 
 			resp, err := agent.activateImageOnDevice(ctx, req)
 			if err != nil {
 				logger.Errorw(ctx, "activate-image-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_ACTIVATION_ABORTED,
+					},
+				}}
 				return
 			}
 
 			err = dMgr.validateDeviceImageResponse(resp)
 			if err != nil {
 				logger.Errorw(ctx, "activate-image-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 
@@ -1876,22 +1972,46 @@ func (dMgr *Manager) CommitImage(ctx context.Context, request *voltha.DeviceImag
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {
 			agent := dMgr.getDeviceAgent(ctx, deviceID)
 			if agent == nil {
-				logger.Errorw(ctx, "Not-found", log.Fields{"device-id": deviceID})
-				ch <- nil
+				logger.Errorw(ctx, "Device-agent-not-found", log.Fields{"device-id": deviceID})
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_COMMIT_ABORTED,
+					},
+				}}
 				return
 			}
 
 			resp, err := agent.commitImage(ctx, req)
 			if err != nil {
 				logger.Errorw(ctx, "commit-image-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_COMMIT_ABORTED,
+					},
+				}}
 				return
 			}
 
 			err = dMgr.validateDeviceImageResponse(resp)
 			if err != nil {
 				logger.Errorf(ctx, "commit-image-failed", log.Fields{"device-id": deviceID, "error": err})
-				ch <- nil
+				ch <- []*voltha.DeviceImageState{{
+					DeviceId: deviceID,
+					ImageState: &voltha.ImageState{
+						Version:       request.GetVersion(),
+						DownloadState: voltha.ImageState_DOWNLOAD_UNKNOWN,
+						Reason:        voltha.ImageState_UNKNOWN_ERROR,
+						ImageState:    voltha.ImageState_IMAGE_UNKNOWN,
+					},
+				}}
 				return
 			}
 			ch <- resp.GetDeviceImageStates()
