@@ -55,6 +55,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "dbb92941_11530592",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-11T18:05:38Z",
+      "side": 1,
+      "message": "But the agent at the voltha-core is \u0027per device\u0027. So this approach was needed. So though the API supports request for multiple devices at once, the request to the adapter are to be sent one-by-one from the core.",
+      "parentUuid": "1d297156_67d47eae",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "482f23ba_f955823e",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 2
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "Ok, I see, so the agent will return error in this case. And this change then  ensures to return according image state indications (like in case to ONU adapter itself returns error). So we don\u0027t get any information that the request was just done to some wrong device ID - that is a bit sad, think we had some according information on voltctl with the old API\u0027s.",
       "parentUuid": "702ce89a_83830d89",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e8bec526_e8d61440",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-11T18:05:38Z",
+      "side": 1,
+      "message": "Exactly. But as of now, there is no code that indicates \u0027NOT_FOUND\u0027 (For instance). \nMoreover we shall not simply return gRPC error as there are multiple devices involved. \nSo there might be cases where the request went successfully for a few devices, but failed for some.",
+      "parentUuid": "191692e9_2492d7a6",
       "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
