@@ -86,6 +86,24 @@
       "parentUuid": "482f23ba_f955823e",
       "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "191692e9_2492d7a6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-11T15:42:44Z",
+      "side": 1,
+      "message": "Ok, I see, so the agent will return error in this case. And this change then  ensures to return according image state indications (like in case to ONU adapter itself returns error). So we don\u0027t get any information that the request was just done to some wrong device ID - that is a bit sad, think we had some according information on voltctl with the old API\u0027s.",
+      "parentUuid": "702ce89a_83830d89",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
