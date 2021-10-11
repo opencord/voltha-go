@@ -16,6 +16,24 @@
       "message": "Did not like the method name here? Any advice for me? There is already DeleteAllPorts method and it seems it is an NB API, I can not change the signature of the method.",
       "revId": "d43eea593d57e922004e3032575ee6f2a07f5be0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "35138578_5e9293fc",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-10-11T08:22:47Z",
+      "side": 1,
+      "message": "I think is ok as method name unless somebody disagrees.",
+      "parentUuid": "5e430d1f_cfbe3e29",
+      "revId": "d43eea593d57e922004e3032575ee6f2a07f5be0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
