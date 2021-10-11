@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "c57ad48a_5032a2c5",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-11T13:07:21Z",
+      "side": 1,
+      "message": "I don\u0027t completely agree to Andrea\u0027s comment, compare also my comment in line 1688.\nSo basically the manager here should not store any ONU related states in order to provide more exact status information in error situations. The error situations we are discussing here are only exceptional, where something really strange/wrong is either requested or somehow used in the code. For these surely rare situations I think we could basically live with the prepared implementation except some improvement proposal for the activate and commit commands: Here - in these error conditions - I would rather prefer to set the image state to \u0027ACTIVATION_ABORTED`or \u0027ImageState_IMAGE_COMMIT_ABORTED\u0027 (according to the download state \u0027ImageState_DOWNLOAD_FAILED\u0027 at syntactical download errors).",
+      "parentUuid": "b888a825_fe5de252",
+      "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "b45eeeeb_66c74baa",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 1
@@ -48,6 +66,24 @@
       "writtenOn": "2021-10-11T12:16:49Z",
       "side": 1,
       "message": "For the scenarios like \u0027INVALID_URL\u0027, the reason (present in ImageState) would come from the onu-adapter. \n\nThe reasons UNKNOWN_ERROR is returned from the core for the following cases:\n1. The device not found (No error code present in proto which matches this, so UNKNOW_ERROR suits best)\n2. The device is an OLT (No error code present in proto which matches this, so UNKNOW_ERROR suits best)\n3. \u0027Call-to-adapter\u0027 fails with some error, or the \u0027Call-to-adapter\u0027 returns insane response (not very easy for core to find out what went wrong at the adapter)\n\n\nAnd any specific errors, say OMCI_TRANSFER_ERROR, IMAGE_REFUSED_BY_ONU, INVALID_URL would come from adapter, as they know the best was exactly is going on. \n\nThoughts?",
+      "parentUuid": "b45eeeeb_66c74baa",
+      "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "edb8b702_0d332412",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-11T13:07:21Z",
+      "side": 1,
+      "message": "Current OnuAdapter implementation does only deliver some error (in err) here for obvious error conditions within the API parameters like nil request pointer or no deviceId entry and so on. If the parameters are syntactically correct, then the OnuAdapter delivers the state indications according to current processing conditions (like URL error or Vendor-device mismatch) per requested Onu Device.\nSo for me the implementation looks good here.",
       "parentUuid": "b45eeeeb_66c74baa",
       "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"

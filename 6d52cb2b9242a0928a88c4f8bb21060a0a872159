@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "37c5f0dd_daac6516",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-11T13:07:21Z",
+      "side": 1,
+      "message": "I\u0027d tend more to give a +1 ...",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "26908ede_74a9659e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-11T13:07:21Z",
+      "side": 1,
+      "message": "... some approach I would at least not expect. This way a download request for multiple devices will be split here into separate calls to downloadImageToDevice for each device, even though the API has the facility to send the complete device map with one download command. Seems not very effective in case multiple devices shall be updated.",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "482f23ba_f955823e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-11T13:07:21Z",
+      "side": 1,
+      "message": "As I\u0027m not aware of the complete code: Would this check here detect, that the request is not wrongly set to some OLT device?",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
