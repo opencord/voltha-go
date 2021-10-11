@@ -33,6 +33,24 @@
       "message": "is there a way from the error or the rest to understand that for example the URL was wrong and use INVALID_URL ? https://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/device.proto#L253 or one of https://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/device.proto#L254-L255\nor even https://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/device.proto#L260",
       "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "eb4f6644_f11dc5f7",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1688,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-11T12:16:49Z",
+      "side": 1,
+      "message": "For the scenarios like \u0027INVALID_URL\u0027, the reason (present in ImageState) would come from the onu-adapter. \n\nThe reasons UNKNOWN_ERROR is returned from the core for the following cases:\n1. The device not found (No error code present in proto which matches this, so UNKNOW_ERROR suits best)\n2. The device is an OLT (No error code present in proto which matches this, so UNKNOW_ERROR suits best)\n3. \u0027Call-to-adapter\u0027 fails with some error, or the \u0027Call-to-adapter\u0027 returns insane response (not very easy for core to find out what went wrong at the adapter)\n\n\nAnd any specific errors, say OMCI_TRANSFER_ERROR, IMAGE_REFUSED_BY_ONU, INVALID_URL would come from adapter, as they know the best was exactly is going on. \n\nThoughts?",
+      "parentUuid": "b45eeeeb_66c74baa",
+      "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
