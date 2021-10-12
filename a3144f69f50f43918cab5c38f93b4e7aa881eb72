@@ -56,6 +56,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "5bb3aa8c_d99e2574",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-12T14:53:33Z",
+      "side": 1,
+      "message": "To me it seems the voltha-core error logs in such case contain enough information to troubleshoot. \nBut the response sent to the caller (voltctl or any other NB component) does not have enough information to indicate what exactly went wrong, ie, \n1. Whether the operator by mistake requested image download for an \u0027OLT\u0027, \n2. The device-id in the request is not found\n3. Received invalid response from the adapter etc",
+      "parentUuid": "7afe67e4_4bb5159a",
+      "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "b45eeeeb_66c74baa",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 1
