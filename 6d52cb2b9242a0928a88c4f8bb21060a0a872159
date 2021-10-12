@@ -71,6 +71,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "5878fe84_24e18720",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-12T12:28:31Z",
+      "side": 1,
+      "message": "True, but there might possibly be ways to overcome this restriction. E.g. one could use the first deviceId for the agent tranfer as usual but nevertheless include the other devices in the agent and adapter transfer. The OnuAdapter anyway has to verify validity of each device. But for now it is ok to me.",
+      "parentUuid": "dbb92941_11530592",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "482f23ba_f955823e",
@@ -138,6 +156,24 @@
       "side": 1,
       "message": "Exactly. But as of now, there is no code that indicates \u0027NOT_FOUND\u0027 (For instance). \nMoreover we shall not simply return gRPC error as there are multiple devices involved. \nSo there might be cases where the request went successfully for a few devices, but failed for some.",
       "parentUuid": "191692e9_2492d7a6",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1f5ae3d5_41d4cc04",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-10-12T12:28:31Z",
+      "side": 1,
+      "message": "Yes, it would require a proto update to include an according error code for the image states.\nWe should try to keep it in mind for after some possible proto update also in respect to further adapter related state extensions.",
+      "parentUuid": "e8bec526_e8d61440",
       "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
