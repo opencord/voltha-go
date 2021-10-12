@@ -38,6 +38,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "7afe67e4_4bb5159a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-12T14:10:11Z",
+      "side": 1,
+      "message": "does the log and/or the stored image state contain enough information for an operator to troubleshoot? if not then more information needs to be added.",
+      "parentUuid": "c57ad48a_5032a2c5",
+      "revId": "a3144f69f50f43918cab5c38f93b4e7aa881eb72",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "b45eeeeb_66c74baa",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 1

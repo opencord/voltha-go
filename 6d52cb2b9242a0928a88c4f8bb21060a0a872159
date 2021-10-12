@@ -176,6 +176,70 @@
       "parentUuid": "e8bec526_e8d61440",
       "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f1c7cb5b_7d813333",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-12T14:10:11Z",
+      "side": 1,
+      "message": "This isn\u0027t so much as an image not found as the agent is not found? If this is the case then we shouldn\u0027t be returning NOT_FOUND as an image state error or reason as that might send an operator down a confusing pass. Unless we add a specific error agent not found (which might be a good idea) UNKNOWN_ERROR likely fits.",
+      "parentUuid": "1f5ae3d5_41d4cc04",
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "98a77af1_01018f1f",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1690,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-12T14:10:11Z",
+      "side": 1,
+      "message": "i would like to see the protos extended here, as opposed to UNKNOWN, but that implies that we are going to inspect the err a bit more, i.e. was it a connectivity issue, timeout, ???",
+      "range": {
+        "startLine": 1690,
+        "startChar": 28,
+        "endLine": 1690,
+        "endChar": 52
+      },
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4b202c31_3617f7b3",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1740,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-12T14:10:11Z",
+      "side": 1,
+      "message": "needs to be more informative, what was not found?",
+      "range": {
+        "startLine": 1740,
+        "startChar": 0,
+        "endLine": 1740,
+        "endChar": 70
+      },
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
