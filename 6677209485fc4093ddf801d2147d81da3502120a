@@ -97,6 +97,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "d06aceeb_51bf6f5e",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-10-12T16:04:56Z",
+      "side": 1,
+      "message": "If not required, we shouldn\u0027t do that. At least via the agent call.",
+      "parentUuid": "448dd3d2_3ec22c60",
+      "range": {
+        "startLine": 122,
+        "startChar": 18,
+        "endLine": 122,
+        "endChar": 31
+      },
+      "revId": "6677209485fc4093ddf801d2147d81da3502120a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "ca158849_540a9e01",
         "filename": "rw_core/core/device/manager_state_callback.go",
         "patchSetId": 7
