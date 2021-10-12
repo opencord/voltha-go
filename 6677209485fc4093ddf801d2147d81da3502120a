@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "96090f69_2ec3d8cb",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-10-12T07:15:31Z",
+      "side": 1,
+      "message": "We can call this in transitions.go I guess.",
+      "range": {
+        "startLine": 53,
+        "startChar": 32,
+        "endLine": 53,
+        "endChar": 54
+      },
+      "revId": "6677209485fc4093ddf801d2147d81da3502120a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0a79af73_cbb9159b",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-10-12T07:15:31Z",
+      "side": 1,
+      "message": "Why do we need to do that? This sends disable to onu-adapter for each child device and onu-adapter tries to send OMCI messages to lock its ports afaik. But OLT is already down. All this messages will fail.",
+      "range": {
+        "startLine": 122,
+        "startChar": 18,
+        "endLine": 122,
+        "endChar": 31
+      },
+      "revId": "6677209485fc4093ddf801d2147d81da3502120a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ca158849_540a9e01",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-10-12T07:15:31Z",
+      "side": 1,
+      "message": "\"failure-disable-device-ports\"",
+      "range": {
+        "startLine": 123,
+        "startChar": 23,
+        "endLine": 123,
+        "endChar": 50
+      },
+      "revId": "6677209485fc4093ddf801d2147d81da3502120a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
