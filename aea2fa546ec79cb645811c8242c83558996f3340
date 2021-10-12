@@ -16,6 +16,74 @@
       "message": "Verified patchset-9 : https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1662/console",
       "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "211db3a4_e1f71eaa",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-12T18:09:14Z",
+      "side": 1,
+      "message": "Is Unlock needed?  Delete is supposed to do the unlock.",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e07bda67_042adbc4",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-12T18:09:14Z",
+      "side": 1,
+      "message": "Same comment as above.",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f4dea9b3_4d985955",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-12T18:09:14Z",
+      "side": 1,
+      "message": "This request is really a clean of the data in KV.  It\u0027s better it gets executed after a successful delete operation.  Check the onDeleteSuccess method in agent.go (need something similar for force delete as well).",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "756d765c_07e7690f",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-12T18:09:14Z",
+      "side": 1,
+      "message": "dMgr.DeleteAllLogicalPorts is invoked as part of dMgr.DeleteParentPorts.  Is there a consolidating these actions?",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }

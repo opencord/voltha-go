@@ -121,6 +121,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "7a0b50f5_bb47dbb2",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-12T18:09:14Z",
+      "side": 1,
+      "message": "Disable should not be used here as it can prevent a \"force delete\" action is the device is in a reconcile state (e.g. failed reconcile).",
+      "parentUuid": "d06aceeb_51bf6f5e",
+      "range": {
+        "startLine": 122,
+        "startChar": 18,
+        "endLine": 122,
+        "endChar": 31
+      },
+      "revId": "6677209485fc4093ddf801d2147d81da3502120a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "ca158849_540a9e01",
         "filename": "rw_core/core/device/manager_state_callback.go",
         "patchSetId": 7
