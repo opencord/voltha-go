@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "02754107_caa51214",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000741
+      },
+      "writtenOn": "2021-10-12T14:34:53Z",
+      "side": 1,
+      "message": "Verified patchset-9 : https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1662/console",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
