@@ -35,6 +35,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "5ed35fba_f8896a84",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-13T08:51:57Z",
+      "side": 1,
+      "message": "As we discussed on the slack, I leave it as is.",
+      "parentUuid": "211db3a4_e1f71eaa",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "e07bda67_042adbc4",
@@ -48,6 +66,24 @@
       "writtenOn": "2021-10-12T18:09:14Z",
       "side": 1,
       "message": "Same comment as above.",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e07f953a_90f3a521",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-13T08:51:57Z",
+      "side": 1,
+      "message": "same as above.",
+      "parentUuid": "e07bda67_042adbc4",
       "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -71,6 +107,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "2a66a59f_623eeea1",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-13T08:51:57Z",
+      "side": 1,
+      "message": "This method is called in DeleteAllChildDevices and it is invoked by the transition map when a device becomes unreachable or deleted. I believe onDeleteSuccess triggers the transitions. Do you mean we should call DeleteAllPorts as a part of transition map?",
+      "parentUuid": "f4dea9b3_4d985955",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "756d765c_07e7690f",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 9
@@ -82,6 +136,24 @@
       "writtenOn": "2021-10-12T18:09:14Z",
       "side": 1,
       "message": "dMgr.DeleteAllLogicalPorts is invoked as part of dMgr.DeleteParentPorts.  Is there a consolidating these actions?",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "76cbc25f_104387f7",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-13T08:51:57Z",
+      "side": 1,
+      "message": "You\u0027re right. However, DeleteParentPorts uses OLT\u0027s device id. Before this implementation, port entries in the KV was still in there. \nSo, do you think we should remove the DeleteAllLogicalPorts from the transition map? Or find another way?",
+      "parentUuid": "756d765c_07e7690f",
       "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
