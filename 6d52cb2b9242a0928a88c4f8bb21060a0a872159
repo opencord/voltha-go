@@ -335,6 +335,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "5ac29d84_ab04600e",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1690,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-10-18T15:41:41Z",
+      "side": 1,
+      "message": "please create them as you feel and share them here.",
+      "parentUuid": "0dada732_6b23a172",
+      "range": {
+        "startLine": 1690,
+        "startChar": 28,
+        "endLine": 1690,
+        "endChar": 52
+      },
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "4b202c31_3617f7b3",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 2
