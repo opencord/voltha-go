@@ -311,6 +311,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "0dada732_6b23a172",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1690,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-18T12:12:47Z",
+      "side": 1,
+      "message": "who is responsible for creating the JIRAs for the issues that we plan to fix in the future? can we get those JIRAs created before the merge?",
+      "parentUuid": "316fae9a_1ec513a1",
+      "range": {
+        "startLine": 1690,
+        "startChar": 28,
+        "endLine": 1690,
+        "endChar": 52
+      },
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "4b202c31_3617f7b3",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 2
