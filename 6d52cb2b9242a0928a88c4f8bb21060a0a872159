@@ -263,6 +263,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "58a49bb5_32c7192a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1690,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-18T02:29:54Z",
+      "side": 1,
+      "message": "currently, there is no error/string field that could be used to convey the actual error \u0027as is\u0027 to the operator.\nDoes it make sense to also have a string field (in addition to the Reason) in the \u0027DeviceImageState\u0027 which can be used to send the actual error string? This could be used as an add-on.",
+      "parentUuid": "973ac6fb_7292d6b8",
+      "range": {
+        "startLine": 1690,
+        "startChar": 28,
+        "endLine": 1690,
+        "endChar": 52
+      },
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "4b202c31_3617f7b3",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 2
@@ -274,6 +298,30 @@
       "writtenOn": "2021-10-12T14:10:11Z",
       "side": 1,
       "message": "needs to be more informative, what was not found?",
+      "range": {
+        "startLine": 1740,
+        "startChar": 0,
+        "endLine": 1740,
+        "endChar": 70
+      },
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "940f0370_d7e2f115",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1740,
+      "author": {
+        "id": 1000608
+      },
+      "writtenOn": "2021-10-18T02:29:54Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4b202c31_3617f7b3",
       "range": {
         "startLine": 1740,
         "startChar": 0,
