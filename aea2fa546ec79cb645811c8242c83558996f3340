@@ -125,6 +125,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "857b787d_cf088fe0",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-18T13:43:35Z",
+      "side": 1,
+      "message": "Yes",
+      "parentUuid": "2a66a59f_623eeea1",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "756d765c_07e7690f",
         "filename": "rw_core/core/device/state/transitions.go",
         "patchSetId": 9
@@ -154,6 +172,24 @@
       "side": 1,
       "message": "You\u0027re right. However, DeleteParentPorts uses OLT\u0027s device id. Before this implementation, port entries in the KV was still in there. \nSo, do you think we should remove the DeleteAllLogicalPorts from the transition map? Or find another way?",
       "parentUuid": "756d765c_07e7690f",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ce67f5d1_7758619d",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-18T13:43:35Z",
+      "side": 1,
+      "message": "Since we want a KV cleanup, how about doing these cleanups as part of the RunPostDeviceDelete()?   We can\u0027t remove DeleteAllLogicalPorts from the transition map because the order of actions matters.",
+      "parentUuid": "76cbc25f_104387f7",
       "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
