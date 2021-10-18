@@ -287,6 +287,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "316fae9a_1ec513a1",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1690,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-10-18T07:42:42Z",
+      "side": 1,
+      "message": "we discussed this a while ago. I would suggest we avoid this in 2.8, so we merge this patch as is then we can possibly contemplate it for master.",
+      "parentUuid": "58a49bb5_32c7192a",
+      "range": {
+        "startLine": 1690,
+        "startChar": 28,
+        "endLine": 1690,
+        "endChar": 52
+      },
+      "revId": "6d52cb2b9242a0928a88c4f8bb21060a0a872159",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "4b202c31_3617f7b3",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 2
