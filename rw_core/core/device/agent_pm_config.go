@@ -22,7 +22,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -60,7 +60,7 @@ func (agent *Agent) updatePmConfigs(ctx context.Context, pmConfigs *voltha.PmCon
 			})
 		return err
 	}
-	_, pmErr := client.UpdatePmConfig(ctx, &ic.PmConfigsInfo{
+	_, pmErr := client.UpdatePmConfig(ctx, &ca.PmConfigsInfo{
 		DeviceId:  agent.deviceID,
 		PmConfigs: pmConfigs,
 	})

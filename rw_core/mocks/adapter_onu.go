@@ -26,13 +26,14 @@ import (
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/common"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/extension"
 	"github.com/phayes/freeport"
 
 	"github.com/gogo/protobuf/proto"
 	com "github.com/opencord/voltha-lib-go/v7/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	of "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -131,7 +132,7 @@ func (onuA *ONUAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 		d.ConnectStatus = common.ConnectStatus_REACHABLE
 		d.OperStatus = common.OperStatus_DISCOVERED
 
-		if _, err = c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{DeviceId: d.Id, OperStatus: d.OperStatus, ConnStatus: d.ConnectStatus}); err != nil {
+		if _, err = c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{DeviceId: d.Id, OperStatus: d.OperStatus, ConnStatus: d.ConnectStatus}); err != nil {
 			logger.Fatalf(ctx, "PortCreated-failed-%s", err)
 		}
 
@@ -187,7 +188,7 @@ func (onuA *ONUAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 		d.ConnectStatus = common.ConnectStatus_REACHABLE
 		d.OperStatus = common.OperStatus_ACTIVE
 
-		if _, err = c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{DeviceId: d.Id, OperStatus: d.OperStatus, ConnStatus: d.ConnectStatus}); err != nil {
+		if _, err = c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{DeviceId: d.Id, OperStatus: d.OperStatus, ConnStatus: d.ConnectStatus}); err != nil {
 			logger.Fatalf(ctx, "PortCreated-failed-%s", err)
 		}
 
@@ -223,7 +224,7 @@ func (onuA *ONUAdapter) DisableDevice(ctx context.Context, device *voltha.Device
 		}
 
 		if _, err := c.PortsStateUpdate(context.TODO(),
-			&ic.PortStateFilter{
+			&ca.PortStateFilter{
 				DeviceId:       cloned.Id,
 				PortTypeFilter: 0,
 				OperStatus:     common.OperStatus_UNKNOWN,
@@ -235,7 +236,7 @@ func (onuA *ONUAdapter) DisableDevice(ctx context.Context, device *voltha.Device
 		cloned.ConnectStatus = common.ConnectStatus_UNREACHABLE
 		cloned.OperStatus = common.OperStatus_UNKNOWN
 
-		if _, err := c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{
+		if _, err := c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{
 			DeviceId:   cloned.Id,
 			OperStatus: cloned.OperStatus,
 			ConnStatus: cloned.ConnectStatus,
@@ -266,7 +267,7 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 
 		// Update the all ports state on that device to enable
 		if _, err := c.PortsStateUpdate(context.TODO(),
-			&ic.PortStateFilter{
+			&ca.PortStateFilter{
 				DeviceId:       cloned.Id,
 				PortTypeFilter: 0,
 				OperStatus:     common.OperStatus_ACTIVE,
@@ -278,7 +279,7 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 		cloned.ConnectStatus = common.ConnectStatus_REACHABLE
 		cloned.OperStatus = common.OperStatus_ACTIVE
 
-		if _, err := c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{
+		if _, err := c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{
 			DeviceId:   cloned.Id,
 			OperStatus: cloned.OperStatus,
 			ConnStatus: cloned.ConnectStatus,
@@ -292,6 +293,6 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 	return &empty.Empty{}, nil
 }
 
-func (onuA *ONUAdapter) StartOmciTest(ctx context.Context, _ *ic.OMCITest) (*voltha.TestResponse, error) { // nolint
-	return &voltha.TestResponse{Result: voltha.TestResponse_SUCCESS}, nil
+func (onuA *ONUAdapter) StartOmciTest(ctx context.Context, _ *ca.OMCITest) (*omci.TestResponse, error) { // nolint
+	return &omci.TestResponse{Result: omci.TestResponse_SUCCESS}, nil
 }

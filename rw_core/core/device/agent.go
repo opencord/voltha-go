@@ -25,8 +25,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/opencord/voltha-protos/v5/go/adapter_services"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 
 	"github.com/cenkalti/backoff/v3"
 	"github.com/gogo/protobuf/proto"
@@ -44,8 +45,8 @@ import (
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/extension"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -452,7 +453,7 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 
 //addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
 //adapters
-func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
 	//if new flow list is empty then the called function returns quickly
@@ -472,7 +473,7 @@ func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFl
 
 //deleteFlowsAndGroups removes the "flowsToDel" and "groupsToDel" from the existing flows/groups and sends the update to the
 //adapters
-func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
 	if flwResponse, err = agent.deleteFlowsFromAdapter(ctx, flowsToDel, flowMetadata); err != nil {
@@ -490,7 +491,7 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 
 //updateFlowsAndGroups replaces the existing flows and groups with "updatedFlows" and "updatedGroups" respectively. It
 //also sends the updates to the adapters
-func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
 	if flwResponse, err = agent.updateFlowsToAdapter(ctx, updatedFlows, flowMetadata); err != nil {
@@ -643,7 +644,7 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 
 	previousAdminState := device.AdminState
 	if previousAdminState != common.AdminState_PREPROVISIONED {
-		var client adapter_services.AdapterServiceClient
+		var client adapter_service.AdapterServiceClient
 		client, err = agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 		if err != nil {
 			logger.Errorw(ctx, "grpc-client-nil",
@@ -712,7 +713,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 	// If the device was in pre-prov state (only parent device are in that state) then do not send the request to the
 	// adapter
 	if previousAdminState != common.AdminState_PREPROVISIONED {
-		var client adapter_services.AdapterServiceClient
+		var client adapter_service.AdapterServiceClient
 		client, err = agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 		if err != nil {
 			logger.Errorw(ctx, "grpc-client-nil",
@@ -760,7 +761,7 @@ func (agent *Agent) setParentID(ctx context.Context, device *voltha.Device, pare
 }
 
 // getSwitchCapability retrieves the switch capability of a parent device
-func (agent *Agent) getSwitchCapability(ctx context.Context) (*ic.SwitchCapability, error) {
+func (agent *Agent) getSwitchCapability(ctx context.Context) (*ca.SwitchCapability, error) {
 	logger.Debugw(ctx, "get-switch-capability", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
@@ -806,7 +807,7 @@ func (agent *Agent) packetOut(ctx context.Context, outPort uint32, packet *ofp.O
 	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 	go func() {
 		defer cancel()
-		_, err := client.SendPacketOut(subCtx, &ic.PacketOut{
+		_, err := client.SendPacketOut(subCtx, &ca.PacketOut{
 			DeviceId:     agent.deviceID,
 			EgressPortNo: outPort,
 			Packet:       packet,
@@ -944,7 +945,7 @@ func (agent *Agent) simulateAlarm(ctx context.Context, simulateReq *voltha.Simul
 	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		_, err := client.SimulateAlarm(subCtx, &ic.SimulateAlarmMessage{Device: device, Request: simulateReq})
+		_, err := client.SimulateAlarm(subCtx, &ca.SimulateAlarmMessage{Device: device, Request: simulateReq})
 		if err == nil {
 			agent.onSuccess(subCtx, nil, nil, false)
 		} else {
@@ -1119,7 +1120,7 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 	return nil
 }
 
-func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *omci.OmciTestRequest) (*omci.TestResponse, error) {
 	var err error
 	var desc string
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
@@ -1155,7 +1156,7 @@ func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *voltha.O
 		return nil, err
 	}
 
-	res, err := client.StartOmciTest(ctx, &ic.OMCITest{
+	res, err := client.StartOmciTest(ctx, &ca.OMCITest{
 		Device:  cloned,
 		Request: omcitestrequest,
 	})
@@ -1165,7 +1166,7 @@ func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *voltha.O
 	return res, err
 }
 
-func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cdevice *voltha.Device, valueparam *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
+func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cdevice *voltha.Device, valueparam *extension.ValueSpecifier) (*extension.ReturnValues, error) {
 	logger.Debugw(ctx, "get-ext-value", log.Fields{"device-id": agent.deviceID, "onu-id": valueparam.Id, "value-type": valueparam.Value})
 	var err error
 	var desc string
@@ -1193,7 +1194,7 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 	// Release lock before sending to adapter
 	agent.requestQueue.RequestComplete()
 
-	retVal, err := client.GetExtValue(ctx, &ic.GetExtValueMessage{
+	retVal, err := client.GetExtValue(ctx, &ca.GetExtValueMessage{
 		ParentDevice: pdevice,
 		ChildDevice:  cdevice,
 		ValueType:    valueparam.Value,
@@ -1204,7 +1205,7 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 	return retVal, err
 }
 
-func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, value *voltha.ValueSet) (*empty.Empty, error) {
+func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, value *extension.ValueSet) (*empty.Empty, error) {
 	logger.Debugw(ctx, "set-ext-value", log.Fields{"device-id": value.Id})
 
 	var err error
@@ -1233,7 +1234,7 @@ func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, valu
 	// Release lock before sending request to adapter
 	agent.requestQueue.RequestComplete()
 
-	retVal, err := client.SetExtValue(ctx, &ic.SetExtValueMessage{
+	retVal, err := client.SetExtValue(ctx, &ca.SetExtValueMessage{
 		Device: device,
 		Value:  value,
 	})

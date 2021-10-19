@@ -28,13 +28,15 @@ import (
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
-	"github.com/opencord/voltha-protos/v5/go/adapter_services"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
-	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
+	"github.com/opencord/voltha-protos/v5/go/health"
 	"google.golang.org/grpc"
 
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/extension"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -129,7 +131,7 @@ func (ta *Adapter) GetEndPoint() string {
 	return ta.serviceEndpoint
 }
 
-func (ta *Adapter) GetCoreClient() (core.CoreServiceClient, error) {
+func (ta *Adapter) GetCoreClient() (core_service.CoreServiceClient, error) {
 	// Wait until the Core is up and running
 	for {
 		if ta.coreClient != nil {
@@ -139,7 +141,7 @@ func (ta *Adapter) GetCoreClient() (core.CoreServiceClient, error) {
 				time.Sleep(1 * time.Second)
 				continue
 			}
-			c, ok := client.(core.CoreServiceClient)
+			c, ok := client.(core_service.CoreServiceClient)
 			if ok {
 				logger.Debug(context.Background(), "got-valid-client")
 				return c, nil
@@ -152,10 +154,10 @@ func (ta *Adapter) GetCoreClient() (core.CoreServiceClient, error) {
 
 // Helper methods
 // startGRPCService creates the grpc service handlers, registers it to the grpc server and starts the server
-func (ta *Adapter) startGRPCService(ctx context.Context, server *vgrpc.GrpcServer, handler adapter_services.AdapterServiceServer, serviceName string) {
+func (ta *Adapter) startGRPCService(ctx context.Context, server *vgrpc.GrpcServer, handler adapter_service.AdapterServiceServer, serviceName string) {
 	logger.Infow(ctx, "service-created", log.Fields{"service": serviceName})
 
-	server.AddService(func(gs *grpc.Server) { adapter_services.RegisterAdapterServiceServer(gs, handler) })
+	server.AddService(func(gs *grpc.Server) { adapter_service.RegisterAdapterServiceServer(gs, handler) })
 	logger.Infow(ctx, "service-added", log.Fields{"service": serviceName})
 
 	ta.Probe.UpdateStatus(ctx, serviceName, probe.ServiceStatusRunning)
@@ -168,16 +170,16 @@ func (ta *Adapter) startGRPCService(ctx context.Context, server *vgrpc.GrpcServe
 }
 
 func setAndTestCoreServiceHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
-	svc := core.NewCoreServiceClient(conn)
-	if h, err := svc.GetHealthStatus(ctx, &empty.Empty{}); err != nil || h.State != voltha.HealthStatus_HEALTHY {
+	svc := core_service.NewCoreServiceClient(conn)
+	if h, err := svc.GetHealthStatus(ctx, &empty.Empty{}); err != nil || h.State != health.HealthStatus_HEALTHY {
 		return nil
 	}
 	return svc
 }
 
 // gRPC service
-func (ta *Adapter) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*voltha.HealthStatus, error) {
-	return &voltha.HealthStatus{State: voltha.HealthStatus_HEALTHY}, nil
+func (ta *Adapter) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*health.HealthStatus, error) {
+	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
 }
 
 // Device
@@ -225,7 +227,7 @@ func (ta *Adapter) ChildDeviceLost(ctx context.Context, device *voltha.Device) (
 	return &empty.Empty{}, nil
 }
 
-func (ta *Adapter) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) {
+func (ta *Adapter) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ca.SwitchCapability, error) {
 	return nil, nil
 }
 
@@ -240,11 +242,11 @@ func (ta *Adapter) DisablePort(ctx context.Context, port *voltha.Port) (*empty.E
 }
 
 // Flows
-func (ta *Adapter) UpdateFlowsBulk(ctx context.Context, flows *ic.BulkFlows) (*empty.Empty, error) {
+func (ta *Adapter) UpdateFlowsBulk(ctx context.Context, flows *ca.BulkFlows) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
-func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ic.IncrementalFlows) (*empty.Empty, error) {
+func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ca.IncrementalFlows) (*empty.Empty, error) {
 	ta.flowLock.Lock()
 	defer ta.flowLock.Unlock()
 
@@ -278,12 +280,12 @@ func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ic.I
 }
 
 //Packets
-func (ta *Adapter) SendPacketOut(ctx context.Context, packet *ic.PacketOut) (*empty.Empty, error) {
+func (ta *Adapter) SendPacketOut(ctx context.Context, packet *ca.PacketOut) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
 // PM
-func (ta *Adapter) UpdatePmConfig(ctx context.Context, configs *ic.PmConfigsInfo) (*empty.Empty, error) {
+func (ta *Adapter) UpdatePmConfig(ctx context.Context, configs *ca.PmConfigsInfo) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
@@ -313,28 +315,28 @@ func (ta *Adapter) CommitOnuImage(ctx context.Context, request *voltha.DeviceIma
 }
 
 // Deprecated image APIs
-func (ta *Adapter) DownloadImage(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+func (ta *Adapter) DownloadImage(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
 	return &voltha.ImageDownload{}, nil
 }
 
-func (ta *Adapter) GetImageDownloadStatus(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+func (ta *Adapter) GetImageDownloadStatus(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
 	return &voltha.ImageDownload{}, nil
 }
 
-func (ta *Adapter) CancelImageDownload(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+func (ta *Adapter) CancelImageDownload(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
 	return &voltha.ImageDownload{}, nil
 }
 
-func (ta *Adapter) ActivateImageUpdate(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+func (ta *Adapter) ActivateImageUpdate(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
 	return &voltha.ImageDownload{}, nil
 }
 
-func (ta *Adapter) RevertImageUpdate(ctx context.Context, in *ic.ImageDownloadMessage) (*voltha.ImageDownload, error) {
+func (ta *Adapter) RevertImageUpdate(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
 	return &voltha.ImageDownload{}, nil
 }
 
 // OMCI test
-func (ta *Adapter) StartOmciTest(ctx context.Context, test *ic.OMCITest) (*voltha.TestResponse, error) {
+func (ta *Adapter) StartOmciTest(ctx context.Context, test *ca.OMCITest) (*omci.TestResponse, error) {
 	return nil, nil
 }
 
@@ -347,15 +349,15 @@ func (ta *Adapter) UnSuppressEvent(ctx context.Context, filter *voltha.EventFilt
 	return &empty.Empty{}, nil
 }
 
-func (ta *Adapter) SimulateAlarm(context.Context, *ic.SimulateAlarmMessage) (*common.OperationResp, error) {
+func (ta *Adapter) SimulateAlarm(context.Context, *ca.SimulateAlarmMessage) (*common.OperationResp, error) {
 	return &common.OperationResp{}, nil
 }
 
-func (ta *Adapter) GetExtValue(context.Context, *ic.GetExtValueMessage) (*common.ReturnValues, error) {
-	return &common.ReturnValues{}, nil
+func (ta *Adapter) GetExtValue(context.Context, *ca.GetExtValueMessage) (*extension.ReturnValues, error) {
+	return &extension.ReturnValues{}, nil
 }
 
-func (ta *Adapter) SetExtValue(context.Context, *ic.SetExtValueMessage) (*empty.Empty, error) {
+func (ta *Adapter) SetExtValue(context.Context, *ca.SetExtValueMessage) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 

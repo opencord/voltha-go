@@ -31,7 +31,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/kafka"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
-	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/extension"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
@@ -189,10 +189,10 @@ func (core *Core) Stop() {
 }
 
 // startGrpcSbiService creates the grpc core service handlers, registers it to the grpc server and starts the server
-func startGrpcSbiService(ctx context.Context, server *grpcserver.GrpcServer, serviceName string, handler core.CoreServiceServer) {
+func startGrpcSbiService(ctx context.Context, server *grpcserver.GrpcServer, serviceName string, handler core_service.CoreServiceServer) {
 	logger.Infow(ctx, "starting-grpc-sbi-service", log.Fields{"service": serviceName})
 
-	server.AddService(func(server *grpc.Server) { core.RegisterCoreServiceServer(server, handler) })
+	server.AddService(func(server *grpc.Server) { core_service.RegisterCoreServiceServer(server, handler) })
 	logger.Infow(ctx, "grpc-sbi-service-added", log.Fields{"service": serviceName})
 
 	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)

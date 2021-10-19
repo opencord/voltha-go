@@ -517,13 +517,13 @@ func (agent *LogicalAgent) flowModifyStrict(flowUpdate *ofp.FlowTableUpdate) err
 }
 
 // TODO: Remove this helper, just pass the map through to functions directly
-func toMetadata(meters map[uint32]*ofp.OfpMeterConfig) *voltha.FlowMetadata {
+func toMetadata(meters map[uint32]*ofp.OfpMeterConfig) *ofp.FlowMetadata {
 	ctr, ret := 0, make([]*ofp.OfpMeterConfig, len(meters))
 	for _, meter := range meters {
 		ret[ctr] = meter
 		ctr++
 	}
-	return &voltha.FlowMetadata{Meters: ret}
+	return &ofp.FlowMetadata{Meters: ret}
 }
 
 func (agent *LogicalAgent) deleteFlowsHavingMeter(ctx context.Context, meterID uint32) error {
