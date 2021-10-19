@@ -33,7 +33,7 @@ import (
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v7/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -106,7 +106,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 	var ld *voltha.LogicalDevice
 	if !logicalDeviceExist {
 		//Build the logical device based on information retrieved from the device adapter
-		var switchCap *ic.SwitchCapability
+		var switchCap *ca.SwitchCapability
 		var err error
 		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceID); err != nil {
 			return err
@@ -298,7 +298,7 @@ func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, 
 	return responses
 }
 
-func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *voltha.FlowMetadata) []coreutils.Response {
+func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, deviceRules *fu.DeviceRules, flowMetadata *ofp.FlowMetadata) []coreutils.Response {
 	logger.Debugw(ctx, "send-update-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID})
 
 	responses := make([]coreutils.Response, 0)
@@ -341,7 +341,7 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 			continue
 		}
 		logger.Debugw(ctx, "uni-port", log.Fields{"flows": flows, "uni-port": uniPort})
-		go func(uniPort uint32, metadata *voltha.FlowMetadata) {
+		go func(uniPort uint32, metadata *ofp.FlowMetadata) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.internalTimeout)
 			subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
 

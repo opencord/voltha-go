@@ -27,8 +27,9 @@ import (
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
-	"github.com/opencord/voltha-protos/v5/go/adapter_services"
-	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
+	"github.com/opencord/voltha-protos/v5/go/olt_inter_adapter_service"
+	"github.com/opencord/voltha-protos/v5/go/onu_inter_adapter_service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 )
@@ -162,13 +163,13 @@ func (c *Client) GetClient() (interface{}, error) {
 
 // GetCoreServiceClient is a helper function that returns a concrete service instead of the GetClient() API
 // which returns an interface
-func (c *Client) GetCoreServiceClient() (core.CoreServiceClient, error) {
+func (c *Client) GetCoreServiceClient() (core_service.CoreServiceClient, error) {
 	c.connectionLock.RLock()
 	defer c.connectionLock.RUnlock()
 	if c.service == nil {
 		return nil, fmt.Errorf("no core connection to %s", c.apiEndPoint)
 	}
-	client, ok := c.service.(core.CoreServiceClient)
+	client, ok := c.service.(core_service.CoreServiceClient)
 	if ok {
 		return client, nil
 	}
@@ -177,13 +178,13 @@ func (c *Client) GetCoreServiceClient() (core.CoreServiceClient, error) {
 
 // GetOnuAdapterServiceClient is a helper function that returns a concrete service instead of the GetClient() API
 // which returns an interface
-func (c *Client) GetOnuInterAdapterServiceClient() (adapter_services.OnuInterAdapterServiceClient, error) {
+func (c *Client) GetOnuInterAdapterServiceClient() (onu_inter_adapter_service.OnuInterAdapterServiceClient, error) {
 	c.connectionLock.RLock()
 	defer c.connectionLock.RUnlock()
 	if c.service == nil {
 		return nil, fmt.Errorf("no child adapter connection to %s", c.apiEndPoint)
 	}
-	client, ok := c.service.(adapter_services.OnuInterAdapterServiceClient)
+	client, ok := c.service.(onu_inter_adapter_service.OnuInterAdapterServiceClient)
 	if ok {
 		return client, nil
 	}
@@ -192,13 +193,13 @@ func (c *Client) GetOnuInterAdapterServiceClient() (adapter_services.OnuInterAda
 
 // GetOltAdapterServiceClient is a helper function that returns a concrete service instead of the GetClient() API
 // which returns an interface
-func (c *Client) GetOltInterAdapterServiceClient() (adapter_services.OltInterAdapterServiceClient, error) {
+func (c *Client) GetOltInterAdapterServiceClient() (olt_inter_adapter_service.OltInterAdapterServiceClient, error) {
 	c.connectionLock.RLock()
 	defer c.connectionLock.RUnlock()
 	if c.service == nil {
 		return nil, fmt.Errorf("no parent adapter connection to %s", c.apiEndPoint)
 	}
-	client, ok := c.service.(adapter_services.OltInterAdapterServiceClient)
+	client, ok := c.service.(olt_inter_adapter_service.OltInterAdapterServiceClient)
 	if ok {
 		return client, nil
 	}

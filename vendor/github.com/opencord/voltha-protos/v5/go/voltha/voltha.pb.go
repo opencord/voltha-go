@@ -9,7 +9,8 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	common "github.com/opencord/voltha-protos/v5/go/common"
-	config "github.com/opencord/voltha-protos/v5/go/ext/config"
+	extension "github.com/opencord/voltha-protos/v5/go/extension"
+	health "github.com/opencord/voltha-protos/v5/go/health"
 	omci "github.com/opencord/voltha-protos/v5/go/omci"
 	openflow_13 "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -30,23 +31,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// ChildNode from public import voltha_protos/meta.proto
-type ChildNode = common.ChildNode
-
-// Access from public import voltha_protos/meta.proto
-type Access = common.Access
-
-var Access_name = common.Access_name
-var Access_value = common.Access_value
-
-const Access_CONFIG = Access(common.Access_CONFIG)
-const Access_READ_ONLY = Access(common.Access_READ_ONLY)
-const Access_REAL_TIME = Access(common.Access_REAL_TIME)
-
-var E_ChildNode = common.E_ChildNode
-
-var E_Access = common.E_Access
-
 // ID from public import voltha_protos/common.proto
 type ID = common.ID
 
@@ -64,15 +48,6 @@ type ConnectStatus = common.ConnectStatus
 
 // OperationResp from public import voltha_protos/common.proto
 type OperationResp = common.OperationResp
-
-// ValueType from public import voltha_protos/common.proto
-type ValueType = common.ValueType
-
-// ValueSpecifier from public import voltha_protos/common.proto
-type ValueSpecifier = common.ValueSpecifier
-
-// ReturnValues from public import voltha_protos/common.proto
-type ReturnValues = common.ReturnValues
 
 // TestModeKeys from public import voltha_protos/common.proto
 type TestModeKeys = common.TestModeKeys
@@ -130,1535 +105,21 @@ const OperationResp_OPERATION_FAILURE = OperationResp_OperationReturnCode(common
 const OperationResp_OPERATION_UNSUPPORTED = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_UNSUPPORTED)
 const OperationResp_OPERATION_IN_PROGRESS = OperationResp_OperationReturnCode(common.OperationResp_OPERATION_IN_PROGRESS)
 
-// ValueType_Type from public import voltha_protos/common.proto
-type ValueType_Type = common.ValueType_Type
-
-var ValueType_Type_name = common.ValueType_Type_name
-var ValueType_Type_value = common.ValueType_Type_value
-
-const ValueType_EMPTY = ValueType_Type(common.ValueType_EMPTY)
-const ValueType_DISTANCE = ValueType_Type(common.ValueType_DISTANCE)
-
-// OfpHeader from public import voltha_protos/openflow_13.proto
-type OfpHeader = openflow_13.OfpHeader
-
-// OfpHelloElemHeader from public import voltha_protos/openflow_13.proto
-type OfpHelloElemHeader = openflow_13.OfpHelloElemHeader
-type OfpHelloElemHeader_Versionbitmap = openflow_13.OfpHelloElemHeader_Versionbitmap
-
-// OfpHelloElemVersionbitmap from public import voltha_protos/openflow_13.proto
-type OfpHelloElemVersionbitmap = openflow_13.OfpHelloElemVersionbitmap
-
-// OfpHello from public import voltha_protos/openflow_13.proto
-type OfpHello = openflow_13.OfpHello
-
-// OfpSwitchConfig from public import voltha_protos/openflow_13.proto
-type OfpSwitchConfig = openflow_13.OfpSwitchConfig
-
-// OfpTableMod from public import voltha_protos/openflow_13.proto
-type OfpTableMod = openflow_13.OfpTableMod
-
-// OfpPort from public import voltha_protos/openflow_13.proto
-type OfpPort = openflow_13.OfpPort
-
-// OfpSwitchFeatures from public import voltha_protos/openflow_13.proto
-type OfpSwitchFeatures = openflow_13.OfpSwitchFeatures
-
-// OfpPortStatus from public import voltha_protos/openflow_13.proto
-type OfpPortStatus = openflow_13.OfpPortStatus
-
-// OfpPortMod from public import voltha_protos/openflow_13.proto
-type OfpPortMod = openflow_13.OfpPortMod
-
-// OfpMatch from public import voltha_protos/openflow_13.proto
-type OfpMatch = openflow_13.OfpMatch
-
-// OfpOxmField from public import voltha_protos/openflow_13.proto
-type OfpOxmField = openflow_13.OfpOxmField
-type OfpOxmField_OfbField = openflow_13.OfpOxmField_OfbField
-type OfpOxmField_ExperimenterField = openflow_13.OfpOxmField_ExperimenterField
-
-// OfpOxmOfbField from public import voltha_protos/openflow_13.proto
-type OfpOxmOfbField = openflow_13.OfpOxmOfbField
-type OfpOxmOfbField_Port = openflow_13.OfpOxmOfbField_Port
-type OfpOxmOfbField_PhysicalPort = openflow_13.OfpOxmOfbField_PhysicalPort
-type OfpOxmOfbField_TableMetadata = openflow_13.OfpOxmOfbField_TableMetadata
-type OfpOxmOfbField_EthDst = openflow_13.OfpOxmOfbField_EthDst
-type OfpOxmOfbField_EthSrc = openflow_13.OfpOxmOfbField_EthSrc
-type OfpOxmOfbField_EthType = openflow_13.OfpOxmOfbField_EthType
-type OfpOxmOfbField_VlanVid = openflow_13.OfpOxmOfbField_VlanVid
-type OfpOxmOfbField_VlanPcp = openflow_13.OfpOxmOfbField_VlanPcp
-type OfpOxmOfbField_IpDscp = openflow_13.OfpOxmOfbField_IpDscp
-type OfpOxmOfbField_IpEcn = openflow_13.OfpOxmOfbField_IpEcn
-type OfpOxmOfbField_IpProto = openflow_13.OfpOxmOfbField_IpProto
-type OfpOxmOfbField_Ipv4Src = openflow_13.OfpOxmOfbField_Ipv4Src
-type OfpOxmOfbField_Ipv4Dst = openflow_13.OfpOxmOfbField_Ipv4Dst
-type OfpOxmOfbField_TcpSrc = openflow_13.OfpOxmOfbField_TcpSrc
-type OfpOxmOfbField_TcpDst = openflow_13.OfpOxmOfbField_TcpDst
-type OfpOxmOfbField_UdpSrc = openflow_13.OfpOxmOfbField_UdpSrc
-type OfpOxmOfbField_UdpDst = openflow_13.OfpOxmOfbField_UdpDst
-type OfpOxmOfbField_SctpSrc = openflow_13.OfpOxmOfbField_SctpSrc
-type OfpOxmOfbField_SctpDst = openflow_13.OfpOxmOfbField_SctpDst
-type OfpOxmOfbField_Icmpv4Type = openflow_13.OfpOxmOfbField_Icmpv4Type
-type OfpOxmOfbField_Icmpv4Code = openflow_13.OfpOxmOfbField_Icmpv4Code
-type OfpOxmOfbField_ArpOp = openflow_13.OfpOxmOfbField_ArpOp
-type OfpOxmOfbField_ArpSpa = openflow_13.OfpOxmOfbField_ArpSpa
-type OfpOxmOfbField_ArpTpa = openflow_13.OfpOxmOfbField_ArpTpa
-type OfpOxmOfbField_ArpSha = openflow_13.OfpOxmOfbField_ArpSha
-type OfpOxmOfbField_ArpTha = openflow_13.OfpOxmOfbField_ArpTha
-type OfpOxmOfbField_Ipv6Src = openflow_13.OfpOxmOfbField_Ipv6Src
-type OfpOxmOfbField_Ipv6Dst = openflow_13.OfpOxmOfbField_Ipv6Dst
-type OfpOxmOfbField_Ipv6Flabel = openflow_13.OfpOxmOfbField_Ipv6Flabel
-type OfpOxmOfbField_Icmpv6Type = openflow_13.OfpOxmOfbField_Icmpv6Type
-type OfpOxmOfbField_Icmpv6Code = openflow_13.OfpOxmOfbField_Icmpv6Code
-type OfpOxmOfbField_Ipv6NdTarget = openflow_13.OfpOxmOfbField_Ipv6NdTarget
-type OfpOxmOfbField_Ipv6NdSsl = openflow_13.OfpOxmOfbField_Ipv6NdSsl
-type OfpOxmOfbField_Ipv6NdTll = openflow_13.OfpOxmOfbField_Ipv6NdTll
-type OfpOxmOfbField_MplsLabel = openflow_13.OfpOxmOfbField_MplsLabel
-type OfpOxmOfbField_MplsTc = openflow_13.OfpOxmOfbField_MplsTc
-type OfpOxmOfbField_MplsBos = openflow_13.OfpOxmOfbField_MplsBos
-type OfpOxmOfbField_PbbIsid = openflow_13.OfpOxmOfbField_PbbIsid
-type OfpOxmOfbField_TunnelId = openflow_13.OfpOxmOfbField_TunnelId
-type OfpOxmOfbField_Ipv6Exthdr = openflow_13.OfpOxmOfbField_Ipv6Exthdr
-type OfpOxmOfbField_TableMetadataMask = openflow_13.OfpOxmOfbField_TableMetadataMask
-type OfpOxmOfbField_EthDstMask = openflow_13.OfpOxmOfbField_EthDstMask
-type OfpOxmOfbField_EthSrcMask = openflow_13.OfpOxmOfbField_EthSrcMask
-type OfpOxmOfbField_VlanVidMask = openflow_13.OfpOxmOfbField_VlanVidMask
-type OfpOxmOfbField_Ipv4SrcMask = openflow_13.OfpOxmOfbField_Ipv4SrcMask
-type OfpOxmOfbField_Ipv4DstMask = openflow_13.OfpOxmOfbField_Ipv4DstMask
-type OfpOxmOfbField_ArpSpaMask = openflow_13.OfpOxmOfbField_ArpSpaMask
-type OfpOxmOfbField_ArpTpaMask = openflow_13.OfpOxmOfbField_ArpTpaMask
-type OfpOxmOfbField_Ipv6SrcMask = openflow_13.OfpOxmOfbField_Ipv6SrcMask
-type OfpOxmOfbField_Ipv6DstMask = openflow_13.OfpOxmOfbField_Ipv6DstMask
-type OfpOxmOfbField_Ipv6FlabelMask = openflow_13.OfpOxmOfbField_Ipv6FlabelMask
-type OfpOxmOfbField_PbbIsidMask = openflow_13.OfpOxmOfbField_PbbIsidMask
-type OfpOxmOfbField_TunnelIdMask = openflow_13.OfpOxmOfbField_TunnelIdMask
-type OfpOxmOfbField_Ipv6ExthdrMask = openflow_13.OfpOxmOfbField_Ipv6ExthdrMask
-
-// OfpOxmExperimenterField from public import voltha_protos/openflow_13.proto
-type OfpOxmExperimenterField = openflow_13.OfpOxmExperimenterField
-
-// OfpAction from public import voltha_protos/openflow_13.proto
-type OfpAction = openflow_13.OfpAction
-type OfpAction_Output = openflow_13.OfpAction_Output
-type OfpAction_MplsTtl = openflow_13.OfpAction_MplsTtl
-type OfpAction_Push = openflow_13.OfpAction_Push
-type OfpAction_PopMpls = openflow_13.OfpAction_PopMpls
-type OfpAction_Group = openflow_13.OfpAction_Group
-type OfpAction_NwTtl = openflow_13.OfpAction_NwTtl
-type OfpAction_SetField = openflow_13.OfpAction_SetField
-type OfpAction_Experimenter = openflow_13.OfpAction_Experimenter
-
-// OfpActionOutput from public import voltha_protos/openflow_13.proto
-type OfpActionOutput = openflow_13.OfpActionOutput
-
-// OfpActionMplsTtl from public import voltha_protos/openflow_13.proto
-type OfpActionMplsTtl = openflow_13.OfpActionMplsTtl
-
-// OfpActionPush from public import voltha_protos/openflow_13.proto
-type OfpActionPush = openflow_13.OfpActionPush
-
-// OfpActionPopMpls from public import voltha_protos/openflow_13.proto
-type OfpActionPopMpls = openflow_13.OfpActionPopMpls
-
-// OfpActionGroup from public import voltha_protos/openflow_13.proto
-type OfpActionGroup = openflow_13.OfpActionGroup
-
-// OfpActionNwTtl from public import voltha_protos/openflow_13.proto
-type OfpActionNwTtl = openflow_13.OfpActionNwTtl
-
-// OfpActionSetField from public import voltha_protos/openflow_13.proto
-type OfpActionSetField = openflow_13.OfpActionSetField
-
-// OfpActionExperimenter from public import voltha_protos/openflow_13.proto
-type OfpActionExperimenter = openflow_13.OfpActionExperimenter
-
-// OfpInstruction from public import voltha_protos/openflow_13.proto
-type OfpInstruction = openflow_13.OfpInstruction
-type OfpInstruction_GotoTable = openflow_13.OfpInstruction_GotoTable
-type OfpInstruction_WriteMetadata = openflow_13.OfpInstruction_WriteMetadata
-type OfpInstruction_Actions = openflow_13.OfpInstruction_Actions
-type OfpInstruction_Meter = openflow_13.OfpInstruction_Meter
-type OfpInstruction_Experimenter = openflow_13.OfpInstruction_Experimenter
-
-// OfpInstructionGotoTable from public import voltha_protos/openflow_13.proto
-type OfpInstructionGotoTable = openflow_13.OfpInstructionGotoTable
-
-// OfpInstructionWriteMetadata from public import voltha_protos/openflow_13.proto
-type OfpInstructionWriteMetadata = openflow_13.OfpInstructionWriteMetadata
-
-// OfpInstructionActions from public import voltha_protos/openflow_13.proto
-type OfpInstructionActions = openflow_13.OfpInstructionActions
-
-// OfpInstructionMeter from public import voltha_protos/openflow_13.proto
-type OfpInstructionMeter = openflow_13.OfpInstructionMeter
-
-// OfpInstructionExperimenter from public import voltha_protos/openflow_13.proto
-type OfpInstructionExperimenter = openflow_13.OfpInstructionExperimenter
-
-// OfpFlowMod from public import voltha_protos/openflow_13.proto
-type OfpFlowMod = openflow_13.OfpFlowMod
-
-// OfpBucket from public import voltha_protos/openflow_13.proto
-type OfpBucket = openflow_13.OfpBucket
-
-// OfpGroupMod from public import voltha_protos/openflow_13.proto
-type OfpGroupMod = openflow_13.OfpGroupMod
-
-// OfpPacketOut from public import voltha_protos/openflow_13.proto
-type OfpPacketOut = openflow_13.OfpPacketOut
-
-// OfpPacketIn from public import voltha_protos/openflow_13.proto
-type OfpPacketIn = openflow_13.OfpPacketIn
-
-// OfpFlowRemoved from public import voltha_protos/openflow_13.proto
-type OfpFlowRemoved = openflow_13.OfpFlowRemoved
-
-// OfpMeterBandHeader from public import voltha_protos/openflow_13.proto
-type OfpMeterBandHeader = openflow_13.OfpMeterBandHeader
-type OfpMeterBandHeader_Drop = openflow_13.OfpMeterBandHeader_Drop
-type OfpMeterBandHeader_DscpRemark = openflow_13.OfpMeterBandHeader_DscpRemark
-type OfpMeterBandHeader_Experimenter = openflow_13.OfpMeterBandHeader_Experimenter
-
-// OfpMeterBandDrop from public import voltha_protos/openflow_13.proto
-type OfpMeterBandDrop = openflow_13.OfpMeterBandDrop
-
-// OfpMeterBandDscpRemark from public import voltha_protos/openflow_13.proto
-type OfpMeterBandDscpRemark = openflow_13.OfpMeterBandDscpRemark
-
-// OfpMeterBandExperimenter from public import voltha_protos/openflow_13.proto
-type OfpMeterBandExperimenter = openflow_13.OfpMeterBandExperimenter
-
-// OfpMeterMod from public import voltha_protos/openflow_13.proto
-type OfpMeterMod = openflow_13.OfpMeterMod
-
-// OfpErrorMsg from public import voltha_protos/openflow_13.proto
-type OfpErrorMsg = openflow_13.OfpErrorMsg
-
-// OfpErrorExperimenterMsg from public import voltha_protos/openflow_13.proto
-type OfpErrorExperimenterMsg = openflow_13.OfpErrorExperimenterMsg
-
-// OfpMultipartRequest from public import voltha_protos/openflow_13.proto
-type OfpMultipartRequest = openflow_13.OfpMultipartRequest
-
-// OfpMultipartReply from public import voltha_protos/openflow_13.proto
-type OfpMultipartReply = openflow_13.OfpMultipartReply
-
-// OfpDesc from public import voltha_protos/openflow_13.proto
-type OfpDesc = openflow_13.OfpDesc
-
-// OfpFlowStatsRequest from public import voltha_protos/openflow_13.proto
-type OfpFlowStatsRequest = openflow_13.OfpFlowStatsRequest
-
-// OfpFlowStats from public import voltha_protos/openflow_13.proto
-type OfpFlowStats = openflow_13.OfpFlowStats
-
-// OfpAggregateStatsRequest from public import voltha_protos/openflow_13.proto
-type OfpAggregateStatsRequest = openflow_13.OfpAggregateStatsRequest
-
-// OfpAggregateStatsReply from public import voltha_protos/openflow_13.proto
-type OfpAggregateStatsReply = openflow_13.OfpAggregateStatsReply
-
-// OfpTableFeatureProperty from public import voltha_protos/openflow_13.proto
-type OfpTableFeatureProperty = openflow_13.OfpTableFeatureProperty
-type OfpTableFeatureProperty_Instructions = openflow_13.OfpTableFeatureProperty_Instructions
-type OfpTableFeatureProperty_NextTables = openflow_13.OfpTableFeatureProperty_NextTables
-type OfpTableFeatureProperty_Actions = openflow_13.OfpTableFeatureProperty_Actions
-type OfpTableFeatureProperty_Oxm = openflow_13.OfpTableFeatureProperty_Oxm
-type OfpTableFeatureProperty_Experimenter = openflow_13.OfpTableFeatureProperty_Experimenter
-
-// OfpTableFeaturePropInstructions from public import voltha_protos/openflow_13.proto
-type OfpTableFeaturePropInstructions = openflow_13.OfpTableFeaturePropInstructions
-
-// OfpTableFeaturePropNextTables from public import voltha_protos/openflow_13.proto
-type OfpTableFeaturePropNextTables = openflow_13.OfpTableFeaturePropNextTables
-
-// OfpTableFeaturePropActions from public import voltha_protos/openflow_13.proto
-type OfpTableFeaturePropActions = openflow_13.OfpTableFeaturePropActions
-
-// OfpTableFeaturePropOxm from public import voltha_protos/openflow_13.proto
-type OfpTableFeaturePropOxm = openflow_13.OfpTableFeaturePropOxm
-
-// OfpTableFeaturePropExperimenter from public import voltha_protos/openflow_13.proto
-type OfpTableFeaturePropExperimenter = openflow_13.OfpTableFeaturePropExperimenter
-
-// OfpTableFeatures from public import voltha_protos/openflow_13.proto
-type OfpTableFeatures = openflow_13.OfpTableFeatures
-
-// OfpTableStats from public import voltha_protos/openflow_13.proto
-type OfpTableStats = openflow_13.OfpTableStats
-
-// OfpPortStatsRequest from public import voltha_protos/openflow_13.proto
-type OfpPortStatsRequest = openflow_13.OfpPortStatsRequest
-
-// OfpPortStats from public import voltha_protos/openflow_13.proto
-type OfpPortStats = openflow_13.OfpPortStats
-
-// OfpGroupStatsRequest from public import voltha_protos/openflow_13.proto
-type OfpGroupStatsRequest = openflow_13.OfpGroupStatsRequest
-
-// OfpBucketCounter from public import voltha_protos/openflow_13.proto
-type OfpBucketCounter = openflow_13.OfpBucketCounter
-
-// OfpGroupStats from public import voltha_protos/openflow_13.proto
-type OfpGroupStats = openflow_13.OfpGroupStats
-
-// OfpGroupDesc from public import voltha_protos/openflow_13.proto
-type OfpGroupDesc = openflow_13.OfpGroupDesc
-
-// OfpGroupEntry from public import voltha_protos/openflow_13.proto
-type OfpGroupEntry = openflow_13.OfpGroupEntry
-
-// OfpGroupFeatures from public import voltha_protos/openflow_13.proto
-type OfpGroupFeatures = openflow_13.OfpGroupFeatures
-
-// OfpMeterMultipartRequest from public import voltha_protos/openflow_13.proto
-type OfpMeterMultipartRequest = openflow_13.OfpMeterMultipartRequest
-
-// OfpMeterBandStats from public import voltha_protos/openflow_13.proto
-type OfpMeterBandStats = openflow_13.OfpMeterBandStats
-
-// OfpMeterStats from public import voltha_protos/openflow_13.proto
-type OfpMeterStats = openflow_13.OfpMeterStats
-
-// OfpMeterConfig from public import voltha_protos/openflow_13.proto
-type OfpMeterConfig = openflow_13.OfpMeterConfig
-
-// OfpMeterFeatures from public import voltha_protos/openflow_13.proto
-type OfpMeterFeatures = openflow_13.OfpMeterFeatures
-
-// OfpMeterEntry from public import voltha_protos/openflow_13.proto
-type OfpMeterEntry = openflow_13.OfpMeterEntry
-
-// OfpExperimenterMultipartHeader from public import voltha_protos/openflow_13.proto
-type OfpExperimenterMultipartHeader = openflow_13.OfpExperimenterMultipartHeader
-
-// OfpExperimenterHeader from public import voltha_protos/openflow_13.proto
-type OfpExperimenterHeader = openflow_13.OfpExperimenterHeader
-
-// OfpQueuePropHeader from public import voltha_protos/openflow_13.proto
-type OfpQueuePropHeader = openflow_13.OfpQueuePropHeader
-
-// OfpQueuePropMinRate from public import voltha_protos/openflow_13.proto
-type OfpQueuePropMinRate = openflow_13.OfpQueuePropMinRate
-
-// OfpQueuePropMaxRate from public import voltha_protos/openflow_13.proto
-type OfpQueuePropMaxRate = openflow_13.OfpQueuePropMaxRate
-
-// OfpQueuePropExperimenter from public import voltha_protos/openflow_13.proto
-type OfpQueuePropExperimenter = openflow_13.OfpQueuePropExperimenter
-
-// OfpPacketQueue from public import voltha_protos/openflow_13.proto
-type OfpPacketQueue = openflow_13.OfpPacketQueue
-
-// OfpQueueGetConfigRequest from public import voltha_protos/openflow_13.proto
-type OfpQueueGetConfigRequest = openflow_13.OfpQueueGetConfigRequest
-
-// OfpQueueGetConfigReply from public import voltha_protos/openflow_13.proto
-type OfpQueueGetConfigReply = openflow_13.OfpQueueGetConfigReply
-
-// OfpActionSetQueue from public import voltha_protos/openflow_13.proto
-type OfpActionSetQueue = openflow_13.OfpActionSetQueue
-
-// OfpQueueStatsRequest from public import voltha_protos/openflow_13.proto
-type OfpQueueStatsRequest = openflow_13.OfpQueueStatsRequest
-
-// OfpQueueStats from public import voltha_protos/openflow_13.proto
-type OfpQueueStats = openflow_13.OfpQueueStats
-
-// OfpRoleRequest from public import voltha_protos/openflow_13.proto
-type OfpRoleRequest = openflow_13.OfpRoleRequest
-
-// OfpAsyncConfig from public import voltha_protos/openflow_13.proto
-type OfpAsyncConfig = openflow_13.OfpAsyncConfig
-
-// MeterModUpdate from public import voltha_protos/openflow_13.proto
-type MeterModUpdate = openflow_13.MeterModUpdate
-
-// MeterStatsReply from public import voltha_protos/openflow_13.proto
-type MeterStatsReply = openflow_13.MeterStatsReply
-
-// FlowTableUpdate from public import voltha_protos/openflow_13.proto
-type FlowTableUpdate = openflow_13.FlowTableUpdate
-
-// FlowGroupTableUpdate from public import voltha_protos/openflow_13.proto
-type FlowGroupTableUpdate = openflow_13.FlowGroupTableUpdate
-
-// Flows from public import voltha_protos/openflow_13.proto
-type Flows = openflow_13.Flows
-
-// Meters from public import voltha_protos/openflow_13.proto
-type Meters = openflow_13.Meters
-
-// FlowGroups from public import voltha_protos/openflow_13.proto
-type FlowGroups = openflow_13.FlowGroups
-
-// FlowChanges from public import voltha_protos/openflow_13.proto
-type FlowChanges = openflow_13.FlowChanges
-
-// FlowGroupChanges from public import voltha_protos/openflow_13.proto
-type FlowGroupChanges = openflow_13.FlowGroupChanges
-
-// PacketIn from public import voltha_protos/openflow_13.proto
-type PacketIn = openflow_13.PacketIn
-
-// PacketOut from public import voltha_protos/openflow_13.proto
-type PacketOut = openflow_13.PacketOut
-
-// ChangeEvent from public import voltha_protos/openflow_13.proto
-type ChangeEvent = openflow_13.ChangeEvent
-type ChangeEvent_PortStatus = openflow_13.ChangeEvent_PortStatus
-type ChangeEvent_Error = openflow_13.ChangeEvent_Error
-
-// OfpPortNo from public import voltha_protos/openflow_13.proto
-type OfpPortNo = openflow_13.OfpPortNo
-
-var OfpPortNo_name = openflow_13.OfpPortNo_name
-var OfpPortNo_value = openflow_13.OfpPortNo_value
-
-const OfpPortNo_OFPP_INVALID = OfpPortNo(openflow_13.OfpPortNo_OFPP_INVALID)
-const OfpPortNo_OFPP_MAX = OfpPortNo(openflow_13.OfpPortNo_OFPP_MAX)
-const OfpPortNo_OFPP_IN_PORT = OfpPortNo(openflow_13.OfpPortNo_OFPP_IN_PORT)
-const OfpPortNo_OFPP_TABLE = OfpPortNo(openflow_13.OfpPortNo_OFPP_TABLE)
-const OfpPortNo_OFPP_NORMAL = OfpPortNo(openflow_13.OfpPortNo_OFPP_NORMAL)
-const OfpPortNo_OFPP_FLOOD = OfpPortNo(openflow_13.OfpPortNo_OFPP_FLOOD)
-const OfpPortNo_OFPP_ALL = OfpPortNo(openflow_13.OfpPortNo_OFPP_ALL)
-const OfpPortNo_OFPP_CONTROLLER = OfpPortNo(openflow_13.OfpPortNo_OFPP_CONTROLLER)
-const OfpPortNo_OFPP_LOCAL = OfpPortNo(openflow_13.OfpPortNo_OFPP_LOCAL)
-const OfpPortNo_OFPP_ANY = OfpPortNo(openflow_13.OfpPortNo_OFPP_ANY)
-
-// OfpType from public import voltha_protos/openflow_13.proto
-type OfpType = openflow_13.OfpType
-
-var OfpType_name = openflow_13.OfpType_name
-var OfpType_value = openflow_13.OfpType_value
-
-const OfpType_OFPT_HELLO = OfpType(openflow_13.OfpType_OFPT_HELLO)
-const OfpType_OFPT_ERROR = OfpType(openflow_13.OfpType_OFPT_ERROR)
-const OfpType_OFPT_ECHO_REQUEST = OfpType(openflow_13.OfpType_OFPT_ECHO_REQUEST)
-const OfpType_OFPT_ECHO_REPLY = OfpType(openflow_13.OfpType_OFPT_ECHO_REPLY)
-const OfpType_OFPT_EXPERIMENTER = OfpType(openflow_13.OfpType_OFPT_EXPERIMENTER)
-const OfpType_OFPT_FEATURES_REQUEST = OfpType(openflow_13.OfpType_OFPT_FEATURES_REQUEST)
-const OfpType_OFPT_FEATURES_REPLY = OfpType(openflow_13.OfpType_OFPT_FEATURES_REPLY)
-const OfpType_OFPT_GET_CONFIG_REQUEST = OfpType(openflow_13.OfpType_OFPT_GET_CONFIG_REQUEST)
-const OfpType_OFPT_GET_CONFIG_REPLY = OfpType(openflow_13.OfpType_OFPT_GET_CONFIG_REPLY)
-const OfpType_OFPT_SET_CONFIG = OfpType(openflow_13.OfpType_OFPT_SET_CONFIG)
-const OfpType_OFPT_PACKET_IN = OfpType(openflow_13.OfpType_OFPT_PACKET_IN)
-const OfpType_OFPT_FLOW_REMOVED = OfpType(openflow_13.OfpType_OFPT_FLOW_REMOVED)
-const OfpType_OFPT_PORT_STATUS = OfpType(openflow_13.OfpType_OFPT_PORT_STATUS)
-const OfpType_OFPT_PACKET_OUT = OfpType(openflow_13.OfpType_OFPT_PACKET_OUT)
-const OfpType_OFPT_FLOW_MOD = OfpType(openflow_13.OfpType_OFPT_FLOW_MOD)
-const OfpType_OFPT_GROUP_MOD = OfpType(openflow_13.OfpType_OFPT_GROUP_MOD)
-const OfpType_OFPT_PORT_MOD = OfpType(openflow_13.OfpType_OFPT_PORT_MOD)
-const OfpType_OFPT_TABLE_MOD = OfpType(openflow_13.OfpType_OFPT_TABLE_MOD)
-const OfpType_OFPT_MULTIPART_REQUEST = OfpType(openflow_13.OfpType_OFPT_MULTIPART_REQUEST)
-const OfpType_OFPT_MULTIPART_REPLY = OfpType(openflow_13.OfpType_OFPT_MULTIPART_REPLY)
-const OfpType_OFPT_BARRIER_REQUEST = OfpType(openflow_13.OfpType_OFPT_BARRIER_REQUEST)
-const OfpType_OFPT_BARRIER_REPLY = OfpType(openflow_13.OfpType_OFPT_BARRIER_REPLY)
-const OfpType_OFPT_QUEUE_GET_CONFIG_REQUEST = OfpType(openflow_13.OfpType_OFPT_QUEUE_GET_CONFIG_REQUEST)
-const OfpType_OFPT_QUEUE_GET_CONFIG_REPLY = OfpType(openflow_13.OfpType_OFPT_QUEUE_GET_CONFIG_REPLY)
-const OfpType_OFPT_ROLE_REQUEST = OfpType(openflow_13.OfpType_OFPT_ROLE_REQUEST)
-const OfpType_OFPT_ROLE_REPLY = OfpType(openflow_13.OfpType_OFPT_ROLE_REPLY)
-const OfpType_OFPT_GET_ASYNC_REQUEST = OfpType(openflow_13.OfpType_OFPT_GET_ASYNC_REQUEST)
-const OfpType_OFPT_GET_ASYNC_REPLY = OfpType(openflow_13.OfpType_OFPT_GET_ASYNC_REPLY)
-const OfpType_OFPT_SET_ASYNC = OfpType(openflow_13.OfpType_OFPT_SET_ASYNC)
-const OfpType_OFPT_METER_MOD = OfpType(openflow_13.OfpType_OFPT_METER_MOD)
-
-// OfpHelloElemType from public import voltha_protos/openflow_13.proto
-type OfpHelloElemType = openflow_13.OfpHelloElemType
-
-var OfpHelloElemType_name = openflow_13.OfpHelloElemType_name
-var OfpHelloElemType_value = openflow_13.OfpHelloElemType_value
-
-const OfpHelloElemType_OFPHET_INVALID = OfpHelloElemType(openflow_13.OfpHelloElemType_OFPHET_INVALID)
-const OfpHelloElemType_OFPHET_VERSIONBITMAP = OfpHelloElemType(openflow_13.OfpHelloElemType_OFPHET_VERSIONBITMAP)
-
-// OfpConfigFlags from public import voltha_protos/openflow_13.proto
-type OfpConfigFlags = openflow_13.OfpConfigFlags
-
-var OfpConfigFlags_name = openflow_13.OfpConfigFlags_name
-var OfpConfigFlags_value = openflow_13.OfpConfigFlags_value
-
-const OfpConfigFlags_OFPC_FRAG_NORMAL = OfpConfigFlags(openflow_13.OfpConfigFlags_OFPC_FRAG_NORMAL)
-const OfpConfigFlags_OFPC_FRAG_DROP = OfpConfigFlags(openflow_13.OfpConfigFlags_OFPC_FRAG_DROP)
-const OfpConfigFlags_OFPC_FRAG_REASM = OfpConfigFlags(openflow_13.OfpConfigFlags_OFPC_FRAG_REASM)
-const OfpConfigFlags_OFPC_FRAG_MASK = OfpConfigFlags(openflow_13.OfpConfigFlags_OFPC_FRAG_MASK)
-
-// OfpTableConfig from public import voltha_protos/openflow_13.proto
-type OfpTableConfig = openflow_13.OfpTableConfig
-
-var OfpTableConfig_name = openflow_13.OfpTableConfig_name
-var OfpTableConfig_value = openflow_13.OfpTableConfig_value
-
-const OfpTableConfig_OFPTC_INVALID = OfpTableConfig(openflow_13.OfpTableConfig_OFPTC_INVALID)
-const OfpTableConfig_OFPTC_DEPRECATED_MASK = OfpTableConfig(openflow_13.OfpTableConfig_OFPTC_DEPRECATED_MASK)
-
-// OfpTable from public import voltha_protos/openflow_13.proto
-type OfpTable = openflow_13.OfpTable
-
-var OfpTable_name = openflow_13.OfpTable_name
-var OfpTable_value = openflow_13.OfpTable_value
-
-const OfpTable_OFPTT_INVALID = OfpTable(openflow_13.OfpTable_OFPTT_INVALID)
-const OfpTable_OFPTT_MAX = OfpTable(openflow_13.OfpTable_OFPTT_MAX)
-const OfpTable_OFPTT_ALL = OfpTable(openflow_13.OfpTable_OFPTT_ALL)
-
-// OfpCapabilities from public import voltha_protos/openflow_13.proto
-type OfpCapabilities = openflow_13.OfpCapabilities
-
-var OfpCapabilities_name = openflow_13.OfpCapabilities_name
-var OfpCapabilities_value = openflow_13.OfpCapabilities_value
-
-const OfpCapabilities_OFPC_INVALID = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_INVALID)
-const OfpCapabilities_OFPC_FLOW_STATS = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_FLOW_STATS)
-const OfpCapabilities_OFPC_TABLE_STATS = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_TABLE_STATS)
-const OfpCapabilities_OFPC_PORT_STATS = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_PORT_STATS)
-const OfpCapabilities_OFPC_GROUP_STATS = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_GROUP_STATS)
-const OfpCapabilities_OFPC_IP_REASM = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_IP_REASM)
-const OfpCapabilities_OFPC_QUEUE_STATS = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_QUEUE_STATS)
-const OfpCapabilities_OFPC_PORT_BLOCKED = OfpCapabilities(openflow_13.OfpCapabilities_OFPC_PORT_BLOCKED)
-
-// OfpPortConfig from public import voltha_protos/openflow_13.proto
-type OfpPortConfig = openflow_13.OfpPortConfig
-
-var OfpPortConfig_name = openflow_13.OfpPortConfig_name
-var OfpPortConfig_value = openflow_13.OfpPortConfig_value
-
-const OfpPortConfig_OFPPC_INVALID = OfpPortConfig(openflow_13.OfpPortConfig_OFPPC_INVALID)
-const OfpPortConfig_OFPPC_PORT_DOWN = OfpPortConfig(openflow_13.OfpPortConfig_OFPPC_PORT_DOWN)
-const OfpPortConfig_OFPPC_NO_RECV = OfpPortConfig(openflow_13.OfpPortConfig_OFPPC_NO_RECV)
-const OfpPortConfig_OFPPC_NO_FWD = OfpPortConfig(openflow_13.OfpPortConfig_OFPPC_NO_FWD)
-const OfpPortConfig_OFPPC_NO_PACKET_IN = OfpPortConfig(openflow_13.OfpPortConfig_OFPPC_NO_PACKET_IN)
-
-// OfpPortState from public import voltha_protos/openflow_13.proto
-type OfpPortState = openflow_13.OfpPortState
-
-var OfpPortState_name = openflow_13.OfpPortState_name
-var OfpPortState_value = openflow_13.OfpPortState_value
-
-const OfpPortState_OFPPS_INVALID = OfpPortState(openflow_13.OfpPortState_OFPPS_INVALID)
-const OfpPortState_OFPPS_LINK_DOWN = OfpPortState(openflow_13.OfpPortState_OFPPS_LINK_DOWN)
-const OfpPortState_OFPPS_BLOCKED = OfpPortState(openflow_13.OfpPortState_OFPPS_BLOCKED)
-const OfpPortState_OFPPS_LIVE = OfpPortState(openflow_13.OfpPortState_OFPPS_LIVE)
-
-// OfpPortFeatures from public import voltha_protos/openflow_13.proto
-type OfpPortFeatures = openflow_13.OfpPortFeatures
-
-var OfpPortFeatures_name = openflow_13.OfpPortFeatures_name
-var OfpPortFeatures_value = openflow_13.OfpPortFeatures_value
-
-const OfpPortFeatures_OFPPF_INVALID = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_INVALID)
-const OfpPortFeatures_OFPPF_10MB_HD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_10MB_HD)
-const OfpPortFeatures_OFPPF_10MB_FD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_10MB_FD)
-const OfpPortFeatures_OFPPF_100MB_HD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_100MB_HD)
-const OfpPortFeatures_OFPPF_100MB_FD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_100MB_FD)
-const OfpPortFeatures_OFPPF_1GB_HD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_1GB_HD)
-const OfpPortFeatures_OFPPF_1GB_FD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_1GB_FD)
-const OfpPortFeatures_OFPPF_10GB_FD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_10GB_FD)
-const OfpPortFeatures_OFPPF_40GB_FD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_40GB_FD)
-const OfpPortFeatures_OFPPF_100GB_FD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_100GB_FD)
-const OfpPortFeatures_OFPPF_1TB_FD = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_1TB_FD)
-const OfpPortFeatures_OFPPF_OTHER = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_OTHER)
-const OfpPortFeatures_OFPPF_COPPER = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_COPPER)
-const OfpPortFeatures_OFPPF_FIBER = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_FIBER)
-const OfpPortFeatures_OFPPF_AUTONEG = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_AUTONEG)
-const OfpPortFeatures_OFPPF_PAUSE = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_PAUSE)
-const OfpPortFeatures_OFPPF_PAUSE_ASYM = OfpPortFeatures(openflow_13.OfpPortFeatures_OFPPF_PAUSE_ASYM)
-
-// OfpPortReason from public import voltha_protos/openflow_13.proto
-type OfpPortReason = openflow_13.OfpPortReason
-
-var OfpPortReason_name = openflow_13.OfpPortReason_name
-var OfpPortReason_value = openflow_13.OfpPortReason_value
-
-const OfpPortReason_OFPPR_ADD = OfpPortReason(openflow_13.OfpPortReason_OFPPR_ADD)
-const OfpPortReason_OFPPR_DELETE = OfpPortReason(openflow_13.OfpPortReason_OFPPR_DELETE)
-const OfpPortReason_OFPPR_MODIFY = OfpPortReason(openflow_13.OfpPortReason_OFPPR_MODIFY)
-
-// OfpMatchType from public import voltha_protos/openflow_13.proto
-type OfpMatchType = openflow_13.OfpMatchType
-
-var OfpMatchType_name = openflow_13.OfpMatchType_name
-var OfpMatchType_value = openflow_13.OfpMatchType_value
-
-const OfpMatchType_OFPMT_STANDARD = OfpMatchType(openflow_13.OfpMatchType_OFPMT_STANDARD)
-const OfpMatchType_OFPMT_OXM = OfpMatchType(openflow_13.OfpMatchType_OFPMT_OXM)
-
-// OfpOxmClass from public import voltha_protos/openflow_13.proto
-type OfpOxmClass = openflow_13.OfpOxmClass
-
-var OfpOxmClass_name = openflow_13.OfpOxmClass_name
-var OfpOxmClass_value = openflow_13.OfpOxmClass_value
-
-const OfpOxmClass_OFPXMC_NXM_0 = OfpOxmClass(openflow_13.OfpOxmClass_OFPXMC_NXM_0)
-const OfpOxmClass_OFPXMC_NXM_1 = OfpOxmClass(openflow_13.OfpOxmClass_OFPXMC_NXM_1)
-const OfpOxmClass_OFPXMC_OPENFLOW_BASIC = OfpOxmClass(openflow_13.OfpOxmClass_OFPXMC_OPENFLOW_BASIC)
-const OfpOxmClass_OFPXMC_EXPERIMENTER = OfpOxmClass(openflow_13.OfpOxmClass_OFPXMC_EXPERIMENTER)
-
-// OxmOfbFieldTypes from public import voltha_protos/openflow_13.proto
-type OxmOfbFieldTypes = openflow_13.OxmOfbFieldTypes
-
-var OxmOfbFieldTypes_name = openflow_13.OxmOfbFieldTypes_name
-var OxmOfbFieldTypes_value = openflow_13.OxmOfbFieldTypes_value
-
-const OxmOfbFieldTypes_OFPXMT_OFB_IN_PORT = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IN_PORT)
-const OxmOfbFieldTypes_OFPXMT_OFB_IN_PHY_PORT = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IN_PHY_PORT)
-const OxmOfbFieldTypes_OFPXMT_OFB_METADATA = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_METADATA)
-const OxmOfbFieldTypes_OFPXMT_OFB_ETH_DST = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ETH_DST)
-const OxmOfbFieldTypes_OFPXMT_OFB_ETH_SRC = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ETH_SRC)
-const OxmOfbFieldTypes_OFPXMT_OFB_ETH_TYPE = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ETH_TYPE)
-const OxmOfbFieldTypes_OFPXMT_OFB_VLAN_VID = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_VLAN_VID)
-const OxmOfbFieldTypes_OFPXMT_OFB_VLAN_PCP = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_VLAN_PCP)
-const OxmOfbFieldTypes_OFPXMT_OFB_IP_DSCP = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IP_DSCP)
-const OxmOfbFieldTypes_OFPXMT_OFB_IP_ECN = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IP_ECN)
-const OxmOfbFieldTypes_OFPXMT_OFB_IP_PROTO = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IP_PROTO)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV4_SRC = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV4_SRC)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV4_DST = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV4_DST)
-const OxmOfbFieldTypes_OFPXMT_OFB_TCP_SRC = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_TCP_SRC)
-const OxmOfbFieldTypes_OFPXMT_OFB_TCP_DST = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_TCP_DST)
-const OxmOfbFieldTypes_OFPXMT_OFB_UDP_SRC = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_UDP_SRC)
-const OxmOfbFieldTypes_OFPXMT_OFB_UDP_DST = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_UDP_DST)
-const OxmOfbFieldTypes_OFPXMT_OFB_SCTP_SRC = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_SCTP_SRC)
-const OxmOfbFieldTypes_OFPXMT_OFB_SCTP_DST = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_SCTP_DST)
-const OxmOfbFieldTypes_OFPXMT_OFB_ICMPV4_TYPE = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ICMPV4_TYPE)
-const OxmOfbFieldTypes_OFPXMT_OFB_ICMPV4_CODE = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ICMPV4_CODE)
-const OxmOfbFieldTypes_OFPXMT_OFB_ARP_OP = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ARP_OP)
-const OxmOfbFieldTypes_OFPXMT_OFB_ARP_SPA = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ARP_SPA)
-const OxmOfbFieldTypes_OFPXMT_OFB_ARP_TPA = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ARP_TPA)
-const OxmOfbFieldTypes_OFPXMT_OFB_ARP_SHA = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ARP_SHA)
-const OxmOfbFieldTypes_OFPXMT_OFB_ARP_THA = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ARP_THA)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV6_SRC = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV6_SRC)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV6_DST = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV6_DST)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV6_FLABEL = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV6_FLABEL)
-const OxmOfbFieldTypes_OFPXMT_OFB_ICMPV6_TYPE = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ICMPV6_TYPE)
-const OxmOfbFieldTypes_OFPXMT_OFB_ICMPV6_CODE = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_ICMPV6_CODE)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV6_ND_TARGET = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV6_ND_TARGET)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV6_ND_SLL = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV6_ND_SLL)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV6_ND_TLL = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV6_ND_TLL)
-const OxmOfbFieldTypes_OFPXMT_OFB_MPLS_LABEL = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_MPLS_LABEL)
-const OxmOfbFieldTypes_OFPXMT_OFB_MPLS_TC = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_MPLS_TC)
-const OxmOfbFieldTypes_OFPXMT_OFB_MPLS_BOS = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_MPLS_BOS)
-const OxmOfbFieldTypes_OFPXMT_OFB_PBB_ISID = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_PBB_ISID)
-const OxmOfbFieldTypes_OFPXMT_OFB_TUNNEL_ID = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_TUNNEL_ID)
-const OxmOfbFieldTypes_OFPXMT_OFB_IPV6_EXTHDR = OxmOfbFieldTypes(openflow_13.OxmOfbFieldTypes_OFPXMT_OFB_IPV6_EXTHDR)
-
-// OfpVlanId from public import voltha_protos/openflow_13.proto
-type OfpVlanId = openflow_13.OfpVlanId
-
-var OfpVlanId_name = openflow_13.OfpVlanId_name
-var OfpVlanId_value = openflow_13.OfpVlanId_value
-
-const OfpVlanId_OFPVID_NONE = OfpVlanId(openflow_13.OfpVlanId_OFPVID_NONE)
-const OfpVlanId_OFPVID_PRESENT = OfpVlanId(openflow_13.OfpVlanId_OFPVID_PRESENT)
-
-// OfpIpv6ExthdrFlags from public import voltha_protos/openflow_13.proto
-type OfpIpv6ExthdrFlags = openflow_13.OfpIpv6ExthdrFlags
-
-var OfpIpv6ExthdrFlags_name = openflow_13.OfpIpv6ExthdrFlags_name
-var OfpIpv6ExthdrFlags_value = openflow_13.OfpIpv6ExthdrFlags_value
-
-const OfpIpv6ExthdrFlags_OFPIEH_INVALID = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_INVALID)
-const OfpIpv6ExthdrFlags_OFPIEH_NONEXT = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_NONEXT)
-const OfpIpv6ExthdrFlags_OFPIEH_ESP = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_ESP)
-const OfpIpv6ExthdrFlags_OFPIEH_AUTH = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_AUTH)
-const OfpIpv6ExthdrFlags_OFPIEH_DEST = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_DEST)
-const OfpIpv6ExthdrFlags_OFPIEH_FRAG = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_FRAG)
-const OfpIpv6ExthdrFlags_OFPIEH_ROUTER = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_ROUTER)
-const OfpIpv6ExthdrFlags_OFPIEH_HOP = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_HOP)
-const OfpIpv6ExthdrFlags_OFPIEH_UNREP = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_UNREP)
-const OfpIpv6ExthdrFlags_OFPIEH_UNSEQ = OfpIpv6ExthdrFlags(openflow_13.OfpIpv6ExthdrFlags_OFPIEH_UNSEQ)
-
-// OfpActionType from public import voltha_protos/openflow_13.proto
-type OfpActionType = openflow_13.OfpActionType
-
-var OfpActionType_name = openflow_13.OfpActionType_name
-var OfpActionType_value = openflow_13.OfpActionType_value
-
-const OfpActionType_OFPAT_OUTPUT = OfpActionType(openflow_13.OfpActionType_OFPAT_OUTPUT)
-const OfpActionType_OFPAT_COPY_TTL_OUT = OfpActionType(openflow_13.OfpActionType_OFPAT_COPY_TTL_OUT)
-const OfpActionType_OFPAT_COPY_TTL_IN = OfpActionType(openflow_13.OfpActionType_OFPAT_COPY_TTL_IN)
-const OfpActionType_OFPAT_SET_MPLS_TTL = OfpActionType(openflow_13.OfpActionType_OFPAT_SET_MPLS_TTL)
-const OfpActionType_OFPAT_DEC_MPLS_TTL = OfpActionType(openflow_13.OfpActionType_OFPAT_DEC_MPLS_TTL)
-const OfpActionType_OFPAT_PUSH_VLAN = OfpActionType(openflow_13.OfpActionType_OFPAT_PUSH_VLAN)
-const OfpActionType_OFPAT_POP_VLAN = OfpActionType(openflow_13.OfpActionType_OFPAT_POP_VLAN)
-const OfpActionType_OFPAT_PUSH_MPLS = OfpActionType(openflow_13.OfpActionType_OFPAT_PUSH_MPLS)
-const OfpActionType_OFPAT_POP_MPLS = OfpActionType(openflow_13.OfpActionType_OFPAT_POP_MPLS)
-const OfpActionType_OFPAT_SET_QUEUE = OfpActionType(openflow_13.OfpActionType_OFPAT_SET_QUEUE)
-const OfpActionType_OFPAT_GROUP = OfpActionType(openflow_13.OfpActionType_OFPAT_GROUP)
-const OfpActionType_OFPAT_SET_NW_TTL = OfpActionType(openflow_13.OfpActionType_OFPAT_SET_NW_TTL)
-const OfpActionType_OFPAT_DEC_NW_TTL = OfpActionType(openflow_13.OfpActionType_OFPAT_DEC_NW_TTL)
-const OfpActionType_OFPAT_SET_FIELD = OfpActionType(openflow_13.OfpActionType_OFPAT_SET_FIELD)
-const OfpActionType_OFPAT_PUSH_PBB = OfpActionType(openflow_13.OfpActionType_OFPAT_PUSH_PBB)
-const OfpActionType_OFPAT_POP_PBB = OfpActionType(openflow_13.OfpActionType_OFPAT_POP_PBB)
-const OfpActionType_OFPAT_EXPERIMENTER = OfpActionType(openflow_13.OfpActionType_OFPAT_EXPERIMENTER)
-
-// OfpControllerMaxLen from public import voltha_protos/openflow_13.proto
-type OfpControllerMaxLen = openflow_13.OfpControllerMaxLen
-
-var OfpControllerMaxLen_name = openflow_13.OfpControllerMaxLen_name
-var OfpControllerMaxLen_value = openflow_13.OfpControllerMaxLen_value
-
-const OfpControllerMaxLen_OFPCML_INVALID = OfpControllerMaxLen(openflow_13.OfpControllerMaxLen_OFPCML_INVALID)
-const OfpControllerMaxLen_OFPCML_MAX = OfpControllerMaxLen(openflow_13.OfpControllerMaxLen_OFPCML_MAX)
-const OfpControllerMaxLen_OFPCML_NO_BUFFER = OfpControllerMaxLen(openflow_13.OfpControllerMaxLen_OFPCML_NO_BUFFER)
-
-// OfpInstructionType from public import voltha_protos/openflow_13.proto
-type OfpInstructionType = openflow_13.OfpInstructionType
-
-var OfpInstructionType_name = openflow_13.OfpInstructionType_name
-var OfpInstructionType_value = openflow_13.OfpInstructionType_value
-
-const OfpInstructionType_OFPIT_INVALID = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_INVALID)
-const OfpInstructionType_OFPIT_GOTO_TABLE = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_GOTO_TABLE)
-const OfpInstructionType_OFPIT_WRITE_METADATA = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_WRITE_METADATA)
-const OfpInstructionType_OFPIT_WRITE_ACTIONS = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_WRITE_ACTIONS)
-const OfpInstructionType_OFPIT_APPLY_ACTIONS = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_APPLY_ACTIONS)
-const OfpInstructionType_OFPIT_CLEAR_ACTIONS = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_CLEAR_ACTIONS)
-const OfpInstructionType_OFPIT_METER = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_METER)
-const OfpInstructionType_OFPIT_EXPERIMENTER = OfpInstructionType(openflow_13.OfpInstructionType_OFPIT_EXPERIMENTER)
-
-// OfpFlowModCommand from public import voltha_protos/openflow_13.proto
-type OfpFlowModCommand = openflow_13.OfpFlowModCommand
-
-var OfpFlowModCommand_name = openflow_13.OfpFlowModCommand_name
-var OfpFlowModCommand_value = openflow_13.OfpFlowModCommand_value
-
-const OfpFlowModCommand_OFPFC_ADD = OfpFlowModCommand(openflow_13.OfpFlowModCommand_OFPFC_ADD)
-const OfpFlowModCommand_OFPFC_MODIFY = OfpFlowModCommand(openflow_13.OfpFlowModCommand_OFPFC_MODIFY)
-const OfpFlowModCommand_OFPFC_MODIFY_STRICT = OfpFlowModCommand(openflow_13.OfpFlowModCommand_OFPFC_MODIFY_STRICT)
-const OfpFlowModCommand_OFPFC_DELETE = OfpFlowModCommand(openflow_13.OfpFlowModCommand_OFPFC_DELETE)
-const OfpFlowModCommand_OFPFC_DELETE_STRICT = OfpFlowModCommand(openflow_13.OfpFlowModCommand_OFPFC_DELETE_STRICT)
-
-// OfpFlowModFlags from public import voltha_protos/openflow_13.proto
-type OfpFlowModFlags = openflow_13.OfpFlowModFlags
-
-var OfpFlowModFlags_name = openflow_13.OfpFlowModFlags_name
-var OfpFlowModFlags_value = openflow_13.OfpFlowModFlags_value
-
-const OfpFlowModFlags_OFPFF_INVALID = OfpFlowModFlags(openflow_13.OfpFlowModFlags_OFPFF_INVALID)
-const OfpFlowModFlags_OFPFF_SEND_FLOW_REM = OfpFlowModFlags(openflow_13.OfpFlowModFlags_OFPFF_SEND_FLOW_REM)
-const OfpFlowModFlags_OFPFF_CHECK_OVERLAP = OfpFlowModFlags(openflow_13.OfpFlowModFlags_OFPFF_CHECK_OVERLAP)
-const OfpFlowModFlags_OFPFF_RESET_COUNTS = OfpFlowModFlags(openflow_13.OfpFlowModFlags_OFPFF_RESET_COUNTS)
-const OfpFlowModFlags_OFPFF_NO_PKT_COUNTS = OfpFlowModFlags(openflow_13.OfpFlowModFlags_OFPFF_NO_PKT_COUNTS)
-const OfpFlowModFlags_OFPFF_NO_BYT_COUNTS = OfpFlowModFlags(openflow_13.OfpFlowModFlags_OFPFF_NO_BYT_COUNTS)
-
-// OfpGroup from public import voltha_protos/openflow_13.proto
-type OfpGroup = openflow_13.OfpGroup
-
-var OfpGroup_name = openflow_13.OfpGroup_name
-var OfpGroup_value = openflow_13.OfpGroup_value
-
-const OfpGroup_OFPG_INVALID = OfpGroup(openflow_13.OfpGroup_OFPG_INVALID)
-const OfpGroup_OFPG_MAX = OfpGroup(openflow_13.OfpGroup_OFPG_MAX)
-const OfpGroup_OFPG_ALL = OfpGroup(openflow_13.OfpGroup_OFPG_ALL)
-const OfpGroup_OFPG_ANY = OfpGroup(openflow_13.OfpGroup_OFPG_ANY)
-
-// OfpGroupModCommand from public import voltha_protos/openflow_13.proto
-type OfpGroupModCommand = openflow_13.OfpGroupModCommand
-
-var OfpGroupModCommand_name = openflow_13.OfpGroupModCommand_name
-var OfpGroupModCommand_value = openflow_13.OfpGroupModCommand_value
-
-const OfpGroupModCommand_OFPGC_ADD = OfpGroupModCommand(openflow_13.OfpGroupModCommand_OFPGC_ADD)
-const OfpGroupModCommand_OFPGC_MODIFY = OfpGroupModCommand(openflow_13.OfpGroupModCommand_OFPGC_MODIFY)
-const OfpGroupModCommand_OFPGC_DELETE = OfpGroupModCommand(openflow_13.OfpGroupModCommand_OFPGC_DELETE)
-
-// OfpGroupType from public import voltha_protos/openflow_13.proto
-type OfpGroupType = openflow_13.OfpGroupType
-
-var OfpGroupType_name = openflow_13.OfpGroupType_name
-var OfpGroupType_value = openflow_13.OfpGroupType_value
-
-const OfpGroupType_OFPGT_ALL = OfpGroupType(openflow_13.OfpGroupType_OFPGT_ALL)
-const OfpGroupType_OFPGT_SELECT = OfpGroupType(openflow_13.OfpGroupType_OFPGT_SELECT)
-const OfpGroupType_OFPGT_INDIRECT = OfpGroupType(openflow_13.OfpGroupType_OFPGT_INDIRECT)
-const OfpGroupType_OFPGT_FF = OfpGroupType(openflow_13.OfpGroupType_OFPGT_FF)
-
-// OfpPacketInReason from public import voltha_protos/openflow_13.proto
-type OfpPacketInReason = openflow_13.OfpPacketInReason
-
-var OfpPacketInReason_name = openflow_13.OfpPacketInReason_name
-var OfpPacketInReason_value = openflow_13.OfpPacketInReason_value
-
-const OfpPacketInReason_OFPR_NO_MATCH = OfpPacketInReason(openflow_13.OfpPacketInReason_OFPR_NO_MATCH)
-const OfpPacketInReason_OFPR_ACTION = OfpPacketInReason(openflow_13.OfpPacketInReason_OFPR_ACTION)
-const OfpPacketInReason_OFPR_INVALID_TTL = OfpPacketInReason(openflow_13.OfpPacketInReason_OFPR_INVALID_TTL)
-
-// OfpFlowRemovedReason from public import voltha_protos/openflow_13.proto
-type OfpFlowRemovedReason = openflow_13.OfpFlowRemovedReason
-
-var OfpFlowRemovedReason_name = openflow_13.OfpFlowRemovedReason_name
-var OfpFlowRemovedReason_value = openflow_13.OfpFlowRemovedReason_value
-
-const OfpFlowRemovedReason_OFPRR_IDLE_TIMEOUT = OfpFlowRemovedReason(openflow_13.OfpFlowRemovedReason_OFPRR_IDLE_TIMEOUT)
-const OfpFlowRemovedReason_OFPRR_HARD_TIMEOUT = OfpFlowRemovedReason(openflow_13.OfpFlowRemovedReason_OFPRR_HARD_TIMEOUT)
-const OfpFlowRemovedReason_OFPRR_DELETE = OfpFlowRemovedReason(openflow_13.OfpFlowRemovedReason_OFPRR_DELETE)
-const OfpFlowRemovedReason_OFPRR_GROUP_DELETE = OfpFlowRemovedReason(openflow_13.OfpFlowRemovedReason_OFPRR_GROUP_DELETE)
-const OfpFlowRemovedReason_OFPRR_METER_DELETE = OfpFlowRemovedReason(openflow_13.OfpFlowRemovedReason_OFPRR_METER_DELETE)
-
-// OfpMeter from public import voltha_protos/openflow_13.proto
-type OfpMeter = openflow_13.OfpMeter
-
-var OfpMeter_name = openflow_13.OfpMeter_name
-var OfpMeter_value = openflow_13.OfpMeter_value
-
-const OfpMeter_OFPM_ZERO = OfpMeter(openflow_13.OfpMeter_OFPM_ZERO)
-const OfpMeter_OFPM_MAX = OfpMeter(openflow_13.OfpMeter_OFPM_MAX)
-const OfpMeter_OFPM_SLOWPATH = OfpMeter(openflow_13.OfpMeter_OFPM_SLOWPATH)
-const OfpMeter_OFPM_CONTROLLER = OfpMeter(openflow_13.OfpMeter_OFPM_CONTROLLER)
-const OfpMeter_OFPM_ALL = OfpMeter(openflow_13.OfpMeter_OFPM_ALL)
-
-// OfpMeterBandType from public import voltha_protos/openflow_13.proto
-type OfpMeterBandType = openflow_13.OfpMeterBandType
-
-var OfpMeterBandType_name = openflow_13.OfpMeterBandType_name
-var OfpMeterBandType_value = openflow_13.OfpMeterBandType_value
-
-const OfpMeterBandType_OFPMBT_INVALID = OfpMeterBandType(openflow_13.OfpMeterBandType_OFPMBT_INVALID)
-const OfpMeterBandType_OFPMBT_DROP = OfpMeterBandType(openflow_13.OfpMeterBandType_OFPMBT_DROP)
-const OfpMeterBandType_OFPMBT_DSCP_REMARK = OfpMeterBandType(openflow_13.OfpMeterBandType_OFPMBT_DSCP_REMARK)
-const OfpMeterBandType_OFPMBT_EXPERIMENTER = OfpMeterBandType(openflow_13.OfpMeterBandType_OFPMBT_EXPERIMENTER)
-
-// OfpMeterModCommand from public import voltha_protos/openflow_13.proto
-type OfpMeterModCommand = openflow_13.OfpMeterModCommand
-
-var OfpMeterModCommand_name = openflow_13.OfpMeterModCommand_name
-var OfpMeterModCommand_value = openflow_13.OfpMeterModCommand_value
-
-const OfpMeterModCommand_OFPMC_ADD = OfpMeterModCommand(openflow_13.OfpMeterModCommand_OFPMC_ADD)
-const OfpMeterModCommand_OFPMC_MODIFY = OfpMeterModCommand(openflow_13.OfpMeterModCommand_OFPMC_MODIFY)
-const OfpMeterModCommand_OFPMC_DELETE = OfpMeterModCommand(openflow_13.OfpMeterModCommand_OFPMC_DELETE)
-
-// OfpMeterFlags from public import voltha_protos/openflow_13.proto
-type OfpMeterFlags = openflow_13.OfpMeterFlags
-
-var OfpMeterFlags_name = openflow_13.OfpMeterFlags_name
-var OfpMeterFlags_value = openflow_13.OfpMeterFlags_value
-
-const OfpMeterFlags_OFPMF_INVALID = OfpMeterFlags(openflow_13.OfpMeterFlags_OFPMF_INVALID)
-const OfpMeterFlags_OFPMF_KBPS = OfpMeterFlags(openflow_13.OfpMeterFlags_OFPMF_KBPS)
-const OfpMeterFlags_OFPMF_PKTPS = OfpMeterFlags(openflow_13.OfpMeterFlags_OFPMF_PKTPS)
-const OfpMeterFlags_OFPMF_BURST = OfpMeterFlags(openflow_13.OfpMeterFlags_OFPMF_BURST)
-const OfpMeterFlags_OFPMF_STATS = OfpMeterFlags(openflow_13.OfpMeterFlags_OFPMF_STATS)
-
-// OfpErrorType from public import voltha_protos/openflow_13.proto
-type OfpErrorType = openflow_13.OfpErrorType
-
-var OfpErrorType_name = openflow_13.OfpErrorType_name
-var OfpErrorType_value = openflow_13.OfpErrorType_value
-
-const OfpErrorType_OFPET_HELLO_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_HELLO_FAILED)
-const OfpErrorType_OFPET_BAD_REQUEST = OfpErrorType(openflow_13.OfpErrorType_OFPET_BAD_REQUEST)
-const OfpErrorType_OFPET_BAD_ACTION = OfpErrorType(openflow_13.OfpErrorType_OFPET_BAD_ACTION)
-const OfpErrorType_OFPET_BAD_INSTRUCTION = OfpErrorType(openflow_13.OfpErrorType_OFPET_BAD_INSTRUCTION)
-const OfpErrorType_OFPET_BAD_MATCH = OfpErrorType(openflow_13.OfpErrorType_OFPET_BAD_MATCH)
-const OfpErrorType_OFPET_FLOW_MOD_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_FLOW_MOD_FAILED)
-const OfpErrorType_OFPET_GROUP_MOD_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_GROUP_MOD_FAILED)
-const OfpErrorType_OFPET_PORT_MOD_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_PORT_MOD_FAILED)
-const OfpErrorType_OFPET_TABLE_MOD_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_TABLE_MOD_FAILED)
-const OfpErrorType_OFPET_QUEUE_OP_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_QUEUE_OP_FAILED)
-const OfpErrorType_OFPET_SWITCH_CONFIG_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_SWITCH_CONFIG_FAILED)
-const OfpErrorType_OFPET_ROLE_REQUEST_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_ROLE_REQUEST_FAILED)
-const OfpErrorType_OFPET_METER_MOD_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_METER_MOD_FAILED)
-const OfpErrorType_OFPET_TABLE_FEATURES_FAILED = OfpErrorType(openflow_13.OfpErrorType_OFPET_TABLE_FEATURES_FAILED)
-const OfpErrorType_OFPET_EXPERIMENTER = OfpErrorType(openflow_13.OfpErrorType_OFPET_EXPERIMENTER)
-
-// OfpHelloFailedCode from public import voltha_protos/openflow_13.proto
-type OfpHelloFailedCode = openflow_13.OfpHelloFailedCode
-
-var OfpHelloFailedCode_name = openflow_13.OfpHelloFailedCode_name
-var OfpHelloFailedCode_value = openflow_13.OfpHelloFailedCode_value
-
-const OfpHelloFailedCode_OFPHFC_INCOMPATIBLE = OfpHelloFailedCode(openflow_13.OfpHelloFailedCode_OFPHFC_INCOMPATIBLE)
-const OfpHelloFailedCode_OFPHFC_EPERM = OfpHelloFailedCode(openflow_13.OfpHelloFailedCode_OFPHFC_EPERM)
-
-// OfpBadRequestCode from public import voltha_protos/openflow_13.proto
-type OfpBadRequestCode = openflow_13.OfpBadRequestCode
-
-var OfpBadRequestCode_name = openflow_13.OfpBadRequestCode_name
-var OfpBadRequestCode_value = openflow_13.OfpBadRequestCode_value
-
-const OfpBadRequestCode_OFPBRC_BAD_VERSION = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_VERSION)
-const OfpBadRequestCode_OFPBRC_BAD_TYPE = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_TYPE)
-const OfpBadRequestCode_OFPBRC_BAD_MULTIPART = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_MULTIPART)
-const OfpBadRequestCode_OFPBRC_BAD_EXPERIMENTER = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_EXPERIMENTER)
-const OfpBadRequestCode_OFPBRC_BAD_EXP_TYPE = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_EXP_TYPE)
-const OfpBadRequestCode_OFPBRC_EPERM = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_EPERM)
-const OfpBadRequestCode_OFPBRC_BAD_LEN = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_LEN)
-const OfpBadRequestCode_OFPBRC_BUFFER_EMPTY = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BUFFER_EMPTY)
-const OfpBadRequestCode_OFPBRC_BUFFER_UNKNOWN = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BUFFER_UNKNOWN)
-const OfpBadRequestCode_OFPBRC_BAD_TABLE_ID = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_TABLE_ID)
-const OfpBadRequestCode_OFPBRC_IS_SLAVE = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_IS_SLAVE)
-const OfpBadRequestCode_OFPBRC_BAD_PORT = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_PORT)
-const OfpBadRequestCode_OFPBRC_BAD_PACKET = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_BAD_PACKET)
-const OfpBadRequestCode_OFPBRC_MULTIPART_BUFFER_OVERFLOW = OfpBadRequestCode(openflow_13.OfpBadRequestCode_OFPBRC_MULTIPART_BUFFER_OVERFLOW)
-
-// OfpBadActionCode from public import voltha_protos/openflow_13.proto
-type OfpBadActionCode = openflow_13.OfpBadActionCode
-
-var OfpBadActionCode_name = openflow_13.OfpBadActionCode_name
-var OfpBadActionCode_value = openflow_13.OfpBadActionCode_value
-
-const OfpBadActionCode_OFPBAC_BAD_TYPE = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_TYPE)
-const OfpBadActionCode_OFPBAC_BAD_LEN = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_LEN)
-const OfpBadActionCode_OFPBAC_BAD_EXPERIMENTER = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_EXPERIMENTER)
-const OfpBadActionCode_OFPBAC_BAD_EXP_TYPE = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_EXP_TYPE)
-const OfpBadActionCode_OFPBAC_BAD_OUT_PORT = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_OUT_PORT)
-const OfpBadActionCode_OFPBAC_BAD_ARGUMENT = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_ARGUMENT)
-const OfpBadActionCode_OFPBAC_EPERM = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_EPERM)
-const OfpBadActionCode_OFPBAC_TOO_MANY = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_TOO_MANY)
-const OfpBadActionCode_OFPBAC_BAD_QUEUE = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_QUEUE)
-const OfpBadActionCode_OFPBAC_BAD_OUT_GROUP = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_OUT_GROUP)
-const OfpBadActionCode_OFPBAC_MATCH_INCONSISTENT = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_MATCH_INCONSISTENT)
-const OfpBadActionCode_OFPBAC_UNSUPPORTED_ORDER = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_UNSUPPORTED_ORDER)
-const OfpBadActionCode_OFPBAC_BAD_TAG = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_TAG)
-const OfpBadActionCode_OFPBAC_BAD_SET_TYPE = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_SET_TYPE)
-const OfpBadActionCode_OFPBAC_BAD_SET_LEN = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_SET_LEN)
-const OfpBadActionCode_OFPBAC_BAD_SET_ARGUMENT = OfpBadActionCode(openflow_13.OfpBadActionCode_OFPBAC_BAD_SET_ARGUMENT)
-
-// OfpBadInstructionCode from public import voltha_protos/openflow_13.proto
-type OfpBadInstructionCode = openflow_13.OfpBadInstructionCode
-
-var OfpBadInstructionCode_name = openflow_13.OfpBadInstructionCode_name
-var OfpBadInstructionCode_value = openflow_13.OfpBadInstructionCode_value
-
-const OfpBadInstructionCode_OFPBIC_UNKNOWN_INST = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_UNKNOWN_INST)
-const OfpBadInstructionCode_OFPBIC_UNSUP_INST = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_UNSUP_INST)
-const OfpBadInstructionCode_OFPBIC_BAD_TABLE_ID = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_BAD_TABLE_ID)
-const OfpBadInstructionCode_OFPBIC_UNSUP_METADATA = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_UNSUP_METADATA)
-const OfpBadInstructionCode_OFPBIC_UNSUP_METADATA_MASK = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_UNSUP_METADATA_MASK)
-const OfpBadInstructionCode_OFPBIC_BAD_EXPERIMENTER = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_BAD_EXPERIMENTER)
-const OfpBadInstructionCode_OFPBIC_BAD_EXP_TYPE = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_BAD_EXP_TYPE)
-const OfpBadInstructionCode_OFPBIC_BAD_LEN = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_BAD_LEN)
-const OfpBadInstructionCode_OFPBIC_EPERM = OfpBadInstructionCode(openflow_13.OfpBadInstructionCode_OFPBIC_EPERM)
-
-// OfpBadMatchCode from public import voltha_protos/openflow_13.proto
-type OfpBadMatchCode = openflow_13.OfpBadMatchCode
-
-var OfpBadMatchCode_name = openflow_13.OfpBadMatchCode_name
-var OfpBadMatchCode_value = openflow_13.OfpBadMatchCode_value
-
-const OfpBadMatchCode_OFPBMC_BAD_TYPE = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_TYPE)
-const OfpBadMatchCode_OFPBMC_BAD_LEN = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_LEN)
-const OfpBadMatchCode_OFPBMC_BAD_TAG = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_TAG)
-const OfpBadMatchCode_OFPBMC_BAD_DL_ADDR_MASK = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_DL_ADDR_MASK)
-const OfpBadMatchCode_OFPBMC_BAD_NW_ADDR_MASK = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_NW_ADDR_MASK)
-const OfpBadMatchCode_OFPBMC_BAD_WILDCARDS = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_WILDCARDS)
-const OfpBadMatchCode_OFPBMC_BAD_FIELD = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_FIELD)
-const OfpBadMatchCode_OFPBMC_BAD_VALUE = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_VALUE)
-const OfpBadMatchCode_OFPBMC_BAD_MASK = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_MASK)
-const OfpBadMatchCode_OFPBMC_BAD_PREREQ = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_BAD_PREREQ)
-const OfpBadMatchCode_OFPBMC_DUP_FIELD = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_DUP_FIELD)
-const OfpBadMatchCode_OFPBMC_EPERM = OfpBadMatchCode(openflow_13.OfpBadMatchCode_OFPBMC_EPERM)
-
-// OfpFlowModFailedCode from public import voltha_protos/openflow_13.proto
-type OfpFlowModFailedCode = openflow_13.OfpFlowModFailedCode
-
-var OfpFlowModFailedCode_name = openflow_13.OfpFlowModFailedCode_name
-var OfpFlowModFailedCode_value = openflow_13.OfpFlowModFailedCode_value
-
-const OfpFlowModFailedCode_OFPFMFC_UNKNOWN = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_UNKNOWN)
-const OfpFlowModFailedCode_OFPFMFC_TABLE_FULL = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_TABLE_FULL)
-const OfpFlowModFailedCode_OFPFMFC_BAD_TABLE_ID = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_BAD_TABLE_ID)
-const OfpFlowModFailedCode_OFPFMFC_OVERLAP = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_OVERLAP)
-const OfpFlowModFailedCode_OFPFMFC_EPERM = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_EPERM)
-const OfpFlowModFailedCode_OFPFMFC_BAD_TIMEOUT = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_BAD_TIMEOUT)
-const OfpFlowModFailedCode_OFPFMFC_BAD_COMMAND = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_BAD_COMMAND)
-const OfpFlowModFailedCode_OFPFMFC_BAD_FLAGS = OfpFlowModFailedCode(openflow_13.OfpFlowModFailedCode_OFPFMFC_BAD_FLAGS)
-
-// OfpGroupModFailedCode from public import voltha_protos/openflow_13.proto
-type OfpGroupModFailedCode = openflow_13.OfpGroupModFailedCode
-
-var OfpGroupModFailedCode_name = openflow_13.OfpGroupModFailedCode_name
-var OfpGroupModFailedCode_value = openflow_13.OfpGroupModFailedCode_value
-
-const OfpGroupModFailedCode_OFPGMFC_GROUP_EXISTS = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_GROUP_EXISTS)
-const OfpGroupModFailedCode_OFPGMFC_INVALID_GROUP = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_INVALID_GROUP)
-const OfpGroupModFailedCode_OFPGMFC_WEIGHT_UNSUPPORTED = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_WEIGHT_UNSUPPORTED)
-const OfpGroupModFailedCode_OFPGMFC_OUT_OF_GROUPS = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_OUT_OF_GROUPS)
-const OfpGroupModFailedCode_OFPGMFC_OUT_OF_BUCKETS = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_OUT_OF_BUCKETS)
-const OfpGroupModFailedCode_OFPGMFC_CHAINING_UNSUPPORTED = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_CHAINING_UNSUPPORTED)
-const OfpGroupModFailedCode_OFPGMFC_WATCH_UNSUPPORTED = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_WATCH_UNSUPPORTED)
-const OfpGroupModFailedCode_OFPGMFC_LOOP = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_LOOP)
-const OfpGroupModFailedCode_OFPGMFC_UNKNOWN_GROUP = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_UNKNOWN_GROUP)
-const OfpGroupModFailedCode_OFPGMFC_CHAINED_GROUP = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_CHAINED_GROUP)
-const OfpGroupModFailedCode_OFPGMFC_BAD_TYPE = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_BAD_TYPE)
-const OfpGroupModFailedCode_OFPGMFC_BAD_COMMAND = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_BAD_COMMAND)
-const OfpGroupModFailedCode_OFPGMFC_BAD_BUCKET = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_BAD_BUCKET)
-const OfpGroupModFailedCode_OFPGMFC_BAD_WATCH = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_BAD_WATCH)
-const OfpGroupModFailedCode_OFPGMFC_EPERM = OfpGroupModFailedCode(openflow_13.OfpGroupModFailedCode_OFPGMFC_EPERM)
-
-// OfpPortModFailedCode from public import voltha_protos/openflow_13.proto
-type OfpPortModFailedCode = openflow_13.OfpPortModFailedCode
-
-var OfpPortModFailedCode_name = openflow_13.OfpPortModFailedCode_name
-var OfpPortModFailedCode_value = openflow_13.OfpPortModFailedCode_value
-
-const OfpPortModFailedCode_OFPPMFC_BAD_PORT = OfpPortModFailedCode(openflow_13.OfpPortModFailedCode_OFPPMFC_BAD_PORT)
-const OfpPortModFailedCode_OFPPMFC_BAD_HW_ADDR = OfpPortModFailedCode(openflow_13.OfpPortModFailedCode_OFPPMFC_BAD_HW_ADDR)
-const OfpPortModFailedCode_OFPPMFC_BAD_CONFIG = OfpPortModFailedCode(openflow_13.OfpPortModFailedCode_OFPPMFC_BAD_CONFIG)
-const OfpPortModFailedCode_OFPPMFC_BAD_ADVERTISE = OfpPortModFailedCode(openflow_13.OfpPortModFailedCode_OFPPMFC_BAD_ADVERTISE)
-const OfpPortModFailedCode_OFPPMFC_EPERM = OfpPortModFailedCode(openflow_13.OfpPortModFailedCode_OFPPMFC_EPERM)
-
-// OfpTableModFailedCode from public import voltha_protos/openflow_13.proto
-type OfpTableModFailedCode = openflow_13.OfpTableModFailedCode
-
-var OfpTableModFailedCode_name = openflow_13.OfpTableModFailedCode_name
-var OfpTableModFailedCode_value = openflow_13.OfpTableModFailedCode_value
-
-const OfpTableModFailedCode_OFPTMFC_BAD_TABLE = OfpTableModFailedCode(openflow_13.OfpTableModFailedCode_OFPTMFC_BAD_TABLE)
-const OfpTableModFailedCode_OFPTMFC_BAD_CONFIG = OfpTableModFailedCode(openflow_13.OfpTableModFailedCode_OFPTMFC_BAD_CONFIG)
-const OfpTableModFailedCode_OFPTMFC_EPERM = OfpTableModFailedCode(openflow_13.OfpTableModFailedCode_OFPTMFC_EPERM)
-
-// OfpQueueOpFailedCode from public import voltha_protos/openflow_13.proto
-type OfpQueueOpFailedCode = openflow_13.OfpQueueOpFailedCode
-
-var OfpQueueOpFailedCode_name = openflow_13.OfpQueueOpFailedCode_name
-var OfpQueueOpFailedCode_value = openflow_13.OfpQueueOpFailedCode_value
-
-const OfpQueueOpFailedCode_OFPQOFC_BAD_PORT = OfpQueueOpFailedCode(openflow_13.OfpQueueOpFailedCode_OFPQOFC_BAD_PORT)
-const OfpQueueOpFailedCode_OFPQOFC_BAD_QUEUE = OfpQueueOpFailedCode(openflow_13.OfpQueueOpFailedCode_OFPQOFC_BAD_QUEUE)
-const OfpQueueOpFailedCode_OFPQOFC_EPERM = OfpQueueOpFailedCode(openflow_13.OfpQueueOpFailedCode_OFPQOFC_EPERM)
-
-// OfpSwitchConfigFailedCode from public import voltha_protos/openflow_13.proto
-type OfpSwitchConfigFailedCode = openflow_13.OfpSwitchConfigFailedCode
-
-var OfpSwitchConfigFailedCode_name = openflow_13.OfpSwitchConfigFailedCode_name
-var OfpSwitchConfigFailedCode_value = openflow_13.OfpSwitchConfigFailedCode_value
-
-const OfpSwitchConfigFailedCode_OFPSCFC_BAD_FLAGS = OfpSwitchConfigFailedCode(openflow_13.OfpSwitchConfigFailedCode_OFPSCFC_BAD_FLAGS)
-const OfpSwitchConfigFailedCode_OFPSCFC_BAD_LEN = OfpSwitchConfigFailedCode(openflow_13.OfpSwitchConfigFailedCode_OFPSCFC_BAD_LEN)
-const OfpSwitchConfigFailedCode_OFPSCFC_EPERM = OfpSwitchConfigFailedCode(openflow_13.OfpSwitchConfigFailedCode_OFPSCFC_EPERM)
-
-// OfpRoleRequestFailedCode from public import voltha_protos/openflow_13.proto
-type OfpRoleRequestFailedCode = openflow_13.OfpRoleRequestFailedCode
-
-var OfpRoleRequestFailedCode_name = openflow_13.OfpRoleRequestFailedCode_name
-var OfpRoleRequestFailedCode_value = openflow_13.OfpRoleRequestFailedCode_value
-
-const OfpRoleRequestFailedCode_OFPRRFC_STALE = OfpRoleRequestFailedCode(openflow_13.OfpRoleRequestFailedCode_OFPRRFC_STALE)
-const OfpRoleRequestFailedCode_OFPRRFC_UNSUP = OfpRoleRequestFailedCode(openflow_13.OfpRoleRequestFailedCode_OFPRRFC_UNSUP)
-const OfpRoleRequestFailedCode_OFPRRFC_BAD_ROLE = OfpRoleRequestFailedCode(openflow_13.OfpRoleRequestFailedCode_OFPRRFC_BAD_ROLE)
-
-// OfpMeterModFailedCode from public import voltha_protos/openflow_13.proto
-type OfpMeterModFailedCode = openflow_13.OfpMeterModFailedCode
-
-var OfpMeterModFailedCode_name = openflow_13.OfpMeterModFailedCode_name
-var OfpMeterModFailedCode_value = openflow_13.OfpMeterModFailedCode_value
-
-const OfpMeterModFailedCode_OFPMMFC_UNKNOWN = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_UNKNOWN)
-const OfpMeterModFailedCode_OFPMMFC_METER_EXISTS = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_METER_EXISTS)
-const OfpMeterModFailedCode_OFPMMFC_INVALID_METER = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_INVALID_METER)
-const OfpMeterModFailedCode_OFPMMFC_UNKNOWN_METER = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_UNKNOWN_METER)
-const OfpMeterModFailedCode_OFPMMFC_BAD_COMMAND = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_BAD_COMMAND)
-const OfpMeterModFailedCode_OFPMMFC_BAD_FLAGS = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_BAD_FLAGS)
-const OfpMeterModFailedCode_OFPMMFC_BAD_RATE = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_BAD_RATE)
-const OfpMeterModFailedCode_OFPMMFC_BAD_BURST = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_BAD_BURST)
-const OfpMeterModFailedCode_OFPMMFC_BAD_BAND = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_BAD_BAND)
-const OfpMeterModFailedCode_OFPMMFC_BAD_BAND_DETAIL = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_BAD_BAND_DETAIL)
-const OfpMeterModFailedCode_OFPMMFC_OUT_OF_METERS = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_OUT_OF_METERS)
-const OfpMeterModFailedCode_OFPMMFC_OUT_OF_BANDS = OfpMeterModFailedCode(openflow_13.OfpMeterModFailedCode_OFPMMFC_OUT_OF_BANDS)
-
-// OfpTableFeaturesFailedCode from public import voltha_protos/openflow_13.proto
-type OfpTableFeaturesFailedCode = openflow_13.OfpTableFeaturesFailedCode
-
-var OfpTableFeaturesFailedCode_name = openflow_13.OfpTableFeaturesFailedCode_name
-var OfpTableFeaturesFailedCode_value = openflow_13.OfpTableFeaturesFailedCode_value
-
-const OfpTableFeaturesFailedCode_OFPTFFC_BAD_TABLE = OfpTableFeaturesFailedCode(openflow_13.OfpTableFeaturesFailedCode_OFPTFFC_BAD_TABLE)
-const OfpTableFeaturesFailedCode_OFPTFFC_BAD_METADATA = OfpTableFeaturesFailedCode(openflow_13.OfpTableFeaturesFailedCode_OFPTFFC_BAD_METADATA)
-const OfpTableFeaturesFailedCode_OFPTFFC_BAD_TYPE = OfpTableFeaturesFailedCode(openflow_13.OfpTableFeaturesFailedCode_OFPTFFC_BAD_TYPE)
-const OfpTableFeaturesFailedCode_OFPTFFC_BAD_LEN = OfpTableFeaturesFailedCode(openflow_13.OfpTableFeaturesFailedCode_OFPTFFC_BAD_LEN)
-const OfpTableFeaturesFailedCode_OFPTFFC_BAD_ARGUMENT = OfpTableFeaturesFailedCode(openflow_13.OfpTableFeaturesFailedCode_OFPTFFC_BAD_ARGUMENT)
-const OfpTableFeaturesFailedCode_OFPTFFC_EPERM = OfpTableFeaturesFailedCode(openflow_13.OfpTableFeaturesFailedCode_OFPTFFC_EPERM)
-
-// OfpMultipartType from public import voltha_protos/openflow_13.proto
-type OfpMultipartType = openflow_13.OfpMultipartType
-
-var OfpMultipartType_name = openflow_13.OfpMultipartType_name
-var OfpMultipartType_value = openflow_13.OfpMultipartType_value
-
-const OfpMultipartType_OFPMP_DESC = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_DESC)
-const OfpMultipartType_OFPMP_FLOW = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_FLOW)
-const OfpMultipartType_OFPMP_AGGREGATE = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_AGGREGATE)
-const OfpMultipartType_OFPMP_TABLE = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_TABLE)
-const OfpMultipartType_OFPMP_PORT_STATS = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_PORT_STATS)
-const OfpMultipartType_OFPMP_QUEUE = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_QUEUE)
-const OfpMultipartType_OFPMP_GROUP = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_GROUP)
-const OfpMultipartType_OFPMP_GROUP_DESC = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_GROUP_DESC)
-const OfpMultipartType_OFPMP_GROUP_FEATURES = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_GROUP_FEATURES)
-const OfpMultipartType_OFPMP_METER = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_METER)
-const OfpMultipartType_OFPMP_METER_CONFIG = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_METER_CONFIG)
-const OfpMultipartType_OFPMP_METER_FEATURES = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_METER_FEATURES)
-const OfpMultipartType_OFPMP_TABLE_FEATURES = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_TABLE_FEATURES)
-const OfpMultipartType_OFPMP_PORT_DESC = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_PORT_DESC)
-const OfpMultipartType_OFPMP_EXPERIMENTER = OfpMultipartType(openflow_13.OfpMultipartType_OFPMP_EXPERIMENTER)
-
-// OfpMultipartRequestFlags from public import voltha_protos/openflow_13.proto
-type OfpMultipartRequestFlags = openflow_13.OfpMultipartRequestFlags
-
-var OfpMultipartRequestFlags_name = openflow_13.OfpMultipartRequestFlags_name
-var OfpMultipartRequestFlags_value = openflow_13.OfpMultipartRequestFlags_value
-
-const OfpMultipartRequestFlags_OFPMPF_REQ_INVALID = OfpMultipartRequestFlags(openflow_13.OfpMultipartRequestFlags_OFPMPF_REQ_INVALID)
-const OfpMultipartRequestFlags_OFPMPF_REQ_MORE = OfpMultipartRequestFlags(openflow_13.OfpMultipartRequestFlags_OFPMPF_REQ_MORE)
-
-// OfpMultipartReplyFlags from public import voltha_protos/openflow_13.proto
-type OfpMultipartReplyFlags = openflow_13.OfpMultipartReplyFlags
-
-var OfpMultipartReplyFlags_name = openflow_13.OfpMultipartReplyFlags_name
-var OfpMultipartReplyFlags_value = openflow_13.OfpMultipartReplyFlags_value
-
-const OfpMultipartReplyFlags_OFPMPF_REPLY_INVALID = OfpMultipartReplyFlags(openflow_13.OfpMultipartReplyFlags_OFPMPF_REPLY_INVALID)
-const OfpMultipartReplyFlags_OFPMPF_REPLY_MORE = OfpMultipartReplyFlags(openflow_13.OfpMultipartReplyFlags_OFPMPF_REPLY_MORE)
-
-// OfpTableFeaturePropType from public import voltha_protos/openflow_13.proto
-type OfpTableFeaturePropType = openflow_13.OfpTableFeaturePropType
-
-var OfpTableFeaturePropType_name = openflow_13.OfpTableFeaturePropType_name
-var OfpTableFeaturePropType_value = openflow_13.OfpTableFeaturePropType_value
-
-const OfpTableFeaturePropType_OFPTFPT_INSTRUCTIONS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_INSTRUCTIONS)
-const OfpTableFeaturePropType_OFPTFPT_INSTRUCTIONS_MISS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_INSTRUCTIONS_MISS)
-const OfpTableFeaturePropType_OFPTFPT_NEXT_TABLES = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_NEXT_TABLES)
-const OfpTableFeaturePropType_OFPTFPT_NEXT_TABLES_MISS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_NEXT_TABLES_MISS)
-const OfpTableFeaturePropType_OFPTFPT_WRITE_ACTIONS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_WRITE_ACTIONS)
-const OfpTableFeaturePropType_OFPTFPT_WRITE_ACTIONS_MISS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_WRITE_ACTIONS_MISS)
-const OfpTableFeaturePropType_OFPTFPT_APPLY_ACTIONS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_APPLY_ACTIONS)
-const OfpTableFeaturePropType_OFPTFPT_APPLY_ACTIONS_MISS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_APPLY_ACTIONS_MISS)
-const OfpTableFeaturePropType_OFPTFPT_MATCH = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_MATCH)
-const OfpTableFeaturePropType_OFPTFPT_WILDCARDS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_WILDCARDS)
-const OfpTableFeaturePropType_OFPTFPT_WRITE_SETFIELD = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_WRITE_SETFIELD)
-const OfpTableFeaturePropType_OFPTFPT_WRITE_SETFIELD_MISS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_WRITE_SETFIELD_MISS)
-const OfpTableFeaturePropType_OFPTFPT_APPLY_SETFIELD = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_APPLY_SETFIELD)
-const OfpTableFeaturePropType_OFPTFPT_APPLY_SETFIELD_MISS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_APPLY_SETFIELD_MISS)
-const OfpTableFeaturePropType_OFPTFPT_EXPERIMENTER = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_EXPERIMENTER)
-const OfpTableFeaturePropType_OFPTFPT_EXPERIMENTER_MISS = OfpTableFeaturePropType(openflow_13.OfpTableFeaturePropType_OFPTFPT_EXPERIMENTER_MISS)
-
-// OfpGroupCapabilities from public import voltha_protos/openflow_13.proto
-type OfpGroupCapabilities = openflow_13.OfpGroupCapabilities
-
-var OfpGroupCapabilities_name = openflow_13.OfpGroupCapabilities_name
-var OfpGroupCapabilities_value = openflow_13.OfpGroupCapabilities_value
-
-const OfpGroupCapabilities_OFPGFC_INVALID = OfpGroupCapabilities(openflow_13.OfpGroupCapabilities_OFPGFC_INVALID)
-const OfpGroupCapabilities_OFPGFC_SELECT_WEIGHT = OfpGroupCapabilities(openflow_13.OfpGroupCapabilities_OFPGFC_SELECT_WEIGHT)
-const OfpGroupCapabilities_OFPGFC_SELECT_LIVENESS = OfpGroupCapabilities(openflow_13.OfpGroupCapabilities_OFPGFC_SELECT_LIVENESS)
-const OfpGroupCapabilities_OFPGFC_CHAINING = OfpGroupCapabilities(openflow_13.OfpGroupCapabilities_OFPGFC_CHAINING)
-const OfpGroupCapabilities_OFPGFC_CHAINING_CHECKS = OfpGroupCapabilities(openflow_13.OfpGroupCapabilities_OFPGFC_CHAINING_CHECKS)
-
-// OfpQueueProperties from public import voltha_protos/openflow_13.proto
-type OfpQueueProperties = openflow_13.OfpQueueProperties
-
-var OfpQueueProperties_name = openflow_13.OfpQueueProperties_name
-var OfpQueueProperties_value = openflow_13.OfpQueueProperties_value
-
-const OfpQueueProperties_OFPQT_INVALID = OfpQueueProperties(openflow_13.OfpQueueProperties_OFPQT_INVALID)
-const OfpQueueProperties_OFPQT_MIN_RATE = OfpQueueProperties(openflow_13.OfpQueueProperties_OFPQT_MIN_RATE)
-const OfpQueueProperties_OFPQT_MAX_RATE = OfpQueueProperties(openflow_13.OfpQueueProperties_OFPQT_MAX_RATE)
-const OfpQueueProperties_OFPQT_EXPERIMENTER = OfpQueueProperties(openflow_13.OfpQueueProperties_OFPQT_EXPERIMENTER)
-
-// OfpControllerRole from public import voltha_protos/openflow_13.proto
-type OfpControllerRole = openflow_13.OfpControllerRole
-
-var OfpControllerRole_name = openflow_13.OfpControllerRole_name
-var OfpControllerRole_value = openflow_13.OfpControllerRole_value
-
-const OfpControllerRole_OFPCR_ROLE_NOCHANGE = OfpControllerRole(openflow_13.OfpControllerRole_OFPCR_ROLE_NOCHANGE)
-const OfpControllerRole_OFPCR_ROLE_EQUAL = OfpControllerRole(openflow_13.OfpControllerRole_OFPCR_ROLE_EQUAL)
-const OfpControllerRole_OFPCR_ROLE_MASTER = OfpControllerRole(openflow_13.OfpControllerRole_OFPCR_ROLE_MASTER)
-const OfpControllerRole_OFPCR_ROLE_SLAVE = OfpControllerRole(openflow_13.OfpControllerRole_OFPCR_ROLE_SLAVE)
-
-type EventFilterRuleKey_EventFilterRuleType int32
-
-const (
-	EventFilterRuleKey_filter_all        EventFilterRuleKey_EventFilterRuleType = 0
-	EventFilterRuleKey_category          EventFilterRuleKey_EventFilterRuleType = 1
-	EventFilterRuleKey_sub_category      EventFilterRuleKey_EventFilterRuleType = 2
-	EventFilterRuleKey_kpi_event_type    EventFilterRuleKey_EventFilterRuleType = 3
-	EventFilterRuleKey_config_event_type EventFilterRuleKey_EventFilterRuleType = 4
-	EventFilterRuleKey_device_event_type EventFilterRuleKey_EventFilterRuleType = 5
-)
-
-var EventFilterRuleKey_EventFilterRuleType_name = map[int32]string{
-	0: "filter_all",
-	1: "category",
-	2: "sub_category",
-	3: "kpi_event_type",
-	4: "config_event_type",
-	5: "device_event_type",
-}
-
-var EventFilterRuleKey_EventFilterRuleType_value = map[string]int32{
-	"filter_all":        0,
-	"category":          1,
-	"sub_category":      2,
-	"kpi_event_type":    3,
-	"config_event_type": 4,
-	"device_event_type": 5,
-}
-
-func (x EventFilterRuleKey_EventFilterRuleType) String() string {
-	return proto.EnumName(EventFilterRuleKey_EventFilterRuleType_name, int32(x))
-}
-
-func (EventFilterRuleKey_EventFilterRuleType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{2, 0}
-}
-
-type TestResponse_TestResponseResult int32
-
-const (
-	TestResponse_SUCCESS TestResponse_TestResponseResult = 0
-	TestResponse_FAILURE TestResponse_TestResponseResult = 1
-)
-
-var TestResponse_TestResponseResult_name = map[int32]string{
-	0: "SUCCESS",
-	1: "FAILURE",
-}
-
-var TestResponse_TestResponseResult_value = map[string]int32{
-	"SUCCESS": 0,
-	"FAILURE": 1,
-}
-
-func (x TestResponse_TestResponseResult) String() string {
-	return proto.EnumName(TestResponse_TestResponseResult_name, int32(x))
-}
-
-func (TestResponse_TestResponseResult) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{9, 0}
-}
-
-type SelfTestResponse_SelfTestResult int32
-
-const (
-	SelfTestResponse_SUCCESS       SelfTestResponse_SelfTestResult = 0
-	SelfTestResponse_FAILURE       SelfTestResponse_SelfTestResult = 1
-	SelfTestResponse_NOT_SUPPORTED SelfTestResponse_SelfTestResult = 2
-	SelfTestResponse_UNKNOWN_ERROR SelfTestResponse_SelfTestResult = 3
-)
-
-var SelfTestResponse_SelfTestResult_name = map[int32]string{
-	0: "SUCCESS",
-	1: "FAILURE",
-	2: "NOT_SUPPORTED",
-	3: "UNKNOWN_ERROR",
-}
-
-var SelfTestResponse_SelfTestResult_value = map[string]int32{
-	"SUCCESS":       0,
-	"FAILURE":       1,
-	"NOT_SUPPORTED": 2,
-	"UNKNOWN_ERROR": 3,
-}
-
-func (x SelfTestResponse_SelfTestResult) String() string {
-	return proto.EnumName(SelfTestResponse_SelfTestResult_name, int32(x))
-}
-
-func (SelfTestResponse_SelfTestResult) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{12, 0}
-}
-
-type DeviceGroup struct {
-	Id                   string           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	LogicalDevices       []*LogicalDevice `protobuf:"bytes,2,rep,name=logical_devices,json=logicalDevices,proto3" json:"logical_devices,omitempty"`
-	Devices              []*Device        `protobuf:"bytes,3,rep,name=devices,proto3" json:"devices,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
-	XXX_unrecognized     []byte           `json:"-"`
-	XXX_sizecache        int32            `json:"-"`
-}
-
-func (m *DeviceGroup) Reset()         { *m = DeviceGroup{} }
-func (m *DeviceGroup) String() string { return proto.CompactTextString(m) }
-func (*DeviceGroup) ProtoMessage()    {}
-func (*DeviceGroup) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{0}
-}
-
-func (m *DeviceGroup) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DeviceGroup.Unmarshal(m, b)
-}
-func (m *DeviceGroup) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DeviceGroup.Marshal(b, m, deterministic)
-}
-func (m *DeviceGroup) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeviceGroup.Merge(m, src)
-}
-func (m *DeviceGroup) XXX_Size() int {
-	return xxx_messageInfo_DeviceGroup.Size(m)
-}
-func (m *DeviceGroup) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeviceGroup.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DeviceGroup proto.InternalMessageInfo
-
-func (m *DeviceGroup) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *DeviceGroup) GetLogicalDevices() []*LogicalDevice {
-	if m != nil {
-		return m.LogicalDevices
-	}
-	return nil
-}
-
-func (m *DeviceGroup) GetDevices() []*Device {
-	if m != nil {
-		return m.Devices
-	}
-	return nil
-}
-
-type DeviceGroups struct {
-	Items                []*DeviceGroup `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
-	XXX_unrecognized     []byte         `json:"-"`
-	XXX_sizecache        int32          `json:"-"`
-}
-
-func (m *DeviceGroups) Reset()         { *m = DeviceGroups{} }
-func (m *DeviceGroups) String() string { return proto.CompactTextString(m) }
-func (*DeviceGroups) ProtoMessage()    {}
-func (*DeviceGroups) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{1}
-}
-
-func (m *DeviceGroups) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DeviceGroups.Unmarshal(m, b)
-}
-func (m *DeviceGroups) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DeviceGroups.Marshal(b, m, deterministic)
-}
-func (m *DeviceGroups) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeviceGroups.Merge(m, src)
-}
-func (m *DeviceGroups) XXX_Size() int {
-	return xxx_messageInfo_DeviceGroups.Size(m)
-}
-func (m *DeviceGroups) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeviceGroups.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DeviceGroups proto.InternalMessageInfo
-
-func (m *DeviceGroups) GetItems() []*DeviceGroup {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
-type EventFilterRuleKey struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *EventFilterRuleKey) Reset()         { *m = EventFilterRuleKey{} }
-func (m *EventFilterRuleKey) String() string { return proto.CompactTextString(m) }
-func (*EventFilterRuleKey) ProtoMessage()    {}
-func (*EventFilterRuleKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{2}
-}
-
-func (m *EventFilterRuleKey) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_EventFilterRuleKey.Unmarshal(m, b)
-}
-func (m *EventFilterRuleKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_EventFilterRuleKey.Marshal(b, m, deterministic)
-}
-func (m *EventFilterRuleKey) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventFilterRuleKey.Merge(m, src)
-}
-func (m *EventFilterRuleKey) XXX_Size() int {
-	return xxx_messageInfo_EventFilterRuleKey.Size(m)
-}
-func (m *EventFilterRuleKey) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventFilterRuleKey.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventFilterRuleKey proto.InternalMessageInfo
-
-type EventFilterRule struct {
-	Key                  EventFilterRuleKey_EventFilterRuleType `protobuf:"varint,1,opt,name=key,proto3,enum=voltha.EventFilterRuleKey_EventFilterRuleType" json:"key,omitempty"`
-	Value                string                                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                               `json:"-"`
-	XXX_unrecognized     []byte                                 `json:"-"`
-	XXX_sizecache        int32                                  `json:"-"`
-}
-
-func (m *EventFilterRule) Reset()         { *m = EventFilterRule{} }
-func (m *EventFilterRule) String() string { return proto.CompactTextString(m) }
-func (*EventFilterRule) ProtoMessage()    {}
-func (*EventFilterRule) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{3}
-}
-
-func (m *EventFilterRule) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_EventFilterRule.Unmarshal(m, b)
-}
-func (m *EventFilterRule) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_EventFilterRule.Marshal(b, m, deterministic)
-}
-func (m *EventFilterRule) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventFilterRule.Merge(m, src)
-}
-func (m *EventFilterRule) XXX_Size() int {
-	return xxx_messageInfo_EventFilterRule.Size(m)
-}
-func (m *EventFilterRule) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventFilterRule.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventFilterRule proto.InternalMessageInfo
-
-func (m *EventFilterRule) GetKey() EventFilterRuleKey_EventFilterRuleType {
-	if m != nil {
-		return m.Key
-	}
-	return EventFilterRuleKey_filter_all
-}
-
-func (m *EventFilterRule) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
-
-type EventFilter struct {
-	Id                   string             `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Enable               bool               `protobuf:"varint,2,opt,name=enable,proto3" json:"enable,omitempty"`
-	DeviceId             string             `protobuf:"bytes,3,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	EventType            string             `protobuf:"bytes,4,opt,name=event_type,json=eventType,proto3" json:"event_type,omitempty"`
-	Rules                []*EventFilterRule `protobuf:"bytes,5,rep,name=rules,proto3" json:"rules,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
-	XXX_unrecognized     []byte             `json:"-"`
-	XXX_sizecache        int32              `json:"-"`
-}
-
-func (m *EventFilter) Reset()         { *m = EventFilter{} }
-func (m *EventFilter) String() string { return proto.CompactTextString(m) }
-func (*EventFilter) ProtoMessage()    {}
-func (*EventFilter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{4}
-}
-
-func (m *EventFilter) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_EventFilter.Unmarshal(m, b)
-}
-func (m *EventFilter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_EventFilter.Marshal(b, m, deterministic)
-}
-func (m *EventFilter) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventFilter.Merge(m, src)
-}
-func (m *EventFilter) XXX_Size() int {
-	return xxx_messageInfo_EventFilter.Size(m)
-}
-func (m *EventFilter) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventFilter.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventFilter proto.InternalMessageInfo
-
-func (m *EventFilter) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *EventFilter) GetEnable() bool {
-	if m != nil {
-		return m.Enable
-	}
-	return false
-}
-
-func (m *EventFilter) GetDeviceId() string {
-	if m != nil {
-		return m.DeviceId
-	}
-	return ""
-}
-
-func (m *EventFilter) GetEventType() string {
-	if m != nil {
-		return m.EventType
-	}
-	return ""
-}
-
-func (m *EventFilter) GetRules() []*EventFilterRule {
-	if m != nil {
-		return m.Rules
-	}
-	return nil
-}
-
-type EventFilters struct {
-	Filters              []*EventFilter `protobuf:"bytes,1,rep,name=filters,proto3" json:"filters,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
-	XXX_unrecognized     []byte         `json:"-"`
-	XXX_sizecache        int32          `json:"-"`
-}
-
-func (m *EventFilters) Reset()         { *m = EventFilters{} }
-func (m *EventFilters) String() string { return proto.CompactTextString(m) }
-func (*EventFilters) ProtoMessage()    {}
-func (*EventFilters) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{5}
-}
-
-func (m *EventFilters) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_EventFilters.Unmarshal(m, b)
-}
-func (m *EventFilters) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_EventFilters.Marshal(b, m, deterministic)
-}
-func (m *EventFilters) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventFilters.Merge(m, src)
-}
-func (m *EventFilters) XXX_Size() int {
-	return xxx_messageInfo_EventFilters.Size(m)
-}
-func (m *EventFilters) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventFilters.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventFilters proto.InternalMessageInfo
-
-func (m *EventFilters) GetFilters() []*EventFilter {
-	if m != nil {
-		return m.Filters
-	}
-	return nil
-}
-
 // CoreInstance represents a core instance.  It is data held in memory when a core
 // is running.  This data is not persistent.
 type CoreInstance struct {
-	InstanceId           string        `protobuf:"bytes,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
-	Health               *HealthStatus `protobuf:"bytes,2,opt,name=health,proto3" json:"health,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	InstanceId           string               `protobuf:"bytes,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	Health               *health.HealthStatus `protobuf:"bytes,2,opt,name=health,proto3" json:"health,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
 func (m *CoreInstance) Reset()         { *m = CoreInstance{} }
 func (m *CoreInstance) String() string { return proto.CompactTextString(m) }
 func (*CoreInstance) ProtoMessage()    {}
 func (*CoreInstance) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{6}
+	return fileDescriptor_e084f1a60ce7016c, []int{0}
 }
 
 func (m *CoreInstance) XXX_Unmarshal(b []byte) error {
@@ -1686,7 +147,7 @@ func (m *CoreInstance) GetInstanceId() string {
 	return ""
 }
 
-func (m *CoreInstance) GetHealth() *HealthStatus {
+func (m *CoreInstance) GetHealth() *health.HealthStatus {
 	if m != nil {
 		return m.Health
 	}
@@ -1704,7 +165,7 @@ func (m *CoreInstances) Reset()         { *m = CoreInstances{} }
 func (m *CoreInstances) String() string { return proto.CompactTextString(m) }
 func (*CoreInstances) ProtoMessage()    {}
 func (*CoreInstances) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{7}
+	return fileDescriptor_e084f1a60ce7016c, []int{1}
 }
 
 func (m *CoreInstances) XXX_Unmarshal(b []byte) error {
@@ -1732,165 +193,6 @@ func (m *CoreInstances) GetItems() []*CoreInstance {
 	return nil
 }
 
-type OmciTestRequest struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Uuid                 string   `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *OmciTestRequest) Reset()         { *m = OmciTestRequest{} }
-func (m *OmciTestRequest) String() string { return proto.CompactTextString(m) }
-func (*OmciTestRequest) ProtoMessage()    {}
-func (*OmciTestRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{8}
-}
-
-func (m *OmciTestRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_OmciTestRequest.Unmarshal(m, b)
-}
-func (m *OmciTestRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_OmciTestRequest.Marshal(b, m, deterministic)
-}
-func (m *OmciTestRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OmciTestRequest.Merge(m, src)
-}
-func (m *OmciTestRequest) XXX_Size() int {
-	return xxx_messageInfo_OmciTestRequest.Size(m)
-}
-func (m *OmciTestRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_OmciTestRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OmciTestRequest proto.InternalMessageInfo
-
-func (m *OmciTestRequest) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *OmciTestRequest) GetUuid() string {
-	if m != nil {
-		return m.Uuid
-	}
-	return ""
-}
-
-type TestResponse struct {
-	Result               TestResponse_TestResponseResult `protobuf:"varint,1,opt,name=result,proto3,enum=voltha.TestResponse_TestResponseResult" json:"result,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                        `json:"-"`
-	XXX_unrecognized     []byte                          `json:"-"`
-	XXX_sizecache        int32                           `json:"-"`
-}
-
-func (m *TestResponse) Reset()         { *m = TestResponse{} }
-func (m *TestResponse) String() string { return proto.CompactTextString(m) }
-func (*TestResponse) ProtoMessage()    {}
-func (*TestResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{9}
-}
-
-func (m *TestResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_TestResponse.Unmarshal(m, b)
-}
-func (m *TestResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_TestResponse.Marshal(b, m, deterministic)
-}
-func (m *TestResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TestResponse.Merge(m, src)
-}
-func (m *TestResponse) XXX_Size() int {
-	return xxx_messageInfo_TestResponse.Size(m)
-}
-func (m *TestResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_TestResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TestResponse proto.InternalMessageInfo
-
-func (m *TestResponse) GetResult() TestResponse_TestResponseResult {
-	if m != nil {
-		return m.Result
-	}
-	return TestResponse_SUCCESS
-}
-
-type ValueSet struct {
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Types that are valid to be assigned to Value:
-	//	*ValueSet_AlarmConfig
-	Value                isValueSet_Value `protobuf_oneof:"value"`
-	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
-	XXX_unrecognized     []byte           `json:"-"`
-	XXX_sizecache        int32            `json:"-"`
-}
-
-func (m *ValueSet) Reset()         { *m = ValueSet{} }
-func (m *ValueSet) String() string { return proto.CompactTextString(m) }
-func (*ValueSet) ProtoMessage()    {}
-func (*ValueSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{10}
-}
-
-func (m *ValueSet) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ValueSet.Unmarshal(m, b)
-}
-func (m *ValueSet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ValueSet.Marshal(b, m, deterministic)
-}
-func (m *ValueSet) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ValueSet.Merge(m, src)
-}
-func (m *ValueSet) XXX_Size() int {
-	return xxx_messageInfo_ValueSet.Size(m)
-}
-func (m *ValueSet) XXX_DiscardUnknown() {
-	xxx_messageInfo_ValueSet.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ValueSet proto.InternalMessageInfo
-
-func (m *ValueSet) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-type isValueSet_Value interface {
-	isValueSet_Value()
-}
-
-type ValueSet_AlarmConfig struct {
-	AlarmConfig *config.AlarmConfig `protobuf:"bytes,2,opt,name=alarm_config,json=alarmConfig,proto3,oneof"`
-}
-
-func (*ValueSet_AlarmConfig) isValueSet_Value() {}
-
-func (m *ValueSet) GetValue() isValueSet_Value {
-	if m != nil {
-		return m.Value
-	}
-	return nil
-}
-
-func (m *ValueSet) GetAlarmConfig() *config.AlarmConfig {
-	if x, ok := m.GetValue().(*ValueSet_AlarmConfig); ok {
-		return x.AlarmConfig
-	}
-	return nil
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*ValueSet) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ValueSet_AlarmConfig)(nil),
-	}
-}
-
 // Voltha represents the Voltha cluster data.  Each Core instance will hold a subset of
 // the entire cluster. However, some items (e.g. adapters) will be held by all cores
 // for better performance
@@ -1900,7 +202,6 @@ type Voltha struct {
 	LogicalDevices       []*LogicalDevice        `protobuf:"bytes,3,rep,name=logical_devices,json=logicalDevices,proto3" json:"logical_devices,omitempty"`
 	Devices              []*Device               `protobuf:"bytes,4,rep,name=devices,proto3" json:"devices,omitempty"`
 	DeviceTypes          []*DeviceType           `protobuf:"bytes,5,rep,name=device_types,json=deviceTypes,proto3" json:"device_types,omitempty"`
-	DeviceGroups         []*DeviceGroup          `protobuf:"bytes,6,rep,name=device_groups,json=deviceGroups,proto3" json:"device_groups,omitempty"`
 	EventFilters         []*EventFilter          `protobuf:"bytes,7,rep,name=event_filters,json=eventFilters,proto3" json:"event_filters,omitempty"`
 	OmciMibDatabase      []*omci.MibDeviceData   `protobuf:"bytes,28,rep,name=omci_mib_database,json=omciMibDatabase,proto3" json:"omci_mib_database,omitempty"`
 	OmciAlarmDatabase    []*omci.AlarmDeviceData `protobuf:"bytes,29,rep,name=omci_alarm_database,json=omciAlarmDatabase,proto3" json:"omci_alarm_database,omitempty"`
@@ -1913,7 +214,7 @@ func (m *Voltha) Reset()         { *m = Voltha{} }
 func (m *Voltha) String() string { return proto.CompactTextString(m) }
 func (*Voltha) ProtoMessage()    {}
 func (*Voltha) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{11}
+	return fileDescriptor_e084f1a60ce7016c, []int{2}
 }
 
 func (m *Voltha) XXX_Unmarshal(b []byte) error {
@@ -1969,13 +270,6 @@ func (m *Voltha) GetDeviceTypes() []*DeviceType {
 	return nil
 }
 
-func (m *Voltha) GetDeviceGroups() []*DeviceGroup {
-	if m != nil {
-		return m.DeviceGroups
-	}
-	return nil
-}
-
 func (m *Voltha) GetEventFilters() []*EventFilter {
 	if m != nil {
 		return m.EventFilters
@@ -1997,565 +291,150 @@ func (m *Voltha) GetOmciAlarmDatabase() []*omci.AlarmDeviceData {
 	return nil
 }
 
-// Device Self Test Response
-type SelfTestResponse struct {
-	Result               SelfTestResponse_SelfTestResult `protobuf:"varint,1,opt,name=result,proto3,enum=voltha.SelfTestResponse_SelfTestResult" json:"result,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                        `json:"-"`
-	XXX_unrecognized     []byte                          `json:"-"`
-	XXX_sizecache        int32                           `json:"-"`
-}
-
-func (m *SelfTestResponse) Reset()         { *m = SelfTestResponse{} }
-func (m *SelfTestResponse) String() string { return proto.CompactTextString(m) }
-func (*SelfTestResponse) ProtoMessage()    {}
-func (*SelfTestResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{12}
-}
-
-func (m *SelfTestResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SelfTestResponse.Unmarshal(m, b)
-}
-func (m *SelfTestResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SelfTestResponse.Marshal(b, m, deterministic)
-}
-func (m *SelfTestResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SelfTestResponse.Merge(m, src)
-}
-func (m *SelfTestResponse) XXX_Size() int {
-	return xxx_messageInfo_SelfTestResponse.Size(m)
-}
-func (m *SelfTestResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_SelfTestResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SelfTestResponse proto.InternalMessageInfo
-
-func (m *SelfTestResponse) GetResult() SelfTestResponse_SelfTestResult {
-	if m != nil {
-		return m.Result
-	}
-	return SelfTestResponse_SUCCESS
-}
-
-type OfAgentSubscriber struct {
-	// ID of ofagent instance
-	OfagentId string `protobuf:"bytes,1,opt,name=ofagent_id,json=ofagentId,proto3" json:"ofagent_id,omitempty"`
-	// ID of voltha instance to which the ofagent is subscribed
-	VolthaId             string   `protobuf:"bytes,2,opt,name=voltha_id,json=volthaId,proto3" json:"voltha_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *OfAgentSubscriber) Reset()         { *m = OfAgentSubscriber{} }
-func (m *OfAgentSubscriber) String() string { return proto.CompactTextString(m) }
-func (*OfAgentSubscriber) ProtoMessage()    {}
-func (*OfAgentSubscriber) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{13}
-}
-
-func (m *OfAgentSubscriber) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_OfAgentSubscriber.Unmarshal(m, b)
-}
-func (m *OfAgentSubscriber) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_OfAgentSubscriber.Marshal(b, m, deterministic)
-}
-func (m *OfAgentSubscriber) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OfAgentSubscriber.Merge(m, src)
-}
-func (m *OfAgentSubscriber) XXX_Size() int {
-	return xxx_messageInfo_OfAgentSubscriber.Size(m)
-}
-func (m *OfAgentSubscriber) XXX_DiscardUnknown() {
-	xxx_messageInfo_OfAgentSubscriber.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OfAgentSubscriber proto.InternalMessageInfo
-
-func (m *OfAgentSubscriber) GetOfagentId() string {
-	if m != nil {
-		return m.OfagentId
-	}
-	return ""
-}
-
-func (m *OfAgentSubscriber) GetVolthaId() string {
-	if m != nil {
-		return m.VolthaId
-	}
-	return ""
-}
-
-// Identifies a membership group a Core belongs to
-type Membership struct {
-	//  Group name
-	GroupName string `protobuf:"bytes,1,opt,name=group_name,json=groupName,proto3" json:"group_name,omitempty"`
-	// Unique ID of a container within that group
-	Id                   string   `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Membership) Reset()         { *m = Membership{} }
-func (m *Membership) String() string { return proto.CompactTextString(m) }
-func (*Membership) ProtoMessage()    {}
-func (*Membership) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{14}
-}
-
-func (m *Membership) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Membership.Unmarshal(m, b)
-}
-func (m *Membership) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Membership.Marshal(b, m, deterministic)
-}
-func (m *Membership) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Membership.Merge(m, src)
-}
-func (m *Membership) XXX_Size() int {
-	return xxx_messageInfo_Membership.Size(m)
-}
-func (m *Membership) XXX_DiscardUnknown() {
-	xxx_messageInfo_Membership.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Membership proto.InternalMessageInfo
-
-func (m *Membership) GetGroupName() string {
-	if m != nil {
-		return m.GroupName
-	}
-	return ""
-}
-
-func (m *Membership) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-type DeviceImageDownloadRequest struct {
-	// Device Id
-	// allows for operations on multiple devices.
-	DeviceId []*common.ID `protobuf:"bytes,1,rep,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	//The image for the device containing all the information
-	Image *Image `protobuf:"bytes,2,opt,name=image,proto3" json:"image,omitempty"`
-	//Activate the image if the download to the device is successful
-	ActivateOnSuccess bool `protobuf:"varint,3,opt,name=activateOnSuccess,proto3" json:"activateOnSuccess,omitempty"`
-	//Automatically commit the image if the activation on the device is successful
-	CommitOnSuccess      bool     `protobuf:"varint,4,opt,name=commitOnSuccess,proto3" json:"commitOnSuccess,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *DeviceImageDownloadRequest) Reset()         { *m = DeviceImageDownloadRequest{} }
-func (m *DeviceImageDownloadRequest) String() string { return proto.CompactTextString(m) }
-func (*DeviceImageDownloadRequest) ProtoMessage()    {}
-func (*DeviceImageDownloadRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{15}
-}
-
-func (m *DeviceImageDownloadRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DeviceImageDownloadRequest.Unmarshal(m, b)
-}
-func (m *DeviceImageDownloadRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DeviceImageDownloadRequest.Marshal(b, m, deterministic)
-}
-func (m *DeviceImageDownloadRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeviceImageDownloadRequest.Merge(m, src)
-}
-func (m *DeviceImageDownloadRequest) XXX_Size() int {
-	return xxx_messageInfo_DeviceImageDownloadRequest.Size(m)
-}
-func (m *DeviceImageDownloadRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeviceImageDownloadRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DeviceImageDownloadRequest proto.InternalMessageInfo
-
-func (m *DeviceImageDownloadRequest) GetDeviceId() []*common.ID {
-	if m != nil {
-		return m.DeviceId
-	}
-	return nil
-}
-
-func (m *DeviceImageDownloadRequest) GetImage() *Image {
-	if m != nil {
-		return m.Image
-	}
-	return nil
-}
-
-func (m *DeviceImageDownloadRequest) GetActivateOnSuccess() bool {
-	if m != nil {
-		return m.ActivateOnSuccess
-	}
-	return false
-}
-
-func (m *DeviceImageDownloadRequest) GetCommitOnSuccess() bool {
-	if m != nil {
-		return m.CommitOnSuccess
-	}
-	return false
-}
-
-type DeviceImageRequest struct {
-	//Device Id
-	//allows for operations on multiple adapters.
-	DeviceId []*common.ID `protobuf:"bytes,1,rep,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	// Image Version, this is the sole identifier of the image. it's the vendor specified OMCI version
-	// must be known at the time of initiating a download, activate, commit image on an onu.
-	Version string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	//Automatically commit the image if the activation on the device is successful
-	CommitOnSuccess      bool     `protobuf:"varint,3,opt,name=commitOnSuccess,proto3" json:"commitOnSuccess,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *DeviceImageRequest) Reset()         { *m = DeviceImageRequest{} }
-func (m *DeviceImageRequest) String() string { return proto.CompactTextString(m) }
-func (*DeviceImageRequest) ProtoMessage()    {}
-func (*DeviceImageRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{16}
-}
-
-func (m *DeviceImageRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DeviceImageRequest.Unmarshal(m, b)
-}
-func (m *DeviceImageRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DeviceImageRequest.Marshal(b, m, deterministic)
-}
-func (m *DeviceImageRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeviceImageRequest.Merge(m, src)
-}
-func (m *DeviceImageRequest) XXX_Size() int {
-	return xxx_messageInfo_DeviceImageRequest.Size(m)
-}
-func (m *DeviceImageRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeviceImageRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DeviceImageRequest proto.InternalMessageInfo
-
-func (m *DeviceImageRequest) GetDeviceId() []*common.ID {
-	if m != nil {
-		return m.DeviceId
-	}
-	return nil
-}
-
-func (m *DeviceImageRequest) GetVersion() string {
-	if m != nil {
-		return m.Version
-	}
-	return ""
-}
-
-func (m *DeviceImageRequest) GetCommitOnSuccess() bool {
-	if m != nil {
-		return m.CommitOnSuccess
-	}
-	return false
-}
-
-type DeviceImageResponse struct {
-	//Image state for the different devices
-	DeviceImageStates    []*DeviceImageState `protobuf:"bytes,1,rep,name=device_image_states,json=deviceImageStates,proto3" json:"device_image_states,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
-	XXX_unrecognized     []byte              `json:"-"`
-	XXX_sizecache        int32               `json:"-"`
-}
-
-func (m *DeviceImageResponse) Reset()         { *m = DeviceImageResponse{} }
-func (m *DeviceImageResponse) String() string { return proto.CompactTextString(m) }
-func (*DeviceImageResponse) ProtoMessage()    {}
-func (*DeviceImageResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{17}
-}
-
-func (m *DeviceImageResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DeviceImageResponse.Unmarshal(m, b)
-}
-func (m *DeviceImageResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DeviceImageResponse.Marshal(b, m, deterministic)
-}
-func (m *DeviceImageResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeviceImageResponse.Merge(m, src)
-}
-func (m *DeviceImageResponse) XXX_Size() int {
-	return xxx_messageInfo_DeviceImageResponse.Size(m)
-}
-func (m *DeviceImageResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeviceImageResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DeviceImageResponse proto.InternalMessageInfo
-
-func (m *DeviceImageResponse) GetDeviceImageStates() []*DeviceImageState {
-	if m != nil {
-		return m.DeviceImageStates
-	}
-	return nil
-}
-
-// Additional information required to process flow at device adapters
-type FlowMetadata struct {
-	// Meters associated with flow-update to adapter
-	Meters               []*openflow_13.OfpMeterConfig `protobuf:"bytes,1,rep,name=meters,proto3" json:"meters,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
-	XXX_unrecognized     []byte                        `json:"-"`
-	XXX_sizecache        int32                         `json:"-"`
-}
-
-func (m *FlowMetadata) Reset()         { *m = FlowMetadata{} }
-func (m *FlowMetadata) String() string { return proto.CompactTextString(m) }
-func (*FlowMetadata) ProtoMessage()    {}
-func (*FlowMetadata) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e084f1a60ce7016c, []int{18}
-}
-
-func (m *FlowMetadata) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_FlowMetadata.Unmarshal(m, b)
-}
-func (m *FlowMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_FlowMetadata.Marshal(b, m, deterministic)
-}
-func (m *FlowMetadata) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FlowMetadata.Merge(m, src)
-}
-func (m *FlowMetadata) XXX_Size() int {
-	return xxx_messageInfo_FlowMetadata.Size(m)
-}
-func (m *FlowMetadata) XXX_DiscardUnknown() {
-	xxx_messageInfo_FlowMetadata.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_FlowMetadata proto.InternalMessageInfo
-
-func (m *FlowMetadata) GetMeters() []*openflow_13.OfpMeterConfig {
-	if m != nil {
-		return m.Meters
-	}
-	return nil
-}
-
 func init() {
-	proto.RegisterEnum("voltha.EventFilterRuleKey_EventFilterRuleType", EventFilterRuleKey_EventFilterRuleType_name, EventFilterRuleKey_EventFilterRuleType_value)
-	proto.RegisterEnum("voltha.TestResponse_TestResponseResult", TestResponse_TestResponseResult_name, TestResponse_TestResponseResult_value)
-	proto.RegisterEnum("voltha.SelfTestResponse_SelfTestResult", SelfTestResponse_SelfTestResult_name, SelfTestResponse_SelfTestResult_value)
-	proto.RegisterType((*DeviceGroup)(nil), "voltha.DeviceGroup")
-	proto.RegisterType((*DeviceGroups)(nil), "voltha.DeviceGroups")
-	proto.RegisterType((*EventFilterRuleKey)(nil), "voltha.EventFilterRuleKey")
-	proto.RegisterType((*EventFilterRule)(nil), "voltha.EventFilterRule")
-	proto.RegisterType((*EventFilter)(nil), "voltha.EventFilter")
-	proto.RegisterType((*EventFilters)(nil), "voltha.EventFilters")
 	proto.RegisterType((*CoreInstance)(nil), "voltha.CoreInstance")
 	proto.RegisterType((*CoreInstances)(nil), "voltha.CoreInstances")
-	proto.RegisterType((*OmciTestRequest)(nil), "voltha.OmciTestRequest")
-	proto.RegisterType((*TestResponse)(nil), "voltha.TestResponse")
-	proto.RegisterType((*ValueSet)(nil), "voltha.ValueSet")
 	proto.RegisterType((*Voltha)(nil), "voltha.Voltha")
-	proto.RegisterType((*SelfTestResponse)(nil), "voltha.SelfTestResponse")
-	proto.RegisterType((*OfAgentSubscriber)(nil), "voltha.OfAgentSubscriber")
-	proto.RegisterType((*Membership)(nil), "voltha.Membership")
-	proto.RegisterType((*DeviceImageDownloadRequest)(nil), "voltha.DeviceImageDownloadRequest")
-	proto.RegisterType((*DeviceImageRequest)(nil), "voltha.DeviceImageRequest")
-	proto.RegisterType((*DeviceImageResponse)(nil), "voltha.DeviceImageResponse")
-	proto.RegisterType((*FlowMetadata)(nil), "voltha.FlowMetadata")
 }
 
 func init() { proto.RegisterFile("voltha_protos/voltha.proto", fileDescriptor_e084f1a60ce7016c) }
 
 var fileDescriptor_e084f1a60ce7016c = []byte{
-	// 2901 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x5a, 0xcb, 0x73, 0x1b, 0xb7,
-	0x19, 0x37, 0xf5, 0xd6, 0x47, 0x4a, 0x22, 0x41, 0x3d, 0x68, 0x4a, 0xf2, 0x03, 0x4e, 0x6c, 0x45,
-	0x89, 0xc9, 0xd8, 0x8e, 0x3d, 0x69, 0xd2, 0x4c, 0xa3, 0x97, 0x15, 0x36, 0xb6, 0xc9, 0x2e, 0x25,
-	0x3b, 0x6d, 0xe3, 0xe1, 0x2c, 0xb9, 0x20, 0xb5, 0x63, 0x92, 0xcb, 0xee, 0x82, 0xb2, 0x3d, 0x9e,
-	0x4c, 0xa7, 0xe9, 0x23, 0xe9, 0x39, 0xf7, 0x9e, 0xda, 0xe9, 0x4c, 0x2f, 0xfd, 0x1f, 0x7a, 0xcf,
-	0xa9, 0xa7, 0x5e, 0x3b, 0x3d, 0xf4, 0x2f, 0xc8, 0xb9, 0x83, 0x0f, 0x00, 0xb9, 0xcb, 0xdd, 0xd5,
-	0xc3, 0xc9, 0x4c, 0x4f, 0xd2, 0x02, 0x1f, 0x7e, 0xbf, 0x0f, 0x1f, 0xf0, 0x3d, 0x00, 0x10, 0xf2,
-	0xc7, 0x4e, 0x9b, 0x1f, 0x99, 0xb5, 0x9e, 0xeb, 0x70, 0xc7, 0x2b, 0xca, 0xaf, 0x02, 0x7e, 0x91,
-	0x29, 0xf9, 0x95, 0x5f, 0x6b, 0x39, 0x4e, 0xab, 0xcd, 0x8a, 0x66, 0xcf, 0x2e, 0x9a, 0xdd, 0xae,
-	0xc3, 0x4d, 0x6e, 0x3b, 0x5d, 0x4f, 0x4a, 0xe5, 0x57, 0x55, 0x2f, 0x7e, 0xd5, 0xfb, 0xcd, 0x22,
-	0xeb, 0xf4, 0xf8, 0x4b, 0xd5, 0x99, 0x0b, 0xc2, 0x77, 0x18, 0x57, 0xe0, 0xf9, 0x11, 0xe2, 0x86,
-	0xd3, 0xe9, 0x38, 0xdd, 0xe8, 0xbe, 0x23, 0x66, 0xb6, 0xf9, 0x91, 0xea, 0xa3, 0xc1, 0xbe, 0xb6,
-	0xd3, 0xb2, 0x1b, 0x66, 0xbb, 0x66, 0xb1, 0x63, 0xbb, 0xc1, 0xa2, 0xc7, 0x07, 0xfa, 0x56, 0x83,
-	0x7d, 0xa6, 0x65, 0xf6, 0x38, 0x73, 0x55, 0xe7, 0xe5, 0x60, 0xa7, 0xd3, 0x63, 0xdd, 0x66, 0xdb,
-	0x79, 0x5e, 0xbb, 0x75, 0x27, 0x46, 0xa0, 0xd3, 0xb0, 0x6b, 0x1d, 0xbb, 0x5e, 0xb3, 0xea, 0x4a,
-	0xe0, 0x6a, 0x84, 0x80, 0xd9, 0x36, 0xdd, 0xce, 0x50, 0xe4, 0x52, 0x50, 0x84, 0xbd, 0xe0, 0xb5,
-	0x86, 0xd3, 0x6d, 0xda, 0x2d, 0xd9, 0x4f, 0xff, 0x9c, 0x80, 0xe4, 0x2e, 0xaa, 0xbc, 0xef, 0x3a,
-	0xfd, 0x1e, 0x59, 0x82, 0x31, 0xdb, 0xca, 0x25, 0xae, 0x24, 0x36, 0x66, 0xb7, 0x27, 0xff, 0xfb,
-	0xdd, 0xb7, 0xeb, 0x09, 0x63, 0xcc, 0xb6, 0x48, 0x09, 0x16, 0x82, 0x93, 0xf7, 0x72, 0x63, 0x57,
-	0xc6, 0x37, 0x92, 0xb7, 0x97, 0x0a, 0x6a, 0x15, 0x1f, 0xc8, 0x6e, 0x89, 0xb5, 0x3d, 0xfb, 0xef,
-	0xef, 0xbe, 0x5d, 0x9f, 0x10, 0x58, 0xc6, 0x7c, 0xdb, 0xdf, 0xe3, 0x91, 0x3b, 0x30, 0xad, 0x21,
-	0xc6, 0x11, 0x62, 0x5e, 0x43, 0x84, 0xc7, 0x6a, 0x49, 0xfa, 0x23, 0x48, 0xf9, 0xb4, 0xf4, 0xc8,
-	0x5b, 0x30, 0x69, 0x73, 0xd6, 0xf1, 0x72, 0x09, 0x84, 0xc8, 0x06, 0x21, 0x50, 0xc8, 0x90, 0x12,
-	0xf4, 0x4f, 0x09, 0x20, 0x7b, 0xc7, 0xac, 0xcb, 0xef, 0xdb, 0x6d, 0xce, 0x5c, 0xa3, 0xdf, 0x66,
-	0x9f, 0xb2, 0x97, 0xf4, 0xab, 0x04, 0x64, 0x47, 0x9a, 0x0f, 0x5e, 0xf6, 0x18, 0x99, 0x07, 0x68,
-	0x62, 0x4b, 0xcd, 0x6c, 0xb7, 0xd3, 0x17, 0x48, 0x0a, 0x66, 0x1a, 0x26, 0x67, 0x2d, 0xc7, 0x7d,
-	0x99, 0x4e, 0x90, 0x34, 0xa4, 0xbc, 0x7e, 0xbd, 0x36, 0x68, 0x19, 0x23, 0x04, 0xe6, 0x9f, 0xf5,
-	0xec, 0x1a, 0x13, 0x50, 0x35, 0xfe, 0xb2, 0xc7, 0xd2, 0xe3, 0x64, 0x09, 0x32, 0xd2, 0xc8, 0xfe,
-	0xe6, 0x09, 0xd1, 0x2c, 0xe7, 0xe3, 0x6f, 0x9e, 0xa4, 0x36, 0x2c, 0x8c, 0x28, 0x42, 0x3e, 0x86,
-	0xf1, 0x67, 0xec, 0x25, 0x2e, 0xc3, 0xfc, 0xed, 0x82, 0x9e, 0x5c, 0x78, 0x16, 0x85, 0x88, 0x19,
-	0x18, 0x62, 0x28, 0x59, 0x84, 0xc9, 0x63, 0xb3, 0xdd, 0x67, 0xb9, 0x31, 0xb1, 0x94, 0x86, 0xfc,
-	0xa0, 0x7f, 0x4d, 0x40, 0xd2, 0x37, 0x24, 0x6e, 0xb5, 0x97, 0x61, 0x8a, 0x75, 0xcd, 0x7a, 0x5b,
-	0x8e, 0x9e, 0x31, 0xd4, 0x17, 0x59, 0x85, 0x59, 0x35, 0x01, 0xdb, 0xca, 0x8d, 0x23, 0xf0, 0x8c,
-	0x6c, 0x28, 0x59, 0x64, 0x1d, 0x60, 0x38, 0xad, 0xdc, 0x04, 0xf6, 0xce, 0x62, 0x0b, 0xda, 0xf5,
-	0x26, 0x4c, 0xba, 0xfd, 0x36, 0xf3, 0x72, 0x93, 0xb8, 0x62, 0x2b, 0x31, 0x93, 0x32, 0xa4, 0x14,
-	0xfd, 0x08, 0x52, 0xbe, 0x1e, 0x8f, 0xdc, 0x84, 0x69, 0xb9, 0x2c, 0xa1, 0x25, 0xf7, 0x03, 0x68,
-	0x19, 0xfa, 0x0c, 0x52, 0x3b, 0x8e, 0xcb, 0x4a, 0x5d, 0x8f, 0x9b, 0xdd, 0x06, 0x23, 0xd7, 0x21,
-	0x69, 0xab, 0xff, 0x6b, 0xa3, 0x33, 0x06, 0xdd, 0x53, 0xb2, 0xc8, 0x1d, 0x98, 0x92, 0x01, 0x00,
-	0x67, 0x9e, 0xbc, 0xbd, 0xa8, 0x59, 0x3e, 0xc1, 0xd6, 0x2a, 0x37, 0x79, 0xdf, 0xdb, 0x9e, 0x14,
-	0x3b, 0xf4, 0x82, 0xa1, 0x44, 0xe9, 0x87, 0x30, 0xe7, 0x27, 0xf3, 0xc8, 0x66, 0x70, 0x77, 0x0e,
-	0x40, 0xfc, 0x52, 0x7a, 0x7b, 0xde, 0x85, 0x85, 0x72, 0xa7, 0x61, 0x1f, 0x30, 0x8f, 0x1b, 0xec,
-	0x57, 0x7d, 0xe6, 0x71, 0x32, 0x3f, 0x5c, 0x15, 0x5c, 0x0e, 0x02, 0x13, 0xfd, 0xbe, 0x6d, 0xa9,
-	0xa5, 0xc4, 0xff, 0xe9, 0xaf, 0x21, 0x25, 0x87, 0x78, 0x3d, 0xa7, 0xeb, 0x31, 0xf2, 0x13, 0x98,
-	0x72, 0x99, 0xd7, 0x6f, 0x73, 0xb5, 0x69, 0x6e, 0x68, 0x4e, 0xbf, 0x54, 0xe0, 0xc3, 0x40, 0x71,
-	0x43, 0x0d, 0xa3, 0x05, 0x20, 0xe1, 0x5e, 0x92, 0x84, 0xe9, 0xea, 0xe1, 0xce, 0xce, 0x5e, 0xb5,
-	0x9a, 0xbe, 0x20, 0x3e, 0xee, 0x6f, 0x95, 0x1e, 0x1c, 0x1a, 0x7b, 0xe9, 0x04, 0x7d, 0x0a, 0x33,
-	0x8f, 0xc5, 0x9e, 0xaa, 0xb2, 0xb0, 0xc2, 0xef, 0x43, 0x4a, 0x86, 0x21, 0xe9, 0x05, 0xca, 0x96,
-	0xd9, 0x82, 0x8a, 0x3c, 0x5b, 0xa2, 0x6f, 0x07, 0xff, 0xff, 0xe4, 0x82, 0x91, 0x34, 0x87, 0x9f,
-	0xdb, 0xd3, 0x6a, 0xdb, 0xd2, 0x7f, 0x4d, 0xc0, 0xd4, 0x63, 0x9c, 0x01, 0xb9, 0x0c, 0xd3, 0xc7,
-	0xcc, 0xf5, 0x6c, 0xa7, 0x1b, 0x5c, 0x37, 0xdd, 0x4a, 0xee, 0xc1, 0x8c, 0x8a, 0xac, 0x3a, 0x2a,
-	0x2d, 0xe8, 0xd9, 0x6f, 0xc9, 0x76, 0x7f, 0x4c, 0x19, 0xc8, 0x46, 0x05, 0xb5, 0xf1, 0xef, 0x1f,
-	0xd4, 0x26, 0xce, 0x1a, 0xd4, 0xc8, 0xc7, 0x90, 0x52, 0xee, 0x24, 0x5c, 0x46, 0x7b, 0x06, 0x09,
-	0x8e, 0x14, 0xce, 0xe3, 0x1f, 0x9d, 0xb4, 0x06, 0xcd, 0x1e, 0xd9, 0x81, 0x39, 0x85, 0xd0, 0xc2,
-	0xb8, 0x98, 0x9b, 0x8a, 0x0d, 0x87, 0x7e, 0x0c, 0x45, 0xab, 0x62, 0xe9, 0x0e, 0xcc, 0x49, 0xc7,
-	0xd5, 0x0e, 0x36, 0x1d, 0xeb, 0x60, 0x01, 0x10, 0xe6, 0xf7, 0xcf, 0x9f, 0x41, 0x66, 0x98, 0x9f,
-	0x4c, 0x6e, 0xd6, 0x4d, 0x8f, 0xe5, 0xd6, 0x14, 0x90, 0xe8, 0x29, 0x3c, 0xb4, 0xeb, 0x52, 0x9d,
-	0x5d, 0x93, 0x9b, 0xdb, 0x69, 0x01, 0x94, 0xf4, 0xc5, 0x13, 0x63, 0x41, 0x48, 0x09, 0x21, 0x35,
-	0x9a, 0x3c, 0x81, 0xac, 0x3f, 0xa3, 0x69, 0xd0, 0x75, 0xb5, 0x44, 0x08, 0x8a, 0x5b, 0xe9, 0x44,
-	0x58, 0x54, 0x4b, 0x8a, 0x29, 0x04, 0xfa, 0x97, 0x04, 0xa4, 0xab, 0xac, 0xdd, 0x3c, 0x9b, 0x03,
-	0x8d, 0x4a, 0xfa, 0x1b, 0xfc, 0x0e, 0x54, 0x81, 0xf9, 0x60, 0x4f, 0xbc, 0xf3, 0x90, 0x0c, 0xcc,
-	0x3d, 0x2a, 0x1f, 0xd4, 0xaa, 0x87, 0x95, 0x4a, 0xd9, 0x38, 0xd8, 0xdb, 0x4d, 0x8f, 0x89, 0xa6,
-	0xc3, 0x47, 0x9f, 0x3e, 0x2a, 0x3f, 0x79, 0x54, 0xdb, 0x33, 0x8c, 0xb2, 0x91, 0x1e, 0xa7, 0x65,
-	0xc8, 0x94, 0x9b, 0x5b, 0x2d, 0xd6, 0xe5, 0xd5, 0x7e, 0xdd, 0x6b, 0xb8, 0x76, 0x9d, 0xb9, 0x22,
-	0xcc, 0x3a, 0x4d, 0x53, 0x34, 0x0e, 0x02, 0x99, 0x31, 0xab, 0x5a, 0x4a, 0x96, 0x08, 0xd1, 0x2a,
-	0xe3, 0x0f, 0x02, 0xc6, 0x8c, 0x6c, 0x28, 0x59, 0xf4, 0x43, 0x80, 0x87, 0xac, 0x53, 0x67, 0xae,
-	0x77, 0x64, 0xf7, 0x04, 0x12, 0xee, 0x9a, 0x5a, 0xd7, 0xec, 0x30, 0x8d, 0x84, 0x2d, 0x8f, 0xcc,
-	0x0e, 0x53, 0x4e, 0x3d, 0xa6, 0x9d, 0x9a, 0xfe, 0x23, 0x01, 0x79, 0x69, 0xe9, 0x52, 0xc7, 0x6c,
-	0xb1, 0x5d, 0xe7, 0x79, 0xb7, 0xed, 0x98, 0x96, 0x0e, 0x5a, 0x37, 0xfc, 0xb9, 0x41, 0xc6, 0x3d,
-	0x28, 0xa8, 0x42, 0xab, 0xb4, 0xeb, 0xcb, 0x13, 0xd7, 0x60, 0xd2, 0x16, 0x00, 0x2a, 0x2a, 0xcc,
-	0x69, 0x3b, 0x23, 0xaa, 0x21, 0xfb, 0xc8, 0x3b, 0x90, 0x31, 0x1b, 0xdc, 0x3e, 0x36, 0x39, 0x2b,
-	0x77, 0xab, 0xfd, 0x46, 0x83, 0x79, 0x1e, 0x66, 0x9c, 0x19, 0x23, 0xdc, 0x41, 0x36, 0x60, 0x41,
-	0x30, 0xd9, 0x7c, 0x28, 0x3b, 0x81, 0xb2, 0xa3, 0xcd, 0xf4, 0x37, 0x09, 0x20, 0xbe, 0x49, 0x9c,
-	0x5b, 0xf9, 0xdc, 0x30, 0x16, 0x49, 0xcb, 0x0c, 0x82, 0x50, 0x84, 0x0e, 0xe3, 0xd1, 0x3a, 0xd4,
-	0x20, 0x1b, 0x50, 0x41, 0x6d, 0xc0, 0x4f, 0x20, 0xab, 0x75, 0x10, 0xed, 0x35, 0x8f, 0x9b, 0x9c,
-	0xe9, 0x14, 0x92, 0x0b, 0x7a, 0x34, 0x8e, 0x14, 0xc9, 0x88, 0x19, 0xaa, 0xa4, 0x18, 0xb6, 0x78,
-	0x74, 0x0f, 0x52, 0xf7, 0xdb, 0xce, 0xf3, 0x87, 0x8c, 0x9b, 0xc2, 0x6b, 0xc8, 0x5d, 0x98, 0xea,
-	0x30, 0x5f, 0xea, 0x5c, 0x2f, 0xf8, 0x6b, 0x4d, 0xa7, 0xd9, 0xab, 0x61, 0xb7, 0x8a, 0xd6, 0x86,
-	0x12, 0xbe, 0xfd, 0xf7, 0x7b, 0x30, 0x27, 0x43, 0x70, 0x95, 0xb9, 0x82, 0x83, 0x3c, 0x81, 0xb9,
-	0x7d, 0xc6, 0x7d, 0x5b, 0x68, 0xb9, 0x20, 0xeb, 0xf1, 0x82, 0xae, 0xc7, 0x0b, 0x7b, 0xa2, 0x1e,
-	0xcf, 0x0f, 0x62, 0xd8, 0x50, 0x96, 0xe6, 0xbf, 0xfc, 0xe7, 0x7f, 0xbe, 0x19, 0x5b, 0x24, 0x04,
-	0x4b, 0xfb, 0xe3, 0x5b, 0xc5, 0xce, 0x10, 0xe7, 0x29, 0xa4, 0x0f, 0x7b, 0x96, 0xc9, 0x99, 0x0f,
-	0x3b, 0x02, 0x23, 0x1f, 0xc3, 0x47, 0xd7, 0x11, 0x7b, 0x85, 0x46, 0x60, 0x7f, 0x90, 0xd8, 0x24,
-	0xbb, 0x30, 0xbb, 0xcf, 0xb8, 0x4a, 0x27, 0x71, 0x3a, 0x0f, 0x22, 0xb6, 0x94, 0xa3, 0x0b, 0x88,
-	0x39, 0x4b, 0xa6, 0x15, 0x26, 0x79, 0x0a, 0x99, 0x07, 0xb6, 0xc7, 0x83, 0xa9, 0x3e, 0x0e, 0x6d,
-	0x29, 0x2a, 0xe7, 0x7b, 0xf4, 0x22, 0x82, 0x66, 0x49, 0x46, 0x2b, 0x6a, 0x0f, 0x90, 0xaa, 0xb0,
-	0xb0, 0xcf, 0x02, 0xe8, 0xc4, 0xb7, 0x07, 0xf3, 0x91, 0x45, 0x04, 0xbd, 0x84, 0x78, 0x39, 0xb2,
-	0x1c, 0xc2, 0x2b, 0xbe, 0xb2, 0xad, 0x2f, 0x88, 0x01, 0x29, 0xa1, 0xf3, 0x96, 0x4e, 0x79, 0x71,
-	0xea, 0xa6, 0x47, 0x12, 0xa6, 0x47, 0x73, 0x88, 0x4c, 0x48, 0x5a, 0x23, 0x0f, 0xd2, 0x26, 0x03,
-	0x22, 0x30, 0x1f, 0x04, 0x33, 0x60, 0x1c, 0xf2, 0x72, 0x64, 0x2e, 0xf5, 0xe8, 0x65, 0xc4, 0xbf,
-	0x48, 0x56, 0x34, 0xfe, 0x48, 0x2a, 0x26, 0xbf, 0x84, 0xf4, 0x3e, 0x0b, 0xb2, 0x04, 0x0c, 0x12,
-	0x9d, 0xa4, 0xe9, 0x1b, 0x88, 0x7b, 0x89, 0xac, 0xc5, 0xe0, 0x4a, 0xbb, 0x34, 0x61, 0x39, 0x34,
-	0x87, 0x8a, 0xe3, 0x72, 0x2f, 0xda, 0xe6, 0x4a, 0x0e, 0x25, 0xe8, 0x26, 0x32, 0xbc, 0x41, 0xe8,
-	0x49, 0x0c, 0xc5, 0x1e, 0xa2, 0xbd, 0x80, 0xc5, 0xd1, 0x49, 0x08, 0x10, 0xb2, 0x14, 0x81, 0x5c,
-	0xb2, 0xf2, 0xd9, 0x88, 0x66, 0xfa, 0x1e, 0xf2, 0x15, 0xc8, 0x3b, 0xa7, 0xf3, 0x15, 0x5f, 0x89,
-	0x3f, 0x35, 0x31, 0xc3, 0xdf, 0x27, 0x60, 0x65, 0x0f, 0xcb, 0xf6, 0x33, 0xb3, 0xc7, 0x79, 0xd7,
-	0x87, 0xa8, 0xc0, 0x5d, 0x7a, 0xe7, 0x3c, 0x0a, 0x14, 0xd5, 0x99, 0xe1, 0xab, 0x04, 0xe4, 0x76,
-	0x6d, 0xef, 0x07, 0x51, 0xe4, 0xc7, 0xa8, 0xc8, 0x3d, 0xfa, 0xde, 0xb9, 0x14, 0xb1, 0x24, 0x3b,
-	0xb1, 0x22, 0xd6, 0x5c, 0xc4, 0xc9, 0xe0, 0x9a, 0x93, 0x40, 0x70, 0xc4, 0xfe, 0x33, 0xae, 0x78,
-	0x13, 0xb1, 0x7e, 0x9b, 0x80, 0x35, 0x19, 0xcb, 0x42, 0x44, 0x07, 0xa8, 0xc6, 0x5a, 0x88, 0x00,
-	0xdb, 0xe5, 0x98, 0xd8, 0xa9, 0xdf, 0x44, 0x15, 0x6e, 0xd0, 0x33, 0xa8, 0x20, 0x22, 0xde, 0xef,
-	0x12, 0xb0, 0x1e, 0xa1, 0xc5, 0x43, 0x11, 0xd9, 0xa5, 0x1a, 0xab, 0x01, 0x35, 0xb0, 0xe3, 0xa1,
-	0x63, 0x9d, 0xa2, 0x45, 0x01, 0xb5, 0xd8, 0xa0, 0xd7, 0x4e, 0xd4, 0x42, 0xe6, 0x0f, 0xa1, 0x46,
-	0x0b, 0x56, 0x42, 0x26, 0x47, 0xaa, 0xa0, 0xcd, 0xb3, 0x61, 0x5d, 0x3c, 0xfa, 0x36, 0x72, 0xbd,
-	0x49, 0xce, 0xc2, 0x45, 0x38, 0xac, 0x46, 0xae, 0xad, 0x2a, 0x71, 0xfd, 0x64, 0x2b, 0x21, 0xfb,
-	0x4b, 0x21, 0xfa, 0x2e, 0x12, 0x6e, 0x92, 0x8d, 0x53, 0x4d, 0xac, 0xaa, 0x6d, 0xf2, 0x4d, 0x02,
-	0xae, 0xc6, 0xac, 0x35, 0x62, 0x4a, 0x4b, 0x5f, 0x8d, 0x26, 0x3c, 0xcb, 0xaa, 0xdf, 0x41, 0x95,
-	0x6e, 0xd2, 0x33, 0xab, 0x24, 0x8c, 0x5e, 0x86, 0xa4, 0xb0, 0xc5, 0x69, 0x81, 0x79, 0x21, 0x58,
-	0x52, 0x78, 0x74, 0x05, 0xc9, 0x32, 0x64, 0x41, 0x93, 0xe9, 0x48, 0x5c, 0x86, 0xb9, 0x21, 0x60,
-	0xc9, 0x8a, 0x87, 0x4c, 0x0e, 0xcd, 0x1c, 0x91, 0xea, 0x24, 0x9c, 0x6d, 0x79, 0xe4, 0x10, 0xd2,
-	0x06, 0x6b, 0x38, 0xdd, 0x86, 0xdd, 0x66, 0x5a, 0x4d, 0xff, 0xd8, 0x58, 0x7b, 0xac, 0x21, 0xe6,
-	0x32, 0x0d, 0x63, 0x8a, 0x89, 0xef, 0x61, 0x9a, 0x8f, 0x48, 0x15, 0x23, 0x87, 0x31, 0x0d, 0x43,
-	0x16, 0x47, 0x66, 0x2a, 0x73, 0xc3, 0x4f, 0x21, 0xb5, 0xe3, 0x32, 0x93, 0x2b, 0xd5, 0xc8, 0xc8,
-	0xe8, 0x10, 0x9a, 0x2a, 0x6c, 0xe8, 0xa8, 0xdd, 0x84, 0x4a, 0x4f, 0x20, 0x25, 0x83, 0x70, 0x84,
-	0x56, 0x71, 0x93, 0xbc, 0x86, 0x78, 0xeb, 0x74, 0x35, 0x4a, 0x3b, 0x1d, 0x56, 0x7f, 0x0e, 0x73,
-	0x2a, 0xaa, 0x9e, 0x03, 0x59, 0xe5, 0x46, 0xba, 0x16, 0x89, 0xac, 0xe3, 0xe4, 0x13, 0x48, 0x19,
-	0xac, 0xee, 0x38, 0xfc, 0x07, 0xd3, 0xd9, 0x45, 0x38, 0x01, 0xbc, 0xcb, 0xda, 0x8c, 0xbf, 0x86,
-	0x31, 0x36, 0xa3, 0x81, 0x2d, 0x84, 0x23, 0x75, 0xc8, 0xdc, 0x77, 0xdc, 0x06, 0x3b, 0x37, 0xfa,
-	0x5b, 0x88, 0x7e, 0x6d, 0xf3, 0x6a, 0x24, 0x7a, 0x53, 0x60, 0xd6, 0x14, 0x47, 0x1f, 0xe6, 0xf4,
-	0x91, 0x07, 0x6b, 0xed, 0x61, 0xee, 0x0a, 0x1c, 0x87, 0xf2, 0x4b, 0x9a, 0xb6, 0xdc, 0x63, 0x2e,
-	0xde, 0x5d, 0x8b, 0x0a, 0x9f, 0xde, 0x43, 0xa6, 0x77, 0xe9, 0xdb, 0x91, 0x4c, 0xb2, 0xe2, 0xb7,
-	0x14, 0x86, 0x57, 0x7c, 0x25, 0x8e, 0x64, 0x5f, 0x88, 0x0d, 0xf4, 0x65, 0x02, 0x96, 0xf7, 0x19,
-	0x0f, 0x70, 0xc8, 0x5b, 0xa8, 0x78, 0x05, 0xa2, 0x9a, 0xe9, 0x07, 0xa8, 0xc0, 0x7b, 0xe4, 0xf6,
-	0x39, 0x14, 0x28, 0x7a, 0x92, 0xa9, 0x8f, 0xa5, 0x58, 0x00, 0xef, 0x9c, 0xec, 0x2a, 0x90, 0x91,
-	0xf3, 0x4c, 0x9f, 0x34, 0x65, 0xa1, 0x19, 0x40, 0xf2, 0x46, 0xd6, 0x35, 0x8a, 0xcd, 0xa3, 0xef,
-	0x20, 0xdd, 0x75, 0xf2, 0xc6, 0x59, 0xe8, 0xc8, 0x0b, 0xc8, 0xee, 0x88, 0x9a, 0xb9, 0x7d, 0xc6,
-	0x19, 0x46, 0x2e, 0xb0, 0x9a, 0xe1, 0xe6, 0xb9, 0x66, 0xf8, 0x75, 0x02, 0xb2, 0x5b, 0xea, 0x38,
-	0x8b, 0x2c, 0x32, 0x1f, 0x9c, 0x93, 0x7a, 0x07, 0xa9, 0x3f, 0xa2, 0xef, 0x9f, 0x67, 0x69, 0x65,
-	0x73, 0x1f, 0xf9, 0xc4, 0x46, 0xfb, 0x43, 0x02, 0x32, 0x06, 0x3b, 0x66, 0x2e, 0xff, 0xbf, 0x28,
-	0xe2, 0x22, 0xb5, 0x50, 0xe4, 0xeb, 0x04, 0x2c, 0x05, 0x3c, 0xed, 0xc0, 0x51, 0x1e, 0x4d, 0x23,
-	0x0e, 0xc1, 0x23, 0xd7, 0x10, 0xf9, 0xd5, 0x08, 0x19, 0x7d, 0xc4, 0xd6, 0xe5, 0x0b, 0xb9, 0x3e,
-	0xaa, 0x1f, 0xea, 0xe0, 0x15, 0xb5, 0x6e, 0xf2, 0x04, 0xee, 0x91, 0xe7, 0x30, 0xaf, 0xf7, 0xbd,
-	0xf2, 0xb9, 0x7c, 0x24, 0xfc, 0x19, 0xa8, 0x63, 0x77, 0xa4, 0xa2, 0x96, 0x7f, 0x6a, 0xca, 0xe1,
-	0xfe, 0x98, 0x80, 0x8b, 0x5b, 0x75, 0x67, 0xb0, 0x16, 0x2d, 0xd7, 0xb4, 0x86, 0x76, 0x78, 0x6d,
-	0x25, 0x62, 0xbd, 0x50, 0x29, 0x61, 0x0a, 0xca, 0x5a, 0x5f, 0xd2, 0x69, 0x23, 0x3c, 0x86, 0xd4,
-	0x3e, 0xe3, 0xe5, 0x6e, 0xbf, 0x24, 0xbf, 0xfd, 0xfe, 0x97, 0xd1, 0x6c, 0x83, 0x6e, 0x7a, 0x03,
-	0x39, 0xae, 0x92, 0xcb, 0x91, 0x7b, 0xc0, 0xe9, 0xf6, 0x35, 0xee, 0x2b, 0x98, 0x0b, 0x6c, 0xfd,
-	0xd7, 0x9f, 0xd6, 0x2d, 0xa4, 0x7c, 0x9b, 0xc6, 0x2d, 0xab, 0xbe, 0x30, 0x52, 0xcc, 0x62, 0x93,
-	0x3d, 0x87, 0xe4, 0x0e, 0x5e, 0xcb, 0x7c, 0x4f, 0xea, 0x22, 0x52, 0xbf, 0x45, 0xe3, 0x96, 0x55,
-	0xde, 0xfd, 0xf8, 0x88, 0x2b, 0xb0, 0x30, 0xac, 0xa5, 0xc2, 0x27, 0xce, 0xc1, 0x6d, 0x98, 0x3c,
-	0x6a, 0x52, 0x84, 0x5f, 0x23, 0xf9, 0x48, 0x63, 0xca, 0x23, 0xe6, 0x53, 0xc8, 0xfa, 0x10, 0xd5,
-	0x45, 0x7a, 0xcc, 0x32, 0x0d, 0xba, 0x4f, 0x59, 0xa6, 0x9e, 0xbe, 0xba, 0xf7, 0x48, 0x17, 0x96,
-	0x64, 0x2c, 0x18, 0x25, 0x08, 0x83, 0xc6, 0xa6, 0x59, 0x75, 0x7e, 0xa2, 0xa7, 0x91, 0x09, 0x03,
-	0x1d, 0xfa, 0x0d, 0x74, 0xb6, 0xe3, 0xd9, 0xc9, 0x56, 0x92, 0xc7, 0x32, 0x06, 0x8b, 0x41, 0xd8,
-	0xf3, 0x9c, 0x0c, 0x36, 0x90, 0x80, 0x92, 0x2b, 0xb1, 0x04, 0xfa, 0x44, 0xf0, 0xb9, 0x5f, 0x7b,
-	0x79, 0x47, 0x1f, 0x57, 0x2c, 0x67, 0xc3, 0xf7, 0xfc, 0x5e, 0x5c, 0x65, 0x2a, 0x1f, 0x08, 0x88,
-	0x81, 0xf7, 0x6f, 0x43, 0xf9, 0x11, 0xcb, 0x84, 0xf0, 0xe8, 0x55, 0x84, 0x5b, 0x25, 0x17, 0xa3,
-	0xe0, 0x64, 0xb5, 0x5b, 0x83, 0xf4, 0x50, 0x63, 0x65, 0x94, 0x38, 0x95, 0x17, 0x23, 0xde, 0x15,
-	0x3c, 0x7d, 0xf9, 0x46, 0x96, 0x46, 0x48, 0x94, 0x49, 0xee, 0x43, 0xba, 0xca, 0x5d, 0x66, 0x76,
-	0x2a, 0x66, 0xe3, 0x19, 0xe3, 0x5e, 0xb9, 0xcf, 0xc9, 0x72, 0xc0, 0xd2, 0xb2, 0xa3, 0xdc, 0xe7,
-	0xb1, 0x1b, 0xe8, 0xc2, 0x46, 0x82, 0xec, 0xe1, 0xa1, 0x81, 0xd9, 0xc7, 0x4c, 0x01, 0x95, 0xba,
-	0x27, 0xdc, 0xbe, 0x85, 0xf1, 0x4b, 0x5d, 0x7a, 0xe1, 0xdd, 0x04, 0xf9, 0x14, 0xb2, 0x0a, 0x66,
-	0xe7, 0xc8, 0xec, 0xb6, 0x18, 0xbe, 0x6e, 0xc4, 0x4f, 0x39, 0x17, 0x40, 0xf2, 0x0d, 0x41, 0xb0,
-	0x43, 0x4c, 0x10, 0xfe, 0xf7, 0xf3, 0xe0, 0xb1, 0x36, 0x6c, 0xae, 0xb8, 0xcd, 0xaa, 0xac, 0xa5,
-	0xd7, 0x24, 0x23, 0x4f, 0x20, 0xfe, 0xb7, 0xda, 0xa8, 0xf7, 0x98, 0x7c, 0x54, 0x23, 0xbd, 0x82,
-	0x14, 0x79, 0x3a, 0x58, 0x90, 0xc0, 0xf3, 0x8e, 0x70, 0xb2, 0xc7, 0xa8, 0xb7, 0x1f, 0x3d, 0xf2,
-	0xda, 0xcb, 0xff, 0x02, 0x1b, 0x56, 0x3c, 0x80, 0x2a, 0x15, 0xb7, 0x20, 0x23, 0x83, 0xc5, 0xeb,
-	0x29, 0xfe, 0x26, 0x52, 0x5c, 0xce, 0x9f, 0x40, 0x21, 0xb4, 0xb7, 0x20, 0x23, 0x2b, 0xfd, 0x53,
-	0x59, 0xe2, 0xf6, 0x93, 0x9a, 0xcb, 0xe6, 0x49, 0x73, 0x51, 0x8e, 0x11, 0x78, 0x85, 0x3e, 0xd5,
-	0x31, 0x02, 0x16, 0x0b, 0x39, 0x46, 0x80, 0x85, 0x3c, 0xc0, 0xe3, 0x6a, 0x44, 0x56, 0x9d, 0x0f,
-	0x14, 0x5d, 0x9e, 0x3e, 0x03, 0x91, 0xd5, 0xf8, 0xb2, 0xca, 0x23, 0x9f, 0xc1, 0x8c, 0x7e, 0x7e,
-	0x0a, 0x80, 0xe5, 0xe2, 0xde, 0xb1, 0xe8, 0x75, 0x84, 0xbd, 0x42, 0x2f, 0x45, 0xc2, 0x7a, 0xac,
-	0xdd, 0xac, 0x71, 0x81, 0xf6, 0x18, 0xab, 0xff, 0xc0, 0xf3, 0xdd, 0xe8, 0xed, 0x4d, 0xe8, 0x7d,
-	0x2f, 0x1c, 0x79, 0x84, 0x1b, 0x09, 0x39, 0x75, 0x6d, 0x63, 0xd7, 0xc9, 0xe7, 0x40, 0xf6, 0x19,
-	0x1f, 0x79, 0xc1, 0x1b, 0xb9, 0xe2, 0x8d, 0x7a, 0xe4, 0x0b, 0xdb, 0x23, 0x88, 0x8d, 0xef, 0x85,
-	0xc4, 0x83, 0xb9, 0xaa, 0xdd, 0xe9, 0xb7, 0x4d, 0xce, 0x70, 0x3c, 0x59, 0x1b, 0x18, 0xc2, 0xdf,
-	0xac, 0xb3, 0x7c, 0x4c, 0x45, 0x1b, 0xba, 0x76, 0x0b, 0xda, 0x48, 0x21, 0xd5, 0x04, 0x92, 0xd8,
-	0x99, 0x3b, 0x30, 0x3b, 0x78, 0xaa, 0x23, 0x17, 0x07, 0xc5, 0xd1, 0xe8, 0x23, 0x5e, 0x3e, 0xbe,
-	0x8b, 0x5e, 0x20, 0x0f, 0x01, 0xe4, 0x9d, 0x01, 0x5e, 0x91, 0xa6, 0xfc, 0x15, 0x41, 0xec, 0x86,
-	0x56, 0x97, 0x2d, 0x74, 0x5e, 0xe8, 0x38, 0x1c, 0xad, 0xae, 0x83, 0xd4, 0x4d, 0xc1, 0x39, 0xf0,
-	0x86, 0x77, 0x1a, 0xc7, 0xb7, 0x8a, 0xbe, 0xe1, 0x02, 0xf0, 0x33, 0x48, 0x8a, 0xe0, 0xf1, 0x82,
-	0xe3, 0xfb, 0x3f, 0x59, 0xd6, 0x96, 0x93, 0x3f, 0x07, 0xe8, 0xb1, 0x86, 0xdd, 0xb4, 0x99, 0x9b,
-	0x5f, 0xd4, 0xed, 0x06, 0xe3, 0x7d, 0xb7, 0x8b, 0xbd, 0x1e, 0x5d, 0x45, 0xe0, 0x25, 0x92, 0xd5,
-	0x06, 0xf5, 0x43, 0x1d, 0x40, 0xb2, 0xea, 0xfb, 0x1c, 0x3c, 0x4a, 0xe8, 0x1f, 0x1a, 0xc4, 0xaa,
-	0x1b, 0x42, 0xf5, 0xc3, 0x1c, 0x41, 0xb6, 0xca, 0x4d, 0x97, 0xeb, 0x9f, 0x59, 0x88, 0xaa, 0xd3,
-	0xe9, 0x92, 0xc1, 0x2f, 0x50, 0x46, 0x7e, 0x7e, 0x31, 0x74, 0xe6, 0x80, 0xb7, 0xa8, 0x90, 0x41,
-	0x07, 0xef, 0x15, 0x9e, 0xc0, 0xac, 0xe1, 0x0b, 0xb5, 0x70, 0x93, 0x0f, 0x12, 0x9b, 0xdb, 0x6d,
-	0xc8, 0x3a, 0x6e, 0x0b, 0x33, 0x46, 0xc3, 0x71, 0x2d, 0x85, 0xb3, 0x9d, 0x92, 0x2f, 0x4a, 0x15,
-	0xfc, 0x09, 0xd6, 0x2f, 0x0a, 0x2d, 0x9b, 0x1f, 0xf5, 0xeb, 0xc2, 0x3a, 0x45, 0x2d, 0xa9, 0x7e,
-	0x0a, 0x77, 0x53, 0xff, 0x30, 0xee, 0x6e, 0xb1, 0xe5, 0xa8, 0xb6, 0xbf, 0x8d, 0x2d, 0x97, 0x35,
-	0xde, 0x63, 0xff, 0x03, 0x55, 0x65, 0xac, 0x32, 0x5e, 0x99, 0xa8, 0x4c, 0x56, 0xa6, 0x2a, 0xd3,
-	0x95, 0x99, 0xfa, 0x14, 0x8e, 0xbd, 0xf3, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x14, 0x94, 0xf1,
-	0xbe, 0x64, 0x27, 0x00, 0x00,
+	// 2130 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x59, 0xeb, 0x6e, 0x1b, 0xb9,
+	0x15, 0xde, 0x71, 0x76, 0x73, 0xa1, 0x25, 0xdb, 0xa2, 0x7c, 0x91, 0x25, 0xf9, 0xc6, 0x64, 0xb3,
+	0x5e, 0x25, 0x91, 0x92, 0x38, 0xd9, 0xb6, 0xd9, 0x2e, 0x0a, 0xaf, 0x6f, 0xf5, 0x36, 0x81, 0x0d,
+	0x29, 0x71, 0xda, 0x62, 0xb3, 0xc2, 0x48, 0x43, 0xcb, 0x83, 0x8e, 0x66, 0xd4, 0x21, 0x65, 0x27,
+	0x30, 0xf6, 0x4f, 0x2f, 0x40, 0x8a, 0xa2, 0xe8, 0x8f, 0x7d, 0x8b, 0x3e, 0x45, 0xff, 0xf5, 0x01,
+	0xfa, 0x0a, 0x7d, 0x90, 0x82, 0x87, 0xa4, 0x3c, 0xd4, 0xcc, 0xc8, 0x56, 0xba, 0x40, 0xff, 0x58,
+	0x26, 0x0f, 0xf9, 0x7d, 0x1f, 0xcf, 0x39, 0xbc, 0x0e, 0x2a, 0x9e, 0x06, 0x1e, 0x3f, 0xb1, 0x9b,
+	0xbd, 0x30, 0xe0, 0x01, 0xab, 0xc9, 0x52, 0x15, 0x4a, 0xf8, 0xba, 0x2c, 0x15, 0xcb, 0x9d, 0x20,
+	0xe8, 0x78, 0xb4, 0x66, 0xf7, 0xdc, 0x9a, 0xed, 0xfb, 0x01, 0xb7, 0xb9, 0x1b, 0xf8, 0x4c, 0xb6,
+	0x2a, 0x96, 0x94, 0x15, 0x4a, 0xad, 0xfe, 0x71, 0x8d, 0x76, 0x7b, 0xfc, 0x9d, 0x32, 0x0e, 0xc1,
+	0xb7, 0x83, 0x6e, 0x37, 0xf0, 0x93, 0x6d, 0x27, 0xd4, 0xf6, 0xf8, 0x89, 0xb2, 0x11, 0xd3, 0xe6,
+	0x05, 0x1d, 0xb7, 0x6d, 0x7b, 0x4d, 0x87, 0x9e, 0xba, 0x6d, 0x9a, 0xdc, 0xdf, 0xb0, 0x95, 0x4c,
+	0x9b, 0xed, 0xd8, 0x3d, 0x4e, 0x43, 0x65, 0x5c, 0x31, 0x8d, 0x41, 0x8f, 0xfa, 0xc7, 0x5e, 0x70,
+	0xd6, 0x7c, 0xb4, 0x91, 0x8c, 0x4c, 0x4f, 0xa9, 0xcf, 0xf5, 0x70, 0x97, 0x87, 0x6c, 0x6f, 0x39,
+	0xf5, 0x59, 0xc4, 0x1d, 0xc3, 0xe0, 0xdd, 0xb6, 0xdb, 0xec, 0xba, 0xad, 0xa6, 0xd3, 0x52, 0x0d,
+	0xd6, 0x12, 0x1a, 0xd8, 0x9e, 0x1d, 0x76, 0x2f, 0x9a, 0x2c, 0x25, 0x34, 0xe1, 0x94, 0x71, 0x69,
+	0x26, 0x6f, 0x50, 0x66, 0x2b, 0x08, 0xe9, 0xbe, 0xcf, 0xb8, 0xed, 0xb7, 0x29, 0x5e, 0x41, 0x93,
+	0xae, 0xfa, 0xbf, 0xe9, 0x3a, 0x05, 0x6b, 0xd5, 0x5a, 0xbf, 0x55, 0x47, 0xba, 0x6a, 0xdf, 0xc1,
+	0xf7, 0xd1, 0x75, 0xe9, 0xdd, 0xc2, 0xc4, 0xaa, 0xb5, 0x3e, 0xf9, 0x78, 0xb6, 0xaa, 0x9c, 0xfd,
+	0x4b, 0xf8, 0x69, 0x70, 0x9b, 0xf7, 0x59, 0x5d, 0xb5, 0x21, 0x5f, 0xa2, 0x6c, 0x14, 0x9e, 0xe1,
+	0x0a, 0xfa, 0xc4, 0xe5, 0xb4, 0xcb, 0x0a, 0xd6, 0xea, 0x35, 0xe8, 0xad, 0xb2, 0x24, 0xda, 0xaa,
+	0x2e, 0x9b, 0x90, 0x7f, 0x5e, 0x43, 0xd7, 0x8f, 0xc0, 0x8c, 0x0b, 0xe8, 0xc6, 0x29, 0x0d, 0x85,
+	0x6f, 0x94, 0x24, 0x5d, 0xc4, 0xf7, 0xd1, 0x4d, 0x15, 0x11, 0x56, 0x98, 0x00, 0xcc, 0x99, 0xaa,
+	0x0e, 0xd1, 0xa6, 0xfc, 0xad, 0x0f, 0x5a, 0xe0, 0x5d, 0x34, 0x6d, 0xc6, 0x9f, 0x15, 0xae, 0x41,
+	0xa7, 0xa5, 0xea, 0x50, 0x5e, 0x3c, 0x97, 0xc5, 0x6d, 0x28, 0xd5, 0xa7, 0xbc, 0x68, 0x91, 0xe1,
+	0x75, 0x74, 0x43, 0xf7, 0xff, 0x18, 0xfa, 0x4f, 0x55, 0x55, 0x3f, 0xd5, 0x41, 0x9b, 0xf1, 0x53,
+	0x94, 0x91, 0xff, 0x36, 0xf9, 0xbb, 0x1e, 0x65, 0x85, 0x4f, 0xa0, 0x39, 0x36, 0x9b, 0xbf, 0x7c,
+	0xd7, 0xa3, 0xf5, 0x49, 0x67, 0xf0, 0x3f, 0xc3, 0x3f, 0x41, 0x59, 0x48, 0x95, 0xe6, 0xb1, 0xeb,
+	0xc1, 0xd8, 0x6e, 0xa8, 0x7e, 0x50, 0x5b, 0xdd, 0x11, 0x7f, 0x77, 0xc1, 0x54, 0xcf, 0xd0, 0x8b,
+	0x02, 0xc3, 0xbf, 0x40, 0xb9, 0x8b, 0x3c, 0xb1, 0xb9, 0xdd, 0xb2, 0x19, 0x2d, 0x94, 0xa1, 0x73,
+	0xbe, 0x2a, 0x2c, 0xd5, 0x17, 0x6e, 0x4b, 0xb2, 0x6e, 0xdb, 0xdc, 0xae, 0x4f, 0x8b, 0x3a, 0x51,
+	0xa5, 0xda, 0xe2, 0x1d, 0x94, 0x8f, 0xe6, 0x91, 0x86, 0x58, 0x02, 0x88, 0x39, 0x09, 0xb1, 0x29,
+	0x6c, 0x11, 0x10, 0xa0, 0x94, 0x95, 0xaa, 0xfd, 0x37, 0x1f, 0xdf, 0xbc, 0x3e, 0x73, 0xe3, 0xf1,
+	0xbf, 0x36, 0x50, 0x56, 0x86, 0xb0, 0x41, 0x43, 0xd1, 0x1c, 0x6f, 0xa3, 0x5b, 0x7b, 0x94, 0xab,
+	0xb0, 0xce, 0x57, 0xe5, 0x84, 0xaf, 0xea, 0x09, 0x5f, 0xdd, 0x11, 0x13, 0xbe, 0x38, 0xa5, 0xd3,
+	0x42, 0xb6, 0x23, 0xd3, 0x7f, 0xf8, 0xf7, 0x7f, 0x7e, 0x98, 0xb8, 0x85, 0x6f, 0xc0, 0xba, 0x71,
+	0xfa, 0x08, 0xbf, 0x41, 0xb9, 0xe7, 0x2e, 0xe3, 0x66, 0x6e, 0xa5, 0xa1, 0xcd, 0x25, 0x25, 0x19,
+	0x23, 0x8b, 0x00, 0x9a, 0xc7, 0x39, 0x05, 0x5a, 0x73, 0x07, 0x48, 0x0d, 0x34, 0xbd, 0x47, 0x0d,
+	0x74, 0x8c, 0xaa, 0x6a, 0xc1, 0xd9, 0xdf, 0x2e, 0x26, 0x66, 0x2d, 0x59, 0x06, 0xbc, 0x02, 0x9e,
+	0x8f, 0xe1, 0xd5, 0xce, 0x5d, 0xe7, 0x7b, 0xdc, 0x40, 0x19, 0xa1, 0x79, 0x53, 0xe7, 0x62, 0x9a,
+	0xdc, 0xdc, 0x70, 0xfe, 0x32, 0x52, 0x00, 0x68, 0x8c, 0x67, 0x34, 0xf4, 0x20, 0xa1, 0xbb, 0x08,
+	0x0b, 0xd0, 0xe7, 0x66, 0x7a, 0xa6, 0x41, 0x2f, 0x8f, 0xcc, 0x72, 0x46, 0x56, 0x80, 0x67, 0x11,
+	0x2f, 0x68, 0x9e, 0xa1, 0xc9, 0x82, 0xdb, 0x68, 0x66, 0x8f, 0x9a, 0x6c, 0x86, 0x67, 0x46, 0x4f,
+	0x23, 0x72, 0x07, 0xf0, 0x97, 0x71, 0x39, 0x05, 0x5f, 0x3a, 0xca, 0x47, 0xf3, 0xb1, 0x31, 0x1d,
+	0x06, 0x21, 0x67, 0x06, 0x55, 0x39, 0x85, 0x0a, 0x5a, 0x92, 0x0a, 0x30, 0xdd, 0xc1, 0x64, 0x14,
+	0x53, 0xad, 0x07, 0xa8, 0xef, 0x2d, 0x34, 0x3b, 0x3c, 0x2a, 0x81, 0x82, 0x97, 0x46, 0x50, 0xec,
+	0x3b, 0xc5, 0xd2, 0x08, 0x33, 0x79, 0x02, 0x02, 0xaa, 0xf8, 0xfe, 0xe5, 0x02, 0x6a, 0xe7, 0xe2,
+	0xa7, 0x29, 0x86, 0xfe, 0x37, 0x0b, 0x2d, 0xec, 0xf8, 0x76, 0xcb, 0xa3, 0x63, 0xab, 0x49, 0x89,
+	0x39, 0xf9, 0x12, 0x84, 0x3c, 0x25, 0x1b, 0xe3, 0x08, 0xa9, 0x51, 0x10, 0x81, 0xff, 0x6e, 0xa1,
+	0xc2, 0xb6, 0xcb, 0x7e, 0x54, 0x41, 0x3f, 0x07, 0x41, 0x5f, 0x90, 0x27, 0x63, 0x09, 0x72, 0xa4,
+	0x0a, 0xec, 0x24, 0x24, 0xc7, 0xae, 0x17, 0x9c, 0x99, 0xc9, 0x81, 0xab, 0xd1, 0x9d, 0x18, 0xec,
+	0x57, 0x4c, 0x89, 0x63, 0xc0, 0xfa, 0xa3, 0x85, 0xca, 0xaf, 0x7a, 0x8e, 0xcd, 0x69, 0x8c, 0xe8,
+	0x25, 0xc8, 0x28, 0xc7, 0x08, 0xa0, 0x5e, 0xf6, 0x49, 0x1d, 0xfa, 0x03, 0x90, 0xf0, 0x19, 0xb9,
+	0x82, 0x84, 0x67, 0x56, 0x05, 0xff, 0xc9, 0x42, 0x4b, 0x09, 0x2a, 0x5e, 0x50, 0x4e, 0x43, 0x29,
+	0xa3, 0x64, 0xc8, 0x00, 0xc3, 0x8b, 0xc0, 0xb9, 0x44, 0x45, 0x15, 0x54, 0xac, 0x93, 0xdb, 0x23,
+	0x55, 0x74, 0x05, 0x18, 0xc8, 0xe8, 0xa0, 0x85, 0x98, 0xcb, 0x81, 0xca, 0xf4, 0x79, 0x3e, 0xae,
+	0x85, 0x91, 0x7b, 0xc0, 0xf5, 0x29, 0xbe, 0x0a, 0x17, 0xe6, 0xa8, 0x94, 0x18, 0xdb, 0xbd, 0x30,
+	0xe8, 0xf7, 0x4c, 0xb2, 0x85, 0x98, 0xff, 0x65, 0x23, 0xf2, 0x10, 0x08, 0x2b, 0x78, 0xfd, 0x52,
+	0x17, 0x37, 0x3b, 0x12, 0xf6, 0x07, 0x0b, 0xad, 0xa5, 0xc4, 0x1a, 0x30, 0xa5, 0xa7, 0xd7, 0x92,
+	0x09, 0xaf, 0x12, 0xf5, 0x0d, 0x90, 0xf4, 0x80, 0x5c, 0x59, 0x92, 0x70, 0xfa, 0x01, 0x9a, 0x14,
+	0xbe, 0xb8, 0x6c, 0x45, 0x9f, 0x36, 0x0f, 0x12, 0x8c, 0x2c, 0x00, 0x59, 0x0e, 0x4f, 0x6b, 0x32,
+	0xbd, 0x74, 0x1f, 0xa0, 0xec, 0x05, 0xe0, 0xbe, 0x93, 0x0e, 0x39, 0x79, 0xe1, 0xe6, 0x84, 0x4d,
+	0x52, 0xc2, 0xb9, 0x0e, 0xc3, 0xaf, 0xd0, 0x4c, 0x9d, 0xb6, 0x03, 0xbf, 0xed, 0x7a, 0x54, 0xcb,
+	0x8c, 0xf6, 0x4d, 0xf5, 0x47, 0x19, 0x30, 0xe7, 0x49, 0x1c, 0x53, 0x0c, 0x7c, 0x07, 0x0e, 0x08,
+	0x09, 0x7b, 0xcb, 0xd0, 0x11, 0x4b, 0xc3, 0xe0, 0xd9, 0xa1, 0x91, 0xca, 0x4d, 0xe4, 0x1b, 0x94,
+	0xd9, 0x0a, 0xa9, 0xcd, 0x95, 0x34, 0x3c, 0xd4, 0x3b, 0x86, 0x56, 0x04, 0xb4, 0x59, 0x32, 0xec,
+	0x37, 0x21, 0xe9, 0x35, 0xca, 0xc8, 0x45, 0x39, 0x41, 0x55, 0xda, 0x20, 0x6f, 0x03, 0xde, 0x12,
+	0x29, 0x25, 0xa9, 0xd3, 0xcb, 0xeb, 0x6f, 0x50, 0x56, 0xad, 0xae, 0x63, 0x20, 0xab, 0x4d, 0x94,
+	0x94, 0x13, 0x91, 0xf5, 0x3a, 0xf9, 0x1a, 0x65, 0xea, 0xb4, 0x15, 0x04, 0xfc, 0x47, 0xd3, 0x1c,
+	0x02, 0x9c, 0x00, 0xde, 0xa6, 0x1e, 0xe5, 0x1f, 0xe0, 0x8c, 0x4a, 0x32, 0xb0, 0x03, 0x70, 0xb8,
+	0x85, 0x72, 0xbb, 0x41, 0xd8, 0xa6, 0x63, 0xa3, 0x7f, 0x0e, 0xe8, 0xb7, 0x2b, 0x6b, 0x89, 0xe8,
+	0xc7, 0x02, 0xb3, 0xa9, 0x38, 0xde, 0xa2, 0xec, 0x76, 0x70, 0xe6, 0x7b, 0x81, 0xed, 0xec, 0x77,
+	0xed, 0x0e, 0xc5, 0x73, 0x3a, 0x0d, 0xa0, 0xa8, 0x6d, 0xc5, 0x39, 0x4d, 0x7b, 0xd0, 0xa3, 0x21,
+	0x5c, 0x51, 0xeb, 0x94, 0xf5, 0xc8, 0xcf, 0x80, 0xe9, 0x21, 0xb9, 0x97, 0xc8, 0xe4, 0x0a, 0x88,
+	0xa6, 0xa3, 0x30, 0x58, 0xed, 0xdc, 0xb7, 0xbb, 0xf4, 0xfb, 0x67, 0x56, 0xe5, 0xfd, 0x84, 0x85,
+	0xff, 0x6c, 0xa1, 0xf9, 0x3d, 0xca, 0x0d, 0x1a, 0x79, 0x59, 0x4a, 0xd7, 0x90, 0x54, 0x4d, 0xbe,
+	0x02, 0x0d, 0x4f, 0xf0, 0xe3, 0x31, 0x34, 0xd4, 0x18, 0x30, 0x09, 0x1d, 0x6f, 0xe1, 0x04, 0x67,
+	0x40, 0x8e, 0x29, 0xe0, 0x0b, 0xb9, 0x9c, 0xe1, 0x71, 0x9c, 0x20, 0x98, 0x5d, 0x79, 0x54, 0x35,
+	0xc0, 0xd8, 0x50, 0x80, 0x93, 0x08, 0x19, 0xa9, 0x01, 0xe3, 0x5d, 0x7c, 0xe7, 0x2a, 0x8c, 0x82,
+	0xea, 0x1c, 0xe5, 0xb7, 0xc4, 0xc9, 0xdb, 0xbb, 0xe2, 0x38, 0x13, 0x83, 0xad, 0xc6, 0x59, 0x19,
+	0x77, 0x9c, 0x7f, 0xb5, 0x50, 0x7e, 0xb3, 0xcd, 0xdd, 0x53, 0x9b, 0x53, 0x20, 0x92, 0xdb, 0xc3,
+	0x98, 0xec, 0xbb, 0xc0, 0xfe, 0x15, 0xf9, 0xe9, 0x38, 0x61, 0x96, 0xd5, 0x7d, 0xe0, 0x53, 0x79,
+	0xf7, 0x17, 0x0b, 0xe5, 0xea, 0xf4, 0x94, 0x86, 0xfc, 0xff, 0xa2, 0x25, 0x04, 0x6a, 0xa5, 0xe5,
+	0xbd, 0x85, 0xe6, 0x8c, 0xe9, 0xf7, 0x32, 0x50, 0xd3, 0x9c, 0x98, 0xab, 0xb1, 0xa1, 0xaa, 0x4e,
+	0x7f, 0xdf, 0xa7, 0x8c, 0x17, 0x4b, 0x09, 0x6d, 0x84, 0xbc, 0xc0, 0x67, 0x54, 0x9f, 0x69, 0xf0,
+	0xdd, 0x61, 0x89, 0x20, 0x83, 0xd5, 0xb4, 0xbc, 0xa6, 0x2c, 0xe3, 0x33, 0x34, 0xa5, 0xa7, 0x81,
+	0x9a, 0x85, 0xc5, 0x44, 0xf8, 0x2b, 0x50, 0xdf, 0x4f, 0xcb, 0x4e, 0x45, 0x2d, 0x7f, 0x9a, 0x72,
+	0x0a, 0x8a, 0x78, 0x2c, 0x6e, 0xb6, 0x82, 0x41, 0x38, 0x3a, 0xa1, 0xed, 0x5c, 0xf8, 0xe1, 0x83,
+	0x45, 0x6c, 0xa4, 0x4d, 0x4a, 0x25, 0xc2, 0x16, 0x94, 0xcd, 0xbe, 0xa4, 0xd3, 0x4e, 0x38, 0x42,
+	0x99, 0x3d, 0xca, 0x0f, 0xfc, 0xfe, 0xbe, 0x2c, 0x47, 0xe7, 0x62, 0x4e, 0xb3, 0x0d, 0xcc, 0xe4,
+	0x33, 0xe0, 0x58, 0xc3, 0x2b, 0x89, 0x69, 0x10, 0xf8, 0x7d, 0x8d, 0x7b, 0x8e, 0xb2, 0xc6, 0x04,
+	0xf8, 0xf0, 0x61, 0x3d, 0x02, 0xca, 0x7b, 0x24, 0x2d, 0xac, 0xb6, 0xa2, 0x51, 0xcc, 0x62, 0xb3,
+	0x3e, 0x43, 0x93, 0x5b, 0x41, 0xb7, 0xeb, 0xf2, 0xff, 0x91, 0x5a, 0x2e, 0x3a, 0x9f, 0x93, 0xb4,
+	0xb0, 0xb6, 0x81, 0x24, 0x42, 0x7c, 0x88, 0xa6, 0x2f, 0x0e, 0x58, 0xf1, 0xfb, 0x6a, 0x56, 0x93,
+	0xc9, 0x0b, 0x2a, 0x01, 0xf8, 0x32, 0x2e, 0x26, 0x3a, 0x53, 0x5e, 0x4c, 0xdf, 0xa0, 0x7c, 0x04,
+	0xb1, 0xbb, 0x15, 0xf8, 0xc7, 0x6e, 0x27, 0x25, 0x4c, 0x03, 0xf3, 0x25, 0x61, 0xea, 0x75, 0x9b,
+	0x6d, 0x85, 0xe3, 0xa3, 0x39, 0xb9, 0x1c, 0x0c, 0x13, 0xc4, 0x41, 0x53, 0xf7, 0x5e, 0x75, 0xa9,
+	0x22, 0x97, 0x91, 0x09, 0x07, 0xbd, 0x8a, 0x3a, 0xe8, 0x6a, 0x77, 0xb6, 0xd1, 0x5e, 0x92, 0x77,
+	0x35, 0x8a, 0x66, 0x4d, 0xd8, 0x71, 0xae, 0x0b, 0xeb, 0x40, 0x40, 0xf0, 0x6a, 0x2a, 0x81, 0xbe,
+	0x26, 0x7c, 0x1b, 0x55, 0x2f, 0x1f, 0xe9, 0xd2, 0x4e, 0xd0, 0xf9, 0xf8, 0xeb, 0x1e, 0x4b, 0x3b,
+	0xae, 0xca, 0x67, 0x41, 0x5c, 0x47, 0xd9, 0xc1, 0xa9, 0x57, 0xb4, 0x1f, 0xf2, 0x4c, 0x0c, 0x8f,
+	0xac, 0x01, 0x5c, 0x09, 0x2f, 0x26, 0xc1, 0xc9, 0x23, 0xf0, 0x2e, 0x9a, 0x69, 0xf0, 0x90, 0xda,
+	0xdd, 0x43, 0xbb, 0xfd, 0x3b, 0xca, 0xd9, 0x41, 0x9f, 0xe3, 0x79, 0xc3, 0x11, 0xd2, 0x70, 0xd0,
+	0xe7, 0xa9, 0xf1, 0xfd, 0x68, 0xdd, 0xc2, 0x3b, 0x70, 0xd0, 0xa7, 0xee, 0x29, 0x55, 0x40, 0xfb,
+	0xfe, 0x88, 0xb7, 0xb6, 0x38, 0xfe, 0xbe, 0x4f, 0x3e, 0x7a, 0x68, 0xe1, 0x5f, 0xa1, 0xbc, 0x82,
+	0xd9, 0x3a, 0xb1, 0xfd, 0x0e, 0x85, 0x37, 0xcc, 0x74, 0x27, 0x16, 0x0c, 0xa4, 0x48, 0x17, 0x00,
+	0x7b, 0x83, 0x72, 0xf2, 0x78, 0x1f, 0x79, 0x09, 0xc5, 0x09, 0xaf, 0xa3, 0xc5, 0x84, 0x3a, 0xb2,
+	0x0a, 0xbe, 0x2b, 0x92, 0x39, 0xed, 0x3b, 0xe3, 0xa9, 0x55, 0xa6, 0xaa, 0xd8, 0x1e, 0xa2, 0xd8,
+	0xe6, 0x4d, 0x37, 0x86, 0x99, 0x90, 0xaa, 0x06, 0xa8, 0x8c, 0x48, 0x0b, 0xe5, 0xe4, 0x8c, 0xfb,
+	0x10, 0xd5, 0x9f, 0x02, 0xc1, 0x4a, 0x71, 0x04, 0x81, 0x90, 0xde, 0x46, 0x39, 0x79, 0x82, 0xbe,
+	0x8c, 0x23, 0x2d, 0xe4, 0x6a, 0x20, 0x95, 0x51, 0x03, 0xf9, 0x0e, 0xcd, 0x88, 0xc9, 0x10, 0x75,
+	0xc0, 0x88, 0xd9, 0x90, 0xe0, 0xad, 0x25, 0x20, 0x59, 0xc0, 0xc9, 0x21, 0xc0, 0xcf, 0xe1, 0x12,
+	0x98, 0xb0, 0x2d, 0x4d, 0x19, 0x07, 0x17, 0xa6, 0x6f, 0x16, 0xb8, 0x94, 0x7e, 0x34, 0x61, 0xf8,
+	0xd7, 0xe8, 0x66, 0x83, 0x7a, 0xc7, 0x2f, 0x29, 0xe3, 0x06, 0x58, 0x41, 0x83, 0x69, 0xeb, 0x60,
+	0xf1, 0xbf, 0x0b, 0xb0, 0xab, 0x64, 0x39, 0x11, 0x96, 0x51, 0xef, 0x18, 0x3e, 0xa2, 0xe0, 0x23,
+	0x38, 0x4d, 0x1b, 0x2f, 0xea, 0xc3, 0x6f, 0x22, 0xb1, 0x27, 0xf7, 0xf8, 0xd4, 0x15, 0x89, 0x2e,
+	0xda, 0xa9, 0xc7, 0x10, 0xb7, 0x85, 0xbf, 0x45, 0x78, 0x8f, 0xf2, 0xa1, 0x67, 0x76, 0x03, 0x39,
+	0xf9, 0x25, 0x3e, 0xee, 0x0f, 0x13, 0x1b, 0x1e, 0xf5, 0x31, 0x43, 0xd9, 0x86, 0xdb, 0xed, 0x7b,
+	0x36, 0xa7, 0xd0, 0x1f, 0x97, 0x07, 0x8e, 0x88, 0x56, 0xeb, 0x6d, 0x32, 0xe5, 0x54, 0x18, 0x7b,
+	0xcc, 0x32, 0x7d, 0xa4, 0x90, 0x9a, 0x02, 0x49, 0xe4, 0xe5, 0x0b, 0x84, 0xe4, 0x25, 0x1a, 0xde,
+	0x0e, 0x33, 0xd1, 0xdd, 0x30, 0x35, 0x15, 0xd5, 0xeb, 0x03, 0x99, 0x12, 0xf0, 0x17, 0xbd, 0xd5,
+	0xfb, 0x88, 0xba, 0x3a, 0x8f, 0x81, 0x77, 0x71, 0xc9, 0x3f, 0x7d, 0x54, 0x8b, 0x74, 0x17, 0x80,
+	0xdf, 0xa1, 0x49, 0x31, 0xe5, 0xdf, 0xf2, 0x23, 0xdb, 0xeb, 0x53, 0xbc, 0x58, 0x1d, 0x7c, 0x8e,
+	0xab, 0x42, 0x4d, 0xa3, 0x47, 0xdb, 0xee, 0xb1, 0x4b, 0xc3, 0xe2, 0x42, 0xc4, 0x54, 0xa7, 0xbc,
+	0x1f, 0xfa, 0xd0, 0x80, 0x91, 0x12, 0xc0, 0xcf, 0xe1, 0xbc, 0xf6, 0x48, 0x14, 0xf0, 0x35, 0x9a,
+	0x6c, 0x44, 0x8a, 0xf9, 0x18, 0x3e, 0x4d, 0xd7, 0x1d, 0x03, 0x8e, 0x22, 0x39, 0x28, 0xdf, 0xe0,
+	0x76, 0xc8, 0x0f, 0xba, 0x6d, 0x57, 0x24, 0xb1, 0x38, 0x7a, 0x05, 0x3e, 0x56, 0x09, 0xa2, 0x6b,
+	0x75, 0x30, 0xb1, 0xac, 0x36, 0xb2, 0x5d, 0xcd, 0x78, 0x32, 0x78, 0xf6, 0x67, 0x02, 0xaf, 0x39,
+	0xf8, 0x56, 0xf8, 0xcc, 0xaa, 0x7c, 0xed, 0xa1, 0x7c, 0x10, 0x76, 0x60, 0x4d, 0x6e, 0x07, 0xa1,
+	0xa3, 0xbe, 0x80, 0x7c, 0x9d, 0x91, 0x5f, 0x68, 0x0e, 0xe1, 0xeb, 0xe2, 0x6f, 0xab, 0x1d, 0x97,
+	0x9f, 0xf4, 0x5b, 0x22, 0x5f, 0x6a, 0xba, 0xa5, 0xfa, 0x0e, 0xfc, 0x40, 0x7f, 0x15, 0x7e, 0x5a,
+	0xeb, 0x04, 0xaa, 0xee, 0x1f, 0x13, 0xf3, 0x07, 0x1a, 0xef, 0x28, 0xfa, 0xc1, 0xe7, 0x70, 0xa2,
+	0x75, 0x1d, 0xda, 0x6f, 0xfc, 0x37, 0x00, 0x00, 0xff, 0xff, 0x37, 0x95, 0xcc, 0x79, 0x55, 0x1e,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2570,10 +449,6 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type VolthaServiceClient interface {
-	// Get the membership group of a Voltha Core
-	GetMembership(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Membership, error)
-	// Set the membership group of a Voltha Core
-	UpdateMembership(ctx context.Context, in *Membership, opts ...grpc.CallOption) (*empty.Empty, error)
 	// Get high level information on the Voltha cluster
 	GetVoltha(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Voltha, error)
 	// List all Voltha cluster core instances
@@ -2705,15 +580,11 @@ type VolthaServiceClient interface {
 	ListDeviceTypes(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*DeviceTypes, error)
 	// Get additional information on a device type
 	GetDeviceType(ctx context.Context, in *common.ID, opts ...grpc.CallOption) (*DeviceType, error)
-	// List all device sharding groups
-	ListDeviceGroups(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*DeviceGroups, error)
 	// Stream control packets to the dataplane
 	StreamPacketsOut(ctx context.Context, opts ...grpc.CallOption) (VolthaService_StreamPacketsOutClient, error)
 	// Receive control packet stream
 	ReceivePacketsIn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (VolthaService_ReceivePacketsInClient, error)
 	ReceiveChangeEvents(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (VolthaService_ReceiveChangeEventsClient, error)
-	// Get additional information on a device group
-	GetDeviceGroup(ctx context.Context, in *common.ID, opts ...grpc.CallOption) (*DeviceGroup, error)
 	CreateEventFilter(ctx context.Context, in *EventFilter, opts ...grpc.CallOption) (*EventFilter, error)
 	// Get all filters present for a device
 	GetEventFilter(ctx context.Context, in *common.ID, opts ...grpc.CallOption) (*EventFilters, error)
@@ -2729,13 +600,12 @@ type VolthaServiceClient interface {
 	GetAlarmDeviceData(ctx context.Context, in *common.ID, opts ...grpc.CallOption) (*omci.AlarmDeviceData, error)
 	// Simulate an Alarm
 	SimulateAlarm(ctx context.Context, in *SimulateAlarmRequest, opts ...grpc.CallOption) (*common.OperationResp, error)
-	Subscribe(ctx context.Context, in *OfAgentSubscriber, opts ...grpc.CallOption) (*OfAgentSubscriber, error)
 	EnablePort(ctx context.Context, in *Port, opts ...grpc.CallOption) (*empty.Empty, error)
 	DisablePort(ctx context.Context, in *Port, opts ...grpc.CallOption) (*empty.Empty, error)
-	GetExtValue(ctx context.Context, in *common.ValueSpecifier, opts ...grpc.CallOption) (*common.ReturnValues, error)
-	SetExtValue(ctx context.Context, in *ValueSet, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetExtValue(ctx context.Context, in *extension.ValueSpecifier, opts ...grpc.CallOption) (*extension.ReturnValues, error)
+	SetExtValue(ctx context.Context, in *extension.ValueSet, opts ...grpc.CallOption) (*empty.Empty, error)
 	// omci start and stop cli implementation
-	StartOmciTestAction(ctx context.Context, in *OmciTestRequest, opts ...grpc.CallOption) (*TestResponse, error)
+	StartOmciTestAction(ctx context.Context, in *omci.OmciTestRequest, opts ...grpc.CallOption) (*omci.TestResponse, error)
 }
 
 type volthaServiceClient struct {
@@ -2744,24 +614,6 @@ type volthaServiceClient struct {
 
 func NewVolthaServiceClient(cc *grpc.ClientConn) VolthaServiceClient {
 	return &volthaServiceClient{cc}
-}
-
-func (c *volthaServiceClient) GetMembership(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Membership, error) {
-	out := new(Membership)
-	err := c.cc.Invoke(ctx, "/voltha.VolthaService/GetMembership", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *volthaServiceClient) UpdateMembership(ctx context.Context, in *Membership, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/voltha.VolthaService/UpdateMembership", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *volthaServiceClient) GetVoltha(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Voltha, error) {
@@ -2998,6 +850,7 @@ func (c *volthaServiceClient) ForceDeleteDevice(ctx context.Context, in *common.
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *volthaServiceClient) DownloadImage(ctx context.Context, in *ImageDownload, opts ...grpc.CallOption) (*common.OperationResp, error) {
 	out := new(common.OperationResp)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/DownloadImage", in, out, opts...)
@@ -3007,6 +860,7 @@ func (c *volthaServiceClient) DownloadImage(ctx context.Context, in *ImageDownlo
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *volthaServiceClient) GetImageDownloadStatus(ctx context.Context, in *ImageDownload, opts ...grpc.CallOption) (*ImageDownload, error) {
 	out := new(ImageDownload)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/GetImageDownloadStatus", in, out, opts...)
@@ -3016,6 +870,7 @@ func (c *volthaServiceClient) GetImageDownloadStatus(ctx context.Context, in *Im
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *volthaServiceClient) GetImageDownload(ctx context.Context, in *ImageDownload, opts ...grpc.CallOption) (*ImageDownload, error) {
 	out := new(ImageDownload)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/GetImageDownload", in, out, opts...)
@@ -3025,6 +880,7 @@ func (c *volthaServiceClient) GetImageDownload(ctx context.Context, in *ImageDow
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *volthaServiceClient) ListImageDownloads(ctx context.Context, in *common.ID, opts ...grpc.CallOption) (*ImageDownloads, error) {
 	out := new(ImageDownloads)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/ListImageDownloads", in, out, opts...)
@@ -3034,6 +890,7 @@ func (c *volthaServiceClient) ListImageDownloads(ctx context.Context, in *common
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *volthaServiceClient) CancelImageDownload(ctx context.Context, in *ImageDownload, opts ...grpc.CallOption) (*common.OperationResp, error) {
 	out := new(common.OperationResp)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/CancelImageDownload", in, out, opts...)
@@ -3043,6 +900,7 @@ func (c *volthaServiceClient) CancelImageDownload(ctx context.Context, in *Image
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *volthaServiceClient) ActivateImageUpdate(ctx context.Context, in *ImageDownload, opts ...grpc.CallOption) (*common.OperationResp, error) {
 	out := new(common.OperationResp)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/ActivateImageUpdate", in, out, opts...)
@@ -3052,6 +910,7 @@ func (c *volthaServiceClient) ActivateImageUpdate(ctx context.Context, in *Image
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *volthaServiceClient) RevertImageUpdate(ctx context.Context, in *ImageDownload, opts ...grpc.CallOption) (*common.OperationResp, error) {
 	out := new(common.OperationResp)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/RevertImageUpdate", in, out, opts...)
@@ -3178,15 +1037,6 @@ func (c *volthaServiceClient) GetDeviceType(ctx context.Context, in *common.ID, 
 	return out, nil
 }
 
-func (c *volthaServiceClient) ListDeviceGroups(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*DeviceGroups, error) {
-	out := new(DeviceGroups)
-	err := c.cc.Invoke(ctx, "/voltha.VolthaService/ListDeviceGroups", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *volthaServiceClient) StreamPacketsOut(ctx context.Context, opts ...grpc.CallOption) (VolthaService_StreamPacketsOutClient, error) {
 	stream, err := c.cc.NewStream(ctx, &_VolthaService_serviceDesc.Streams[0], "/voltha.VolthaService/StreamPacketsOut", opts...)
 	if err != nil {
@@ -3285,15 +1135,6 @@ func (x *volthaServiceReceiveChangeEventsClient) Recv() (*openflow_13.ChangeEven
 	return m, nil
 }
 
-func (c *volthaServiceClient) GetDeviceGroup(ctx context.Context, in *common.ID, opts ...grpc.CallOption) (*DeviceGroup, error) {
-	out := new(DeviceGroup)
-	err := c.cc.Invoke(ctx, "/voltha.VolthaService/GetDeviceGroup", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *volthaServiceClient) CreateEventFilter(ctx context.Context, in *EventFilter, opts ...grpc.CallOption) (*EventFilter, error) {
 	out := new(EventFilter)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/CreateEventFilter", in, out, opts...)
@@ -3384,15 +1225,6 @@ func (c *volthaServiceClient) SimulateAlarm(ctx context.Context, in *SimulateAla
 	return out, nil
 }
 
-func (c *volthaServiceClient) Subscribe(ctx context.Context, in *OfAgentSubscriber, opts ...grpc.CallOption) (*OfAgentSubscriber, error) {
-	out := new(OfAgentSubscriber)
-	err := c.cc.Invoke(ctx, "/voltha.VolthaService/Subscribe", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *volthaServiceClient) EnablePort(ctx context.Context, in *Port, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/EnablePort", in, out, opts...)
@@ -3411,8 +1243,8 @@ func (c *volthaServiceClient) DisablePort(ctx context.Context, in *Port, opts ..
 	return out, nil
 }
 
-func (c *volthaServiceClient) GetExtValue(ctx context.Context, in *common.ValueSpecifier, opts ...grpc.CallOption) (*common.ReturnValues, error) {
-	out := new(common.ReturnValues)
+func (c *volthaServiceClient) GetExtValue(ctx context.Context, in *extension.ValueSpecifier, opts ...grpc.CallOption) (*extension.ReturnValues, error) {
+	out := new(extension.ReturnValues)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/GetExtValue", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -3420,7 +1252,7 @@ func (c *volthaServiceClient) GetExtValue(ctx context.Context, in *common.ValueS
 	return out, nil
 }
 
-func (c *volthaServiceClient) SetExtValue(ctx context.Context, in *ValueSet, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *volthaServiceClient) SetExtValue(ctx context.Context, in *extension.ValueSet, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/SetExtValue", in, out, opts...)
 	if err != nil {
@@ -3429,8 +1261,8 @@ func (c *volthaServiceClient) SetExtValue(ctx context.Context, in *ValueSet, opt
 	return out, nil
 }
 
-func (c *volthaServiceClient) StartOmciTestAction(ctx context.Context, in *OmciTestRequest, opts ...grpc.CallOption) (*TestResponse, error) {
-	out := new(TestResponse)
+func (c *volthaServiceClient) StartOmciTestAction(ctx context.Context, in *omci.OmciTestRequest, opts ...grpc.CallOption) (*omci.TestResponse, error) {
+	out := new(omci.TestResponse)
 	err := c.cc.Invoke(ctx, "/voltha.VolthaService/StartOmciTestAction", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -3440,10 +1272,6 @@ func (c *volthaServiceClient) StartOmciTestAction(ctx context.Context, in *OmciT
 
 // VolthaServiceServer is the server API for VolthaService service.
 type VolthaServiceServer interface {
-	// Get the membership group of a Voltha Core
-	GetMembership(context.Context, *empty.Empty) (*Membership, error)
-	// Set the membership group of a Voltha Core
-	UpdateMembership(context.Context, *Membership) (*empty.Empty, error)
 	// Get high level information on the Voltha cluster
 	GetVoltha(context.Context, *empty.Empty) (*Voltha, error)
 	// List all Voltha cluster core instances
@@ -3575,15 +1403,11 @@ type VolthaServiceServer interface {
 	ListDeviceTypes(context.Context, *empty.Empty) (*DeviceTypes, error)
 	// Get additional information on a device type
 	GetDeviceType(context.Context, *common.ID) (*DeviceType, error)
-	// List all device sharding groups
-	ListDeviceGroups(context.Context, *empty.Empty) (*DeviceGroups, error)
 	// Stream control packets to the dataplane
 	StreamPacketsOut(VolthaService_StreamPacketsOutServer) error
 	// Receive control packet stream
 	ReceivePacketsIn(*empty.Empty, VolthaService_ReceivePacketsInServer) error
 	ReceiveChangeEvents(*empty.Empty, VolthaService_ReceiveChangeEventsServer) error
-	// Get additional information on a device group
-	GetDeviceGroup(context.Context, *common.ID) (*DeviceGroup, error)
 	CreateEventFilter(context.Context, *EventFilter) (*EventFilter, error)
 	// Get all filters present for a device
 	GetEventFilter(context.Context, *common.ID) (*EventFilters, error)
@@ -3599,25 +1423,18 @@ type VolthaServiceServer interface {
 	GetAlarmDeviceData(context.Context, *common.ID) (*omci.AlarmDeviceData, error)
 	// Simulate an Alarm
 	SimulateAlarm(context.Context, *SimulateAlarmRequest) (*common.OperationResp, error)
-	Subscribe(context.Context, *OfAgentSubscriber) (*OfAgentSubscriber, error)
 	EnablePort(context.Context, *Port) (*empty.Empty, error)
 	DisablePort(context.Context, *Port) (*empty.Empty, error)
-	GetExtValue(context.Context, *common.ValueSpecifier) (*common.ReturnValues, error)
-	SetExtValue(context.Context, *ValueSet) (*empty.Empty, error)
+	GetExtValue(context.Context, *extension.ValueSpecifier) (*extension.ReturnValues, error)
+	SetExtValue(context.Context, *extension.ValueSet) (*empty.Empty, error)
 	// omci start and stop cli implementation
-	StartOmciTestAction(context.Context, *OmciTestRequest) (*TestResponse, error)
+	StartOmciTestAction(context.Context, *omci.OmciTestRequest) (*omci.TestResponse, error)
 }
 
 // UnimplementedVolthaServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedVolthaServiceServer struct {
 }
 
-func (*UnimplementedVolthaServiceServer) GetMembership(ctx context.Context, req *empty.Empty) (*Membership, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMembership not implemented")
-}
-func (*UnimplementedVolthaServiceServer) UpdateMembership(ctx context.Context, req *Membership) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateMembership not implemented")
-}
 func (*UnimplementedVolthaServiceServer) GetVoltha(ctx context.Context, req *empty.Empty) (*Voltha, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVoltha not implemented")
 }
@@ -3756,9 +1573,6 @@ func (*UnimplementedVolthaServiceServer) ListDeviceTypes(ctx context.Context, re
 func (*UnimplementedVolthaServiceServer) GetDeviceType(ctx context.Context, req *common.ID) (*DeviceType, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceType not implemented")
 }
-func (*UnimplementedVolthaServiceServer) ListDeviceGroups(ctx context.Context, req *empty.Empty) (*DeviceGroups, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListDeviceGroups not implemented")
-}
 func (*UnimplementedVolthaServiceServer) StreamPacketsOut(srv VolthaService_StreamPacketsOutServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamPacketsOut not implemented")
 }
@@ -3767,9 +1581,6 @@ func (*UnimplementedVolthaServiceServer) ReceivePacketsIn(req *empty.Empty, srv 
 }
 func (*UnimplementedVolthaServiceServer) ReceiveChangeEvents(req *empty.Empty, srv VolthaService_ReceiveChangeEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ReceiveChangeEvents not implemented")
-}
-func (*UnimplementedVolthaServiceServer) GetDeviceGroup(ctx context.Context, req *common.ID) (*DeviceGroup, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceGroup not implemented")
 }
 func (*UnimplementedVolthaServiceServer) CreateEventFilter(ctx context.Context, req *EventFilter) (*EventFilter, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEventFilter not implemented")
@@ -3801,63 +1612,24 @@ func (*UnimplementedVolthaServiceServer) GetAlarmDeviceData(ctx context.Context,
 func (*UnimplementedVolthaServiceServer) SimulateAlarm(ctx context.Context, req *SimulateAlarmRequest) (*common.OperationResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SimulateAlarm not implemented")
 }
-func (*UnimplementedVolthaServiceServer) Subscribe(ctx context.Context, req *OfAgentSubscriber) (*OfAgentSubscriber, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
-}
 func (*UnimplementedVolthaServiceServer) EnablePort(ctx context.Context, req *Port) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnablePort not implemented")
 }
 func (*UnimplementedVolthaServiceServer) DisablePort(ctx context.Context, req *Port) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisablePort not implemented")
 }
-func (*UnimplementedVolthaServiceServer) GetExtValue(ctx context.Context, req *common.ValueSpecifier) (*common.ReturnValues, error) {
+func (*UnimplementedVolthaServiceServer) GetExtValue(ctx context.Context, req *extension.ValueSpecifier) (*extension.ReturnValues, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetExtValue not implemented")
 }
-func (*UnimplementedVolthaServiceServer) SetExtValue(ctx context.Context, req *ValueSet) (*empty.Empty, error) {
+func (*UnimplementedVolthaServiceServer) SetExtValue(ctx context.Context, req *extension.ValueSet) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetExtValue not implemented")
 }
-func (*UnimplementedVolthaServiceServer) StartOmciTestAction(ctx context.Context, req *OmciTestRequest) (*TestResponse, error) {
+func (*UnimplementedVolthaServiceServer) StartOmciTestAction(ctx context.Context, req *omci.OmciTestRequest) (*omci.TestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartOmciTestAction not implemented")
 }
 
 func RegisterVolthaServiceServer(s *grpc.Server, srv VolthaServiceServer) {
 	s.RegisterService(&_VolthaService_serviceDesc, srv)
-}
-
-func _VolthaService_GetMembership_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(VolthaServiceServer).GetMembership(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/voltha.VolthaService/GetMembership",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).GetMembership(ctx, req.(*empty.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _VolthaService_UpdateMembership_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Membership)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(VolthaServiceServer).UpdateMembership(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/voltha.VolthaService/UpdateMembership",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).UpdateMembership(ctx, req.(*Membership))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _VolthaService_GetVoltha_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -4688,24 +2460,6 @@ func _VolthaService_GetDeviceType_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VolthaService_ListDeviceGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(VolthaServiceServer).ListDeviceGroups(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/voltha.VolthaService/ListDeviceGroups",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).ListDeviceGroups(ctx, req.(*empty.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _VolthaService_StreamPacketsOut_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(VolthaServiceServer).StreamPacketsOut(&volthaServiceStreamPacketsOutServer{stream})
 }
@@ -4772,24 +2526,6 @@ type volthaServiceReceiveChangeEventsServer struct {
 
 func (x *volthaServiceReceiveChangeEventsServer) Send(m *openflow_13.ChangeEvent) error {
 	return x.ServerStream.SendMsg(m)
-}
-
-func _VolthaService_GetDeviceGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(common.ID)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(VolthaServiceServer).GetDeviceGroup(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/voltha.VolthaService/GetDeviceGroup",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).GetDeviceGroup(ctx, req.(*common.ID))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _VolthaService_CreateEventFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -4972,24 +2708,6 @@ func _VolthaService_SimulateAlarm_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VolthaService_Subscribe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OfAgentSubscriber)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(VolthaServiceServer).Subscribe(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/voltha.VolthaService/Subscribe",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).Subscribe(ctx, req.(*OfAgentSubscriber))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _VolthaService_EnablePort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Port)
 	if err := dec(in); err != nil {
@@ -5027,7 +2745,7 @@ func _VolthaService_DisablePort_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _VolthaService_GetExtValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(common.ValueSpecifier)
+	in := new(extension.ValueSpecifier)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -5039,13 +2757,13 @@ func _VolthaService_GetExtValue_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/voltha.VolthaService/GetExtValue",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).GetExtValue(ctx, req.(*common.ValueSpecifier))
+		return srv.(VolthaServiceServer).GetExtValue(ctx, req.(*extension.ValueSpecifier))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _VolthaService_SetExtValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ValueSet)
+	in := new(extension.ValueSet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -5057,13 +2775,13 @@ func _VolthaService_SetExtValue_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/voltha.VolthaService/SetExtValue",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).SetExtValue(ctx, req.(*ValueSet))
+		return srv.(VolthaServiceServer).SetExtValue(ctx, req.(*extension.ValueSet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _VolthaService_StartOmciTestAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OmciTestRequest)
+	in := new(omci.OmciTestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -5075,7 +2793,7 @@ func _VolthaService_StartOmciTestAction_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/voltha.VolthaService/StartOmciTestAction",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolthaServiceServer).StartOmciTestAction(ctx, req.(*OmciTestRequest))
+		return srv.(VolthaServiceServer).StartOmciTestAction(ctx, req.(*omci.OmciTestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5084,14 +2802,6 @@ var _VolthaService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "voltha.VolthaService",
 	HandlerType: (*VolthaServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GetMembership",
-			Handler:    _VolthaService_GetMembership_Handler,
-		},
-		{
-			MethodName: "UpdateMembership",
-			Handler:    _VolthaService_UpdateMembership_Handler,
-		},
 		{
 			MethodName: "GetVoltha",
 			Handler:    _VolthaService_GetVoltha_Handler,
@@ -5277,14 +2987,6 @@ var _VolthaService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _VolthaService_GetDeviceType_Handler,
 		},
 		{
-			MethodName: "ListDeviceGroups",
-			Handler:    _VolthaService_ListDeviceGroups_Handler,
-		},
-		{
-			MethodName: "GetDeviceGroup",
-			Handler:    _VolthaService_GetDeviceGroup_Handler,
-		},
-		{
 			MethodName: "CreateEventFilter",
 			Handler:    _VolthaService_CreateEventFilter_Handler,
 		},
@@ -5323,10 +3025,6 @@ var _VolthaService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SimulateAlarm",
 			Handler:    _VolthaService_SimulateAlarm_Handler,
-		},
-		{
-			MethodName: "Subscribe",
-			Handler:    _VolthaService_Subscribe_Handler,
 		},
 		{
 			MethodName: "EnablePort",

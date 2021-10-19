@@ -29,6 +29,8 @@ issues:
   exclude:
     - "Package github.com/golang/protobuf/proto is deprecated"
     - "Package github.com/golang/protobuf/jsonpb is deprecated"
+    - "SA1019: voltha.ImageDownloads is deprecated"
+    - "SA1019: voltha.ImageDownload is deprecated"
 
 linters:
   enable:
