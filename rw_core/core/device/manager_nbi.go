@@ -23,6 +23,8 @@ import (
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/extension"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -656,7 +658,7 @@ func (dMgr *Manager) ListDeviceFlows(ctx context.Context, id *voltha.ID) (*ofp.F
 }
 
 // ListDeviceFlowGroups returns the flow group details for a specific device entry
-func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*voltha.FlowGroups, error) {
+func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*ofp.FlowGroups, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ListDeviceFlowGroups")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 	logger.Debugw(ctx, "list-device-flow-groups", log.Fields{"device-id": id.Id})
@@ -670,7 +672,7 @@ func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*
 		ret[ctr] = group
 		ctr++
 	}
-	return &voltha.FlowGroups{Items: ret}, nil
+	return &ofp.FlowGroups{Items: ret}, nil
 }
 
 func (dMgr *Manager) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
@@ -697,7 +699,7 @@ func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty
 	return &empty.Empty{}, agent.disablePort(ctx, port.PortNo)
 }
 
-func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifier) (*voltha.ReturnValues, error) {
+func (dMgr *Manager) GetExtValue(ctx context.Context, value *extension.ValueSpecifier) (*extension.ReturnValues, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "GetExtValue")
 	log.EnrichSpan(ctx, log.Fields{"device-id": value.Id})
 
@@ -723,7 +725,7 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *voltha.ValueSpecifi
 }
 
 // SetExtValue  set some given configs or value
-func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*empty.Empty, error) {
+func (dMgr *Manager) SetExtValue(ctx context.Context, value *extension.ValueSet) (*empty.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "SetExtValue")
 	logger.Debugw(ctx, "set-ext-value", log.Fields{"onu-id": value.Id})
 
@@ -743,7 +745,7 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *voltha.ValueSet) (*
 
 }
 
-func (dMgr *Manager) StartOmciTestAction(ctx context.Context, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+func (dMgr *Manager) StartOmciTestAction(ctx context.Context, request *omci.OmciTestRequest) (*omci.TestResponse, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "StartOmciTestAction")
 	log.EnrichSpan(ctx, log.Fields{"device-id": request.Id})
 

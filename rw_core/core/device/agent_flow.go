@@ -46,7 +46,7 @@ func (agent *Agent) listDeviceFlows() map[uint64]*ofp.OfpFlowStats {
 	return flows
 }
 
-func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFlowStats, flowMetadata *ofp.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "add-flows-to-adapters", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
 
 	var err error
@@ -118,16 +118,16 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 			flowSlice[ctr] = flow
 			ctr++
 		}
-		go agent.sendBulkFlows(subCtx, device, &voltha.Flows{Items: flowSlice}, nil, flowMetadata, response)
+		go agent.sendBulkFlows(subCtx, device, &ofp.Flows{Items: flowSlice}, nil, flowMetadata, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: flowsToAdd},
-			ToRemove: &voltha.Flows{Items: flowsToDelete},
+			ToAdd:    &ofp.Flows{Items: flowsToAdd},
+			ToRemove: &ofp.Flows{Items: flowsToDelete},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToAdd:    &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
 		go agent.sendIncrementalFlows(subCtx, device, flowChanges, groupChanges, flowMetadata, response)
 	}
@@ -138,9 +138,9 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 func (agent *Agent) sendBulkFlows(
 	ctx context.Context,
 	device *voltha.Device,
-	flows *voltha.Flows,
-	groups *voltha.FlowGroups,
-	flowMetadata *voltha.FlowMetadata,
+	flows *ofp.Flows,
+	groups *ofp.FlowGroups,
+	flowMetadata *ofp.FlowMetadata,
 	response coreutils.Response,
 ) {
 	var err error
@@ -182,7 +182,7 @@ func (agent *Agent) sendIncrementalFlows(
 	device *voltha.Device,
 	flowChanges *ofp.FlowChanges,
 	groupChanges *ofp.FlowGroupChanges,
-	flowMetadata *voltha.FlowMetadata,
+	flowMetadata *ofp.FlowMetadata,
 	response coreutils.Response,
 ) {
 	var err error
@@ -218,7 +218,7 @@ func (agent *Agent) sendIncrementalFlows(
 	}
 }
 
-func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, flowMetadata *ofp.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "delete-flows-from-adapter", log.Fields{"device-id": agent.deviceID, "flows": flowsToDel})
 
 	var desc string
@@ -269,16 +269,16 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 			flowSlice[ctr] = flow
 			ctr++
 		}
-		go agent.sendBulkFlows(subCtx, device, &voltha.Flows{Items: flowSlice}, nil, flowMetadata, response)
+		go agent.sendBulkFlows(subCtx, device, &ofp.Flows{Items: flowSlice}, nil, flowMetadata, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
-			ToRemove: &voltha.Flows{Items: flowsToDel},
+			ToAdd:    &ofp.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToRemove: &ofp.Flows{Items: flowsToDel},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToAdd:    &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
 		go agent.sendIncrementalFlows(subCtx, device, flowChanges, groupChanges, flowMetadata, response)
 	}
@@ -286,7 +286,7 @@ func (agent *Agent) deleteFlowsFromAdapter(ctx context.Context, flowsToDel []*of
 	return response, nil
 }
 
-func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, flowMetadata *ofp.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "update-flows-to-adapter", log.Fields{"device-id": agent.deviceID, "flows": updatedFlows})
 
 	var err error
@@ -347,7 +347,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 			flowSlice[ctr] = flow
 			ctr++
 		}
-		go agent.sendBulkFlows(subCtx, device, &voltha.Flows{Items: flowSlice}, nil, flowMetadata, response)
+		go agent.sendBulkFlows(subCtx, device, &ofp.Flows{Items: flowSlice}, nil, flowMetadata, response)
 	} else {
 		logger.Debugw(ctx, "updating-flows-and-groups",
 			log.Fields{
@@ -363,13 +363,13 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 		}
 
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: flowsToAdd},
-			ToRemove: &voltha.Flows{Items: flowsToDelete},
+			ToAdd:    &ofp.Flows{Items: flowsToAdd},
+			ToRemove: &ofp.Flows{Items: flowsToDelete},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToAdd:    &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
 		go agent.sendIncrementalFlows(subCtx, device, flowChanges, groupChanges, flowMetadata, response)
 	}
@@ -378,7 +378,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 }
 
 //filterOutFlows removes flows from a device using the uni-port as filter
-func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMetadata *voltha.FlowMetadata) error {
+func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMetadata *ofp.FlowMetadata) error {
 	var flowsToDelete []*ofp.OfpFlowStats
 	// If an existing flow has the uniPort as an InPort or OutPort or as a Tunnel ID then it needs to be removed
 	for flowID := range agent.flowCache.ListIDs() {

@@ -31,6 +31,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/kafka"
 	mock_kafka "github.com/opencord/voltha-lib-go/v7/pkg/mocks/kafka"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
@@ -1222,7 +1223,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi voltha.VolthaService
 	// -----------------------------------------------------------------------
 	// SubTest 1: Omci test action should fail due to nonexistent device id
 
-	request := &voltha.OmciTestRequest{Id: "123", Uuid: "456"}
+	request := &omci.OmciTestRequest{Id: "123", Uuid: "456"}
 	_, err := nbi.StartOmciTestAction(getContext(), request)
 	assert.NotNil(t, err)
 	assert.Equal(t, "rpc error: code = NotFound desc = 123", err.Error())
@@ -1236,7 +1237,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi voltha.VolthaService
 	assert.NotNil(t, deviceNoAdapter)
 
 	// Omci test action should fail due to nonexistent adapter
-	request = &voltha.OmciTestRequest{Id: deviceNoAdapter.Id, Uuid: "456"}
+	request = &omci.OmciTestRequest{Id: deviceNoAdapter.Id, Uuid: "456"}
 	_, err = nbi.StartOmciTestAction(getContext(), request)
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "noAdapterRegisteredOmciTest"))
@@ -1283,10 +1284,10 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi voltha.VolthaService
 	onuDevice := onuDevices.Items[0]
 
 	// Omci test action should succeed
-	request = &voltha.OmciTestRequest{Id: onuDevice.Id, Uuid: "456"}
+	request = &omci.OmciTestRequest{Id: onuDevice.Id, Uuid: "456"}
 	resp, err := nbi.StartOmciTestAction(getContext(), request)
 	assert.Nil(t, err)
-	assert.Equal(t, resp.Result, voltha.TestResponse_SUCCESS)
+	assert.Equal(t, resp.Result, omci.TestResponse_SUCCESS)
 
 	//Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, false)

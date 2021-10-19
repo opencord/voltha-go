@@ -30,11 +30,12 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/adapter_services"
 	"github.com/opencord/voltha-protos/v5/go/common"
-	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/core_services"
 	"google.golang.org/grpc"
 
 	"github.com/opencord/voltha-protos/v5/go/extension"
 	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -129,7 +130,7 @@ func (ta *Adapter) GetEndPoint() string {
 	return ta.serviceEndpoint
 }
 
-func (ta *Adapter) GetCoreClient() (core.CoreServiceClient, error) {
+func (ta *Adapter) GetCoreClient() (core_services.CoreServiceClient, error) {
 	// Wait until the Core is up and running
 	for {
 		if ta.coreClient != nil {
@@ -139,7 +140,7 @@ func (ta *Adapter) GetCoreClient() (core.CoreServiceClient, error) {
 				time.Sleep(1 * time.Second)
 				continue
 			}
-			c, ok := client.(core.CoreServiceClient)
+			c, ok := client.(core_services.CoreServiceClient)
 			if ok {
 				logger.Debug(context.Background(), "got-valid-client")
 				return c, nil
@@ -168,7 +169,7 @@ func (ta *Adapter) startGRPCService(ctx context.Context, server *vgrpc.GrpcServe
 }
 
 func setAndTestCoreServiceHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
-	svc := core.NewCoreServiceClient(conn)
+	svc := core_services.NewCoreServiceClient(conn)
 	if h, err := svc.GetHealthStatus(ctx, &empty.Empty{}); err != nil || h.State != voltha.HealthStatus_HEALTHY {
 		return nil
 	}
@@ -334,7 +335,7 @@ func (ta *Adapter) RevertImageUpdate(ctx context.Context, in *ic.ImageDownloadMe
 }
 
 // OMCI test
-func (ta *Adapter) StartOmciTest(ctx context.Context, test *ic.OMCITest) (*voltha.TestResponse, error) {
+func (ta *Adapter) StartOmciTest(ctx context.Context, test *ic.OMCITest) (*omci.TestResponse, error) {
 	return nil, nil
 }
 
@@ -351,8 +352,8 @@ func (ta *Adapter) SimulateAlarm(context.Context, *ic.SimulateAlarmMessage) (*co
 	return &common.OperationResp{}, nil
 }
 
-func (ta *Adapter) GetExtValue(context.Context, *ic.GetExtValueMessage) (*common.ReturnValues, error) {
-	return &common.ReturnValues{}, nil
+func (ta *Adapter) GetExtValue(context.Context, *ic.GetExtValueMessage) (*extension.ReturnValues, error) {
+	return &extension.ReturnValues{}, nil
 }
 
 func (ta *Adapter) SetExtValue(context.Context, *ic.SetExtValueMessage) (*empty.Empty, error) {

@@ -347,7 +347,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
 		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
 	}
-	err := da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	err := da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &ofp.FlowMetadata{})
 	// Expect specific error as adapter communication, for unit tests, are not set
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "flow-failure-device-"))
@@ -368,7 +368,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
 	}
 
-	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "flow-failure-device-"))
 	daFlows = changeToFlowList(da.listDeviceFlows())
@@ -390,7 +390,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 		{Id: 128, TableId: 1280, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1280000, PacketCount: 0},
 	}
 
-	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daFlows = changeToFlowList(da.listDeviceFlows())
@@ -412,7 +412,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 		{Id: 128, TableId: 1280, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1280000, PacketCount: 0},
 	}
 
-	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	err = da.addFlowsAndGroups(context.Background(), newFlows, []*ofp.OfpGroupEntry{}, &ofp.FlowMetadata{})
 	assert.Nil(t, err)
 	daFlows = changeToFlowList(da.listDeviceFlows())
 	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows))
@@ -430,7 +430,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
 	}
 
-	err = da.deleteFlowsAndGroups(context.Background(), flowsToDelete, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	err = da.deleteFlowsAndGroups(context.Background(), flowsToDelete, []*ofp.OfpGroupEntry{}, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daFlows = changeToFlowList(da.listDeviceFlows())
@@ -446,7 +446,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
 	}
 
-	err = da.deleteFlowsAndGroups(context.Background(), flowsToDelete, []*ofp.OfpGroupEntry{}, &voltha.FlowMetadata{})
+	err = da.deleteFlowsAndGroups(context.Background(), flowsToDelete, []*ofp.OfpGroupEntry{}, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daFlows = changeToFlowList(da.listDeviceFlows())
@@ -459,7 +459,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
 	}
-	err := da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &voltha.FlowMetadata{})
+	err := da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "flow-failure-device-"))
 	daGroups := changeToGroupList(da.listDeviceGroups())
@@ -476,7 +476,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
 	}
-	err = da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &voltha.FlowMetadata{})
+	err = da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daGroups = changeToGroupList(da.listDeviceGroups())
@@ -495,7 +495,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
 	}
-	err = da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &voltha.FlowMetadata{})
+	err = da.addFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, newGroups, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daGroups = changeToGroupList(da.listDeviceGroups())
@@ -512,7 +512,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
 	}
-	err = da.updateFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, updtGroups, &voltha.FlowMetadata{})
+	err = da.updateFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, updtGroups, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daGroups = changeToGroupList(da.listDeviceGroups())
@@ -528,7 +528,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
 	}
-	err = da.deleteFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, delGroups, &voltha.FlowMetadata{})
+	err = da.deleteFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, delGroups, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daGroups = changeToGroupList(da.listDeviceGroups())
@@ -543,7 +543,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 5, GroupId: 50, Buckets: nil}},
 	}
-	err = da.deleteFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, delGroups, &voltha.FlowMetadata{})
+	err = da.deleteFlowsAndGroups(context.Background(), []*ofp.OfpFlowStats{}, delGroups, &ofp.FlowMetadata{})
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daGroups = changeToGroupList(da.listDeviceGroups())
