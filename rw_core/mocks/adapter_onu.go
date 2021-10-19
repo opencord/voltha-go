@@ -33,6 +33,7 @@ import (
 	com "github.com/opencord/voltha-lib-go/v7/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	of "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -292,6 +293,6 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 	return &empty.Empty{}, nil
 }
 
-func (onuA *ONUAdapter) StartOmciTest(ctx context.Context, _ *ic.OMCITest) (*voltha.TestResponse, error) { // nolint
-	return &voltha.TestResponse{Result: voltha.TestResponse_SUCCESS}, nil
+func (onuA *ONUAdapter) StartOmciTest(ctx context.Context, _ *ic.OMCITest) (*omci.TestResponse, error) { // nolint
+	return &omci.TestResponse{Result: omci.TestResponse_SUCCESS}, nil
 }

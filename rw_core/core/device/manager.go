@@ -477,7 +477,7 @@ func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, devic
 	return nil
 }
 
-func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	logger.Debugw(ctx, "add-flows-and-groups", log.Fields{"device-id": deviceID, "groups:": groups, "flow-metadata": flowMetadata})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.addFlowsAndGroups(ctx, flows, groups, flowMetadata)
@@ -486,7 +486,7 @@ func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flo
 }
 
 // deleteParentFlows removes flows from the parent device based on  specific attributes
-func (dMgr *Manager) deleteParentFlows(ctx context.Context, deviceID string, uniPort uint32, metadata *voltha.FlowMetadata) error {
+func (dMgr *Manager) deleteParentFlows(ctx context.Context, deviceID string, uniPort uint32, metadata *ofp.FlowMetadata) error {
 	logger.Debugw(ctx, "delete-parent-flows", log.Fields{"device-id": deviceID, "uni-port": uniPort, "metadata": metadata})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		if !agent.isRootDevice {
@@ -497,7 +497,7 @@ func (dMgr *Manager) deleteParentFlows(ctx context.Context, deviceID string, uni
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	logger.Debugw(ctx, "delete-flows-and-groups", log.Fields{"device-id": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.deleteFlowsAndGroups(ctx, flows, groups, flowMetadata)
@@ -505,7 +505,7 @@ func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, 
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) updateFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) error {
+func (dMgr *Manager) updateFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	logger.Debugw(ctx, "update-flows-and-groups", log.Fields{"device-id": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
 		return agent.updateFlowsAndGroups(ctx, flows, groups, flowMetadata)

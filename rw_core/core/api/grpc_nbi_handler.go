@@ -78,12 +78,6 @@ func (handler *APIHandler) ListCoreInstances(context.Context, *empty.Empty) (*vo
 func (handler *APIHandler) GetCoreInstance(context.Context, *voltha.ID) (*voltha.CoreInstance, error) {
 	return nil, errUnimplemented
 }
-func (handler *APIHandler) ListDeviceGroups(context.Context, *empty.Empty) (*voltha.DeviceGroups, error) {
-	return nil, errUnimplemented
-}
-func (handler *APIHandler) GetDeviceGroup(context.Context, *voltha.ID) (*voltha.DeviceGroup, error) {
-	return nil, errUnimplemented
-}
 func (handler *APIHandler) CreateEventFilter(context.Context, *voltha.EventFilter) (*voltha.EventFilter, error) {
 	return nil, errUnimplemented
 }
@@ -102,18 +96,9 @@ func (handler *APIHandler) ListEventFilters(context.Context, *empty.Empty) (*vol
 func (handler *APIHandler) SelfTest(context.Context, *voltha.ID) (*voltha.SelfTestResponse, error) {
 	return nil, errUnimplemented
 }
-func (handler *APIHandler) Subscribe(context.Context, *voltha.OfAgentSubscriber) (*voltha.OfAgentSubscriber, error) {
-	return nil, errUnimplemented
-}
 func (handler *APIHandler) GetAlarmDeviceData(context.Context, *common.ID) (*omci.AlarmDeviceData, error) {
 	return nil, errUnimplemented
 }
 func (handler *APIHandler) GetMibDeviceData(context.Context, *common.ID) (*omci.MibDeviceData, error) {
-	return nil, errUnimplemented
-}
-func (handler *APIHandler) GetMembership(context.Context, *empty.Empty) (*voltha.Membership, error) {
-	return nil, errUnimplemented
-}
-func (handler *APIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return nil, errUnimplemented
 }

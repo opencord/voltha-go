@@ -27,6 +27,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/extension"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/phayes/freeport"
 
 	"github.com/gogo/protobuf/proto"
@@ -408,7 +409,7 @@ func (oltA *OLTAdapter) RebootDevice(ctx context.Context, device *voltha.Device)
 }
 
 // TODO: REMOVE Start_omci_test begins an omci self-test
-func (oltA *OLTAdapter) StartOmciTest(ctx context.Context, test *ic.OMCITest) (*voltha.TestResponse, error) { // nolint
+func (oltA *OLTAdapter) StartOmciTest(ctx context.Context, test *ic.OMCITest) (*omci.TestResponse, error) { // nolint
 	return nil, errors.New("start-omci-test-not-implemented")
 }
 

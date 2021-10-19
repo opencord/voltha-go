@@ -231,7 +231,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	}
 
 	// Update the devices
-	respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, &voltha.FlowMetadata{})
+	respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, &ofp.FlowMetadata{})
 
 	// Wait for completion
 	go func() {

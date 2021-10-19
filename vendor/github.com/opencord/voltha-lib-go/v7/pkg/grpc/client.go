@@ -28,7 +28,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/adapter_services"
-	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/core_services"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 )
@@ -162,13 +162,13 @@ func (c *Client) GetClient() (interface{}, error) {
 
 // GetCoreServiceClient is a helper function that returns a concrete service instead of the GetClient() API
 // which returns an interface
-func (c *Client) GetCoreServiceClient() (core.CoreServiceClient, error) {
+func (c *Client) GetCoreServiceClient() (core_services.CoreServiceClient, error) {
 	c.connectionLock.RLock()
 	defer c.connectionLock.RUnlock()
 	if c.service == nil {
 		return nil, fmt.Errorf("no core connection to %s", c.apiEndPoint)
 	}
-	client, ok := c.service.(core.CoreServiceClient)
+	client, ok := c.service.(core_services.CoreServiceClient)
 	if ok {
 		return client, nil
 	}
