@@ -27,13 +27,14 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/extension"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/phayes/freeport"
 
 	"github.com/gogo/protobuf/proto"
 	com "github.com/opencord/voltha-lib-go/v7/pkg/adapters/common"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	of "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -174,7 +175,7 @@ func (oltA *OLTAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 		d.ConnectStatus = common.ConnectStatus_REACHABLE
 		d.OperStatus = common.OperStatus_ACTIVE
 
-		if _, err = c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{DeviceId: d.Id, OperStatus: d.OperStatus, ConnStatus: d.ConnectStatus}); err != nil {
+		if _, err = c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{DeviceId: d.Id, OperStatus: d.OperStatus, ConnStatus: d.ConnectStatus}); err != nil {
 			logger.Fatalf(ctx, "PortCreated-failed-%s", err)
 		}
 
@@ -190,7 +191,7 @@ func (oltA *OLTAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 		for i := 0; i < numONUPerOLT; i++ {
 			go func(seqNo int) {
 				if _, err := c.ChildDeviceDetected(context.TODO(),
-					&ic.DeviceDiscovery{
+					&ca.DeviceDiscovery{
 						ParentId:        d.Id,
 						ParentPortNo:    1,
 						ChildDeviceType: oltA.ChildDeviceType,
@@ -215,11 +216,11 @@ func (oltA *OLTAdapter) Single_get_value_request(ctx context.Context, // nolint
 }
 
 // Get_ofp_device_info returns ofp device info
-func (oltA *OLTAdapter) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ic.SwitchCapability, error) { // nolint
+func (oltA *OLTAdapter) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ca.SwitchCapability, error) { // nolint
 	if d := oltA.getDevice(device.Id); d == nil {
 		logger.Fatalf(ctx, "device-not-found-%s", device.Id)
 	}
-	return &ic.SwitchCapability{
+	return &ca.SwitchCapability{
 		Desc: &of.OfpDesc{
 			HwDesc:    "olt_adapter_mock",
 			SwDesc:    "olt_adapter_mock",
@@ -251,7 +252,7 @@ func (oltA *OLTAdapter) DisableDevice(ctx context.Context, device *voltha.Device
 		}
 
 		if _, err := c.PortsStateUpdate(context.TODO(),
-			&ic.PortStateFilter{
+			&ca.PortStateFilter{
 				DeviceId:       cloned.Id,
 				PortTypeFilter: 0,
 				OperStatus:     common.OperStatus_UNKNOWN,
@@ -263,7 +264,7 @@ func (oltA *OLTAdapter) DisableDevice(ctx context.Context, device *voltha.Device
 		cloned.OperStatus = common.OperStatus_UNKNOWN
 		// The device is still reachable after it has been disabled, so the connection status should not be changed.
 
-		if _, err := c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{
+		if _, err := c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{
 			DeviceId:   cloned.Id,
 			OperStatus: cloned.OperStatus,
 			ConnStatus: cloned.ConnectStatus,
@@ -300,7 +301,7 @@ func (oltA *OLTAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 
 		// Update the all ports state on that device to enable
 		if _, err := c.PortsStateUpdate(context.TODO(),
-			&ic.PortStateFilter{
+			&ca.PortStateFilter{
 				DeviceId:       cloned.Id,
 				PortTypeFilter: 0,
 				OperStatus:     common.OperStatus_ACTIVE,
@@ -311,7 +312,7 @@ func (oltA *OLTAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 		//Update the device state
 		cloned.OperStatus = common.OperStatus_ACTIVE
 
-		if _, err := c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{
+		if _, err := c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{
 			DeviceId:   cloned.Id,
 			OperStatus: cloned.OperStatus,
 			ConnStatus: cloned.ConnectStatus,
@@ -339,7 +340,7 @@ func (oltA *OLTAdapter) EnablePort(ctx context.Context, port *voltha.Port) (*emp
 
 		if port.Type == voltha.Port_PON_OLT {
 			if _, err := c.PortStateUpdate(context.TODO(),
-				&ic.PortState{
+				&ca.PortState{
 					DeviceId:   port.DeviceId,
 					PortType:   voltha.Port_ETHERNET_NNI,
 					PortNo:     port.PortNo,
@@ -362,7 +363,7 @@ func (oltA *OLTAdapter) DisablePort(ctx context.Context, port *voltha.Port) (*em
 		}
 		if port.Type == voltha.Port_PON_OLT {
 			if _, err := c.PortStateUpdate(context.TODO(),
-				&ic.PortState{
+				&ca.PortState{
 					DeviceId:   port.DeviceId,
 					PortType:   voltha.Port_PON_OLT,
 					PortNo:     port.PortNo,
@@ -386,7 +387,7 @@ func (oltA *OLTAdapter) RebootDevice(ctx context.Context, device *voltha.Device)
 			return
 		}
 
-		if _, err := c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{
+		if _, err := c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{
 			DeviceId:   device.Id,
 			OperStatus: common.OperStatus_UNKNOWN,
 			ConnStatus: common.ConnectStatus_UNREACHABLE,
@@ -396,7 +397,7 @@ func (oltA *OLTAdapter) RebootDevice(ctx context.Context, device *voltha.Device)
 		}
 
 		if _, err := c.PortsStateUpdate(context.TODO(),
-			&ic.PortStateFilter{
+			&ca.PortStateFilter{
 				DeviceId:       device.Id,
 				PortTypeFilter: 0,
 				OperStatus:     common.OperStatus_UNKNOWN,
@@ -408,7 +409,7 @@ func (oltA *OLTAdapter) RebootDevice(ctx context.Context, device *voltha.Device)
 }
 
 // TODO: REMOVE Start_omci_test begins an omci self-test
-func (oltA *OLTAdapter) StartOmciTest(ctx context.Context, test *ic.OMCITest) (*voltha.TestResponse, error) { // nolint
+func (oltA *OLTAdapter) StartOmciTest(ctx context.Context, test *ca.OMCITest) (*omci.TestResponse, error) { // nolint
 	return nil, errors.New("start-omci-test-not-implemented")
 }
 
@@ -419,7 +420,7 @@ func (oltA *OLTAdapter) SetDeviceActive(deviceID string) {
 		return
 	}
 
-	if _, err := c.DeviceStateUpdate(context.TODO(), &ic.DeviceStateFilter{
+	if _, err := c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{
 		DeviceId:   deviceID,
 		OperStatus: common.OperStatus_ACTIVE,
 		ConnStatus: common.ConnectStatus_REACHABLE,

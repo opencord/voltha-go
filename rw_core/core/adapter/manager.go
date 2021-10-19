@@ -25,9 +25,9 @@ import (
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/db"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
-	"github.com/opencord/voltha-protos/v5/go/adapter_services"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	"github.com/opencord/voltha-protos/v5/go/core_adapter"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -132,7 +132,7 @@ func (aMgr *Manager) GetAdapterNameWithEndpoint(ctx context.Context, endPoint st
 	return "", errors.New("Not found")
 }
 
-func (aMgr *Manager) GetAdapterClient(_ context.Context, endpoint string) (adapter_services.AdapterServiceClient, error) {
+func (aMgr *Manager) GetAdapterClient(_ context.Context, endpoint string) (adapter_service.AdapterServiceClient, error) {
 	if endpoint == "" {
 		return nil, errors.New("endpoint-cannot-be-empty")
 	}
@@ -277,7 +277,7 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory(ctx context.Context) err
 	return nil
 }
 
-func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *ic.AdapterRegistration) (*empty.Empty, error) {
+func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_adapter.AdapterRegistration) (*empty.Empty, error) {
 	adapter := registration.Adapter
 	deviceTypes := registration.DTypes
 	logger.Infow(ctx, "RegisterAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})

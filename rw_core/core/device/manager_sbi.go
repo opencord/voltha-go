@@ -22,7 +22,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -62,7 +62,7 @@ func (dMgr *Manager) DeviceUpdate(ctx context.Context, device *voltha.Device) (*
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
-func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ic.DeviceStateFilter) (*empty.Empty, error) {
+func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ca.DeviceStateFilter) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeviceStateUpdate")
 	logger.Debugw(ctx, "device-state-update", log.Fields{"device-id": ds.DeviceId, "operStatus": ds.OperStatus, "connStatus": ds.ConnStatus})
 
@@ -75,7 +75,7 @@ func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ic.DeviceStateFi
 	return nil, status.Errorf(codes.NotFound, "%s", ds.DeviceId)
 }
 
-func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ic.DeviceDiscovery) (*voltha.Device, error) {
+func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDiscovery) (*voltha.Device, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDeviceDetected")
 	logger.Debugw(ctx, "child-device-detected",
 		log.Fields{
@@ -121,7 +121,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ic.DeviceDisco
 		return nil, status.Errorf(codes.FailedPrecondition, "device Type not set %s", dd.ParentId)
 	}
 
-	if device, err := dMgr.GetChildDevice(ctx, &ic.ChildDeviceFilter{
+	if device, err := dMgr.GetChildDevice(ctx, &ca.ChildDeviceFilter{
 		ParentId:     dd.ParentId,
 		SerialNumber: dd.SerialNumber,
 		OnuId:        dd.OnuId,
@@ -170,7 +170,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ic.DeviceDisco
 	return insertedChildDevice, nil
 }
 
-func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ic.ChildDeviceFilter) (*voltha.Device, error) {
+func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilter) (*voltha.Device, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "GetChildDevice")
 	logger.Debugw(ctx, "get-child-device", log.Fields{"filter": df})
 
@@ -229,7 +229,7 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ic.ChildDeviceFilte
 }
 
 // PortsStateUpdate updates the operational status of all ports on the device
-func (dMgr *Manager) PortsStateUpdate(ctx context.Context, ps *ic.PortStateFilter) (*empty.Empty, error) {
+func (dMgr *Manager) PortsStateUpdate(ctx context.Context, ps *ca.PortStateFilter) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "PortsStateUpdate")
 	logger.Debugw(ctx, "ports-state-update", log.Fields{"device-id": ps.DeviceId})
 
@@ -336,7 +336,7 @@ func (dMgr *Manager) GetChildDeviceWithProxyAddress(ctx context.Context, proxyAd
 	return nil, status.Errorf(codes.NotFound, "%s", proxyAddress)
 }
 
-func (dMgr *Manager) GetPorts(ctx context.Context, pf *ic.PortFilter) (*voltha.Ports, error) {
+func (dMgr *Manager) GetPorts(ctx context.Context, pf *ca.PortFilter) (*voltha.Ports, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "GetPorts")
 	logger.Debugw(ctx, "get-ports", log.Fields{"device-id": pf.DeviceId, "portType": pf.PortType})
 
@@ -354,7 +354,7 @@ func (dMgr *Manager) GetChildDevices(ctx context.Context, parentDeviceID *common
 	return dMgr.getAllChildDevices(ctx, parentDeviceID.Id)
 }
 
-func (dMgr *Manager) ChildrenStateUpdate(ctx context.Context, ds *ic.DeviceStateFilter) (*empty.Empty, error) {
+func (dMgr *Manager) ChildrenStateUpdate(ctx context.Context, ds *ca.DeviceStateFilter) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildrenStateUpdate")
 	logger.Debugw(ctx, "children-state-update", log.Fields{"parent-device-id": ds.ParentDeviceId, "operStatus": ds.OperStatus, "connStatus": ds.ConnStatus})
 
@@ -372,7 +372,7 @@ func (dMgr *Manager) ChildrenStateUpdate(ctx context.Context, ds *ic.DeviceState
 	return &empty.Empty{}, nil
 }
 
-func (dMgr *Manager) PortStateUpdate(ctx context.Context, ps *ic.PortState) (*empty.Empty, error) {
+func (dMgr *Manager) PortStateUpdate(ctx context.Context, ps *ca.PortState) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "PortStateUpdate")
 	logger.Debugw(ctx, "port-state-update", log.Fields{"device-id": ps.DeviceId, "portType": ps.PortType, "portNo": ps.PortNo, "operStatus": ps.OperStatus})
 
@@ -430,7 +430,7 @@ func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID *common.ID) (*
 }
 
 // GetDevicePort returns the port details for a specific device port entry
-func (dMgr *Manager) GetDevicePort(ctx context.Context, pf *ic.PortFilter) (*voltha.Port, error) {
+func (dMgr *Manager) GetDevicePort(ctx context.Context, pf *ca.PortFilter) (*voltha.Port, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "GetDevicePort")
 	logger.Debugw(ctx, "get-device-port", log.Fields{"device-id": pf.DeviceId})
 
@@ -459,7 +459,7 @@ func (dMgr *Manager) DevicePMConfigUpdate(ctx context.Context, pc *voltha.PmConf
 }
 
 // SendPacketIn receives packetIn request from adapter
-func (dMgr *Manager) SendPacketIn(ctx context.Context, pi *ic.PacketIn) (*empty.Empty, error) {
+func (dMgr *Manager) SendPacketIn(ctx context.Context, pi *ca.PacketIn) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "SendPacketIn")
 	logger.Debugw(ctx, "packet-in", log.Fields{"device-id": pi.DeviceId, "port": pi.Port})
 
@@ -481,7 +481,7 @@ func (dMgr *Manager) SendPacketIn(ctx context.Context, pi *ic.PacketIn) (*empty.
 	return &empty.Empty{}, nil
 }
 
-func (dMgr *Manager) DeviceReasonUpdate(ctx context.Context, dr *ic.DeviceReason) (*empty.Empty, error) {
+func (dMgr *Manager) DeviceReasonUpdate(ctx context.Context, dr *ca.DeviceReason) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeviceReasonUpdate")
 	logger.Debugw(ctx, "update-device-reason", log.Fields{"device-id": dr.DeviceId, "reason": dr.Reason})
 

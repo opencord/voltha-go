@@ -26,6 +26,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	"github.com/opencord/voltha-lib-go/v7/pkg/version"
 	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -49,8 +50,8 @@ func NewAPIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalMa
 	}
 }
 
-func (handler *APIHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*voltha.HealthStatus, error) {
-	return &voltha.HealthStatus{State: voltha.HealthStatus_HEALTHY}, nil
+func (handler *APIHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*health.HealthStatus, error) {
+	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
 }
 
 // GetVoltha currently just returns version information
@@ -78,12 +79,6 @@ func (handler *APIHandler) ListCoreInstances(context.Context, *empty.Empty) (*vo
 func (handler *APIHandler) GetCoreInstance(context.Context, *voltha.ID) (*voltha.CoreInstance, error) {
 	return nil, errUnimplemented
 }
-func (handler *APIHandler) ListDeviceGroups(context.Context, *empty.Empty) (*voltha.DeviceGroups, error) {
-	return nil, errUnimplemented
-}
-func (handler *APIHandler) GetDeviceGroup(context.Context, *voltha.ID) (*voltha.DeviceGroup, error) {
-	return nil, errUnimplemented
-}
 func (handler *APIHandler) CreateEventFilter(context.Context, *voltha.EventFilter) (*voltha.EventFilter, error) {
 	return nil, errUnimplemented
 }
@@ -102,18 +97,9 @@ func (handler *APIHandler) ListEventFilters(context.Context, *empty.Empty) (*vol
 func (handler *APIHandler) SelfTest(context.Context, *voltha.ID) (*voltha.SelfTestResponse, error) {
 	return nil, errUnimplemented
 }
-func (handler *APIHandler) Subscribe(context.Context, *voltha.OfAgentSubscriber) (*voltha.OfAgentSubscriber, error) {
-	return nil, errUnimplemented
-}
 func (handler *APIHandler) GetAlarmDeviceData(context.Context, *common.ID) (*omci.AlarmDeviceData, error) {
 	return nil, errUnimplemented
 }
 func (handler *APIHandler) GetMibDeviceData(context.Context, *common.ID) (*omci.MibDeviceData, error) {
-	return nil, errUnimplemented
-}
-func (handler *APIHandler) GetMembership(context.Context, *empty.Empty) (*voltha.Membership, error) {
-	return nil, errUnimplemented
-}
-func (handler *APIHandler) UpdateMembership(context.Context, *voltha.Membership) (*empty.Empty, error) {
 	return nil, errUnimplemented
 }

@@ -42,7 +42,7 @@ func (agent *Agent) listDeviceGroups() map[uint32]*ofp.OfpGroupEntry {
 	return groups
 }
 
-func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "add-groups-to-adapters", log.Fields{"device-id": agent.deviceID, "groups": newGroups, "flow-metadata": flowMetadata})
 
 	var err error
@@ -116,16 +116,16 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 			groupSlice[ctr] = group
 			ctr++
 		}
-		go agent.sendBulkFlows(subCtx, device, nil, &voltha.FlowGroups{Items: groupSlice}, flowMetadata, response)
+		go agent.sendBulkFlows(subCtx, device, nil, &ofp.FlowGroups{Items: groupSlice}, flowMetadata, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
-			ToRemove: &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToAdd:    &ofp.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToRemove: &ofp.Flows{Items: []*ofp.OfpFlowStats{}},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: groupsToAdd},
-			ToRemove: &voltha.FlowGroups{Items: groupsToDelete},
-			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToAdd:    &ofp.FlowGroups{Items: groupsToAdd},
+			ToRemove: &ofp.FlowGroups{Items: groupsToDelete},
+			ToUpdate: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
 		go agent.sendIncrementalFlows(subCtx, device, flowChanges, groupChanges, flowMetadata, response)
 	}
@@ -133,7 +133,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 	return response, nil
 }
 
-func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "delete-groups-from-adapter", log.Fields{"device-id": agent.deviceID, "groups": groupsToDel})
 
 	var desc string
@@ -183,16 +183,16 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 			groupSlice[ctr] = group
 			ctr++
 		}
-		go agent.sendBulkFlows(subCtx, device, nil, &voltha.FlowGroups{Items: groupSlice}, flowMetadata, response)
+		go agent.sendBulkFlows(subCtx, device, nil, &ofp.FlowGroups{Items: groupSlice}, flowMetadata, response)
 	} else {
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
-			ToRemove: &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToAdd:    &ofp.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToRemove: &ofp.Flows{Items: []*ofp.OfpFlowStats{}},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToRemove: &voltha.FlowGroups{Items: groupsToDel},
-			ToUpdate: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToAdd:    &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &ofp.FlowGroups{Items: groupsToDel},
+			ToUpdate: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
 		}
 		go agent.sendIncrementalFlows(subCtx, device, flowChanges, groupChanges, flowMetadata, response)
 	}
@@ -200,7 +200,7 @@ func (agent *Agent) deleteGroupsFromAdapter(ctx context.Context, groupsToDel []*
 	return response, nil
 }
 
-func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *voltha.FlowMetadata) (coreutils.Response, error) {
+func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) (coreutils.Response, error) {
 	logger.Debugw(ctx, "update-groups-to-adapter", log.Fields{"device-id": agent.deviceID, "groups": updatedGroups})
 
 	var desc string
@@ -258,7 +258,7 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 			groupSlice[ctr] = group
 			ctr++
 		}
-		go agent.sendBulkFlows(subCtx, device, nil, &voltha.FlowGroups{Items: groupSlice}, flowMetadata, response)
+		go agent.sendBulkFlows(subCtx, device, nil, &ofp.FlowGroups{Items: groupSlice}, flowMetadata, response)
 	} else {
 		logger.Debugw(ctx, "updating-groups",
 			log.Fields{
@@ -274,13 +274,13 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 		}
 
 		flowChanges := &ofp.FlowChanges{
-			ToAdd:    &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
-			ToRemove: &voltha.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToAdd:    &ofp.Flows{Items: []*ofp.OfpFlowStats{}},
+			ToRemove: &ofp.Flows{Items: []*ofp.OfpFlowStats{}},
 		}
 		groupChanges := &ofp.FlowGroupChanges{
-			ToAdd:    &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToRemove: &voltha.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
-			ToUpdate: &voltha.FlowGroups{Items: groupsToUpdate},
+			ToAdd:    &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToRemove: &ofp.FlowGroups{Items: []*ofp.OfpGroupEntry{}},
+			ToUpdate: &ofp.FlowGroups{Items: groupsToUpdate},
 		}
 		go agent.sendIncrementalFlows(subCtx, device, flowChanges, groupChanges, flowMetadata, response)
 	}

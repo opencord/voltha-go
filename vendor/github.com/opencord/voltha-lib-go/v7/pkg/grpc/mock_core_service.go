@@ -22,14 +22,15 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-protos/v5/go/common"
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
+	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
 
 //MockCoreServiceHandler implements the methods in the core service
 type MockCoreServiceHandler struct{}
 
-func (handler *MockCoreServiceHandler) RegisterAdapter(ctx context.Context, reg *ic.AdapterRegistration) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) RegisterAdapter(ctx context.Context, reg *ca.AdapterRegistration) (*empty.Empty, error) {
 	//logger.Debugw(ctx, "registration-received", log.Fields{"input": reg})
 	return &empty.Empty{}, nil
 }
@@ -42,7 +43,7 @@ func (handler *MockCoreServiceHandler) PortCreated(context.Context, *voltha.Port
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) PortsStateUpdate(context.Context, *ic.PortStateFilter) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) PortsStateUpdate(context.Context, *ca.PortStateFilter) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
@@ -50,7 +51,7 @@ func (handler *MockCoreServiceHandler) DeleteAllPorts(context.Context, *common.I
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) GetDevicePort(context.Context, *ic.PortFilter) (*voltha.Port, error) {
+func (handler *MockCoreServiceHandler) GetDevicePort(context.Context, *ca.PortFilter) (*voltha.Port, error) {
 	return &voltha.Port{}, nil
 }
 
@@ -58,7 +59,7 @@ func (handler *MockCoreServiceHandler) ListDevicePorts(context.Context, *common.
 	return &voltha.Ports{}, nil
 }
 
-func (handler *MockCoreServiceHandler) DeviceStateUpdate(context.Context, *ic.DeviceStateFilter) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) DeviceStateUpdate(context.Context, *ca.DeviceStateFilter) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
@@ -66,7 +67,7 @@ func (handler *MockCoreServiceHandler) DevicePMConfigUpdate(context.Context, *vo
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) ChildDeviceDetected(context.Context, *ic.DeviceDiscovery) (*voltha.Device, error) {
+func (handler *MockCoreServiceHandler) ChildDeviceDetected(context.Context, *ca.DeviceDiscovery) (*voltha.Device, error) {
 	return &voltha.Device{}, nil
 }
 
@@ -89,7 +90,7 @@ func (handler *MockCoreServiceHandler) GetDevice(ctx context.Context, id *common
 	}, nil
 }
 
-func (handler *MockCoreServiceHandler) GetChildDevice(context.Context, *ic.ChildDeviceFilter) (*voltha.Device, error) {
+func (handler *MockCoreServiceHandler) GetChildDevice(context.Context, *ca.ChildDeviceFilter) (*voltha.Device, error) {
 	return nil, nil
 }
 
@@ -97,15 +98,15 @@ func (handler *MockCoreServiceHandler) GetChildDevices(context.Context, *common.
 	return &voltha.Devices{}, nil
 }
 
-func (handler *MockCoreServiceHandler) SendPacketIn(context.Context, *ic.PacketIn) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) SendPacketIn(context.Context, *ca.PacketIn) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) DeviceReasonUpdate(context.Context, *ic.DeviceReason) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) DeviceReasonUpdate(context.Context, *ca.DeviceReason) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) PortStateUpdate(context.Context, *ic.PortState) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) PortStateUpdate(context.Context, *ca.PortState) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
@@ -118,11 +119,11 @@ func (handler *MockCoreServiceHandler) GetChildDeviceWithProxyAddress(context.Co
 	return &voltha.Device{}, nil
 }
 
-func (handler *MockCoreServiceHandler) GetPorts(context.Context, *ic.PortFilter) (*voltha.Ports, error) {
+func (handler *MockCoreServiceHandler) GetPorts(context.Context, *ca.PortFilter) (*voltha.Ports, error) {
 	return &voltha.Ports{}, nil
 }
 
-func (handler *MockCoreServiceHandler) ChildrenStateUpdate(context.Context, *ic.DeviceStateFilter) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) ChildrenStateUpdate(context.Context, *ca.DeviceStateFilter) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
@@ -130,6 +131,6 @@ func (handler *MockCoreServiceHandler) UpdateImageDownload(context.Context, *vol
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*voltha.HealthStatus, error) {
-	return &voltha.HealthStatus{State: voltha.HealthStatus_HEALTHY}, nil
+func (handler *MockCoreServiceHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*health.HealthStatus, error) {
+	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
 }

@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 
 	"math/rand"
 
@@ -226,7 +226,7 @@ func CreateAndRegisterAdapters(
 			coreClient, err := onuAdapter.GetCoreClient()
 			assert.Nil(t, err)
 			assert.NotNil(t, coreClient)
-			if _, err := coreClient.RegisterAdapter(ctx, &ic.AdapterRegistration{
+			if _, err := coreClient.RegisterAdapter(ctx, &ca.AdapterRegistration{
 				Adapter: adapterToRegister,
 				DTypes:  deviceTypes}); err != nil {
 				logger.Errorw(ctx, "failed-to-register-adapter", log.Fields{"error": err, "adapter": adapterToRegister.Id})
@@ -266,7 +266,7 @@ func CreateAndRegisterAdapters(
 			assert.Nil(t, err)
 			assert.NotNil(t, coreClient)
 
-			if _, err := coreClient.RegisterAdapter(ctx, &ic.AdapterRegistration{
+			if _, err := coreClient.RegisterAdapter(ctx, &ca.AdapterRegistration{
 				Adapter: adapterToRegister,
 				DTypes:  deviceTypes}); err != nil {
 				logger.Errorw(ctx, "failed-to-register-adapter", log.Fields{"error": err, "adapter": adapterToRegister.Id})
