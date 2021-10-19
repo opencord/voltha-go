@@ -21,7 +21,7 @@ import (
 	"errors"
 	"time"
 
-	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
+	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 
 	"github.com/opencord/voltha-protos/v5/go/common"
 
@@ -100,7 +100,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		response, err := client.DownloadImage(subCtx, &ic.ImageDownloadMessage{
+		response, err := client.DownloadImage(subCtx, &ca.ImageDownloadMessage{
 			Device: cloned,
 			Image:  clonedImg,
 		})
@@ -181,7 +181,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		response, err := client.CancelImageDownload(subCtx, &ic.ImageDownloadMessage{
+		response, err := client.CancelImageDownload(subCtx, &ca.ImageDownloadMessage{
 			Device: cloned,
 			Image:  img,
 		})
@@ -262,7 +262,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		response, err := client.ActivateImageUpdate(subCtx, &ic.ImageDownloadMessage{
+		response, err := client.ActivateImageUpdate(subCtx, &ca.ImageDownloadMessage{
 			Device: cloned,
 			Image:  img,
 		})
@@ -333,7 +333,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		_, err := client.RevertImageUpdate(subCtx, &ic.ImageDownloadMessage{
+		_, err := client.RevertImageUpdate(subCtx, &ca.ImageDownloadMessage{
 			Device: cloned,
 			Image:  img,
 		})
@@ -379,7 +379,7 @@ func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.Imag
 		return nil, err
 	}
 	agent.requestQueue.RequestComplete()
-	return client.GetImageDownloadStatus(ctx, &ic.ImageDownloadMessage{
+	return client.GetImageDownloadStatus(ctx, &ca.ImageDownloadMessage{
 		Device: device,
 		Image:  img,
 	})

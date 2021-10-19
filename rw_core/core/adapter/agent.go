@@ -25,7 +25,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	"github.com/opencord/voltha-protos/v5/go/adapter_services"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
+	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
 )
@@ -42,8 +43,8 @@ type agent struct {
 }
 
 func setAndTestAdapterServiceHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
-	svc := adapter_services.NewAdapterServiceClient(conn)
-	if h, err := svc.GetHealthStatus(ctx, &empty.Empty{}); err != nil || h.State != voltha.HealthStatus_HEALTHY {
+	svc := adapter_service.NewAdapterServiceClient(conn)
+	if h, err := svc.GetHealthStatus(ctx, &empty.Empty{}); err != nil || h.State != health.HealthStatus_HEALTHY {
 		logger.Debugw(ctx, "connection-not-ready", log.Fields{"error": err, "health": h})
 		return nil
 	}
@@ -88,12 +89,12 @@ func (aa *agent) getAdapter(ctx context.Context) *voltha.Adapter {
 	return aa.adapter
 }
 
-func (aa *agent) getClient() (adapter_services.AdapterServiceClient, error) {
+func (aa *agent) getClient() (adapter_service.AdapterServiceClient, error) {
 	client, err := aa.vClient.GetClient()
 	if err != nil {
 		return nil, err
 	}
-	c, ok := client.(adapter_services.AdapterServiceClient)
+	c, ok := client.(adapter_service.AdapterServiceClient)
 	if ok {
 		return c, nil
 	}
