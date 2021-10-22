@@ -382,8 +382,9 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed: %s", agent.deviceID)
 		return err
 	}
-
-	if oldDevice.AdminState == voltha.AdminState_ENABLED {
+	//vol-4275 TST meeting 08/04/2021: Let EnableDevice to be called again if device is in FAILED operational state,
+	//even the admin state is ENABLED.
+	if oldDevice.AdminState == voltha.AdminState_ENABLED && oldDevice.OperStatus != voltha.OperStatus_FAILED {
 		logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
 		err = status.Errorf(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id))
