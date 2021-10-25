@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "83f58f57_5de236b4",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-25T13:32:05Z",
+      "side": 1,
+      "message": "Currently in the Core state machine we do not have a specific transition when a device goes to operation failed state.   Is there any action that is needed when such a transition occurs? E.g. should the logical ports be removed?  If this is an OLT device, should the logical agent be removed (assuming we went from ACTIVE operational state to FAILED state - not sure if that\u0027s a valid transition).\n\nIf we do re-enable on a failed operational state, the Core will first change the operational state to activating before sending the request to the adapter.  Is this still ok in this use case?",
+      "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
