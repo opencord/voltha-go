@@ -141,6 +141,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b999b7ba_c12feefa",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-25T19:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "857b787d_cf088fe0",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "756d765c_07e7690f",
@@ -190,6 +208,24 @@
       "side": 1,
       "message": "Since we want a KV cleanup, how about doing these cleanups as part of the RunPostDeviceDelete()?   We can\u0027t remove DeleteAllLogicalPorts from the transition map because the order of actions matters.",
       "parentUuid": "76cbc25f_104387f7",
+      "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "391644bf_460b8cc4",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-25T19:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ce67f5d1_7758619d",
       "revId": "aea2fa546ec79cb645811c8242c83558996f3340",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
