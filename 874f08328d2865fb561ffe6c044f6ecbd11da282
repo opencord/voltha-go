@@ -34,6 +34,24 @@
       "parentUuid": "83f58f57_5de236b4",
       "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4283bb1c_1c32824a",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-10-25T16:54:00Z",
+      "side": 1,
+      "message": "I\u0027m not sure about taking any action when transition to FAILED operational status. The transition would be done not from ACTIVE, but from ACTIVATING to FAIL.  And previously the device was admin DISABLED. During a enableDevice the state transition was;\n (admin\u003dDISABLED,  oper\u003dUNKNOWN) -\u003e (admin\u003dENABLE,  oper\u003dACTIVATING)-\u003e(admin\u003dENABLE, oper\u003dACTIVE). \nBut now with this patch, if enableDevice fails, the transition would be;\n (admin\u003dDISABLED, oper\u003dUNKNOWN) -\u003e (admin\u003dENABLE,oper\u003dACTIVATING)-\u003e(admin\u003dENABLE, oper\u003dFAILED). \nThen if an enable is called again and succeeded this time, it would be;\n (admin\u003dENABLE, oper\u003dFAILED) -\u003e (admin\u003dENABLE, oper\u003dACTIVATING)-\u003e(admin\u003dENABLE, oper\u003dACTIVE).\nIf enable is failed again then it would again be;\n(admin\u003dENABLE, oper\u003dFAILED) -\u003e (admin\u003dENABLE, oper\u003dACTIVATING)-\u003e(admin\u003dENABLE, oper\u003dFAILED). \n\nBesides the questions you asked, I have some other questions in my mind. What if some of the ports of the device are enabled and some not(enabling a device means enabling its ports in adapters)? Does this still mean failure or not(currently one port failure is enough to decide enableDevice is failed)?\n\nAre there some functionalities that needs to be checked and tested when the device waiting in operational FAILED state?",
+      "parentUuid": "85bae0df_0a3c6db4",
+      "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
