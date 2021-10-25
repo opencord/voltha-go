@@ -52,6 +52,24 @@
       "parentUuid": "85bae0df_0a3c6db4",
       "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "edf61a2a_113d1628",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-10-25T23:25:43Z",
+      "side": 1,
+      "message": "I tested and checked that the logical device or its ports are not removed when the device is disabled. So I think no need to remove them when failed in enabling the previously disabled device.",
+      "parentUuid": "4283bb1c_1c32824a",
+      "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
