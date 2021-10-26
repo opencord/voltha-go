@@ -67,6 +67,121 @@
       "message": "Verified patchset 11 with https://gerrit.opencord.org/c/voltha-system-tests/+/27566: https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1675/robot/report/RobotLogs/sanity-kind-att-robot/log.html",
       "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "76c4f6d4_d5babee6",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-26T12:19:23Z",
+      "side": 1,
+      "message": "delete",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 14
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "24cfbc0d_10471ec9",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-26T12:19:23Z",
+      "side": 1,
+      "message": "make this :\u003d and remove the var declaration",
+      "range": {
+        "startLine": 49,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 9
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1457c10e_8c62d397",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-26T12:19:23Z",
+      "side": 1,
+      "message": "i would keep this as nil and remove the `var err error` declaration",
+      "range": {
+        "startLine": 56,
+        "startChar": 8,
+        "endLine": 56,
+        "endChar": 11
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "93bbd0ec_a9ca8395",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-26T12:19:23Z",
+      "side": 1,
+      "message": "if you need to delete ports, but the port deletion fails it is not an error? what if deleteAllPorts leaves the system in a partial state? seems like if this call fails the system is in an unknown state and thus this is an error and should be returned as an error.",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 110
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "46e4740e_c938f779",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-26T12:19:23Z",
+      "side": 1,
+      "message": "same comment as above. this seems like the system is in an unknown error state if this call fails.",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 86
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
