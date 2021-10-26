@@ -92,6 +92,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b4f77c65_82ec0fa7",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-26T13:21:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "76c4f6d4_d5babee6",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 14
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "24cfbc0d_10471ec9",
@@ -105,6 +129,30 @@
       "writtenOn": "2021-10-26T12:19:23Z",
       "side": 1,
       "message": "make this :\u003d and remove the var declaration",
+      "range": {
+        "startLine": 49,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 9
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d169d8b7_b1b19463",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-26T13:21:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "24cfbc0d_10471ec9",
       "range": {
         "startLine": 49,
         "startChar": 8,
@@ -138,6 +186,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "9109d9fb_bf5e620a",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-26T13:21:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1457c10e_8c62d397",
+      "range": {
+        "startLine": 56,
+        "startChar": 8,
+        "endLine": 56,
+        "endChar": 11
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "93bbd0ec_a9ca8395",
@@ -161,6 +233,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "bf93d43d_276c77f7",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-26T13:21:21Z",
+      "side": 1,
+      "message": "if deletePort fails there would be stale data in the KV. The device is already in DELETED state, and we\u0027re just trying to delete what is left in the KV.",
+      "parentUuid": "93bbd0ec_a9ca8395",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 110
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "46e4740e_c938f779",
@@ -174,6 +270,30 @@
       "writtenOn": "2021-10-26T12:19:23Z",
       "side": 1,
       "message": "same comment as above. this seems like the system is in an unknown error state if this call fails.",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 86
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ff82c8ca_ed4760fa",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-26T13:21:21Z",
+      "side": 1,
+      "message": "same as above. A slight difference is the transition to DeleteAllLogicalMeters is before the RunPostDeviceDelete. There would be some stale data in etcd which does not indicate any state. I\u0027m not sure if there is a need of having a transactional mechanism here  - that would be another discussion.",
+      "parentUuid": "46e4740e_c938f779",
       "range": {
         "startLine": 170,
         "startChar": 0,
