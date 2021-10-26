@@ -70,6 +70,30 @@
       },
       "revId": "397a99dbb82376d82db8ed6e32efe88279bb8495",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0f10d57c_a85478d1",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-26T14:22:56Z",
+      "side": 1,
+      "message": "Done. Thanks.",
+      "parentUuid": "5483cd4d_aab47ceb",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 87
+      },
+      "revId": "397a99dbb82376d82db8ed6e32efe88279bb8495",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
