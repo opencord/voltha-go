@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3abc1473_1f931da5",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-26T13:35:10Z",
+      "side": 1,
+      "message": "sorry, should have caught this the first time around. if you are returning an error, then logging the issue should not be done as the caller of function will either \"address\" the error, pass it on, or log it. \n\nOne thing we might need to consider as a best practice is error wrapping at some point.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 87
+      },
+      "revId": "397a99dbb82376d82db8ed6e32efe88279bb8495",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}

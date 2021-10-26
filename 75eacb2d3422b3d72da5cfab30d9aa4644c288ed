@@ -257,6 +257,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "37ef1dc4_d35197d8",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-10-26T13:35:10Z",
+      "side": 1,
+      "message": "Is there a way to garbage collect or prune data from the database that is no longer valid? i am thinking about a period prune routine that runs every 5 min or so that attempts (or reattempts) to delete data that has been left.",
+      "parentUuid": "bf93d43d_276c77f7",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 110
+      },
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "46e4740e_c938f779",
