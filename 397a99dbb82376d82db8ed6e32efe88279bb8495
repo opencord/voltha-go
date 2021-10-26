@@ -22,6 +22,30 @@
       },
       "revId": "397a99dbb82376d82db8ed6e32efe88279bb8495",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8155e39a_27d09451",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2021-10-26T13:46:33Z",
+      "side": 1,
+      "message": "No problem, thank you. I\u0027m not sure how to log the error by the caller. Please see the transition.go file. We may think to remove the \"return err\" here and just log the error.",
+      "parentUuid": "3abc1473_1f931da5",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 87
+      },
+      "revId": "397a99dbb82376d82db8ed6e32efe88279bb8495",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
