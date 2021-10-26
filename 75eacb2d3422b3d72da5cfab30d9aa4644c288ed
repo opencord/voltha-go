@@ -50,6 +50,23 @@
       "message": "hardware test\nfunctional tests",
       "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "12b95182_56a34459",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 11
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000741
+      },
+      "writtenOn": "2021-10-26T08:14:36Z",
+      "side": 1,
+      "message": "Verified patchset 11 with https://gerrit.opencord.org/c/voltha-system-tests/+/27566: https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1675/robot/report/RobotLogs/sanity-kind-att-robot/log.html",
+      "revId": "75eacb2d3422b3d72da5cfab30d9aa4644c288ed",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
