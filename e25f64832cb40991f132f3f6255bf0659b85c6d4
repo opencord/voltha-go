@@ -33,6 +33,23 @@
       "message": "Verified here: https://jenkins.opencord.org/job/verify_voltha-go_sanity-test-voltha-2.8/9/replay/diff with https://gerrit.opencord.org/c/voltha-system-tests/+/28620 and https://gerrit.opencord.org/c/voltha-openolt-adapter/+/28504 changes.",
       "revId": "e25f64832cb40991f132f3f6255bf0659b85c6d4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f8d6fc5e_b50a1df8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-10-27T10:54:49Z",
+      "side": 1,
+      "message": "hardware test",
+      "revId": "e25f64832cb40991f132f3f6255bf0659b85c6d4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
