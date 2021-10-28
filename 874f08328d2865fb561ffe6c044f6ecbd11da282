@@ -88,6 +88,24 @@
       "parentUuid": "edf61a2a_113d1628",
       "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3d5f4a28_7bfcf7a9",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-28T13:17:27Z",
+      "side": 1,
+      "message": "@Mahir Does the operational FAILED state applies only when a device is being activated?  Can we get in this operational state if we disable a device (or re-enable a disabled device)?  Should a FAILED operational state have any impact on the logical device port state?  \n\nBtw, the change you made is good.   My comments are whether something else need to happen in the Core when we see a device in FAILED operational state.",
+      "parentUuid": "90105b1e_7c67db15",
+      "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
