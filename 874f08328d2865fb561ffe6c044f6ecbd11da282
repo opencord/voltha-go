@@ -106,6 +106,24 @@
       "parentUuid": "90105b1e_7c67db15",
       "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "76916bad_c2816a01",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-10-28T18:31:02Z",
+      "side": 1,
+      "message": "@David currently FAILED state applies only when a disabled device is being reenabled. There is no sate transition to FAILED in anywhere else. I agree that the \u0027FAILED\u0027 sounds like a more generic  state than a \u0027REENABLE_FAILED\u0027 like thing, but we decided to use an existing state for this. In order to get a device to a known good state in this case is to try a new reenable for ex. This is why this change originally came up. We had a requirement to be able to reenable the device again when the previous reenable is failed. An other action may be reseting as you said.\n\n@Khen We go to FAILED state only in a re-enable case(enabling a previously disabled device). When adapters receive a reenable from core, whether they transit to oper\u003dACTIVE or FAILED according to the successful execution of reenable. For the logical device changes and questions about other possible needed changes in core, I totally see the point and I also have the same questions in my mind as yours. The thing is, before device go to the FAILED state, it is a disabled device. In this DISABLED state, the logical device is there with its ports. So I\u0027m not sure if we need to remove the logical device or its ports in FAILED state, though we have them for a disabled device.\n\nOn top of these questions, imho we need to take this in a step further and think what should be done if a reenabled device is partially enabled. Re-enabling a device corresponds to unlocking the ports of the device in adapters. What if we successfully unlocked some UNI ports of the ONU but failed some? How this reflects to the states of device and the ports? Currently we are giving up on the other ports and send a oper-state\u003dFAILED immediately back to core when a port is failed. We may end up for example 2 ports enabled, 1 failed and 1 left locked. What does oper-state FAILED means in this case. We have the capability to use some ports of device and probably the subscriber started to take its service on the unlocked ports. The changes in the code are the things we discussed and decided to make in TST. Seems we need more to think on or discuss for this case. We may leave the patch unmerged and continue to discuss it on mail or at the next TST if you prefer. Or we can merge this and discuss what to be done further on that. Thougts?",
+      "parentUuid": "3d5f4a28_7bfcf7a9",
+      "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
