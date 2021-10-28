@@ -19,7 +19,6 @@ import (
 	"context"
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	"github.com/opencord/voltha-protos/v5/go/core"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -102,33 +101,25 @@ func (dMgr *Manager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *vo
 	return nil
 }
 
-//DeleteAllChildDevices is invoked as a callback when the parent device is deleted
+// DeleteAllChildDevices is invoked as a callback when the parent device is deleted.  The force
+// delete option is used in this callback because if the child device is in reconcile state then
+// a delete request with no force option would not be sent to the child adapter, hence leaving the
+// system in an unknown state.  See https://jira.opencord.org/browse/VOL-4421 for more details.
 func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device) error {
 	logger.Debugw(ctx, "delete-all-child-devices", log.Fields{"parent-device-id": parentCurrDevice.Id})
-	force := false
-	// Get the parent device Transient state, if its FORCE_DELETED(go for force delete for child devices)
-	// So in cases when this handler is getting called other than DELETE operation, no force option would be used.
+
 	agent := dMgr.getDeviceAgent(ctx, parentCurrDevice.Id)
 	if agent == nil {
 		return status.Errorf(codes.NotFound, "%s", parentCurrDevice.Id)
 	}
 
-	force = agent.getTransientState() == core.DeviceTransientState_FORCE_DELETING
-
 	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
 	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
-			logger.Debugw(ctx, "invoking-delete-device-and-ports", log.Fields{"device-id": childDeviceID, "force-delete": force})
-			if force {
-				if err := agent.deleteDeviceForce(ctx); err != nil {
-					logger.Warnw(ctx, "failure-delete-device-force", log.Fields{"device-id": childDeviceID,
-						"error": err.Error()})
-				}
-			} else {
-				if err := agent.deleteDevice(ctx); err != nil {
-					logger.Warnw(ctx, "failure-delete-device", log.Fields{"device-id": childDeviceID,
-						"error": err.Error()})
-				}
+			logger.Debugw(ctx, "invoking-delete-device", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id})
+			if err := agent.deleteDeviceForce(ctx); err != nil {
+				logger.Warnw(ctx, "delete-device-force-failed", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id,
+					"error": err.Error()})
 			}
 			// No further action is required here.  The deleteDevice will change the device state where the resulting
 			// callback will take care of cleaning the child device agent.
