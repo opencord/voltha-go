@@ -124,6 +124,24 @@
       "parentUuid": "3d5f4a28_7bfcf7a9",
       "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "116bfd33_f1debde1",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-29T15:19:22Z",
+      "side": 1,
+      "message": "@Mahir, I am ok either way.   The patch itself is ok, so it can be merged.  The larger questions that you mentioned can be discussed on the TST call.\n\nI think, imho, if the device has a few working ports and a few failed ports then the device is operationally active.  The state of the ports that have failed (assuming UNI ports here) should be reflected in the logical ports as state\u003ddown.",
+      "parentUuid": "76916bad_c2816a01",
+      "revId": "874f08328d2865fb561ffe6c044f6ecbd11da282",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
