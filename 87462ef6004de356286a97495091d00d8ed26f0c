@@ -16,6 +16,24 @@
       "message": "In the reconciling case under consideration, is it ensured that if the RPC delete_device() was sent to the ONU adapter before the RPC reconcile_device() could be sent, the latter is suppressed? Otherwise at least the internal data structures for the actually deleted ONU device would be created again.  ",
       "revId": "87462ef6004de356286a97495091d00d8ed26f0c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e3e28afe_3a206aba",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-10-29T18:07:53Z",
+      "side": 1,
+      "message": "Once a delete_device() is sent to the adapter, that device goes into the deleting state in the core.  No further action could be done on that device, including reconciling.",
+      "parentUuid": "5d7fa7fe_930ef253",
+      "revId": "87462ef6004de356286a97495091d00d8ed26f0c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
