@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "672c1c3d_0312afbd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-02T10:35:44Z",
+      "side": 1,
+      "message": "hardware test\nfunctional tests",
+      "revId": "92dd12136e1f5d3b4b4a1732e32fdfe84e8a4229",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
