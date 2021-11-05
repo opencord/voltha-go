@@ -18,6 +18,7 @@ package flowdecomposition
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/opencord/voltha-go/rw_core/core/device/state"
@@ -26,8 +27,6 @@ import (
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type testDeviceManager struct {
@@ -449,7 +448,7 @@ func (tfd *testFlowDecomposer) GetRoute(ctx context.Context, ingressPortNo uint3
 			return val, nil
 		}
 	}
-	return nil, status.Errorf(codes.FailedPrecondition, "no route from:%d to:%d", ingressPortNo, egressPortNo)
+	return nil, fmt.Errorf("no route from:%d to:%d %w", ingressPortNo, egressPortNo, route.ErrNoRoute)
 }
 
 func (tfd *testFlowDecomposer) GetNNIPorts() map[uint32]struct{} {
