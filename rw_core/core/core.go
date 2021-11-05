@@ -141,7 +141,7 @@ func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	dbPath := model.NewDBPath(backend)
 
 	// load adapters & device types while other things are starting
-	adapterMgr := adapter.NewAdapterManager(dbPath, id, backend, cf.LiveProbeInterval)
+	adapterMgr := adapter.NewAdapterManager(cf.GrpcSBIAddress, dbPath, id, backend, cf.LiveProbeInterval)
 	adapterMgr.Start(ctx, adapterService)
 
 	// create the core of the system, the device managers

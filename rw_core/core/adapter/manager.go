@@ -52,6 +52,7 @@ type Manager struct {
 	lockDeviceTypesMap      sync.RWMutex
 	lockAdapterEndPointsMap sync.RWMutex
 	liveProbeInterval       time.Duration
+	coreEndpoint            string
 }
 
 // SetAdapterRestartedCallback is used to set the callback that needs to be invoked on an adapter restart
@@ -60,6 +61,7 @@ func (aMgr *Manager) SetAdapterRestartedCallback(onAdapterRestart vgrpc.Restarte
 }
 
 func NewAdapterManager(
+	coreEndpoint string,
 	dbPath *model.Path,
 	coreInstanceID string,
 	backend *db.Backend,
@@ -72,6 +74,7 @@ func NewAdapterManager(
 		adapterAgents:     make(map[string]*agent),
 		adapterEndpoints:  make(map[Endpoint]*agent),
 		endpointMgr:       NewEndpointManager(backend),
+		coreEndpoint:      coreEndpoint,
 		liveProbeInterval: liveProbeInterval,
 	}
 }
@@ -178,7 +181,7 @@ func (aMgr *Manager) addAdapter(ctx context.Context, adapter *voltha.Adapter, sa
 		// Use a muted adapter restart handler which is invoked by the corresponding gRPC client on an adapter restart.
 		// This handler just log the restart event.  The actual action taken following an adapter restart
 		// will be done when an adapter re-registers itself.
-		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval)
+		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(aMgr.coreEndpoint, clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval)
 		aMgr.adapterEndpoints[Endpoint(adapter.Endpoint)] = aMgr.adapterAgents[adapter.Id]
 	}
 	return nil

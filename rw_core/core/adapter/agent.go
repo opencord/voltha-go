@@ -39,6 +39,7 @@ type agent struct {
 	adapterLock        sync.RWMutex
 	onAdapterRestart   vgrpc.RestartedHandler
 	liveProbeInterval  time.Duration
+	coreEndpoint       string
 }
 
 func setAndTestAdapterServiceHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
@@ -50,19 +51,23 @@ func setAndTestAdapterServiceHandler(ctx context.Context, conn *grpc.ClientConn)
 	return svc
 }
 
-func newAdapterAgent(adapter *voltha.Adapter, onAdapterRestart vgrpc.RestartedHandler, liveProbeInterval time.Duration) *agent {
+func newAdapterAgent(coreEndpoint string, adapter *voltha.Adapter, onAdapterRestart vgrpc.RestartedHandler, liveProbeInterval time.Duration) *agent {
 	return &agent{
 		adapter:            adapter,
 		onAdapterRestart:   onAdapterRestart,
 		adapterAPIEndPoint: adapter.Endpoint,
 		liveProbeInterval:  liveProbeInterval,
+		coreEndpoint:       coreEndpoint,
 	}
 }
 
 func (aa *agent) start(ctx context.Context) error {
 	// Establish grpc connection to Core
 	var err error
-	if aa.vClient, err = vgrpc.NewClient(aa.adapterAPIEndPoint,
+	if aa.vClient, err = vgrpc.NewClient(
+		aa.coreEndpoint,
+		aa.adapterAPIEndPoint,
+		"voltha.AdapterService",
 		aa.onAdapterRestart,
 		vgrpc.ActivityCheck(true)); err != nil {
 		return err

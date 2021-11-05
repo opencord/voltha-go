@@ -4,6 +4,8 @@ go 1.16
 
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	github.com/opencord/voltha-lib-go/v7 => ../voltha-lib-go
+	github.com/opencord/voltha-protos/v5 => ../voltha-protos
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.25.1
 )

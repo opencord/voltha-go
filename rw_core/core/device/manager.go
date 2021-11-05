@@ -57,6 +57,7 @@ type Manager struct {
 	devicesLoadingLock      sync.RWMutex
 	deviceLoadingInProgress map[string][]chan int
 	config                  *config.RWCoreFlags
+	doneCtx context.Context
 }
 
 //NewManagers creates the Manager and the Logical Manager.
@@ -92,6 +93,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, cf *config.RWC
 
 func (dMgr *Manager) Start(ctx context.Context, serviceName string) error {
 	logger.Info(ctx, "starting-device-manager")
+	dMgr.doneCtx = ctx
 	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusPreparing)
 
 	// Load all the devices from the dB

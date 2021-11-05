@@ -53,6 +53,9 @@ type ID = common.ID
 // IDs from public import voltha_protos/common.proto
 type IDs = common.IDs
 
+// Connection from public import voltha_protos/common.proto
+type Connection = common.Connection
+
 // AdminState from public import voltha_protos/common.proto
 type AdminState = common.AdminState
 

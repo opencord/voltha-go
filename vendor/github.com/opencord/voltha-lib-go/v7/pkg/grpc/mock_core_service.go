@@ -17,11 +17,14 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/core"
 	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -132,4 +135,22 @@ func (handler *MockCoreServiceHandler) UpdateImageDownload(context.Context, *vol
 
 func (handler *MockCoreServiceHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*voltha.HealthStatus, error) {
 	return &voltha.HealthStatus{State: voltha.HealthStatus_HEALTHY}, nil
+}
+
+func (handler *MockCoreServiceHandler) KeepAliveConnection(conn *common.Connection, remote core.CoreService_KeepAliveConnectionServer) error {
+	logger.Debugw(context.Background(), "keep-alive-connection", log.Fields{"remote": conn})
+	if conn == nil {
+		return fmt.Errorf("conn-is-nil %v", conn)
+	}
+	var err error
+loop:
+	for {
+		if err = remote.Send(&common.Connection{Endpoint: "mock-endpoint"}); err != nil {
+			break loop
+		}
+		keepAliveTimer := time.NewTimer(time.Duration(conn.KeepAliveInterval))
+		<-keepAliveTimer.C
+	}
+	logger.Errorw(context.Background(), "connection-down", log.Fields{"remote": conn.Endpoint, "error": err})
+	return err
 }

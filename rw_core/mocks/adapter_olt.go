@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
@@ -33,6 +34,7 @@ import (
 	com "github.com/opencord/voltha-lib-go/v7/pkg/adapters/common"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-protos/v5/go/adapter_services"
 	ic "github.com/opencord/voltha-protos/v5/go/inter_container"
 	of "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
@@ -90,7 +92,10 @@ func (oltA *OLTAdapter) start(ctx context.Context) {
 	go oltA.startGRPCService(ctx, oltA.grpcServer, oltA, "olt-grpc-service")
 
 	// Establish grpc connection to Core
-	if oltA.coreClient, err = vgrpc.NewClient(oltA.coreEnpoint,
+	if oltA.coreClient, err = vgrpc.NewClient(
+		"mock-olt-endpoint",
+		oltA.coreEnpoint,
+		"voltha.CoreService",
 		oltA.oltRestarted,
 		vgrpc.ActivityCheck(true)); err != nil {
 		logger.Fatal(ctx, "grpc-client-not-created")
@@ -427,5 +432,23 @@ func (oltA *OLTAdapter) SetDeviceActive(deviceID string) {
 		logger.Warnw(context.Background(), "device-state-update-failed", log.Fields{"device-id": deviceID, "error": err})
 		return
 	}
+}
 
+func (oltA *OLTAdapter) KeepAliveConnection(conn *common.Connection, remote adapter_services.AdapterService_KeepAliveConnectionServer) error {
+	logger.Debugw(context.Background(), "receive-stream-connection", log.Fields{"connection": conn})
+
+	if conn == nil {
+		return fmt.Errorf("conn-is-nil %v", conn)
+	}
+	var err error
+loop:
+	for {
+		if err = remote.Send(&common.Connection{Endpoint: oltA.serviceEndpoint}); err != nil {
+			break loop
+		}
+		keepAliveTimer := time.NewTimer(time.Duration(conn.KeepAliveInterval))
+		<-keepAliveTimer.C
+	}
+	logger.Errorw(context.Background(), "connection-down", log.Fields{"remote": conn.Endpoint, "error": err})
+	return err
 }
