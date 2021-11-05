@@ -97,7 +97,7 @@ func (dr *DeviceRoutes) GetRoute(ctx context.Context, ingress, egress uint32) ([
 
 	uniPort, nniPort, err := dr.getLogicalPorts(ingress, egress)
 	if err != nil {
-		return nil, fmt.Errorf("no route from:%d to:%d %w", ingress, egress, err)
+		return nil, fmt.Errorf("no route from:%d to:%d for %s %w", ingress, egress, err.Error(), ErrNoRoute)
 	}
 
 	childPonPort, err := dr.getChildPonPort(ctx, uniPort.DeviceId)
