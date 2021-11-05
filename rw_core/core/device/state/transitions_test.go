@@ -210,8 +210,8 @@ func TestValidTransitions(t *testing.T) {
 		core.DeviceTransientState_NONE)
 	assert.Equal(t, 5, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalPorts).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalMeters).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalMeters).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllDeviceFlows).Pointer() == reflect.ValueOf(handlers[4]).Pointer())
 
@@ -228,8 +228,8 @@ func TestValidTransitions(t *testing.T) {
 		core.DeviceTransientState_NONE)
 	assert.Equal(t, 5, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalPorts).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalMeters).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllChildDevices).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalMeters).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalDevice).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllDeviceFlows).Pointer() == reflect.ValueOf(handlers[4]).Pointer())
 
@@ -332,9 +332,8 @@ func TestValidTransitions(t *testing.T) {
 		},
 		expectedParentHandlers: []transitionHandler{
 			tdm.DeleteAllLogicalPorts,
-			tdm.DeleteAllLogicalMeters,
 			tdm.DeleteAllChildDevices,
-			tdm.DeleteLogicalDevice,
+			tdm.DeleteAllLogicalMeters,
 			tdm.RunPostDeviceDelete,
 		},
 		expectedChildHandlers: []transitionHandler{
@@ -351,7 +350,7 @@ func TestValidTransitions(t *testing.T) {
 			t.Run(testName, func(t *testing.T) {
 				handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, core.DeviceTransientState_FORCE_DELETING,
 					core.DeviceTransientState_ANY)
-				assert.Equal(t, 5, len(handlers))
+				assert.Equal(t, 4, len(handlers))
 				for idx, expHandler := range deleteDeviceTest.expectedParentHandlers {
 					assert.True(t, reflect.ValueOf(expHandler).Pointer() == reflect.ValueOf(handlers[idx]).Pointer())
 				}
