@@ -33,6 +33,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/config"
+	"github.com/opencord/voltha-go/rw_core/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -53,6 +54,7 @@ import (
 
 var errReconcileAborted = errors.New("reconcile aborted")
 var errContextExpired = errors.New("context expired")
+var errNoConnection = errors.New("no connection")
 
 // Agent represents device agent attributes
 type Agent struct {
@@ -656,7 +658,7 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 					"adapter-endpoint": device.AdapterEndpoint,
 				})
 			agent.requestQueue.RequestComplete()
-			return err
+			return fmt.Errorf("remote-not-reachable %w", errNoConnection)
 		}
 		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 		requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
@@ -1350,6 +1352,9 @@ func (agent *Agent) abortAllProcessing(ctx context.Context) error {
 		updatedState = core.DeviceTransientState_DELETE_FAILED
 	case core.DeviceTransientState_DELETING_FROM_ADAPTER:
 		updatedState = core.DeviceTransientState_DELETE_FAILED
+	case core.DeviceTransientState_DELETE_FAILED:
+		// do not change state
+		return nil
 	default:
 		updatedState = core.DeviceTransientState_NONE
 	}
@@ -1360,7 +1365,93 @@ func (agent *Agent) abortAllProcessing(ctx context.Context) error {
 	return nil
 }
 
+func (agent *Agent) DeleteDevicePostAdapterRestart(ctx context.Context) error {
+	logger.Debugw(ctx, "delete-post-restart", log.Fields{"device-id": agent.deviceID})
+	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DelteDevicePostAdapterRestart")
+
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+	var desc string
+
+	defer func() {
+		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, nil, desc)
+	}()
+
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+
+	// Keep the device lock since no other action can be done on this device
+	defer agent.requestQueue.RequestComplete()
+
+	device := agent.getDeviceReadOnlyWithoutLock()
+	if device.AdminState == voltha.AdminState_PREPROVISIONED {
+		logger.Debugw(ctx, "device-in-preprovisioning-state-reconcile-not-needed", log.Fields{"device-id": device.Id})
+		return nil
+	}
+	// Change device transient state to FORCE_DELETING
+	if err := agent.updateTransientState(ctx, core.DeviceTransientState_FORCE_DELETING); err != nil {
+		logger.Errorw(ctx, "failure-updating-transient-state", log.Fields{"error": err, "device-id": agent.deviceID})
+		return err
+	}
+
+	// Ensure we have a valid grpc client available as we have just restarted
+	deleteBackoff := backoff.NewExponentialBackOff()
+	deleteBackoff.InitialInterval = agent.config.BackoffRetryInitialInterval
+	deleteBackoff.MaxElapsedTime = agent.config.BackoffRetryMaxElapsedTime
+	deleteBackoff.MaxInterval = agent.config.BackoffRetryMaxInterval
+	var backoffTimer *time.Timer
+	var err error
+	var client adapter_services.AdapterServiceClient
+retry:
+	for {
+		client, err = agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+		if err == nil {
+			break retry
+		}
+		duration := deleteBackoff.NextBackOff()
+		if duration == backoff.Stop {
+			deleteBackoff.Reset()
+			duration = deleteBackoff.NextBackOff()
+		}
+		backoffTimer = time.NewTimer(duration)
+		select {
+		case <-backoffTimer.C:
+			logger.Debugw(ctx, "backoff-timer-expires", log.Fields{"device-id": agent.deviceID})
+		case <-ctx.Done():
+			err = ctx.Err()
+			break retry
+		}
+	}
+	if backoffTimer != nil && !backoffTimer.Stop() {
+		select {
+		case <-backoffTimer.C:
+		default:
+		}
+	}
+	if err != nil || client == nil {
+		return err
+	}
+
+	// Invoke force delete on the adapter
+	if _, err = client.DeleteDevice(ctx, device); err != nil {
+		return err
+	}
+	requestStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
+	desc = "adapter-delete-force-response"
+	return nil
+}
+
 func (agent *Agent) ReconcileDevice(ctx context.Context) {
+	// Do not reconcile if the device was in DELETE_FAILED transient state.  Just invoke the force delete on that device.
+	state := agent.getTransientState()
+	logger.Debugw(ctx, "starting-reconcile", log.Fields{"device-id": agent.deviceID, "state": state})
+	if agent.getTransientState() == core.DeviceTransientState_DELETE_FAILED {
+		if err := agent.DeleteDevicePostAdapterRestart(ctx); err != nil {
+			logger.Errorw(ctx, "delete-post-restart-failed", log.Fields{"error": err, "device-id": agent.deviceID})
+		}
+		return
+	}
+
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	var desc string
 
