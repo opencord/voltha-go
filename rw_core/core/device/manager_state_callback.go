@@ -17,8 +17,10 @@ package device
 
 import (
 	"context"
+	"errors"
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-protos/v5/go/core"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -119,7 +121,17 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 			logger.Debugw(ctx, "invoking-delete-device", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id})
 			if err := agent.deleteDeviceForce(ctx); err != nil {
 				logger.Warnw(ctx, "delete-device-force-failed", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id,
-					"error": err.Error()})
+					"error": err})
+				// We got an error - if its a connection error we should just mark the device as delete failed and
+				// when connection is established then proceed with the deletion instead of reconciling the device.
+				// A DeviceTransientState_DELETE_FAILED does not perform any state transition
+				if errors.Is(err, errNoConnection) {
+					if err = agent.updateTransientState(ctx, core.DeviceTransientState_DELETE_FAILED); err != nil {
+						logger.Warnw(ctx, "failed-updating-transient-state", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id,
+							"error": err})
+					}
+					logger.Debugw(ctx, "device-set-to-delete-failed", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id})
+				}
 			}
 			// No further action is required here.  The deleteDevice will change the device state where the resulting
 			// callback will take care of cleaning the child device agent.
