@@ -378,9 +378,17 @@ loop:
 		select {
 		case <-ctx.Done():
 			logger.Debugw(ctx, "context-closing", log.Fields{"endpoint": c.apiEndPoint})
-			return
+			break loop
 		case event := <-c.events:
 			logger.Debugw(ctx, "received-event", log.Fields{"event": event, "endpoint": c.apiEndPoint})
+			c.connectionLock.RLock()
+			// On a client stopped, just allow the stop event to go through
+			if c.done && event != eventStopped {
+				c.connectionLock.RUnlock()
+				logger.Debugw(ctx, "ignoring-event-on-client-stop", log.Fields{"event": event, "endpoint": c.apiEndPoint})
+				continue
+			}
+			c.connectionLock.RUnlock()
 			switch event {
 			case eventConnecting:
 				c.stateLock.Lock()
@@ -404,7 +412,11 @@ loop:
 								return
 							}
 							attempt += 1
-							c.events <- eventConnecting
+							c.connectionLock.RLock()
+							if !c.done {
+								c.events <- eventConnecting
+							}
+							c.connectionLock.RUnlock()
 						} else {
 							backoff.Reset()
 						}
@@ -544,11 +556,14 @@ func (c *Client) closeConnection(ctx context.Context, p *probe.Probe) error {
 }
 
 func (c *Client) Stop(ctx context.Context) {
+	c.connectionLock.Lock()
+	defer c.connectionLock.Unlock()
 	if !c.done {
+		c.done = true
 		c.events <- eventStopped
 		close(c.events)
-		c.done = true
 	}
+	logger.Infow(ctx, "client-stopped", log.Fields{"endpoint": c.apiEndPoint})
 }
 
 // SetService is used for testing only
