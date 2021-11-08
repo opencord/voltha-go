@@ -69,6 +69,24 @@
       "parentUuid": "c4a45b88_4476945f",
       "revId": "1473c59d75471ed43126d2962b4c98145996cb24",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "94cf92f6_c8e15d46",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-11-08T16:31:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab9a4560_e03f2e1d",
+      "revId": "1473c59d75471ed43126d2962b4c98145996cb24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
