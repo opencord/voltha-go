@@ -149,7 +149,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDisco
 	}
 
 	// Create and start a device agent for that device
-	agent := newAgent(childDevice, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.internalTimeout, dMgr.rpcTimeout)
+	agent := newAgent(childDevice, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.internalTimeout, dMgr.rpcTimeout, dMgr.flowTimeout)
 	insertedChildDevice, err := agent.start(ctx, false, childDevice)
 	if err != nil {
 		logger.Errorw(ctx, "error-starting-child-device", log.Fields{"parent-device-id": childDevice.ParentId, "child-device-id": agent.deviceID, "error": err})

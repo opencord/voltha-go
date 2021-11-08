@@ -161,7 +161,7 @@ func (agent *Agent) sendBulkFlows(
 		response.Error(err)
 		return
 	}
-	subCtx, cancel := context.WithTimeout(ctx, agent.rpcTimeout)
+	subCtx, cancel := context.WithTimeout(ctx, agent.flowTimeout)
 	defer cancel()
 
 	if _, err = client.UpdateFlowsBulk(subCtx, &ca.BulkFlows{
@@ -203,7 +203,7 @@ func (agent *Agent) sendIncrementalFlows(
 		response.Error(err)
 		return
 	}
-	subCtx, cancel := context.WithTimeout(ctx, agent.rpcTimeout)
+	subCtx, cancel := context.WithTimeout(ctx, agent.flowTimeout)
 	defer cancel()
 	if _, err = client.UpdateFlowsIncrementally(subCtx, &ca.IncrementalFlows{
 		Device:       device,
@@ -400,7 +400,7 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 	if err != nil {
 		return err
 	}
-	if res := coreutils.WaitForNilOrErrorResponses(agent.rpcTimeout, response); res != nil {
+	if res := coreutils.WaitForNilOrErrorResponses(agent.flowTimeout, response); res != nil {
 		return status.Errorf(codes.Aborted, "errors-%s", res)
 	}
 	return nil
