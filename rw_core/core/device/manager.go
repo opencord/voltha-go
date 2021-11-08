@@ -470,6 +470,18 @@ func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, devic
 		if err := agent.canDeviceRequestProceed(ctx); err != nil {
 			return err
 		}
+		// Perform the same checks for parent device
+		if !agent.isRootDevice {
+			parentDeviceAgent := dMgr.getDeviceAgent(ctx, agent.parentID)
+			if parentDeviceAgent == nil {
+				logger.Errorw(ctx, "parent-device-adapter-nil", log.Fields{"parent-id": agent.parentID})
+				return status.Errorf(codes.Unavailable, "parent-device-adapter-nil-for-%s", deviceID)
+			}
+			if err := parentDeviceAgent.canDeviceRequestProceed(ctx); err != nil {
+				return err
+			}
+		}
+
 	}
 	if !ready {
 		return status.Error(codes.Unavailable, "adapter(s)-not-ready")
