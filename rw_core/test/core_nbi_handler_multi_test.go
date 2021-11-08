@@ -96,6 +96,7 @@ type NBTest struct {
 	internalTimeout   time.Duration
 	maxTimeout        time.Duration
 	coreRPCTimeout    time.Duration
+	coreFlowTimeout   time.Duration
 	core              *c.Core
 	probe             *probe.Probe
 	oltAdaptersLock   sync.RWMutex
@@ -129,10 +130,12 @@ func newNBTest(ctx context.Context, loadTest bool) *NBTest {
 	test.internalTimeout = 20 * time.Second
 	test.maxTimeout = 20 * time.Second
 	test.coreRPCTimeout = 20 * time.Second
+	test.coreFlowTimeout = 30 * time.Second
 	if loadTest {
 		test.internalTimeout = 100 * time.Second
 		test.maxTimeout = 300 * time.Second
 		test.coreRPCTimeout = 100 * time.Second
+		test.coreFlowTimeout = 120 * time.Second
 		setRetryInterval(5 * time.Second)
 	}
 	return test
@@ -144,6 +147,7 @@ func (nb *NBTest) startGRPCCore(ctx context.Context, t *testing.T) (coreEndpoint
 	cfg.ParseCommandArguments([]string{})
 	cfg.InternalTimeout = nb.internalTimeout
 	cfg.RPCTimeout = nb.coreRPCTimeout
+	cfg.FlowTimeout = nb.coreFlowTimeout
 	cfg.KVStoreAddress = "127.0.0.1" + ":" + strconv.Itoa(nb.kvClientPort)
 	cfg.LogLevel = "DEBUG"
 

@@ -54,6 +54,7 @@ type Manager struct {
 	coreInstanceID          string
 	internalTimeout         time.Duration
 	rpcTimeout              time.Duration
+	flowTimeout             time.Duration
 	devicesLoadingLock      sync.RWMutex
 	deviceLoadingInProgress map[string][]chan int
 	config                  *config.RWCoreFlags
@@ -69,6 +70,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, cf *config.RWC
 		adapterMgr:              adapterMgr,
 		internalTimeout:         cf.InternalTimeout,
 		rpcTimeout:              cf.RPCTimeout,
+		flowTimeout:             cf.FlowTimeout,
 		Agent:                   event.NewAgent(eventProxy, coreInstanceID, cf.VolthaStackID),
 		deviceLoadingInProgress: make(map[string][]chan int),
 		config:                  cf,
@@ -111,7 +113,7 @@ func (dMgr *Manager) Start(ctx context.Context, serviceName string) error {
 
 	for _, device := range devices {
 		// Create an agent for each device
-		agent := newAgent(device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.internalTimeout, dMgr.rpcTimeout)
+		agent := newAgent(device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.internalTimeout, dMgr.rpcTimeout, dMgr.flowTimeout)
 		if _, err := agent.start(ctx, true, device); err != nil {
 			logger.Warnw(ctx, "failure-starting-agent", log.Fields{"device-id": device.Id})
 		} else {
@@ -269,7 +271,7 @@ func (dMgr *Manager) loadDevice(ctx context.Context, deviceID string) (*Agent, e
 			// Proceed with the loading only if the device exist in the Model (could have been deleted)
 			if device, err = dMgr.getDeviceFromModel(ctx, deviceID); err == nil {
 				logger.Debugw(ctx, "loading-device", log.Fields{"device-id": deviceID})
-				agent := newAgent(device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.internalTimeout, dMgr.rpcTimeout)
+				agent := newAgent(device, dMgr, dMgr.dbPath, dMgr.dProxy, dMgr.internalTimeout, dMgr.rpcTimeout, dMgr.flowTimeout)
 				if _, err = agent.start(ctx, true, device); err != nil {
 					logger.Warnw(ctx, "failure-loading-device", log.Fields{"device-id": deviceID, "error": err})
 				} else {
@@ -470,6 +472,18 @@ func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, devic
 		if err := agent.canDeviceRequestProceed(ctx); err != nil {
 			return err
 		}
+		// Perform the same checks for parent device
+		if !agent.isRootDevice {
+			parentDeviceAgent := dMgr.getDeviceAgent(ctx, agent.parentID)
+			if parentDeviceAgent == nil {
+				logger.Errorw(ctx, "parent-device-adapter-nil", log.Fields{"parent-id": agent.parentID})
+				return status.Errorf(codes.Unavailable, "parent-device-adapter-nil-for-%s", deviceID)
+			}
+			if err := parentDeviceAgent.canDeviceRequestProceed(ctx); err != nil {
+				return err
+			}
+		}
+
 	}
 	if !ready {
 		return status.Error(codes.Unavailable, "adapter(s)-not-ready")
