@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f7a6736f_157f50fc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-11-08T09:19:03Z",
+      "side": 1,
+      "message": "Just a logging comment. Otherwise +1.",
+      "revId": "85a9f0555584beff46bd567ef97258151c198653",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ffc4e457_708125f0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-11-08T09:19:03Z",
+      "side": 1,
+      "message": "I\u0027d shift this log entry to line 1453 and do an extra log entry in line 1447 to indicate \u0027delete instead of reconcile device\u0027.",
+      "revId": "85a9f0555584beff46bd567ef97258151c198653",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
