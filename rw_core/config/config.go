@@ -45,6 +45,7 @@ type RWCoreFlags struct {
 	RWCoreCA                    string
 	InternalTimeout             time.Duration
 	RPCTimeout                  time.Duration
+	FlowTimeout                 time.Duration
 	MaxConnectionRetries        int
 	ConnectionRetryInterval     time.Duration
 	LiveProbeInterval           time.Duration
@@ -113,6 +114,11 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 		"rpc_timeout",
 		5*time.Second,
 		"RPC timeout")
+
+	fs.DurationVar(&(cf.FlowTimeout), //Note flow time out will be considered for flows related rpc's not rpc timeout
+		"flow_timeout",
+		30*time.Second,
+		"Flow timeout")
 
 	fs.BoolVar(&cf.Banner,
 		"banner",
