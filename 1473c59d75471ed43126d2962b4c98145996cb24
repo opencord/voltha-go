@@ -51,6 +51,24 @@
       "parentUuid": "1e351ef4_0c09f173",
       "revId": "1473c59d75471ed43126d2962b4c98145996cb24",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ab9a4560_e03f2e1d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-11-08T16:30:48Z",
+      "side": 1,
+      "message": "Thinking a little bit more about it, we won\u0027t get into cases where this function will be invoked with multiple child device IDs. Originally thought this could happen in a multicast scenario but got confirmation from Andrea that there is always a 1:1 flow relationship for ONU devices. The loop is unnecessary but does not impact anything. I will remove the -1.",
+      "parentUuid": "c4a45b88_4476945f",
+      "revId": "1473c59d75471ed43126d2962b4c98145996cb24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
