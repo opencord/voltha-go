@@ -18,6 +18,23 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1c53a232_aeb735f6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-11-08T12:36:55Z",
+      "side": 1,
+      "message": "During the verification this patch together with patch https://gerrit.opencord.org/c/voltha-openonu-adapter-go/+/28800, a crash of the openolt adapter occurs. Following JIRA has been written: https://jira.opencord.org/browse/VOL-4448",
+      "revId": "85a9f0555584beff46bd567ef97258151c198653",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "ffc4e457_708125f0",
