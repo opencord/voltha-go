@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1e351ef4_0c09f173",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-11-08T15:24:35Z",
+      "side": 1,
+      "message": "While this code is good, it will need some optimization.  Say we have 1000 ONUs off the same OLT device.  In this loop, we will check whether we can proceed with the request by checking the same parent device 1000 times (this would also require locking/unlocking the parent device 1000 times).  A map keeping track of the parent device state could be useful.",
+      "revId": "1473c59d75471ed43126d2962b4c98145996cb24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
