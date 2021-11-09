@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "acd1e305_37ccd265",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-11-09T08:40:51Z",
+      "side": 1,
+      "message": "As suggested in Slack - all three related patches should be merged and then thoroughly tested.",
+      "revId": "a02e4e2289f1acade3306077051894d259ce9298",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
