@@ -41,6 +41,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "7e8cfff1_be467220",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-09T13:04:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c1c2bcfd_2e97a482",
+      "range": {
+        "startLine": 84,
+        "startChar": 8,
+        "endLine": 84,
+        "endChar": 12
+      },
+      "revId": "0f82151ef7d9435da1a91e242fc1394b9224a689",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6d4adf30_ec04df4a",
@@ -54,6 +78,30 @@
       "writtenOn": "2021-11-09T12:54:18Z",
       "side": 1,
       "message": "This seems off to me. Isn\u0027t the wrapped error `err`. If you want to return an instance of a \"known\" error should you extend the base error type with the parameters and then return as that error. It feels like a mix of logging and error return together.",
+      "range": {
+        "startLine": 100,
+        "startChar": 14,
+        "endLine": 100,
+        "endChar": 102
+      },
+      "revId": "0f82151ef7d9435da1a91e242fc1394b9224a689",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a34a653a_dbdad4f0",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-09T13:04:22Z",
+      "side": 1,
+      "message": "this is the way I\u0027ve seen it done in other places. the %w brings in the error type, the other one was just a way to further specify internal errors, I can remove the err.Error(), it just provide a bit more info.",
+      "parentUuid": "6d4adf30_ec04df4a",
       "range": {
         "startLine": 100,
         "startChar": 14,
