@@ -16,6 +16,52 @@
       "message": "hardware test\nfunctional tests",
       "revId": "0f82151ef7d9435da1a91e242fc1394b9224a689",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c1c2bcfd_2e97a482",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-11-09T12:54:18Z",
+      "side": 1,
+      "message": "Debugw?",
+      "range": {
+        "startLine": 84,
+        "startChar": 8,
+        "endLine": 84,
+        "endChar": 12
+      },
+      "revId": "0f82151ef7d9435da1a91e242fc1394b9224a689",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6d4adf30_ec04df4a",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-11-09T12:54:18Z",
+      "side": 1,
+      "message": "This seems off to me. Isn\u0027t the wrapped error `err`. If you want to return an instance of a \"known\" error should you extend the base error type with the parameters and then return as that error. It feels like a mix of logging and error return together.",
+      "range": {
+        "startLine": 100,
+        "startChar": 14,
+        "endLine": 100,
+        "endChar": 102
+      },
+      "revId": "0f82151ef7d9435da1a91e242fc1394b9224a689",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
