@@ -16,6 +16,23 @@
       "message": "As suggested in Slack - all three related patches should be merged and then thoroughly tested.",
       "revId": "a02e4e2289f1acade3306077051894d259ce9298",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a823d9ba_b5ab1bc5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-09T08:59:29Z",
+      "side": 1,
+      "message": "worth including the voltha-lib-go update in here for the closed channel ? ",
+      "revId": "a02e4e2289f1acade3306077051894d259ce9298",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
