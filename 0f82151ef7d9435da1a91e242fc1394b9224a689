@@ -110,6 +110,30 @@
       },
       "revId": "0f82151ef7d9435da1a91e242fc1394b9224a689",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "08bca64c_3a739c15",
+        "filename": "rw_core/route/device_route.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-11-09T13:18:04Z",
+      "side": 1,
+      "message": "Yes, I understand that the %w brings in the error type, usually I have seen it used for wrapping the nested error as opposed to bringing in the type of the error you want to return. not a big deal and we can leave it.",
+      "parentUuid": "a34a653a_dbdad4f0",
+      "range": {
+        "startLine": 100,
+        "startChar": 14,
+        "endLine": 100,
+        "endChar": 102
+      },
+      "revId": "0f82151ef7d9435da1a91e242fc1394b9224a689",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
