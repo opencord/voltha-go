@@ -273,6 +273,10 @@ func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *vo
 		return errors.New("device-not-root")
 	}
 	logDeviceID := device.ParentId
+	if err := ldMgr.deleteAllLogicalMeters(ctx, logDeviceID); err != nil {
+		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
+		logger.Warnw(ctx, "delete-logical-meters-error", log.Fields{"device-id": logDeviceID, "error": err})
+	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, logDeviceID); agent != nil {
 		// Stop the logical device agent
 		if err := agent.stop(ctx); err != nil {
@@ -281,6 +285,8 @@ func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *vo
 		}
 		//Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
+	} else {
+		logger.Warnw(ctx, "no-logical-device-agent-on-deletion", log.Fields{"device-id": logDeviceID})
 	}
 
 	logger.Debug(ctx, "deleting-logical-device-ends")

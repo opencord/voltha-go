@@ -354,6 +354,16 @@ func (dMgr *Manager) stopManagingDevice(ctx context.Context, id string) {
 // RunPostDeviceDelete removes any reference of this device
 func (dMgr *Manager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Infow(ctx, "run-post-device-delete", log.Fields{"device-id": cDevice.Id})
+	//deleting the logical device
+	logger.Debugw(ctx, "delete-logical-device", log.Fields{"device-id": cDevice.Id})
+	if dMgr.logicalDeviceMgr != nil && cDevice.Root {
+		if err := dMgr.logicalDeviceMgr.deleteLogicalDevice(ctx, cDevice); err != nil {
+			logger.Warnw(ctx, "failure-delete-logical-device", log.Fields{"device-id": cDevice.Id, "error": err.Error()})
+		}
+		// Remove the logical device Id from the parent device
+		logicalID := ""
+		dMgr.UpdateDeviceAttribute(ctx, cDevice.Id, "ParentId", logicalID)
+	}
 	if agent := dMgr.getDeviceAgent(ctx, cDevice.Id); agent != nil {
 		logger.Debugw(ctx, "invoking-delete-device-ports", log.Fields{"device-id": cDevice.Id})
 		//delete ports
@@ -2110,7 +2120,7 @@ func (dMgr *Manager) DeleteAllLogicalMeters(ctx context.Context, cDevice *voltha
 	logger.Debugw(ctx, "delete-all-logical-device-meters", log.Fields{"device-id": cDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllLogicalMeters(ctx, cDevice.Id); err != nil {
 		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
-		logger.Warnw(ctx, "delete-logical-ports-error", log.Fields{"device-id": cDevice.Id, "error": err})
+		logger.Warnw(ctx, "delete-logical-meters-error", log.Fields{"device-id": cDevice.Id, "error": err})
 	}
 	return nil
 
