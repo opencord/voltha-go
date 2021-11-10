@@ -101,6 +101,24 @@
       "message": "With the change you made to have meters deleted as part of the logical device deletion, is there a need to keep DeleteAllLogicalMeters()?",
       "revId": "408dec63f9f6275354dbe30aae2a6c223175f356",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a076181c_0227e355",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-10T14:44:44Z",
+      "side": 1,
+      "message": "to me keeping it there is the \"right way\" to do it in order, with an explicit call. The one in the PostDeviceDelete does the cleanup only in the case the stats impose a re-installation, sort of a backup, but ideally it should pass with no computation.",
+      "parentUuid": "f5c04c7b_2440b4d4",
+      "revId": "408dec63f9f6275354dbe30aae2a6c223175f356",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
