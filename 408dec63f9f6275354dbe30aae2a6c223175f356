@@ -67,6 +67,40 @@
       "message": "recheck",
       "revId": "408dec63f9f6275354dbe30aae2a6c223175f356",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "daa39b66_37dc4274",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-11-10T14:41:10Z",
+      "side": 1,
+      "message": "Minor comment",
+      "revId": "408dec63f9f6275354dbe30aae2a6c223175f356",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f5c04c7b_2440b4d4",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-11-10T14:41:10Z",
+      "side": 1,
+      "message": "With the change you made to have meters deleted as part of the logical device deletion, is there a need to keep DeleteAllLogicalMeters()?",
+      "revId": "408dec63f9f6275354dbe30aae2a6c223175f356",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
