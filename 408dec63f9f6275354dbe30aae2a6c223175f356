@@ -16,6 +16,23 @@
       "message": "hardware test\nfunctional tests",
       "revId": "408dec63f9f6275354dbe30aae2a6c223175f356",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "68f5a803_7dd73807",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-10T13:39:05Z",
+      "side": 1,
+      "message": " correction for: https://jenkins.opencord.org/view/VOLTHA-2.8/job/periodic-voltha-test-bbsim-2.8/124/robot/report/bbsim-errorscenarios/log.html",
+      "revId": "408dec63f9f6275354dbe30aae2a6c223175f356",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
