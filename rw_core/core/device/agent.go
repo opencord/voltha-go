@@ -274,6 +274,31 @@ func (agent *Agent) onFailure(ctx context.Context, err error, prevState, currSta
 	logger.Errorw(ctx, "failed-operation", log.Fields{"error": err, "device-id": agent.deviceID, "rpc": coreutils.GetRPCMetadataFromContext(ctx)})
 }
 
+// onForceDeleteResponse is invoked following a force delete request to an adapter.
+func (agent *Agent) onForceDeleteResponse(ctx context.Context, prevState, currState *common.AdminState_Types, dErr error) {
+	// Log the status
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
+	if dErr != nil {
+		requestStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+	}
+	agent.logDeviceUpdate(ctx, prevState, currState, requestStatus, dErr, "adapter-force-delete-response")
+
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		logger.Errorw(ctx, "failed-getting-device-request-lock", log.Fields{"device-id": agent.deviceID, "error": err})
+	}
+	previousDeviceTransientState := agent.getTransientState()
+	newDevice := agent.cloneDeviceWithoutLock()
+
+	// Even on a delete error response, cleaup the device in the core
+	requestStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
+	err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, newDevice,
+		core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE, previousDeviceTransientState)
+	if err != nil {
+		requestStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+	}
+	agent.logDeviceUpdate(ctx, prevState, currState, requestStatus, err, "transient-state-update")
+}
+
 // onDeleteSuccess is a common callback for scenarios where we receive a nil response following a delete request
 // to an adapter.
 func (agent *Agent) onDeleteSuccess(ctx context.Context, prevState, currState *common.AdminState_Types) {
@@ -1433,12 +1458,9 @@ retry:
 	// Send the delete request to the adapter
 	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 	defer cancel()
-	if _, err = client.DeleteDevice(subCtx, device); err != nil {
-		agent.onDeleteFailure(subCtx, err, nil, nil)
-	} else {
-		agent.onDeleteSuccess(subCtx, nil, nil)
-	}
-	return nil
+	_, err = client.DeleteDevice(subCtx, device)
+	agent.onForceDeleteResponse(subCtx, nil, nil, err)
+	return err
 }
 
 func (agent *Agent) ReconcileDevice(ctx context.Context) {
@@ -1531,6 +1553,17 @@ retry:
 
 		// Send a reconcile request to the adapter.
 		err := agent.sendReconcileRequestToAdapter(ctx, device)
+
+		// Check the transient state after a response from the adapter.   If a device delete
+		// request was issued due to a callback during that time and failed then just delete
+		// the device and stop the reconcile loop and invoke the device deletion
+		if agent.getTransientState() == core.DeviceTransientState_DELETE_FAILED {
+			if dErr := agent.DeleteDevicePostAdapterRestart(ctx); dErr != nil {
+				logger.Errorw(ctx, "delete-post-restart-failed", log.Fields{"error": dErr, "device-id": agent.deviceID})
+			}
+			break retry
+		}
+
 		if errors.Is(err, errContextExpired) || errors.Is(err, errReconcileAborted) {
 			logger.Errorw(ctx, "reconcile-aborted", log.Fields{"error": err})
 			requestStatus = &common.OperationResp{Code: common.OperationResp_OperationReturnCode(common.OperStatus_FAILED)}
