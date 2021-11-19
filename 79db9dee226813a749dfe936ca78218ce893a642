@@ -16,6 +16,24 @@
       "message": "If somehow we get in this else scenario, ofagent will receive a delete device notification for an already deleted device.  Should the notification be sent only when the logical device is found and successfully deleted?",
       "revId": "79db9dee226813a749dfe936ca78218ce893a642",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d58b5eb7_fd5af69f",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-19T17:27:21Z",
+      "side": 1,
+      "message": "agreed, moving the code",
+      "parentUuid": "0b55b6c5_0e0fc329",
+      "revId": "79db9dee226813a749dfe936ca78218ce893a642",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }

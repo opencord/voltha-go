@@ -16,6 +16,24 @@
       "message": "While this will work, it will be confusing later on.  Since this event is used only by ofagent to clear the connection with the OF controller then it is better to create a new proto event (e.g. message switch_status {string id \u003d 1; uint32 status \u003d 2; //bitmap}. We would also need to have statuses for the switch, e.g OFPS_SWITCH_DELETED  This way the core can set the proper data structure and the ofagent can act on it.   Thoughts?",
       "revId": "ed3e075297812809b2b0f5d4a41b2d1d0dfed7b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e87744be_d135228b",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-11-19T17:27:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a118d42_dedc4aa8",
+      "revId": "ed3e075297812809b2b0f5d4a41b2d1d0dfed7b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
