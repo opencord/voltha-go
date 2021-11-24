@@ -48,12 +48,20 @@ const (
 	ContextIsRoot ContextType = "is-root"
 	// ContextParentPort is for the parent interface id of child in the context of the event
 	ContextParentPort ContextType = "parent-port"
+	//ContextPonID is the PON ID the Child device is connected to
+	ContextPonID ContextType = "pon-id"
+	//ContextOnuID is the Onu ID of the child device
+	ContextOnuID ContextType = "onu-id"
+	//ContextParentSerialNum is the serila number of the parent device
+	ContextParentSerialNum ContextType = "olt-serial-number"
 )
 
 type EventName string
 
 const (
 	DeviceStateChangeEvent EventName = "DEVICE_STATE_CHANGE"
+	OltDeviceStateDeleted  EventName = "OLT_DELETED_RAISE_EVENT"
+	OnuDeviceStateDeleted  EventName = "ONU_DELETED_RAISE_EVENT"
 )
 
 type EventAction string
@@ -87,5 +95,29 @@ func CreateDeviceStateChangeEvent(serialNumber string, deviceID string, parentID
 		Context:         context,
 		ResourceId:      deviceID,
 		DeviceEventName: fmt.Sprintf("%s_%s", string(DeviceStateChangeEvent), string(Raise)),
+	}
+}
+
+//CreateDeviceDeletedEvent forms and returns a new DeviceState Event
+func CreateDeviceDeletedEvent(serialNumber string, deviceID string, parentID string,
+	onuId uint32, parentPonPort uint32, isRoot bool) *voltha.DeviceEvent {
+
+	context := make(map[string]string)
+	eventName := string(OltDeviceStateDeleted)
+	/* Populating event context */
+	context[string(ContextSerialNumber)] = serialNumber
+	context[string(ContextDeviceID)] = deviceID
+	if !isRoot {
+		context[string(ContextPonID)] = strconv.FormatUint(uint64(parentPonPort), 10)
+		context[string(ContextOnuID)] = strconv.FormatUint(uint64(onuId), 10)
+		context[string(ContextParentID)] = parentID
+		eventName = string(OnuDeviceStateDeleted)
+
+	}
+
+	return &voltha.DeviceEvent{
+		Context:         context,
+		ResourceId:      deviceID,
+		DeviceEventName: eventName,
 	}
 }
