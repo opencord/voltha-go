@@ -209,6 +209,8 @@ func (agent *Agent) stop(ctx context.Context) error {
 	if err := agent.dbProxy.Remove(ctx, agent.deviceID); err != nil {
 		return err
 	}
+        //send the device event to the message bus
+	agent.deviceMgr.Agent.SendDeviceStateEvent(ctx, agent.device, time.Now().Unix())
 
 	close(agent.exitChannel)
 

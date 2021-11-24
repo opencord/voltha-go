@@ -308,3 +308,30 @@ func (q *Agent) SendDeviceStateChangeEvent(ctx context.Context,
 	logger.Debugw(ctx, "device-state-change-sent", log.Fields{"event": *de})
 	return nil
 }
+
+// SendDeviceStateEvent sends Device State Event to message bus
+func (q *Agent) SendDeviceStateEvent(ctx context.Context, device *voltha.Device, raisedTs int64) error {
+
+	var onuId uint32
+	var ponId uint32
+
+	if !device.Root {
+		onuId = device.ProxyAddress.OnuId
+		ponId = device.ProxyAddress.ChannelId
+	}
+	de := ev.CreateDeviceStateEvent(device.SerialNumber, device.Id, device.ParentId,
+		onuId, ponId, device.Root)
+
+	subCategory := voltha.EventSubCategory_ONU
+	if device.Root {
+		subCategory = voltha.EventSubCategory_OLT
+	}
+
+	if err := q.eventProxy.SendDeviceEvent(ctx, de, voltha.EventCategory_EQUIPMENT,
+		subCategory, raisedTs); err != nil {
+		logger.Errorw(ctx, "error-sending-device-event", log.Fields{"id": device.Id, "err": err})
+		return err
+	}
+	logger.Debugw(ctx, "device-state-sent", log.Fields{"event": *de})
+	return nil
+}
