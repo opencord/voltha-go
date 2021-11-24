@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "dc05ad26_a4557700",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2021-11-24T13:19:42Z",
+      "side": 1,
+      "message": "ONU deleted even was raised by onu adapter earlier, but the right place would be core as it does other operations before removing from database. Added a ONU/OLT deleted event which is similar to what onu adapter was reporting. OLT deleted is something new which was not implemented earlier",
+      "revId": "1789b3edc165feb33c18055a72e74c34c2af10ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
