@@ -87,6 +87,30 @@
       },
       "revId": "1789b3edc165feb33c18055a72e74c34c2af10ca",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3d1d975e_6f9f6a7a",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2021-11-25T12:14:34Z",
+      "side": 1,
+      "message": "I could rename the function to CreateDeviceDeletedEvent instead. let me change it it would make more sense",
+      "parentUuid": "73c87cb2_2c6ebcbf",
+      "range": {
+        "startLine": 313,
+        "startChar": 16,
+        "endLine": 313,
+        "endChar": 36
+      },
+      "revId": "1789b3edc165feb33c18055a72e74c34c2af10ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
