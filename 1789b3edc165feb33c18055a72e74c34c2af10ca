@@ -63,6 +63,30 @@
       },
       "revId": "1789b3edc165feb33c18055a72e74c34c2af10ca",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "73c87cb2_2c6ebcbf",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2021-11-25T08:21:10Z",
+      "side": 1,
+      "message": "Abhilash is the event name \"ONU_DELETED_RAISE_EVENT\" set in ev.CreateDeviceStateEvent() function called below? Could you elaborate on using CreateDeviceStateEvent but not e.g CreateDeviceDeletedEvent?",
+      "parentUuid": "56a1b1fc_2b785f43",
+      "range": {
+        "startLine": 313,
+        "startChar": 16,
+        "endLine": 313,
+        "endChar": 36
+      },
+      "revId": "1789b3edc165feb33c18055a72e74c34c2af10ca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
