@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1bf1b9ae_b05116ec",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-11-26T08:10:38Z",
+      "side": 1,
+      "message": "might fail for the sca, as error return value is not checked.",
+      "revId": "57403ed07732f85b4ba56e2fd6ba5978df03c5e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9ebdbd5d_227ec011",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-11-26T08:10:38Z",
+      "side": 1,
+      "message": "redundant check. Please move this in the above check itself.",
+      "revId": "57403ed07732f85b4ba56e2fd6ba5978df03c5e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2b27b0c0_cc49c6c1",
+        "filename": "rw_core/core/device/event/event.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-11-26T08:10:38Z",
+      "side": 1,
+      "message": "nit:Spelling",
+      "revId": "57403ed07732f85b4ba56e2fd6ba5978df03c5e7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
