@@ -67,6 +67,23 @@
       "message": "After a new OLT debian package update on the physical OLT and some enhancements to the test pipelines all tests on the h/w expect one failed. The failed test had ping test failing only for one ONU (an Alpha ONU) and this is a sporadic issue that we see from time to time where ICMP Reqs land on wrong gem ports from the ONU and are dropped at the OLT. This failure is unrelated to the changes in this patch. Considering this I will issue a recheck to get a +1 and then merge the patch.",
       "revId": "3d922b6ea54017bfe643b02892e1853376033a31",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "abe3e69e_48beb329",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-12-07T10:19:43Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "3d922b6ea54017bfe643b02892e1853376033a31",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
