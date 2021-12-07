@@ -33,6 +33,23 @@
       "message": "Ignore the hardware failure for now. The OLT was not up-to-date with the newer debian package and also the test pipeline needed some fixes for XGSPON ONUs.\nI will re-run the hardware job when these issues are fixed.",
       "revId": "3d922b6ea54017bfe643b02892e1853376033a31",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5dbda400_6752fbe6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-12-07T08:42:27Z",
+      "side": 1,
+      "message": "hardware test\nfunctional tests",
+      "revId": "3d922b6ea54017bfe643b02892e1853376033a31",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
