@@ -131,6 +131,6 @@ func (handler *MockCoreServiceHandler) UpdateImageDownload(context.Context, *vol
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*health.HealthStatus, error) {
+func (handler *MockCoreServiceHandler) GetHealthStatus(ctx context.Context, conn *common.Connection) (*health.HealthStatus, error) {
 	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
 }

@@ -131,7 +131,7 @@ func (dat *DATest) startCore(ctx context.Context) {
 		LivenessChannelInterval: cfg.LiveProbeInterval / 2}
 
 	proxy := model.NewDBPath(backend)
-	dat.adapterMgr = adapter.NewAdapterManager(proxy, dat.coreInstanceID, backend, 5)
+	dat.adapterMgr = adapter.NewAdapterManager("test-endpoint", proxy, dat.coreInstanceID, backend, 5)
 	eventProxy := events.NewEventProxy(events.MsgClient(dat.kEventClient), events.MsgTopic(kafka.Topic{Name: cfg.EventTopic}))
 	dat.deviceMgr, dat.logicalDeviceMgr = NewManagers(proxy, dat.adapterMgr, cfg, dat.coreInstanceID, eventProxy)
 	dat.adapterMgr.Start(context.Background(), "agent-test")
