@@ -1367,10 +1367,14 @@ func (agent *Agent) abortAllProcessing(ctx context.Context) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
+	logger.Infow(ctx, "aborting-current-running-requests-after-wait", log.Fields{"device-id": agent.deviceID})
+
 	defer agent.requestQueue.RequestComplete()
 
 	// If any reconciling is in progress just abort it. The adapter is gone.
 	agent.stopReconcile()
+
+	logger.Infow(ctx, "aborting-current-running-requests-after-sendstop", log.Fields{"device-id": agent.deviceID})
 
 	// Update the Core device transient state accordingly
 	var updatedState core.DeviceTransientState_Types
@@ -1515,7 +1519,7 @@ func (agent *Agent) ReconcileDevice(ctx context.Context) {
 
 	//making here to keep lifecycle of this channel within the scope of retryReconcile
 	agent.stopReconcilingMutex.Lock()
-	agent.stopReconciling = make(chan int)
+	agent.stopReconciling = make(chan int, 1)
 	agent.stopReconcilingMutex.Unlock()
 
 	// defined outside the retry loop so it can be cleaned
@@ -1590,6 +1594,8 @@ retry:
 		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 		break retry
 	}
+
+	logger.Debugw(ctx, "reconcile-retry-ends", log.Fields{"adapter-endpoint": agent.adapterEndpoint})
 
 	// Retry loop is broken, so stop any timers and drain the channel
 	if backoffTimer != nil && !backoffTimer.Stop() {

@@ -91,9 +91,10 @@ func (oltA *OLTAdapter) start(ctx context.Context) {
 	go oltA.startGRPCService(ctx, oltA.grpcServer, oltA, "olt-grpc-service")
 
 	// Establish grpc connection to Core
-	if oltA.coreClient, err = vgrpc.NewClient(oltA.coreEnpoint,
-		oltA.oltRestarted,
-		vgrpc.ActivityCheck(true)); err != nil {
+	if oltA.coreClient, err = vgrpc.NewClient(
+		"olt-endpoint",
+		oltA.coreEnpoint,
+		oltA.oltRestarted); err != nil {
 		logger.Fatal(ctx, "grpc-client-not-created")
 	}
 

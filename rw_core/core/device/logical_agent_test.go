@@ -154,7 +154,7 @@ func (lda *LDATest) startCore(ctx context.Context, inCompeteMode bool) {
 		LivenessChannelInterval: cfg.LiveProbeInterval / 2}
 
 	proxy := model.NewDBPath(backend)
-	adapterMgr := adapter.NewAdapterManager(proxy, lda.coreInstanceID, backend, 5)
+	adapterMgr := adapter.NewAdapterManager("test-endpoint", proxy, lda.coreInstanceID, backend, 5)
 	eventProxy := events.NewEventProxy(events.MsgClient(lda.kEventClient), events.MsgTopic(kafka.Topic{Name: cfg.EventTopic}))
 	lda.deviceMgr, lda.logicalDeviceMgr = NewManagers(proxy, adapterMgr, cfg, lda.coreInstanceID, eventProxy)
 	adapterMgr.Start(context.Background(), "logical-test")

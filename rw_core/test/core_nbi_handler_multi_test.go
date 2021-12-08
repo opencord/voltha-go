@@ -2149,7 +2149,7 @@ func TestRandomMacGenerator(t *testing.T) {
 }
 
 func TestSuite(t *testing.T) {
-	log.SetAllLogLevel(log.FatalLevel)
+	log.SetAllLogLevel(log.DebugLevel)
 
 	// Create a context to be cancelled at the end of all tests.  This will trigger closing of any ressources used.
 	ctx, cancel := context.WithCancel(context.Background())
