@@ -86,9 +86,10 @@ func (onuA *ONUAdapter) start(ctx context.Context) {
 	go onuA.startGRPCService(ctx, onuA.grpcServer, onuA, "onu-grpc-service")
 
 	// Establish grpc connection to Core
-	if onuA.coreClient, err = vgrpc.NewClient(onuA.coreEnpoint,
-		onuA.onuRestarted,
-		vgrpc.ActivityCheck(true)); err != nil {
+	if onuA.coreClient, err = vgrpc.NewClient(
+		"onu-endpoint",
+		onuA.coreEnpoint,
+		onuA.onuRestarted); err != nil {
 		logger.Fatal(ctx, "grpc-client-not-created")
 	}
 	go onuA.coreClient.Start(probeCtx, setAndTestCoreServiceHandler)

@@ -23,10 +23,16 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
+	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+func (dMgr *Manager) GetHealthStatus(ctx context.Context, clientConn *common.Connection) (*health.HealthStatus, error) {
+	logger.Debugw(ctx, "get-health-status-from-remote", log.Fields{"remote-client": clientConn})
+	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
+}
 
 func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "PortCreated")

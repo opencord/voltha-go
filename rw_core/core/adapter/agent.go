@@ -22,10 +22,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/adapter_service"
+	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
@@ -40,32 +40,35 @@ type agent struct {
 	adapterLock        sync.RWMutex
 	onAdapterRestart   vgrpc.RestartedHandler
 	liveProbeInterval  time.Duration
+	coreEndpoint       string
 }
 
-func setAndTestAdapterServiceHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
+func setAndTestAdapterServiceHandler(ctx context.Context, conn *grpc.ClientConn, clientConn *common.Connection) interface{} {
 	svc := adapter_service.NewAdapterServiceClient(conn)
-	if h, err := svc.GetHealthStatus(ctx, &empty.Empty{}); err != nil || h.State != health.HealthStatus_HEALTHY {
-		logger.Debugw(ctx, "connection-not-ready", log.Fields{"error": err, "health": h})
+	if h, err := svc.GetHealthStatus(ctx, clientConn); err != nil || h.State != health.HealthStatus_HEALTHY {
+		logger.Debugw(ctx, "remote-connection-not-ready", log.Fields{"error": err, "health": h, "requester": clientConn, "target": conn.Target()})
 		return nil
 	}
 	return svc
 }
 
-func newAdapterAgent(adapter *voltha.Adapter, onAdapterRestart vgrpc.RestartedHandler, liveProbeInterval time.Duration) *agent {
+func newAdapterAgent(coreEndpoint string, adapter *voltha.Adapter, onAdapterRestart vgrpc.RestartedHandler, liveProbeInterval time.Duration) *agent {
 	return &agent{
 		adapter:            adapter,
 		onAdapterRestart:   onAdapterRestart,
 		adapterAPIEndPoint: adapter.Endpoint,
 		liveProbeInterval:  liveProbeInterval,
+		coreEndpoint:       coreEndpoint,
 	}
 }
 
 func (aa *agent) start(ctx context.Context) error {
 	// Establish grpc connection to Core
 	var err error
-	if aa.vClient, err = vgrpc.NewClient(aa.adapterAPIEndPoint,
-		aa.onAdapterRestart,
-		vgrpc.ActivityCheck(true)); err != nil {
+	if aa.vClient, err = vgrpc.NewClient(
+		aa.coreEndpoint,
+		aa.adapterAPIEndPoint,
+		aa.onAdapterRestart); err != nil {
 		return err
 	}
 

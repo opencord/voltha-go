@@ -26,7 +26,6 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	"github.com/opencord/voltha-lib-go/v7/pkg/version"
 	"github.com/opencord/voltha-protos/v5/go/common"
-	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -48,10 +47,6 @@ func NewAPIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalMa
 		LogicalManager: logicalDeviceMgr,
 		adapterManager: adapterManager{adapterMgr},
 	}
-}
-
-func (handler *APIHandler) GetHealthStatus(ctx context.Context, empty *empty.Empty) (*health.HealthStatus, error) {
-	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
 }
 
 // GetVoltha currently just returns version information
