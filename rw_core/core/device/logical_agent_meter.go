@@ -47,6 +47,24 @@ func (agent *LogicalAgent) updateMeterTable(ctx context.Context, meterMod *ofp.O
 	if meterMod == nil {
 		return nil
 	}
+	// This lock is necessary to ensure that logical-device-delete and meter operations are synchronized.
+	// It was observed during tests that while meter cleanup was happening as part of logical-device delete,
+	// ONOS was re-adding meters which became stale entries on the KV store.
+	// It might look like a costly operation to lock the logical-device-agent for every meter operation,
+	// but in practicality we have only handful number of meter profiles for a given deployment so we do
+	// not expect too many meter operations.
+	// We do not need such mechanism for flows, since flows are not stored on the KV store (it is only cached).
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+	defer agent.requestQueue.RequestComplete()
+
+	// If the logical-device-agent is stopped, return
+	if agent.stopped {
+		logger.Warnw(ctx, "logical-agent-stopped-not-handling-meter", log.Fields{"logical-device-id": agent.logicalDeviceID})
+		return nil
+	}
+
 	switch meterMod.GetCommand() {
 	case ofp.OfpMeterModCommand_OFPMC_ADD:
 		return agent.meterAdd(ctx, meterMod)
