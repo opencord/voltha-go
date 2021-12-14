@@ -33,6 +33,23 @@
       "message": "the only test that failed hardware is a known issue with XGSPON ONUs on BAL3.10. The rest of the 9 tests passed. So issuing a recheck to get back +1 from jenkins.",
       "revId": "c8d9b80c8ec57466fee3cdbbb4facc57d39398b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7807c5b1_810205c3",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-12-14T09:38:12Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "c8d9b80c8ec57466fee3cdbbb4facc57d39398b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
