@@ -204,16 +204,16 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 				log.Fields{"error": err, "logical-device-id": agent.logicalDeviceID})
 		}
 
+		if err := agent.ldeviceMgr.deleteAllLogicalMeters(ctx, agent.logicalDeviceID, true); err != nil {
+			// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
+			logger.Warnw(ctx, "delete-logical-meters-error", log.Fields{"device-id": agent.logicalDeviceID, "error": err})
+		}
+
 		//Remove the logical device from the model
 		if err := agent.ldProxy.Remove(ctx, agent.logicalDeviceID); err != nil {
 			returnErr = err
 		} else {
 			logger.Debugw(ctx, "logical-device-removed", log.Fields{"logical-device-id": agent.logicalDeviceID})
-		}
-
-		if err := agent.ldeviceMgr.deleteAllLogicalMeters(ctx, agent.logicalDeviceID); err != nil {
-			// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
-			logger.Warnw(ctx, "delete-logical-meters-error", log.Fields{"device-id": agent.logicalDeviceID, "error": err})
 		}
 
 		// TODO: remove all entries from all loaders

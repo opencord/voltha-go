@@ -424,13 +424,19 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 	return nil
 }
 
-// deleteAllLogicalMeters removes the logical meters associated with a child device
-func (ldMgr *LogicalManager) deleteAllLogicalMeters(ctx context.Context, deviceID string) error {
+// deleteAllLogicalMeters removes the logical meters associated with a physical or the logical device
+func (ldMgr *LogicalManager) deleteAllLogicalMeters(ctx context.Context, deviceID string, isLogicalDeviceID bool) error {
 	logger.Debugw(ctx, "delete-logical-meters", log.Fields{"device-id": deviceID})
-	// Get logical port
-	ldID, err := ldMgr.getLogicalDeviceIDFromDeviceID(ctx, deviceID)
-	if err != nil {
-		return err
+	var ldID *string
+	var err error
+	if isLogicalDeviceID {
+		ldID = &deviceID
+	} else {
+		// Get logical device id
+		ldID, err = ldMgr.getLogicalDeviceIDFromDeviceID(ctx, deviceID)
+		if err != nil {
+			return err
+		}
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
 		for meterID := range agent.meterLoader.ListIDs() {
