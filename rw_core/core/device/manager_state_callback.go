@@ -178,7 +178,12 @@ func (dMgr *Manager) ChildDeviceLost(ctx context.Context, curr *voltha.Device) e
 
 func (dMgr *Manager) DeleteAllLogicalMeters(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Debugw(ctx, "delete-all-logical-device-meters", log.Fields{"device-id": cDevice.Id})
-	if err := dMgr.logicalDeviceMgr.deleteAllLogicalMeters(ctx, cDevice.Id); err != nil {
+	// Get logical device id
+	ldID, err := dMgr.logicalDeviceMgr.getLogicalDeviceIDFromDeviceID(ctx, cDevice.Id)
+	if err != nil {
+		return err
+	}
+	if err := dMgr.logicalDeviceMgr.deleteAllLogicalMetersForLogicalDevice(ctx, *ldID); err != nil {
 		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
 		logger.Warnw(ctx, "delete-logical-meters-error", log.Fields{"device-id": cDevice.Id, "error": err})
 	}
