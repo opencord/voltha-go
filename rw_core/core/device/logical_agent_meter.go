@@ -59,9 +59,11 @@ func (agent *LogicalAgent) updateMeterTable(ctx context.Context, meterMod *ofp.O
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	// If the logical-device-agent is stopped, return
 	if agent.stopped {
-		logger.Warnw(ctx, "logical-agent-stopped-not-handling-meter", log.Fields{"logical-device-id": agent.logicalDeviceID})
+		logger.Warnw(ctx, "logical-device-already-stopped-not-handling-meter", log.Fields{"logical-device-id": agent.logicalDeviceID})
+		return nil
+	} else if _, err := agent.ldeviceMgr.getLogicalDeviceFromModel(ctx, agent.logicalDeviceID); err != nil {
+		logger.Warnw(ctx, "logical-device-already-removed-not-handling-meter", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		return nil
 	}
 
