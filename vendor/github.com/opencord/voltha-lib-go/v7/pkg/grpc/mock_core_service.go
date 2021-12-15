@@ -17,18 +17,36 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
 
 //MockCoreServiceHandler implements the methods in the core service
-type MockCoreServiceHandler struct{}
+type MockCoreServiceHandler struct {
+	exitChannel chan struct{}
+}
+
+func NewMockCoreServiceHandler() *MockCoreServiceHandler {
+	return &MockCoreServiceHandler{exitChannel: make(chan struct{})}
+}
+
+func (handler *MockCoreServiceHandler) Start() {
+	logger.Debug(context.Background(), "starting-mock-core-service")
+}
+
+func (handler *MockCoreServiceHandler) Stop() {
+	logger.Debug(context.Background(), "stopping-mock-core-service")
+	close(handler.exitChannel)
+}
 
 func (handler *MockCoreServiceHandler) RegisterAdapter(ctx context.Context, reg *ca.AdapterRegistration) (*empty.Empty, error) {
 	//logger.Debugw(ctx, "registration-received", log.Fields{"input": reg})
@@ -131,6 +149,41 @@ func (handler *MockCoreServiceHandler) UpdateImageDownload(context.Context, *vol
 	return &empty.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) GetHealthStatus(ctx context.Context, conn *common.Connection) (*health.HealthStatus, error) {
-	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
+func (handler *MockCoreServiceHandler) GetHealthStatus(stream core_service.CoreService_GetHealthStatusServer) error {
+	logger.Debugw(context.Background(), "keep-alive-connection", log.Fields{"stream": stream})
+	if stream == nil {
+		return fmt.Errorf("stream-is-nil %v", stream)
+	}
+	var err error
+	var remoteClient *common.Connection
+	var tempClient *common.Connection
+	ctx := context.Background()
+loop:
+	for {
+		tempClient, err = stream.Recv()
+		if err != nil {
+			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+		// Send a response back
+		err = stream.Send(&health.HealthStatus{State: health.HealthStatus_HEALTHY})
+		if err != nil {
+			logger.Warnw(ctx, "sending-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+
+		remoteClient = tempClient
+		logger.Debugw(ctx, "received-keep-alive", log.Fields{"remote-client": remoteClient})
+		select {
+		case <-stream.Context().Done():
+			logger.Infow(ctx, "stream-keep-alive-context-done", log.Fields{"remote-client": remoteClient, "error": stream.Context().Err()})
+			break loop
+		case <-handler.exitChannel:
+			logger.Warnw(ctx, "received-stop", log.Fields{"remote-client": remoteClient})
+			break loop
+		default:
+		}
+	}
+	logger.Errorw(context.Background(), "connection-down", log.Fields{"remote-client": remoteClient, "error": err})
+	return err
 }

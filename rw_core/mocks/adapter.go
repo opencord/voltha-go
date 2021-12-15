@@ -169,12 +169,11 @@ func (ta *Adapter) startGRPCService(ctx context.Context, server *vgrpc.GrpcServe
 	ta.Probe.UpdateStatus(ctx, serviceName, probe.ServiceStatusStopped)
 }
 
-func setAndTestCoreServiceHandler(ctx context.Context, conn *grpc.ClientConn, clientConn *common.Connection) interface{} {
-	svc := core_service.NewCoreServiceClient(conn)
-	if h, err := svc.GetHealthStatus(ctx, clientConn); err != nil || h.State != health.HealthStatus_HEALTHY {
+func setCoreServiceHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
+	if conn == nil {
 		return nil
 	}
-	return svc
+	return core_service.NewCoreServiceClient(conn)
 }
 
 // gRPC service

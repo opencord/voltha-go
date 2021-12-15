@@ -17,22 +17,20 @@ package device
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func (dMgr *Manager) GetHealthStatus(ctx context.Context, clientConn *common.Connection) (*health.HealthStatus, error) {
-	logger.Debugw(ctx, "get-health-status-from-remote", log.Fields{"remote-client": clientConn})
-	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
-}
 
 func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "PortCreated")
@@ -532,4 +530,46 @@ func (dMgr *Manager) UpdateImageDownload(ctx context.Context, img *voltha.ImageD
 		return nil, status.Errorf(codes.NotFound, "%s", img.Id)
 	}
 	return &empty.Empty{}, nil
+}
+
+func (dMgr *Manager) GetHealthStatus(stream core_service.CoreService_GetHealthStatusServer) error {
+	ctx := utils.WithRPCMetadataContext(context.Background(), "keep-alive-connection")
+	logger.Debugw(ctx, "receive-stream-connection", log.Fields{"stream": stream})
+
+	if stream == nil {
+		return fmt.Errorf("conn-is-nil %v", stream)
+	}
+	initialRequestTime := time.Now()
+	var remoteClient *common.Connection
+	var tempClient *common.Connection
+	var err error
+loop:
+	for {
+		tempClient, err = stream.Recv()
+		if err != nil {
+			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+		// Send a response back
+		err = stream.Send(&health.HealthStatus{State: health.HealthStatus_HEALTHY})
+		if err != nil {
+			logger.Warnw(ctx, "sending-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+
+		remoteClient = tempClient
+		logger.Debugw(ctx, "received-keep-alive", log.Fields{"remote-client": remoteClient})
+
+		select {
+		case <-stream.Context().Done():
+			logger.Infow(ctx, "stream-keep-alive-context-done", log.Fields{"remote-client": remoteClient, "error": stream.Context().Err()})
+			break loop
+		case <-dMgr.doneCh:
+			logger.Warnw(ctx, "received-stop", log.Fields{"remote-client": remoteClient, "initial-conn-time": initialRequestTime})
+			break loop
+		default:
+		}
+	}
+	logger.Errorw(ctx, "connection-down", log.Fields{"remote-client": remoteClient, "error": err, "initial-conn-time": initialRequestTime})
+	return err
 }

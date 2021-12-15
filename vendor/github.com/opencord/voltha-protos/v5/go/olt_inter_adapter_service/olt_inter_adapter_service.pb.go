@@ -33,27 +33,29 @@ func init() {
 }
 
 var fileDescriptor_3ddb40a5aae0f6e1 = []byte{
-	// 316 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0xbf, 0x4e, 0xc3, 0x30,
-	0x10, 0x87, 0x05, 0x03, 0x43, 0x16, 0x90, 0x85, 0x2a, 0x11, 0x58, 0x18, 0x19, 0xea, 0x20, 0x10,
-	0x13, 0x53, 0xcb, 0x9f, 0xd2, 0x01, 0xb5, 0xa2, 0x88, 0x81, 0xa5, 0x72, 0xdd, 0xab, 0x63, 0xc9,
-	0xf1, 0x05, 0xfb, 0x52, 0xe8, 0x5b, 0x30, 0xf0, 0xc0, 0x28, 0xb1, 0x3b, 0xa4, 0x6a, 0xa6, 0x28,
-	0xba, 0xef, 0xf7, 0xf9, 0xee, 0xec, 0xa4, 0xbf, 0x46, 0x43, 0xb9, 0x98, 0x97, 0x0e, 0x09, 0x7d,
-	0x86, 0x86, 0xe6, 0xda, 0x12, 0xb8, 0xb9, 0x58, 0x8a, 0xb2, 0xfe, 0x7a, 0x70, 0x6b, 0x2d, 0x81,
-	0x37, 0x00, 0x3b, 0xeb, 0x04, 0xd2, 0xb4, 0x6d, 0x92, 0x58, 0x14, 0x68, 0x43, 0x2c, 0x3d, 0x57,
-	0x88, 0xca, 0x40, 0xd6, 0xfc, 0x2d, 0xaa, 0x55, 0x06, 0x45, 0x49, 0x9b, 0x58, 0xbc, 0x6c, 0x07,
-	0x5b, 0xf6, 0x88, 0xec, 0xb8, 0x73, 0x10, 0x86, 0xf2, 0x50, 0xbb, 0xf9, 0x3b, 0x4c, 0x7a, 0x13,
-	0x43, 0xe3, 0x3a, 0x36, 0x08, 0xa9, 0x59, 0x68, 0x89, 0xdd, 0x27, 0xc7, 0x23, 0xa0, 0x97, 0x86,
-	0x9e, 0x91, 0xa0, 0xca, 0x33, 0xc6, 0x63, 0x63, 0x0f, 0x68, 0x2d, 0x48, 0xd2, 0x68, 0xd3, 0x53,
-	0x1e, 0x85, 0x2d, 0xf2, 0x39, 0x39, 0x99, 0x3a, 0xfc, 0xd9, 0x4c, 0x0a, 0xa9, 0xdf, 0xe0, 0xab,
-	0x02, 0x4f, 0x2c, 0xe5, 0xed, 0xee, 0xea, 0xda, 0x2b, 0x78, 0x2f, 0x14, 0xa4, 0x3d, 0x1e, 0x86,
-	0xe4, 0xdb, 0x21, 0xf9, 0x53, 0x3d, 0x24, 0xab, 0x92, 0xde, 0x08, 0xe8, 0x1d, 0x64, 0x3e, 0x75,
-	0xb8, 0xd2, 0x06, 0xc6, 0xd6, 0x93, 0xb0, 0x12, 0xd8, 0xf5, 0x8e, 0x6d, 0x0f, 0x13, 0x0f, 0xde,
-	0x9e, 0x71, 0xd5, 0x9d, 0x78, 0xc4, 0x6f, 0x6b, 0x50, 0x2c, 0x23, 0x3a, 0xfc, 0x3d, 0x48, 0xfa,
-	0xe8, 0x14, 0xc7, 0x12, 0xac, 0x44, 0xb7, 0xe4, 0x61, 0x85, 0xbc, 0xf3, 0x02, 0x87, 0x17, 0x1f,
-	0x0d, 0xb1, 0x7f, 0x97, 0x9f, 0x03, 0xa5, 0x29, 0xaf, 0x16, 0xf5, 0xfa, 0xb2, 0xad, 0x33, 0x0b,
-	0xce, 0x7e, 0xbc, 0x96, 0xf5, 0x5d, 0xa6, 0xb0, 0xfb, 0x09, 0x2d, 0x8e, 0x1a, 0xee, 0xf6, 0x3f,
-	0x00, 0x00, 0xff, 0xff, 0x7c, 0x06, 0x94, 0x70, 0x74, 0x02, 0x00, 0x00,
+	// 337 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0xcf, 0x4e, 0xe3, 0x30,
+	0x10, 0x87, 0xd5, 0x3d, 0xec, 0xc1, 0x97, 0xdd, 0xb5, 0x56, 0x95, 0x48, 0xb9, 0x70, 0x83, 0x43,
+	0x9d, 0x0a, 0xc4, 0x19, 0xb5, 0xfc, 0x69, 0x7b, 0x40, 0xad, 0x28, 0xe2, 0xc0, 0xa5, 0x72, 0xdd,
+	0x69, 0x12, 0xc9, 0xf1, 0x04, 0x7b, 0x52, 0xe8, 0x5b, 0xf0, 0x8c, 0x3c, 0x09, 0x4a, 0xec, 0x4a,
+	0xa4, 0x6a, 0x4e, 0x51, 0x34, 0xdf, 0xef, 0xf3, 0x8c, 0x66, 0x58, 0x7f, 0x8b, 0x9a, 0x52, 0xb9,
+	0x2c, 0x2c, 0x12, 0xba, 0x18, 0x35, 0x2d, 0x33, 0x43, 0x60, 0x97, 0x72, 0x2d, 0x8b, 0xea, 0xeb,
+	0xc0, 0x6e, 0x33, 0x05, 0xa2, 0x06, 0xf8, 0x49, 0x2b, 0x10, 0x45, 0x4d, 0x93, 0xc2, 0x3c, 0x47,
+	0xe3, 0x63, 0x51, 0x2f, 0x41, 0x4c, 0x34, 0xc4, 0xf5, 0xdf, 0xaa, 0xdc, 0xc4, 0x90, 0x17, 0xb4,
+	0x0b, 0xc5, 0xb3, 0x66, 0xb0, 0x61, 0x0f, 0xc8, 0x81, 0x3b, 0x05, 0xa9, 0x29, 0xf5, 0xb5, 0xcb,
+	0xaf, 0x5f, 0xac, 0x3b, 0xd3, 0x34, 0xad, 0x62, 0x43, 0x9f, 0x5a, 0xf8, 0x96, 0xf8, 0x0d, 0xfb,
+	0x33, 0x06, 0x9a, 0xd4, 0xf4, 0x82, 0x24, 0x95, 0x8e, 0x73, 0x11, 0x1a, 0xbb, 0x45, 0x63, 0x40,
+	0x51, 0x86, 0x26, 0xfa, 0x2f, 0x82, 0xf0, 0x27, 0x79, 0xde, 0x19, 0x74, 0xf8, 0x03, 0xfb, 0x3b,
+	0xb7, 0xf8, 0xb1, 0x9b, 0xe5, 0x2a, 0x7b, 0x82, 0xb7, 0x12, 0x1c, 0xf1, 0x48, 0x34, 0x3b, 0xac,
+	0x6a, 0x8f, 0xe0, 0x9c, 0x4c, 0x20, 0xea, 0x0a, 0x3f, 0xa8, 0xd8, 0x0f, 0x2a, 0xee, 0xab, 0x41,
+	0xf9, 0x84, 0xfd, 0x3b, 0xf4, 0x38, 0xde, 0x6b, 0x17, 0xb9, 0x56, 0x53, 0xc9, 0xba, 0x63, 0xa0,
+	0x67, 0x50, 0xe9, 0xdc, 0xe2, 0x26, 0xd3, 0x30, 0x35, 0x8e, 0xa4, 0x51, 0xc0, 0x07, 0x07, 0xba,
+	0x23, 0x4c, 0x78, 0x7a, 0xdf, 0xed, 0x45, 0x7b, 0xe2, 0x0e, 0xdf, 0x8d, 0x46, 0xb9, 0x0e, 0xe8,
+	0xe8, 0xb3, 0xc3, 0xfa, 0x68, 0x13, 0x81, 0x05, 0x18, 0x85, 0x76, 0x2d, 0xfc, 0x42, 0x44, 0xeb,
+	0x39, 0x8c, 0x4e, 0x5f, 0x6a, 0xe2, 0xf8, 0x66, 0x5e, 0x87, 0x49, 0x46, 0x69, 0xb9, 0xaa, 0x96,
+	0x11, 0xef, 0x9d, 0xb1, 0x77, 0xf6, 0xc3, 0x92, 0xb7, 0xd7, 0x71, 0x82, 0xed, 0x07, 0xb9, 0xfa,
+	0x5d, 0x73, 0x57, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xd0, 0x9f, 0xd5, 0x8e, 0xc2, 0x02, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -68,10 +70,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type OltInterAdapterServiceClient interface {
-	// GetHealthStatus is used by an OltInterAdapterService client to verify connectivity
-	// to the gRPC server hosting the OltInterAdapterService service
-	GetHealthStatus(ctx context.Context, in *common.Connection, opts ...grpc.CallOption) (*health.HealthStatus, error)
+	// GetHealthStatus is used by a OltInterAdapterService client to detect a connection
+	// lost with the gRPC server hosting the OltInterAdapterService service
+	GetHealthStatus(ctx context.Context, opts ...grpc.CallOption) (OltInterAdapterService_GetHealthStatusClient, error)
 	ProxyOmciRequest(ctx context.Context, in *inter_adapter.OmciMessage, opts ...grpc.CallOption) (*empty.Empty, error)
+	ProxyOmciRequests(ctx context.Context, in *inter_adapter.OmciMessages, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetTechProfileInstance(ctx context.Context, in *inter_adapter.TechProfileInstanceRequestMessage, opts ...grpc.CallOption) (*inter_adapter.TechProfileDownloadMessage, error)
 }
 
@@ -83,18 +86,49 @@ func NewOltInterAdapterServiceClient(cc *grpc.ClientConn) OltInterAdapterService
 	return &oltInterAdapterServiceClient{cc}
 }
 
-func (c *oltInterAdapterServiceClient) GetHealthStatus(ctx context.Context, in *common.Connection, opts ...grpc.CallOption) (*health.HealthStatus, error) {
-	out := new(health.HealthStatus)
-	err := c.cc.Invoke(ctx, "/olt_inter_adapter_service.OltInterAdapterService/GetHealthStatus", in, out, opts...)
+func (c *oltInterAdapterServiceClient) GetHealthStatus(ctx context.Context, opts ...grpc.CallOption) (OltInterAdapterService_GetHealthStatusClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_OltInterAdapterService_serviceDesc.Streams[0], "/olt_inter_adapter_service.OltInterAdapterService/GetHealthStatus", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &oltInterAdapterServiceGetHealthStatusClient{stream}
+	return x, nil
+}
+
+type OltInterAdapterService_GetHealthStatusClient interface {
+	Send(*common.Connection) error
+	Recv() (*health.HealthStatus, error)
+	grpc.ClientStream
+}
+
+type oltInterAdapterServiceGetHealthStatusClient struct {
+	grpc.ClientStream
+}
+
+func (x *oltInterAdapterServiceGetHealthStatusClient) Send(m *common.Connection) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *oltInterAdapterServiceGetHealthStatusClient) Recv() (*health.HealthStatus, error) {
+	m := new(health.HealthStatus)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *oltInterAdapterServiceClient) ProxyOmciRequest(ctx context.Context, in *inter_adapter.OmciMessage, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/olt_inter_adapter_service.OltInterAdapterService/ProxyOmciRequest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *oltInterAdapterServiceClient) ProxyOmciRequest(ctx context.Context, in *inter_adapter.OmciMessage, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *oltInterAdapterServiceClient) ProxyOmciRequests(ctx context.Context, in *inter_adapter.OmciMessages, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/olt_inter_adapter_service.OltInterAdapterService/ProxyOmciRequest", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/olt_inter_adapter_service.OltInterAdapterService/ProxyOmciRequests", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,10 +146,11 @@ func (c *oltInterAdapterServiceClient) GetTechProfileInstance(ctx context.Contex
 
 // OltInterAdapterServiceServer is the server API for OltInterAdapterService service.
 type OltInterAdapterServiceServer interface {
-	// GetHealthStatus is used by an OltInterAdapterService client to verify connectivity
-	// to the gRPC server hosting the OltInterAdapterService service
-	GetHealthStatus(context.Context, *common.Connection) (*health.HealthStatus, error)
+	// GetHealthStatus is used by a OltInterAdapterService client to detect a connection
+	// lost with the gRPC server hosting the OltInterAdapterService service
+	GetHealthStatus(OltInterAdapterService_GetHealthStatusServer) error
 	ProxyOmciRequest(context.Context, *inter_adapter.OmciMessage) (*empty.Empty, error)
+	ProxyOmciRequests(context.Context, *inter_adapter.OmciMessages) (*empty.Empty, error)
 	GetTechProfileInstance(context.Context, *inter_adapter.TechProfileInstanceRequestMessage) (*inter_adapter.TechProfileDownloadMessage, error)
 }
 
@@ -123,11 +158,14 @@ type OltInterAdapterServiceServer interface {
 type UnimplementedOltInterAdapterServiceServer struct {
 }
 
-func (*UnimplementedOltInterAdapterServiceServer) GetHealthStatus(ctx context.Context, req *common.Connection) (*health.HealthStatus, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetHealthStatus not implemented")
+func (*UnimplementedOltInterAdapterServiceServer) GetHealthStatus(srv OltInterAdapterService_GetHealthStatusServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetHealthStatus not implemented")
 }
 func (*UnimplementedOltInterAdapterServiceServer) ProxyOmciRequest(ctx context.Context, req *inter_adapter.OmciMessage) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProxyOmciRequest not implemented")
+}
+func (*UnimplementedOltInterAdapterServiceServer) ProxyOmciRequests(ctx context.Context, req *inter_adapter.OmciMessages) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProxyOmciRequests not implemented")
 }
 func (*UnimplementedOltInterAdapterServiceServer) GetTechProfileInstance(ctx context.Context, req *inter_adapter.TechProfileInstanceRequestMessage) (*inter_adapter.TechProfileDownloadMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTechProfileInstance not implemented")
@@ -137,22 +175,30 @@ func RegisterOltInterAdapterServiceServer(s *grpc.Server, srv OltInterAdapterSer
 	s.RegisterService(&_OltInterAdapterService_serviceDesc, srv)
 }
 
-func _OltInterAdapterService_GetHealthStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(common.Connection)
-	if err := dec(in); err != nil {
+func _OltInterAdapterService_GetHealthStatus_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(OltInterAdapterServiceServer).GetHealthStatus(&oltInterAdapterServiceGetHealthStatusServer{stream})
+}
+
+type OltInterAdapterService_GetHealthStatusServer interface {
+	Send(*health.HealthStatus) error
+	Recv() (*common.Connection, error)
+	grpc.ServerStream
+}
+
+type oltInterAdapterServiceGetHealthStatusServer struct {
+	grpc.ServerStream
+}
+
+func (x *oltInterAdapterServiceGetHealthStatusServer) Send(m *health.HealthStatus) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *oltInterAdapterServiceGetHealthStatusServer) Recv() (*common.Connection, error) {
+	m := new(common.Connection)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(OltInterAdapterServiceServer).GetHealthStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/olt_inter_adapter_service.OltInterAdapterService/GetHealthStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OltInterAdapterServiceServer).GetHealthStatus(ctx, req.(*common.Connection))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 func _OltInterAdapterService_ProxyOmciRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -169,6 +215,24 @@ func _OltInterAdapterService_ProxyOmciRequest_Handler(srv interface{}, ctx conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OltInterAdapterServiceServer).ProxyOmciRequest(ctx, req.(*inter_adapter.OmciMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OltInterAdapterService_ProxyOmciRequests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(inter_adapter.OmciMessages)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OltInterAdapterServiceServer).ProxyOmciRequests(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/olt_inter_adapter_service.OltInterAdapterService/ProxyOmciRequests",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OltInterAdapterServiceServer).ProxyOmciRequests(ctx, req.(*inter_adapter.OmciMessages))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -196,18 +260,25 @@ var _OltInterAdapterService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*OltInterAdapterServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetHealthStatus",
-			Handler:    _OltInterAdapterService_GetHealthStatus_Handler,
-		},
-		{
 			MethodName: "ProxyOmciRequest",
 			Handler:    _OltInterAdapterService_ProxyOmciRequest_Handler,
+		},
+		{
+			MethodName: "ProxyOmciRequests",
+			Handler:    _OltInterAdapterService_ProxyOmciRequests_Handler,
 		},
 		{
 			MethodName: "GetTechProfileInstance",
 			Handler:    _OltInterAdapterService_GetTechProfileInstance_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetHealthStatus",
+			Handler:       _OltInterAdapterService_GetHealthStatus_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "voltha_protos/olt_inter_adapter_service.proto",
 }

@@ -275,6 +275,8 @@ func (p *Probe) ListenAndServe(ctx context.Context, address string) {
 }
 
 func (p *Probe) IsReady() bool {
+	p.mutex.RLock()
+	defer p.mutex.RUnlock()
 	return p.isReady
 }
 
