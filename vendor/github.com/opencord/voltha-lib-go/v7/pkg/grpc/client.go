@@ -25,30 +25,26 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
+	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/olt_inter_adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/onu_inter_adapter_service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/keepalive"
+	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
+	"google.golang.org/grpc/status"
 )
 
 type event byte
 type state byte
 type SetAndTestServiceHandler func(context.Context, *grpc.ClientConn, *common.Connection) interface{}
 type RestartedHandler func(ctx context.Context, endPoint string) error
-
-type contextKey string
-
-func (c contextKey) String() string {
-	return string(c)
-}
-
-var (
-	grpcMonitorContextKey = contextKey("grpc-monitor")
-)
 
 const (
 	grpcBackoffInitialInterval = "GRPC_BACKOFF_INITIAL_INTERVAL"
@@ -65,13 +61,6 @@ const (
 )
 
 const (
-	connectionErrorSubString  = "SubConns are in TransientFailure"
-	connectionClosedSubstring = "client connection is closing"
-	connectionError           = "connection error"
-	connectionSystemNotReady  = "system is not ready"
-)
-
-const (
 	eventConnecting = event(iota)
 	eventConnected
 	eventDisconnected
@@ -85,7 +74,9 @@ const (
 
 type Client struct {
 	clientEndpoint         string
+	clientContextData      string
 	serverEndPoint         string
+	remoteServiceName      string
 	connection             *grpc.ClientConn
 	connectionLock         sync.RWMutex
 	stateLock              sync.RWMutex
@@ -98,17 +89,26 @@ type Client struct {
 	backoffMaxElapsedTime  time.Duration
 	monitorInterval        time.Duration
 	done                   bool
+	livenessLock           sync.RWMutex
 	livenessCallback       func(timestamp time.Time)
 }
 
 type ClientOption func(*Client)
 
-func NewClient(clientEndpoint, serverEndpoint string, onRestart RestartedHandler, opts ...ClientOption) (*Client, error) {
+func ClientContextData(data string) ClientOption {
+	return func(args *Client) {
+		args.clientContextData = data
+	}
+}
+
+func NewClient(clientEndpoint, serverEndpoint, remoteServiceName string, onRestart RestartedHandler,
+	opts ...ClientOption) (*Client, error) {
 	c := &Client{
 		clientEndpoint:         clientEndpoint,
 		serverEndPoint:         serverEndpoint,
+		remoteServiceName:      remoteServiceName,
 		onRestart:              onRestart,
-		events:                 make(chan event, 1),
+		events:                 make(chan event, 5),
 		state:                  stateDisconnected,
 		backoffInitialInterval: DefaultBackoffInitialInterval,
 		backoffMaxInterval:     DefaultBackoffMaxInterval,
@@ -200,6 +200,21 @@ func (c *Client) GetOltInterAdapterServiceClient() (olt_inter_adapter_service.Ol
 	return nil, fmt.Errorf("invalid-service-%s", reflect.TypeOf(c.service))
 }
 
+// GetAdapterServiceClient is a helper function that returns a concrete service instead of the GetClient() API
+// which returns an interface
+func (c *Client) GetAdapterServiceClient() (adapter_service.AdapterServiceClient, error) {
+	c.connectionLock.RLock()
+	defer c.connectionLock.RUnlock()
+	if c.service == nil {
+		return nil, fmt.Errorf("no adapter service connection to %s", c.serverEndPoint)
+	}
+	client, ok := c.service.(adapter_service.AdapterServiceClient)
+	if ok {
+		return client, nil
+	}
+	return nil, fmt.Errorf("invalid-service-%s", reflect.TypeOf(c.service))
+}
+
 func (c *Client) Reset(ctx context.Context) {
 	logger.Debugw(ctx, "resetting-client-connection", log.Fields{"endpoint": c.serverEndPoint})
 	c.stateLock.Lock()
@@ -210,124 +225,148 @@ func (c *Client) Reset(ctx context.Context) {
 	}
 }
 
-func (c *Client) clientInterceptor(ctx context.Context, method string, req interface{}, reply interface{},
-	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	// Nothing to do before intercepting the call
-	err := invoker(ctx, method, req, reply, cc, opts...)
-	// On connection failure, start the reconnect process depending on the error response
-	if err != nil {
-		logger.Errorw(ctx, "received-error", log.Fields{"error": err, "context": ctx, "endpoint": c.serverEndPoint})
-		if strings.Contains(err.Error(), connectionErrorSubString) ||
-			strings.Contains(err.Error(), connectionError) ||
-			strings.Contains(err.Error(), connectionSystemNotReady) ||
-			isGrpcMonitorKeyPresentInContext(ctx) {
-			c.stateLock.Lock()
-			if c.state == stateConnected {
-				c.state = stateDisconnected
-				logger.Warnw(context.Background(), "sending-disconnect-event", log.Fields{"endpoint": c.serverEndPoint, "error": err, "curr-state": stateConnected, "new-state": c.state})
-				c.events <- eventDisconnected
-			}
-			c.stateLock.Unlock()
-		} else if strings.Contains(err.Error(), connectionClosedSubstring) {
-			logger.Errorw(context.Background(), "invalid-client-connection-closed", log.Fields{"endpoint": c.serverEndPoint, "error": err})
+// SendWithTimeout runs f and returns its error.  If the deadline d elapses first,
+// it returns a grpc DeadlineExceeded error instead.
+func SendWithTimeout(f func(*common.Connection) error, conn *common.Connection, d time.Duration) error {
+	errChan := make(chan error, 1)
+	go func() {
+		err := f(conn)
+		logger.Debugw(context.Background(), "message-sent", log.Fields{"error": err})
+		errChan <- err
+		close(errChan)
+	}()
+	t := time.NewTimer(d)
+	select {
+	case <-t.C:
+		return status.Errorf(codes.DeadlineExceeded, "timeout-on-sending-message")
+	case err := <-errChan:
+		if !t.Stop() {
+			<-t.C
 		}
 		return err
 	}
-	// Update activity on success only
-	c.updateActivity(ctx)
-	return nil
 }
 
-// updateActivity updates the liveness channel
-func (c *Client) updateActivity(ctx context.Context) {
-	logger.Debugw(ctx, "update-activity", log.Fields{"api-endpoint": c.serverEndPoint})
+func (c *Client) monitorConnection(ctx context.Context) {
+	logger.Infow(ctx, "monitor-connection-started", log.Fields{"endpoint": c.serverEndPoint})
 
-	// Update liveness only in connected state
-	if c.livenessCallback != nil {
-		c.stateLock.RLock()
-		if c.state == stateConnected {
-			c.livenessCallback(time.Now())
+	// If we exit, assume disconnected
+	defer func() {
+		c.stateLock.Lock()
+		if !c.done && c.state == stateConnected {
+			c.state = stateDisconnected
+			logger.Warnw(ctx, "sending-disconnect-event", log.Fields{"endpoint": c.serverEndPoint, "curr-state": stateConnected, "new-state": c.state})
+			c.events <- eventDisconnected
+		} else {
+			logger.Debugw(ctx, "no-state-change-needed", log.Fields{"endpoint": c.serverEndPoint, "state": c.state, "client-done": c.done})
 		}
-		c.stateLock.RUnlock()
+		logger.Debugw(ctx, "monitor-connection-ended", log.Fields{"endpoint": c.serverEndPoint})
+		c.stateLock.Unlock()
+	}()
+
+	c.connectionLock.RLock()
+	conn := c.connection
+	c.connectionLock.RUnlock()
+	if conn == nil {
+		logger.Errorw(ctx, "connection-nil", log.Fields{"endpoint": c.serverEndPoint})
+		return
 	}
-}
 
-func WithGrpcMonitorContext(ctx context.Context, name string) context.Context {
-	ctx = context.WithValue(ctx, grpcMonitorContextKey, name)
-	return ctx
-}
-
-func isGrpcMonitorKeyPresentInContext(ctx context.Context) bool {
-	if ctx != nil {
-		_, present := ctx.Value(grpcMonitorContextKey).(string)
-		return present
+	// Get a new client using reflection. The server can implement any grpc service, but it
+	// needs to also implement the "StartKeepAliveStream" API
+	grpcReflectClient := grpcreflect.NewClient(ctx, rpb.NewServerReflectionClient(conn))
+	if grpcReflectClient == nil {
+		logger.Errorw(ctx, "grpc-reflect-client-nil", log.Fields{"endpoint": c.serverEndPoint})
+		return
 	}
-	return false
-}
+	// defer grpcReflectClient.Reset()
 
-// monitorActivity monitors the activity on the gRPC connection.   If there are no activity after a specified
-// timeout, it will send a default API request on that connection.   If the connection is good then nothing
-// happens.  If it's bad this will trigger reconnection attempts.
-func (c *Client) monitorActivity(ctx context.Context, handler SetAndTestServiceHandler) {
-	logger.Infow(ctx, "start-activity-monitor", log.Fields{"endpoint": c.serverEndPoint})
+	// Get the list of services - there should be 2 services: a server reflection and the voltha service we are interested in
+	services, err := grpcReflectClient.ListServices()
+	if err != nil {
+		logger.Errorw(ctx, "list-services-error", log.Fields{"endpoint": c.serverEndPoint, "error": err})
+		return
+	}
 
-	grpcMonitorCheckRunning := false
-	var grpcMonitorCheckRunningLock sync.RWMutex
+	// Filter out the service
+	logger.Debugw(ctx, "services", log.Fields{"services": services})
+	serviceOfInterest := ""
+	for _, service := range services {
+		if strings.Contains(service, c.remoteServiceName) {
+			serviceOfInterest = service
+		}
+	}
+	if serviceOfInterest == "" {
+		logger.Errorw(ctx, "no-service-found", log.Fields{"endpoint": c.serverEndPoint, "services": services})
+		return
+	}
 
-	// Interval to wait for no activity before probing the connection
-	timeout := c.monitorInterval
+	// Resolve the service
+	resolvedService, err := grpcReflectClient.ResolveService(serviceOfInterest)
+	if err != nil {
+		logger.Errorw(ctx, "service-error", log.Fields{"endpoint": c.serverEndPoint, "service": resolvedService, "error": err})
+		return
+	}
+
+	// Find the method of interest
+	method := resolvedService.FindMethodByName("KeepAlive")
+	if method == nil {
+		logger.Errorw(ctx, "nil-method", log.Fields{"endpoint": c.serverEndPoint, "service": resolvedService})
+		return
+	}
+	logger.Debugw(ctx, "resolved-to-method", log.Fields{"service": resolvedService.GetName(), "method": method.GetName()})
+
+	// Get a dynamic connection
+	dynamicConn := grpcdynamic.NewStub(conn)
+
+	// Get the stream and send this client information
+	streamCtx, streamDone := context.WithCancel(log.WithSpanFromContext(context.Background(), ctx))
+	defer streamDone()
+	stream, err := dynamicConn.InvokeRpcClientStream(streamCtx, method)
+
+	// stream, err := dynamicConn.InvokeRpcServerStream(streamCtx, method, myInfo)
+	// stream, err := dynamicConn.InvokeRpcServerStream(ctx, method, myInfo)
+	if err != nil {
+		logger.Errorw(ctx, "stream-error", log.Fields{"endpoint": c.serverEndPoint, "service": resolvedService, "error": err})
+		return
+	}
+
+	myInfo := &common.Connection{
+		Endpoint:          c.clientEndpoint,
+		ContextInfo:       c.clientContextData,
+		KeepAliveInterval: int64(c.monitorInterval),
+	}
+
 loop:
 	for {
-		timeoutTimer := time.NewTimer(timeout)
-		select {
-
-		case <-ctx.Done():
-			// Stop and drain timer
-			if !timeoutTimer.Stop() {
-				select {
-				case <-timeoutTimer.C:
-				default:
-				}
-			}
+		// Let's send a keep alive message with our info
+		err := SendWithTimeout(func(conn *common.Connection) error { return stream.SendMsg(conn) }, myInfo, c.monitorInterval)
+		if err != nil {
+			// Any error means the far end is gone
+			logger.Errorw(ctx, "sending-stream-error", log.Fields{"error": err, "remote": c.serverEndPoint, "context": stream.Context().Err()})
 			break loop
+		}
+		logger.Debugw(ctx, "stream-data-sent", log.Fields{"remote": c.serverEndPoint})
+		// Update liveness, if configured
+		c.livenessLock.RLock()
+		if c.livenessCallback != nil {
+			go c.livenessCallback(time.Now())
+		}
+		c.livenessLock.RUnlock()
 
-		case <-timeoutTimer.C:
-			// Trigger an activity check if the state is connected.  If the state is not connected then there is already
-			// a backoff retry mechanism in place to retry establishing connection.
-			c.stateLock.RLock()
-			grpcMonitorCheckRunningLock.RLock()
-			runCheck := (c.state == stateConnected) && !grpcMonitorCheckRunning
-			grpcMonitorCheckRunningLock.RUnlock()
-			c.stateLock.RUnlock()
-			if runCheck {
-				go func() {
-					grpcMonitorCheckRunningLock.Lock()
-					if grpcMonitorCheckRunning {
-						grpcMonitorCheckRunningLock.Unlock()
-						logger.Debugw(ctx, "connection-check-already-in-progress", log.Fields{"api-endpoint": c.serverEndPoint})
-						return
-					}
-					grpcMonitorCheckRunning = true
-					grpcMonitorCheckRunningLock.Unlock()
-
-					logger.Debugw(ctx, "connection-check-start", log.Fields{"api-endpoint": c.serverEndPoint})
-					subCtx, cancel := context.WithTimeout(ctx, c.backoffMaxInterval)
-					defer cancel()
-					subCtx = WithGrpcMonitorContext(subCtx, "grpc-monitor")
-					c.connectionLock.RLock()
-					defer c.connectionLock.RUnlock()
-					if c.connection != nil {
-						response := handler(subCtx, c.connection, &common.Connection{Endpoint: c.clientEndpoint, KeepAliveInterval: int64(c.monitorInterval)})
-						logger.Debugw(ctx, "connection-check-response", log.Fields{"api-endpoint": c.serverEndPoint, "up": response != nil})
-					}
-					grpcMonitorCheckRunningLock.Lock()
-					grpcMonitorCheckRunning = false
-					grpcMonitorCheckRunningLock.Unlock()
-				}()
-			}
+		// Wait to send the next keep alive
+		keepAliveTimer := time.NewTimer(time.Duration(myInfo.KeepAliveInterval))
+		select {
+		case <-ctx.Done():
+			logger.Warnw(ctx, "context-done", log.Fields{"remote": c.serverEndPoint})
+			break loop
+		case <-stream.Context().Done():
+			logger.Debugw(ctx, "stream-context-done", log.Fields{"remote": c.serverEndPoint, "stream-info": stream.Context()})
+			break loop
+		case <-keepAliveTimer.C:
+			continue
 		}
 	}
-	logger.Infow(ctx, "activity-monitor-stopping", log.Fields{"endpoint": c.serverEndPoint})
 }
 
 // Start kicks off the adapter agent by trying to connect to the adapter
@@ -340,8 +379,8 @@ func (c *Client) Start(ctx context.Context, handler SetAndTestServiceHandler) {
 		p.RegisterService(ctx, c.serverEndPoint)
 	}
 
-	// Enable activity check
-	go c.monitorActivity(ctx, handler)
+	var monitorConnectionCtx context.Context
+	var monitorConnectionDone func()
 
 	initialConnection := true
 	c.events <- eventConnecting
@@ -404,6 +443,8 @@ loop:
 				logger.Debugw(ctx, "endpoint-connected", log.Fields{"endpoint": c.serverEndPoint, "curr-state": c.state})
 				if c.state != stateConnected {
 					c.state = stateConnected
+					monitorConnectionCtx, monitorConnectionDone = context.WithCancel(context.Background())
+					go c.monitorConnection(monitorConnectionCtx)
 					if initialConnection {
 						logger.Debugw(ctx, "initial-endpoint-connection", log.Fields{"endpoint": c.serverEndPoint})
 						initialConnection = false
@@ -425,19 +466,28 @@ loop:
 					p.UpdateStatus(ctx, c.serverEndPoint, probe.ServiceStatusNotReady)
 				}
 				c.stateLock.RLock()
-				logger.Debugw(ctx, "endpoint-disconnected", log.Fields{"endpoint": c.serverEndPoint, "curr-state": c.state})
+				logger.Debugw(ctx, "endpoint-disconnected", log.Fields{"endpoint": c.serverEndPoint, "curr-state": c.state, "connectiondDone": monitorConnectionDone})
 				c.stateLock.RUnlock()
+
+				// Stop the streaming connection
+				if monitorConnectionDone != nil {
+					monitorConnectionDone()
+					monitorConnectionDone = nil
+				}
 
 				// Try to connect again
 				c.events <- eventConnecting
 
 			case eventStopped:
-				logger.Debugw(ctx, "endPoint-stopped", log.Fields{"adapter": c.serverEndPoint})
-				go func() {
-					if err := c.closeConnection(ctx, p); err != nil {
-						logger.Errorw(ctx, "endpoint-closing-connection-failed", log.Fields{"endpoint": c.serverEndPoint, "error": err})
-					}
-				}()
+				logger.Debugw(ctx, "endpoint-stopped", log.Fields{"adapter": c.serverEndPoint})
+
+				if monitorConnectionDone != nil {
+					monitorConnectionDone()
+					monitorConnectionDone = nil
+				}
+				if err := c.closeConnection(ctx, p); err != nil {
+					logger.Errorw(ctx, "endpoint-closing-connection-failed", log.Fields{"endpoint": c.serverEndPoint, "error": err})
+				}
 				break loop
 			case eventError:
 				logger.Errorw(ctx, "endpoint-error-event", log.Fields{"endpoint": c.serverEndPoint})
@@ -446,7 +496,14 @@ loop:
 			}
 		}
 	}
-	logger.Infow(ctx, "endpoint-stopped", log.Fields{"endpoint": c.serverEndPoint})
+
+	// Stop the streaming connection
+	if monitorConnectionDone != nil {
+		logger.Debugw(ctx, "closing the connection monitoring", log.Fields{"endpoint": c.serverEndPoint})
+		monitorConnectionDone()
+	}
+
+	logger.Infow(ctx, "client-stopped", log.Fields{"endpoint": c.serverEndPoint})
 }
 
 func (c *Client) connectToEndpoint(ctx context.Context, handler SetAndTestServiceHandler, p *probe.Probe) error {
@@ -476,8 +533,6 @@ func (c *Client) connectToEndpoint(ctx context.Context, handler SetAndTestServic
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
 			grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(log.ActiveTracerProxy{})),
 		)),
-		grpc.WithUnaryInterceptor(c.clientInterceptor),
-		// Set keealive parameter - use default grpc values
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:                c.monitorInterval,
 			Timeout:             c.backoffMaxInterval,
@@ -498,13 +553,12 @@ func (c *Client) connectToEndpoint(ctx context.Context, handler SetAndTestServic
 			logger.Infow(ctx, "connected-to-endpoint", log.Fields{"endpoint": c.serverEndPoint})
 			c.events <- eventConnected
 			return nil
+		} else {
+			logger.Warnw(ctx, "getting-service-from-conn-failed", log.Fields{"endpoint": c.serverEndPoint})
 		}
+	} else {
+		logger.Warnw(ctx, "no-connection-to-endpoint", log.Fields{"endpoint": c.serverEndPoint, "error": err})
 	}
-	logger.Warnw(ctx, "Failed to connect to endpoint",
-		log.Fields{
-			"endpoint": c.serverEndPoint,
-			"error":    err,
-		})
 
 	if p != nil {
 		p.UpdateStatus(ctx, c.serverEndPoint, probe.ServiceStatusFailed)
@@ -516,12 +570,14 @@ func (c *Client) closeConnection(ctx context.Context, p *probe.Probe) error {
 	if p != nil {
 		p.UpdateStatus(ctx, c.serverEndPoint, probe.ServiceStatusStopped)
 	}
+	logger.Infow(ctx, "client-closing-connection", log.Fields{"endpoint": c.serverEndPoint})
 
 	c.connectionLock.Lock()
 	defer c.connectionLock.Unlock()
 
 	if c.connection != nil {
 		err := c.connection.Close()
+		c.service = nil
 		c.connection = nil
 		return err
 	}
@@ -537,7 +593,7 @@ func (c *Client) Stop(ctx context.Context) {
 		c.events <- eventStopped
 		close(c.events)
 	}
-	logger.Infow(ctx, "client-stopped", log.Fields{"endpoint": c.serverEndPoint})
+	logger.Infow(ctx, "client-stop-request-event-sent", log.Fields{"endpoint": c.serverEndPoint})
 }
 
 // SetService is used for testing only
@@ -548,5 +604,7 @@ func (c *Client) SetService(srv interface{}) {
 }
 
 func (c *Client) SubscribeForLiveness(callback func(timestamp time.Time)) {
+	c.livenessLock.Lock()
+	defer c.livenessLock.Unlock()
 	c.livenessCallback = callback
 }

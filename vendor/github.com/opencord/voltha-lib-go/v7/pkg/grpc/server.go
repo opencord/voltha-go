@@ -167,6 +167,7 @@ Stop servicing GRPC requests
 func (s *GrpcServer) Stop() {
 	if s.gs != nil {
 		s.gs.Stop()
+		// s.gs.GracefulStop()
 	}
 }
 
