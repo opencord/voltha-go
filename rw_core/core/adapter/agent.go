@@ -25,8 +25,6 @@ import (
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/adapter_service"
-	"github.com/opencord/voltha-protos/v5/go/common"
-	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
 )
@@ -43,13 +41,11 @@ type agent struct {
 	coreEndpoint       string
 }
 
-func setAndTestAdapterServiceHandler(ctx context.Context, conn *grpc.ClientConn, clientConn *common.Connection) interface{} {
-	svc := adapter_service.NewAdapterServiceClient(conn)
-	if h, err := svc.GetHealthStatus(ctx, clientConn); err != nil || h.State != health.HealthStatus_HEALTHY {
-		logger.Debugw(ctx, "remote-connection-not-ready", log.Fields{"error": err, "health": h, "requester": clientConn, "target": conn.Target()})
+func getAdapterServiceClientHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
+	if conn == nil {
 		return nil
 	}
-	return svc
+	return adapter_service.NewAdapterServiceClient(conn)
 }
 
 func newAdapterAgent(coreEndpoint string, adapter *voltha.Adapter, onAdapterRestart vgrpc.RestartedHandler, liveProbeInterval time.Duration) *agent {
@@ -68,6 +64,7 @@ func (aa *agent) start(ctx context.Context) error {
 	if aa.vClient, err = vgrpc.NewClient(
 		aa.coreEndpoint,
 		aa.adapterAPIEndPoint,
+		"adapter_service.AdapterService",
 		aa.onAdapterRestart); err != nil {
 		return err
 	}
@@ -75,12 +72,13 @@ func (aa *agent) start(ctx context.Context) error {
 	// Add a liveness communication update
 	aa.vClient.SubscribeForLiveness(aa.updateCommunicationTime)
 
-	go aa.vClient.Start(ctx, setAndTestAdapterServiceHandler)
+	go aa.vClient.Start(ctx, getAdapterServiceClientHandler)
 	return nil
 }
 
 func (aa *agent) stop(ctx context.Context) {
 	// Close the client
+	logger.Infow(ctx, "stopping-adapter-agent", log.Fields{"adapter": aa.adapter})
 	if aa.vClient != nil {
 		aa.vClient.Stop(ctx)
 	}

@@ -21,13 +21,16 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/extension"
+	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/phayes/freeport"
 
 	"github.com/gogo/protobuf/proto"
@@ -87,12 +90,13 @@ func (onuA *ONUAdapter) start(ctx context.Context) {
 
 	// Establish grpc connection to Core
 	if onuA.coreClient, err = vgrpc.NewClient(
-		"onu-endpoint",
+		"mock-onu-endpoint",
 		onuA.coreEnpoint,
+		"core_service.CoreService",
 		onuA.onuRestarted); err != nil {
 		logger.Fatal(ctx, "grpc-client-not-created")
 	}
-	go onuA.coreClient.Start(probeCtx, setAndTestCoreServiceHandler)
+	go onuA.coreClient.Start(probeCtx, setCoreServiceHandler)
 
 	logger.Debugw(ctx, "ONUAdapter-started", log.Fields{"grpc-address": onuA.serviceEndpoint})
 }
@@ -296,4 +300,41 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 
 func (onuA *ONUAdapter) StartOmciTest(ctx context.Context, _ *ca.OMCITest) (*omci.TestResponse, error) { // nolint
 	return &omci.TestResponse{Result: omci.TestResponse_SUCCESS}, nil
+}
+
+func (onuA *ONUAdapter) GetHealthStatus(stream adapter_service.AdapterService_GetHealthStatusServer) error {
+	ctx := context.Background()
+	logger.Debugw(ctx, "receive-stream-connection", log.Fields{"stream": stream})
+
+	if stream == nil {
+		return fmt.Errorf("conn-is-nil %v", stream)
+	}
+	initialRequestTime := time.Now()
+	var remoteClient *common.Connection
+	var tempClient *common.Connection
+	var err error
+loop:
+	for {
+		tempClient, err = stream.Recv()
+		if err != nil {
+			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+		err = stream.Send(&health.HealthStatus{State: health.HealthStatus_HEALTHY})
+		if err != nil {
+			logger.Warnw(ctx, "sending-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+		remoteClient = tempClient
+		logger.Debugw(ctx, "received-keep-alive", log.Fields{"remote-client": remoteClient})
+
+		select {
+		case <-stream.Context().Done():
+			logger.Infow(ctx, "stream-keep-alive-context-done", log.Fields{"remote-client": remoteClient, "error": stream.Context().Err()})
+			break loop
+		default:
+		}
+	}
+	logger.Errorw(ctx, "connection-down", log.Fields{"remote-client": remoteClient, "error": err, "initial-conn-time": initialRequestTime})
+	return err
 }

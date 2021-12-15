@@ -22,11 +22,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/extension"
+	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/phayes/freeport"
 
@@ -92,13 +95,14 @@ func (oltA *OLTAdapter) start(ctx context.Context) {
 
 	// Establish grpc connection to Core
 	if oltA.coreClient, err = vgrpc.NewClient(
-		"olt-endpoint",
+		"mock-olt-endpoint",
 		oltA.coreEnpoint,
+		"core_service.CoreService",
 		oltA.oltRestarted); err != nil {
 		logger.Fatal(ctx, "grpc-client-not-created")
 	}
 
-	go oltA.coreClient.Start(probeCtx, setAndTestCoreServiceHandler)
+	go oltA.coreClient.Start(probeCtx, setCoreServiceHandler)
 
 	logger.Debugw(ctx, "OLTAdapter-started", log.Fields{"grpc-address": oltA.serviceEndpoint})
 
@@ -430,4 +434,41 @@ func (oltA *OLTAdapter) SetDeviceActive(deviceID string) {
 		return
 	}
 
+}
+
+func (oltA *OLTAdapter) GetHealthStatus(stream adapter_service.AdapterService_GetHealthStatusServer) error {
+	ctx := context.Background()
+	logger.Debugw(ctx, "receive-stream-connection", log.Fields{"stream": stream})
+
+	if stream == nil {
+		return fmt.Errorf("conn-is-nil %v", stream)
+	}
+	initialRequestTime := time.Now()
+	var remoteClient *common.Connection
+	var tempClient *common.Connection
+	var err error
+loop:
+	for {
+		tempClient, err = stream.Recv()
+		if err != nil {
+			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+		err = stream.Send(&health.HealthStatus{State: health.HealthStatus_HEALTHY})
+		if err != nil {
+			logger.Warnw(ctx, "sending-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			break loop
+		}
+		remoteClient = tempClient
+		logger.Debugw(ctx, "received-keep-alive", log.Fields{"remote-client": remoteClient})
+
+		select {
+		case <-stream.Context().Done():
+			logger.Infow(ctx, "stream-keep-alive-context-done", log.Fields{"remote-client": remoteClient, "error": stream.Context().Err()})
+			break loop
+		default:
+		}
+	}
+	logger.Errorw(ctx, "connection-down", log.Fields{"remote-client": remoteClient, "error": err, "initial-conn-time": initialRequestTime})
+	return err
 }

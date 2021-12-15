@@ -1378,6 +1378,12 @@ func (dr *DeviceRules) FilterRules(deviceIds map[string]string) *DeviceRules {
 	return filteredDR
 }
 
+func (dr *DeviceRules) RemoveRule(deviceId string) {
+	dr.rulesLock.RLock()
+	defer dr.rulesLock.RUnlock()
+	delete(dr.Rules, deviceId)
+}
+
 func (dr *DeviceRules) AddFlow(deviceId string, flow *ofp.OfpFlowStats) {
 	dr.rulesLock.Lock()
 	defer dr.rulesLock.Unlock()
