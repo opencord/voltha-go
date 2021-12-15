@@ -98,9 +98,18 @@ func (aMgr *Manager) Stop(ctx context.Context) {
 	//	Stop all adapters
 	aMgr.lockAdapterAgentsMap.RLock()
 	defer aMgr.lockAdapterAgentsMap.RUnlock()
+	var wg sync.WaitGroup
 	for _, adapterAgent := range aMgr.adapterAgents {
-		adapterAgent.stop(ctx)
+		// Run the agent stop in its own go routine to notify to the
+		// adapters that the Core is no longer a client
+		wg.Add(1)
+		go func(agt *agent) {
+			agt.stop(ctx)
+			wg.Done()
+		}(adapterAgent)
 	}
+	// Wait for all tests to complete
+	wg.Wait()
 }
 
 func (aMgr *Manager) GetAdapterEndpoint(ctx context.Context, deviceID string, deviceType string) (string, error) {

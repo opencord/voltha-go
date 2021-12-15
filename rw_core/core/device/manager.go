@@ -58,6 +58,7 @@ type Manager struct {
 	devicesLoadingLock      sync.RWMutex
 	deviceLoadingInProgress map[string][]chan int
 	config                  *config.RWCoreFlags
+	doneCh                  chan struct{}
 }
 
 //NewManagers creates the Manager and the Logical Manager.
@@ -74,6 +75,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, cf *config.RWC
 		Agent:                   event.NewAgent(eventProxy, coreInstanceID, cf.VolthaStackID),
 		deviceLoadingInProgress: make(map[string][]chan int),
 		config:                  cf,
+		doneCh:                  make(chan struct{}),
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
@@ -126,6 +128,12 @@ func (dMgr *Manager) Start(ctx context.Context, serviceName string) error {
 	logger.Info(ctx, "device-manager-started")
 
 	return nil
+}
+
+func (dMgr *Manager) Stop(ctx context.Context, serviceName string) {
+	logger.Info(ctx, "stopping-device-manager")
+	close(dMgr.doneCh)
+	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusStopped)
 }
 
 func (dMgr *Manager) addDeviceAgentToMap(agent *Agent) {

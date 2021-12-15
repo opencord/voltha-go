@@ -129,6 +129,7 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
+github.com/golang/protobuf/ptypes/struct
 github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
 # github.com/golang/snappy v0.0.3
@@ -194,6 +195,15 @@ github.com/jcmturner/gokrb5/v8/types
 # github.com/jcmturner/rpc/v2 v2.0.3
 github.com/jcmturner/rpc/v2/mstypes
 github.com/jcmturner/rpc/v2/ndr
+# github.com/jhump/protoreflect v1.10.2
+github.com/jhump/protoreflect/codec
+github.com/jhump/protoreflect/desc
+github.com/jhump/protoreflect/desc/internal
+github.com/jhump/protoreflect/dynamic
+github.com/jhump/protoreflect/dynamic/grpcdynamic
+github.com/jhump/protoreflect/grpcreflect
+github.com/jhump/protoreflect/internal
+github.com/jhump/protoreflect/internal/codec
 # github.com/jonboulle/clockwork v0.2.2
 github.com/jonboulle/clockwork
 # github.com/json-iterator/go v1.1.11
@@ -211,7 +221,7 @@ github.com/matttproud/golang_protobuf_extensions/pbutil
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
-# github.com/opencord/voltha-lib-go/v7 v7.1.3
+# github.com/opencord/voltha-lib-go/v7 v7.1.5 => ../voltha-lib-go
 ## explicit
 github.com/opencord/voltha-lib-go/v7/pkg/adapters/common
 github.com/opencord/voltha-lib-go/v7/pkg/config
@@ -227,7 +237,7 @@ github.com/opencord/voltha-lib-go/v7/pkg/mocks/etcd
 github.com/opencord/voltha-lib-go/v7/pkg/mocks/kafka
 github.com/opencord/voltha-lib-go/v7/pkg/probe
 github.com/opencord/voltha-lib-go/v7/pkg/version
-# github.com/opencord/voltha-protos/v5 v5.1.2
+# github.com/opencord/voltha-protos/v5 v5.2.2 => ../voltha-protos
 ## explicit
 github.com/opencord/voltha-protos/v5/go/adapter_service
 github.com/opencord/voltha-protos/v5/go/common
@@ -350,12 +360,12 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 golang.org/x/time/rate
-# google.golang.org/genproto v0.0.0-20211207154714-918901c715cf
+# google.golang.org/genproto v0.0.0-20220208230804-65c12eb4c068
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/protobuf/field_mask
-# google.golang.org/grpc v1.42.0 => google.golang.org/grpc v1.25.1
+# google.golang.org/grpc v1.44.0 => google.golang.org/grpc v1.25.1
 ## explicit
 google.golang.org/grpc
 google.golang.org/grpc/backoff
@@ -432,6 +442,7 @@ google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/fieldmaskpb
+google.golang.org/protobuf/types/known/structpb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
 # gopkg.in/yaml.v2 v2.4.0
@@ -440,5 +451,7 @@ gopkg.in/yaml.v2
 gopkg.in/yaml.v3
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
+# github.com/opencord/voltha-lib-go/v7 => ../voltha-lib-go
+# github.com/opencord/voltha-protos/v5 => ../voltha-protos
 # go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 # google.golang.org/grpc => google.golang.org/grpc v1.25.1
