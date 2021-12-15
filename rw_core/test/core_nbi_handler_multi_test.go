@@ -263,7 +263,7 @@ func (nb *NBTest) stopAll(ctx context.Context) {
 		}
 	}
 	if nb.core != nil {
-		nb.core.Stop()
+		nb.core.Stop(ctx)
 	}
 }
 
