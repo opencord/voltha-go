@@ -17,12 +17,15 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 )
@@ -133,4 +136,31 @@ func (handler *MockCoreServiceHandler) UpdateImageDownload(context.Context, *vol
 
 func (handler *MockCoreServiceHandler) GetHealthStatus(ctx context.Context, conn *common.Connection) (*health.HealthStatus, error) {
 	return &health.HealthStatus{State: health.HealthStatus_HEALTHY}, nil
+}
+
+func (handler *MockCoreServiceHandler) KeepAlive(conn core_service.CoreService_KeepAliveServer) error {
+	logger.Debugw(context.Background(), "keep-alive-connection", log.Fields{"remote": conn})
+	if conn == nil {
+		return fmt.Errorf("conn-is-nil %v", conn)
+	}
+	var err error
+	ctx := context.Background()
+loop:
+	for {
+		select {
+		case <-conn.Context().Done():
+			logger.Infow(ctx, "stream-keep-alive-context-done", log.Fields{"conn": conn, "error": conn.Context().Err()})
+			break loop
+		default:
+		}
+
+		remote, err := conn.Recv()
+		if err != nil {
+			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote": remote, "error": err})
+			break loop
+		}
+		logger.Warnw(ctx, "received-keep-alive", log.Fields{"remote": remote})
+	}
+	logger.Errorw(context.Background(), "connection-down", log.Fields{"remote": conn, "error": err})
+	return err
 }

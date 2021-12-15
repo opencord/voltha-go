@@ -21,10 +21,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/extension"
@@ -87,8 +89,9 @@ func (onuA *ONUAdapter) start(ctx context.Context) {
 
 	// Establish grpc connection to Core
 	if onuA.coreClient, err = vgrpc.NewClient(
-		"onu-endpoint",
+		"mock-onu-endpoint",
 		onuA.coreEnpoint,
+		"CoreService",
 		onuA.onuRestarted); err != nil {
 		logger.Fatal(ctx, "grpc-client-not-created")
 	}
@@ -296,4 +299,33 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 
 func (onuA *ONUAdapter) StartOmciTest(ctx context.Context, _ *ca.OMCITest) (*omci.TestResponse, error) { // nolint
 	return &omci.TestResponse{Result: omci.TestResponse_SUCCESS}, nil
+}
+
+func (onuA *ONUAdapter) KeepAlive(remote adapter_service.AdapterService_KeepAliveServer) error {
+	ctx := context.Background()
+	logger.Debugw(ctx, "receive-stream-connection", log.Fields{"connection": remote})
+
+	if remote == nil {
+		return fmt.Errorf("conn-is-nil %v", remote)
+	}
+	initialRequestTime := time.Now()
+	var err error
+loop:
+	for {
+		select {
+		case <-remote.Context().Done():
+			logger.Infow(ctx, "stream-keep-alive-context-done", log.Fields{"remote": remote, "error": remote.Context().Err()})
+			break loop
+		default:
+		}
+
+		remote, err := remote.Recv()
+		if err != nil {
+			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote": remote, "error": err})
+			break loop
+		}
+		logger.Warnw(ctx, "received-keep-alive", log.Fields{"remote": remote})
+	}
+	logger.Errorw(ctx, "connection-down", log.Fields{"remote": remote, "error": err, "initial-conn-time": initialRequestTime})
+	return err
 }

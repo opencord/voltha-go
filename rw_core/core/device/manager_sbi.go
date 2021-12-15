@@ -17,12 +17,15 @@ package device
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
@@ -532,4 +535,36 @@ func (dMgr *Manager) UpdateImageDownload(ctx context.Context, img *voltha.ImageD
 		return nil, status.Errorf(codes.NotFound, "%s", img.Id)
 	}
 	return &empty.Empty{}, nil
+}
+
+func (dMgr *Manager) KeepAlive(remote core_service.CoreService_KeepAliveServer) error {
+	ctx := utils.WithRPCMetadataContext(context.Background(), "keep-alive-connection")
+	logger.Debugw(ctx, "receive-stream-connection", log.Fields{"remote": remote})
+
+	if remote == nil {
+		return fmt.Errorf("conn-is-nil %v", remote)
+	}
+	initialRequestTime := time.Now()
+	var err error
+loop:
+	for {
+		select {
+		case <-remote.Context().Done():
+			logger.Infow(ctx, "stream-keep-alive-context-done", log.Fields{"remote": remote, "error": remote.Context().Err()})
+			break loop
+		case <-dMgr.doneCtx.Done():
+			logger.Warnw(ctx, "context-done", log.Fields{"remote": remote, "initial-conn-time": initialRequestTime})
+			break loop
+		default:
+		}
+
+		remote, err := remote.Recv()
+		if err != nil {
+			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote": remote, "error": err})
+			break loop
+		}
+		logger.Debugw(ctx, "received-keep-alive", log.Fields{"remote": remote})
+	}
+	logger.Errorw(ctx, "connection-down", log.Fields{"remote": remote, "error": err, "initial-conn-time": initialRequestTime})
+	return err
 }

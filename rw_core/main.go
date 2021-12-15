@@ -137,7 +137,7 @@ func main() {
 	logger.Infow(ctx, "received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
-	core.Stop()
+	core.Stop(shutdownCtx)
 
 	elapsed := time.Since(start)
 	logger.Infow(ctx, "rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})
