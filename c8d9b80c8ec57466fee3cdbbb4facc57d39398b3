@@ -67,6 +67,24 @@
       "message": "nit:  We should have had two separate APIs, one using the logicaldeviceId and one using the deviceID (or always use logicaldeviceID and the calling function does the deviceid to logicaldeviceID).  One of the two functions (if we chose that approach) would just do a conversion and invoke the other function.",
       "revId": "c8d9b80c8ec57466fee3cdbbb4facc57d39398b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "80274a51_928aa503",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-12-15T05:55:28Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1aa3035a_7ecf01fc",
+      "revId": "c8d9b80c8ec57466fee3cdbbb4facc57d39398b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
