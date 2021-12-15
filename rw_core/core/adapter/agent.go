@@ -68,6 +68,7 @@ func (aa *agent) start(ctx context.Context) error {
 	if aa.vClient, err = vgrpc.NewClient(
 		aa.coreEndpoint,
 		aa.adapterAPIEndPoint,
+		"adapter_service.AdapterService",
 		aa.onAdapterRestart); err != nil {
 		return err
 	}
@@ -81,6 +82,7 @@ func (aa *agent) start(ctx context.Context) error {
 
 func (aa *agent) stop(ctx context.Context) {
 	// Close the client
+	logger.Infow(ctx, "stopping-adapter-agent", log.Fields{"adapter": aa.adapter})
 	if aa.vClient != nil {
 		aa.vClient.Stop(ctx)
 	}
