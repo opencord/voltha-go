@@ -17,7 +17,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
-	github.com/opencord/voltha-lib-go/v7 v7.1.3
+	github.com/opencord/voltha-lib-go/v7 v7.1.4
 	github.com/opencord/voltha-protos/v5 v5.1.2
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
