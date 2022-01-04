@@ -465,37 +465,44 @@ func (dMgr *Manager) AddPort(ctx context.Context, deviceID string, port *voltha.
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, deviceIDs []string) error {
-	ready := len(deviceIDs) > 0
-	for _, deviceID := range deviceIDs {
-		agent := dMgr.getDeviceAgent(ctx, deviceID)
-		if agent == nil {
-			logger.Errorw(ctx, "adapter-nil", log.Fields{"device-id": deviceID})
-			return status.Errorf(codes.Unavailable, "adapter-nil-for-%s", deviceID)
+func (dMgr *Manager) canAdapterRequestProceed(ctx context.Context, deviceID string) error {
+	agent := dMgr.getDeviceAgent(ctx, deviceID)
+	if agent == nil {
+		logger.Errorw(ctx, "device-nil", log.Fields{"device-id": deviceID})
+		return status.Errorf(codes.NotFound, "device-nil-for-%s", deviceID)
+	}
+	if !agent.isAdapterConnectionUp(ctx) {
+		return status.Errorf(codes.Unavailable, "adapter-connection-down-for-%s", deviceID)
+	}
+	if err := agent.canDeviceRequestProceed(ctx); err != nil {
+		return err
+	}
+	// Perform the same checks for parent device
+	if !agent.isRootDevice {
+		parentDeviceAgent := dMgr.getDeviceAgent(ctx, agent.parentID)
+		if parentDeviceAgent == nil {
+			logger.Errorw(ctx, "parent-device-adapter-nil", log.Fields{"parent-id": agent.parentID})
+			return status.Errorf(codes.NotFound, "parent-device-adapter-nil-for-%s", deviceID)
 		}
-		ready = ready && agent.isAdapterConnectionUp(ctx)
-		if !ready {
-			return status.Errorf(codes.Unavailable, "adapter-connection-down-for-%s", deviceID)
-		}
-		if err := agent.canDeviceRequestProceed(ctx); err != nil {
+		if err := parentDeviceAgent.canDeviceRequestProceed(ctx); err != nil {
 			return err
 		}
-		// Perform the same checks for parent device
-		if !agent.isRootDevice {
-			parentDeviceAgent := dMgr.getDeviceAgent(ctx, agent.parentID)
-			if parentDeviceAgent == nil {
-				logger.Errorw(ctx, "parent-device-adapter-nil", log.Fields{"parent-id": agent.parentID})
-				return status.Errorf(codes.Unavailable, "parent-device-adapter-nil-for-%s", deviceID)
-			}
-			if err := parentDeviceAgent.canDeviceRequestProceed(ctx); err != nil {
-				return err
-			}
-		}
-
 	}
-	if !ready {
+
+	return nil
+}
+
+func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, deviceIDs []string) error {
+	if len(deviceIDs) == 0 {
 		return status.Error(codes.Unavailable, "adapter(s)-not-ready")
 	}
+
+	for _, deviceID := range deviceIDs {
+		if err := dMgr.canAdapterRequestProceed(ctx, deviceID); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
