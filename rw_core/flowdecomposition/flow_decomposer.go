@@ -70,7 +70,7 @@ func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent LogicalDevic
 }
 
 // Handles special case of any controller-bound flow for a parent device
-func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevide(ctx context.Context, dr *fu.DeviceRules) (*fu.DeviceRules, error) {
+func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevice(ctx context.Context, dr *fu.DeviceRules) (*fu.DeviceRules, error) {
 	EAPOL := fu.EthType(0x888e)
 	PPPoED := fu.EthType(0x8863)
 	IGMP := fu.IpProto(2)
@@ -542,6 +542,6 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 			return deviceRules, status.Errorf(codes.Aborted, "unknown downstream flow %v", *flow)
 		}
 	}
-	deviceRules, err = fd.updateOutputPortForControllerBoundFlowForParentDevide(ctx, deviceRules)
+	deviceRules, err = fd.updateOutputPortForControllerBoundFlowForParentDevice(ctx, deviceRules)
 	return deviceRules, err
 }
