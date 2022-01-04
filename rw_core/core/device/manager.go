@@ -462,8 +462,8 @@ func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, devic
 	for _, deviceID := range deviceIDs {
 		agent := dMgr.getDeviceAgent(ctx, deviceID)
 		if agent == nil {
-			logger.Errorw(ctx, "adapter-nil", log.Fields{"device-id": deviceID})
-			return status.Errorf(codes.Unavailable, "adapter-nil-for-%s", deviceID)
+			logger.Errorw(ctx, "device-nil", log.Fields{"device-id": deviceID})
+			return status.Errorf(codes.NotFound, "device-nil-for-%s", deviceID)
 		}
 		ready = ready && agent.isAdapterConnectionUp(ctx)
 		if !ready {

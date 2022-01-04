@@ -455,7 +455,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	} else {
 		devicesInFlows = []string{agent.rootDeviceID}
 	}
-
+	//TODO this should proceed only with the existing devices.
 	if err := agent.deviceMgr.canMultipleAdapterRequestProceed(ctx, devicesInFlows); err != nil {
 		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow": flowsToDelete, "error": err})
 		return err
