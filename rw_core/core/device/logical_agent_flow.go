@@ -356,9 +356,20 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 			devicesInFlows = []string{agent.rootDeviceID}
 		}
 
-		if err := agent.deviceMgr.canMultipleAdapterRequestProceed(ctx, devicesInFlows); err != nil {
-			logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow": toDelete, "error": err})
-			return err
+		for _, deviceID := range devicesInFlows {
+			if err := agent.deviceMgr.canAdapterRequestProceed(ctx, deviceID); err != nil {
+				//If the error has code.NotFound the device is not there anymore, there is no need to delete flows, just ignore it
+				if status.Code(err) != codes.NotFound {
+					logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow": toDelete, "error": err})
+					return err
+				} else {
+					logger.Debugw(ctx, "flow-delete-for-nil-device-proceeding-deletion", log.Fields{"deviceID": deviceID})
+					if deviceRules != nil {
+						deviceRules.RemoveRule(deviceID)
+						partialRoute = true
+					}
+				}
+			}
 		}
 
 		// Update the devices
@@ -456,9 +467,20 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 		devicesInFlows = []string{agent.rootDeviceID}
 	}
 
-	if err := agent.deviceMgr.canMultipleAdapterRequestProceed(ctx, devicesInFlows); err != nil {
-		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow": flowsToDelete, "error": err})
-		return err
+	for _, deviceID := range devicesInFlows {
+		if err := agent.deviceMgr.canAdapterRequestProceed(ctx, deviceID); err != nil {
+			//If the error has code.NotFound the device is not there anymore, there is no need to delete flows, just ignore it
+			if status.Code(err) != codes.NotFound {
+				logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow": flowsToDelete, "error": err})
+				return err
+			} else {
+				logger.Debugw(ctx, "flow-delete-strict-for-nil-device-proceeding-deletion", log.Fields{"deviceID": deviceID})
+				if deviceRules != nil {
+					deviceRules.RemoveRule(deviceID)
+					partialRoute = true
+				}
+			}
+		}
 	}
 
 	// Update the devices
