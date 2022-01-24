@@ -62,9 +62,7 @@ func (agent *Agent) isDeletionInProgress() bool {
 }
 
 func (agent *Agent) isForceDeletingAllowed(deviceTransientState core.DeviceTransientState_Types, device *voltha.Device) bool {
-	return deviceTransientState != core.DeviceTransientState_FORCE_DELETING &&
-		(device.OperStatus != common.OperStatus_RECONCILING ||
-			!agent.matchTransientState(core.DeviceTransientState_RECONCILE_IN_PROGRESS))
+	return deviceTransientState != core.DeviceTransientState_FORCE_DELETING
 }
 
 func (agent *Agent) deleteTransientState(ctx context.Context) error {
