@@ -16,6 +16,24 @@
       "message": "would be removing the RECONCILING and RECONCILE IN PROGRESS be enough here ? so we are not re-issuing an already sent call",
       "revId": "24ba08010800ed35c066ed46d09a0d8c223db562",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "af34fb76_d1ecfcf9",
+        "filename": "rw_core/core/device/agent_transient_state.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2022-01-24T09:51:35Z",
+      "side": 0,
+      "message": "Ack",
+      "parentUuid": "9fa77d78_ffd4e97f",
+      "revId": "24ba08010800ed35c066ed46d09a0d8c223db562",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
