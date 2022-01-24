@@ -61,12 +61,6 @@ func (agent *Agent) isDeletionInProgress() bool {
 		deviceTransientState == core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
 }
 
-func (agent *Agent) isForceDeletingAllowed(deviceTransientState core.DeviceTransientState_Types, device *voltha.Device) bool {
-	return deviceTransientState != core.DeviceTransientState_FORCE_DELETING &&
-		(device.OperStatus != common.OperStatus_RECONCILING ||
-			!agent.matchTransientState(core.DeviceTransientState_RECONCILE_IN_PROGRESS))
-}
-
 func (agent *Agent) deleteTransientState(ctx context.Context) error {
 	transientStateHandle := agent.transientStateLoader.Lock()
 	if err := transientStateHandle.Delete(ctx); err != nil {

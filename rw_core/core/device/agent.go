@@ -21,21 +21,19 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"reflect"
-	"sync"
-	"time"
-
-	"github.com/opencord/voltha-protos/v5/go/adapter_service"
-	"github.com/opencord/voltha-protos/v5/go/core"
-	"github.com/opencord/voltha-protos/v5/go/omci"
-
 	"github.com/cenkalti/backoff/v3"
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
+	"github.com/opencord/voltha-protos/v5/go/core"
+	"github.com/opencord/voltha-protos/v5/go/omci"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"reflect"
+	"sync"
+	"time"
 
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -668,12 +666,6 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 	// Get the device Transient state, return err if it is DELETING
 	previousDeviceTransientState := agent.getTransientState()
 	device := agent.cloneDeviceWithoutLock()
-	if !agent.isForceDeletingAllowed(previousDeviceTransientState, device) {
-		agent.requestQueue.RequestComplete()
-		err = status.Error(codes.FailedPrecondition, fmt.Sprintf("deviceId:%s, force deletion is in progress", agent.deviceID))
-		return err
-	}
-
 	previousAdminState := device.AdminState
 	if previousAdminState != common.AdminState_PREPROVISIONED {
 		var client adapter_service.AdapterServiceClient
