@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "250b42c5_f7a1d1c3",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2022-01-26T16:46:13Z",
+      "side": 1,
+      "message": "This seems risky to me because the caller of Start (a public function) doesn\u0027t necessarily understand how the ctx is going to be used by the dMgr, so copying the parameter to a private variable seems risky.\n\nWhat is doneCtx for? just passing around context that are not used in a run to completion manner may not be the right thing.\n\nThe context passed in may not even be set up with a cancel or deadline and as such Done() will be nil.",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 19
+      },
+      "revId": "4fb49aaf1b6a23e80838debc6639380fdbe0810f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4bc91fe1_cf9b6e75",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2022-01-26T16:46:13Z",
+      "side": 1,
+      "message": "this may never fire if Start is called with a context that can\u0027t be canceled",
+      "range": {
+        "startLine": 555,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 29
+      },
+      "revId": "4fb49aaf1b6a23e80838debc6639380fdbe0810f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
