@@ -26,6 +26,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "7360620f_47cdce0c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-01-28T20:38:51Z",
+      "side": 1,
+      "message": "Good point ... let me see why i used this doneCtx instead of using the Stop().",
+      "parentUuid": "250b42c5_f7a1d1c3",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 19
+      },
+      "revId": "4fb49aaf1b6a23e80838debc6639380fdbe0810f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "4bc91fe1_cf9b6e75",
         "filename": "rw_core/core/device/manager_sbi.go",
         "patchSetId": 2
@@ -37,6 +61,30 @@
       "writtenOn": "2022-01-26T16:46:13Z",
       "side": 1,
       "message": "this may never fire if Start is called with a context that can\u0027t be canceled",
+      "range": {
+        "startLine": 555,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 29
+      },
+      "revId": "4fb49aaf1b6a23e80838debc6639380fdbe0810f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "95d886f8_f0f0e08b",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-01-28T20:38:51Z",
+      "side": 1,
+      "message": "Will change.",
+      "parentUuid": "4bc91fe1_cf9b6e75",
       "range": {
         "startLine": 555,
         "startChar": 0,
