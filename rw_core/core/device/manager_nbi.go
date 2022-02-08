@@ -345,6 +345,18 @@ func (dMgr *Manager) GetImageStatus(ctx context.Context, request *voltha.DeviceI
 	ctx = utils.WithRPCMetadataContext(ctx, "GetImageStatus")
 
 	respCh := make(chan []*voltha.DeviceImageState, len(request.GetDeviceId()))
+
+	if request.DeviceId == nil {
+		//Reply for every ONU
+		dMgr.deviceAgents.Range(func(key, value interface{}) bool {
+			device := value.(*Agent).device
+			if !device.Root {
+				request.DeviceId = append(request.DeviceId, &common.ID{Id: value.(*Agent).device.Id})
+			}
+			return true
+		})
+	}
+
 	for index, deviceID := range request.DeviceId {
 		// Create status request per device
 		imageStatusReq := &voltha.DeviceImageRequest{

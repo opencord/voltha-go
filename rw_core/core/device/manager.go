@@ -774,7 +774,7 @@ func (dMgr *Manager) validateImageDownloadRequest(request *voltha.DeviceImageDow
 }
 
 func (dMgr *Manager) validateImageRequest(request *voltha.DeviceImageRequest) error {
-	if request == nil || len(request.DeviceId) == 0 || request.DeviceId[0] == nil {
+	if request == nil {
 		return status.Errorf(codes.InvalidArgument, "invalid argument")
 	}
 
