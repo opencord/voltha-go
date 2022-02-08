@@ -50,6 +50,29 @@
       "message": "same",
       "revId": "54c4c6105fb064912b5898956eb9c9c9c7fad7fd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d0099d9c_7ae4893e",
+        "filename": "vendor/github.com/opencord/voltha-lib-go/v7/pkg/flows/flow_utils.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1386,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-02-08T15:20:03Z",
+      "side": 1,
+      "message": "Added this without realizing it was in the vendor folder. Making a patch to the correct repository to add the function",
+      "range": {
+        "startLine": 1381,
+        "startChar": 0,
+        "endLine": 1386,
+        "endChar": 0
+      },
+      "revId": "54c4c6105fb064912b5898956eb9c9c9c7fad7fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
