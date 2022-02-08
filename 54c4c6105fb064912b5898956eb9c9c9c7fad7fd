@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3c7f05cc_7a56cd78",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-08T13:52:40Z",
+      "side": 1,
+      "message": "changes LGTM, minor comments on the logging",
+      "revId": "54c4c6105fb064912b5898956eb9c9c9c7fad7fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "db7a50ab_59c586fe",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-08T13:52:40Z",
+      "side": 1,
+      "message": "this log is devious, we are not actually ignoring it, but instead proceeding. I would change to `flow-delete-for-nil-device-proceeding-deletion`",
+      "revId": "54c4c6105fb064912b5898956eb9c9c9c7fad7fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2a9bdfde_c8fb1d99",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-08T13:52:40Z",
+      "side": 1,
+      "message": "same",
+      "revId": "54c4c6105fb064912b5898956eb9c9c9c7fad7fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
