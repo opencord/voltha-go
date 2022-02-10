@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e54fe8fe_c2dca85a",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-02-10T14:38:27Z",
+      "side": 1,
+      "message": "By removing some the device rules above, we may end up with a partial route (i.e. flow in parent device and none in child device (the opposite may also be true but very unlikely).  The logic for partial route deletion is different.  Should the partial route boolean be re-evaluated after the above changes?",
+      "revId": "6f68863ee1e76c9ecbff805c593ae7b4de052078",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
