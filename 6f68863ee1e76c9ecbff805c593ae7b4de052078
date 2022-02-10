@@ -34,6 +34,24 @@
       "parentUuid": "e54fe8fe_c2dca85a",
       "revId": "6f68863ee1e76c9ecbff805c593ae7b4de052078",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "57d7f1c0_ef3f8dfa",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-02-10T18:52:13Z",
+      "side": 1,
+      "message": "The partial route logic assumes that the logical flow is decomposed into a flow for one parent device only or for a parent and a child device. As long as the OF controller (ONOS in this case) follows that logic then it is safe to set partial route when a device rule is removed.  If we get in the case where the parent device rule is removed but not the child device rule (race condition?) then I don\u0027t know if we would need a logic to remove flow from child device given that the child adapter would most likely not reach the device since the parent is gone.   @andrea can confirm whether the flows that the OF controller send are for 1 parent device only or for one parent and one child.",
+      "parentUuid": "4a1d9c96_a4a117a8",
+      "revId": "6f68863ee1e76c9ecbff805c593ae7b4de052078",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
