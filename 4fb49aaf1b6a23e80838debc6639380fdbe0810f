@@ -48,6 +48,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b291fc9c_edd113f2",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-02-10T18:57:47Z",
+      "side": 1,
+      "message": "Updated.",
+      "parentUuid": "7360620f_47cdce0c",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 19
+      },
+      "revId": "4fb49aaf1b6a23e80838debc6639380fdbe0810f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "4bc91fe1_cf9b6e75",
@@ -85,6 +109,30 @@
       "side": 1,
       "message": "Will change.",
       "parentUuid": "4bc91fe1_cf9b6e75",
+      "range": {
+        "startLine": 555,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 29
+      },
+      "revId": "4fb49aaf1b6a23e80838debc6639380fdbe0810f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e561eed2_2cebcfb9",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-02-10T18:57:47Z",
+      "side": 1,
+      "message": "Updated.",
+      "parentUuid": "95d886f8_f0f0e08b",
       "range": {
         "startLine": 555,
         "startChar": 0,
