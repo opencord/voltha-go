@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "94a04f43_d7034c05",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-02-11T13:43:19Z",
+      "side": 1,
+      "message": "Should a Codes.NotFound be returned here as well?  If the device is a root device then the a Codes.NotFound will be returned.  If the device is a child device and the parent device cannot be found then a codes.Unavailbale is returned.  This can be confusing.   In this case since you are using NotFound to indicate the absence of a device then it\u0027s better to return NotFound in all cases where a device is not found.  Sorry, did not notice this before.",
+      "revId": "5a661b4cc3fa73c0ff148d78dd2580dec7c61212",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
