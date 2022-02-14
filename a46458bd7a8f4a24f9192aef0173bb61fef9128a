@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "73c10667_2d096337",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-14T19:23:30Z",
+      "side": 1,
+      "message": "Overriding jenkins -1 as this has dependencies with openonu adapter changes which is yet to merge.",
+      "revId": "a46458bd7a8f4a24f9192aef0173bb61fef9128a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
