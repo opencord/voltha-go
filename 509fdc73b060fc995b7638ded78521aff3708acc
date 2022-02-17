@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fff19217_5b2a2a2e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-17T10:59:21Z",
+      "side": 1,
+      "message": "hardware test\nfunctional tests",
+      "revId": "509fdc73b060fc995b7638ded78521aff3708acc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
