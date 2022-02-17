@@ -70,6 +70,24 @@
       "parentUuid": "57d7f1c0_ef3f8dfa",
       "revId": "6f68863ee1e76c9ecbff805c593ae7b4de052078",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4e832f19_a3072310",
+        "filename": "rw_core/core/device/logical_agent_flow.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-02-17T10:34:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5befd34c_b049996e",
+      "revId": "6f68863ee1e76c9ecbff805c593ae7b4de052078",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
