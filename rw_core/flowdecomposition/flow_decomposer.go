@@ -328,12 +328,12 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(ctx context.Context
 		if portNumber != 0 {
 			recalculatedRoute, err := agent.GetRoute(ctx, inPortNo, portNumber)
 			if err != nil {
-				logger.Errorw(ctx, "no-route-double-tag", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "metadata": metadataFromwriteMetadata, "error": err})
+				logger.Errorw(ctx, "no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo, "metadata": metadataFromwriteMetadata, "error": err})
 				return deviceRules, nil
 			}
 			switch len(recalculatedRoute) {
 			case 0:
-				logger.Errorw(ctx, "no-route-double-tag", log.Fields{"inPortNo": inPortNo, "outPortNo": portNumber, "comment": "deleting-flow", "metadata": metadataFromwriteMetadata})
+				logger.Errorw(ctx, "no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": portNumber, "comment": "deleting-flow", "metadata": metadataFromwriteMetadata})
 				//TODO: Delete flow
 				return deviceRules, nil
 			case 2:
@@ -344,21 +344,22 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(ctx context.Context
 			}
 			ingressHop = recalculatedRoute[0]
 		}
-		innerTag := fu.GetInnerTagFromMetaData(ctx, flow)
-		if innerTag == 0 {
-			logger.Errorw(ctx, "no-inner-route-double-tag", log.Fields{"inPortNo": inPortNo, "outPortNo": portNumber, "comment": "deleting-flow", "metadata": metadataFromwriteMetadata})
-			//TODO: Delete flow
-			return deviceRules, nil
-		}
+
 		fa := &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie, "meter_id": uint64(meterID), "write_metadata": metadataFromwriteMetadata},
 			MatchFields: []*ofp.OfpOxmOfbField{
 				fu.InPort(ingressHop.Ingress),
-				fu.Metadata_ofp(uint64(innerTag)),
 				fu.TunnelId(uint64(portNumber)),
 			},
 			Actions: fu.GetActions(flow),
 		}
+
+		// Augment the metadata with innerTag if it is valid
+		innerTag := fu.GetInnerTagFromMetaData(ctx, flow)
+		if innerTag != 0 {
+			fa.MatchFields = append(fa.MatchFields, []*ofp.OfpOxmOfbField{fu.Metadata_ofp(uint64(innerTag))}...)
+		}
+
 		// Augment the matchfields with the ofpfields from the flow
 		fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.METADATA)...)
 
