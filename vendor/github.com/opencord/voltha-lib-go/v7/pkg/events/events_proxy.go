@@ -121,7 +121,7 @@ func (ep *EventProxy) SendRPCEvent(ctx context.Context, id string, rpcEvent *vol
 }
 
 /* Send out device events*/
-func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.DeviceEvent, category eventif.EventCategory, subCategory eventif.EventSubCategory, raisedTs int64) error {
+func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.DeviceEvent, category eventif.EventCategory, subCategory eventif.EventSubCategory, raisedTs int64, keys ...string) error {
 	if deviceEvent == nil {
 		logger.Error(ctx, "Recieved empty device event")
 		return errors.New("Device event nil")
@@ -134,7 +134,14 @@ func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.D
 		return err
 	}
 	event.EventType = &de
-	if err := ep.sendEvent(ctx, &event); err != nil {
+	key := ""
+	if len(keys) > 0 {
+		key = keys[0]
+	} else {
+		key = deviceEvent.ResourceId
+	}
+
+	if err := ep.sendEvent(ctx, &event, key); err != nil {
 		logger.Errorw(ctx, "Failed to send device event to KAFKA bus", log.Fields{"device-event": deviceEvent})
 		return err
 	}
@@ -161,7 +168,8 @@ func (ep *EventProxy) SendKpiEvent(ctx context.Context, id string, kpiEvent *vol
 		return err
 	}
 	event.EventType = &de
-	if err := ep.sendEvent(ctx, &event); err != nil {
+	key := strconv.FormatInt(raisedTs, 10)
+	if err := ep.sendEvent(ctx, &event, key); err != nil {
 		logger.Errorw(ctx, "Failed to send kpi event to KAFKA bus", log.Fields{"device-event": kpiEvent})
 		return err
 	}
@@ -173,9 +181,9 @@ func (ep *EventProxy) SendKpiEvent(ctx context.Context, id string, kpiEvent *vol
 
 }
 
-func (ep *EventProxy) sendEvent(ctx context.Context, event *voltha.Event) error {
+func (ep *EventProxy) sendEvent(ctx context.Context, event *voltha.Event, key string) error {
 	logger.Debugw(ctx, "Send event to kafka", log.Fields{"event": event})
-	if err := ep.kafkaClient.Send(ctx, event, &ep.eventTopic); err != nil {
+	if err := ep.kafkaClient.Send(ctx, event, &ep.eventTopic, key); err != nil {
 		return err
 	}
 	logger.Debugw(ctx, "Sent event to kafka", log.Fields{"event": event})
@@ -218,7 +226,7 @@ func (ep *EventProxy) Start() error {
 			logger.Warnw(ctx, "invalid-event", log.Fields{"element": elem})
 			continue
 		}
-		if err := ep.sendEvent(ctx, event); err != nil {
+		if err := ep.sendEvent(ctx, event, ""); err != nil {
 			logger.Errorw(ctx, "failed-to-send-event-to-kafka-bus", log.Fields{"event": event})
 		} else {
 			logger.Debugw(ctx, "successfully-sent-rpc-event-to-kafka-bus", log.Fields{"id": event.Header.Id, "category": event.Header.Category,
