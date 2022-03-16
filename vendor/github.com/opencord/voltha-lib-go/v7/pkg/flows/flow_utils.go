@@ -629,6 +629,22 @@ func GetInnerTagFromMetaData(ctx context.Context, flow *ofp.OfpFlowStats) uint16
 	return innerTag
 }
 
+func GetInnerTagFromWriteMetaData(ctx context.Context, metadata uint64) uint16 {
+	/*
+			  Write metadata instruction value (metadata) is 8 bytes:
+		    	MS 2 bytes: C Tag
+		    	Next 2 bytes: Technology Profile Id
+		    	Next 4 bytes: Port number (uni or nni)
+		    	This is set in the ONOS OltPipeline as a write metadata instruction
+	*/
+	var innerTag uint16 = 0
+	if metadata != 0 {
+		innerTag = uint16((metadata >> 48) & 0xFFFF)
+		logger.Debugw(ctx, "Found  CVLAN from write metadate action", log.Fields{"c_vlan": innerTag})
+	}
+	return innerTag
+}
+
 //GetInnerTagFromMetaData retrieves the inner tag from the Metadata_ofp. The port number (UNI on ONU) is in the
 // lower 32-bits of Metadata_ofp and the inner_tag is in the upper 32-bits. This is set in the ONOS OltPipeline as
 //// a Metadata_ofp field

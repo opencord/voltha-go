@@ -37,6 +37,8 @@ type RWCoreFlags struct {
 	KVStoreTimeout              time.Duration
 	KVStoreAddress              string
 	EventTopic                  string
+	EventTopicPartitions        int
+	EventTopicReplicas          int
 	LogLevel                    string
 	Banner                      bool
 	DisplayVersionOnly          bool
@@ -84,6 +86,16 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 		"event_topic",
 		"voltha.events",
 		"RW Core Event topic")
+
+	fs.IntVar(&cf.EventTopicPartitions,
+		"EventTopicPartitions",
+		3,
+		"RW Core Event topic partitions")
+
+	fs.IntVar(&cf.EventTopicReplicas,
+		"EventTopicReplicas",
+		1,
+		"RW Core Event topic replicas")
 
 	fs.StringVar(&cf.KVStoreType,
 		"kv_store_type",
