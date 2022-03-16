@@ -77,4 +77,5 @@ type Client interface {
 	SendLiveness(ctx context.Context) error
 	EnableLivenessChannel(ctx context.Context, enable bool) chan bool
 	EnableHealthinessChannel(ctx context.Context, enable bool) chan bool
+	ListTopics(ctx context.Context) ([]string, error)
 }
