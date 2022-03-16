@@ -327,13 +327,16 @@ func (sc *SaramaClient) createTopic(ctx context.Context, topic *Topic, numPartit
 	topicDetails[topic.Name] = topicDetail
 
 	if err := sc.cAdmin.CreateTopic(topic.Name, topicDetail, false); err != nil {
-		if err == sarama.ErrTopicAlreadyExists {
-			//	Not an error
-			logger.Debugw(ctx, "topic-already-exist", log.Fields{"topic": topic.Name})
-			return nil
+		switch typedErr := err.(type) {
+		case *sarama.TopicError:
+			if typedErr.Err == sarama.ErrTopicAlreadyExists {
+				err = nil
+			}
 		}
-		logger.Errorw(ctx, "create-topic-failure", log.Fields{"error": err})
-		return err
+		if err != nil {
+			logger.Errorw(ctx, "create-topic-failure", log.Fields{"error": err})
+			return err
+		}
 	}
 	// TODO: Wait until the topic has been created.  No API is available in the Sarama clusterAdmin to
 	// do so.
@@ -832,7 +835,8 @@ func (sc *SaramaClient) createPublisher(ctx context.Context) error {
 	// This Creates the publisher
 	config := sarama.NewConfig()
 	config.Version = sarama.V1_0_0_0
-	config.Producer.Partitioner = sarama.NewRandomPartitioner
+	//config.Producer.Partitioner = sarama.NewRandomPartitioner
+	config.Producer.Partitioner = sarama.NewHashPartitioner
 	config.Producer.Flush.Frequency = time.Duration(sc.producerFlushFrequency)
 	config.Producer.Flush.Messages = sc.producerFlushMessages
 	config.Producer.Flush.MaxMessages = sc.producerFlushMaxmessages
