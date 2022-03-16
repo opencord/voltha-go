@@ -119,6 +119,14 @@ func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	}
 	defer core.KafkaClient.Stop(ctx)
 
+	// create the voltha.events topic
+	topic := &kafka.Topic{Name: cf.EventTopic}
+	if err := core.KafkaClient.CreateTopic(ctx, topic, cf.EventTopicPartitions, cf.EventTopicReplicas); err != nil {
+		if err != nil {
+			logger.Fatal(ctx, "unable-to create topic", log.Fields{"topic": cf.EventTopic, "error": err})
+		}
+	}
+
 	// Create the event proxy to post events to KAFKA
 	eventProxy := events.NewEventProxy(events.MsgClient(core.KafkaClient), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
 	go func() {
