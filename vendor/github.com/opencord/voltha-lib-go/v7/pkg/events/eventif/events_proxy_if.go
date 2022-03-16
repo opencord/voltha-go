@@ -26,6 +26,8 @@ import (
 type EventProxy interface {
 	SendDeviceEvent(ctx context.Context, deviceEvent *voltha.DeviceEvent, category EventCategory,
 		subCategory EventSubCategory, raisedTs int64) error
+	SendDeviceEventWithKey(ctx context.Context, deviceEvent *voltha.DeviceEvent, category EventCategory,
+		subCategory EventSubCategory, raisedTs int64, key string) error
 	SendKpiEvent(ctx context.Context, id string, deviceEvent *voltha.KpiEvent2, category EventCategory,
 		subCategory EventSubCategory, raisedTs int64) error
 	SendRPCEvent(ctx context.Context, id string, deviceEvent *voltha.RPCEvent, category EventCategory,

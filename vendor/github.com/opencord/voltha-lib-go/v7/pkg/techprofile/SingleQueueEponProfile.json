@@ -1,0 +1,61 @@
+{
+    "name": "SingleQueueEponProfile",
+    "profile_type": "EPON",
+    "version": 1,
+    "num_gem_ports": 1,
+    "instance_control": {
+      "onu": "multi-instance",
+      "uni": "single-instance",
+      "max_gem_payload_size": "auto"
+    },
+    "epon_attribute": {
+        "package_type": "B"
+    },
+    "upstream_queue_attribute_list": [
+      {
+        "pbit_map": "0b11111111",
+        "aes_encryption": "False",
+        "traffic_type": "BE",
+        "unsolicited_grant_size": 0,
+        "nominal_interval": 0,
+        "tolerated_poll_jitter": 0,
+        "request_transmission_policy": 0,
+        "num_q_sets": 2,
+        "q_thresholds": {
+          "q_threshold1":5500,
+          "q_threshold2":0,
+          "q_threshold3":0,
+          "q_threshold4":0,
+          "q_threshold5":0,
+          "q_threshold6":0,
+          "q_threshold7":0
+        },
+        "scheduling_policy": "StrictPriority",
+        "priority_q": 4,
+        "weight": 0,
+        "discard_policy": "TailDrop",
+        "max_q_size": "auto",
+        "discard_config": {
+          "min_threshold": 0,
+          "max_threshold": 0,
+          "max_probability": 0
+        }
+      }
+    ],
+    "downstream_queue_attribute_list": [
+      {
+        "pbit_map": "0b11111111",
+        "aes_encryption": "True",
+        "scheduling_policy": "StrictPriority",
+        "priority_q": 4,
+        "weight": 0,
+        "discard_policy": "TailDrop",
+        "max_q_size": "auto",
+        "discard_config": {
+          "min_threshold": 0,
+          "max_threshold": 0,
+          "max_probability": 0
+        }
+      }
+    ]
+}
