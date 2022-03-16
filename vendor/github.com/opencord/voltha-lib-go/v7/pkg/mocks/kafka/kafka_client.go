@@ -174,3 +174,8 @@ func (kc *KafkaClient) EnableHealthinessChannel(ctx context.Context, enable bool
 	logger.Debug(ctx, "EnableHealthinessChannel - unimplemented")
 	return nil
 }
+
+func (kc *KafkaClient) ListTopics(ctx context.Context) ([]string, error) {
+	logger.Debug(ctx, "ListTopics - unimplemented")
+	return nil, nil
+}
