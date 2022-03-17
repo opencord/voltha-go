@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3759949a_2f557648",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-03-17T13:38:04Z",
+      "side": 1,
+      "message": "Please see my comments on the openolt-adapter changes.   In short this change would work better with environment variables used in the voltha-lib-go (kafkaclient) rather than having the same code in all repos and potentially having one component configuring the same topic with a different configuration (partition, replicas) than another component.",
+      "revId": "9fdeddd12b174f6454a7c10d390b2078e2414724",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
