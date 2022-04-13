@@ -89,7 +89,7 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 
 	fs.IntVar(&cf.EventTopicPartitions,
 		"EventTopicPartitions",
-		3,
+		1,
 		"RW Core Event topic partitions")
 
 	fs.IntVar(&cf.EventTopicReplicas,
