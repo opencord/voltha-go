@@ -197,6 +197,8 @@ func (r *roundRobin) Close(ctx context.Context) {
 	// Notify anyone waiting for a client to stop waiting
 	close(r.stopCh)
 
+	close(r.closingCh)
+
 	// Clean-up unused clients
 	for i := 0; i < len(r.available); i++ {
 		// Count 0 means no one is using that client
